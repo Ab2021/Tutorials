@@ -1,0 +1,888 @@
+Week 1: Foundations of Vision & PyTorch Basics
+Day 1 – Introduction to Computer Vision & PyTorch
+Main Topics
+
+What is CV? Applications & pipelines
+
+PyTorch overview: tensors, autograd
+
+Subtopics
+
+CV use-cases: classification, detection, segmentation
+
+Torch vs NumPy: tensor ops, GPU acceleration
+
+Autograd mechanics: requires_grad, computation graphs
+
+Installing & structuring a PyTorch project
+
+Intricacies
+
+Implicit vs explicit device placement (.to(device))
+
+Memory management: in-place ops and .detach()
+
+Key Pointers
+
+Always set random seeds for reproducibility
+
+Profile simple tensor ops on CPU vs GPU
+
+Day 2 – Image I/O, Transformations & Datasets
+Main Topics
+
+Loading images and annotations
+
+TorchVision transforms and datasets
+
+Subtopics
+
+PIL vs OpenCV for reading images
+
+torchvision.datasets.ImageFolder & custom Dataset
+
+Common transforms: resize, crop, normalize
+
+Building a custom Dataset class with labels
+
+Intricacies
+
+Transform ordering: resize before normalize
+
+Handling channels-first vs channels-last formats
+
+Key Pointers
+
+Chain transforms with Compose for clarity
+
+Validate dataset indices and labels
+
+Day 3 – DataLoader & Efficient Input Pipelines
+Main Topics
+
+DataLoader parameters & multiprocessing
+
+Subtopics
+
+batch_size, shuffle, num_workers, pin_memory
+
+Collate functions for variable-size data
+
+Prefetching and asynchronous loading
+
+Debugging deadlocks and worker failures
+
+Intricacies
+
+Shared memory limits and num_workers tuning
+
+Seed synchronization for reproducible shuffles
+
+Key Pointers
+
+Use smaller batches when GPU memory is limited
+
+Catch exceptions inside custom __getitem__
+
+Day 4 – Tensors, Device Management & Mixed Precision
+Main Topics
+
+Floating types, mixed-precision with AMP
+
+Subtopics
+
+float32, float16, bfloat16 trade-offs
+
+Enabling torch.cuda.amp.autocast and GradScaler
+
+Loss scaling underflows/overflows
+
+Benchmarking speed vs numerical stability
+
+Intricacies
+
+Certain ops not supported in float16 (e.g. batchnorm)
+
+Scale-back when gradients vanish
+
+Key Pointers
+
+Start with small scaling factor, adjust dynamically
+
+Profile memory footprint with and without AMP
+
+Day 5 – Building & Training a Simple CNN
+Main Topics
+
+Defining nn.Module; training loop essentials
+
+Subtopics
+
+Convolution, ReLU, MaxPool layers in PyTorch
+
+nn.Sequential vs custom forward
+
+Writing a training loop: forward, loss, backward, step
+
+Validation loop and metric logging
+
+Intricacies
+
+Zeroing gradients (optimizer.zero_grad()) correctly
+
+Detaching tensors for metric computation
+
+Key Pointers
+
+Use torch.no_grad() in eval to save memory
+
+Log losses & accuracies per epoch
+
+📅 Week 2: Classical Vision Techniques & Data Augmentation
+Day 6 – Image Preprocessing & Classical Filters
+Main Topics
+
+Edge detection, blurs, morphological ops
+
+Subtopics
+
+Sobel, Canny edge detectors
+
+Gaussian, median, bilateral filters
+
+Dilation, erosion, opening/closing
+
+Histogram equalization, CLAHE
+
+Intricacies
+
+Kernel size vs artifact risk
+
+Border handling modes (reflect, constant)
+
+Key Pointers
+
+Visualize intermediate filter outputs
+
+Combine filters for noise-robust preproc
+
+Day 7 – Data Augmentation Strategies
+Main Topics
+
+Boosting generalization via synthetic variations
+
+Subtopics
+
+Geometric transforms: flips, rotations, perspective
+
+Photometric transforms: brightness, contrast, hue
+
+Cutout, mixup, CutMix, Mosaic
+
+Online vs offline augmentation pipelines
+
+Intricacies
+
+Label transformations for bounding boxes / masks
+
+Distribution shift from heavy augmentations
+
+Key Pointers
+
+Visualize augmented samples before training
+
+Start with mild augmentations, scale up
+
+Day 8 – Transfer Learning & Pretrained Backbones
+Main Topics
+
+Fine-tuning vs feature extraction
+
+Subtopics
+
+Loading pretrained models from torchvision.models
+
+Freezing layers and replacing classifier heads
+
+Gradual unfreezing strategy
+
+Learning-rate multipliers per layer group
+
+Intricacies
+
+BatchNorm layers in eval vs train during fine-tuning
+
+Overfitting small datasets when unfreezing too early
+
+Key Pointers
+
+Use a smaller LR for pretrained layers
+
+Validate on a hold-out set for early stopping
+
+Day 9 – Advanced Architectures: ResNet, DenseNet, EfficientNet
+Main Topics
+
+Modern CNN building blocks
+
+Subtopics
+
+Bottleneck vs basic residual blocks
+
+Dense connectivity and growth rate
+
+Compound scaling in EfficientNet
+
+Depthwise separable convolutions in MobileNet
+
+Intricacies
+
+Width/depth trade-offs vs latency
+
+Customizing blocks for different input resolutions
+
+Key Pointers
+
+Compare FLOPs and parameter counts
+
+Profile inference time on target device
+
+Day 10 – CNN Lab: Image Classification Challenge
+Main Topics
+
+End-to-end classification on CIFAR-100 or custom dataset
+
+Subtopics
+
+Data pipeline & augmentations setup
+
+Backbone + custom head instantiation
+
+Training with LR scheduler and checkpointing
+
+Model export to ONNX and basic inference script
+
+Intricacies
+
+Managing learning-rate warm-up for stable convergence
+
+Export-inference mismatch debugging
+
+Key Pointers
+
+Automate training via a simple CLI script
+
+Validate exported model outputs match PyTorch
+
+📅 Week 3: Object Detection & Segmentation
+Day 11 – Anchor-Based Detection (Faster R-CNN)
+Main Topics
+
+Two-stage detection pipelines
+
+Subtopics
+
+Region Proposal Network (RPN) design
+
+Anchor box parameterization and IoU matching
+
+ROIAlign vs ROI Pooling
+
+Multi-task loss: classification + box regression
+
+Intricacies
+
+Imbalanced positive/negative samples in RPN
+
+Aligning feature map strides with anchors
+
+Key Pointers
+
+Visualize proposals overlayed on images
+
+Tune anchor scales/aspect ratios per dataset
+
+Day 12 – One-Stage Detection (YOLO, SSD, RetinaNet)
+Main Topics
+
+Single-shot high-speed detectors
+
+Subtopics
+
+Grid-cell based localization (YOLO)
+
+Feature pyramids in SSD/RetinaNet
+
+Focal loss to address class imbalance
+
+NMS and Soft-NMS variants
+
+Intricacies
+
+Trade-off between speed and accuracy
+
+Post-processing latency in large-scale scenes
+
+Key Pointers
+
+Benchmark model on representative resolution
+
+Optimize NMS thresholds for precision/recall
+
+Day 13 – Instance & Semantic Segmentation
+Main Topics
+
+Pixel-level prediction tasks
+
+Subtopics
+
+FCN and U-Net encoder-decoder structure
+
+Mask R-CNN for instance masks
+
+Conditional Random Fields (CRF) post-processing
+
+Mean IoU and Dice coefficient metrics
+
+Intricacies
+
+Memory use with high-resolution masks
+
+Balancing boundary accuracy vs region smoothness
+
+Key Pointers
+
+Tile inference for large images
+
+Use mixed precision carefully to fit model+mask
+
+Day 14 – Advanced Segmentation: DeepLab & PSPNet
+Main Topics
+
+Context aggregation techniques
+
+Subtopics
+
+Atrous Spatial Pyramid Pooling (ASPP)
+
+Pyramid pooling in PSPNet
+
+Hard vs soft weighting of multi-scale features
+
+Edge refinement modules
+
+Intricacies
+
+Computational cost of dilated convs
+
+Tuning dilation rates to avoid gridding artifacts
+
+Key Pointers
+
+Visualize multi-scale feature maps
+
+Balance performance with throughput
+
+Day 15 – Detection & Segmentation Lab
+Main Topics
+
+Build and compare two detection/segmentation pipelines
+
+Subtopics
+
+Data annotation formats: Pascal VOC, COCO
+
+Configuring torchvision or MMDetection libs
+
+Training loop with combined losses
+
+Exporting to TorchScript for deployment
+
+Intricacies
+
+Handling mixed-size inputs in batch
+
+Debugging TorchScript failures on dynamic ops
+
+Key Pointers
+
+Automate COCO evaluation metrics
+
+Use scripted models for faster C++ inference
+
+📅 Week 4: Advanced Vision & PyTorch Internals
+Day 16 – Custom Layers & Autograd Functions
+Main Topics
+
+Extending PyTorch with specialized ops
+
+Subtopics
+
+Writing custom nn.Module with parameters
+
+Defining torch.autograd.Function for forward/backward
+
+Integrating C++/CUDA extensions via torch.utils.cpp_extension
+
+Profiling custom ops for performance
+
+Intricacies
+
+Ensuring correct gradient shapes and types
+
+Managing CUDA streams and memory in extensions
+
+Key Pointers
+
+Test gradients via gradcheck
+
+Benchmark native vs custom implementations
+
+Day 17 – Attention & Vision Transformers (ViT)
+Main Topics
+
+Self-attention applied to images
+
+Subtopics
+
+Patch embedding and positional encoding
+
+Multi-head self-attention mechanics
+
+Hybrid CNN−Transformer architectures
+
+Token mixer variants (Swin, PoolFormer)
+
+Intricacies
+
+Quadratic cost of full attention on high-res images
+
+LayerNorm vs BatchNorm placement
+
+Key Pointers
+
+Use sparse or windowed attention for efficiency
+
+Profile memory usage per layer
+
+Day 18 – Self-Supervised Vision (SimCLR, BYOL)
+Main Topics
+
+Learning representations without labels
+
+Subtopics
+
+Contrastive loss and temperature hyperparameter
+
+Data augmentations critical for SSL
+
+Momentum encoders and stop-gradient tricks
+
+Linear probe evaluation
+
+Intricacies
+
+Large batch requirements for negative sampling
+
+Avoiding collapse in non-contrastive methods
+
+Key Pointers
+
+Warm-up projector before training backbone
+
+Monitor representation separability via k-NN
+
+Day 19 – 3D Vision & Point Clouds (PointNet, DGCNN)
+Main Topics
+
+Deep learning on 3D data
+
+Subtopics
+
+PointNet architecture and symmetry functions
+
+Dynamic graph CNN for local neighborhoods
+
+Voxelization vs point-based processing
+
+Chamfer distance and Earth Movers’ distance losses
+
+Intricacies
+
+Memory vs resolution trade-offs in voxels
+
+Ensuring permutation invariance in point sets
+
+Key Pointers
+
+Normalize point clouds to unit sphere
+
+Augment with random rotations and jitter
+
+Day 20 – GANs for Vision (Pix2Pix, CycleGAN)
+Main Topics
+
+Conditional and unpaired image translation
+
+Subtopics
+
+U-Net generator and PatchGAN discriminator
+
+Cycle-consistency and identity losses
+
+Training stability tricks (buffer, learning-rate scheduling)
+
+Evaluation: FID, LPIPS, user studies
+
+Intricacies
+
+Mode collapse and discriminator overpower
+
+Balancing L1 vs adversarial loss weights
+
+Key Pointers
+
+Start with small images to validate pipeline
+
+Monitor generator/discriminator losses separately
+
+📅 Week 5: Deployment, Optimization & Research Directions
+Day 21 – Model Optimization & Quantization
+Main Topics
+
+Reducing size & latency for CV models
+
+Subtopics
+
+Post-training dynamic/static quantization
+
+Quantization-aware training
+
+Structured pruning and filter sparsification
+
+Exporting optimized models via torch.quantization
+
+Intricacies
+
+Calibration data selection for static quant
+
+Sparse compute inefficiencies on certain hardware
+
+Key Pointers
+
+Benchmark accuracy vs latency trade-offs
+
+Use torch.fx for graph transforms
+
+Day 22 – TorchScript & ONNX Export
+Main Topics
+
+Serializing models for production
+
+Subtopics
+
+Scripting vs tracing in TorchScript
+
+Handling Python constructs in export
+
+ONNX operator support and custom ops
+
+Running ONNX models via TensorRT or ONNX Runtime
+
+Intricacies
+
+Debugging missing op support in backends
+
+Ensuring deterministic results across runtimes
+
+Key Pointers
+
+Write small test scripts to validate exports
+
+Lock PyTorch and ONNX versions for compatibility
+
+Day 23 – Serving CV Models at Scale
+Main Topics
+
+Architectures for low-latency inference
+
+Subtopics
+
+NVIDIA Triton Inference Server integration
+
+Batch vs real-time inference strategies
+
+Autoscaling on Kubernetes with KServe/TFKServe
+
+Monitoring with Prometheus/Grafana
+
+Intricacies
+
+Cold-start latency vs container warm pools
+
+Load balancing GPU resources among models
+
+Key Pointers
+
+Expose /health and /metrics endpoints
+
+Use metric-driven HPA for autoscaling
+
+Day 24 – End-to-End MLOps for Vision
+Main Topics
+
+CI/CD pipelines for CV projects
+
+Subtopics
+
+Data versioning with DVC or MLflow
+
+Automated training workflows (Airflow, Argo)
+
+Model registry and lineage tracking
+
+Canary deployments and rollback policies
+
+Intricacies
+
+Preventing data and code drift
+
+Secure handling of sensitive image data
+
+Key Pointers
+
+Gate production deployments on validation metrics
+
+Audit all artifacts for reproducibility
+
+📅 Week 6: Advanced Research Topics & Capstone
+Day 26 – Self-Supervised Vision & Masked Modeling
+Main Topics
+
+Masked image modeling and contrastive SSL
+
+Subtopics
+
+MAE: Masked autoencoders for images
+
+iGPT and generative pretraining on pixels
+
+Hybrid SSL objectives (contrastive + reconstruction)
+
+Linear probing vs fine-tuning evaluation
+
+Intricacies
+
+High compute demands for large masking ratios
+
+Choosing patch sizes for balanced contextual learning
+
+Key Pointers
+
+Pretrain on large corpus (e.g. ImageNet-1K)
+
+Monitor reconstruction quality early
+
+Day 27 – 3D & Multi-View Reconstruction
+Main Topics
+
+From multiple images to 3D models
+
+Subtopics
+
+Multi-view stereo and depth estimation networks
+
+Neural Radiance Fields (NeRF) basics
+
+Point-cloud to mesh conversion
+
+Losses: photometric reprojection, consistency
+
+Intricacies
+
+High memory use for volumetric representations
+
+Sensitivity to camera calibration errors
+
+Key Pointers
+
+Start with small scenes and low resolution
+
+Validate depth maps before full NeRF training
+
+Day 28 – Attention in Vision: DETR & Beyond
+Main Topics
+
+End-to-end object detection with transformers
+
+Subtopics
+
+DETR architecture: encoder-decoder queries
+
+Hungarian matching for set loss
+
+Deformable DETR improvements
+
+Training dynamics and cosine LR
+
+Intricacies
+
+Slow convergence of original DETR
+
+Matching instability with limited objects
+
+Key Pointers
+
+Use deformable variants for faster training
+
+Carefully tune LR warm-up and weight decay
+
+Day 29 – Video Understanding & Action Recognition
+Main Topics
+
+Temporal models for video data
+
+Subtopics
+
+3D convolutions (C3D, I3D)
+
+Two-stream networks (RGB + optical flow)
+
+SlowFast and TimeSformer architectures
+
+Temporal segment networks and TSN training
+
+Intricacies
+
+High computational cost of frame stacks
+
+Synchronizing multi-stream inputs
+
+Key Pointers
+
+Sample frames sparsely to reduce load
+
+Precompute optical flow offline
+
+Day 30 – Capstone Project & Presentation
+Activities
+
+Choose a capstone: classification, detection, segmentation, 3D reconstruction, or video analysis
+
+Build full pipeline: data prep, model, training, deployment
+
+Write report with architecture diagrams, metrics, ethics considerations
+
+Present demo, discuss challenges and future work
+
+Key Pointers
+
+Emphasize reproducibility: code, data, environment
+
+Reflect on performance vs resource trade-offs
+## 📅 Week 7: Niche & Emerging Topics in Computer Vision
+
+### Day 31 – Color Science & Photometric Stereo  
+- **Main Topics**  
+  - Camera response functions, color spaces, and illumination models  
+- **Subtopics**  
+  1. **Colorimetry Basics**: CIE XYZ, sRGB, gamma correction  
+  2. **White Balance & Color Constancy**: Gray-world, Bayesian methods  
+  3. **Photometric Stereo**: Surface normal estimation under varying lighting  
+  4. **Shape-from-Shading**: Reflectance models (Lambertian, specular)  
+- **Intricacies**  
+  - Sensor noise and non-linear camera pipelines  
+  - Handling mixed lighting and interreflections  
+- **Key Pointers**  
+  - Calibrate with color targets (e.g. Macbeth chart)  
+  - Use multiple known light directions for robust normal maps  
+
+### Day 32 – Domain Adaptation & Synthetic Data  
+- **Main Topics**  
+  - Bridging sim-to-real gaps using adaptation and data synthesis  
+- **Subtopics**  
+  1. **Style Transfer**: CycleGAN for unpaired image translation  
+  2. **Domain-Adversarial Training**: DANN and gradient reversal  
+  3. **Synthetic Data Generation**: Blender/Unity pipelines, domain randomization  
+  4. **Benchmarking**: Fréchet Inception Distance (FID) for realism  
+- **Intricacies**  
+  - Avoiding artifact overfitting to synthetic textures  
+  - Balancing synthetic vs real data ratios  
+- **Key Pointers**  
+  - Randomize lighting, textures, and camera parameters  
+  - Finetune on small real-world “seed” sets  
+
+### Day 33 – Explainability in Vision  
+- **Main Topics**  
+  - Techniques to interpret CV model decisions  
+- **Subtopics**  
+  1. **Gradient-based Methods**: Grad-CAM, Guided Backprop  
+  2. **Perturbation Methods**: RISE, Occlusion sensitivity  
+  3. **Feature Inversion & Activation Maximization**  
+  4. **Counterfactual Explanations**: Minimal edits to flip predictions  
+- **Intricacies**  
+  - High-resolution CAM heatmap smoothing  
+  - Computational cost of repeated perturbations  
+- **Key Pointers**  
+  - Overlay heatmaps on original images for qualitative review  
+  - Validate explanations against known object masks  
+
+### Day 34 – Federated & Privacy-Preserving CV  
+- **Main Topics**  
+  - On-device learning and data privacy for images  
+- **Subtopics**  
+  1. **Federated Learning Frameworks**: PySyft, Flower  
+  2. **Differential Privacy Mechanisms**: DP-SGD, Gaussian noise addition  
+  3. **Secure Aggregation Protocols**: Homomorphic encryption basics  
+  4. **Client Heterogeneity**: Handling non-IID camera data  
+- **Intricacies**  
+  - Communication overhead vs model convergence  
+  - Privacy budget management across rounds  
+- **Key Pointers**  
+  - Simulate federated rounds with variable client participation  
+  - Track per-client contribution for fairness  
+
+### Day 35 – Mobile & Edge-Optimized CV  
+- **Main Topics**  
+  - Deploying CV on resource-constrained devices  
+- **Subtopics**  
+  1. **Model Distillation & Pruning**: Teacher-student pipelines  
+  2. **Quantization on Mobile**: ONNX Runtime Mobile, TFLite  
+  3. **Hardware Acceleration**: NNAPI, CoreML, Qualcomm SNPE  
+  4. **Efficient Architectures**: MobileNetV3, GhostNet  
+- **Intricacies**  
+  - Balancing input resolution vs FPS on mobile GPUs  
+  - Managing thermal throttling during inference  
+- **Key Pointers**  
+  - Profile end-to-end app performance (latency, battery)  
+  - Use platform-specific profilers (e.g. Android Systrace)  
+
+### Day 36 – SLAM & Visual Odometry  
+- **Main Topics**  
+  - Real-time camera pose estimation and mapping  
+- **Subtopics**  
+  1. **Feature Tracking**: ORB, SIFT, KLT for matching across frames  
+  2. **Pose Estimation**: PnP, bundle adjustment, RANSAC outlier rejection  
+  3. **Map Representation**: Sparse vs dense (TSDF, Octree)  
+  4. **Loop Closure & Relocalization**  
+- **Intricacies**  
+  - Drift accumulation in monocular VO  
+  - Scale ambiguity and scale recovery methods  
+- **Key Pointers**  
+  - Fuse IMU data for scale and robustness  
+  - Visualize trajectories in 3D viewers for debugging  
+
+### Day 37 – Medical & Industrial Vision  
+- **Main Topics**  
+  - Domain-specific CV applications and challenges  
+- **Subtopics**  
+  1. **Medical Imaging**: Segmentation of CT/MRI scans, U-Net variants  
+  2. **Defect Detection**: Industrial surface inspection, anomaly detection  
+  3. **Regulatory Constraints**: FDA/CE requirements, dataset de-identification  
+  4. **High-Resolution Tiling**: Sliding-window inference for gigapixel images  
+- **Intricacies**  
+  - Class imbalance in rare-disease datasets  
+  - Data privacy and consent workflows  
+- **Key Pointers**  
+  - Use patch-based approaches with overlap-tiling  
+  - Validate models on held-out institutions/hospitals  

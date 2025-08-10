@@ -1,0 +1,823 @@
+📅 Week 1: Foundations & Core Concepts
+Day 1 – Introduction to Deep Learning & Perceptrons
+Main Topics
+
+Origins of neural networks
+
+Single-layer perceptron as linear classifier
+
+Subtopics
+
+Perceptron learning rule and decision boundary
+
+Activation functions: sigmoid, tanh, ReLU (pros/cons)
+
+Geometric interpretation in feature space
+
+Transition to multi-layer networks
+
+Intricacies
+
+Saturation regions in sigmoid/tanh causing vanishing gradients
+
+“Dead” ReLUs when inputs fall below zero
+
+Key Pointers
+
+Normalize inputs to center activations
+
+Visualize boundaries on simple 2D datasets
+
+Day 2 – Multilayer Perceptrons & Backpropagation
+Main Topics
+
+Feedforward architecture
+
+Chain-rule gradient computation
+
+Subtopics
+
+Forward pass: activations and loss (MSE vs cross-entropy)
+
+Backward pass: computing ∂L/∂W via chain rule
+
+Computational graph abstraction
+
+Numerical gradient checking for validation
+
+Intricacies
+
+Depth × width trade-offs in gradient signal propagation
+
+Floating-point accumulation errors
+
+Key Pointers
+
+Implement a toy network from scratch for clarity
+
+Always compare analytical vs numerical gradients on small scale
+
+Day 3 – Optimization Algorithms
+Main Topics
+
+First-order optimizers (SGD, momentum, Nesterov)
+
+Adaptive optimizers (Adam, RMSProp, Adagrad)
+
+Subtopics
+
+Momentum mechanics and dampening
+
+Adam’s bias correction and parameter defaults
+
+Learning-rate schedules: step decay, cosine annealing, warm-up
+
+Regularization via weight decay vs explicit penalty
+
+Intricacies
+
+Adam’s divergence sometimes in certain non-convex landscapes
+
+Over-adjustment when momentum and adaptive steps conflict
+
+Key Pointers
+
+Always tune base learning rate first
+
+Monitor both training loss and validation performance separately
+
+Day 4 – Regularization & Generalization
+Main Topics
+
+Overfitting causes
+
+Techniques to improve generalization
+
+Subtopics
+
+Dropout and DropConnect mechanisms
+
+Early stopping based on validation plateau
+
+Data augmentation pipelines (image, text)
+
+Normalization layers: BatchNorm, LayerNorm, GroupNorm
+
+Intricacies
+
+Changing behavior of BatchNorm between train/eval
+
+Dropout’s scaling factor at inference time
+
+Key Pointers
+
+Combine augmentations that preserve task semantics
+
+Use small hold-out sets to avoid over-tuning
+
+Day 5 – Practical MLP Lab & Frameworks Intro
+Main Topics
+
+Building MLPs in PyTorch & TensorFlow
+
+Subtopics
+
+Dataset handling: DataLoader, tf.data
+
+Defining Sequential vs Functional APIs
+
+Checkpointing models and logging metrics (TensorBoard, WandB)
+
+Implementing custom training loops
+
+Intricacies
+
+Ensuring reproducibility via seed setting
+
+Managing GPU memory and mixed precision
+
+Key Pointers
+
+Profile training step times and GPU utilization
+
+Structure code for clear experiment tracking
+
+📅 Week 2: Convolutional Neural Networks
+Day 6 – Convolution Fundamentals
+Main Topics
+
+Convolution operation for images
+
+Subtopics
+
+Kernel size, stride, padding, dilation
+
+Depthwise, pointwise, grouped convolutions
+
+Transposed convolutions for upsampling
+
+Calculating receptive fields
+
+Intricacies
+
+Checkerboard artifacts in naive transpose conv
+
+Border effects when using “valid” padding
+
+Key Pointers
+
+Visualize feature maps after each conv layer
+
+Match kernel sizes to expected pattern scales
+
+Day 7 – Classic CNN Architectures
+Main Topics
+
+LeNet, AlexNet, VGG, ResNet, DenseNet families
+
+Subtopics
+
+Network depth vs parameter count
+
+Residual blocks and identity shortcuts
+
+BatchNorm placement (pre-activation vs post-activation)
+
+Dense connectivity benefits
+
+Intricacies
+
+Training very deep networks without vanishing/exploding gradients
+
+Memory overhead of dense connections
+
+Key Pointers
+
+Leverage pretrained weights for transfer learning
+
+Adjust learning rates when fine-tuning deep layers
+
+Day 8 – Advanced CNN Topics
+Main Topics
+
+Attention modules in vision
+
+Subtopics
+
+Squeeze-and-Excitation for channel attention
+
+CBAM: channel + spatial attention
+
+Dilated convolutions and ASPP for segmentation
+
+Non-local blocks for global context
+
+Intricacies
+
+Extra FLOPs vs accuracy gains
+
+Instabilities when dilation rates are large
+
+Key Pointers
+
+Profile inference impact of attention modules
+
+Prune modules if real-time constraints require
+
+Day 9 – Object Detection & Segmentation
+Main Topics
+
+Two-stage vs one-stage detectors; segmentation methods
+
+Subtopics
+
+Anchor boxes, IoU thresholding
+
+Focal loss handling class imbalance
+
+ROIAlign vs ROIPool in Mask R-CNN
+
+Panoptic segmentation concepts
+
+Intricacies
+
+Non-Max Suppression tuning to reduce false positives
+
+Memory consumption of ROI operations
+
+Key Pointers
+
+Evaluate with mAP, AP@[.5,.75] for detectors
+
+Use synthetic augmentation for minority classes
+
+Day 10 – CNN Lab: Build & Deploy a Vision Model
+Main Topics
+
+End-to-end vision pipeline
+
+Subtopics
+
+Preparing datasets (CIFAR-10, COCO subset)
+
+Training ResNet or MobileNet backbone
+
+Exporting to ONNX/TensorRT
+
+Serving via Flask/FastAPI + GPU inference
+
+Intricacies
+
+Unsupported ops during model conversion
+
+Batch vs single-image latency differences
+
+Key Pointers
+
+Automate conversion tests in CI
+
+Profile on target hardware (CPU/GPU) separately
+
+📅 Week 3: Sequence Models & Attention
+Day 11 – RNNs, LSTMs & GRUs
+Main Topics
+
+Recurrent architectures for sequence data
+
+Subtopics
+
+Vanilla RNN gates and vanishing gradients
+
+LSTM internals: input, forget, output gates
+
+GRU vs LSTM performance trade-offs
+
+Bidirectional and stacked RNNs
+
+Intricacies
+
+Memory growth with long sequences
+
+Teacher-forcing vs scheduled sampling
+
+Key Pointers
+
+Clip gradients to prevent exploding magnitudes
+
+Use packed sequences for variable-length batches
+
+Day 12 – Sequence-to-Sequence & Attention
+Main Topics
+
+Encoder–decoder with attention
+
+Subtopics
+
+Bahdanau vs Luong attention mechanisms
+
+Generating context vectors
+
+Masking padded tokens
+
+Beam search strategies
+
+Intricacies
+
+Attention alignment visualization for debugging
+
+Beam width impact on latency and quality
+
+Key Pointers
+
+Visualize attention heatmaps
+
+Constrain beam size in production
+
+Day 13 – Transformer Architecture
+Main Topics
+
+Self-attention and multi-head mechanisms
+
+Subtopics
+
+Scaled dot-product attention math
+
+Positional encodings: sinusoidal vs learned
+
+Feedforward sublayers and residuals
+
+Pre-norm vs post-norm stability
+
+Intricacies
+
+Quadratic complexity in sequence length
+
+Warm-up learning rate schedules critical for training
+
+Key Pointers
+
+Use sparse or linearized attention for long inputs
+
+Always include warm-up phase before decay
+
+Day 14 – Pretrained Language Models & Fine-Tuning
+Main Topics
+
+BERT, GPT, T5 model families
+
+Subtopics
+
+Pretraining objectives: MLM vs causal LM
+
+Adapter and prefix-tuning methods
+
+Prompt engineering vs parameter fine-tuning
+
+Domain adaptation via continual pretraining
+
+Intricacies
+
+Catastrophic forgetting during fine-tuning
+
+Tokenizer vocabulary mismatches
+
+Key Pointers
+
+Freeze lower layers when data is scarce
+
+Monitor output divergence from pretraining
+
+Day 15 – Transformer Lab: Build a Mini-BERT
+Main Topics
+
+Hands-on transformer implementation
+
+Subtopics
+
+Tokenization pipelines (WordPiece, Byte-Pair Encoding)
+
+Embedding & positional encoding layers
+
+Assembling multi-head self-attention blocks
+
+Pretrain on small corpus, fine-tune on classification
+
+Intricacies
+
+GPU memory limits and gradient checkpointing
+
+Mask sampling ratio impacts performance
+
+Key Pointers
+
+Validate model outputs on toy inputs
+
+Use mixed-precision to fit larger batch sizes
+
+📅 Week 4: Advanced & Specialized Architectures
+Day 16 – Vision Transformers & Hybrid Models
+Main Topics
+
+ViT patch embeddings and hybrid CNN–ViT designs
+
+Subtopics
+
+Patch size and embedding dimensionality trade-offs
+
+Token mixers like Swin Transformer
+
+Relative positional bias vs absolute encodings
+
+Initialization and scaling strategies
+
+Intricacies
+
+Data-hunger of pure ViTs on smaller datasets
+
+Overfitting without sufficient regularization
+
+Key Pointers
+
+Combine ViT with pretrained CNN backbone
+
+Pretrain on large-scale datasets when possible
+
+Day 17 – Graph Neural Networks (GNNs)
+Main Topics
+
+Message passing and graph convolutions
+
+Subtopics
+
+GCN vs GAT vs GraphSAGE architectures
+
+Handling dynamic vs static graph structures
+
+Graph pooling and readout functions
+
+Scalability via neighbor sampling (Cluster GCN)
+
+Intricacies
+
+Over-smoothing in deep GNN layers
+
+Memory blow-up on large graphs
+
+Key Pointers
+
+Use sparse adjacency representations
+
+Evaluate with graph-specific metrics (AUC, AP)
+
+Day 18 – Autoencoders & Representation Learning
+Main Topics
+
+Vanilla, denoising, variational, and sparse autoencoders
+
+Subtopics
+
+Bottleneck design and latent dimension selection
+
+KL divergence term in VAEs and balance with reconstruction
+
+Noise injection strategies
+
+Sparse coding regularizers
+
+Intricacies
+
+Posterior collapse in VAEs
+
+Trade-off between compression and fidelity
+
+Key Pointers
+
+Visualize latent space traversals
+
+Leverage as unsupervised pretraining
+
+Day 19 – Generative Adversarial Networks (GANs)
+Main Topics
+
+Adversarial training framework
+
+Subtopics
+
+Minimax vs non-saturating loss formulations
+
+DCGAN, WGAN-GP, StyleGAN architectures
+
+Mode collapse detection and mitigation
+
+Conditional GANs for class-guided generation
+
+Intricacies
+
+Training instability and careful balancing of G/D updates
+
+Sensitivity to hyperparameters (learning rates, batch size)
+
+Key Pointers
+
+Monitor FID and IS metrics
+
+Start with simple datasets (MNIST, CelebA)
+
+Day 20 – Advanced Generative Models & Diffusion
+Main Topics
+
+Score-based and diffusion models
+
+Subtopics
+
+Forward diffusion and noise schedules
+
+Reverse denoising parameterizations
+
+Classifier-free guidance techniques
+
+Latent vs pixel-space diffusion trade-offs
+
+Intricacies
+
+Sampling speed vs sample quality trade-off
+
+Memory footprint for long diffusion chains
+
+Key Pointers
+
+Use DDIM/DDPM samplers for accelerated inference
+
+Tune noise schedules for target domain
+
+📅 Week 5: Deployment, MLOps & Ethics
+Day 21 – Model Quantization & Pruning
+Main Topics
+
+Techniques to reduce model size and latency
+
+Subtopics
+
+Post-training vs quantization-aware training (QAT)
+
+Symmetric vs asymmetric quantization, per-channel calibration
+
+Structured vs unstructured pruning methods
+
+Hardware support: TensorRT, XLA, QNNPACK
+
+Intricacies
+
+Accuracy loss vs compression ratio
+
+Sparse compute inefficiencies on some hardware
+
+Key Pointers
+
+Calibrate on representative dataset
+
+Benchmark on deployment target
+
+Day 22 – Distributed & Multi-GPU Training
+Main Topics
+
+Scaling training across devices
+
+Subtopics
+
+Data-parallel (DDP) vs model-parallel vs pipeline-parallel
+
+Mixed-precision and AMP usage
+
+Checkpoint sharding (FSDP) and offloading
+
+Elastic training with Kubernetes/SLURM
+
+Intricacies
+
+Straggler effect and load imbalance
+
+Communication/computation overlap tuning
+
+Key Pointers
+
+Profile NCCL vs Gloo backend
+
+Use torch.profiler or TF Profiler
+
+Day 23 – Serving & Monitoring Deep Models
+Main Topics
+
+Production inference best practices
+
+Subtopics
+
+TensorFlow Serving, TorchServe, NVIDIA Triton
+
+Autoscaling policies and health checks
+
+Exposing metrics (Prometheus) and logging
+
+Explainability endpoints (SHAP)
+
+Intricacies
+
+Cold-start latency vs warm pools
+
+Integrating drift detection triggers
+
+Key Pointers
+
+Expose /health and /metrics endpoints
+
+Scrape and visualize with Grafana
+
+Day 24 – MLOps Integration & CI/CD
+Main Topics
+
+End-to-end pipeline orchestration
+
+Subtopics
+
+GitOps principles for code and configs
+
+Artifact registries: MLflow, DVC, S3
+
+Automated testing: unit, integration, performance tests
+
+Canary and blue-green deployment strategies
+
+Intricacies
+
+Flapping deployments due to noisy metrics
+
+Secure secret handling in pipelines
+
+Key Pointers
+
+Version datasets alongside model code
+
+Gate deployments on validation metric thresholds
+
+Day 25 – Ethics, Fairness & Future Directions
+Main Topics
+
+Responsible AI practices
+
+Subtopics
+
+Fairness metrics: demographic parity, equalized odds
+
+Differential Privacy for deep nets
+
+Neural Architecture Search (NAS) and environmental cost
+
+TinyML & on-device DL trends
+
+Intricacies
+
+Interpretability vs model complexity trade-off
+
+Carbon footprint considerations of large models
+
+Key Pointers
+
+Publish model cards documenting metrics and biases
+
+Track energy consumption during training
+
+📅 Additional Module: Advanced DL & Reinforcement Learning
+Day 26 – Self-Supervised & Contrastive Representation Learning
+Main Topics
+
+Learning without labels via pretext tasks
+
+Subtopics
+
+Contrastive frameworks: SimCLR, MoCo, temperature hyperparameter
+
+BYOL and stop-gradient mechanisms
+
+Clustering approaches: DeepCluster, SwAV
+
+Linear evaluation protocols
+
+Intricacies
+
+Avoiding collapsed representations without negatives
+
+Memory bank vs large batch trade-offs
+
+Key Pointers
+
+Warm-up projector head before contrastive training
+
+Evaluate via k-NN retrieval on validation set
+
+Day 27 – Meta-Learning & Few-Shot Adaptation
+Main Topics
+
+Quick adaptation from few examples
+
+Subtopics
+
+Prototypical networks and metric learning
+
+Optimization-based (MAML, Reptile) algorithms
+
+Memory-augmented meta-learners
+
+Task sampling strategies for robust evaluation
+
+Intricacies
+
+Computational overhead of higher-order gradients
+
+Overfitting on meta-train tasks
+
+Key Pointers
+
+Use first-order MAML approximations if GPU-limited
+
+Employ curriculum scheduling for tasks
+
+Day 28 – Neural Architecture Search & HPO
+Main Topics
+
+Automated search for architectures and hyperparameters
+
+Subtopics
+
+Reinforcement-learning NAS (ENAS, DARTS)
+
+Evolutionary strategies for architecture evolution
+
+Bayesian optimization & Hyperband for HPO
+
+One-shot weight-sharing techniques
+
+Intricacies
+
+Compute cost of search vs final evaluation
+
+Proxy tasks leading to suboptimal generalization
+
+Key Pointers
+
+Define lightweight proxy tasks for rapid iteration
+
+Validate search results on hold-out datasets
+
+Day 29 – Reinforcement Learning Fundamentals & DQN
+Main Topics
+
+Value-based RL methods
+
+Subtopics
+
+Markov Decision Processes and Bellman equations
+
+DQN architecture: target networks, replay buffers
+
+Double DQN and dueling architectures
+
+ε-greedy vs Boltzmann action selection
+
+Intricacies
+
+Replay buffer non-stationarity
+
+Overestimation bias and mitigation
+
+Key Pointers
+
+Use prioritized replay for sample efficiency
+
+Regularly sync target network
+
+Day 30 – Advanced RL: Policy Gradients & Model-Based RL
+Main Topics
+
+Policy optimization and planning
+
+Subtopics
+
+REINFORCE with baseline variance reduction
+
+Actor-Critic methods: A2C, A3C, PPO, TRPO
+
+Generalized Advantage Estimation (GAE)
+
+Model-based RL with learned dynamics and planning
+
+Intricacies
+
+Stability vs sample efficiency trade-off
+
+Balancing model learning and policy updates
+
+Key Pointers
+
+Clip policy updates on KL divergence thresholds
+
+Integrate imagination modules for improved exploration

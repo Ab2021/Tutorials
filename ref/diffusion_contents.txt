@@ -1,0 +1,328 @@
+### Unified Diffusion + RL + Advanced Deep Learning Course (Expanded: Day 1-38)
+
+---
+
+#### **Day 1: Introduction to Diffusion Models and Deep Generative Models**
+
+* **What are Diffusion Models?**
+
+  * Understanding the generative process via noise addition and removal
+  * Historical evolution: from GANs and VAEs to Diffusion
+* **Comparison of Generative Models**
+
+  * Key concepts: mode collapse, stability, fidelity vs. diversity
+  * Strengths of diffusion models
+
+#### **Day 2: Mathematical Foundations of Diffusion Models**
+
+* **Stochastic Processes**
+
+  * Brownian motion, Gaussian processes
+  * Fokker-Planck and Langevin equations
+* **Score-based Models**
+
+  * Score matching and its role in generative modeling
+
+#### **Day 3: Denoising Score Matching (DSM)**
+
+* **Objective Function**
+
+  * The concept of the score function and its estimation
+  * Denoising Score Matching and its mathematical foundation
+* **Hands-on**
+
+  * Implementing DSM in PyTorch
+
+#### **Day 4: Denoising Diffusion Probabilistic Models (DDPM)**
+
+* **Model Definition**
+
+  * Forward process: q(x\_t | x\_{t-1})
+  * Reverse process: p(x\_{t-1} | x\_t)
+* **Noise Schedule**
+
+  * Linear, cosine beta schedule
+  * Variational lower bound (VLB) optimization
+
+#### **Day 5: Implementing DDPM from Scratch**
+
+* **Model Architecture**
+
+  * U-Net design, positional embeddings
+* **Training Loop**
+
+  * Adding noise to images
+  * Loss: MSE between predicted and actual noise
+
+#### **Day 6: Sampling Techniques in Diffusion**
+
+* **Naive vs. DDIM Sampling**
+
+  * Sampling speedup with DDIM
+* **Conditional Sampling**
+
+  * Class-conditioned sampling and guidance
+
+#### **Day 7: Advanced Architectures**
+
+* **Architectural Improvements**
+
+  * Attention U-Nets, Residual Blocks
+  * Multi-scale processing with skip connections
+
+#### **Day 8: Class-Conditional Diffusion**
+
+* **Guided Generation**
+
+  * Classifier guidance
+  * Classifier-free guidance: removing reliance on classifiers
+* **Experiments**
+
+  * CIFAR-10 conditional generation
+
+#### **Day 9: Text-to-Image Diffusion**
+
+* **Transformer Integration**
+
+  * Using CLIP, T5, and BERT for prompt embeddings
+* **Model Overview**
+
+  * Imagen, DALL·E, Stable Diffusion
+
+#### **Day 10: Latent Diffusion Models (LDM)**
+
+* **Latent Space Learning**
+
+  * Using autoencoders or VQ-GANs
+* **Compression Trade-offs**
+
+  * Speed vs. fidelity
+
+#### **Day 11: Hands-on with Stable Diffusion**
+
+* **Model Usage**
+
+  * Pre-trained model access via Hugging Face or CompVis
+  * Sampling, CFG (Classifier Free Guidance), inpainting
+
+#### **Day 12: Super-Resolution via Diffusion**
+
+* **SR3 Model**
+
+  * Using conditional UNet
+* **Upscaling Images**
+
+  * Architecture and training objective
+
+#### **Day 13: Inpainting & Editing**
+
+* **Inpainting Techniques**
+
+  * Partial image masking and denoising
+  * Real-time photo editing use cases
+
+#### **Day 14: Video Generation**
+
+* **Temporal Coherence**
+
+  * Extending DDPM to video frames
+  * 3D UNets, temporal transformers
+
+#### **Day 15: Diffusion for 3D Generation**
+
+* **Point Clouds and Meshes**
+
+  * Voxel diffusion and CAD applications
+
+#### **Day 16: Diffusion in Medical Imaging**
+
+* **Applications**
+
+  * MRI, CT scan reconstruction
+  * Low SNR denoising
+
+#### **Day 17: Audio and Speech**
+
+* **Models like DiffWave**
+
+  * Mel-spectrogram conditioning
+  * Speech synthesis and denoising
+
+#### **Day 18: Evaluation Metrics**
+
+* **Quantitative Evaluation**
+
+  * FID, IS, LPIPS
+* **Qualitative and Human Evaluation**
+
+  * User studies, prompt alignment
+
+#### **Day 19: Diffusion vs GANs and VAEs**
+
+* **Strengths & Weaknesses**
+
+  * Mode coverage, stability, sample quality
+
+#### **Day 20: Diffusion Transformers (DiT)**
+
+* **Transformers for Diffusion**
+
+  * Cross-attention, scalability
+* **Use cases**
+
+  * ImageNet class-conditioned generation
+
+#### **Day 21: Training Optimization**
+
+* **Speedup Techniques**
+
+  * EMA, mixed precision, checkpointing
+* **Sampling Parallelization**
+
+  * JAX, TPU/GPU acceleration
+
+#### **Day 22: Fine-tuning Diffusion**
+
+* **DreamBooth, Textual Inversion**
+
+  * Personalized generation
+* **Domain adaptation**
+
+  * Few-shot learning with diffusion
+
+#### **Day 23: Ethics and Safety**
+
+* **Bias, Misuse Prevention**
+
+  * Prompt filters, dataset curation
+* **Adversarial Threats**
+
+  * Robustness testing
+
+#### **Day 24: Diffusion for Embedding Learning**
+
+* **Data Augmentation via Diffusion**
+
+  * Self-supervised learning applications
+
+#### **Day 25: Capstone Projects**
+
+* **Use Case Implementation**
+
+  * Art generator, super-resolution service, inpainting UI
+* **Deployment Tools**
+
+  * TensorRT, ONNX, FastAPI
+
+#### **Day 26: Reinforcement Learning (RL) Introduction**
+
+* **Agent-Environment Loop**
+
+  * States, actions, rewards, policies
+* **Markov Decision Process (MDP)**
+
+  * Transition dynamics, discounting
+
+#### **Day 27: RL Algorithms (Model-Free)**
+
+* **Policy Gradient**
+
+  * REINFORCE algorithm
+* **Value-based Methods**
+
+  * Q-learning, SARSA
+
+#### **Day 28: Deep Q Networks (DQN)**
+
+* **Function Approximation**
+
+  * CNN + Q-function
+* **Stability Tricks**
+
+  * Target network, experience replay
+
+#### **Day 29: Actor-Critic and A3C**
+
+* **On-policy Learning**
+
+  * Combining value and policy networks
+* **Parallelism**
+
+  * Asynchronous updates
+
+#### **Day 30: PPO and Advanced Policy Gradient**
+
+* **Proximal Policy Optimization**
+
+  * Clipping surrogate loss
+  * TRPO vs PPO comparison
+
+#### **Day 31: Imitation and Offline Learning**
+
+* **Behavior Cloning**
+
+  * Supervised learning from expert trajectories
+* **Offline RL Challenges**
+
+  * Distributional shift
+
+#### **Day 32: RL in Generative Modeling**
+
+* **Reward Engineering**
+
+  * Aligning generations with user intent
+* **RLHF (Reinforcement Learning from Human Feedback)**
+
+  * Preference modeling, reward training
+
+#### **Day 33: RL with Diffusion Models**
+
+* **Diffusion Planning and Control**
+
+  * Diffuser: planning as conditional generation
+  * Trajectory modeling via diffusion
+
+#### **Day 34: Vision-Language Models and Multi-Modal Diffusion**
+
+* **Cross-modal Training**
+
+  * CLIP, Flamingo, BLIP
+  * Zero-shot and few-shot image/text tasks
+
+#### **Day 35: Open-Ended Generation with RL + Diffusion**
+
+* **Prompt Optimization Loop**
+
+  * Using RL to guide prompt tuning
+* **Goal-conditioned Diffusion**
+
+  * Reward-conditioned generation
+
+#### **Day 36: Diffusion + RL in Robotics and Control**
+
+* **Trajectory Prediction**
+
+  * Diffuser + motion planning
+* **Simulation Environments**
+
+  * MuJoCo, IsaacGym integration
+
+#### **Day 37: Productionizing RL + Diffusion Systems**
+
+* **System Design**
+
+  * Serving, orchestration, batching
+* **Monitoring and Feedback Loops**
+
+  * Logging and auto-retraining triggers
+
+#### **Day 38: Final Capstone Integration**
+
+* **Multi-domain Project**
+
+  * Custom image-to-image translation
+  * Voice cloning with reward alignment
+  * Robot control with trajectory generation
+
+---
+

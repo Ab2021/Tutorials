@@ -1,0 +1,651 @@
+📅 Week 1: Networking Foundations for AI/ML
+
+Day 1 – Network Topologies & Infrastructure Layers
+
+Main Topics:
+
+OSI vs TCP/IP models in AI contexts
+
+Spine-Leaf, Clos, ring topologies for GPU clusters
+
+Subtopics:
+
+Layer 2 vs Layer 3 switching: VLANs, routing protocols (OSPF, BGP)
+
+Data-center fabrics: leaf-spine design, multi-tier
+
+RDMA over Converged Ethernet (RoCE) vs InfiniBand
+
+Network Virtualization: VXLAN, NVGRE, Segmentation
+
+Intricacies:
+
+East-West traffic optimization for distributed training
+
+Congestion hotspots and buffer tuning
+
+Key Pointers:
+
+Map NN data flows to physical topology
+
+Tune MTU, priority flow control for HPC workloads
+
+Day 2 – IP Networking & Traffic Engineering
+
+Main Topics:
+
+IP addressing, CIDR, subnetting for multi-tenant clusters
+
+Traffic engineering with MPLS, TE-LDP, segment routing
+
+Subtopics:
+
+IPAM tools: design address plans
+
+Quality of Service (QoS): DSCP, queue scheduling
+
+Load balancing: ECMP, Anycast, DNS-based
+
+Software-Defined WAN (SD-WAN) principles
+
+Intricacies:
+
+Preventing link oversubscription under high-throughput
+
+Balancing latency-sensitive vs bulk data pipelines
+
+Key Pointers:
+
+Define traffic classes for model training vs inference
+
+Use telemetry for dynamic path adjustments
+
+Day 3 – High-Performance Networking & Acceleration
+
+Main Topics:
+
+InfiniBand, RoCE v2, NVLink for GPU-to-GPU
+
+Network acceleration cards (SmartNICs, DPUs)
+
+Subtopics:
+
+RDMA verbs: reliable vs unreliable transports
+
+SmartNIC offload: TCP/IP, encryption, kTLS
+
+NVLink bridge architectures
+
+PCIe Gen4/5 topology and bandwidth
+
+Intricacies:
+
+OS bypass and zero-copy APIs impact on throughput
+
+Ensuring flow-control coherence across fabrics
+
+Key Pointers:
+
+Leverage DPU offloads for AI service mesh
+
+Monitor NIC queues to preempt congestion
+
+Day 4 – Network Security Basics & Perimeter Defense
+
+Main Topics:
+
+Firewall architectures: stateful vs stateless
+
+IDS/IPS fundamentals in AI environments
+
+Subtopics:
+
+Network ACLs vs security groups
+
+Deep packet inspection (DPI) for ML traffic
+
+Next-gen firewalls: application awareness
+
+DMZ and bastion host patterns
+
+Intricacies:
+
+Encrypted training data flows vs inspection capabilities
+
+Firewall latency vs throughput trade-offs
+
+Key Pointers:
+
+Place IDS inline for anomaly detection
+
+Use Micro‑segmentation for lateral defense
+
+Day 5 – Service Mesh & East-West Security
+
+Main Topics:
+
+Service mesh concepts: Istio, Linkerd, Consul Connect
+
+mTLS, mutual authentication for microservices
+
+Subtopics:
+
+Sidecar proxy injection and traffic routing
+
+Policy enforcement: authentication, authorization
+
+Telemetry: distributed tracing, metrics, logs
+
+Circuit breaker and retry policies
+
+Intricacies:
+
+Performance overhead of sidecars on inference latency
+
+Certificate rotation and SPIFFE identities
+
+Key Pointers:
+
+Enforce zero-trust for all intra-cluster calls
+
+Visualize service-topology graphs for audit
+
+📅 Week 2: Secure Infrastructure & Automation
+
+Day 6 – Infrastructure-as-Code Security & Compliance
+
+Main Topics:
+
+Secure IaC with Terraform, Pulumi, Crossplane
+
+Policy-as-code: OPA, Sentinel, Gatekeeper
+
+Subtopics:
+
+IaC module hardening: least privilege IAM
+
+Automated policy testing: policy unit tests
+
+Secret management: Vault, AWS KMS, Azure Key Vault
+
+Drift detection and compliance scanning
+
+Intricacies:
+
+Preventing secret leakage in CI logs
+
+Balancing modularity vs policy enforcement
+
+Key Pointers:
+
+Enforce code reviews for IaC changes
+
+Integrate policy checks into CI/CD
+
+Day 7 – Container & Host Hardening
+
+Main Topics:
+
+Container security: image scanning, runtime defense
+
+Host-level hardening: CIS Benchmarks, kernel lockdown
+
+Subtopics:
+
+Building minimal base images
+
+Runtime tools: Falco, AppArmor, SELinux
+
+Kernel parameters: network namespace, sysctl hardening
+
+Patch management: automated updates, canary rollouts
+
+Intricacies:
+
+Ensuring compatibility with GPU drivers
+
+Mitigating container escape attacks
+
+Key Pointers:
+
+Use immutable container registries
+
+Automate CVE scanning and patch pipelines
+
+Day 8 – Identity & Access Management for AI/ML
+
+Main Topics:
+
+Authentication protocols: LDAP, OIDC, SAML
+
+Authorization: RBAC, ABAC, IAM policies
+
+Subtopics:
+
+Service account management for training jobs
+
+Fine‑grained RBAC in Kubernetes and cloud
+
+Short‑lived credentials and token refresh
+
+Audit logging of access events
+
+Intricacies:
+
+Least-privilege vs operational agility
+
+Preventing privilege escalation in multi-tenant clusters
+
+Key Pointers:
+
+Rotate keys and tokens regularly
+
+Implement just-in-time access workflows
+
+Day 9 – API Gateways & Secure Inference Endpoints
+
+Main Topics:
+
+API gateway features: rate-limiting, authentication
+
+Secure serving: SSL/TLS, JWT, API keys
+
+Subtopics:
+
+Traffic throttling vs burst capacity planning
+
+Bot detection and WAF integration
+
+Certificate management and renewal
+
+Mutual TLS for client-service auth
+
+Intricacies:
+
+Latency overhead of API policies
+
+Key rotation without endpoint downtime
+
+Key Pointers:
+
+Centralize policy management in gateway
+
+Monitor anomaly patterns in API logs
+
+Day 10 – Vulnerability Management & Penetration Testing
+
+Main Topics:
+
+CVE lifecycle: discovery, patch, mitigation
+
+Red teaming & pentesting for AI infra
+
+Subtopics:
+
+Automated vulnerability scanning: Nessus, OpenVAS
+
+ML-specific threat models: model poisoning, data exfiltration
+
+Pen-testing workflows: reconnaissance to exploitation
+
+Reporting and remediation tracking
+
+Intricacies:
+
+Testing live GPU clusters without disruption
+
+Simulating adversarial ML attacks
+
+Key Pointers:
+
+Schedule regular pentests on non-prod environments
+
+Integrate scan reports with ticketing systems
+
+📅 Week 3: Monitoring, Threat Intelligence & Incident Response
+
+Day 11 – Security Monitoring & SIEM for AI/ML
+
+Main Topics:
+
+SIEM tools: Splunk, ELK, Azure Sentinel
+
+Log aggregation: network, host, container logs
+
+Subtopics:
+
+Normalizing logs across hybrid environments
+
+Correlating ML pipeline events with security alerts
+
+Threat hunting use-cases: anomalous model access
+
+Alert fatigue management
+
+Intricacies:
+
+High-volume log ingestion costs
+
+Real-time vs batch analysis trade-offs
+
+Key Pointers:
+
+Define use-case-driven detections
+
+Tune alert thresholds to reduce noise
+
+Day 12 – Threat Intelligence & SOAR Integration
+
+Main Topics:
+
+Threat intel feeds: STIX/TAXII, MISP
+
+SOAR platforms: Cortex XSOAR, Splunk SOAR
+
+Subtopics:
+
+Mapping threat intel to network indicators
+
+Automated playbooks for containment
+
+Feedback loops to ML-secured workloads
+
+Orchestrating multi-tool workflows
+
+Intricacies:
+
+Ensuring timely intel updates without false positives
+
+Key Pointers:
+
+Build modular playbooks for rapid adaptation
+
+Combine signature and ML-driven detections
+
+Day 13 – Incident Response & Digital Forensics
+
+Main Topics:
+
+IR process: detection, containment, eradication
+
+Forensics: packet capture, host memory analysis
+
+Subtopics:
+
+IR runbooks for AI/ML-specific incidents
+
+Evidence collection in distributed clusters
+
+Automated triage: YARA rules, IOC matching
+
+Post-incident reporting and lessons learned
+
+Intricacies:
+
+Preserving volatile GPU memory contents
+
+Correlating logs across silos for root cause
+
+Key Pointers:
+
+Automate initial containment steps (quarantine nodes)
+
+Document chain-of-custody for evidence
+
+Day 14 – Zero Trust & Micro-Segmentation Strategies
+
+Main Topics:
+
+Zero trust principles for AI/ML environments
+
+Micro-segmentation with Calico, Cilium
+
+Subtopics:
+
+Defining trust zones per workload
+
+Policy authoring: label- and tag-based
+
+Dynamic policy updates and audits
+
+Tool integration: service mesh + segmentation
+
+Intricacies:
+
+Scaling policies in large clusters
+
+Preventing policy conflicts and blind spots
+
+Key Pointers:
+
+Continuously validate segmentation with test traffic
+
+Use visualization tools for policy coverage
+
+Day 15 – Secure Hybrid & Multi-Cloud Networking
+
+Main Topics:
+
+VPN, VPC peering, Transit Gateways
+
+Encryption in transit: IPsec, TLS, wireguard
+
+Subtopics:
+
+Designing secure connectivity across clouds
+
+Managing cross-region latency and egress costs
+
+Certificate and key distribution at scale
+
+Automated failover and health checks
+
+Intricacies:
+
+Synchronizing security groups across providers
+
+Handling policy differences per cloud vendor
+
+Key Pointers:
+
+Automate VPN tunnel monitoring and rekeying
+
+Tag resources for unified policy enforcement
+
+Day 16 – Compliance & Privacy for AI/ML Workloads
+
+Main Topics:
+
+Regulatory frameworks: GDPR, HIPAA, PCI DSS
+
+Data residency and sovereignty
+
+Subtopics:
+
+Mapping data flows to compliance zones
+
+Encryption at rest: KMS integration, BYOK
+
+Audit logging for regulated datasets
+
+Pseudonymization and masking techniques
+
+Intricacies:
+
+Balancing performance with encryption overhead
+
+Ensuring immutable audit trails
+
+Key Pointers:
+
+Automate compliance checks via policy-as-code
+
+Maintain clear data classification taxonomy
+
+Day 17 – Advanced Threat Modeling for AI/ML
+
+Main Topics:
+
+Threat modeling methodologies: STRIDE, PASTA
+
+Attack surface analysis for ML pipelines
+
+Subtopics:
+
+Identifying assets: models, data stores, endpoints
+
+Enumerating threats: poisoning, evasion, inference
+
+Prioritization: DREAD scoring, risk matrices
+
+Mitigation plans: secure design patterns
+
+Intricacies:
+
+Modeling emerging threats in LLMOps
+
+Integrating threat models into SDLC
+
+Key Pointers:
+
+Update threat models periodically
+
+Involve cross-functional teams in workshops
+
+Day 18 – Secure CI/CD & Pipeline Hardening
+
+Main Topics:
+
+Pipeline security: supply-chain hardening (SLSA)
+
+Secrets management and ephemeral credentials
+
+Subtopics:
+
+SBOM generation for ML artifacts
+
+Signing and verifying container images
+
+Ephemeral build agents and isolation
+
+Dependency vulnerability scanning
+
+Intricacies:
+
+Ensuring reproducibility while securing pipelines
+
+Handling large ML dependencies securely
+
+Key Pointers:
+
+Adopt build provenance tracking
+
+Enforce minimal base images and scan nightly
+
+Day 19 – Chaos Engineering for Security Resilience
+
+Main Topics:
+
+Security chaos tests: firewall failures, DDoS
+
+Resilience metrics and SLA validation
+
+Subtopics:
+
+Injecting network partitions and packet loss
+
+Simulating compromised service mesh sidecars
+
+Measuring recovery times and failure modes
+
+Automated rollback triggers on breaches
+
+Intricacies:
+
+Avoid cascading failures during tests
+
+Ensuring safe blast radius definitions
+
+Key Pointers:
+
+Schedule security chaos in staging first
+
+Monitor SLA deviations and report metrics
+
+Day 20 – AI-Specific Vulnerability Research & Red Teams
+
+Main Topics:
+
+Adversarial ML threat research: poisoning, extraction
+
+Red-team exercises for AI/ML
+
+Subtopics:
+
+Crafting adversarial examples against models
+
+Model extraction via API probing
+
+Data poisoning attacks in pipelines
+
+Blue-team vs red-team coordination
+
+Intricacies:
+
+Ethical considerations in adversarial testing
+
+Controlling test impact on production data
+
+Key Pointers:
+
+Isolate adversarial tests to sandbox
+
+Document vulnerabilities and patch cycles
+
+Day 21 – Emerging Trends: Quantum-Safe Networking & Post-Quantum Crypto
+
+Main Topics:
+
+Post-quantum algorithms: lattice-based, hash-based signatures
+
+Quantum-safe transport protocols
+
+Subtopics:
+
+Evaluating PQC algorithms for latency
+
+Hybrid handshakes: classical + post-quantum
+
+Impact on GPU cluster interconnects
+
+Migration planning for AI infra
+
+Intricacies:
+
+Key size and performance trade-offs
+
+Interoperability with legacy systems
+
+Key Pointers:
+
+Prototype PQC in test networks
+
+Monitor standardization updates (NIST)
+
+Day 22 – Capstone: Design & Secure Deployment Workshop
+
+Activities:
+
+Design a secure, high‑performance network for an AI/ML pipeline
+
+Implement key controls: zero‑trust, micro‑segmentation, encrypted fabrics
+
+Validate with chaos tests, pentests, and compliance scans
+
+Present architecture, security posture, and lessons learned
+
+Key Pointers:
+
+Emphasize defense‑in‑depth layers
+
+Align security with AI performance SLAs
