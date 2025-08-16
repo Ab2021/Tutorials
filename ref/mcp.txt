@@ -1,0 +1,252 @@
+The Definitive Guide to the Model Context Protocol (MCP)
+Module 1: Foundations of MCP
+This module introduces the core concepts, architecture, and communication standards that underpin the entire protocol, setting the stage for all subsequent learning.
+
+Lesson 1.1: Introduction to MCP
+What is MCP?: An open standard for standardizing how Large Language Models (LLMs) interact with external data and tools. Before MCP, integrations were often bespoke, leading to a fragmented and insecure ecosystem. MCP provides a common language for these interactions.
+
+The "Why": Solving the problem of creating a universal, secure, and flexible bridge between AI models and the outside world. This allows models to move beyond their pre-trained knowledge and perform real-time actions and data retrieval safely.
+
+Key Goals:
+
+Enhancing Model Functionality: Give LLMs access to databases, APIs, local files, and command-line tools.
+
+Ensuring Security: Create a clear, auditable boundary between the AI and sensitive resources, with the user always in control.
+
+Promoting a Standardized Ecosystem: Allow developers to build tools and data sources that work with any MCP-compliant AI application, fostering interoperability.
+
+Lesson 1.2: The MCP Architecture
+The Three Core Components:
+
+Host: The end-user application (e.g., an IDE like Cursor, a desktop app). This is the environment the user directly interacts with.
+
+MCP Client: The component within the Host that speaks the MCP language. It acts as a secure intermediary, managing communication and enforcing permissions.
+
+MCP Server: The backend service providing the data and tools. This can be a local executable or a remote HTTP service.
+
+The Connection Model: A strict 1:1 relationship between a client and a server. This ensures that communication is isolated and secure for each session.
+
+Visualizing the Flow:  The user interacts with the Host application. The Host's MCP Client establishes a connection with an MCP Server. The Client can then discover and invoke the Server's capabilities (tools, resources, prompts), often with the LLM guiding the interaction and the user giving final approval.
+
+Lesson 1.3: The Language of MCP: JSON-RPC 2.0
+Deep Dive into the Message Format:
+
+Request Object: Sent to invoke a method. Its id is crucial for matching the response.
+
+Example: { "jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {} }
+
+Response Object: The reply to a Request. It must contain the same id.
+
+Success Example: { "jsonrpc": "2.0", "id": 1, "result": { "tools": [...] } }
+
+Error Example: { "jsonrpc": "2.0", "id": 1, "error": { "code": -32601, "message": "Method not found" } }
+
+Notification Object: A one-way message from the server to the client. It has no id and should not be responded to.
+
+Example: { "jsonrpc": "2.0", "method": "resources/updated", "params": { "uri": "file:///path/to/file.txt" } }
+
+Module 2: The Transport Layer: How MCP Communicates
+This module covers the mechanisms for sending and receiving MCP messages, including the evolution of the protocol's transport standards.
+
+Lesson 2.1: Standard Transport Mechanisms
+Standard I/O (stdio):
+
+Use Case: Ideal for local development, command-line tools, and integrating an MCP server as a subprocess of the Host application.
+
+How it Works: The client and server communicate by writing to and reading from their standard input and output streams. This is the simplest transport for local-only interactions.
+
+Server-Sent Events (SSE):
+
+Use Case: Web applications requiring real-time, one-way communication from the server to the client (e.g., progress updates, resource change notifications).
+
+How it Works: The client sends standard POST requests to an endpoint (e.g., /message). The server can then hold that connection open and stream Notification messages back over a persistent HTTP connection using the Content-Type: text/event-stream header.
+
+Lesson 2.2: The Evolution to Streamable HTTP
+Limitations of the Original HTTP + SSE Model:
+
+No Connection Resumption: If a mobile client on an unstable network dropped the SSE connection, the entire session was lost.
+
+High Server Load: Maintaining thousands of persistent connections was resource-intensive for servers.
+
+Inflexible Communication: The server could only push notifications; it couldn't make its own requests to the client.
+
+Introducing Streamable HTTP (The Modern Standard):
+
+Key Advantages: Supports stateless servers (improving scalability), is fully backward-compatible, and simplifies the protocol by removing the need for a separate /sse endpoint.
+
+How it Works: Any standard HTTP request from the client can be "upgraded" by the server to an SSE stream if needed. This provides maximum flexibility, allowing for simple request-response interactions or long-lived streaming connections as the situation demands. This also avoids the complexities of WebSockets, such as the lack of header support in browser environments.
+
+Module 3: Building an MCP Server: The Three Primitives
+This module is a practical, hands-on guide to creating the core building blocks of any MCP server.
+
+Lesson 3.1: Understanding the Server Primitives
+Prompts: Reusable, parameterized templates for user interaction. They can be simple (a single message) or complex (a multi-turn conversation workflow).
+
+Example: A "git-commit-message" prompt that takes a diff resource as an argument.
+
+Resources: Read-only contextual data, identified by a unique URI. The URI scheme is defined by the server.
+
+Examples: file:///path/to/code.py, postgres://db/users/123, screen://localhost/display1.
+
+Tools: Executable functions that an LLM can call to perform actions. The inputSchema (a JSON Schema) is critical for the LLM to understand how to use the tool correctly.
+
+Example: A github_create_issue tool with title and body properties in its schema.
+
+Lesson 3.2: The Control Level Hierarchy
+User-Controlled: Prompts (e.g., slash commands). The user explicitly initiates the action.
+
+Application-Controlled: Resources (e.g., the content of an open file). The application provides this context automatically.
+
+Model-Controlled: Tools (e.g., an API call the LLM decides to make). The model initiates the action to fulfill the user's request.
+
+Lesson 3.3: Practical Server Implementation (Go)
+Setup: Installing the mcp-go library with go get.
+
+Step 1: The Server Skeleton: Creating a server instance with server.NewMCPServer("My Server", "1.0.0").
+
+Step 2: Implementing a Tool:
+
+Define the tool's schema with mcp.NewTool(), specifying parameters with helpers like mcp.WithString() and mcp.Required().
+
+Write the handler function to safely cast and use the request.Params.Arguments map.
+
+Register the tool and its handler with s.AddTool().
+
+Step 3: Implementing a Resource:
+
+Define the resource with mcp.NewResource(), providing a clear URI, name, and MIME type.
+
+The handler function contains the logic to fetch the data (e.g., os.ReadFile()).
+
+Register the resource with s.AddResource().
+
+Step 4: Implementing a Prompt:
+
+Define the prompt and its arguments with mcp.NewPrompt() and mcp.WithArgument().
+
+The handler generates a GetPromptResult containing a list of PromptMessage objects.
+
+Register the prompt with s.AddPrompt().
+
+Step 5: Launching the Server: Using server.ServeStdio() for local execution, which will listen for JSON-RPC messages on standard input.
+
+Module 4: Building an MCP Client: Interacting with Servers
+This module focuses on the client side, covering how to connect to servers, discover their capabilities, and utilize them effectively.
+
+Lesson 4.1: Advanced Client-Side Concepts
+Roots: Defining the operational scope for a server by providing one or more root URIs. This is a crucial security feature, acting as a sandbox to prevent a server from accessing unintended files or resources.
+
+Sampling: The "human-in-the-loop" mechanism for when a server needs the LLM's help.
+
+The Flow:
+
+Server sends a sampling/createMessage request with the desired prompt and context.
+
+Client receives the request and can present it to the user for approval or modification.
+
+Client sends the (potentially modified) request to the LLM.
+
+Client receives the LLM's response and can again allow the user to review or edit it.
+
+Client returns the final result to the server.
+
+Purpose: This ensures ultimate user control and security, preventing the server from directly interacting with the LLM without oversight.
+
+Lesson 4.2: Practical Client Implementation (Go)
+Step 1: Creating the Client: Using client.NewStdioMCPClient() to launch and connect to a server executable as a subprocess.
+
+Step 2: The Handshake: Sending an Initialize request with the client's name, version, and supported protocol version. This is the first step in any MCP session.
+
+Step 3: Discovery: Calling ListPrompts, ListResources, and ListTools to dynamically build a UI or inform the LLM of the server's available capabilities.
+
+Step 4: Execution: Constructing a CallToolRequest with the tool's name and a map of arguments that conforms to its schema. Then, sending it with mcpClient.CallTool() and processing the CallToolResult.
+
+Module 5: Real-World Applications and Advanced Scenarios
+This module moves beyond the basics to demonstrate how MCP is used to build sophisticated, multi-functional AI applications.
+
+Lesson 5.1: Case Study 1: The IP Geolocation Server
+Objective: Build a server that provides a tool to get geographic information for an IP address.
+
+Architecture: A clean separation of concerns:
+
+A service layer handles the external GET request to ip-api.com and JSON parsing.
+
+A tools layer defines the ip-details tool, which calls the service layer.
+
+A server layer registers the tool and starts the transport listener.
+
+Key Takeaway: A practical, self-contained example of integrating third-party APIs into a secure and reusable MCP tool.
+
+Lesson 5.2: Case Study 2: The AI-Powered Trip Planner
+Objective: Create an AI assistant that can generate and deploy a webpage for a travel itinerary from a few simple prompts.
+
+The Multi-Server Architecture: This demonstrates the power of composition. The Host application connects to multiple, independent MCP servers simultaneously.
+
+Amap Maps MCP Server: Provides location-based data.
+
+EdgeOne Pages Deploy MCP Server: Provides a tool for instant, one-shot webpage deployment.
+
+The Workflow:
+
+User: "Plan a one-day trip in Shenzhen."
+
+AI: (Calls Amap Maps server's text_search tool to find attractions and restaurants).
+
+AI: (Synthesizes the data into a logical itinerary and generates a complete HTML file).
+
+User: "Looks good, deploy it."
+
+AI: (Calls EdgeOne Pages server's deploy tool with the HTML content).
+
+AI: "Here is the public URL: ..."
+
+Key Takeaway: This showcases the ultimate vision of MCP: a vibrant ecosystem of specialized, interoperable tools that can be combined to create incredibly powerful AI agents.
+
+Module 6: The Cutting Edge: Protocol Evolution and Best Practices
+This final module covers the latest updates to the MCP specification, ensuring your knowledge is current and your applications are secure and robust.
+
+Lesson 6.1: Deep Dive into the June 18, 2025 Protocol Update
+Security Overhaul:
+
+Problem: A malicious server could potentially trick a client into sending it an access token intended for another service.
+
+Solution: MCP servers are now classified as OAuth Resource Servers, and clients MUST implement Resource Indicators (RFC 8707) to specify the intended audience of a token, preventing misuse.
+
+Enhanced Interactivity:
+
+Problem: A tool might need more information from the user after starting.
+
+Solution: The elicitation/create method allows a server to pause execution and formally request additional input from the user mid-workflow.
+
+Richer Tooling:
+
+Problem: Tool outputs were often just unstructured text, making them hard to parse reliably.
+
+Solution: Tools can now define an outputSchema for verifiable, structured JSON results.
+
+Problem: Returning large files (like images or videos) in a tool result is inefficient.
+
+Solution: Tools can now return Resource Links, a URI pointing to the content, which the client can then fetch separately.
+
+Stricter Protocol Compliance:
+
+Problem: In a stateless HTTP environment, the server wouldn't know which protocol version the client was using after the initial handshake.
+
+Solution: The MCP-Protocol-Version header is now mandatory in all HTTP requests.
+
+Lesson 6.2: Best Practices and Future Outlook
+Designing Robust Servers:
+
+Write clear, detailed descriptions for all tools and prompts.
+
+Implement versioning for your server and its capabilities.
+
+Handle errors gracefully and return structured JSON-RPC error objects.
+
+Building Secure Clients:
+
+Always validate inputs from servers.
+
+Manage scopes and permissions carefully, always asking for user consent before executing potentially destructive tools.
+
+The Future of MCP: MCP is a foundational layer for the future of AI. It will be crucial for the development of autonomous agents, multi-agent systems, and a decentralized ecosystem of AI-accessible tools and services.
