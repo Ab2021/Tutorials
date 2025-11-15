@@ -41,3 +41,18 @@ This section provides a detailed comparison of these three frameworks to help yo
     *   You want a framework that is specifically designed for multi-agent collaboration.
 
 Ultimately, the best way to choose a framework is to try them out for yourself. The exercises in the previous days should have given you a good feel for the basic workflow of each framework. For your final project, you might want to try implementing the same agentic system in two different frameworks to get a deeper understanding of their similarities and differences.
+
+## Developer Experience
+
+| Aspect                  | LangGraph                                                              | AutoGen                                                                    | CrewAI                                                                        |
+| ----------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| **Documentation**       | Comprehensive, but can be dense. Assumes a good understanding of LangChain. | Good documentation with a focus on practical examples.                     | Excellent documentation that is clear, concise, and easy to follow.           |
+| **Debugging**           | Can be challenging due to the low-level nature of the framework. Tools like LangSmith are essential. | Relatively easy to debug, as the conversation history provides a clear audit trail. | Easy to debug, with clear error messages and a simple, intuitive workflow.     |
+| **Community Support**   | Very active community as part of the broader LangChain ecosystem.      | Growing community, with good support from Microsoft Research.              | Rapidly growing and very active community.                                    |
+
+## Future Outlook
+
+*   **LangGraph:** As part of the LangChain ecosystem, LangGraph is likely to continue to evolve rapidly, with a focus on adding more advanced features for building complex, stateful applications.
+*   **AutoGen:** AutoGen is a key part of Microsoft's strategy for democratizing AI, so we can expect to see continued investment in the framework, with a focus on making it even easier to use and more powerful.
+*   **CrewAI:** CrewAI has gained a lot of traction in a short amount of time, and it is likely to continue to grow in popularity. We can expect to see more features for building and managing complex crews, as well as more integrations with other tools and platforms.
+

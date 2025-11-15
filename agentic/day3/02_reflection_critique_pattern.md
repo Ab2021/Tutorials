@@ -1,121 +1,64 @@
-# Day 3, Topic 2: The Reflection/Critique Pattern
+# Day 3, Topic 2: An Expert's Guide to the Reflection/Critique Pattern
 
-Agents, especially those based on LLMs, can sometimes produce outputs that are incorrect, incomplete, or suboptimal. The **Reflection/Critique Pattern** is a powerful technique for addressing this by enabling agents to iteratively improve their own work.
+## 1. The Philosophy of Reflection: Learning from Experience
 
-This pattern involves having an agent (or a separate "critic" agent) review and critique an output, and then use that feedback to generate a better version.
+Reflection is a cornerstone of human learning. As the educational theorist Donald Schön argued in his work on "reflective practice," we learn not just by doing, but by reflecting on what we have done. This process of "thinking about our thinking" allows us to identify our mistakes, to understand why we made them, and to develop new strategies for improving our performance in the future.
 
-## Enabling Agents to Learn from Experience
+The Reflection/Critique pattern applies this same philosophy to AI agents. It is based on the idea that an agent can improve its performance by generating an output, critiquing that output, and then using the critique to generate a revised and improved output.
 
-The core idea behind the Reflection/Critique Pattern is to mimic the human process of self-improvement. When we work on a task, we often:
+## 2. A Taxonomy of Reflection Strategies
 
-1.  Produce a first draft.
-2.  Review and critique our own work.
-3.  Identify areas for improvement.
-4.  Revise the work based on our critique.
+*   **Self-Critique:** The simplest form of reflection, where an agent evaluates its own output.
+*   **External Critique:** A separate "critic" agent evaluates the output of a "worker" agent. This can be more effective than self-critique, as it allows for a diversity of perspectives.
+*   **Human-in-the-Loop Critique:** A human provides feedback on the agent's output. This is the most reliable form of critique, but it is also the most expensive.
+*   **Tool-Interactive Critiquing:** An agent uses tools to validate its output. For example, a code-generating agent might run its generated code through a linter or a test suite to check for errors.
 
-The Reflection/Critique Pattern applies this same process to AI agents. It allows an agent to "learn from its experience" within the context of a single task, leading to higher-quality outputs.
+## 3. The "Reflexion" Framework: A Case Study
 
-## How it Works: The Reflection Loop
+A key paper in this area is "Reflexion: Language Agents with Verbal Reinforcement Learning" by Shinn et al. The Reflexion framework enables an agent to learn from its mistakes through a process of "verbal reinforcement learning."
 
-The pattern typically works as follows:
+Instead of using a numerical reward signal, the Reflexion agent uses a text-based critique of its own performance to update its internal "memory" of what works and what doesn't. This allows the agent to learn and adapt its behavior without the need for expensive model fine-tuning.
 
-1.  **Initial Output Generation:** The agent generates an initial output for a given task. This could be a piece of text, a plan, a piece of code, or any other output.
-2.  **Reflection and Critique:** The agent is then prompted to reflect on and critique its own output. This is the key step. The prompt might ask questions like:
-    *   "Review the previous response. Are there any errors or inconsistencies?"
-    *   "Is this the best possible output, or are there ways to improve it?"
-    *   "Does the output fully address the user's request?"
-3.  **Feedback Generation:** The LLM, in "reflection mode," generates a critique of the initial output. This critique identifies specific flaws or areas for improvement.
-4.  **Revision:** The agent is then given the original prompt, the initial output, and the critique, and is asked to generate a revised and improved output.
+## 4. Advanced Reflection Techniques
 
-This loop can be repeated multiple times, with the agent iteratively refining its output until it reaches a satisfactory level of quality.
+*   **Multi-turn Reflection:** An agent can engage in a multi-turn dialogue with itself to refine its thoughts. This is analogous to the human process of "thinking things through."
+*   **Constitutional AI:** The idea of giving an agent a set of principles or a "constitution" to guide its self-correction process. For example, an agent might be given a constitution that instructs it to be helpful, harmless, and honest.
+*   **The Role of Feedback:** The reflection process is driven by feedback. This can be human feedback, environmental feedback (e.g., the result of a tool call), or model-generated feedback (e.g., the output of a critic agent).
 
-## A Concrete Example: Improving a Biography
+## 5. Real-World Applications of Reflective Agents
 
-Let's walk through a concrete example of the Reflection/Critique pattern in action, using a separate "critic" agent to improve a short biography of Marie Curie.
+*   **Improving the accuracy of code generation:** A reflective agent can write a piece of code, run it through a test suite, and then use the test results to debug and improve the code.
+*   **Enhancing the quality of creative writing:** A reflective agent can write a story, critique it for plot holes and inconsistencies, and then revise it to make it more compelling.
+*   **Increasing the robustness of question-answering systems:** A reflective agent can answer a question, search for evidence to support its answer, and then revise its answer if it finds conflicting information.
 
-### 1. The Worker Prompt
+## 6. Code Example
 
-```
-Write a short biography of Marie Curie.
-```
+```python
+# This is a conceptual example of a worker-critic interaction.
 
-### 2. The Initial Output (from the Worker Agent)
+def reflective_agent(query, tools):
+    # 1. Worker generates initial output
+    worker_prompt = f"Question: {query}"
+    initial_output = llm_worker(worker_prompt)
 
-```
-Marie Curie was a famous scientist. She did important research on radioactivity. She was the first woman to win a Nobel Prize.
-```
+    # 2. Critic critiques the output
+    critic_prompt = f"Please critique the following output: {initial_output}"
+    critique = llm_critic(critic_prompt)
 
-This output is factually correct, but it's a bit simplistic and lacks detail.
+    # 3. Worker revises the output based on the critique
+    reviser_prompt = f"Original query: {query}\nInitial output: {initial_output}\nCritique: {critique}\nPlease provide a revised and improved output."
+    revised_output = llm_worker(reviser_prompt)
 
-### 3. The Critic Prompt
-
-Now, we'll use a "critic" agent to review this initial output. The critic is given a specific prompt that encourages it to be thorough and to provide actionable feedback.
-
-```
-You are a helpful assistant who reviews and critiques texts. Please review the following biography of Marie Curie and provide feedback on how it could be improved. Be specific and provide actionable suggestions.
-
-Biography:
-"Marie Curie was a famous scientist. She did important research on radioactivity. She was the first woman to win a Nobel Prize."
+    return revised_output
 ```
 
-### 4. The Critique (from the Critic Agent)
+## 7. Exercises
 
-```
-The biography is a good start, but it could be improved in several ways:
+1.  Implement a simple two-agent critique system where one agent writes a short paragraph on a given topic, and a second agent critiques it.
+2.  How could you use the "Constitutional AI" approach to build a safer and more ethical agent?
 
-1.  **Add more specific details:** The biography is very general. It could be improved by adding more specific details about her life and work. For example, what were her major discoveries? What were the names of the elements she discovered?
-2.  **Mention her second Nobel Prize:** The biography only mentions that she was the first woman to win a Nobel Prize, but it doesn't mention that she won a second one in a different field, which is a very significant achievement.
-3.  **Elaborate on her impact:** The biography mentions that she did "important research," but it doesn't explain what the impact of that research was. How did her work change the world?
-4.  **Improve the flow and style:** The sentences are a bit choppy. The biography could be improved by using more varied sentence structures and transition words to make it flow more smoothly.
-```
+## 8. Further Reading and References
 
-### 5. The Revision Prompt
-
-Finally, we'll give the original prompt, the initial output, and the critique to a "reviser" agent (which could be the same as the worker agent) and ask it to generate a revised output.
-
-```
-Please revise the following biography of Marie Curie based on the provided critique.
-
-Original Biography:
-"Marie Curie was a famous scientist. She did important research on radioactivity. She was the first woman to win a Nobel Prize."
-
-Critique:
-1.  **Add more specific details:** The biography is very general. It could be improved by adding more specific details about her life and work. For example, what were her major discoveries? What were the names of the elements she discovered?
-2.  **Mention her second Nobel Prize:** The biography only mentions that she was the first woman to win a Nobel Prize, but it doesn't mention that she won a second one in a different field, which is a very significant achievement.
-3.  **Elaborate on her impact:** The biography mentions that she did "important research," but it doesn't explain what the impact of that research was. How did her work change the world?
-4.  **Improve the flow and style:** The sentences are a bit choppy. The biography could be improved by using more varied sentence structures and transition words to make it flow more smoothly.
-```
-
-### 6. The Revised Output
-
-```
-Marie Curie was a pioneering physicist and chemist who conducted groundbreaking research on radioactivity. Her work led to the discovery of two new elements, polonium and radium. A true trailblazer, she was the first woman to win a Nobel Prize, and she remains the only person to have won Nobel Prizes in two different scientific fields (Physics in 1903 and Chemistry in 1911). Her research not only revolutionized our understanding of the atom but also laid the foundation for modern nuclear physics and cancer treatments.
-```
-
-As you can see, the revised output is much more detailed, informative, and well-written than the initial output. This is the power of the Reflection/Critique pattern.
-
-## A Word of Caution: The Risk of Over-Correction
-
-While the Reflection/Critique pattern is very powerful, it's important to be aware of the risk of **over-correction**. This is a situation where an agent gets stuck in a loop of critiquing and re-writing its own work without making any substantial progress. The agent might make a series of small, insignificant changes, or it might even make the output worse in its attempt to "improve" it.
-
-To mitigate this risk, it's a good idea to:
-
-*   **Limit the number of reflection cycles:** Don't allow the agent to reflect on its own work indefinitely. Limit it to one or two cycles of reflection, and then take the best output.
-*   **Use a separate "judge" agent:** You can use a third agent to act as a "judge" that compares the initial output with the revised output and decides which one is better.
-*   **Incorporate human feedback:** Ultimately, the best way to avoid over-correction is to incorporate human feedback into the process. A human can provide the common-sense judgment needed to decide when an output is "good enough."
-
-
-
-## Storing and Using Feedback
-
-The feedback generated during the reflection process can also be stored and used to improve the agent's performance on future tasks. This is a form of online learning, where the agent continuously improves over time.
-
-For example, if an agent consistently makes a particular type of error, and this error is repeatedly identified during the reflection process, the system could be designed to automatically fine-tune the agent's base model to correct for this bias.
-
-## Exercise
-
-1.  **Take a previously generated output from an agent (e.g., the travel plan from the morning session).**
-2.  **Write a prompt to an LLM to act as a "critic" and provide feedback on the plan.**
-    *   *Your prompt should encourage the critic to be thorough and to identify specific, actionable areas for improvement.*
-3.  **Use the feedback to improve the original plan.**
-    *   *You can do this manually, or you can write another prompt that gives the LLM the original plan and the critique, and asks it to generate a revised plan.*
+*   Shinn, N., et al. (2023). *Reflexion: Language Agents with Verbal Reinforcement Learning*. arXiv preprint arXiv:2303.11366.
+*   Madaan, A., et al. (2023). *Self-Refine: Iterative Refinement with Self-Feedback*. arXiv preprint arXiv:2303.17651.
+*   Gou, Z., et al. (2024). *CRITIC: Large Language Models Can Self-Correct with Tool-Interactive Critiquing*. arXiv preprint arXiv:2402.02339.

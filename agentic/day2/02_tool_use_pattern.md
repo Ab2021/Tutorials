@@ -1,67 +1,73 @@
-# Day 2, Topic 2: The Tool Use Pattern
+# Day 2, Topic 2: An Expert's Guide to the Tool Use Pattern
 
-The Tool Use pattern is another essential design pattern for building capable AI agents. It addresses a fundamental limitation of Large Language Models (LLMs): they are closed systems. An LLM's knowledge is limited to the data it was trained on, and it has no direct way to interact with the outside world.
+## 1. The Philosophy of Tool Use: Extending the Agent's Mind
 
-The Tool Use pattern solves this problem by giving the agent access to a set of **tools**. A tool is simply a function or an API that the agent can call to perform a specific task.
+The Tool Use pattern is one of the most important concepts in modern agentic AI. It is based on the idea of **cognitive offloading**, which is the use of external aids to reduce cognitive load. Just as humans use calculators to offload arithmetic calculations, AI agents can use tools to offload tasks that are difficult or impossible for them to perform on their own.
 
-## Why LLMs Alone Are Not Enough
+In this sense, tools can be seen as an extension of the agent's mind. They allow the agent to overcome the inherent limitations of its underlying LLM, such as:
 
-There are several reasons why an agent needs tools to be effective:
+*   **The Knowledge Cutoff:** LLMs have no knowledge of events that have occurred since they were trained.
+*   **Lack of Precision:** LLMs are not good at precise mathematical or logical reasoning.
+*   **Inability to Act:** LLMs have no ability to act on the world.
 
-*   **The Knowledge Cutoff Problem:** LLMs have a "knowledge cutoff" date. They do not have access to information about events that have happened since they were trained. For example, an LLM trained in 2022 would not know the winner of the 2023 World Cup.
-*   **Access to Private or Proprietary Information:** An agent might need to access information that is not publicly available, such as a company's internal product database or a user's personal calendar.
-*   **Performing Precise Calculations:** LLMs are notoriously bad at precise mathematical calculations. A calculator tool is much more reliable for this kind of task.
-*   **Taking Action in the World:** An agent might need to take action in the real world, such as sending an email, booking a flight, or controlling a smart home device. This requires tools that can interact with the relevant APIs.
+By giving an agent access to tools, we can create a system that is much more capable and intelligent than the LLM alone.
 
-## Types of Tools
+## 2. A Taxonomy of Tools
 
-An agent's tools can be anything that can be called as a function. Some common types of tools include:
+*   **Information-Gathering Tools:** These tools allow the agent to gather information from the outside world (e.g., search engines, database query tools, API clients for weather or stock data).
+*   **Action-Performing Tools:** These tools allow the agent to take action in the world (e.g., email sending tools, calendar management tools, e-commerce APIs).
+*   **Code-Execution Tools:** These tools allow the agent to write and execute code (e.g., Python interpreters, shell command tools). This is a very powerful class of tools that can be used to solve a wide range of problems.
 
-*   **Search Engines:** A tool that allows the agent to search the web for up-to-date information.
-*   **Calculators:** A tool for performing mathematical calculations.
-*   **Code Interpreters:** A tool that allows the agent to write and execute code in a sandboxed environment. This is very powerful for solving complex problems.
-*   **Custom APIs:** You can create custom tools that allow the agent to interact with any API you want. This could be an internal company API, a third-party service, or your own custom application.
+## 3. The Tool Use Workflow
 
-## How Agents Decide Which Tool to Use
+1.  **Tool Selection:** The LLM decides which tool to use based on the current goal and context.
+2.  **Input Formulation:** The LLM determines the necessary inputs for the selected tool.
+3.  **Tool Call:** The agent's orchestration logic executes the tool with the specified inputs.
+4.  **Observation:** The output of the tool is returned to the LLM.
 
-The process of an agent deciding to use a tool typically involves the following steps:
+This process is often facilitated by **function calling APIs**, which allow the LLM to specify the tool to be called and its arguments in a structured format.
 
-1.  **Reasoning:** The agent's reasoning component (the LLM) determines that it needs to use a tool to complete a task.
-2.  **Tool Selection:** The LLM decides which tool is the most appropriate for the task at hand. This is often done by providing the LLM with a list of available tools and their descriptions.
-3.  **Input Formulation:** The LLM determines the necessary inputs for the selected tool.
-4.  **Tool Call:** The agent's orchestration logic parses the LLM's output, identifies the tool call request, and executes the corresponding function with the specified inputs.
-5.  **Observation:** The output of the tool is returned to the agent, and the LLM observes the result to continue its reasoning process.
+## 4. Advanced Tool Use Techniques
 
-This process is often facilitated by **function calling APIs**, such as the one provided by OpenAI. These APIs allow you to declare a set of tools to the LLM, and the LLM will then generate a structured response indicating when it wants to call one of those tools.
+*   **Dynamic Tool Creation:** In advanced implementations, an agent can even create its own tools on the fly. For example, the "ToolMaker" framework allows an agent to read a scientific paper with code and automatically transform it into a new tool that it can use.
+*   **Tool-Use Chaining:** An agent can chain multiple tool calls together to solve a complex problem. For example, an agent might first use a search tool to find a piece of information, and then use a code execution tool to process that information.
+*   **Tool Use in Multi-Agent Systems:** In a multi-agent system, you need to decide which agents have access to which tools. You might have some specialized "tool-using" agents, or you might give all agents access to a common set of tools.
 
-## Tool Security and Sandboxing
+## 5. Real-World Applications of Tool-Using Agents
 
-Giving an AI agent the ability to execute code and interact with external systems is incredibly powerful, but it also comes with significant security risks. A malicious or buggy agent could potentially:
+*   **Personal Assistants:** Personal assistant agents use tools to access your calendar, send emails, and perform other tasks on your behalf.
+*   **Data Analysis:** Data analysis agents can use code execution tools to write and execute scripts for analyzing data and generating visualizations.
+*   **Software Development:** Software development agents can use tools to write code, run tests, and interact with version control systems.
 
-*   Execute harmful code on the host system.
-*   Access sensitive data.
-*   Abuse APIs to send spam or perform other malicious actions.
+## 6. Code Example
 
-It is therefore crucial to implement robust security measures when building tool-using agents. Here are some best practices:
+```python
+# This is a conceptual example. In a real application, you would use a library like LangChain.
 
-*   **Sandboxing:** Any code generated by an agent should be executed in a sandboxed environment. A sandbox is an isolated environment that restricts the code's access to the host system's resources. This can be achieved using technologies like Docker containers or virtual machines.
-*   **Permission Management:** An agent should only be given the minimum set of permissions it needs to perform its tasks. For example, if an agent only needs to read from a database, it should not be given write access.
-*   **Human-in-the-Loop:** For high-risk actions (e.g., deleting a file, sending an email to a large number of people), it is often a good idea to require human approval before the action is executed.
-*   **API Rate Limiting and Monitoring:** If an agent is interacting with external APIs, it is important to implement rate limiting to prevent abuse and to monitor the agent's API usage for any suspicious activity.
+def get_weather(city):
+    # In a real application, you would call a weather API here
+    return f"The weather in {city} is sunny."
 
-By following these best practices, you can build powerful tool-using agents that are also safe and secure.
+tools = {"get_weather": get_weather}
 
+def tool_using_agent(query, tools):
+    prompt = f"Question: {query}\nI have access to the following tools: {list(tools.keys())}\n"
+    thought_and_action = llm(prompt)
+    thought, action = parse_thought_and_action(thought_and_action)
+    tool_name, tool_input = parse_action(action)
+    if tool_name in tools:
+        observation = tools[tool_name](tool_input)
+        return observation
+    else:
+        return "I don't have access to that tool."
+```
 
-## Exercise
+## 7. Exercises
 
-1.  **Design a tool for a specific purpose (e.g., a tool to get the current weather for a given city).**
-2.  **Define the tool's input and output schema.**
-    *   **Tool Name:** `get_weather`
-    *   **Description:** "Gets the current weather for a specified city."
-    *   **Input Schema:**
-        *   `city` (string, required): The name of the city.
-    *   **Output Schema:**
-        *   `temperature` (number): The current temperature in Celsius.
-        *   `conditions` (string): A brief description of the weather conditions (e.g., "Sunny," "Cloudy," "Rain").
-3.  **(Optional) Write a Python function that implements this tool.**
-    *   *You can use a free weather API to get the data, or you can just return some hardcoded dummy data for the purpose of the exercise.*
+1.  Design and implement a custom tool for a task of your choice (e.g., a tool to get the top headline from a news website, a tool to add an event to your calendar).
+2.  How would you handle the case where a tool requires authentication (e.g., an API key)?
+
+## 8. Further Reading and References
+
+*   Qin, Y., et al. (2023). *ToolLLM: Facilitating Large Language Models to Master 16000+ Real-world APIs*. arXiv preprint arXiv:2307.16789.
+*   Schick, T., et al. (2023). *Toolformer: Language Models That Teach Themselves to Use Tools*. arXiv preprint arXiv:2302.04761.
