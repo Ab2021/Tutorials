@@ -37,44 +37,100 @@ The supervisor receives a high-level goal, breaks it down into smaller tasks, an
 *   **Uber:** Uber's Developer Platform team uses LangGraph to automate unit test generation and fix code.
 *   **LinkedIn:** LinkedIn uses a hierarchical agent system powered by LangGraph for its AI recruiter.
 
-## 6. Code Example (Conceptual)
+## 6. A Complete, Runnable Code Example
+
+This example demonstrates a simple multi-agent system with a supervisor and two workers.
 
 ```python
-# This is a conceptual example of a multi-agent system with a supervisor.
+import os
+from langchain_openai import ChatOpenAI
+from langgraph.graph import StateGraph, END
+from typing import TypedDict, Annotated
+import operator
 
-def supervisor(state):
-    # ... decide which worker to call next
-    pass
+# --- Environment Setup ---
+# Make sure to set your OpenAI API key in your environment variables
+# export OPENAI_API_KEY="..."
 
-def worker_a(state):
-    # ... perform a task
-    pass
+# --- State Definition ---
+class AgentState(TypedDict):
+    messages: Annotated[list, operator.add]
 
-def worker_b(state):
-    # ... perform another task
-    pass
+# --- Agent Definitions ---
+class MyAgent:
+    def __init__(self, model, system_message):
+        self.model = model.bind(system_message=system_message)
 
-workflow = StateGraph(AgentState)
-workflow.add_node("supervisor", supervisor)
-workflow.add_node("worker_a", worker_a)
-workflow.add_node("worker_b", worker_b)
+    def __call__(self, state):
+        messages = state['messages']
+        response = self.model.invoke(messages)
+        return {"messages": [response]}
 
-workflow.add_conditional_edges(
-    "supervisor",
-    supervisor,
-    {"worker_a": "worker_a", "worker_b": "worker_b", "end": END}
-)
-workflow.add_edge("worker_a", "supervisor")
-workflow.add_edge("worker_b", "supervisor")
-workflow.set_entry_point("supervisor")
+# --- Graph Definition ---
+class MyGraph:
+    def __init__(self):
+        self.llm = ChatOpenAI(model="gpt-4-turbo-preview")
+        self.supervisor = MyAgent(self.llm, "You are a supervisor. You manage a team of two workers: a writer and a critic.")
+        self.writer = MyAgent(self.llm, "You are a writer. You write short stories.")
+        self.critic = MyAgent(self.llm, "You are a critic. You critique short stories.")
+        self.workflow = StateGraph(AgentState)
 
-app = workflow.compile()
+        self.workflow.add_node("supervisor", self.supervisor)
+        self.workflow.add_node("writer", self.writer)
+        self.workflow.add_node("critic", self.critic)
+
+        self.workflow.add_conditional_edges(
+            "supervisor",
+            self.supervisor_router,
+            {"writer": "writer", "critic": "critic", "end": END}
+        )
+        self.workflow.add_edge("writer", "supervisor")
+        self.workflow.add_edge("critic", "supervisor")
+        self.workflow.set_entry_point("supervisor")
+
+        self.app = self.workflow.compile()
+
+    def supervisor_router(self, state):
+        # A simple router that alternates between the writer and the critic
+        if len(state['messages']) % 2 == 1:
+            return "writer"
+        else:
+            return "critic"
+
+if __name__ == "__main__":
+    graph = MyGraph()
+    inputs = {"messages": ["Write a short story about a robot who learns to love."]}
+    for output in graph.app.stream(inputs):
+        for key, value in output.items():
+            print(f"Output from node '{key}':")
+            print("---")
+            print(value)
+        print("\n---\n")
 ```
+
+### Code Walkthrough
+
+1.  **Environment Setup:** We import the necessary libraries and assume that the OpenAI API key is set as an environment variable.
+2.  **State Definition:** We define the state of our graph as a `TypedDict` with a single key, `messages`. The `Annotated` type hint with `operator.add` tells LangGraph to append new messages to the list, rather than replacing it.
+3.  **Agent Definitions:** We create a simple `MyAgent` class that takes a model and a system message. The `__call__` method is what will be executed when the agent's node is called.
+4.  **Graph Definition:**
+    *   We create a `MyGraph` class to encapsulate our graph.
+    *   We instantiate our three agents: a supervisor, a writer, and a critic.
+    *   We create a `StateGraph` with our `AgentState`.
+    *   We add our three agents as nodes to the graph.
+    *   We use `add_conditional_edges` to create a simple routing logic. The `supervisor_router` function is called after the supervisor node is executed, and it decides which node to go to next.
+    *   We use `add_edge` to create the edges from the writer and the critic back to the supervisor.
+    *   We use `set_entry_point` to specify that the supervisor is the first node to be called.
+    *   We compile the graph to create a runnable application.
+5.  **Running the Graph:**
+    *   In the `if __name__ == "__main__":` block, we create an instance of our graph.
+    *   We define the initial input to the graph, which is a list with a single message.
+    *   We use `app.stream(inputs)` to run the graph and stream the output.
 
 ## 7. Exercises
 
-1.  Implement a simple two-agent system where one agent proposes a plan and a second agent critiques it.
-2.  How would you add a human-in-the-loop checkpoint to the multi-agent system in the code example above?
+1.  Modify the `supervisor_router` function to have a more intelligent routing logic. For example, you could have the supervisor call an LLM to decide which worker to call next.
+2.  Add a human-in-the-loop checkpoint to the graph that allows a human to review the story before it is passed to the critic.
 
 ## 8. Further Reading and References
 

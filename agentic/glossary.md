@@ -23,8 +23,10 @@ This glossary provides definitions for the key terms and concepts used in this s
 ### C
 
 *   **Chain of Thought (CoT) Reasoning:** A prompting technique for getting a Large Language Model (LLM) to explain its reasoning process step-by-step.
+*   **Cognitive Offloading:** The use of external aids to reduce cognitive load. In the context of AI agents, tools are a form of cognitive offloading.
+*   **Constitutional AI:** The idea of giving an agent a set of principles or a "constitution" to guide its self-correction process.
 *   **Conversation (in AutoGen):** A sequence of messages exchanged between agents.
-*   **Coordinator Pattern:** A multi-agent collaboration pattern where a "manager" agent assigns tasks to "worker" agents.
+*   **Coordinator Pattern:** A multi-agent collaboration pattern where a "manager" aget assigns tasks to "worker" agents.
 *   **Crew (in CrewAI):** A group of agents that work together to complete a set of tasks.
 *   **CrewAI:** An open-source framework for orchestrating role-playing, autonomous AI agents.
 
@@ -39,6 +41,7 @@ This glossary provides definitions for the key terms and concepts used in this s
 
 ### F
 
+*   **FIPA-ACL (Foundation for Intelligent Physical Agents - Agent Communication Language):** A standardized language for agent communication.
 *   **Function Calling:** A feature of some LLMs that allows them to request that a specific function be called with specific arguments.
 
 ### G
@@ -47,7 +50,12 @@ This glossary provides definitions for the key terms and concepts used in this s
 
 ### H
 
+*   **HTN (Hierarchical Task Network):** A type of planning where high-level tasks are decomposed into a hierarchy of smaller sub-tasks.
 *   **Human-in-the-Loop (HITL) Pattern:** A design pattern for integrating human feedback and oversight into an agentic system.
+
+### K
+
+*   **KQML (Knowledge Query and Manipulation Language):** A language and protocol for exchanging information and knowledge.
 
 ### L
 
@@ -67,6 +75,7 @@ This glossary provides definitions for the key terms and concepts used in this s
 
 ### P
 
+*   **PDDL (Planning Domain Definition Language):** A standardized language for representing planning problems.
 *   **Parallel Pattern:** A multi-agent collaboration pattern where multiple agents work on different parts of a problem simultaneously.
 *   **Percept:** A single piece of information that an agent's sensors have detected from the environment.
 *   **Perception:** The process by which an agent senses its environment.
@@ -74,6 +83,7 @@ This glossary provides definitions for the key terms and concepts used in this s
 *   **Planning Pattern:** A design pattern for having an agent break down a high-level goal into a sequence of smaller, executable sub-tasks.
 *   **Pro-activeness:** The ability of an agent to take the initiative to achieve its goals.
 *   **Process (in CrewAI):** The workflow for a crew (e.g., sequential, hierarchical).
+
 
 ### R
 

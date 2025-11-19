@@ -30,33 +30,63 @@ A powerful pattern in AutoGen is to create a hierarchical chat where a "manager"
 *   **Financial Analysis:** AutoGen can be used to build agents that can analyze stock data, generate financial reports, and answer questions about the market.
 *   **Workflow Automation:** AutoGen can be used to automate a wide range of business workflows.
 
-## 6. Code Example (Conceptual)
+## 6. A Complete, Runnable Code Example
+
+This example demonstrates a simple two-agent system for solving a coding problem.
 
 ```python
-# This is a conceptual example of a group chat with a manager.
+import os
+import autogen
 
-llm_config = {"config_list": config_list}
-# The manager agent
-manager = autogen.ManagerAgent(
-    name="manager",
-    llm_config=llm_config,
-    system_message="You are a manager. You manage a team of two workers: a writer and a critic."
+# --- Environment Setup ---
+# Make sure to set your OpenAI API key in your environment variables
+# export OPENAI_API_KEY="..."
+# It is also recommended to create a OAI_CONFIG_LIST file.
+# For more details, see the AutoGen documentation.
+
+# --- Agent Definitions ---
+config_list = autogen.config_list_from_json(
+    "OAI_CONFIG_LIST",
+    filter_dict={"model": ["gpt-4"]},
 )
-# The worker agents
-writer = autogen.AssistantAgent(name="writer", llm_config=llm_config)
-critic = autogen.AssistantAgent(name="critic", llm_config=llm_config)
 
-# The group chat
-groupchat = autogen.GroupChat(agents=[manager, writer, critic], messages=[])
-manager = autogen.GroupChatManager(groupchat=groupchat, llm_config=llm_config)
+assistant = autogen.AssistantAgent(
+    name="assistant",
+    llm_config={"config_list": config_list},
+)
+user_proxy = autogen.UserProxyAgent(
+    name="user_proxy",
+    human_input_mode="TERMINATE",
+    max_consecutive_auto_reply=10,
+    is_termination_msg=lambda x: x.get("content", "").rstrip().endswith("TERMINATE"),
+    code_execution_config={"work_dir": "coding"},
+    llm_config={"config_list": config_list},
+    system_message="""Reply TERMINATE if the task has been solved at full satisfaction.
+Otherwise, reply CONTINUE, or the reason why the task is not solved yet."""
+)
 
-# Start the chat
-manager.initiate_chat(manager, message="Write a short story about a robot who learns to love.")
+# --- Task Execution ---
+if __name__ == "__main__":
+    user_proxy.initiate_chat(
+        assistant,
+        message="""Write a Python function to print the first 10 Fibonacci numbers."""
+    )
 ```
+
+### Code Walkthrough
+
+1.  **Environment Setup:** We import the necessary libraries and assume that the OpenAI API key and a configuration list are set up.
+2.  **Agent Definitions:**
+    *   We create an `AssistantAgent` named "assistant". This agent is powered by an LLM and will be responsible for writing the code.
+    *   We create a `UserProxyAgent` named "user_proxy". This agent acts as a proxy for the human user. It will execute the code written by the assistant and report the results. The `human_input_mode` is set to `TERMINATE`, which means that the conversation will end when the user types "TERMINATE".
+3.  **Task Execution:**
+    *   In the `if __name__ == "__main__":` block, we use `user_proxy.initiate_chat` to start the conversation.
+    *   We pass the assistant agent and the initial message to the `initiate_chat` method.
+    *   The two agents will then autonomously collaborate to solve the problem.
 
 ## 7. Exercises
 
-1.  Implement a group chat with three agents: a writer, a critic, and a human user. The writer should write a short story, the critic should critique it, and the human user should provide the final approval.
+1.  Implement a group chat with three agents: a writer, a critic, and a human user.
 2.  Research the concept of "teachable agents" in the AutoGen documentation. How could you use this feature to build an agent that learns a user's preferences over time?
 
 ## 8. Further Reading and References

@@ -33,34 +33,88 @@ In a hierarchical crew, you have a manager agent that is responsible for delegat
 *   **Financial Analysis:** CrewAI is used to build agents that can analyze stock data and generate investment recommendations.
 *   **Content Creation:** CrewAI is used to automate the process of creating blog posts, articles, and other forms of content.
 
-## 6. Code Example (Conceptual)
+## 6. A Complete, Runnable Code Example
+
+This example demonstrates a simple two-agent crew for researching a topic and writing a blog post.
 
 ```python
-# This is a conceptual example of a hierarchical crew.
+import os
+from crewai import Agent, Task, Crew, Process
+from crewai_tools import SerperDevTool
 
-# Define the agents
-manager = Agent(role='Project Manager', ...)
-writer = Agent(role='Writer', ...)
-researcher = Agent(role='Researcher', ...)
+# --- Environment Setup ---
+# Make sure to set your OpenAI and Serper API keys in your environment variables
+# export OPENAI_API_KEY="..."
+# export SERPER_API_KEY="..."
 
-# Define the tasks
-research_task = Task(description='...', agent=researcher)
-write_task = Task(description='...', agent=writer)
-
-# Assemble the crew with a hierarchical process
-crew = Crew(
-  agents=[manager, writer, researcher],
-  tasks=[research_task, write_task],
-  process=Process.hierarchical,
-  manager_llm=chat_gpt_4 # The manager needs its own LLM
+# --- Agent Definitions ---
+researcher = Agent(
+  role='Senior Research Analyst',
+  goal='Uncover cutting-edge developments in AI and data science',
+  backstory="""You work at a leading tech think tank.
+  Your expertise lies in identifying emerging trends.
+  You have a knack for dissecting complex data and presenting
+  actionable insights.""",
+  verbose=True,
+  allow_delegation=False,
+  tools=[SerperDevTool()]
+)
+writer = Agent(
+  role='Tech Content Strategist',
+  goal='Craft compelling content on tech advancements',
+  backstory="""You are a renowned Content Strategist, known for
+  your insightful and engaging articles.
+  You transform complex concepts into compelling narratives.""",
+  verbose=True,
+  allow_delegation=True
 )
 
-result = crew.kickoff()
+# --- Task Definitions ---
+task1 = Task(
+  description="""Conduct a comprehensive analysis of the latest advancements in AI in 2024.
+  Identify key trends, breakthrough technologies, and potential industry impacts.""",
+  expected_output="A full analysis report",
+  agent=researcher
+)
+
+task2 = Task(
+  description="""Using the insights provided, write a compelling blog post
+  that highlights the most significant AI advancements.
+  Your post should be informative yet accessible, catering to a tech-savvy audience.
+  Make it sound cool, avoid complex words so it doesn't sound like AI.""",
+  expected_output="A 4-paragraph blog post",
+  agent=writer
+)
+
+# --- Crew Definition ---
+if __name__ == "__main__":
+    crew = Crew(
+      agents=[researcher, writer],
+      tasks=[task1, task2],
+      process=Process.sequential
+    )
+    result = crew.kickoff()
+    print("######################")
+    print(result)
 ```
+
+### Code Walkthrough
+
+1.  **Environment Setup:** We import the necessary libraries and assume that the OpenAI and Serper API keys are set as environment variables.
+2.  **Agent Definitions:**
+    *   We create a `researcher` agent with a specific role, goal, and backstory. We also give it access to the `SerperDevTool` for searching the web.
+    *   We create a `writer` agent with its own role, goal, and backstory.
+3.  **Task Definitions:**
+    *   We create a `research_task` and assign it to the `researcher` agent.
+    *   We create a `writing_task` and assign it to the `writer` agent.
+4.  **Crew Definition:**
+    *   In the `if __name__ == "__main__":` block, we create a `Crew` with our two agents and two tasks.
+    *   We specify a `sequential` process, which means that the tasks will be executed in order.
+    *   We then `kickoff` the crew to start the process.
 
 ## 7. Exercises
 
-1.  Implement a hierarchical crew with a manager agent and two worker agents (e.g., a writer and a critic).
+1.  Implement a hierarchical crew with a manager agent and two worker agents.
 2.  Create a custom tool for your crew (e.g., a tool that can read a file from the local filesystem).
 
 ## 8. Further Reading and References

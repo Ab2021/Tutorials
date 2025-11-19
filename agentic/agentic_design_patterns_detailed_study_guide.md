@@ -233,18 +233,34 @@ The exercises in this guide can be completed using the following tools and techn
         *   A deep dive into the similarities and differences between LangGraph, AutoGen, and CrewAI.
         *   Guidance on how to choose the right framework for your project.
 
-*   **Afternoon Session (1:00 PM - 4:00 PM): The Future of Agentic AI and Final Project**
+*   **Afternoon Session (1:00 PM - 4:00 PM): The Future of Agentic AI**
     *   **Topic 3: The Future of Agentic AI**
         *   Emerging trends: Autonomous agents, agent swarms, embodied agents (robotics).
         *   The ethical considerations of building and deploying autonomous agents.
         *   Resources for continued learning (blogs, papers, open-source projects).
-    *   **Topic 4: Final Project**
+
+## Day 10: Evaluating Agentic Systems and Final Project
+
+*   **Morning Session (9:00 AM - 12:00 PM): Evaluating Agentic Systems**
+    *   **Topic 1: The Philosophy of Evaluation**
+        *   The challenges of evaluating non-deterministic and open-ended systems.
+        *   The need for a multi-faceted approach to evaluation.
+    *   **Topic 2: A Taxonomy of Evaluation Methodologies**
+        *   Human Evaluation, Simulation-based Evaluation, LLM-as-a-Judge, and Benchmarks.
+    *   **Topic 3: Key Evaluation Metrics**
+        *   Task Success Rate, Cost and Latency, Robustness and Reliability, Safety and Alignment.
+    *   **Topic 4: A Survey of Evaluation Benchmarks**
+        *   AgentBench, ToolBench, SWE-bench, and others.
+
+*   **Afternoon Session (1:00 PM - 4:00 PM): Final Project**
+    *   **Topic 5: Final Project**
         *   Choose a complex, open-ended task.
         *   Design and (optionally) implement an AI agent or multi-agent system to solve the task, using a combination of the design patterns and frameworks learned throughout the course.
-        *   Write a short report describing your design choices and the patterns and frameworks you used.
+        *   Write a short report describing your design choices, the patterns and frameworks you used, and a plan for how you would evaluate your system.
 
 ## Glossary
 
 A comprehensive glossary of all the key terms and concepts used in this study guide can be found in the `glossary.md` file.
+
 
 
