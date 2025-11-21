@@ -44,14 +44,40 @@ with gr.Blocks() as demo:
 demo.launch()
 ```
 
-## 3. Option B: 3D Asset Generator (Shap-E)
-**Goal:** Generate `.obj` or `.glb` files from text.
-*   **Model:** OpenAI Shap-E.
-*   **Pipeline:**
-    1.  Text $\to$ Latent Representation (Transformer).
-    2.  Latent $\to$ NeRF/SDF.
-    3.  Marching Cubes $\to$ Mesh.
-*   **Use Case:** Rapid prototyping for Indie Game Devs.
+## 4. Option C: Visual Chatbot (Multimodal RAG)
+**Goal:** Chat with your images. "What is in this picture?"
+*   **Model:** LLaVA-1.5-7b (via 4-bit quantization) or BLIP-2.
+*   **Stack:** Transformers, BitsAndBytes, Gradio.
 
-## Summary
+### Step 1: Pipeline Setup
+```python
+import torch
+from transformers import LlavaNextProcessor, LlavaNextForConditionalGeneration
+from PIL import Image
+
+# Load 4-bit quantized model
+processor = LlavaNextProcessor.from_pretrained("llava-hf/llava-v1.6-mistral-7b-hf")
+model = LlavaNextForConditionalGeneration.from_pretrained(
+    "llava-hf/llava-v1.6-mistral-7b-hf", 
+    torch_dtype=torch.float16, 
+    low_cpu_mem_usage=True,
+    load_in_4bit=True
+)
+
+def chat(image, prompt):
+    inputs = processor(prompt, image, return_tensors="pt").to("cuda")
+    output = model.generate(**inputs, max_new_tokens=100)
+    return processor.decode(output[0], skip_special_tokens=True)
+```
+
+### Step 2: Multimodal RAG (Advanced)
+*   **Scenario:** You have 1000 PDFs with charts.
+*   **Pipeline:**
+    1.  **Extract:** Convert PDF pages to images.
+    2.  **Embed:** Use CLIP to embed all images. Store in Vector DB (ChromaDB).
+    3.  **Retrieve:** User asks "Show me the sales chart". Retrieve top-k images.
+    4.  **Answer:** Pass retrieved image + question to LLaVA.
+    5.  **Response:** "Here is the chart. It shows a 20% increase..."
+
+## 5. Summary
 This capstone demonstrates your ability to not just train models, but to **productize** them. You are now a Full-Stack AI Engineer.

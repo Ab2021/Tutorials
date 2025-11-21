@@ -19,6 +19,7 @@
     - [x] Create Directory Structure - **Done**
     - [x] Generate Days 31-35 (Generative Models) - **Done**
     - [x] Generate Days 36-39 (3D/Video/Multimodal) - **Done**
+    - [x] **Expanded Multimodal Content (Agents, RAG, vLLM)** - **Done**
     - [x] Generate Day 40 (Capstone) - **Done**
 
 ## Notes

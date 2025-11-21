@@ -5,7 +5,10 @@ How to run these massive models on consumer hardware or in production?
 *   **FP16 / BF16:** Halves memory usage. Almost no quality loss.
 *   **xFormers:** Optimized Attention implementation (FlashAttention). Speedup 2x.
 *   **Model Offloading:** Move parts of the model (e.g., VAE) to CPU when not in use.
-*   **Quantization (INT8):** Use `bitsandbytes` to run LLMs/Diffusion in 8-bit.
+*   **Quantization (INT8/4):** Use `bitsandbytes` or `AWQ` to run LLMs/Diffusion in 4-bit.
+*   **Serving Engines:**
+    *   **vLLM:** PagedAttention for 24x higher throughput.
+    *   **TensorRT-LLM:** NVIDIA's optimized inference engine.
 *   **Compilation:** `torch.compile()` fuses kernels for faster execution.
 
 ## 2. Deployment Strategies
