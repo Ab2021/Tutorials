@@ -25,10 +25,28 @@
     - [x] Day 18: Service Discovery
     - [x] Day 19: Observability
     - [x] Day 20: Project (Rate Limiter)
-- [ ] **Phase 3: Advanced Architectures (Days 21-30)**
-    - [ ] Generate Days 21-30
-- [ ] **Phase 4: Case Studies (Days 31-40)**
-    - [ ] Generate Days 31-40
+- [x] **Phase 3: Advanced Architectures (Days 21-30)**
+    - [x] Day 21: Microservices vs Monolith
+    - [x] Day 22: Event-Driven Architecture
+    - [x] Day 23: Batch Processing
+    - [x] Day 24: Stream Processing
+    - [x] Day 25: CDNs
+    - [x] Day 26: Geo-Spatial Indexes
+    - [x] Day 27: Distributed Locking
+    - [x] Day 28: Security Design
+    - [x] Day 29: Cloud Native Patterns
+    - [x] Day 30: Project (Mini-KV Store)
+- [x] **Phase 4: Case Studies (Days 31-40)**
+    - [x] Day 31: Design YouTube
+    - [x] Day 32: Design WhatsApp
+    - [x] Day 33: Design Instagram
+    - [x] Day 34: Design Uber
+    - [x] Day 35: Design Twitter Search
+    - [x] Day 36: Design Web Crawler
+    - [x] Day 37: Design Notification System
+    - [x] Day 38: Design Ad Click Aggregator
+    - [x] Day 39: Design Google Drive
+    - [x] Day 40: Capstone & Review
 
 ## Notes
 - 3 files per day: Core, Deep Dive (`_part1`), Interview (`_interview`).
