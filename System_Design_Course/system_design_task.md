@@ -14,8 +14,17 @@
     - [x] Day 8: Distributed Consensus
     - [x] Day 9: Distributed Transactions
     - [x] Day 10: Review
-- [ ] **Phase 2: Building Blocks (Days 11-20)**
-    - [ ] Generate Days 11-20
+- [x] **Phase 2: Building Blocks (Days 11-20)**
+    - [x] Day 11: Load Balancing
+    - [x] Day 12: Message Queues
+    - [x] Day 13: Key-Value Stores
+    - [x] Day 14: Blob Storage
+    - [x] Day 15: Search Engines
+    - [x] Day 16: Rate Limiting
+    - [x] Day 17: Distributed ID Generation
+    - [x] Day 18: Service Discovery
+    - [x] Day 19: Observability
+    - [x] Day 20: Project (Rate Limiter)
 - [ ] **Phase 3: Advanced Architectures (Days 21-30)**
     - [ ] Generate Days 21-30
 - [ ] **Phase 4: Case Studies (Days 31-40)**
