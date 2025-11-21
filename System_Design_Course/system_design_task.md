@@ -47,6 +47,12 @@
     - [x] Day 38: Design Ad Click Aggregator
     - [x] Day 39: Design Google Drive
     - [x] Day 40: Capstone & Review
+- [ ] **Phase 5: Bonus Topics (Days 41-45)**
+    - [ ] Day 41: Payment System
+    - [ ] Day 42: Collaborative Editing
+    - [ ] Day 43: Gaming Leaderboards
+    - [ ] Day 44: Recommendation System
+    - [ ] Day 45: Distributed Job Scheduler
 
 ## Notes
 - 3 files per day: Core, Deep Dive (`_part1`), Interview (`_interview`).
