@@ -1,70 +1,174 @@
-# Lab 12.1: K8S Architecture
+# Lab 12.1: Kubernetes Architecture and Setup
 
 ## Objective
-Learn and practice k8s architecture in a hands-on environment.
+Understand Kubernetes architecture and set up a local cluster using Minikube or kind.
 
 ## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+- Docker installed
+- Basic container knowledge
+- 4GB+ RAM available
 
-## Instructions
+## Learning Objectives
+- Understand K8s control plane and worker nodes
+- Set up local Kubernetes cluster
+- Use kubectl to interact with cluster
+- Deploy first application
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+---
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
+## Part 1: Kubernetes Architecture
 
-### Step 3: Verification
-[How to verify the implementation works correctly]
+### Control Plane Components
 
-## Challenges
+**API Server:** Front-end for K8s control plane  
+**etcd:** Key-value store for cluster data  
+**Scheduler:** Assigns pods to nodes  
+**Controller Manager:** Runs controller processes  
 
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
+### Worker Node Components
 
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
+**Kubelet:** Agent that runs on each node  
+**Kube-proxy:** Network proxy  
+**Container Runtime:** Docker, containerd, CRI-O  
 
-## Solution
+---
 
-<details>
-<summary>Click to reveal solution</summary>
+## Part 2: Install Minikube
 
-### Solution Steps
+### macOS/Linux
 
 ```bash
-# Example commands
-echo "Solution code will be provided here"
+# Install Minikube
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+
+# Install kubectl
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+sudo install kubectl /usr/local/bin/kubectl
+
+# Start cluster
+minikube start --driver=docker
+
+# Verify
+kubectl cluster-info
+kubectl get nodes
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+---
 
-</details>
+## Part 3: First Deployment
+
+### Create Nginx Deployment
+
+```bash
+kubectl create deployment nginx --image=nginx:alpine
+
+# Check deployment
+kubectl get deployments
+kubectl get pods
+
+# Expose as service
+kubectl expose deployment nginx --port=80 --type=NodePort
+
+# Get service URL
+minikube service nginx --url
+
+# Test
+curl $(minikube service nginx --url)
+```
+
+### Using YAML
+
+```yaml
+# nginx-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+```
+
+```bash
+kubectl apply -f nginx-deployment.yaml
+kubectl get pods -l app=nginx
+```
+
+---
+
+## Part 4: Basic kubectl Commands
+
+```bash
+# Get resources
+kubectl get pods
+kubectl get deployments
+kubectl get services
+kubectl get all
+
+# Describe resource
+kubectl describe pod <pod-name>
+
+# Logs
+kubectl logs <pod-name>
+kubectl logs -f <pod-name>  # Follow
+
+# Execute command
+kubectl exec -it <pod-name> -- sh
+
+# Delete
+kubectl delete deployment nginx
+kubectl delete -f nginx-deployment.yaml
+```
+
+---
+
+## Part 5: Namespaces
+
+```bash
+# List namespaces
+kubectl get namespaces
+
+# Create namespace
+kubectl create namespace dev
+
+# Deploy to namespace
+kubectl create deployment nginx --image=nginx -n dev
+
+# Set default namespace
+kubectl config set-context --current --namespace=dev
+```
+
+---
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+
+✅ Minikube cluster running  
+✅ kubectl configured and working  
+✅ Deployed application successfully  
+✅ Accessed application via service  
+✅ Understand basic kubectl commands  
+
+---
 
 ## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
 
-## Troubleshooting
+- **K8s is declarative** - Describe desired state in YAML
+- **Pods are ephemeral** - Can be deleted/recreated anytime
+- **Services provide stable endpoints** - Pods come and go
+- **Namespaces isolate resources** - Multi-tenancy
 
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 12.2** or complete the module assessment.
+**Estimated Time:** 45 minutes  
+**Difficulty:** Intermediate

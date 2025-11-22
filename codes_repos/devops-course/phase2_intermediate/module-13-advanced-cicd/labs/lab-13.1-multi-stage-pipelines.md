@@ -1,70 +1,133 @@
-# Lab 13.1: Multi Stage Pipelines
+# Lab 13.1: Multi-Stage CI/CD Pipelines
 
 ## Objective
-Learn and practice multi stage pipelines in a hands-on environment.
+Build complex CI/CD pipelines with multiple stages, parallel jobs, and conditional execution.
 
 ## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+- GitHub account
+- Completed Module 6 (CI/CD Basics)
 
-## Instructions
+## Learning Objectives
+- Create multi-stage pipelines
+- Run jobs in parallel
+- Implement conditional execution
+- Use job dependencies
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+---
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
+## Part 1: Multi-Stage Pipeline
 
-### Step 3: Verification
-[How to verify the implementation works correctly]
+```yaml
+# .github/workflows/multi-stage.yaml
+name: Multi-Stage Pipeline
 
-## Challenges
+on: [push]
 
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run linter
+        run: echo "Linting code..."
+  
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run tests
+        run: echo "Running tests..."
+  
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build application
+        run: echo "Building..."
+  
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/develop'
+    steps:
+      - name: Deploy to staging
+        run: echo "Deploying to staging..."
+  
+  deploy-prod:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Deploy to production
+        run: echo "Deploying to production..."
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+---
 
-</details>
+## Part 2: Parallel Execution
+
+```yaml
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: [14, 16, 18]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm test
+```
+
+---
+
+## Part 3: Reusable Workflows
+
+```yaml
+# .github/workflows/reusable-deploy.yaml
+name: Reusable Deploy
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to ${{ inputs.environment }}
+        run: echo "Deploying to ${{ inputs.environment }}"
+```
+
+```yaml
+# .github/workflows/main.yaml
+name: Main Pipeline
+
+on: [push]
+
+jobs:
+  deploy-staging:
+    uses: ./.github/workflows/reusable-deploy.yaml
+    with:
+      environment: staging
+```
+
+---
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
+✅ Multi-stage pipeline with dependencies  
+✅ Parallel job execution  
+✅ Conditional deployment  
+✅ Reusable workflows  
 
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 13.2** or complete the module assessment.
+**Estimated Time:** 40 minutes  
+**Difficulty:** Intermediate
