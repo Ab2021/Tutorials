@@ -1,98 +1,26 @@
-# Lab 02: RL Foundations (Days 1-10) - Exercise 2
+# Lab 02: GridWorld Environment
 
 ## Difficulty
 🟢 Easy
 
-## Estimated Time
-45 mins
-
-## Learning Objectives
-- Master concept 2 from RL Foundations (Days 1-10)
-- Apply techniques in practical scenarios
-- Optimize solutions for efficiency
-
-## Prerequisites
-- Completed RL Foundations (Days 1-10) readings
-- Understanding of core concepts
-
 ## Problem Statement
-
-[Detailed problem description will be added here]
-
-## Requirements
-
-1. Implement the core functionality
-2. Handle edge cases
-3. Optimize for time and space complexity
-4. Write clean, documented code
+Create a simple GridWorld environment class.
+- Grid size: 4x4.
+- Start: (0, 0), Goal: (3, 3).
+- Actions: Up, Down, Left, Right.
+- Reward: -1 per step, +10 at goal.
+- `step(action)` returns `next_state`, `reward`, `done`.
 
 ## Starter Code
-
 ```python
-def solution():
-    """
-    TODO: Implement your solution here
-    """
-    pass
-
-# Test cases
-def test_solution():
-    # Add test cases here
-    pass
+class GridWorld:
+    def __init__(self, size=4):
+        self.size = size
+        self.state = (0, 0)
+        
+    def step(self, action):
+        # TODO: Update state based on action
+        # TODO: Check boundaries
+        # TODO: Return (state, reward, done)
+        pass
 ```
-
-## Hints
-
-<details>
-<summary>Hint 1</summary>
-
-Consider the time complexity of your approach. Can you optimize it?
-</details>
-
-<details>
-<summary>Hint 2</summary>
-
-Think about edge cases: empty inputs, single elements, duplicates, etc.
-</details>
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Approach
-
-[Solution approach will be detailed here]
-
-```python
-def solution_optimized():
-    """
-    Optimized solution with explanation
-    """
-    pass
-```
-
-### Time Complexity
-O(n) - [Explanation]
-
-### Space Complexity
-O(1) - [Explanation]
-
-### Explanation
-[Detailed walkthrough of the solution]
-
-</details>
-
-## Extensions
-
-1. Extend the problem to handle [variation 1]
-2. Optimize for [specific constraint]
-3. Implement [alternative approach]
-
-## Related Concepts
-- Related topic 1
-- Related topic 2
-
----
-
-**Next**: [Lab 03](lab_03.md)

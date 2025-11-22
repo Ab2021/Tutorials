@@ -1,98 +1,22 @@
-# Lab 05: RL Foundations (Days 1-10) - Exercise 5
+# Lab 05: Monte Carlo Estimation
 
 ## Difficulty
 🟢 Easy
 
-## Estimated Time
-30 mins
-
-## Learning Objectives
-- Master concept 5 from RL Foundations (Days 1-10)
-- Apply techniques in practical scenarios
-- Optimize solutions for efficiency
-
-## Prerequisites
-- Completed RL Foundations (Days 1-10) readings
-- Understanding of core concepts
-
 ## Problem Statement
-
-[Detailed problem description will be added here]
-
-## Requirements
-
-1. Implement the core functionality
-2. Handle edge cases
-3. Optimize for time and space complexity
-4. Write clean, documented code
+Estimate the value of Pi using Monte Carlo simulation.
+1. Sample random points (x, y) in [-1, 1].
+2. Check if point is inside unit circle (x^2 + y^2 <= 1).
+3. Ratio of points inside / total points approx Pi/4.
 
 ## Starter Code
-
 ```python
-def solution():
-    """
-    TODO: Implement your solution here
-    """
-    pass
+import random
 
-# Test cases
-def test_solution():
-    # Add test cases here
-    pass
+def estimate_pi(num_samples):
+    inside = 0
+    for _ in range(num_samples):
+        # TODO: Sample and check
+        pass
+    return 4 * inside / num_samples
 ```
-
-## Hints
-
-<details>
-<summary>Hint 1</summary>
-
-Consider the time complexity of your approach. Can you optimize it?
-</details>
-
-<details>
-<summary>Hint 2</summary>
-
-Think about edge cases: empty inputs, single elements, duplicates, etc.
-</details>
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Approach
-
-[Solution approach will be detailed here]
-
-```python
-def solution_optimized():
-    """
-    Optimized solution with explanation
-    """
-    pass
-```
-
-### Time Complexity
-O(n) - [Explanation]
-
-### Space Complexity
-O(1) - [Explanation]
-
-### Explanation
-[Detailed walkthrough of the solution]
-
-</details>
-
-## Extensions
-
-1. Extend the problem to handle [variation 1]
-2. Optimize for [specific constraint]
-3. Implement [alternative approach]
-
-## Related Concepts
-- Related topic 1
-- Related topic 2
-
----
-
-**Next**: [Lab 06](lab_06.md)

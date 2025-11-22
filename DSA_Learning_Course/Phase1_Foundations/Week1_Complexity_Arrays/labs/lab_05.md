@@ -1,98 +1,23 @@
-# Lab 05: Complexity & Arrays - Exercise 5
+# Lab 05: Dutch National Flag Problem
 
 ## Difficulty
-🟢 Easy
+🟡 Medium
 
 ## Estimated Time
-30 mins
-
-## Learning Objectives
-- Master concept 5 from Complexity & Arrays
-- Apply techniques in practical scenarios
-- Optimize solutions for efficiency
-
-## Prerequisites
-- Completed Complexity & Arrays readings
-- Understanding of core concepts
+45 mins
 
 ## Problem Statement
+Given an array `nums` with `n` objects colored red, white, or blue, sort them in-place so that objects of the same color are adjacent, with the colors in the order red, white, and blue.
+We will use the integers 0, 1, and 2 to represent the color red, white, and blue, respectively.
 
-[Detailed problem description will be added here]
-
-## Requirements
-
-1. Implement the core functionality
-2. Handle edge cases
-3. Optimize for time and space complexity
-4. Write clean, documented code
+You must solve this problem without using the library's sort function.
 
 ## Starter Code
-
 ```python
-def solution():
+def sort_colors(nums):
     """
-    TODO: Implement your solution here
+    Sorts the array nums in-place.
     """
-    pass
-
-# Test cases
-def test_solution():
-    # Add test cases here
+    # TODO: Implement one-pass algorithm
     pass
 ```
-
-## Hints
-
-<details>
-<summary>Hint 1</summary>
-
-Consider the time complexity of your approach. Can you optimize it?
-</details>
-
-<details>
-<summary>Hint 2</summary>
-
-Think about edge cases: empty inputs, single elements, duplicates, etc.
-</details>
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Approach
-
-[Solution approach will be detailed here]
-
-```python
-def solution_optimized():
-    """
-    Optimized solution with explanation
-    """
-    pass
-```
-
-### Time Complexity
-O(n) - [Explanation]
-
-### Space Complexity
-O(1) - [Explanation]
-
-### Explanation
-[Detailed walkthrough of the solution]
-
-</details>
-
-## Extensions
-
-1. Extend the problem to handle [variation 1]
-2. Optimize for [specific constraint]
-3. Implement [alternative approach]
-
-## Related Concepts
-- Related topic 1
-- Related topic 2
-
----
-
-**Next**: [Lab 06](lab_06.md)

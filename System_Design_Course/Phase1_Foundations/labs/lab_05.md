@@ -1,98 +1,28 @@
-# Lab 05: Foundations (Days 1-10) - Exercise 5
+# Lab 05: Token Bucket Rate Limiter
 
 ## Difficulty
-🟢 Easy
-
-## Estimated Time
-30 mins
-
-## Learning Objectives
-- Master concept 5 from Foundations (Days 1-10)
-- Apply techniques in practical scenarios
-- Optimize solutions for efficiency
-
-## Prerequisites
-- Completed Foundations (Days 1-10) readings
-- Understanding of core concepts
+🟡 Medium
 
 ## Problem Statement
-
-[Detailed problem description will be added here]
-
-## Requirements
-
-1. Implement the core functionality
-2. Handle edge cases
-3. Optimize for time and space complexity
-4. Write clean, documented code
+Implement the Token Bucket algorithm for API rate limiting.
+- The bucket has a `capacity`.
+- Tokens are added at a `refill_rate`.
+- Each request consumes 1 token.
+- If bucket empty, reject request.
 
 ## Starter Code
-
 ```python
-def solution():
-    """
-    TODO: Implement your solution here
-    """
-    pass
+import time
 
-# Test cases
-def test_solution():
-    # Add test cases here
-    pass
+class TokenBucket:
+    def __init__(self, capacity, refill_rate):
+        self.capacity = capacity
+        self.tokens = capacity
+        self.refill_rate = refill_rate
+        self.last_refill = time.time()
+
+    def allow_request(self):
+        # TODO: Refill tokens based on time elapsed
+        # TODO: Check if token available
+        pass
 ```
-
-## Hints
-
-<details>
-<summary>Hint 1</summary>
-
-Consider the time complexity of your approach. Can you optimize it?
-</details>
-
-<details>
-<summary>Hint 2</summary>
-
-Think about edge cases: empty inputs, single elements, duplicates, etc.
-</details>
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Approach
-
-[Solution approach will be detailed here]
-
-```python
-def solution_optimized():
-    """
-    Optimized solution with explanation
-    """
-    pass
-```
-
-### Time Complexity
-O(n) - [Explanation]
-
-### Space Complexity
-O(1) - [Explanation]
-
-### Explanation
-[Detailed walkthrough of the solution]
-
-</details>
-
-## Extensions
-
-1. Extend the problem to handle [variation 1]
-2. Optimize for [specific constraint]
-3. Implement [alternative approach]
-
-## Related Concepts
-- Related topic 1
-- Related topic 2
-
----
-
-**Next**: [Lab 06](lab_06.md)

@@ -1,98 +1,26 @@
-# Lab 01: Foundations (Days 1-10) - Exercise 1
+# Lab 01: Scalability Simulation
 
 ## Difficulty
 🟢 Easy
 
-## Estimated Time
-30 mins
-
-## Learning Objectives
-- Master concept 1 from Foundations (Days 1-10)
-- Apply techniques in practical scenarios
-- Optimize solutions for efficiency
-
-## Prerequisites
-- Completed Foundations (Days 1-10) readings
-- Understanding of core concepts
-
 ## Problem Statement
+Simulate the difference between Vertical Scaling (Scaling Up) and Horizontal Scaling (Scaling Out).
+Create a class `Server` that can handle `capacity` requests per second.
+1. **Vertical**: Increase `capacity` of a single server.
+2. **Horizontal**: Add more `Server` instances.
 
-[Detailed problem description will be added here]
-
-## Requirements
-
-1. Implement the core functionality
-2. Handle edge cases
-3. Optimize for time and space complexity
-4. Write clean, documented code
+Calculate the cost if:
+- Vertical: Cost doubles for every 2x capacity.
+- Horizontal: Cost is linear (number of servers * base cost).
 
 ## Starter Code
-
 ```python
-def solution():
-    """
-    TODO: Implement your solution here
-    """
-    pass
+class Server:
+    def __init__(self, capacity, cost):
+        self.capacity = capacity
+        self.cost = cost
 
-# Test cases
-def test_solution():
-    # Add test cases here
+def compare_scaling(target_capacity):
+    # TODO: Calculate cost for vertical vs horizontal
     pass
 ```
-
-## Hints
-
-<details>
-<summary>Hint 1</summary>
-
-Consider the time complexity of your approach. Can you optimize it?
-</details>
-
-<details>
-<summary>Hint 2</summary>
-
-Think about edge cases: empty inputs, single elements, duplicates, etc.
-</details>
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Approach
-
-[Solution approach will be detailed here]
-
-```python
-def solution_optimized():
-    """
-    Optimized solution with explanation
-    """
-    pass
-```
-
-### Time Complexity
-O(n) - [Explanation]
-
-### Space Complexity
-O(1) - [Explanation]
-
-### Explanation
-[Detailed walkthrough of the solution]
-
-</details>
-
-## Extensions
-
-1. Extend the problem to handle [variation 1]
-2. Optimize for [specific constraint]
-3. Implement [alternative approach]
-
-## Related Concepts
-- Related topic 1
-- Related topic 2
-
----
-
-**Next**: [Lab 02](lab_02.md)

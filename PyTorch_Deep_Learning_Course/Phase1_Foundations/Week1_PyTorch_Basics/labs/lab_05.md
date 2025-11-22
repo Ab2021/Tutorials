@@ -1,98 +1,26 @@
-# Lab 05: PyTorch Basics - Exercise 5
+# Lab 05: Linear Regression from Scratch
 
 ## Difficulty
-🟢 Easy
-
-## Estimated Time
-30 mins
-
-## Learning Objectives
-- Master concept 5 from PyTorch Basics
-- Apply techniques in practical scenarios
-- Optimize solutions for efficiency
-
-## Prerequisites
-- Completed PyTorch Basics readings
-- Understanding of core concepts
+🟡 Medium
 
 ## Problem Statement
-
-[Detailed problem description will be added here]
-
-## Requirements
-
-1. Implement the core functionality
-2. Handle edge cases
-3. Optimize for time and space complexity
-4. Write clean, documented code
+Implement Linear Regression `y = wx + b` using PyTorch tensors and Autograd (no `nn.Linear` or `optim.SGD`).
+1. Initialize weights `w` and bias `b` randomly.
+2. Implement forward pass.
+3. Compute loss (MSE).
+4. Compute gradients.
+5. Update weights manually using Gradient Descent.
 
 ## Starter Code
-
 ```python
-def solution():
-    """
-    TODO: Implement your solution here
-    """
-    pass
+import torch
 
-# Test cases
-def test_solution():
-    # Add test cases here
-    pass
+def train_linear_regression(X, y, epochs=100, lr=0.01):
+    w = torch.randn(1, requires_grad=True)
+    b = torch.randn(1, requires_grad=True)
+    
+    for epoch in range(epochs):
+        # TODO: Forward, Loss, Backward, Update
+        pass
+    return w, b
 ```
-
-## Hints
-
-<details>
-<summary>Hint 1</summary>
-
-Consider the time complexity of your approach. Can you optimize it?
-</details>
-
-<details>
-<summary>Hint 2</summary>
-
-Think about edge cases: empty inputs, single elements, duplicates, etc.
-</details>
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Approach
-
-[Solution approach will be detailed here]
-
-```python
-def solution_optimized():
-    """
-    Optimized solution with explanation
-    """
-    pass
-```
-
-### Time Complexity
-O(n) - [Explanation]
-
-### Space Complexity
-O(1) - [Explanation]
-
-### Explanation
-[Detailed walkthrough of the solution]
-
-</details>
-
-## Extensions
-
-1. Extend the problem to handle [variation 1]
-2. Optimize for [specific constraint]
-3. Implement [alternative approach]
-
-## Related Concepts
-- Related topic 1
-- Related topic 2
-
----
-
-**Next**: [Lab 06](lab_06.md)

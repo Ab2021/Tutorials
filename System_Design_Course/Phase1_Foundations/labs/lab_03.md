@@ -1,98 +1,26 @@
-# Lab 03: Foundations (Days 1-10) - Exercise 3
+# Lab 03: LRU Cache Implementation
 
 ## Difficulty
-🟢 Easy
-
-## Estimated Time
-30 mins
-
-## Learning Objectives
-- Master concept 3 from Foundations (Days 1-10)
-- Apply techniques in practical scenarios
-- Optimize solutions for efficiency
-
-## Prerequisites
-- Completed Foundations (Days 1-10) readings
-- Understanding of core concepts
+🔴 Hard
 
 ## Problem Statement
+Design and implement a Least Recently Used (LRU) Cache.
+It should support:
+- `get(key)`: Get value, move to front (most recently used).
+- `put(key, value)`: Insert value. If capacity reached, remove least recently used.
 
-[Detailed problem description will be added here]
-
-## Requirements
-
-1. Implement the core functionality
-2. Handle edge cases
-3. Optimize for time and space complexity
-4. Write clean, documented code
+Time Complexity: O(1) for both operations.
 
 ## Starter Code
-
 ```python
-def solution():
-    """
-    TODO: Implement your solution here
-    """
-    pass
+class LRUCache:
+    def __init__(self, capacity: int):
+        # TODO: Initialize structures (Hash Map + Doubly Linked List)
+        pass
 
-# Test cases
-def test_solution():
-    # Add test cases here
-    pass
+    def get(self, key: int) -> int:
+        pass
+
+    def put(self, key: int, value: int) -> None:
+        pass
 ```
-
-## Hints
-
-<details>
-<summary>Hint 1</summary>
-
-Consider the time complexity of your approach. Can you optimize it?
-</details>
-
-<details>
-<summary>Hint 2</summary>
-
-Think about edge cases: empty inputs, single elements, duplicates, etc.
-</details>
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Approach
-
-[Solution approach will be detailed here]
-
-```python
-def solution_optimized():
-    """
-    Optimized solution with explanation
-    """
-    pass
-```
-
-### Time Complexity
-O(n) - [Explanation]
-
-### Space Complexity
-O(1) - [Explanation]
-
-### Explanation
-[Detailed walkthrough of the solution]
-
-</details>
-
-## Extensions
-
-1. Extend the problem to handle [variation 1]
-2. Optimize for [specific constraint]
-3. Implement [alternative approach]
-
-## Related Concepts
-- Related topic 1
-- Related topic 2
-
----
-
-**Next**: [Lab 04](lab_04.md)

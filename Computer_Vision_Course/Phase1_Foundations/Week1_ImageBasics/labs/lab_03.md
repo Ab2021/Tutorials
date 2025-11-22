@@ -1,98 +1,19 @@
-# Lab 03: Image Basics & Classical CV - Exercise 3
+# Lab 03: Image Histograms
 
 ## Difficulty
-🟢 Easy
-
-## Estimated Time
-30 mins
-
-## Learning Objectives
-- Master concept 3 from Image Basics & Classical CV
-- Apply techniques in practical scenarios
-- Optimize solutions for efficiency
-
-## Prerequisites
-- Completed Image Basics & Classical CV readings
-- Understanding of core concepts
+🟡 Medium
 
 ## Problem Statement
-
-[Detailed problem description will be added here]
-
-## Requirements
-
-1. Implement the core functionality
-2. Handle edge cases
-3. Optimize for time and space complexity
-4. Write clean, documented code
+1. Compute the histogram of a grayscale image manually.
+2. Plot the histogram using Matplotlib.
+3. Implement Histogram Equalization to improve contrast.
 
 ## Starter Code
-
 ```python
-def solution():
-    """
-    TODO: Implement your solution here
-    """
-    pass
+import cv2
+import matplotlib.pyplot as plt
 
-# Test cases
-def test_solution():
-    # Add test cases here
+def compute_histogram(image):
+    # TODO: Count pixel intensities
     pass
 ```
-
-## Hints
-
-<details>
-<summary>Hint 1</summary>
-
-Consider the time complexity of your approach. Can you optimize it?
-</details>
-
-<details>
-<summary>Hint 2</summary>
-
-Think about edge cases: empty inputs, single elements, duplicates, etc.
-</details>
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Approach
-
-[Solution approach will be detailed here]
-
-```python
-def solution_optimized():
-    """
-    Optimized solution with explanation
-    """
-    pass
-```
-
-### Time Complexity
-O(n) - [Explanation]
-
-### Space Complexity
-O(1) - [Explanation]
-
-### Explanation
-[Detailed walkthrough of the solution]
-
-</details>
-
-## Extensions
-
-1. Extend the problem to handle [variation 1]
-2. Optimize for [specific constraint]
-3. Implement [alternative approach]
-
-## Related Concepts
-- Related topic 1
-- Related topic 2
-
----
-
-**Next**: [Lab 04](lab_04.md)

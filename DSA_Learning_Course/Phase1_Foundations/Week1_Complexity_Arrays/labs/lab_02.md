@@ -1,4 +1,4 @@
-# Lab 02: Complexity & Arrays - Exercise 2
+# Lab 02: Time Complexity Comparison
 
 ## Difficulty
 🟢 Easy
@@ -7,92 +7,45 @@
 45 mins
 
 ## Learning Objectives
-- Master concept 2 from Complexity & Arrays
-- Apply techniques in practical scenarios
-- Optimize solutions for efficiency
-
-## Prerequisites
-- Completed Complexity & Arrays readings
-- Understanding of core concepts
+- Compare theoretical time complexity with actual runtime
+- Understand the impact of input size on performance
+- Visualize O(n^2) vs O(n log n) growth
 
 ## Problem Statement
-
-[Detailed problem description will be added here]
+Implement two sorting algorithms: Bubble Sort (O(n^2)) and Merge Sort (O(n log n)). 
+Measure their execution time for increasing input sizes (n = 100, 1000, 5000, 10000).
+Plot or print the results to verify the theoretical complexity.
 
 ## Requirements
-
-1. Implement the core functionality
-2. Handle edge cases
-3. Optimize for time and space complexity
-4. Write clean, documented code
+1. Implement `bubble_sort(arr)`
+2. Implement `merge_sort(arr)`
+3. Create a benchmarking function that runs both on random arrays
+4. Compare the time taken
 
 ## Starter Code
-
 ```python
-def solution():
-    """
-    TODO: Implement your solution here
-    """
+import time
+import random
+import matplotlib.pyplot as plt  # Optional for plotting
+
+def bubble_sort(arr):
+    # TODO: Implement Bubble Sort
     pass
 
-# Test cases
-def test_solution():
-    # Add test cases here
+def merge_sort(arr):
+    # TODO: Implement Merge Sort
     pass
+
+def benchmark():
+    sizes = [100, 1000, 5000, 10000]
+    for n in sizes:
+        arr = [random.randint(0, 10000) for _ in range(n)]
+        
+        # Measure Bubble Sort
+        start = time.time()
+        bubble_sort(arr.copy())
+        print(f"Bubble Sort (n={n}): {time.time() - start:.4f}s")
+        
+        # Measure Merge Sort
+        # TODO: Measure Merge Sort
 ```
-
-## Hints
-
-<details>
-<summary>Hint 1</summary>
-
-Consider the time complexity of your approach. Can you optimize it?
-</details>
-
-<details>
-<summary>Hint 2</summary>
-
-Think about edge cases: empty inputs, single elements, duplicates, etc.
-</details>
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Approach
-
-[Solution approach will be detailed here]
-
-```python
-def solution_optimized():
-    """
-    Optimized solution with explanation
-    """
-    pass
-```
-
-### Time Complexity
-O(n) - [Explanation]
-
-### Space Complexity
-O(1) - [Explanation]
-
-### Explanation
-[Detailed walkthrough of the solution]
-
-</details>
-
-## Extensions
-
-1. Extend the problem to handle [variation 1]
-2. Optimize for [specific constraint]
-3. Implement [alternative approach]
-
-## Related Concepts
-- Related topic 1
-- Related topic 2
-
----
-
-**Next**: [Lab 03](lab_03.md)

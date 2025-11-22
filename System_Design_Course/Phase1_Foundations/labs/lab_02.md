@@ -1,98 +1,27 @@
-# Lab 02: Foundations (Days 1-10) - Exercise 2
+# Lab 02: Load Balancer Implementation
 
 ## Difficulty
-🟢 Easy
-
-## Estimated Time
-45 mins
-
-## Learning Objectives
-- Master concept 2 from Foundations (Days 1-10)
-- Apply techniques in practical scenarios
-- Optimize solutions for efficiency
-
-## Prerequisites
-- Completed Foundations (Days 1-10) readings
-- Understanding of core concepts
+🟡 Medium
 
 ## Problem Statement
-
-[Detailed problem description will be added here]
-
-## Requirements
-
-1. Implement the core functionality
-2. Handle edge cases
-3. Optimize for time and space complexity
-4. Write clean, documented code
+Implement a Load Balancer with two strategies:
+1. **Round Robin**: Distribute requests sequentially.
+2. **Random**: Distribute requests randomly.
 
 ## Starter Code
-
 ```python
-def solution():
-    """
-    TODO: Implement your solution here
-    """
-    pass
+import random
 
-# Test cases
-def test_solution():
-    # Add test cases here
-    pass
+class LoadBalancer:
+    def __init__(self, servers):
+        self.servers = servers
+        self.current_index = 0
+
+    def get_server_round_robin(self):
+        # TODO: Implement Round Robin
+        pass
+
+    def get_server_random(self):
+        # TODO: Implement Random
+        pass
 ```
-
-## Hints
-
-<details>
-<summary>Hint 1</summary>
-
-Consider the time complexity of your approach. Can you optimize it?
-</details>
-
-<details>
-<summary>Hint 2</summary>
-
-Think about edge cases: empty inputs, single elements, duplicates, etc.
-</details>
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Approach
-
-[Solution approach will be detailed here]
-
-```python
-def solution_optimized():
-    """
-    Optimized solution with explanation
-    """
-    pass
-```
-
-### Time Complexity
-O(n) - [Explanation]
-
-### Space Complexity
-O(1) - [Explanation]
-
-### Explanation
-[Detailed walkthrough of the solution]
-
-</details>
-
-## Extensions
-
-1. Extend the problem to handle [variation 1]
-2. Optimize for [specific constraint]
-3. Implement [alternative approach]
-
-## Related Concepts
-- Related topic 1
-- Related topic 2
-
----
-
-**Next**: [Lab 03](lab_03.md)
