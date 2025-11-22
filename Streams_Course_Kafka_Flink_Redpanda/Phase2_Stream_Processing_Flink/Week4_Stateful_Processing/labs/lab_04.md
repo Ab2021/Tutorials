@@ -7,24 +7,41 @@
 45 mins
 
 ## Learning Objectives
-- State
+-   Use `ReducingState`.
+-   Optimize aggregation.
 
 ## Problem Statement
-Use ReducingState for continuous aggregation.
+Keep the "Max" value seen so far for each key. Use `ReducingState` instead of `ValueState` (it's more efficient because it merges on write).
 
 ## Starter Code
 ```python
-reducing_state.add(value)
+class MaxReducer(ReduceFunction):
+    def reduce(self, value1, value2):
+        return max(value1, value2)
+
+# In open():
+# ctx.get_reducing_state(ReducingStateDescriptor("max", MaxReducer(), Types.INT()))
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+`ReducingState.add(value)` automatically merges the new value with the existing one using your reducer.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+class MaxFunction(RichFlatMapFunction):
+    def open(self, ctx):
+        self.max_state = ctx.get_reducing_state(
+            ReducingStateDescriptor("max", lambda a, b: max(a, b), Types.INT())
+        )
+
+    def flat_map(self, value, out):
+        self.max_state.add(value[1])
+        out.collect((value[0], self.max_state.get()))
+```
 </details>

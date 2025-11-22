@@ -1,30 +1,40 @@
-# Lab 07: Checkpointing Config
+# Lab 07: RocksDB Backend
 
 ## Difficulty
-🟢 Easy
+🟡 Medium
 
 ## Estimated Time
-30 mins
+45 mins
 
 ## Learning Objectives
-- Fault Tolerance
+-   Switch State Backend to RocksDB.
+-   Understand dependencies.
 
 ## Problem Statement
-Enable and configure checkpointing in Flink.
+Configure the job to use `EmbeddedRocksDBStateBackend`.
+*Note: You need the `flink-statebackend-rocksdb` JAR.*
 
 ## Starter Code
 ```python
-env.enableCheckpointing(1000)
+env.set_state_backend(EmbeddedRocksDBStateBackend())
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+In PyFlink, you might need to add the JAR via `env.add_jars()`.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+from pyflink.datastream.state import EmbeddedRocksDBStateBackend
+
+# Ensure JAR is loaded
+env.add_jars("file:///path/to/flink-statebackend-rocksdb.jar")
+
+env.set_state_backend(EmbeddedRocksDBStateBackend())
+```
 </details>

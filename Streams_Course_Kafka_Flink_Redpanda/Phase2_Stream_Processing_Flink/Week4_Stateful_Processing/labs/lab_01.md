@@ -4,27 +4,66 @@
 🟢 Easy
 
 ## Estimated Time
-45 mins
+30 mins
 
 ## Learning Objectives
-- State
+-   Use `ValueState`.
+-   Understand state lifecycle.
 
 ## Problem Statement
-Implement a stateful mapper using ValueState.
+Implement a `RichFlatMapFunction` that keeps a running sum of integers per key.
+Input: `(key, value)`.
+Output: `(key, current_sum)`.
 
 ## Starter Code
 ```python
-state.update(current + 1)
+class SumFunction(RichFlatMapFunction):
+    def open(self, ctx):
+        state_desc = ValueStateDescriptor("sum", Types.INT())
+        self.sum_state = ctx.get_state(state_desc)
+
+    def flat_map(self, value, out):
+        # current = self.sum_state.value()
+        pass
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+`value()` returns `None` if state is empty. Handle that case.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+from pyflink.datastream import StreamExecutionEnvironment
+from pyflink.datastream.functions import RichFlatMapFunction
+from pyflink.datastream.state import ValueStateDescriptor
+from pyflink.common import Types
+
+class RunningSum(RichFlatMapFunction):
+    def open(self, runtime_context):
+        descriptor = ValueStateDescriptor("sum", Types.INT())
+        self.sum_state = runtime_context.get_state(descriptor)
+
+    def flat_map(self, value, out):
+        current_sum = self.sum_state.value()
+        if current_sum is None:
+            current_sum = 0
+        
+        new_sum = current_sum + value[1]
+        self.sum_state.update(new_sum)
+        out.collect((value[0], new_sum))
+
+def run():
+    env = StreamExecutionEnvironment.get_execution_environment()
+    ds = env.from_collection([("A", 1), ("A", 2), ("B", 5)])
+    ds.key_by(lambda x: x[0]).flat_map(RunningSum()).print()
+    env.execute()
+
+if __name__ == '__main__':
+    run()
+```
 </details>

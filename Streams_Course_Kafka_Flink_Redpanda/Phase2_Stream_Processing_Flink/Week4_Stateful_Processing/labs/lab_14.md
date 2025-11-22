@@ -1,4 +1,4 @@
-# Lab 14: Queryable State
+# Lab 14: State Processor API (Read)
 
 ## Difficulty
 🔴 Hard
@@ -7,24 +7,33 @@
 60 mins
 
 ## Learning Objectives
-- Access
+-   Read a Savepoint offline.
 
 ## Problem Statement
-Expose state for external querying (if supported/simulated).
+Write a batch job using the State Processor API to read a Savepoint from Lab 01 and print the total sum of all keys.
 
 ## Starter Code
-```python
-client.getKvState(...)
+```java
+// Java only (Python support is limited/experimental)
+ExecutionEnvironment bEnv = ExecutionEnvironment.getExecutionEnvironment();
+ExistingSavepoint savepoint = Savepoint.load(bEnv, "file:///tmp/savepoint", new MemoryStateBackend());
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+You need to define a `KeyedStateReaderFunction`.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```java
+DataSet<Integer> sums = savepoint.readKeyedState(
+    "stateful-op", 
+    new ReaderFunction());
+
+sums.sum(0).print();
+```
 </details>

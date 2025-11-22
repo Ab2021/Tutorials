@@ -1,30 +1,46 @@
-# Lab 12: Async I/O
+# Lab 12: Queryable State
 
 ## Difficulty
-🔴 Hard
+🟡 Medium
 
 ## Estimated Time
-60 mins
+45 mins
 
 ## Learning Objectives
-- Performance
+-   Understand Queryable State (Deprecated but useful concept).
+-   Alternative: Expose state via Side Output to a DB.
 
 ## Problem Statement
-Implement Async I/O for external database lookups.
+Since Queryable State is deprecated, implement the modern equivalent:
+Write a `RichFlatMapFunction` that updates state AND sends the update to a "Query" stream (Side Output) that writes to Redis.
 
 ## Starter Code
 ```python
-AsyncDataStream.orderedWait(...)
+# Side Output
+ctx.output(query_tag, (key, new_value))
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+This is the "CQRS" pattern in streaming.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+    def flat_map(self, value, out):
+        # Update State
+        self.state.update(value)
+        
+        # Emit to Main Stream
+        out.collect(value)
+        
+        # Emit to Query Stream (Side Output)
+        # In reality, you might write directly to Redis here in async mode, 
+        # or use a Sink on the side output.
+        pass 
+```
 </details>

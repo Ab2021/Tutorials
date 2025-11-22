@@ -1,30 +1,47 @@
-# Lab 08: RocksDB Backend
+# Lab 08: Savepoints
 
 ## Difficulty
-🟡 Medium
+🔴 Hard
 
 ## Estimated Time
-45 mins
+60 mins
 
 ## Learning Objectives
-- Backends
+-   Trigger a Savepoint.
+-   Stop and Resume a job.
 
 ## Problem Statement
-Switch state backend to RocksDB for large state.
+1.  Run the `RunningSum` job (Lab 01).
+2.  Trigger a savepoint via CLI: `flink savepoint <job_id> /tmp/savepoints`.
+3.  Cancel the job.
+4.  Resume from savepoint: `flink run -s /tmp/savepoints/savepoint-xxx ...`.
 
 ## Starter Code
-```python
-env.setStateBackend(EmbeddedRocksDBStateBackend())
+```bash
+# CLI commands
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+Use `flink list` to find the Job ID.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```bash
+# 1. List jobs
+flink list
+
+# 2. Savepoint
+flink savepoint <job_id> /tmp/savepoints
+
+# 3. Cancel
+flink cancel <job_id>
+
+# 4. Resume
+flink run -s /tmp/savepoints/savepoint-<id> -py job.py
+```
 </details>
