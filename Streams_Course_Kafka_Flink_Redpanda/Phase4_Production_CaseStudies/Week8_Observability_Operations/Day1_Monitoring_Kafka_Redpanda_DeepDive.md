@@ -1,26 +1,34 @@
-# Day 1: Monitoring Kafka & Redpanda - Deep Dive
+# Day 1: Monitoring Kafka - Deep Dive
 
 ## Deep Dive & Internals
 
-### JMX Architecture
-Kafka exposes metrics via JMX (Java Management Extensions).
-- **MBeans**: Managed Beans representing metrics
-- **ObjectName**: Hierarchical naming (e.g., `kafka.server:type=BrokerTopicMetrics,name=MessagesInPerSec`)
-- **JMX Exporter**: Translates JMX to Prometheus format
+### JMX vs Native Metrics
+-   **Kafka (JVM)**: Uses JMX (Java Management Extensions). Heavy. Requires `jmx_exporter` sidecar/agent to convert to Prometheus format.
+    -   *Overhead*: JMX scraping can be CPU intensive. Don't scrape too often (< 15s).
+-   **Redpanda (C++)**: Native Prometheus endpoint (`:9644/metrics`). Zero overhead.
 
-### Redpanda Metrics Pipeline
-Redpanda uses Seastar framework metrics:
-- **Prometheus Format**: Native support, no JMX needed
-- **Per-Core Metrics**: Redpanda is thread-per-core, metrics are per-shard
-- **Admin API**: `/metrics` endpoint, `/public_metrics` for external monitoring
+### Histogram Pitfalls
+Kafka's JMX histograms (e.g., `99thPercentile`) are calculated *inside* the broker using a decaying reservoir.
+-   **Pros**: Pre-calculated.
+-   **Cons**: Can be misleading if traffic is bursty.
+-   **Best Practice**: Export raw histograms (buckets) to Prometheus and calculate percentiles there (`histogram_quantile`).
+
+### Consumer Lag Monitoring
+Lag is the difference between `LogEndOffset` (Broker) and `CurrentOffset` (Consumer).
+-   **Internal**: Consumers send offset commits to `__consumer_offsets`.
+-   **External Monitoring (Burrow)**: Look at the *rate* of commits vs *rate* of production.
+    -   If `ProductionRate > ConsumptionRate`, Lag grows.
+    -   If `Lag` is stable but high, it's just latency.
+    -   If `Lag` is growing, it's an incident.
 
 ### Advanced Reasoning
-**Metric Cardinality Problem**
-Kafka has thousands of metrics. Exporting all of them to Prometheus causes:
-- High memory usage in Prometheus
-- Slow queries
-**Solution**: Use JMX Exporter rules to filter and aggregate metrics.
+**The "Stale Metric" Trap**
+If a broker crashes, the Prometheus exporter might stop sending data.
+-   If you alert on `UnderReplicatedPartitions > 0`, and the metric *disappears*, the alert resolves!
+-   **Fix**: Always alert on `up == 0` (Target down) or `absent(metric)`.
 
 ### Performance Implications
-- **Metric Collection Overhead**: Minimal (<1% CPU) if done correctly
-- **Scrape Interval**: 15-30 seconds is standard. Faster = more load.
+-   **Cardinality**: Kafka creates metrics *per partition*.
+    -   100 topics * 50 partitions = 5,000 metrics.
+    -   Multiply by 10 metric types = 50,000 time series.
+    -   **Fix**: Use JMX Exporter regex to aggregate metrics (remove `partition` label) unless debugging.

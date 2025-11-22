@@ -1,14 +1,23 @@
-# Day4 Streaming Databases - DeepDive
+# Day 4: Streaming Databases - Deep Dive
 
-## DeepDive Content
+## Deep Dive & Internals
 
-### Overview
-Emerging streaming database technologies
+### Incremental View Maintenance (IVM)
+How to update `SELECT sum(sales) FROM orders` without rescanning the table?
+-   **New Event**: `+10`.
+-   **Old Sum**: `500`.
+-   **New Sum**: `510`.
+-   **Join**: `A JOIN B`. If `A` changes, look up matching `B` in index, emit change.
 
-### Key Concepts
-- Advanced streaming challenges
-- Future trends and technologies
-- Industry best practices
+### Consistency Models
+-   **Eventual Consistency**: You might see old data.
+-   **Strong Consistency**: You see the correct answer as of a specific timestamp.
+-   **Materialize**: Offers "Consistency" (all views update atomically for a timestamp).
 
-### Solutions
-Modern approaches to solving complex streaming problems.
+### Pull vs Push Queries
+-   **Push Query**: "Tell me whenever the result changes". (Subscription / WebSocket).
+-   **Pull Query**: "Tell me the current result". (Request / Response).
+
+### Performance Implications
+-   **Join State**: Maintaining a join requires storing both tables in state. Expensive.
+-   **Churn**: High update rate = High CPU to maintain the view.

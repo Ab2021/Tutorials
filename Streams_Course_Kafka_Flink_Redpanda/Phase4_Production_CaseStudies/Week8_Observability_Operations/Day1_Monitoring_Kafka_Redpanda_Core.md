@@ -2,39 +2,44 @@
 
 ## Core Concepts & Theory
 
-### Key Metrics to Monitor
-**Broker Metrics:**
-- `MessagesInPerSec`: Incoming message rate
-- `BytesInPerSec` / `BytesOutPerSec`: Network throughput
-- `UnderReplicatedPartitions`: Partitions not fully replicated (critical!)
-- `OfflinePartitionsCount`: Partitions with no leader
-- `ActiveControllerCount`: Should be 1 (0 or >1 indicates problem)
+### The Observability Pillars
+Observability is more than just "monitoring". It's about understanding the internal state of the system based on its external outputs.
+1.  **Metrics**: Aggregatable data (counters, gauges, histograms). "What is happening?"
+2.  **Logs**: Discrete events. "Why did it happen?"
+3.  **Traces**: Request lifecycle. "Where did it happen?"
 
-**Topic Metrics:**
-- `BytesInPerSec` per topic
-- `MessagesInPerSec` per topic
-- `TotalFetchRequestsPerSec`
-- `TotalProduceRequestsPerSec`
+### Key Kafka Metrics
+To operate Kafka/Redpanda at scale, you must monitor these 4 Golden Signals:
 
-**Consumer Metrics:**
-- `records-lag-max`: Maximum lag across all partitions
-- `records-consumed-rate`: Consumption rate
-- `fetch-latency-avg`: Time to fetch data
+#### 1. Latency
+-   `RequestQueueTimeMs`: Time waiting in the request queue. High values = Broker overloaded.
+-   `LocalTimeMs`: Time processing the request (writing to disk). High values = Slow disk.
+-   `RemoteTimeMs`: Time waiting for follower replication. High values = Slow network/follower.
+-   **Total Request Latency** = Queue + Local + Remote.
+
+#### 2. Traffic (Throughput)
+-   `BytesInPerSec` / `BytesOutPerSec`: Network saturation.
+-   `MessagesInPerSec`: CPU load indicator.
+
+#### 3. Errors
+-   `OfflinePartitionsCount`: **CRITICAL**. Partitions with no leader. Data unavailable.
+-   `UnderReplicatedPartitions`: **CRITICAL**. Replicas falling behind. Risk of data loss.
+-   `ActiveControllerCount`: Should be exactly 1. If 0, cluster is brainless. If >1, split brain.
+
+#### 4. Saturation
+-   **Disk Usage**: Alert at 80%. Kafka stops accepting writes at 95% (usually).
+-   **CPU Usage**: High CPU is fine, but look for Thread Pool usage (`NetworkProcessorAvgIdlePercent`). If < 0.3 (30%), you need more network threads.
+
+### Redpanda Specifics
+Redpanda uses a thread-per-core architecture.
+-   **Reactor Utilization**: The most important metric. If > 90%, the core is saturated.
+-   **IO Queue**: If high, disk cannot keep up.
 
 ### Architectural Reasoning
-**Why Monitor UnderReplicatedPartitions?**
-This is the most critical metric. It indicates:
-- Broker is down or slow
-- Network issues
-- Disk I/O saturation
-If this stays > 0 for extended periods, you risk data loss.
-
-### Redpanda-Specific Metrics
-- `vectorized_reactor_utilization`: CPU utilization per core
-- `vectorized_storage_log_compacted_segment`: Compaction activity
-- `vectorized_kafka_rpc_active_connections`: Active client connections
-
-### Key Components
-- **JMX Exporter**: Exposes Kafka metrics as Prometheus format
-- **Redpanda Admin API**: REST API at `:9644/metrics`
-- **Burrow**: LinkedIn's consumer lag monitoring tool
+**Why "Under Replicated" is the Holy Grail Metric**
+It captures almost all failures:
+-   Broker down? -> Under Replicated.
+-   Network slow? -> Under Replicated.
+-   Disk slow? -> Under Replicated.
+-   GC pause? -> Under Replicated.
+If you only alert on one thing, make it this.
