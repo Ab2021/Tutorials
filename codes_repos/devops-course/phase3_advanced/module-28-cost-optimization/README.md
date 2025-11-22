@@ -1,70 +1,97 @@
-# Module 28: Cost Optimization
+# Cloud Cost Optimization & FinOps
 
 ## 🎯 Learning Objectives
 
-By the end of this module, you will:
-- Understand the core concepts of cost optimization
-- Gain hands-on experience with industry-standard tools
-- Apply best practices in real-world scenarios
-- Build production-ready solutions
+By the end of this module, you will have a comprehensive understanding of Cost Optimization, including:
+- **FinOps**: Understanding the cultural shift to make everyone responsible for cost.
+- **Visibility**: Using tools like **Kubecost** and AWS Cost Explorer to see where money goes.
+- **Optimization**: Rightsizing instances, using Spot/Reserved Instances, and eliminating waste.
+- **Governance**: Implementing budgets, alerts, and tagging policies.
+- **Kubernetes**: Optimizing K8s costs with **Karpenter** and resource limits.
 
 ---
 
-## 📖 Module Overview
+## 📖 Theoretical Concepts
 
-**Duration:** 6-8 hours  
-**Difficulty:** Advanced
+### 1. FinOps Principles
 
-### Topics Covered
+FinOps (Financial Operations) is a cultural practice that brings financial accountability to the variable spend model of cloud.
+- **Collaborate**: Finance, Engineering, and Business work together.
+- **Decide**: Everyone can make cost-aware decisions in real-time.
+- **Optimize**: Continuously improve efficiency.
 
-- FinOps
-- Cost visibility
-- Rightsizing
-- Reserved instances
-- Governance
+### 2. The 80/20 Rule
 
----
+80% of your cloud bill comes from 20% of resources.
+- **Compute**: EC2/VMs (biggest cost).
+- **Data Transfer**: Moving data between regions/clouds.
+- **Storage**: S3/EBS (cheap per GB, but adds up).
 
-## 📚 Theoretical Concepts
+### 3. Pricing Models
 
-### Introduction
+- **On-Demand**: Pay by the hour. Most expensive. Most flexible.
+- **Reserved Instances (RIs)**: 1-3 year commitment. 30-70% discount.
+- **Spot Instances**: Bid on unused capacity. Up to 90% discount. Can be terminated with 2-min notice.
+- **Savings Plans**: Flexible RIs. Commit to $/hour instead of instance type.
 
-[Comprehensive theoretical content will cover the fundamental concepts, principles, and best practices for cost optimization.]
+### 4. Kubernetes Cost Optimization
 
-### Key Concepts
-
-[Detailed explanations of core concepts with examples and diagrams]
-
-### Best Practices
-
-[Industry-standard best practices and recommendations]
+- **Right-Sizing**: Set `requests` = actual usage. Don't over-provision.
+- **Cluster Autoscaler**: Add/remove nodes based on pending pods.
+- **Karpenter**: AWS-native autoscaler. Provisions the exact instance type needed (vs fixed node groups).
+- **Kubecost**: Shows cost per namespace/pod/label.
 
 ---
 
 ## 🔧 Practical Examples
 
-### Example 1: Basic Implementation
+### Tagging Strategy (Terraform)
 
-```bash
-# Example commands and code
-echo "Practical examples will be provided"
+```hcl
+resource "aws_instance" "web" {
+  ami           = "ami-123456"
+  instance_type = "t3.micro"
+
+  tags = {
+    Environment = "Production"
+    Team        = "Platform"
+    CostCenter  = "Engineering"
+    Project     = "WebApp"
+  }
+}
 ```
 
-### Example 2: Advanced Scenario
+### Budget Alert (AWS CLI)
 
 ```bash
-# More complex examples
-echo "Advanced use cases and patterns"
+aws budgets create-budget \
+  --account-id 123456789012 \
+  --budget file://budget.json \
+  --notifications-with-subscribers file://notifications.json
+```
+
+### Karpenter Provisioner
+
+```yaml
+apiVersion: karpenter.sh/v1alpha5
+kind: Provisioner
+metadata:
+  name: default
+spec:
+  requirements:
+    - key: karpenter.sh/capacity-type
+      operator: In
+      values: ["spot", "on-demand"]
+  limits:
+    resources:
+      cpu: 1000
 ```
 
 ---
 
 ## 🎯 Hands-on Labs
 
-- [Lab 28.1: Finops Principles](./labs/lab-28.1-finops-principles.md)
 - [Lab 28.1: Kubecost (Cost Visibility)](./labs/lab-28.1-kubecost.md)
-- [Lab 28.10: Cost Governance](./labs/lab-28.10-cost-governance.md)
-- [Lab 28.2: Cost Visibility](./labs/lab-28.2-cost-visibility.md)
 - [Lab 28.2: Karpenter (Just-in-Time Scaling)](./labs/lab-28.2-karpenter.md)
 - [Lab 28.3: Resource Tagging](./labs/lab-28.3-resource-tagging.md)
 - [Lab 28.4: Rightsizing](./labs/lab-28.4-rightsizing.md)
@@ -73,39 +100,31 @@ echo "Advanced use cases and patterns"
 - [Lab 28.7: Cost Allocation](./labs/lab-28.7-cost-allocation.md)
 - [Lab 28.8: Budget Alerts](./labs/lab-28.8-budget-alerts.md)
 - [Lab 28.9: Waste Elimination](./labs/lab-28.9-waste-elimination.md)
+- [Lab 28.10: Cost Governance](./labs/lab-28.10-cost-governance.md)
+
+---
+
 ## 📚 Additional Resources
 
 ### Official Documentation
-- [Link to official documentation]
-- [Related tools and frameworks]
+- [Kubecost Documentation](https://docs.kubecost.com/)
+- [AWS Cost Optimization](https://aws.amazon.com/aws-cost-management/)
 
-### Tutorials and Guides
-- [Recommended tutorials]
-- [Video courses]
-
-### Community Resources
-- [Forums and discussion groups]
-- [GitHub repositories]
+### Tools
+- [Infracost](https://www.infracost.io/) - See Terraform costs before deploying.
 
 ---
 
 ## 🔑 Key Takeaways
 
-- [Key concept 1]
-- [Key concept 2]
-- [Key concept 3]
-- [Best practice 1]
-- [Best practice 2]
+1.  **Visibility First**: You can't optimize what you can't measure.
+2.  **Tag Everything**: Tags are the foundation of cost allocation.
+3.  **Delete Unused Resources**: Orphaned EBS volumes, old snapshots, idle load balancers.
+4.  **Automate Shutdowns**: Turn off Dev/Test environments at night and weekends.
 
 ---
 
 ## ⏭️ Next Steps
 
-1. Complete all 10 labs in the `labs/` directory
-2. Review the key concepts and best practices
-3. Apply what you've learned in a personal project
-4. Proceed to the next module
-
----
-
-**Keep Learning!** 🚀
+1.  Complete the labs to reduce your cloud bill by 30%.
+2.  Proceed to **[Module 29: Incident Management](../module-29-incident-management/README.md)** to handle production outages.
