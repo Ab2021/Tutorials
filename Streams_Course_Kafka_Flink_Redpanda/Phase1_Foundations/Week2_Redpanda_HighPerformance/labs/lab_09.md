@@ -7,24 +7,32 @@
 60 mins
 
 ## Learning Objectives
-- Tuning
+-   Use `rpk redpanda tune`.
+-   Understand OS-level optimizations.
 
 ## Problem Statement
-Tune Redpanda for high throughput (batch size, linger.ms).
+*Note: This requires running on Linux (not Docker Desktop on Mac/Windows).*
+Run the autotuner to optimize for network and disk.
+1.  Run `rpk redpanda tune help`.
+2.  Enable `aio_events` and `disk_irq` tuners.
 
 ## Starter Code
-```python
+```bash
 rpk redpanda tune all
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+This modifies system files (`/etc/sysctl.conf`). Run with sudo.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```bash
+sudo rpk redpanda tune disk_irq aio_events
+```
+Output will show which parameters were changed (e.g., IRQ affinity).
 </details>

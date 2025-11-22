@@ -7,24 +7,37 @@
 60 mins
 
 ## Learning Objectives
-- Operations
+-   Trigger the partition balancer.
+-   Understand `on-demand` vs `continuous` balancing.
 
 ## Problem Statement
-Observe and trigger partition rebalancing.
+1.  Create a topic with 30 partitions.
+2.  Observe they are spread evenly.
+3.  Kill one node. Wait.
+4.  Bring the node back.
+5.  Partitions might not move back immediately. Trigger a rebalance.
 
 ## Starter Code
-```python
+```bash
 rpk cluster partitions balancer-status
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+Redpanda's balancer is usually continuous. You can tweak `partition_autobalancing_mode`.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```bash
+# Check status
+rpk cluster partitions balancer-status
+
+# Force rebalance (if needed)
+# Usually Redpanda does this automatically, but you can inspect the movement:
+rpk cluster partitions movement-cancel --all # To stop it
+```
 </details>

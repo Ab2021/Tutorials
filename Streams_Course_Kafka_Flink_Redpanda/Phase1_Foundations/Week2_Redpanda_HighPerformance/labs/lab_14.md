@@ -1,4 +1,4 @@
-# Lab 14: Redpanda Security
+# Lab 14: Redpanda Security (SASL/SCRAM)
 
 ## Difficulty
 🔴 Hard
@@ -7,24 +7,39 @@
 60 mins
 
 ## Learning Objectives
-- Security
+-   Enable SASL authentication.
+-   Create users and ACLs.
 
 ## Problem Statement
-Enable SASL/SCRAM authentication.
+1.  Enable `enable_sasl: true` in `redpanda.yaml`.
+2.  Create a superuser `admin`.
+3.  Try to access without auth (should fail).
+4.  Access with auth.
 
 ## Starter Code
-```python
-rpk acl user create myuser
+```yaml
+redpanda:
+  enable_sasl: true
+  superusers: ["admin"]
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+You need to pass `--user` and `--password` to `rpk` commands.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+### Create User
+```bash
+rpk acl user create admin -p secret
+```
+
+### Access
+```bash
+rpk cluster info --user admin --password secret --sasl-mechanism SCRAM-SHA-256
+```
 </details>

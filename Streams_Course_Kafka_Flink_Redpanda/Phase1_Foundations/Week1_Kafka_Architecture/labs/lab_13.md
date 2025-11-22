@@ -7,24 +7,37 @@
 60 mins
 
 ## Learning Objectives
-- Security
+-   Understand Kafka ACLs (Access Control Lists).
+-   Restrict access to a topic.
 
 ## Problem Statement
-Configure ACLs to restrict read/write access to a topic.
+*Note: This requires a Kafka cluster configured with an Authorizer (e.g., `SimpleAclAuthorizer`). For this lab, we will assume the environment is set up or we will use the CLI to simulate the commands.*
+
+1.  Create a user `alice`.
+2.  Deny `alice` from reading topic `secret`.
+3.  Verify that `alice` cannot consume.
 
 ## Starter Code
-```python
-admin.create_acls([acl_binding])
+```bash
+kafka-acls --bootstrap-server localhost:9092 --add --allow-principal User:bob --operation Read --topic secret
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+By default, if no ACLs exist, access might be allowed (depending on `allow.everyone.if.no.acl.found`).
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+### Command to Add ACL
+```bash
+# Allow Bob to read/write
+kafka-acls --bootstrap-server localhost:9092   --add   --allow-principal User:bob   --operation Read   --operation Write   --topic secret
+
+# Deny Alice (if implicit allow is on, or just don't add her)
+kafka-acls --bootstrap-server localhost:9092   --add   --deny-principal User:alice   --operation All   --topic secret
+```
 </details>

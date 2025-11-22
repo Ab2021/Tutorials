@@ -7,24 +7,36 @@
 45 mins
 
 ## Learning Objectives
-- Administration
+-   Use the Redpanda Admin API (port 9644).
+-   Manage users and config.
 
 ## Problem Statement
-Use the Admin API to manage Redpanda users.
+The Admin API allows operational control.
+1.  Query the cluster health via the API.
+2.  Create a user `admin` with password `secret` via the API.
 
 ## Starter Code
-```python
-requests.post('http://admin-api/v1/users')
+```bash
+curl http://localhost:9644/v1/status
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+User management endpoint is `/v1/security/users`.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+### Check Status
+```bash
+curl http://localhost:9644/v1/cluster_view
+```
+
+### Create User
+```bash
+curl -X POST http://localhost:9644/v1/security/users   -H "Content-Type: application/json"   -d '{"username": "admin", "password": "secret", "algorithm": "SCRAM-SHA-256"}'
+```
 </details>

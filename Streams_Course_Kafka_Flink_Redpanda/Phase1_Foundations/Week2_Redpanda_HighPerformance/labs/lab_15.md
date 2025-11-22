@@ -1,4 +1,4 @@
-# Lab 15: HTTP Proxy
+# Lab 15: HTTP Proxy (PandaProxy)
 
 ## Difficulty
 🟢 Easy
@@ -7,24 +7,47 @@
 30 mins
 
 ## Learning Objectives
-- Access
+-   Use the REST API to produce/consume.
 
 ## Problem Statement
-Produce and consume messages via the PandaProxy HTTP API.
+Redpanda has a built-in HTTP proxy on port 8082.
+1.  Create a topic `http-test`.
+2.  POST a message to it using `curl`.
+3.  GET messages from it using `curl`.
 
 ## Starter Code
-```python
-curl -X POST http://localhost:8082/topics/test
+```bash
+curl -X POST http://localhost:8082/topics/http-test ...
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+Content-Type must be `application/vnd.kafka.json.v2+json`.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+### Produce
+```bash
+curl -X POST "http://localhost:8082/topics/http-test"   -H "Content-Type: application/vnd.kafka.json.v2+json"   -d '{"records":[{"value":"hello http"}]}'
+```
+
+### Consume
+First, create a consumer:
+```bash
+curl -X POST "http://localhost:8082/consumers/my-group"   -H "Content-Type: application/vnd.kafka.v2+json"   -d '{"name": "my-consumer", "format": "json", "auto.offset.reset": "earliest"}'
+```
+
+Subscribe:
+```bash
+curl -X POST "http://localhost:8082/consumers/my-group/instances/my-consumer/subscription"   -H "Content-Type: application/vnd.kafka.v2+json"   -d '{"topics":["http-test"]}'
+```
+
+Fetch:
+```bash
+curl "http://localhost:8082/consumers/my-group/instances/my-consumer/records"   -H "Accept: application/vnd.kafka.json.v2+json"
+```
 </details>

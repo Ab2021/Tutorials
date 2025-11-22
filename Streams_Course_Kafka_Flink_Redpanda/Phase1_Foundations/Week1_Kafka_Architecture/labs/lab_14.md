@@ -7,24 +7,44 @@
 60 mins
 
 ## Learning Objectives
-- Observability
+-   Enable JMX in Kafka.
+-   Connect using JConsole or VisualVM.
+-   Identify key metrics (MessagesInPerSec, BytesOutPerSec).
 
 ## Problem Statement
-Enable JMX ports and connect via JConsole to view metrics.
+1.  Configure `KAFKA_JMX_OPTS` in Docker Compose.
+2.  Expose the JMX port.
+3.  Connect via JConsole on your host machine.
+4.  Find the `MessagesInPerSec` MBean.
 
 ## Starter Code
-```python
-KAFKA_JMX_OPTS='-Dcom.sun.management.jmxremote'
+```yaml
+environment:
+  KAFKA_JMX_PORT: 9101
+  KAFKA_JMX_HOSTNAME: localhost
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+You might need to set `-Dcom.sun.management.jmxremote.rmi.port=9101` as well.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+### Docker Compose Update
+```yaml
+    environment:
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+    ports:
+      - "9101:9101"
+```
+
+### Connection
+1.  Open `jconsole` (part of JDK).
+2.  Connect to `localhost:9101`.
+3.  Navigate to `MBeans` -> `kafka.server` -> `BrokerTopicMetrics` -> `MessagesInPerSec`.
 </details>

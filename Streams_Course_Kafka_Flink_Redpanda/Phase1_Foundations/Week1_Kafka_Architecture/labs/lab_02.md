@@ -7,27 +7,62 @@
 30 mins
 
 ## Learning Objectives
-- AdminClient
+-   Use the `AdminClient` API in Python.
+-   Understand partitions and replication factors.
+-   Handle `TopicAlreadyExists` exceptions.
 
 ## Problem Statement
-Create a topic with 3 partitions and replication factor of 2 using Python AdminClient.
+Write a Python script using `confluent-kafka` to create a topic named `user-clicks` with **3 partitions** and a **replication factor of 2**. If the topic already exists, print a message instead of crashing.
 
 ## Starter Code
 ```python
 from confluent_kafka.admin import AdminClient, NewTopic
 
 def create_topic(conf, topic_name):
-    pass
+    admin_client = AdminClient(conf)
+    # Your code here...
+
+if __name__ == "__main__":
+    conf = {'bootstrap.servers': 'localhost:9092'}
+    create_topic(conf, "user-clicks")
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+Use `admin_client.create_topics()`. It returns a dictionary of futures. You need to wait on the future to see if it succeeded.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+from confluent_kafka.admin import AdminClient, NewTopic
+from confluent_kafka import KafkaException
+
+def create_topic(conf, topic_name):
+    admin_client = AdminClient(conf)
+    
+    # Define the topic: Name, Partitions, Replication Factor
+    new_topic = NewTopic(topic_name, num_partitions=3, replication_factor=2)
+    
+    # Create the topic
+    fs = admin_client.create_topics([new_topic])
+    
+    # Wait for the result
+    for topic, f in fs.items():
+        try:
+            f.result()  # The result itself is None
+            print(f"Topic {topic} created")
+        except Exception as e:
+            if e.args[0].code() == KafkaException.TOPIC_ALREADY_EXISTS:
+                 print(f"Topic {topic} already exists")
+            else:
+                print(f"Failed to create topic {topic}: {e}")
+
+if __name__ == "__main__":
+    conf = {'bootstrap.servers': 'localhost:9092'}
+    create_topic(conf, "user-clicks")
+```
 </details>

@@ -7,24 +7,41 @@
 30 mins
 
 ## Learning Objectives
-- CLI
+-   Master the `rpk` (Redpanda Keeper) CLI.
+-   Create topics, produce, and consume without writing code.
 
 ## Problem Statement
-Use `rpk` to create topics, produce, and consume messages.
+1.  Create a topic `chat-room` with 5 partitions.
+2.  Produce 3 messages ("Hello", "World", "Redpanda") using `rpk`.
+3.  Consume them using `rpk` with offset `oldest`.
 
 ## Starter Code
-```python
-rpk topic create my-topic -p 3
+```bash
+rpk topic create ...
+rpk topic produce ...
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+`rpk topic produce` reads from stdin. You can pipe data into it.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+### Commands
+```bash
+# Create Topic
+rpk topic create chat-room -p 5 -r 1
+
+# Produce
+echo "Hello" | rpk topic produce chat-room
+echo "World" | rpk topic produce chat-room
+echo "Redpanda" | rpk topic produce chat-room
+
+# Consume
+rpk topic consume chat-room --offset oldest
+```
 </details>
