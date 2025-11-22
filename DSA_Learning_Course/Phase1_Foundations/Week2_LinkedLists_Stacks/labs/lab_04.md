@@ -1,98 +1,31 @@
-# Lab 04: Linked Lists & Stacks - Exercise 4
+# Lab 04: Valid Parentheses
 
 ## Difficulty
 🟢 Easy
 
 ## Estimated Time
-45 mins
+30 mins
 
 ## Learning Objectives
-- Master concept 4 from Linked Lists & Stacks
-- Apply techniques in practical scenarios
-- Optimize solutions for efficiency
-
-## Prerequisites
-- Completed Linked Lists & Stacks readings
-- Understanding of core concepts
+- Stack usage
 
 ## Problem Statement
-
-[Detailed problem description will be added here]
-
-## Requirements
-
-1. Implement the core functionality
-2. Handle edge cases
-3. Optimize for time and space complexity
-4. Write clean, documented code
+Given a string containing '(', ')', '{', '}', '[' and ']', determine if the input string is valid.
 
 ## Starter Code
-
 ```python
-def solution():
-    """
-    TODO: Implement your solution here
-    """
-    pass
-
-# Test cases
-def test_solution():
-    # Add test cases here
+def isValid(s):
     pass
 ```
 
 ## Hints
-
 <details>
 <summary>Hint 1</summary>
-
-Consider the time complexity of your approach. Can you optimize it?
-</details>
-
-<details>
-<summary>Hint 2</summary>
-
-Think about edge cases: empty inputs, single elements, duplicates, etc.
+Focus on the core logic first.
 </details>
 
 ## Solution
-
 <details>
 <summary>Click to reveal solution</summary>
-
-### Approach
-
-[Solution approach will be detailed here]
-
-```python
-def solution_optimized():
-    """
-    Optimized solution with explanation
-    """
-    pass
-```
-
-### Time Complexity
-O(n) - [Explanation]
-
-### Space Complexity
-O(1) - [Explanation]
-
-### Explanation
-[Detailed walkthrough of the solution]
-
+Solution will be provided after you attempt the problem.
 </details>
-
-## Extensions
-
-1. Extend the problem to handle [variation 1]
-2. Optimize for [specific constraint]
-3. Implement [alternative approach]
-
-## Related Concepts
-- Related topic 1
-- Related topic 2
-
----
-
-**Next**: [Lab 05](lab_05.md)
