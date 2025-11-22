@@ -1,30 +1,38 @@
 # Lab 05: Tumbling Windows
 
 ## Difficulty
-🟢 Easy
+🟡 Medium
 
 ## Estimated Time
 45 mins
 
 ## Learning Objectives
-- Windows
+-   Implement a Tumbling Processing Time Window.
+-   Aggregate data per window.
 
 ## Problem Statement
-Aggregate data in fixed-size non-overlapping windows.
+Count words arriving from a socket, but aggregate them in **10-second tumbling windows**.
+Output: `(word, count)` every 10 seconds.
 
 ## Starter Code
 ```python
-window(TumblingEventTimeWindows.of(Time.seconds(10)))
+from pyflink.datastream.window import TumblingProcessingTimeWindows
+from pyflink.common import Time
+
+# ds.key_by(...).window(TumblingProcessingTimeWindows.of(Time.seconds(10))).sum(...)
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+Processing Time is easier for testing than Event Time (no watermarks needed).
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+    ds.key_by(lambda x: x[0])       .window(TumblingProcessingTimeWindows.of(Time.seconds(10)))       .sum(1)       .print()
+```
 </details>

@@ -1,30 +1,50 @@
-# Lab 13: Accumulators
+# Lab 13: CoProcessFunction (Connect)
 
 ## Difficulty
-🟢 Easy
+🔴 Hard
 
 ## Estimated Time
-30 mins
+60 mins
 
 ## Learning Objectives
-- Metrics
+-   Connect two streams.
+-   Share state between streams.
 
 ## Problem Statement
-Use accumulators to count events globally.
+Stream A: `ControlStream` (Switch: ON/OFF).
+Stream B: `DataStream` (Words).
+Requirement: Only print words from Stream B if the Switch (Stream A) is ON.
 
 ## Starter Code
 ```python
-getRuntimeContext().addAccumulator(...)
+connected = control_stream.connect(data_stream)
+connected.process(MyCoProcessFunction())
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+You need a `ValueState` to store the current switch status.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+from pyflink.datastream.functions import CoProcessFunction
+
+class Switch(CoProcessFunction):
+    def process_element1(self, value, ctx, out):
+        # Control Stream
+        self.enabled = (value == "ON")
+
+    def process_element2(self, value, ctx, out):
+        # Data Stream
+        if getattr(self, 'enabled', False):
+            out.collect(value)
+
+# Note: In real Flink, you'd use Flink State (ValueState) to persist 'enabled' across restarts.
+# For this simple lab, a python attribute works if no failure.
+```
 </details>

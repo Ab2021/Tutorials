@@ -1,30 +1,37 @@
-# Lab 08: ProcessWindowFunction
+# Lab 08: Session Windows
 
 ## Difficulty
 🟡 Medium
 
 ## Estimated Time
-60 mins
+45 mins
 
 ## Learning Objectives
-- Low-level
+-   Implement Session Windows.
+-   Understand the "Gap".
 
 ## Problem Statement
-Use ProcessWindowFunction to access window metadata.
+Group user clicks into sessions. A session ends if the user is idle for **5 seconds**.
+Count clicks per session.
 
 ## Starter Code
 ```python
-class MyProcessWindow(ProcessWindowFunction):
+from pyflink.datastream.window import ProcessingTimeSessionWindows
+
+# window(ProcessingTimeSessionWindows.with_gap(Time.seconds(5)))
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+Session windows merge. The key is the user ID.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+ds.key_by(lambda x: x['user_id'])   .window(ProcessingTimeSessionWindows.with_gap(Time.seconds(5)))   .sum('clicks')   .print()
+```
 </details>

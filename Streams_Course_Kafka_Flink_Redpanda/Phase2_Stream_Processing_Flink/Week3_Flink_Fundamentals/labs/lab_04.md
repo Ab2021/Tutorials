@@ -1,30 +1,42 @@
-# Lab 04: Event Time & Watermarks
+# Lab 04: Filter & Map
 
 ## Difficulty
-🟡 Medium
+🟢 Easy
 
 ## Estimated Time
-60 mins
+30 mins
 
 ## Learning Objectives
-- Time
+-   Use basic transformations.
+-   Parse JSON strings.
 
 ## Problem Statement
-Implement a custom WatermarkStrategy for out-of-order data.
+Read a stream of JSON strings `{"user": "A", "age": 25}`.
+1.  Parse JSON.
+2.  Filter out users under 18.
+3.  Map to `Name: A`.
 
 ## Starter Code
 ```python
-WatermarkStrategy.for_bounded_out_of_orderness(...)
+import json
+# ds.map(json.loads).filter(...)
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+Handle JSON parsing errors gracefully (try/except) or the job will fail.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+import json
+from pyflink.common import Types
+
+def parse_and_filter(ds):
+    return ds         .map(lambda x: json.loads(x), output_type=Types.MAP(Types.STRING(), Types.STRING()))         .filter(lambda x: int(x['age']) >= 18)         .map(lambda x: f"Name: {x['user']}", output_type=Types.STRING())
+```
 </details>

@@ -1,30 +1,53 @@
-# Lab 12: Broadcast State
+# Lab 12: Rich Functions (Lifecycle)
 
 ## Difficulty
-🔴 Hard
+🟡 Medium
 
 ## Estimated Time
-90 mins
+45 mins
 
 ## Learning Objectives
-- Patterns
+-   Use `open()` and `close()` in a RichMapFunction.
+-   Simulate a database connection.
 
 ## Problem Statement
-Broadcast a control stream (rules) to all parallel instances.
+Create a `RichMapFunction` that:
+1.  In `open()`, prints "Opening DB Connection".
+2.  In `map()`, appends " processed" to the input.
+3.  In `close()`, prints "Closing DB Connection".
 
 ## Starter Code
 ```python
-ctx.getBroadcastState(rule_state_descriptor)
+class MyMapper(RichMapFunction):
+    def open(self, ctx):
+        pass
+    def map(self, value):
+        pass
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+`open()` is called once per parallel task, not per element.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+from pyflink.datastream.functions import RichMapFunction
+
+class DBMapper(RichMapFunction):
+    def open(self, runtime_context):
+        print("Opening DB Connection...")
+
+    def map(self, value):
+        return value + " processed"
+
+    def close(self):
+        print("Closing DB Connection...")
+
+ds.map(DBMapper()).print()
+```
 </details>

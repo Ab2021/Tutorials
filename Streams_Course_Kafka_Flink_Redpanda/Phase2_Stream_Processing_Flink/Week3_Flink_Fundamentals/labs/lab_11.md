@@ -1,30 +1,43 @@
-# Lab 11: CoProcessFunction
+# Lab 11: Kafka Sink
 
 ## Difficulty
-🔴 Hard
+🟡 Medium
 
 ## Estimated Time
-60 mins
+45 mins
 
 ## Learning Objectives
-- Joins
+-   Write data back to Kafka.
+-   Configure `KafkaSink`.
 
 ## Problem Statement
-Connect two streams and process them together.
+Read from `input-topic`, transform (uppercase), and write to `output-topic` with `at-least-once` semantics.
 
 ## Starter Code
 ```python
-stream1.connect(stream2).process(...)
+sink = KafkaSink.builder()     .set_bootstrap_servers("localhost:9092")     .set_record_serializer(...)     .build()
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+Use `KafkaRecordSerializationSchema`.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+from pyflink.datastream.connectors.kafka import KafkaSink, KafkaRecordSerializationSchema
+
+sink = KafkaSink.builder()     .set_bootstrap_servers("localhost:9092")     .set_record_serializer(
+        KafkaRecordSerializationSchema.builder()
+            .set_topic("output-topic")
+            .set_value_serialization_schema(SimpleStringSchema())
+            .build()
+    )     .set_delivery_guarantee(DeliveryGuarantee.AT_LEAST_ONCE)     .build()
+
+ds.sink_to(sink)
+```
 </details>

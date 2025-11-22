@@ -1,30 +1,38 @@
 # Lab 06: Sliding Windows
 
 ## Difficulty
-🟢 Easy
+🟡 Medium
 
 ## Estimated Time
 45 mins
 
 ## Learning Objectives
-- Windows
+-   Implement Sliding Windows.
+-   Understand overlap.
 
 ## Problem Statement
-Implement sliding windows for moving averages.
+Calculate the moving average of numbers over the last **1 minute**, updated every **10 seconds**.
+Input: Stream of integers.
 
 ## Starter Code
 ```python
-window(SlidingEventTimeWindows.of(...))
+from pyflink.datastream.window import SlidingProcessingTimeWindows
+
+# window(SlidingProcessingTimeWindows.of(Time.minutes(1), Time.seconds(10)))
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+You might need a custom `AggregateFunction` or `ProcessWindowFunction` to calculate the average (sum/count).
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+# Using Reduce for simplicity (Sum)
+ds.key_by(lambda x: "key")   .window(SlidingProcessingTimeWindows.of(Time.minutes(1), Time.seconds(10)))   .reduce(lambda a, b: a + b)   .print()
+```
 </details>

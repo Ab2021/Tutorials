@@ -1,30 +1,42 @@
-# Lab 14: ParameterTool
+# Lab 14: Async I/O
 
 ## Difficulty
-🟢 Easy
+🔴 Hard
 
 ## Estimated Time
-30 mins
+60 mins
 
 ## Learning Objectives
-- Config
+-   Use Async I/O to call external APIs without blocking.
 
 ## Problem Statement
-Pass configuration parameters to the Flink job.
+*Note: PyFlink support for Async I/O is limited compared to Java. We will simulate the concept or use a ThreadPool.*
+Simulate an external API call that takes 1s. Use `map` vs `async_wait` (conceptual).
 
 ## Starter Code
 ```python
-ParameterTool.fromArgs(args)
+# PyFlink Async I/O is complex. 
+# We will focus on the concept:
+# OrderedWait vs UnorderedWait
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+If you block in a `map` function, you block the checkpointing barrier too!
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+*Conceptual Solution (Java syntax is standard for Async I/O)*:
+```java
+AsyncDataStream.unorderedWait(
+    stream,
+    new AsyncDatabaseRequest(),
+    1000, TimeUnit.MILLISECONDS,
+    100);
+```
+In PyFlink, ensure you use a thread pool inside your map function if you must do blocking I/O, but true Async I/O requires the Async operator.
 </details>
