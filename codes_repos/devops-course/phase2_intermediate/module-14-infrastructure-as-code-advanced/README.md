@@ -1,60 +1,91 @@
-# Module 14: Infrastructure as Code - Advanced
+# Advanced Infrastructure as Code
 
 ## 🎯 Learning Objectives
 
-By the end of this module, you will:
-- Understand the core concepts of infrastructure as code - advanced
-- Gain hands-on experience with industry-standard tools
-- Apply best practices in real-world scenarios
-- Build production-ready solutions
+By the end of this module, you will have a comprehensive understanding of advanced IaC patterns, including:
+- **Modularity**: Writing reusable Terraform Modules to DRY (Don't Repeat Yourself) up your code.
+- **Environments**: Managing Dev, Staging, and Prod using Workspaces and Directory layouts.
+- **State Operations**: Importing existing infrastructure and fixing drift.
+- **Testing**: Validating IaC with `tflint`, `checkov`, and `terratest`.
+- **Polyglot IaC**: Introduction to **Pulumi** for defining infrastructure in Python/TypeScript.
 
 ---
 
-## 📖 Module Overview
+## 📖 Theoretical Concepts
 
-**Duration:** 10-12 hours  
-**Difficulty:** Intermediate
+### 1. Terraform Modules
 
-### Topics Covered
+A module is a container for multiple resources that are used together.
+- **Root Module**: The directory where you run `terraform apply`.
+- **Child Module**: A module called by another module.
+- **Structure**:
+  - `main.tf`: Resources.
+  - `variables.tf`: Inputs.
+  - `outputs.tf`: Return values.
 
-- Terraform modules
-- CloudFormation stacks
-- Pulumi
-- State management
-- Enterprise patterns
+### 2. Managing Environments
 
----
+Two main strategies:
+1.  **Workspaces**: Same state file, different "workspace" prefix. Good for similar environments.
+2.  **Directory Layout**: Separate folders (`env/dev`, `env/prod`) that call the same modules. Safer and more explicit.
 
-## 📚 Theoretical Concepts
+### 3. Advanced State Operations
 
-### Introduction
+- **Import**: Bring existing AWS resources under Terraform control (`terraform import aws_s3_bucket.b bucket-name`).
+- **Taint**: Mark a resource for recreation (`terraform taint aws_instance.web`).
+- **State Move**: Refactor code without destroying resources (`terraform state mv`).
 
-[Comprehensive theoretical content will cover the fundamental concepts, principles, and best practices for infrastructure as code - advanced.]
+### 4. IaC Testing & Security
 
-### Key Concepts
-
-[Detailed explanations of core concepts with examples and diagrams]
-
-### Best Practices
-
-[Industry-standard best practices and recommendations]
+- **Static Analysis**: `tflint` (syntax), `checkov` (security/compliance).
+- **Unit Testing**: `terratest` (Go library) deploys real infrastructure, validates it, and destroys it.
+- **Policy as Code**: **Sentinel** or **OPA** (Open Policy Agent) to enforce rules (e.g., "No S3 buckets without encryption").
 
 ---
 
 ## 🔧 Practical Examples
 
-### Example 1: Basic Implementation
+### Creating a Module (`modules/webserver/main.tf`)
 
-```bash
-# Example commands and code
-echo "Practical examples will be provided"
+```hcl
+resource "aws_instance" "this" {
+  ami           = var.ami
+  instance_type = var.size
+  tags          = var.tags
+}
 ```
 
-### Example 2: Advanced Scenario
+### Consuming a Module (`main.tf`)
+
+```hcl
+module "web_server" {
+  source = "./modules/webserver"
+
+  ami  = "ami-123456"
+  size = "t2.micro"
+  tags = { Env = "Dev" }
+}
+```
+
+### Terraform Workspaces
 
 ```bash
-# More complex examples
-echo "Advanced use cases and patterns"
+# Create new workspace
+terraform workspace new dev
+
+# Switch
+terraform workspace select prod
+```
+
+### Pulumi Example (Python)
+
+```python
+import pulumi
+import pulumi_aws as aws
+
+bucket = aws.s3.Bucket("my-bucket")
+
+pulumi.export("bucket_name", bucket.id)
 ```
 
 ---
@@ -62,9 +93,6 @@ echo "Advanced use cases and patterns"
 ## 🎯 Hands-on Labs
 
 - [Lab 14.1: Terraform Modules](./labs/lab-14.1-terraform-modules.md)
-- [Lab 14.1: Terraform Modules](./labs/lab-14.1-terraform-modules_extra.md)
-- [Lab 14.10: Enterprise Patterns](./labs/lab-14.10-enterprise-patterns.md)
-- [Lab 14.2: Module Composition](./labs/lab-14.2-module-composition.md)
 - [Lab 14.2: Remote State & Locking](./labs/lab-14.2-remote-state.md)
 - [Lab 14.3: Cloudformation Stacks](./labs/lab-14.3-cloudformation-stacks.md)
 - [Lab 14.4: Pulumi Intro](./labs/lab-14.4-pulumi-intro.md)
@@ -73,39 +101,32 @@ echo "Advanced use cases and patterns"
 - [Lab 14.7: Cross Tool Comparison](./labs/lab-14.7-cross-tool-comparison.md)
 - [Lab 14.8: Iac Testing](./labs/lab-14.8-iac-testing.md)
 - [Lab 14.9: Terraform Cloud](./labs/lab-14.9-terraform-cloud.md)
+- [Lab 14.10: Enterprise Patterns](./labs/lab-14.10-enterprise-patterns.md)
+
+---
+
 ## 📚 Additional Resources
 
 ### Official Documentation
-- [Link to official documentation]
-- [Related tools and frameworks]
+- [Terraform Modules](https://developer.hashicorp.com/terraform/language/modules)
+- [Pulumi Documentation](https://www.pulumi.com/docs/)
 
-### Tutorials and Guides
-- [Recommended tutorials]
-- [Video courses]
-
-### Community Resources
-- [Forums and discussion groups]
-- [GitHub repositories]
+### Tools
+- [Checkov](https://www.checkov.io/) - Security scanning for IaC.
+- [Terratest](https://terratest.gruntwork.io/) - Testing library.
 
 ---
 
 ## 🔑 Key Takeaways
 
-- [Key concept 1]
-- [Key concept 2]
-- [Key concept 3]
-- [Best practice 1]
-- [Best practice 2]
+1.  **Module Granularity**: Don't make modules too small (1 resource) or too big (entire VPC + App). Group logically related resources.
+2.  **State Hygiene**: Use remote state with locking. Never commit `.tfstate` to Git.
+3.  **Refactoring**: Use `terraform state mv` to move resources between modules without downtime.
+4.  **Policy**: Catch security issues at build time, not deploy time.
 
 ---
 
 ## ⏭️ Next Steps
 
-1. Complete all 10 labs in the `labs/` directory
-2. Review the key concepts and best practices
-3. Apply what you've learned in a personal project
-4. Proceed to the next module
-
----
-
-**Keep Learning!** 🚀
+1.  Complete the labs to refactor your monolithic Terraform into modules.
+2.  Proceed to **[Module 15: Advanced Configuration Management](../module-15-configuration-management-advanced/README.md)** to manage complex server configurations.

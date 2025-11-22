@@ -1,60 +1,100 @@
-# Module 21: Advanced Kubernetes
+# Advanced Kubernetes
 
 ## 🎯 Learning Objectives
 
-By the end of this module, you will:
-- Understand the core concepts of advanced kubernetes
-- Gain hands-on experience with industry-standard tools
-- Apply best practices in real-world scenarios
-- Build production-ready solutions
+By the end of this module, you will have a comprehensive understanding of advanced Kubernetes concepts, including:
+- **Extensibility**: Creating Custom Resource Definitions (CRDs) and Operators.
+- **Packaging**: Managing complex applications with **Helm**.
+- **Service Mesh**: Controlling traffic, security, and observability with **Istio**.
+- **Security**: Hardening clusters with Network Policies and Pod Security Standards.
+- **Stateful Apps**: Running databases on K8s with StatefulSets.
 
 ---
 
-## 📖 Module Overview
+## 📖 Theoretical Concepts
 
-**Duration:** 10-12 hours  
-**Difficulty:** Advanced
+### 1. CRDs and Operators
 
-### Topics Covered
+Kubernetes is extensible. You can teach it new tricks.
+- **CRD (Custom Resource Definition)**: Defines a new object type (e.g., `PrometheusRule`, `PostgresDB`).
+- **Operator**: A controller that watches for your CRD and takes action. It encodes human operational knowledge into software (e.g., "How to backup a Postgres DB").
 
-- Operators
-- CRDs
-- Helm
-- Service mesh
-- Production K8s
+### 2. Helm (The Package Manager)
 
----
+Writing 50 YAML files for one app is painful.
+- **Chart**: A collection of templates.
+- **Values**: Configuration values injected into templates.
+- **Release**: A deployed instance of a chart.
+- **Rollback**: `helm rollback my-app 1`.
 
-## 📚 Theoretical Concepts
+### 3. Service Mesh (Istio)
 
-### Introduction
+A dedicated infrastructure layer for service-to-service communication.
+- **Traffic Management**: Canary deployments (90% v1, 10% v2), Retries, Circuit Breakers.
+- **Security**: mTLS (Mutual TLS) encryption between all pods automatically.
+- **Observability**: Golden metrics (Latency, Traffic, Errors) for free.
 
-[Comprehensive theoretical content will cover the fundamental concepts, principles, and best practices for advanced kubernetes.]
+### 4. Network Policies
 
-### Key Concepts
-
-[Detailed explanations of core concepts with examples and diagrams]
-
-### Best Practices
-
-[Industry-standard best practices and recommendations]
+By default, all pods can talk to all pods. This is bad.
+- **NetworkPolicy**: A firewall rule for K8s.
+- **Best Practice**: "Deny All" ingress by default, then whitelist specific traffic.
 
 ---
 
 ## 🔧 Practical Examples
 
-### Example 1: Basic Implementation
+### Helm Chart Structure
 
-```bash
-# Example commands and code
-echo "Practical examples will be provided"
+```text
+my-chart/
+  Chart.yaml
+  values.yaml
+  templates/
+    deployment.yaml
+    service.yaml
 ```
 
-### Example 2: Advanced Scenario
+### Installing a Chart
 
 ```bash
-# More complex examples
-echo "Advanced use cases and patterns"
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm install my-redis bitnami/redis --set architecture=standalone
+```
+
+### Network Policy (Deny All)
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+```
+
+### Istio VirtualService (Canary)
+
+```yaml
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: my-app
+spec:
+  hosts:
+  - my-app
+  http:
+  - route:
+    - destination:
+        host: my-app
+        subset: v1
+      weight: 90
+    - destination:
+        host: my-app
+        subset: v2
+      weight: 10
 ```
 
 ---
@@ -62,51 +102,41 @@ echo "Advanced use cases and patterns"
 ## 🎯 Hands-on Labs
 
 - [Lab 21.1: Custom Resources](./labs/lab-21.1-custom-resources.md)
-- [Lab 21.1: StatefulSets & Headless Services](./labs/lab-21.1-statefulsets.md)
-- [Lab 21.10: K8S Production](./labs/lab-21.10-k8s-production.md)
-- [Lab 21.2: DaemonSets, Jobs, & CronJobs](./labs/lab-21.2-daemonsets-jobs.md)
 - [Lab 21.2: Operators](./labs/lab-21.2-operators.md)
 - [Lab 21.3: Helm Charts](./labs/lab-21.3-helm-charts.md)
-- [Lab 21.3: Service Mesh with Istio](./labs/lab-21.3-istio-service-mesh.md)
 - [Lab 21.4: Helm Repositories](./labs/lab-21.4-helm-repositories.md)
 - [Lab 21.5: Service Mesh Istio](./labs/lab-21.5-service-mesh-istio.md)
 - [Lab 21.6: Network Policies](./labs/lab-21.6-network-policies.md)
 - [Lab 21.7: Pod Security](./labs/lab-21.7-pod-security.md)
 - [Lab 21.8: Cluster Autoscaling](./labs/lab-21.8-cluster-autoscaling.md)
 - [Lab 21.9: Stateful Applications](./labs/lab-21.9-stateful-applications.md)
+- [Lab 21.10: K8S Production](./labs/lab-21.10-k8s-production.md)
+
+---
+
 ## 📚 Additional Resources
 
 ### Official Documentation
-- [Link to official documentation]
-- [Related tools and frameworks]
+- [Helm Docs](https://helm.sh/docs/)
+- [Istio Docs](https://istio.io/latest/docs/)
+- [Kubernetes Network Policies](https://kubernetes.io/docs/concepts/services-networking/network-policies/)
 
-### Tutorials and Guides
-- [Recommended tutorials]
-- [Video courses]
-
-### Community Resources
-- [Forums and discussion groups]
-- [GitHub repositories]
+### Tools
+- [K9s](https://k9scli.io/) - Terminal UI for K8s.
+- [Kubens/Kubectx](https://github.com/ahmetb/kubectx) - Switch namespaces/contexts fast.
 
 ---
 
 ## 🔑 Key Takeaways
 
-- [Key concept 1]
-- [Key concept 2]
-- [Key concept 3]
-- [Best practice 1]
-- [Best practice 2]
+1.  **Don't Write Raw YAML**: Use Helm or Kustomize for anything complex.
+2.  **Zero Trust**: Assume the network is compromised. Use Network Policies and mTLS.
+3.  **Operators are Powerful**: Use them for stateful apps (Databases, Queues) instead of managing StatefulSets manually.
+4.  **Sidecars**: Istio injects a proxy (Envoy) into every pod to intercept traffic.
 
 ---
 
 ## ⏭️ Next Steps
 
-1. Complete all 10 labs in the `labs/` directory
-2. Review the key concepts and best practices
-3. Apply what you've learned in a personal project
-4. Proceed to the next module
-
----
-
-**Keep Learning!** 🚀
+1.  Complete the labs to master the K8s ecosystem.
+2.  Proceed to **[Module 22: GitOps with ArgoCD](../module-22-gitops-argocd/README.md)** to automate your K8s deployments.

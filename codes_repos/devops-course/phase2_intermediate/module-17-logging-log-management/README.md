@@ -1,70 +1,107 @@
-# Module 17: Logging and Log Management
+# Logging & Log Management
 
 ## 🎯 Learning Objectives
 
-By the end of this module, you will:
-- Understand the core concepts of logging and log management
-- Gain hands-on experience with industry-standard tools
-- Apply best practices in real-world scenarios
-- Build production-ready solutions
+By the end of this module, you will have a comprehensive understanding of Log Management, including:
+- **Centralized Logging**: Aggregating logs from all servers into a single searchable interface.
+- **ELK Stack**: Setting up Elasticsearch, Logstash, and Kibana.
+- **Fluentd**: Using the CNCF standard for unified log collection.
+- **Loki**: Implementing lightweight, label-based logging with Grafana.
+- **Parsing**: Transforming unstructured text logs into structured JSON data.
 
 ---
 
-## 📖 Module Overview
+## 📖 Theoretical Concepts
 
-**Duration:** 8-10 hours  
-**Difficulty:** Intermediate
+### 1. The Need for Centralized Logging
 
-### Topics Covered
+In a distributed system with 100 containers, you cannot SSH into each one to check `/var/log/syslog`.
+- **Aggregation**: Collect logs from all sources (App, OS, DB, LB).
+- **Indexing**: Make them searchable ("Show me all errors from Service A").
+- **Retention**: Keep logs for 30 days (or 7 years for compliance).
 
-- ELK Stack
-- Fluentd
-- Log parsing
-- Centralized logging
-- Best practices
+### 2. ELK Stack (Elastic Stack)
 
----
+The industry veteran.
+- **Elasticsearch**: A distributed search engine. Stores the logs.
+- **Logstash**: A server-side data processing pipeline. Ingests, transforms, and sends data to ES.
+- **Kibana**: The UI. Visualize data and manage the stack.
+- **Beats**: Lightweight shippers (Filebeat) installed on edge nodes.
 
-## 📚 Theoretical Concepts
+### 3. Fluentd & Fluent Bit
 
-### Introduction
+The Cloud Native choice.
+- **Unified Logging Layer**: Decouples data sources from data backends.
+- **Plugins**: 500+ plugins to talk to S3, Kafka, Elasticsearch, Splunk, etc.
+- **Fluent Bit**: A super-lightweight version written in C, often used as a DaemonSet in K8s.
 
-[Comprehensive theoretical content will cover the fundamental concepts, principles, and best practices for logging and log management.]
+### 4. Loki (PLG Stack)
 
-### Key Concepts
-
-[Detailed explanations of core concepts with examples and diagrams]
-
-### Best Practices
-
-[Industry-standard best practices and recommendations]
+Designed by Grafana Labs.
+- **Index-free**: Unlike ES, Loki doesn't index the text of the logs. It only indexes metadata (labels).
+- **Cost**: Much cheaper storage (S3) and less RAM usage.
+- **LogQL**: Query language similar to PromQL.
 
 ---
 
 ## 🔧 Practical Examples
 
-### Example 1: Basic Implementation
+### Fluentd Config (`fluent.conf`)
 
-```bash
-# Example commands and code
-echo "Practical examples will be provided"
+```xml
+<source>
+  @type forward
+  port 24224
+</source>
+
+<filter app.**>
+  @type parser
+  key_name log
+  format json
+</filter>
+
+<match **>
+  @type elasticsearch
+  host elasticsearch
+  port 9200
+  logstash_format true
+</match>
 ```
 
-### Example 2: Advanced Scenario
+### Logstash Pipeline (`pipeline.conf`)
 
-```bash
-# More complex examples
-echo "Advanced use cases and patterns"
+```ruby
+input {
+  beats {
+    port => 5044
+  }
+}
+
+filter {
+  grok {
+    match => { "message" => "%{COMBINEDAPACHELOG}" }
+  }
+}
+
+output {
+  elasticsearch {
+    hosts => ["http://localhost:9200"]
+    index => "%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM.dd}"
+  }
+}
+```
+
+### LogQL Query (Loki)
+
+```logql
+{app="nginx"} |= "error" | json | status >= 500
 ```
 
 ---
 
 ## 🎯 Hands-on Labs
 
-- [Lab 17.1: Elk Stack Setup](./labs/lab-17.1-elk-stack-setup.md)
 - [Lab 17.1: Fluentd Basics](./labs/lab-17.1-fluentd-basics.md)
-- [Lab 17.10: Logging Best Practices](./labs/lab-17.10-logging-best-practices.md)
-- [Lab 17.2: Elasticsearch Basics](./labs/lab-17.2-elasticsearch-basics.md)
 - [Lab 17.2: Loki & Grafana (PLG Stack)](./labs/lab-17.2-loki-grafana.md)
 - [Lab 17.3: Logstash Pipelines](./labs/lab-17.3-logstash-pipelines.md)
 - [Lab 17.4: Kibana Dashboards](./labs/lab-17.4-kibana-dashboards.md)
@@ -73,39 +110,32 @@ echo "Advanced use cases and patterns"
 - [Lab 17.7: Log Retention](./labs/lab-17.7-log-retention.md)
 - [Lab 17.8: Log Analysis](./labs/lab-17.8-log-analysis.md)
 - [Lab 17.9: Centralized Logging](./labs/lab-17.9-centralized-logging.md)
+- [Lab 17.10: Logging Best Practices](./labs/lab-17.10-logging-best-practices.md)
+
+---
+
 ## 📚 Additional Resources
 
 ### Official Documentation
-- [Link to official documentation]
-- [Related tools and frameworks]
+- [Elastic Stack Docs](https://www.elastic.co/guide/index.html)
+- [Fluentd Docs](https://docs.fluentd.org/)
+- [Grafana Loki Docs](https://grafana.com/docs/loki/latest/)
 
-### Tutorials and Guides
-- [Recommended tutorials]
-- [Video courses]
-
-### Community Resources
-- [Forums and discussion groups]
-- [GitHub repositories]
+### Tools
+- [Grok Debugger](https://grokdebug.herokuapp.com/) - Test your Grok patterns.
 
 ---
 
 ## 🔑 Key Takeaways
 
-- [Key concept 1]
-- [Key concept 2]
-- [Key concept 3]
-- [Best practice 1]
-- [Best practice 2]
+1.  **Log Structurally**: Use JSON. Parsing text with Regex is brittle and slow.
+2.  **Separate Concerns**: Your app should write to `stdout`. The infrastructure (Docker/K8s) should handle routing the logs.
+3.  **Context**: Always include Trace IDs in logs to correlate with Traces.
+4.  **Security**: Sanitize logs. Never log PII (Personally Identifiable Information) or Secrets.
 
 ---
 
 ## ⏭️ Next Steps
 
-1. Complete all 10 labs in the `labs/` directory
-2. Review the key concepts and best practices
-3. Apply what you've learned in a personal project
-4. Proceed to the next module
-
----
-
-**Keep Learning!** 🚀
+1.  Complete the labs to build a centralized logging pipeline.
+2.  Proceed to **[Module 18: Security & Compliance](../module-18-security-compliance/README.md)** to learn how to secure your entire stack.

@@ -1,60 +1,90 @@
-# Module 20: Cloud Architecture Patterns
+# Cloud Architecture Patterns
 
 ## 🎯 Learning Objectives
 
-By the end of this module, you will:
-- Understand the core concepts of cloud architecture patterns
-- Gain hands-on experience with industry-standard tools
-- Apply best practices in real-world scenarios
-- Build production-ready solutions
+By the end of this module, you will have a comprehensive understanding of Cloud Architecture, including:
+- **Scalability**: Scaling Up (Vertical) vs Scaling Out (Horizontal).
+- **Reliability**: Designing systems that survive failure (Multi-AZ, Multi-Region).
+- **Performance**: Using Caching (CDN/Redis) and Event-Driven patterns.
+- **Cost**: Optimizing spend with Spot Instances and Savings Plans.
+- **Framework**: Applying the **AWS Well-Architected Framework**.
 
 ---
 
-## 📖 Module Overview
+## 📖 Theoretical Concepts
 
-**Duration:** 8-10 hours  
-**Difficulty:** Intermediate
+### 1. Scaling Strategies
 
-### Topics Covered
+- **Vertical Scaling**: "Make the server bigger" (t2.micro -> t2.large). Easy, but has a limit. Requires downtime.
+- **Horizontal Scaling**: "Add more servers". Infinite scale. No downtime. Requires a Load Balancer.
 
-- High availability
-- Auto-scaling
-- Disaster recovery
-- Microservices
-- Serverless intro
+### 2. Reliability Patterns
 
----
+- **Redundancy**: N+1 rule. If you need 1 server, run 2.
+- **Circuit Breaker**: If Service A calls Service B and B fails, stop calling B immediately to prevent cascading failure.
+- **Bulkhead**: Isolate components so failure in one doesn't crash the whole ship.
 
-## 📚 Theoretical Concepts
+### 3. Caching & Performance
 
-### Introduction
+- **CDN (Content Delivery Network)**: Cache static assets (images, CSS) at the edge (CloudFront).
+- **In-Memory Cache**: Cache database queries in RAM (Redis/Memcached).
+- **Event-Driven**: Decouple services using Queues (SQS) and Topics (SNS). "Fire and Forget".
 
-[Comprehensive theoretical content will cover the fundamental concepts, principles, and best practices for cloud architecture patterns.]
+### 4. The Well-Architected Framework
 
-### Key Concepts
-
-[Detailed explanations of core concepts with examples and diagrams]
-
-### Best Practices
-
-[Industry-standard best practices and recommendations]
+1.  **Operational Excellence**: Automate changes, respond to events.
+2.  **Security**: Protect data and systems.
+3.  **Reliability**: Recover from failure.
+4.  **Performance Efficiency**: Use computing resources efficiently.
+5.  **Cost Optimization**: Avoid unnecessary costs.
+6.  **Sustainability**: Minimize environmental impact.
 
 ---
 
 ## 🔧 Practical Examples
 
-### Example 1: Basic Implementation
+### Auto Scaling Group (Terraform)
 
-```bash
-# Example commands and code
-echo "Practical examples will be provided"
+```hcl
+resource "aws_autoscaling_group" "web" {
+  desired_capacity   = 2
+  max_size           = 5
+  min_size           = 1
+  vpc_zone_identifier = ["subnet-123", "subnet-456"]
+
+  launch_template {
+    id      = aws_launch_template.web.id
+    version = "$Latest"
+  }
+}
 ```
 
-### Example 2: Advanced Scenario
+### Circuit Breaker (Python Pseudocode)
 
-```bash
-# More complex examples
-echo "Advanced use cases and patterns"
+```python
+def call_service_b():
+    if failures > threshold:
+        return "Service B is temporarily unavailable"
+    
+    try:
+        return http.get("http://service-b")
+    except Timeout:
+        failures += 1
+        return "Timeout"
+```
+
+### Event-Driven (SQS)
+
+```python
+import boto3
+
+sqs = boto3.client('sqs')
+
+# Send message
+sqs.send_message(
+    QueueUrl='https://sqs.us-east-1.amazonaws.com/123/my-queue',
+    MessageBody='Process Order #101'
+)
 ```
 
 ---
@@ -62,9 +92,6 @@ echo "Advanced use cases and patterns"
 ## 🎯 Hands-on Labs
 
 - [Lab 20.1: High Availability (Auto Scaling)](./labs/lab-20.1-high-availability.md)
-- [Lab 20.1: High Availability](./labs/lab-20.1-high-availability_extra.md)
-- [Lab 20.10: Architecture Best Practices](./labs/lab-20.10-architecture-best-practices.md)
-- [Lab 20.2: Auto Scaling](./labs/lab-20.2-auto-scaling.md)
 - [Lab 20.2: Disaster Recovery (Cross-Region Replication)](./labs/lab-20.2-disaster-recovery.md)
 - [Lab 20.3: Disaster Recovery](./labs/lab-20.3-disaster-recovery.md)
 - [Lab 20.4: Multi Region](./labs/lab-20.4-multi-region.md)
@@ -73,39 +100,31 @@ echo "Advanced use cases and patterns"
 - [Lab 20.7: Microservices Architecture](./labs/lab-20.7-microservices-architecture.md)
 - [Lab 20.8: Event Driven](./labs/lab-20.8-event-driven.md)
 - [Lab 20.9: Serverless Intro](./labs/lab-20.9-serverless-intro.md)
+- [Lab 20.10: Architecture Best Practices](./labs/lab-20.10-architecture-best-practices.md)
+
+---
+
 ## 📚 Additional Resources
 
 ### Official Documentation
-- [Link to official documentation]
-- [Related tools and frameworks]
+- [AWS Well-Architected Framework](https://aws.amazon.com/architecture/well-architected/)
+- [Azure Architecture Center](https://learn.microsoft.com/en-us/azure/architecture/)
 
-### Tutorials and Guides
-- [Recommended tutorials]
-- [Video courses]
-
-### Community Resources
-- [Forums and discussion groups]
-- [GitHub repositories]
+### Books
+- "Designing Data-Intensive Applications" by Martin Kleppmann.
 
 ---
 
 ## 🔑 Key Takeaways
 
-- [Key concept 1]
-- [Key concept 2]
-- [Key concept 3]
-- [Best practice 1]
-- [Best practice 2]
+1.  **Design for Failure**: Assume everything will fail.
+2.  **Loose Coupling**: Components should not know the internal details of other components.
+3.  **Statelessness**: Servers should be cattle, not pets. Store state in DB/Redis, not on the server disk.
+4.  **Right Sizing**: Don't use a sledgehammer to crack a nut. Use the smallest instance type that works.
 
 ---
 
 ## ⏭️ Next Steps
 
-1. Complete all 10 labs in the `labs/` directory
-2. Review the key concepts and best practices
-3. Apply what you've learned in a personal project
-4. Proceed to the next module
-
----
-
-**Keep Learning!** 🚀
+1.  Complete the labs to build a resilient, auto-scaling architecture.
+2.  **Congratulations!** You have completed Phase 2 (Intermediate). Proceed to **Phase 3 (Advanced)** to master Kubernetes, GitOps, and Chaos Engineering.

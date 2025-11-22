@@ -1,60 +1,88 @@
-# Module 16: Monitoring and Observability
+# Advanced Monitoring & Observability
 
 ## 🎯 Learning Objectives
 
-By the end of this module, you will:
-- Understand the core concepts of monitoring and observability
-- Gain hands-on experience with industry-standard tools
-- Apply best practices in real-world scenarios
-- Build production-ready solutions
+By the end of this module, you will have a comprehensive understanding of advanced observability, including:
+- **Tracing**: Implementing Distributed Tracing with **Jaeger** and **OpenTelemetry**.
+- **SRE Principles**: Defining and measuring **SLIs**, **SLOs**, and **SLAs**.
+- **Advanced Metrics**: Using Prometheus **Recording Rules** and **Service Discovery**.
+- **Alerting**: Managing alert fatigue with **Alertmanager** grouping and inhibition.
+- **Instrumentation**: Exposing custom business metrics from your application code.
 
 ---
 
-## 📖 Module Overview
+## 📖 Theoretical Concepts
 
-**Duration:** 8-10 hours  
-**Difficulty:** Intermediate
+### 1. Distributed Tracing
 
-### Topics Covered
+In microservices, a single user request might hit 10 different services. Logs are isolated. Tracing connects them.
+- **Trace**: The journey of a request.
+- **Span**: A single unit of work (e.g., "Database Query").
+- **Context Propagation**: Passing the Trace ID via HTTP Headers (`x-b3-traceid`).
 
-- Advanced Prometheus
-- Distributed tracing
-- SLOs/SLIs
-- Custom metrics
-- Observability patterns
+### 2. SRE Concepts (SLI/SLO/SLA)
 
----
+- **SLI (Service Level Indicator)**: The metric (e.g., "Latency"). "What is the latency right now?"
+- **SLO (Service Level Objective)**: The goal (e.g., "99% of requests < 200ms"). "What should it be?"
+- **SLA (Service Level Agreement)**: The contract (e.g., "If we miss the SLO, we pay you"). "What happens if we fail?"
+- **Error Budget**: 100% - SLO. The amount of unreliability you are allowed.
 
-## 📚 Theoretical Concepts
+### 3. Advanced Prometheus
 
-### Introduction
+- **Service Discovery**: Prometheus asks Kubernetes "Where are the pods?" instead of hardcoding IPs.
+- **Recording Rules**: Pre-calculate expensive queries (e.g., `rate(http_requests_total[1h])`) and save the result as a new time series. Speeds up dashboards.
 
-[Comprehensive theoretical content will cover the fundamental concepts, principles, and best practices for monitoring and observability.]
+### 4. Alertmanager
 
-### Key Concepts
-
-[Detailed explanations of core concepts with examples and diagrams]
-
-### Best Practices
-
-[Industry-standard best practices and recommendations]
+Handles alerts sent by Prometheus.
+- **Grouping**: "The database is down" causes 100 apps to fail. Send 1 alert, not 101.
+- **Inhibition**: If "Data Center is Down" is firing, suppress "Server A is Down".
+- **Routing**: Send "Critical" to PagerDuty, "Warning" to Slack.
 
 ---
 
 ## 🔧 Practical Examples
 
-### Example 1: Basic Implementation
+### Custom Metrics (Python)
 
-```bash
-# Example commands and code
-echo "Practical examples will be provided"
+```python
+from prometheus_client import start_http_server, Counter
+
+# Define a metric
+REQUESTS = Counter('app_requests_total', 'Total app requests')
+
+def process_request():
+    REQUESTS.inc()  # Increment
+    # ... logic ...
+
+if __name__ == '__main__':
+    start_http_server(8000)  # Expose on /metrics
 ```
 
-### Example 2: Advanced Scenario
+### Prometheus Recording Rule
 
-```bash
-# More complex examples
-echo "Advanced use cases and patterns"
+```yaml
+groups:
+  - name: example
+    rules:
+    - record: job:http_inprogress_requests:sum
+      expr: sum by (job) (http_inprogress_requests)
+```
+
+### Alertmanager Config
+
+```yaml
+route:
+  group_by: ['alertname']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 1h
+  receiver: 'slack-notifications'
+
+receivers:
+- name: 'slack-notifications'
+  slack_configs:
+  - channel: '#alerts'
 ```
 
 ---
@@ -62,10 +90,7 @@ echo "Advanced use cases and patterns"
 ## 🎯 Hands-on Labs
 
 - [Lab 16.1: Distributed Tracing with Jaeger](./labs/lab-16.1-distributed-tracing.md)
-- [Lab 16.1: Prometheus Advanced](./labs/lab-16.1-prometheus-advanced.md)
-- [Lab 16.10: Observability Patterns](./labs/lab-16.10-observability-patterns.md)
 - [Lab 16.2: Custom Metrics & SLOs](./labs/lab-16.2-custom-metrics-slos.md)
-- [Lab 16.2: Custom Metrics](./labs/lab-16.2-custom-metrics.md)
 - [Lab 16.3: Service Discovery](./labs/lab-16.3-service-discovery.md)
 - [Lab 16.4: Alertmanager](./labs/lab-16.4-alertmanager.md)
 - [Lab 16.5: Grafana Advanced](./labs/lab-16.5-grafana-advanced.md)
@@ -73,39 +98,32 @@ echo "Advanced use cases and patterns"
 - [Lab 16.7: Jaeger Setup](./labs/lab-16.7-jaeger-setup.md)
 - [Lab 16.8: Metrics Best Practices](./labs/lab-16.8-metrics-best-practices.md)
 - [Lab 16.9: Slo Sli Setup](./labs/lab-16.9-slo-sli-setup.md)
+- [Lab 16.10: Observability Patterns](./labs/lab-16.10-observability-patterns.md)
+
+---
+
 ## 📚 Additional Resources
 
 ### Official Documentation
-- [Link to official documentation]
-- [Related tools and frameworks]
+- [OpenTelemetry](https://opentelemetry.io/)
+- [Google SRE Book - SLOs](https://sre.google/workbook/implementing-slos/)
 
-### Tutorials and Guides
-- [Recommended tutorials]
-- [Video courses]
-
-### Community Resources
-- [Forums and discussion groups]
-- [GitHub repositories]
+### Tools
+- [Jaeger](https://www.jaegertracing.io/)
+- [Prometheus Alertmanager](https://prometheus.io/docs/alerting/latest/alertmanager/)
 
 ---
 
 ## 🔑 Key Takeaways
 
-- [Key concept 1]
-- [Key concept 2]
-- [Key concept 3]
-- [Best practice 1]
-- [Best practice 2]
+1.  **Don't Alert on Everything**: Alert on symptoms that affect users (Latency, Errors).
+2.  **Context is King**: A log message without a Trace ID is a needle in a haystack.
+3.  **Define SLOs**: You can't improve reliability if you don't measure it against a target.
+4.  **Code Instrumentation**: The best metrics come from inside the application, not the OS.
 
 ---
 
 ## ⏭️ Next Steps
 
-1. Complete all 10 labs in the `labs/` directory
-2. Review the key concepts and best practices
-3. Apply what you've learned in a personal project
-4. Proceed to the next module
-
----
-
-**Keep Learning!** 🚀
+1.  Complete the labs to instrument your application.
+2.  Proceed to **[Module 17: Logging & Log Management](../module-17-logging-log-management/README.md)** to master log aggregation.
