@@ -22,3 +22,22 @@ Flink compiles the pattern into an NFA.
 ### Key Components
 -   `CEP.pattern(stream, pattern)`: Applies the pattern.
 -   `PatternSelectFunction`: Extracts the result when a match is found.
+
+
+### Advanced Theory: CEP Optimization & NFA
+**1. NFA State Explosion**
+The NFA (Nondeterministic Finite Automaton) stores partial matches.
+-   **Pattern**: `A -> B`.
+-   **Stream**: `A1, A2, A3 ...`.
+-   **State**: Flink stores `A1`, `A2`, `A3` waiting for `B`.
+-   **Risk**: If `B` never comes, state grows infinitely.
+-   **Fix**: Always use `within(Time.minutes(10))` to purge old state.
+
+**2. Skip Strategies**
+When multiple matches overlap:
+-   `NO_SKIP`: Find all matches. (Expensive).
+-   `SKIP_PAST_LAST_EVENT`: Once a match is found, ignore overlapping events. (Faster).
+
+**3. Iterative Conditions**
+`where(ctx -> event.price > prev_event.price)`.
+-   Allows comparing the current event with previously matched events in the sequence.
