@@ -1,30 +1,44 @@
-# Lab 15: Kubernetes Deployment
+# Lab 15: Reactive Mode
 
 ## Difficulty
 🔴 Hard
 
 ## Estimated Time
-90 mins
+60 mins
 
 ## Learning Objectives
-- Ops
+-   Configure Reactive Mode.
+-   Scale TaskManagers.
 
 ## Problem Statement
-Deploy a Flink job to a local Minikube/Kind cluster.
+1.  Configure `scheduler-mode: reactive`.
+2.  Deploy cluster.
+3.  Scale TaskManagers from 1 to 2.
+4.  Verify job rescales automatically.
 
 ## Starter Code
-```python
-kubectl apply -f flink-configuration.yaml
+```yaml
+jobmanager.scheduler: reactive
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+Reactive mode requires Application Mode.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+### Config
+```yaml
+jobmanager.scheduler: reactive
+```
+
+### Scaling
+```bash
+kubectl scale deployment/flink-taskmanager --replicas=2
+```
+Watch the logs. The job should restart with parallelism 2.
 </details>

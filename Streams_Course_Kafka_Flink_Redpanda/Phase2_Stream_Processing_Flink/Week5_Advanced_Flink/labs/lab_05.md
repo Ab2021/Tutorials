@@ -1,30 +1,37 @@
-# Lab 05: Pattern Recognition (CEP)
+# Lab 05: CEP Pattern (FollowedBy)
 
 ## Difficulty
-🔴 Hard
+🟡 Medium
 
 ## Estimated Time
-90 mins
+45 mins
 
 ## Learning Objectives
-- CEP
+-   Define a relaxed sequence pattern.
 
 ## Problem Statement
-Detect a specific sequence of events (Start -> Middle -> End).
+Detect: `Login` followed by `Purchase` within 1 hour. (Other events can happen in between).
 
 ## Starter Code
 ```python
-Pattern.begin('start').next('middle')...
+pattern = Pattern.begin("login")...followed_by("purchase")...within(Time.hours(1))
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+Don't forget `.within()`.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+pattern = Pattern.begin("login").where(
+    SimpleCondition(lambda x: x['type'] == 'Login')
+).followed_by("purchase").where(
+    SimpleCondition(lambda x: x['type'] == 'Purchase')
+).within(Time.hours(1))
+```
 </details>

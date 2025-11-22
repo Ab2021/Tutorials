@@ -1,30 +1,42 @@
-# Lab 06: Stream Enrichment (Async Lookup)
+# Lab 06: Broadcast Join
 
 ## Difficulty
-🔴 Hard
+🟡 Medium
 
 ## Estimated Time
-90 mins
+45 mins
 
 ## Learning Objectives
-- Enrichment
+-   Implement Broadcast Join.
 
 ## Problem Statement
-Enrich stream using Async I/O to external DB.
+Stream A: `Transactions`.
+Stream B: `CurrencyRates` (Broadcast).
+Join to convert Transaction Amount to USD.
 
 ## Starter Code
 ```python
-AsyncFunction to call REST API/DB
+# See Week 4 Lab 09 (Broadcast State)
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+Store rates in Broadcast MapState.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+class CurrencyConverter(BroadcastProcessFunction):
+    def process_broadcast_element(self, rate, ctx):
+        ctx.get_broadcast_state(desc).put(rate['currency'], rate['val'])
+
+    def process_element(self, tx, ctx, out):
+        rate = ctx.get_broadcast_state(desc).get(tx['currency'])
+        if rate:
+            out.collect(tx['amount'] * rate)
+```
 </details>

@@ -1,30 +1,47 @@
-# Lab 10: Transactional Producer
+# Lab 10: Dead Letter Queue (DLQ)
 
 ## Difficulty
-🔴 Hard
+🟡 Medium
 
 ## Estimated Time
-60 mins
+45 mins
 
 ## Learning Objectives
-- Transactions
+-   Handle poison pills.
 
 ## Problem Statement
-Write to multiple topics atomically.
+Process a stream of integers. If input is not an integer, send to DLQ (Side Output).
+Do not fail the job.
 
 ## Starter Code
 ```python
-producer.init_transactions()... commit_transaction()
+try:
+    val = int(s)
+except:
+    # side output
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+Use `OutputTag`.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+dlq_tag = OutputTag("dlq", Types.STRING())
+
+class SafeMap(RichProcessFunction):
+    def process_element(self, value, ctx, out):
+        try:
+            out.collect(int(value))
+        except ValueError:
+            ctx.output(dlq_tag, value)
+
+main = ds.process(SafeMap())
+main.get_side_output(dlq_tag).print()
+```
 </details>

@@ -1,30 +1,39 @@
-# Lab 10: User Defined Aggregate Functions
+# Lab 10: Pandas UDF (Vectorized)
 
 ## Difficulty
 🔴 Hard
 
 ## Estimated Time
-90 mins
+60 mins
 
 ## Learning Objectives
-- SQL
+-   Write a Vectorized UDF for performance.
 
 ## Problem Statement
-Implement an AggregateFunction.
+Implement `add_one(series)` using Pandas. It should take a `pd.Series` and return a `pd.Series`.
 
 ## Starter Code
 ```python
-class MyAgg(AggregateFunction):
+@udf(result_type=Types.INT(), func_type="pandas")
+def add_one(i):
+    return i + 1
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+Requires `pandas` and `pyarrow` installed.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+@udf(result_type=Types.INT(), func_type="pandas")
+def add_one(i):
+    return i + 1
+
+# Usage is same as scalar UDF
+```
 </details>

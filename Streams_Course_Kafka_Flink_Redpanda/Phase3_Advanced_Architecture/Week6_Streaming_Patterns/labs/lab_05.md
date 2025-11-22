@@ -1,30 +1,41 @@
-# Lab 05: Stream Enrichment (Join)
+# Lab 05: Stream Enrichment (Async)
 
 ## Difficulty
-🟡 Medium
+🔴 Hard
 
 ## Estimated Time
 60 mins
 
 ## Learning Objectives
-- Enrichment
+-   Simulate Async Enrichment.
 
 ## Problem Statement
-Enrich a click stream with user data using a join.
+Stream: `UserIDs`.
+Enrichment: Call `fake_api(user_id)` which sleeps 0.1s and returns Name.
+Use `AsyncDataStream` (or simulate with ThreadPool in Map if Async not available).
 
 ## Starter Code
 ```python
-clicks.join(users)
+# PyFlink Async support requires specific setup.
+# We will simulate the latency impact.
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+Compare throughput of blocking `map` vs `async`.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+# Conceptual Async Function
+class AsyncEnricher(AsyncFunction):
+    def async_invoke(self, input, result_future):
+        # Call external API in thread
+        val = call_api(input)
+        result_future.complete([val])
+```
 </details>

@@ -1,30 +1,43 @@
-# Lab 04: Kappa Architecture
+# Lab 04: Debezium JSON Parsing
 
 ## Difficulty
 🟡 Medium
 
 ## Estimated Time
-60 mins
+45 mins
 
 ## Learning Objectives
-- Architecture
+-   Parse Debezium JSON format.
 
 ## Problem Statement
-Process same data for real-time and reprocessing (replay).
+Input: Debezium JSON string `{"before": null, "after": {"id": 1, "val": "A"}, "op": "c"}`.
+Task: Extract the "after" state. Filter out deletes (`op="d"`).
 
 ## Starter Code
 ```python
-Reset offsets to 0 to reprocess
+import json
+# ds.map(json.loads).filter(...)
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+Check `op` field. `c`=create, `u`=update, `d`=delete, `r`=read (snapshot).
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+import json
+
+def parse_cdc(record):
+    data = json.loads(record)
+    if data['op'] != 'd':
+        return data['after']
+    return None
+
+ds.map(parse_cdc).filter(lambda x: x is not None).print()
+```
 </details>

@@ -1,30 +1,36 @@
-# Lab 11: Read-Process-Write Transaction
+# Lab 11: Throttling
 
 ## Difficulty
-🔴 Hard
+🟡 Medium
 
 ## Estimated Time
-90 mins
+45 mins
 
 ## Learning Objectives
-- Transactions
+-   Implement a Throttler.
 
 ## Problem Statement
-Consume, process, and produce exactly-once.
+Limit the stream to 1 element per second.
+(Useful for Kappa backfill to protect DB).
 
 ## Starter Code
 ```python
-consume -> process -> produce (in transaction)
+time.sleep(1)
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+`time.sleep` in a MapFunction blocks the thread. In Flink, this effectively throttles the source (backpressure).
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+import time
+
+ds.map(lambda x: (time.sleep(1), x)[1]).print()
+```
 </details>

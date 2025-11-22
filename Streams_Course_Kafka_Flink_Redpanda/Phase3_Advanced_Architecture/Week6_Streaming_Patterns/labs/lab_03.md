@@ -1,30 +1,49 @@
-# Lab 03: CQRS Implementation
+# Lab 03: Kappa Backfill
 
 ## Difficulty
 🔴 Hard
 
 ## Estimated Time
-90 mins
+60 mins
 
 ## Learning Objectives
-- Patterns
+-   Simulate a Kappa Architecture backfill.
 
 ## Problem Statement
-Separate Command and Query sides using Kafka.
+1.  Write a job that reads from a file (simulating Kafka history).
+2.  Process all records.
+3.  Switch to reading from a socket (simulating real-time).
+*Note: In Flink, you can chain sources or use `HybridSource`.*
 
 ## Starter Code
 ```python
-Command Service -> Kafka -> Query Service
+# HybridSource is complex in PyFlink.
+# Simulate by reading file first, then socket.
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+For this lab, just write a job that reads a file. The concept is that the *same code* runs on the file as on the stream.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+# Same logic for both
+def process(ds):
+    ds.map(lambda x: x.upper()).print()
+
+# Backfill Job
+env = StreamExecutionEnvironment.get_execution_environment()
+ds = env.read_text_file("history.txt")
+process(ds)
+env.execute("Backfill")
+
+# Realtime Job
+# ds = env.socket_text_stream(...)
+# process(ds)
+```
 </details>

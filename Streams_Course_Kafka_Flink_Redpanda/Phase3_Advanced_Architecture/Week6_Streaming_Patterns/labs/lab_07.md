@@ -1,30 +1,41 @@
-# Lab 07: Dead Letter Queue (DLQ)
+# Lab 07: Temporal Table Join (SQL)
 
 ## Difficulty
-🟡 Medium
+🔴 Hard
 
 ## Estimated Time
-45 mins
+60 mins
 
 ## Learning Objectives
-- Error Handling
+-   Use SQL Temporal Join.
 
 ## Problem Statement
-Route failed messages to a DLQ topic.
+Join `Orders` with `Rates` using `FOR SYSTEM_TIME AS OF`.
+(Requires setting up versioned table).
 
 ## Starter Code
-```python
-catch exception -> produce to 'dlq-topic'
+```sql
+SELECT * FROM Orders o
+JOIN Rates FOR SYSTEM_TIME AS OF o.ts r
+ON o.curr = r.curr
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+Rates table must have a primary key and watermark.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+t_env.execute_sql("""
+    SELECT o.id, o.amount * r.rate
+    FROM Orders o
+    JOIN Rates FOR SYSTEM_TIME AS OF o.ts r
+    ON o.currency = r.currency
+""").print()
+```
 </details>

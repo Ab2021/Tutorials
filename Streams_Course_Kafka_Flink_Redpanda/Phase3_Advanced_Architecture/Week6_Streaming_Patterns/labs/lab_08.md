@@ -1,30 +1,43 @@
-# Lab 08: Retry Strategy
+# Lab 08: Idempotent Sink
 
 ## Difficulty
-🟡 Medium
+🟢 Easy
 
 ## Estimated Time
-45 mins
+30 mins
 
 ## Learning Objectives
-- Error Handling
+-   Understand Idempotency.
 
 ## Problem Statement
-Implement exponential backoff for retries.
+Write a Sink that writes to a Python Dictionary (simulating a KV store).
+Ensure that writing `(Key, Val)` twice results in the same state.
 
 ## Starter Code
 ```python
-sleep(2 ** attempt)
+store = {}
+def sink(k, v):
+    store[k] = v
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+A dictionary assignment is naturally idempotent. `list.append` is NOT.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+class IdempotentSink(SinkFunction):
+    def __init__(self):
+        self.store = {}
+
+    def invoke(self, value, context):
+        # Idempotent: Overwrite
+        self.store[value[0]] = value[1]
+        print(self.store)
+```
 </details>

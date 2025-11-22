@@ -1,30 +1,55 @@
-# Lab 07: Interval Joins
+# Lab 07: Kafka SQL Connector
 
 ## Difficulty
 🟡 Medium
 
 ## Estimated Time
-60 mins
+45 mins
 
 ## Learning Objectives
-- Joins
+-   Define a Kafka table using DDL.
 
 ## Problem Statement
-Join two streams based on a time interval.
+Create a table `KafkaTable` backed by topic `input`. Read from it using SQL.
 
 ## Starter Code
-```python
-WHERE a.ts BETWEEN b.ts - INTERVAL '5' MINUTE AND ...
+```sql
+CREATE TABLE KafkaTable (
+  `user` STRING,
+  `age` INT
+) WITH (
+  'connector' = 'kafka',
+  'topic' = 'input',
+  'properties.bootstrap.servers' = 'localhost:9092',
+  'format' = 'json'
+)
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+Ensure you have the kafka-sql-connector JAR.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+t_env.execute_sql("""
+    CREATE TABLE KafkaTable (
+      `user` STRING,
+      `age` INT
+    ) WITH (
+      'connector' = 'kafka',
+      'topic' = 'input',
+      'properties.bootstrap.servers' = 'localhost:9092',
+      'properties.group.id' = 'testGroup',
+      'scan.startup.mode' = 'earliest-offset',
+      'format' = 'json'
+    )
+""")
+
+t_env.execute_sql("SELECT * FROM KafkaTable").print()
+```
 </details>

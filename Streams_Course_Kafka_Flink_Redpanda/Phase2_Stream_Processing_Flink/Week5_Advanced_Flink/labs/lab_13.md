@@ -1,4 +1,4 @@
-# Lab 13: Deduplication
+# Lab 13: K8s Deployment (Session)
 
 ## Difficulty
 🟡 Medium
@@ -7,24 +7,36 @@
 45 mins
 
 ## Learning Objectives
-- SQL
+-   Deploy Flink Session Cluster on K8s.
 
 ## Problem Statement
-Remove duplicates using ROW_NUMBER() over partition.
+Use `kubectl` to deploy a JobManager and TaskManager. Submit a job to it.
 
 ## Starter Code
-```python
-ROW_NUMBER() OVER (PARTITION BY id ORDER BY ts DESC)
+```yaml
+# jobmanager-deployment.yaml
+# taskmanager-deployment.yaml
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+Use the official Flink K8s docs YAMLs.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```bash
+kubectl create -f jobmanager-service.yaml
+kubectl create -f jobmanager-deployment.yaml
+kubectl create -f taskmanager-deployment.yaml
+
+# Forward port
+kubectl port-forward service/flink-jobmanager 8081:8081
+
+# Submit
+flink run -m localhost:8081 examples/streaming/WordCount.jar
+```
 </details>

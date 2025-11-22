@@ -1,30 +1,35 @@
-# Lab 09: Idempotent Consumer
+# Lab 09: Transactional Sink (2PC)
 
 ## Difficulty
-🟡 Medium
+🔴 Hard
 
 ## Estimated Time
 60 mins
 
 ## Learning Objectives
-- Reliability
+-   Implement `TwoPhaseCommitSinkFunction`.
 
 ## Problem Statement
-Use a unique ID to prevent processing duplicates.
+(Reuse Week 4 Lab 15 logic).
+Implement a sink that writes to a temporary file and renames it on commit.
 
 ## Starter Code
 ```python
-if id in processed_cache: skip
+# See Week 4 Lab 15
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+Ensure `pre_commit` flushes data.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+# Refer to Week 4 Lab 15 for the 2PC implementation.
+# Key takeaway: The file is not visible until the checkpoint completes.
+```
 </details>

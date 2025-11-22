@@ -1,30 +1,35 @@
-# Lab 02: Event Sourcing Consumer (Materialized View)
+# Lab 02: CQRS Projection
 
 ## Difficulty
 🟡 Medium
 
 ## Estimated Time
-60 mins
+45 mins
 
 ## Learning Objectives
-- Patterns
+-   Separate Write and Read models.
 
 ## Problem Statement
-Reconstruct current state from event log.
+Stream: `OrderCreated(id, user, amount)`.
+Projection: Maintain a `UserSpent` table (User -> Total Amount).
+Implement the projection using a Flink Map/Reduce job.
 
 ## Starter Code
 ```python
-apply_event(state, event)
+ds.key_by(lambda x: x['user']).reduce(...)
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+The "Read Model" here is the state of the Reduce function.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+ds.key_by(lambda x: x['user'])   .reduce(lambda a, b: {'user': a['user'], 'amount': a['amount'] + b['amount']})   .print()
+```
 </details>

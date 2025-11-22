@@ -1,30 +1,48 @@
-# Lab 01: Event Sourcing Producer
+# Lab 01: Event Sourcing (Replay)
 
 ## Difficulty
-🟡 Medium
+🟢 Easy
 
 ## Estimated Time
-60 mins
+30 mins
 
 ## Learning Objectives
-- Patterns
+-   Replay events to rebuild state.
 
 ## Problem Statement
-Implement a producer that emits state change events.
+1.  Create a list of events: `[("Deposit", 100), ("Withdraw", 50), ("Deposit", 20)]`.
+2.  Replay them to calculate the final balance.
+3.  Print the balance after each event.
 
 ## Starter Code
 ```python
-Event(type='AccountCreated', data={...})
+events = [("Deposit", 100), ("Withdraw", 50)]
+# Loop and update balance
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+This is a simple fold/reduce operation.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+def run():
+    events = [("Deposit", 100), ("Withdraw", 50), ("Deposit", 20)]
+    balance = 0
+    
+    for event, amount in events:
+        if event == "Deposit":
+            balance += amount
+        elif event == "Withdraw":
+            balance -= amount
+        print(f"Event: {event} {amount}, Balance: {balance}")
+
+if __name__ == '__main__':
+    run()
+```
 </details>

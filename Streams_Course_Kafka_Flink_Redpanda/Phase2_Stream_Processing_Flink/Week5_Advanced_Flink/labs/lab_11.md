@@ -1,30 +1,42 @@
-# Lab 11: SQL Client
+# Lab 11: MiniCluster Test
 
 ## Difficulty
-🟢 Easy
+🟡 Medium
 
 ## Estimated Time
-30 mins
+45 mins
 
 ## Learning Objectives
-- CLI
+-   Write a JUnit test using MiniCluster.
 
 ## Problem Statement
-Use the Flink SQL Client to submit queries.
+*Java Lab*. Write a JUnit test that starts a `MiniClusterWithClientResource`, submits a job, and verifies output.
 
 ## Starter Code
-```python
-./bin/sql-client.sh
+```java
+@ClassRule
+public static MiniClusterWithClientResource flinkCluster =
+    new MiniClusterWithClientResource(...);
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+Use `Sink.collect()` (test utility) to capture output.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```java
+// Conceptual
+@Test
+public void testJob() throws Exception {
+    StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+    // ... build job ...
+    env.execute();
+    // Verify results
+}
+```
 </details>

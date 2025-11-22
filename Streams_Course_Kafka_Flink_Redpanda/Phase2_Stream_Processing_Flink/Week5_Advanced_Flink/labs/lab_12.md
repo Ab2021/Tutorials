@@ -1,30 +1,45 @@
-# Lab 12: Catalogs
+# Lab 12: TestHarness (ProcessFunction)
 
 ## Difficulty
-🟡 Medium
+🔴 Hard
 
 ## Estimated Time
-45 mins
+60 mins
 
 ## Learning Objectives
-- Metadata
+-   Use `KeyedOneInputStreamOperatorTestHarness`.
+-   Test time-dependent logic.
 
 ## Problem Statement
-Register a Hive or Generic InMemoryCatalog.
+*Java Lab*. Test a ProcessFunction that sets a timer for 1 minute.
+1.  Push element.
+2.  Advance time by 1 minute.
+3.  Verify output.
 
 ## Starter Code
-```python
-table_env.register_catalog(...)
+```java
+harness.processElement("A", 1000);
+harness.setProcessingTime(1000 + 60000);
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+Harness allows full control over time.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```java
+// Conceptual
+OneInputStreamOperatorTestHarness<String, String, String> harness = 
+    new KeyedOneInputStreamOperatorTestHarness<>(operator, ...);
+
+harness.open();
+harness.processElement("key", 100);
+harness.setProcessingTime(60100); // Trigger timer
+// Assert output contains alert
+```
 </details>

@@ -1,30 +1,58 @@
-# Lab 08: Temporal Table Joins
+# Lab 08: Upsert Kafka SQL
 
 ## Difficulty
 🔴 Hard
 
 ## Estimated Time
-90 mins
+60 mins
 
 ## Learning Objectives
-- Joins
+-   Use `upsert-kafka` connector.
+-   Write a changelog stream.
 
 ## Problem Statement
-Join a stream with a versioned table (CDC).
+Read from `Orders`, aggregate `SUM(amount)` per user, and write to `UserStats` (Kafka Upsert topic).
 
 ## Starter Code
-```python
-FOR SYSTEM_TIME AS OF stream.proctime
+```sql
+CREATE TABLE UserStats (
+  user_name STRING PRIMARY KEY NOT ENFORCED,
+  total_amount INT
+) WITH (
+  'connector' = 'upsert-kafka',
+  ...
+)
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+Upsert Kafka requires a Primary Key.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+t_env.execute_sql("""
+    CREATE TABLE UserStats (
+      user_name STRING PRIMARY KEY NOT ENFORCED,
+      total_amount INT
+    ) WITH (
+      'connector' = 'upsert-kafka',
+      'topic' = 'user_stats',
+      'properties.bootstrap.servers' = 'localhost:9092',
+      'key.format' = 'json',
+      'value.format' = 'json'
+    )
+""")
+
+t_env.execute_sql("""
+    INSERT INTO UserStats
+    SELECT user_name, SUM(amount)
+    FROM Orders
+    GROUP BY user_name
+""")
+```
 </details>

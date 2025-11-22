@@ -1,4 +1,4 @@
-# Lab 06: CEP with Time Constraints
+# Lab 06: CEP Looping Pattern
 
 ## Difficulty
 🔴 Hard
@@ -7,24 +7,29 @@
 60 mins
 
 ## Learning Objectives
-- CEP
+-   Use `.times()` or `.oneOrMore()`.
 
 ## Problem Statement
-Detect patterns that happen within a specific timeframe.
+Detect: 3 consecutive failed logins.
 
 ## Starter Code
 ```python
-within(Time.seconds(10))
+pattern = Pattern.begin("fail").where(...).times(3).consecutive()
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+`consecutive()` ensures they are adjacent.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+pattern = Pattern.begin("fail").where(
+    SimpleCondition(lambda x: x['type'] == 'Fail')
+).times(3).consecutive()
+```
 </details>

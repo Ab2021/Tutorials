@@ -1,30 +1,43 @@
-# Lab 12: Outbox Pattern
+# Lab 12: Deduplication
 
 ## Difficulty
-🔴 Hard
+🟡 Medium
 
 ## Estimated Time
-90 mins
+45 mins
 
 ## Learning Objectives
-- Patterns
+-   Deduplicate a stream using State.
 
 ## Problem Statement
-Implement Outbox pattern to sync DB and Kafka.
+Filter out duplicate events (based on ID) seen within the last 10 minutes.
 
 ## Starter Code
 ```python
-DB Insert -> CDC -> Kafka
+state_desc = ValueStateDescriptor("seen", Types.BOOLEAN())
+ttl = StateTtlConfig...
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+Use Keyed State with TTL.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+class Dedupe(RichFlatMapFunction):
+    def open(self, ctx):
+        desc = ValueStateDescriptor("seen", Types.BOOLEAN())
+        desc.enable_time_to_live(ttl_config) # 10 mins
+        self.seen = ctx.get_state(desc)
+
+    def flat_map(self, value, out):
+        if self.seen.value() is None:
+            self.seen.update(True)
+            out.collect(value)
+```
 </details>

@@ -1,30 +1,44 @@
-# Lab 15: Throttling Pattern
+# Lab 15: Command Sourcing
 
 ## Difficulty
-🟡 Medium
+🔴 Hard
 
 ## Estimated Time
-45 mins
+60 mins
 
 ## Learning Objectives
-- Stability
+-   Implement Command Sourcing.
 
 ## Problem Statement
-Implement a token bucket throttler in a Flink map.
+Stream of `Commands` (e.g., "Transfer").
+Process function validates command and emits `Event` ("Transferred") or `Failure` ("InsufficientFunds").
 
 ## Starter Code
 ```python
-if bucket.try_consume(): process else: wait
+class CommandHandler(KeyedProcessFunction):
+    def process_element(self, cmd, ctx, out):
+        # check balance
+        # emit event
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+This is the core of the Event Sourcing Write Model.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```python
+class Bank(KeyedProcessFunction):
+    def process_element(self, cmd, ctx, out):
+        current_balance = self.balance_state.value() or 0
+        if cmd['amount'] <= current_balance:
+            self.balance_state.update(current_balance - cmd['amount'])
+            out.collect(f"Transferred {cmd['amount']}")
+        else:
+            ctx.output(failure_tag, "Insufficient Funds")
+```
 </details>
