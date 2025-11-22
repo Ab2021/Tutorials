@@ -1,60 +1,90 @@
-# Module 29: Incident Management
+# Incident Management & On-Call
 
 ## 🎯 Learning Objectives
 
-By the end of this module, you will:
-- Understand the core concepts of incident management
-- Gain hands-on experience with industry-standard tools
-- Apply best practices in real-world scenarios
-- Build production-ready solutions
+By the end of this module, you will have a comprehensive understanding of Incident Management, including:
+- **Incident Response**: Following a structured process to resolve outages quickly.
+- **On-Call**: Setting up rotations and escalation policies with **PagerDuty**.
+- **Runbooks**: Writing step-by-step guides for common incidents.
+- **Post-Mortems**: Conducting blameless retrospectives to learn from failures.
+- **Culture**: Building a culture where failure is seen as an opportunity to improve.
 
 ---
 
-## 📖 Module Overview
+## 📖 Theoretical Concepts
 
-**Duration:** 6-8 hours  
-**Difficulty:** Advanced
+### 1. Incident Severity Levels
 
-### Topics Covered
+- **SEV-1 (Critical)**: Complete outage. All hands on deck. Page everyone.
+- **SEV-2 (High)**: Partial outage. Core functionality degraded. Page on-call engineer.
+- **SEV-3 (Medium)**: Minor issue. Non-core feature broken. Create ticket.
+- **SEV-4 (Low)**: Cosmetic issue. Fix in next sprint.
 
-- Incident response
-- On-call
-- Runbooks
-- Post-mortems
-- Blameless culture
+### 2. Incident Response Roles
 
----
+- **Incident Commander (IC)**: Coordinates the response. Makes decisions. Doesn't fix the problem.
+- **Communications Lead**: Updates status page, notifies stakeholders.
+- **Subject Matter Expert (SME)**: The engineer who actually fixes the issue.
 
-## 📚 Theoretical Concepts
+### 3. The Incident Lifecycle
 
-### Introduction
+1.  **Detection**: Alert fires (Prometheus/PagerDuty).
+2.  **Triage**: IC assesses severity and assembles team.
+3.  **Mitigation**: Stop the bleeding (rollback, failover).
+4.  **Resolution**: Fix the root cause.
+5.  **Post-Mortem**: Document what happened and how to prevent it.
 
-[Comprehensive theoretical content will cover the fundamental concepts, principles, and best practices for incident management.]
+### 4. Blameless Post-Mortems
 
-### Key Concepts
-
-[Detailed explanations of core concepts with examples and diagrams]
-
-### Best Practices
-
-[Industry-standard best practices and recommendations]
+The goal is to learn, not to punish.
+- **What Happened**: Timeline of events.
+- **Why It Happened**: Root cause analysis (5 Whys).
+- **Action Items**: Concrete steps to prevent recurrence (assign owners and due dates).
 
 ---
 
 ## 🔧 Practical Examples
 
-### Example 1: Basic Implementation
+### Runbook Template
 
-```bash
-# Example commands and code
-echo "Practical examples will be provided"
+```markdown
+# Runbook: Database Connection Pool Exhausted
+
+## Symptoms
+- HTTP 500 errors
+- Logs show "Too many connections"
+
+## Diagnosis
+1. Check Grafana dashboard: `db_connections_active`
+2. If > 95% of max, pool is exhausted
+
+## Mitigation
+1. Restart app pods: `kubectl rollout restart deployment/app`
+2. Increase pool size (temporary): `kubectl set env deployment/app DB_POOL_SIZE=50`
+
+## Root Cause
+- Slow queries holding connections open
+- Missing connection timeout
+
+## Prevention
+- Add connection timeout (5s)
+- Optimize slow queries
 ```
 
-### Example 2: Advanced Scenario
+### PagerDuty Escalation Policy
 
-```bash
-# More complex examples
-echo "Advanced use cases and patterns"
+```yaml
+escalation_policy:
+  name: "Platform Team"
+  escalation_rules:
+    - escalation_delay_in_minutes: 0
+      targets:
+        - type: user
+          id: "P123ABC"  # On-call engineer
+    - escalation_delay_in_minutes: 15
+      targets:
+        - type: user
+          id: "P456DEF"  # Team lead
 ```
 
 ---
@@ -62,9 +92,6 @@ echo "Advanced use cases and patterns"
 ## 🎯 Hands-on Labs
 
 - [Lab 29.1: Incident Response Simulation](./labs/lab-29.1-incident-response.md)
-- [Lab 29.1: Incident Response](./labs/lab-29.1-incident-response_extra.md)
-- [Lab 29.10: Continuous Improvement](./labs/lab-29.10-continuous-improvement.md)
-- [Lab 29.2: On Call Setup](./labs/lab-29.2-on-call-setup.md)
 - [Lab 29.2: Blameless Post-Mortems](./labs/lab-29.2-post-mortem.md)
 - [Lab 29.3: Pagerduty Integration](./labs/lab-29.3-pagerduty-integration.md)
 - [Lab 29.4: Runbooks](./labs/lab-29.4-runbooks.md)
@@ -73,39 +100,31 @@ echo "Advanced use cases and patterns"
 - [Lab 29.7: Escalation Policies](./labs/lab-29.7-escalation-policies.md)
 - [Lab 29.8: Incident Metrics](./labs/lab-29.8-incident-metrics.md)
 - [Lab 29.9: Blameless Culture](./labs/lab-29.9-blameless-culture.md)
+- [Lab 29.10: Continuous Improvement](./labs/lab-29.10-continuous-improvement.md)
+
+---
+
 ## 📚 Additional Resources
 
 ### Official Documentation
-- [Link to official documentation]
-- [Related tools and frameworks]
+- [PagerDuty Documentation](https://support.pagerduty.com/)
+- [Google SRE Book - Incident Management](https://sre.google/sre-book/managing-incidents/)
 
-### Tutorials and Guides
-- [Recommended tutorials]
-- [Video courses]
-
-### Community Resources
-- [Forums and discussion groups]
-- [GitHub repositories]
+### Templates
+- [Atlassian Post-Mortem Template](https://www.atlassian.com/incident-management/postmortem/templates)
 
 ---
 
 ## 🔑 Key Takeaways
 
-- [Key concept 1]
-- [Key concept 2]
-- [Key concept 3]
-- [Best practice 1]
-- [Best practice 2]
+1.  **Practice**: Run Game Days (simulate outages) to practice incident response.
+2.  **Automate Runbooks**: If a runbook is run more than 3 times, automate it.
+3.  **No Blame**: "Who broke it?" is the wrong question. "How do we prevent this?" is the right one.
+4.  **MTTR > MTBF**: Mean Time To Recovery is more important than Mean Time Between Failures. Failures will happen. Recover fast.
 
 ---
 
 ## ⏭️ Next Steps
 
-1. Complete all 10 labs in the `labs/` directory
-2. Review the key concepts and best practices
-3. Apply what you've learned in a personal project
-4. Proceed to the next module
-
----
-
-**Keep Learning!** 🚀
+1.  Complete the labs to prepare for real incidents.
+2.  Proceed to **[Module 30: Production Deployment](../module-30-production-deployment/README.md)** for the final capstone project.
