@@ -1,0 +1,8 @@
+now create a separate folder on STREAMS COURSE USING KAFKA,FLINK,REDPANDA course inside '"Codes & Repos' 
+folder .the course should be similar to the one created under ml_system_design_course 
+folder.start by creating a course md file in the course folder and then day by 
+day create  files.LABS AND README each like created here.ensure to replicate and creating seperate folder. 
+ensure every topic of that course is covered, review each time 
+
+put codes , but put more theoretical concpets and reasoning, also create folder strucute like 
+phase,week,and then days for this STREAMS COURSE USING KAFKA,FLINK,REDPANDA course with all latest advancements , case studies and all CHALLENGES AND ISSUES FACED
