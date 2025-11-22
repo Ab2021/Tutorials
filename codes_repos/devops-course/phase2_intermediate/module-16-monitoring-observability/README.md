@@ -61,23 +61,18 @@ echo "Advanced use cases and patterns"
 
 ## 🎯 Hands-on Labs
 
-This module includes 10 comprehensive labs:
-
-1. **Lab 16.1** - Introduction and setup
-2. **Lab 16.2** - Core concepts
-3. **Lab 16.3** - Practical implementation
-4. **Lab 16.4** - Advanced features
-5. **Lab 16.5** - Integration patterns
-6. **Lab 16.6** - Security and best practices
-7. **Lab 16.7** - Troubleshooting
-8. **Lab 16.8** - Performance optimization
-9. **Lab 16.9** - Real-world scenarios
-10. **Lab 16.10** - Best practices and review
-
-Complete all labs in the `labs/` directory before proceeding to the next module.
-
----
-
+- [Lab 16.1: Distributed Tracing with Jaeger](./labs/lab-16.1-distributed-tracing.md)
+- [Lab 16.1: Prometheus Advanced](./labs/lab-16.1-prometheus-advanced.md)
+- [Lab 16.10: Observability Patterns](./labs/lab-16.10-observability-patterns.md)
+- [Lab 16.2: Custom Metrics & SLOs](./labs/lab-16.2-custom-metrics-slos.md)
+- [Lab 16.2: Custom Metrics](./labs/lab-16.2-custom-metrics.md)
+- [Lab 16.3: Service Discovery](./labs/lab-16.3-service-discovery.md)
+- [Lab 16.4: Alertmanager](./labs/lab-16.4-alertmanager.md)
+- [Lab 16.5: Grafana Advanced](./labs/lab-16.5-grafana-advanced.md)
+- [Lab 16.6: Distributed Tracing](./labs/lab-16.6-distributed-tracing.md)
+- [Lab 16.7: Jaeger Setup](./labs/lab-16.7-jaeger-setup.md)
+- [Lab 16.8: Metrics Best Practices](./labs/lab-16.8-metrics-best-practices.md)
+- [Lab 16.9: Slo Sli Setup](./labs/lab-16.9-slo-sli-setup.md)
 ## 📚 Additional Resources
 
 ### Official Documentation

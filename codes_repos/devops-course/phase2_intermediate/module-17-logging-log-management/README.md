@@ -61,23 +61,18 @@ echo "Advanced use cases and patterns"
 
 ## 🎯 Hands-on Labs
 
-This module includes 10 comprehensive labs:
-
-1. **Lab 17.1** - Introduction and setup
-2. **Lab 17.2** - Core concepts
-3. **Lab 17.3** - Practical implementation
-4. **Lab 17.4** - Advanced features
-5. **Lab 17.5** - Integration patterns
-6. **Lab 17.6** - Security and best practices
-7. **Lab 17.7** - Troubleshooting
-8. **Lab 17.8** - Performance optimization
-9. **Lab 17.9** - Real-world scenarios
-10. **Lab 17.10** - Best practices and review
-
-Complete all labs in the `labs/` directory before proceeding to the next module.
-
----
-
+- [Lab 17.1: Elk Stack Setup](./labs/lab-17.1-elk-stack-setup.md)
+- [Lab 17.1: Fluentd Basics](./labs/lab-17.1-fluentd-basics.md)
+- [Lab 17.10: Logging Best Practices](./labs/lab-17.10-logging-best-practices.md)
+- [Lab 17.2: Elasticsearch Basics](./labs/lab-17.2-elasticsearch-basics.md)
+- [Lab 17.2: Loki & Grafana (PLG Stack)](./labs/lab-17.2-loki-grafana.md)
+- [Lab 17.3: Logstash Pipelines](./labs/lab-17.3-logstash-pipelines.md)
+- [Lab 17.4: Kibana Dashboards](./labs/lab-17.4-kibana-dashboards.md)
+- [Lab 17.5: Fluentd Setup](./labs/lab-17.5-fluentd-setup.md)
+- [Lab 17.6: Log Parsing](./labs/lab-17.6-log-parsing.md)
+- [Lab 17.7: Log Retention](./labs/lab-17.7-log-retention.md)
+- [Lab 17.8: Log Analysis](./labs/lab-17.8-log-analysis.md)
+- [Lab 17.9: Centralized Logging](./labs/lab-17.9-centralized-logging.md)
 ## 📚 Additional Resources
 
 ### Official Documentation

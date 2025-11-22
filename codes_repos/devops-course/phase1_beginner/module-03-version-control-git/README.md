@@ -2,18 +2,12 @@
 
 ## 🎯 Learning Objectives
 
-By the end of this module, you will have comprehensive understanding of version control with git including:
-- Git Fundamentals and History
-- Git Architecture (Working Directory, Staging, Repository)
-- Basic Git Commands (init, add, commit, status, log)
-- Branching and Merging Strategies
-- Remote Repositories (GitHub, GitLab, Bitbucket)
-- Collaboration Workflows (Feature Branch, Git Flow, GitHub Flow)
-- Conflict Resolution
-- Git Tags and Releases
-- Git Stash and Clean
-- Advanced Git (Rebase, Cherry-pick, Bisect)
-- Git Best Practices and Conventions
+By the end of this module, you will have a comprehensive understanding of version control with Git, including:
+- **Architecture**: Understanding the Object Database, References, and the Three Trees.
+- **Core Commands**: Mastering the daily workflow (`add`, `commit`, `push`, `pull`).
+- **Branching**: Implementing effective strategies (Git Flow, Trunk-Based).
+- **Collaboration**: resolving conflicts and reviewing code via Pull Requests.
+- **Advanced Techniques**: Using `rebase`, `bisect`, and `cherry-pick` to maintain a clean history.
 
 ---
 
@@ -21,374 +15,131 @@ By the end of this module, you will have comprehensive understanding of version 
 
 ### 1. Git Fundamentals and History
 
-[Comprehensive theoretical content covering git fundamentals and history]
+Git is a **Distributed Version Control System (DVCS)** created by Linus Torvalds in 2005 to manage the Linux kernel development. Unlike centralized systems (SVN, CVS) where history lives on a central server, every Git repository is a full backup of the entire history.
 
 **Key Concepts:**
-- Concept 1: Detailed explanation
-- Concept 2: Detailed explanation
-- Concept 3: Detailed explanation
+- **Distributed**: Every developer has a full copy of the repo. You can work offline.
+- **Snapshots, Not Differences**: Git thinks of data like a stream of snapshots. If a file hasn't changed, Git just links to the previous identical file.
+- **Checksums**: Everything is checksummed (SHA-1) before it is stored. It is impossible to change the contents of any file or directory without Git knowing about it.
 
-**Real-World Applications:**
-- Application 1
-- Application 2
-- Application 3
+### 2. Git Architecture (The Three Trees)
 
-**Best Practices:**
-- Best practice 1
-- Best practice 2
-- Best practice 3
+Understanding Git requires understanding the three states your files can reside in:
 
-**Common Pitfalls:**
-- Pitfall 1 and how to avoid it
-- Pitfall 2 and how to avoid it
+1.  **Working Directory**: The actual files on your disk that you edit.
+2.  **Staging Area (Index)**: A file that stores information about what will go into your next commit.
+3.  **Repository (HEAD)**: The committed history (snapshots) stored in the `.git` directory.
 
-**Code Examples:**
+**The Workflow:**
+1.  **Modify** files in your working directory.
+2.  **Stage** the files, adding snapshots of them to your staging area (`git add`).
+3.  **Commit**, which takes the files as they are in the staging area and stores that snapshot permanently to your Git directory (`git commit`).
+
+### 3. Branching and Merging Strategies
+
+Branching means you diverge from the main line of development and continue to do work without messing with that main line. In Git, a branch is simply a lightweight movable pointer to a commit.
+
+**Strategies:**
+- **Git Flow**: Strict branching model with `develop`, `master`, `feature/`, `release/`, and `hotfix/` branches. Good for traditional release cycles.
+- **GitHub Flow**: Simple workflow. `main` is always deployable. Create feature branches, open PRs, merge to `main`. Good for CI/CD.
+- **Trunk-Based Development**: Developers merge small, frequent updates to a core "trunk" (main). Requires Feature Flags to hide unfinished work.
+
+**Merge vs. Rebase:**
+- **Merge**: Creates a new "merge commit". Preserves history exactly as it happened.
+- **Rebase**: Moves the entire feature branch to begin on the tip of the main branch. Creates a linear history but rewrites commit hashes. **Golden Rule: Never rebase public branches.**
+
+### 4. Advanced Git
+
+- **Cherry-Pick**: Apply the changes introduced by some existing commits. Useful for backporting hotfixes.
+- **Bisect**: Use binary search to find the commit that introduced a bug.
+- **Reflog**: A safety net. It records when the tip of branches were updated. You can recover "lost" commits using reflog.
+- **Stash**: Temporarily shelve (or stash) changes you've made to your working copy so you can work on something else, and then come back and re-apply them later.
+
+---
+
+## 🔧 Practical Examples
+
+### Basic Workflow
+
 ```bash
-# Example commands and configurations
-echo "Practical examples demonstrating git fundamentals and history"
+# Initialize
+git init
+
+# Check status
+git status
+
+# Stage changes
+git add .
+
+# Commit
+git commit -m "feat: add login page"
+
+# View history
+git log --oneline --graph --all
+```
+
+### Advanced: Interactive Rebase
+
+Clean up your local history before merging.
+
+```bash
+# Rebase last 3 commits
+git rebase -i HEAD~3
+```
+
+*In the editor, change `pick` to `squash` to combine commits.*
+
+### Finding a Bug with Bisect
+
+```bash
+git bisect start
+git bisect bad            # Current version is bad
+git bisect good v1.0      # Version 1.0 was good
+# Git checks out a middle commit
+# Test your app...
+git bisect good           # If this version works
+# Git checks out the next half...
 ```
 
 ---
 
-### 2. Git Architecture (Working Directory, Staging, Repository)
-
-[Comprehensive theoretical content covering git architecture (working directory, staging, repository)]
-
-**Key Concepts:**
-- Concept 1: Detailed explanation
-- Concept 2: Detailed explanation
-- Concept 3: Detailed explanation
-
-**Real-World Applications:**
-- Application 1
-- Application 2
-- Application 3
-
-**Best Practices:**
-- Best practice 1
-- Best practice 2
-- Best practice 3
-
-**Common Pitfalls:**
-- Pitfall 1 and how to avoid it
-- Pitfall 2 and how to avoid it
-
-**Code Examples:**
-```bash
-# Example commands and configurations
-echo "Practical examples demonstrating git architecture (working directory, staging, repository)"
-```
-
----
-
-### 3. Basic Git Commands (init, add, commit, status, log)
-
-[Comprehensive theoretical content covering basic git commands (init, add, commit, status, log)]
-
-**Key Concepts:**
-- Concept 1: Detailed explanation
-- Concept 2: Detailed explanation
-- Concept 3: Detailed explanation
-
-**Real-World Applications:**
-- Application 1
-- Application 2
-- Application 3
-
-**Best Practices:**
-- Best practice 1
-- Best practice 2
-- Best practice 3
-
-**Common Pitfalls:**
-- Pitfall 1 and how to avoid it
-- Pitfall 2 and how to avoid it
-
-**Code Examples:**
-```bash
-# Example commands and configurations
-echo "Practical examples demonstrating basic git commands (init, add, commit, status, log)"
-```
-
----
-
-### 4. Branching and Merging Strategies
-
-[Comprehensive theoretical content covering branching and merging strategies]
-
-**Key Concepts:**
-- Concept 1: Detailed explanation
-- Concept 2: Detailed explanation
-- Concept 3: Detailed explanation
-
-**Real-World Applications:**
-- Application 1
-- Application 2
-- Application 3
-
-**Best Practices:**
-- Best practice 1
-- Best practice 2
-- Best practice 3
-
-**Common Pitfalls:**
-- Pitfall 1 and how to avoid it
-- Pitfall 2 and how to avoid it
-
-**Code Examples:**
-```bash
-# Example commands and configurations
-echo "Practical examples demonstrating branching and merging strategies"
-```
-
----
-
-### 5. Remote Repositories (GitHub, GitLab, Bitbucket)
-
-[Comprehensive theoretical content covering remote repositories (github, gitlab, bitbucket)]
-
-**Key Concepts:**
-- Concept 1: Detailed explanation
-- Concept 2: Detailed explanation
-- Concept 3: Detailed explanation
-
-**Real-World Applications:**
-- Application 1
-- Application 2
-- Application 3
-
-**Best Practices:**
-- Best practice 1
-- Best practice 2
-- Best practice 3
-
-**Common Pitfalls:**
-- Pitfall 1 and how to avoid it
-- Pitfall 2 and how to avoid it
-
-**Code Examples:**
-```bash
-# Example commands and configurations
-echo "Practical examples demonstrating remote repositories (github, gitlab, bitbucket)"
-```
-
----
-
-### 6. Collaboration Workflows (Feature Branch, Git Flow, GitHub Flow)
-
-[Comprehensive theoretical content covering collaboration workflows (feature branch, git flow, github flow)]
-
-**Key Concepts:**
-- Concept 1: Detailed explanation
-- Concept 2: Detailed explanation
-- Concept 3: Detailed explanation
-
-**Real-World Applications:**
-- Application 1
-- Application 2
-- Application 3
-
-**Best Practices:**
-- Best practice 1
-- Best practice 2
-- Best practice 3
-
-**Common Pitfalls:**
-- Pitfall 1 and how to avoid it
-- Pitfall 2 and how to avoid it
-
-**Code Examples:**
-```bash
-# Example commands and configurations
-echo "Practical examples demonstrating collaboration workflows (feature branch, git flow, github flow)"
-```
-
----
-
-### 7. Conflict Resolution
-
-[Comprehensive theoretical content covering conflict resolution]
-
-**Key Concepts:**
-- Concept 1: Detailed explanation
-- Concept 2: Detailed explanation
-- Concept 3: Detailed explanation
-
-**Real-World Applications:**
-- Application 1
-- Application 2
-- Application 3
-
-**Best Practices:**
-- Best practice 1
-- Best practice 2
-- Best practice 3
-
-**Common Pitfalls:**
-- Pitfall 1 and how to avoid it
-- Pitfall 2 and how to avoid it
-
-**Code Examples:**
-```bash
-# Example commands and configurations
-echo "Practical examples demonstrating conflict resolution"
-```
-
----
-
-### 8. Git Tags and Releases
-
-[Comprehensive theoretical content covering git tags and releases]
-
-**Key Concepts:**
-- Concept 1: Detailed explanation
-- Concept 2: Detailed explanation
-- Concept 3: Detailed explanation
-
-**Real-World Applications:**
-- Application 1
-- Application 2
-- Application 3
-
-**Best Practices:**
-- Best practice 1
-- Best practice 2
-- Best practice 3
-
-**Common Pitfalls:**
-- Pitfall 1 and how to avoid it
-- Pitfall 2 and how to avoid it
-
-**Code Examples:**
-```bash
-# Example commands and configurations
-echo "Practical examples demonstrating git tags and releases"
-```
-
----
-
-### 9. Git Stash and Clean
-
-[Comprehensive theoretical content covering git stash and clean]
-
-**Key Concepts:**
-- Concept 1: Detailed explanation
-- Concept 2: Detailed explanation
-- Concept 3: Detailed explanation
-
-**Real-World Applications:**
-- Application 1
-- Application 2
-- Application 3
-
-**Best Practices:**
-- Best practice 1
-- Best practice 2
-- Best practice 3
-
-**Common Pitfalls:**
-- Pitfall 1 and how to avoid it
-- Pitfall 2 and how to avoid it
-
-**Code Examples:**
-```bash
-# Example commands and configurations
-echo "Practical examples demonstrating git stash and clean"
-```
-
----
-
-### 10. Advanced Git (Rebase, Cherry-pick, Bisect)
-
-[Comprehensive theoretical content covering advanced git (rebase, cherry-pick, bisect)]
-
-**Key Concepts:**
-- Concept 1: Detailed explanation
-- Concept 2: Detailed explanation
-- Concept 3: Detailed explanation
-
-**Real-World Applications:**
-- Application 1
-- Application 2
-- Application 3
-
-**Best Practices:**
-- Best practice 1
-- Best practice 2
-- Best practice 3
-
-**Common Pitfalls:**
-- Pitfall 1 and how to avoid it
-- Pitfall 2 and how to avoid it
-
-**Code Examples:**
-```bash
-# Example commands and configurations
-echo "Practical examples demonstrating advanced git (rebase, cherry-pick, bisect)"
-```
-
----
-
-### 11. Git Best Practices and Conventions
-
-[Comprehensive theoretical content covering git best practices and conventions]
-
-**Key Concepts:**
-- Concept 1: Detailed explanation
-- Concept 2: Detailed explanation
-- Concept 3: Detailed explanation
-
-**Real-World Applications:**
-- Application 1
-- Application 2
-- Application 3
-
-**Best Practices:**
-- Best practice 1
-- Best practice 2
-- Best practice 3
-
-**Common Pitfalls:**
-- Pitfall 1 and how to avoid it
-- Pitfall 2 and how to avoid it
-
-**Code Examples:**
-```bash
-# Example commands and configurations
-echo "Practical examples demonstrating git best practices and conventions"
-```
-
----
-
-## 🔑 Key Takeaways
-
-1. [Key takeaway 1]
-2. [Key takeaway 2]
-3. [Key takeaway 3]
-4. [Key takeaway 4]
-5. [Key takeaway 5]
+## 🎯 Hands-on Labs
+
+- [Lab 3.1: Git Basics (Init, Add, Commit)](./labs/lab-03.1-git-basics.md)
+- [Lab 3.10: Version Control Capstone Project](./labs/lab-03.10-git-project.md)
+- [Lab 3.2: Branching Strategies](./labs/lab-03.2-branching-strategies.md)
+- [Lab 3.3: Handling Merge Conflicts](./labs/lab-03.3-merge-conflicts.md)
+- [Lab 3.4: Remote Repositories (GitHub)](./labs/lab-03.4-remote-repositories.md)
+- [Lab 3.5: Undoing Changes (Reset, Revert, Checkout)](./labs/lab-03.5-undoing-changes.md)
+- [Lab 3.6: Git Workflows (GitFlow vs Trunk-Based)](./labs/lab-03.6-git-workflows.md)
+- [Lab 3.7: .gitignore and Stashing](./labs/lab-03.7-gitignore-stashing.md)
+- [Lab 3.8: Advanced Git (Rebase, Squash, Bisect)](./labs/lab-03.8-advanced-git.md)
+- [Lab 3.9: Git Hooks & Automation](./labs/lab-03.9-git-hooks.md)
 
 ---
 
 ## 📚 Additional Resources
 
 ### Official Documentation
-- [Link to official docs]
+- [Pro Git Book (Free)](https://git-scm.com/book/en/v2)
+- [GitHub Skills](https://skills.github.com/)
 
-### Tutorials
-- [Tutorial 1]
-- [Tutorial 2]
+### Interactive Tutorials
+- [Learn Git Branching](https://learngitbranching.js.org/) - Highly recommended visualizer.
+- [Oh My Git!](https://ohmygit.org/) - An open source game about learning Git.
 
-### Books
-- [Recommended book 1]
-- [Recommended book 2]
+---
+
+## 🔑 Key Takeaways
+
+1.  **Commit Often**: Small, atomic commits are easier to review and revert.
+2.  **Write Good Messages**: Subject line (50 chars), Body (Why, not What).
+3.  **Don't Panic**: Almost nothing is lost in Git. `git reflog` is your friend.
+4.  **Pull Requests**: Use them for code review, not just merging.
 
 ---
 
 ## ⏭️ Next Steps
 
-Complete all 10 labs in the `labs/` directory to gain hands-on experience.
-
----
-
-**Master Version Control with Git!** 🚀
+1.  Complete the labs to practice these concepts.
+2.  Proceed to **[Module 4: Networking Basics](../module-04-networking-basics/README.md)** to understand the network layer underlying DevOps.

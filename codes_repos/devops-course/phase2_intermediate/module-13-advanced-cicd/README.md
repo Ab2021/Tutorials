@@ -61,23 +61,18 @@ echo "Advanced use cases and patterns"
 
 ## 🎯 Hands-on Labs
 
-This module includes 10 comprehensive labs:
-
-1. **Lab 13.1** - Introduction and setup
-2. **Lab 13.2** - Core concepts
-3. **Lab 13.3** - Practical implementation
-4. **Lab 13.4** - Advanced features
-5. **Lab 13.5** - Integration patterns
-6. **Lab 13.6** - Security and best practices
-7. **Lab 13.7** - Troubleshooting
-8. **Lab 13.8** - Performance optimization
-9. **Lab 13.9** - Real-world scenarios
-10. **Lab 13.10** - Best practices and review
-
-Complete all labs in the `labs/` directory before proceeding to the next module.
-
----
-
+- [Lab 13.1: GitOps with ArgoCD](./labs/lab-13.1-gitops-argocd.md)
+- [Lab 13.1: Multi Stage Pipelines](./labs/lab-13.1-multi-stage-pipelines.md)
+- [Lab 13.10: Advanced Workflows](./labs/lab-13.10-advanced-workflows.md)
+- [Lab 13.2: Helm Charts](./labs/lab-13.2-helm-charts.md)
+- [Lab 13.2: Parallel Jobs](./labs/lab-13.2-parallel-jobs.md)
+- [Lab 13.3: Matrix Builds](./labs/lab-13.3-matrix-builds.md)
+- [Lab 13.4: Integration Testing](./labs/lab-13.4-integration-testing.md)
+- [Lab 13.5: Deployment Strategies](./labs/lab-13.5-deployment-strategies.md)
+- [Lab 13.6: Pipeline Optimization](./labs/lab-13.6-pipeline-optimization.md)
+- [Lab 13.7: Caching Strategies](./labs/lab-13.7-caching-strategies.md)
+- [Lab 13.8: Self Hosted Runners](./labs/lab-13.8-self-hosted-runners.md)
+- [Lab 13.9: Pipeline Security](./labs/lab-13.9-pipeline-security.md)
 ## 📚 Additional Resources
 
 ### Official Documentation

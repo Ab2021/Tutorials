@@ -3,10 +3,11 @@
 ## 🎯 Learning Objectives
 
 By the end of this module, you will:
-- Understand the core concepts of chaos engineering
-- Gain hands-on experience with industry-standard tools
-- Apply best practices in real-world scenarios
-- Build production-ready solutions
+- Understand the core principles of Chaos Engineering.
+- Gain hands-on experience with **Chaos Mesh** and **LitmusChaos**.
+- Design and execute chaos experiments to test system resilience.
+- Implement automated chaos in CI/CD pipelines.
+- Analyze blast radius and minimize production impact.
 
 ---
 
@@ -14,14 +15,16 @@ By the end of this module, you will:
 
 **Duration:** 6-8 hours  
 **Difficulty:** Advanced
+**Prerequisites:**
+- [Module 12: Kubernetes Fundamentals](../module-12-kubernetes-fundamentals/README.md)
+- [Module 16: Monitoring & Observability](../module-16-monitoring-observability/README.md)
 
 ### Topics Covered
 
-- Chaos principles
-- Failure injection
-- Resilience testing
-- Automated chaos
-- Building resilience
+- **Principles of Chaos**: Hypothesis, Variances, Experiments.
+- **Tools**: Chaos Mesh, LitmusChaos, Gremlin.
+- **Experiments**: Pod Kill, Network Latency, CPU Stress, IO Faults.
+- **Safety**: Abort conditions and Blast Radius.
 
 ---
 
@@ -29,88 +32,101 @@ By the end of this module, you will:
 
 ### Introduction
 
-[Comprehensive theoretical content will cover the fundamental concepts, principles, and best practices for chaos engineering.]
+**Chaos Engineering** is the discipline of experimenting on a system in order to build confidence in the system's capability to withstand turbulent conditions in production. It is not about "breaking things randomly"; it is about **controlled experiments**.
 
 ### Key Concepts
 
-[Detailed explanations of core concepts with examples and diagrams]
+#### 1. Steady State Hypothesis
+Define "normal" behavior. For example, "The 99th percentile latency is < 300ms" or "Error rate is < 1%". If the system deviates from this during an experiment, the system is not resilient.
+
+#### 2. Blast Radius
+The subset of the system affected by the experiment. Start small (one container, one user) and expand (one node, one availability zone).
+
+#### 3. Fault Injection
+Intentionally introducing errors:
+- **Resource**: CPU burn, Memory leak, Disk full.
+- **Network**: Latency, Packet loss, DNS failure.
+- **State**: Kill pods, Reboot nodes, Time skew.
 
 ### Best Practices
 
-[Industry-standard best practices and recommendations]
+- **Start in Staging**: Don't run in Prod until you are confident.
+- **Automate**: Run chaos experiments as part of the CI/CD pipeline.
+- **Minimize Blast Radius**: Use namespaces and labels to target specific components.
+- **Have a Kill Switch**: Stop the experiment immediately if business metrics (e.g., Sales) drop.
 
 ---
 
 ## 🔧 Practical Examples
 
-### Example 1: Basic Implementation
+### Example 1: Network Delay with Chaos Mesh
 
-```bash
-# Example commands and code
-echo "Practical examples will be provided"
+```yaml
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: network-delay
+spec:
+  action: delay
+  mode: one
+  selector:
+    namespaces:
+      - default
+    labelSelectors:
+      app: nginx
+  delay:
+    latency: "200ms"
+  duration: "30s"
 ```
 
-### Example 2: Advanced Scenario
+### Example 2: Pod Kill
 
 ```bash
-# More complex examples
-echo "Advanced use cases and patterns"
+# Imperative Pod Kill
+kubectl delete pod -l app=nginx
+# (Watch it restart if you have a Deployment)
 ```
 
 ---
 
 ## 🎯 Hands-on Labs
 
-This module includes 10 comprehensive labs:
-
-1. **Lab 25.1** - Introduction and setup
-2. **Lab 25.2** - Core concepts
-3. **Lab 25.3** - Practical implementation
-4. **Lab 25.4** - Advanced features
-5. **Lab 25.5** - Integration patterns
-6. **Lab 25.6** - Security and best practices
-7. **Lab 25.7** - Troubleshooting
-8. **Lab 25.8** - Performance optimization
-9. **Lab 25.9** - Real-world scenarios
-10. **Lab 25.10** - Best practices and review
-
-Complete all labs in the `labs/` directory before proceeding to the next module.
+- [Lab 25.1: Chaos Mesh (Pod Kill)](./labs/lab-25.1-chaos-mesh.md)
+- [Lab 25.1: Chaos Principles](./labs/lab-25.1-chaos-principles.md)
+- [Lab 25.10: Building Resilience](./labs/lab-25.10-building-resilience.md)
+- [Lab 25.2: Chaos Monkey](./labs/lab-25.2-chaos-monkey.md)
+- [Lab 25.2: LitmusChaos](./labs/lab-25.2-litmuschaos.md)
+- [Lab 25.3: Failure Injection](./labs/lab-25.3-failure-injection.md)
+- [Lab 25.4: Resilience Testing](./labs/lab-25.4-resilience-testing.md)
+- [Lab 25.5: Chaos Experiments](./labs/lab-25.5-chaos-experiments.md)
+- [Lab 25.6: Blast Radius](./labs/lab-25.6-blast-radius.md)
+- [Lab 25.7: Steady State Hypothesis](./labs/lab-25.7-steady-state-hypothesis.md)
+- [Lab 25.8: Automated Chaos](./labs/lab-25.8-automated-chaos.md)
+- [Lab 25.9: Chaos Reporting](./labs/lab-25.9-chaos-reporting.md)
 
 ---
 
 ## 📚 Additional Resources
 
 ### Official Documentation
-- [Link to official documentation]
-- [Related tools and frameworks]
+- [Chaos Mesh Documentation](https://chaos-mesh.org/docs/)
+- [LitmusChaos Documentation](https://litmuschaos.io/docs/)
+- [Principles of Chaos Engineering](https://principlesofchaos.org/)
 
 ### Tutorials and Guides
-- [Recommended tutorials]
-- [Video courses]
-
-### Community Resources
-- [Forums and discussion groups]
-- [GitHub repositories]
+- [CNCF Chaos Engineering Whitepaper](https://github.com/cncf/tag-app-delivery/blob/master/chaos-engineering/whitepaper/chaos-engineering-whitepaper.md)
 
 ---
 
 ## 🔑 Key Takeaways
 
-- [Key concept 1]
-- [Key concept 2]
-- [Key concept 3]
-- [Best practice 1]
-- [Best practice 2]
+1.  **Resilience is a Requirement**: Systems fail. Design for failure.
+2.  **Observability is Prerequisite**: You cannot do Chaos Engineering if you cannot measure the impact.
+3.  **Culture**: Move from "Who broke it?" to "How can we make it unbreakable?".
 
 ---
 
 ## ⏭️ Next Steps
 
-1. Complete all 10 labs in the `labs/` directory
-2. Review the key concepts and best practices
-3. Apply what you've learned in a personal project
-4. Proceed to the next module
-
----
-
-**Keep Learning!** 🚀
+1.  Complete the labs to practice Fault Injection.
+2.  Proceed to **[Module 26: Multi-Cloud & Hybrid](../module-26-multi-cloud-hybrid/README.md)** to learn about managing infrastructure across clouds.

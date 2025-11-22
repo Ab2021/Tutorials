@@ -61,23 +61,18 @@ echo "Advanced use cases and patterns"
 
 ## 🎯 Hands-on Labs
 
-This module includes 10 comprehensive labs:
-
-1. **Lab 29.1** - Introduction and setup
-2. **Lab 29.2** - Core concepts
-3. **Lab 29.3** - Practical implementation
-4. **Lab 29.4** - Advanced features
-5. **Lab 29.5** - Integration patterns
-6. **Lab 29.6** - Security and best practices
-7. **Lab 29.7** - Troubleshooting
-8. **Lab 29.8** - Performance optimization
-9. **Lab 29.9** - Real-world scenarios
-10. **Lab 29.10** - Best practices and review
-
-Complete all labs in the `labs/` directory before proceeding to the next module.
-
----
-
+- [Lab 29.1: Incident Response Simulation](./labs/lab-29.1-incident-response.md)
+- [Lab 29.1: Incident Response](./labs/lab-29.1-incident-response_extra.md)
+- [Lab 29.10: Continuous Improvement](./labs/lab-29.10-continuous-improvement.md)
+- [Lab 29.2: On Call Setup](./labs/lab-29.2-on-call-setup.md)
+- [Lab 29.2: Blameless Post-Mortems](./labs/lab-29.2-post-mortem.md)
+- [Lab 29.3: Pagerduty Integration](./labs/lab-29.3-pagerduty-integration.md)
+- [Lab 29.4: Runbooks](./labs/lab-29.4-runbooks.md)
+- [Lab 29.5: Post Mortems](./labs/lab-29.5-post-mortems.md)
+- [Lab 29.6: Incident Communication](./labs/lab-29.6-incident-communication.md)
+- [Lab 29.7: Escalation Policies](./labs/lab-29.7-escalation-policies.md)
+- [Lab 29.8: Incident Metrics](./labs/lab-29.8-incident-metrics.md)
+- [Lab 29.9: Blameless Culture](./labs/lab-29.9-blameless-culture.md)
 ## 📚 Additional Resources
 
 ### Official Documentation

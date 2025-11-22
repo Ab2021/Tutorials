@@ -61,23 +61,18 @@ echo "Advanced use cases and patterns"
 
 ## 🎯 Hands-on Labs
 
-This module includes 10 comprehensive labs:
-
-1. **Lab 26.1** - Introduction and setup
-2. **Lab 26.2** - Core concepts
-3. **Lab 26.3** - Practical implementation
-4. **Lab 26.4** - Advanced features
-5. **Lab 26.5** - Integration patterns
-6. **Lab 26.6** - Security and best practices
-7. **Lab 26.7** - Troubleshooting
-8. **Lab 26.8** - Performance optimization
-9. **Lab 26.9** - Real-world scenarios
-10. **Lab 26.10** - Best practices and review
-
-Complete all labs in the `labs/` directory before proceeding to the next module.
-
----
-
+- [Lab 26.1: Multi Cloud Strategy](./labs/lab-26.1-multi-cloud-strategy.md)
+- [Lab 26.1: Multi-Cloud Terraform](./labs/lab-26.1-terraform-multicloud.md)
+- [Lab 26.10: Multi Cloud Management](./labs/lab-26.10-multi-cloud-management.md)
+- [Lab 26.2: Aws Azure Integration](./labs/lab-26.2-aws-azure-integration.md)
+- [Lab 26.2: Crossplane (Universal Control Plane)](./labs/lab-26.2-crossplane.md)
+- [Lab 26.3: Gcp Services](./labs/lab-26.3-gcp-services.md)
+- [Lab 26.4: Cloud Agnostic Tools](./labs/lab-26.4-cloud-agnostic-tools.md)
+- [Lab 26.5: Hybrid Cloud](./labs/lab-26.5-hybrid-cloud.md)
+- [Lab 26.6: Cloud Migration](./labs/lab-26.6-cloud-migration.md)
+- [Lab 26.7: Multi Cloud Networking](./labs/lab-26.7-multi-cloud-networking.md)
+- [Lab 26.8: Cost Comparison](./labs/lab-26.8-cost-comparison.md)
+- [Lab 26.9: Vendor Lock In](./labs/lab-26.9-vendor-lock-in.md)
 ## 📚 Additional Resources
 
 ### Official Documentation

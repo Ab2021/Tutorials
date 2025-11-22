@@ -709,3 +709,17 @@ After completing the labs, move on to **Module 2: Linux Fundamentals**.
 ---
 
 **Master the DevOps Mindset!** 🚀
+
+## 🎯 Hands-on Labs
+
+- [Lab 01.1: Devops Culture](./labs/lab-01.1-devops-culture.md)
+- [Lab 1.1: DevOps Culture and Philosophy](./labs/lab-1.1-devops-culture.md)
+- [Lab 1.10: DevOps Career Paths & Skills](./labs/lab-1.10-career-paths.md)
+- [Lab 1.2: DevOps Principles in Practice](./labs/lab-1.2-devops-principles.md)
+- [Lab 1.3: Understanding the DevOps Lifecycle](./labs/lab-1.3-devops-lifecycle.md)
+- [Lab 1.4: Setting Up the DevOps Toolchain](./labs/lab-1.4-toolchain-overview.md)
+- [Lab 1.5: Collaboration Practices (Git & Code Review)](./labs/lab-1.5-collaboration-practices.md)
+- [Lab 1.6: Automation Benefits (Toil Reduction)](./labs/lab-1.6-automation-benefits.md)
+- [Lab 1.7: Continuous Improvement (Kaizen)](./labs/lab-1.7-continuous-improvement.md)
+- [Lab 1.8: DevOps Metrics (DORA)](./labs/lab-1.8-devops-metrics.md)
+- [Lab 1.9: DevOps Case Studies (Real-World Analysis)](./labs/lab-1.9-case-studies.md)

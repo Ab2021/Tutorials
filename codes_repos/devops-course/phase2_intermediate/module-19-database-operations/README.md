@@ -62,23 +62,18 @@ echo "Advanced use cases and patterns"
 
 ## 🎯 Hands-on Labs
 
-This module includes 10 comprehensive labs:
-
-1. **Lab 19.1** - Introduction and setup
-2. **Lab 19.2** - Core concepts
-3. **Lab 19.3** - Practical implementation
-4. **Lab 19.4** - Advanced features
-5. **Lab 19.5** - Integration patterns
-6. **Lab 19.6** - Security and best practices
-7. **Lab 19.7** - Troubleshooting
-8. **Lab 19.8** - Performance optimization
-9. **Lab 19.9** - Real-world scenarios
-10. **Lab 19.10** - Best practices and review
-
-Complete all labs in the `labs/` directory before proceeding to the next module.
-
----
-
+- [Lab 19.1: Database Backup & Restore (PostgreSQL)](./labs/lab-19.1-db-backup.md)
+- [Lab 19.1: Rds Setup](./labs/lab-19.1-rds-setup.md)
+- [Lab 19.10: Database Security](./labs/lab-19.10-database-security.md)
+- [Lab 19.2: Database Backups](./labs/lab-19.2-database-backups.md)
+- [Lab 19.2: Database Replication (Master-Slave)](./labs/lab-19.2-db-replication.md)
+- [Lab 19.3: Point In Time Recovery](./labs/lab-19.3-point-in-time-recovery.md)
+- [Lab 19.4: Read Replicas](./labs/lab-19.4-read-replicas.md)
+- [Lab 19.5: Database Migrations](./labs/lab-19.5-database-migrations.md)
+- [Lab 19.6: Connection Pooling](./labs/lab-19.6-connection-pooling.md)
+- [Lab 19.7: Database Monitoring](./labs/lab-19.7-database-monitoring.md)
+- [Lab 19.8: Performance Tuning](./labs/lab-19.8-performance-tuning.md)
+- [Lab 19.9: Disaster Recovery](./labs/lab-19.9-disaster-recovery.md)
 ## 📚 Additional Resources
 
 ### Official Documentation

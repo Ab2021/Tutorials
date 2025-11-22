@@ -61,23 +61,18 @@ echo "Advanced use cases and patterns"
 
 ## 🎯 Hands-on Labs
 
-This module includes 10 comprehensive labs:
-
-1. **Lab 15.1** - Introduction and setup
-2. **Lab 15.2** - Core concepts
-3. **Lab 15.3** - Practical implementation
-4. **Lab 15.4** - Advanced features
-5. **Lab 15.5** - Integration patterns
-6. **Lab 15.6** - Security and best practices
-7. **Lab 15.7** - Troubleshooting
-8. **Lab 15.8** - Performance optimization
-9. **Lab 15.9** - Real-world scenarios
-10. **Lab 15.10** - Best practices and review
-
-Complete all labs in the `labs/` directory before proceeding to the next module.
-
----
-
+- [Lab 15.1: Ansible Roles](./labs/lab-15.1-ansible-roles.md)
+- [Lab 15.1: Ansible Dynamic Inventory (AWS)](./labs/lab-15.1-dynamic-inventory.md)
+- [Lab 15.10: Enterprise Automation](./labs/lab-15.10-enterprise-automation.md)
+- [Lab 15.2: Ansible Vault](./labs/lab-15.2-ansible-vault.md)
+- [Lab 15.2: Role Dependencies](./labs/lab-15.2-role-dependencies.md)
+- [Lab 15.3: Ansible Galaxy](./labs/lab-15.3-ansible-galaxy.md)
+- [Lab 15.4: Dynamic Inventory](./labs/lab-15.4-dynamic-inventory.md)
+- [Lab 15.5: Custom Modules](./labs/lab-15.5-custom-modules.md)
+- [Lab 15.6: Ansible Tower Intro](./labs/lab-15.6-ansible-tower-intro.md)
+- [Lab 15.7: Callback Plugins](./labs/lab-15.7-callback-plugins.md)
+- [Lab 15.8: Error Handling](./labs/lab-15.8-error-handling.md)
+- [Lab 15.9: Ansible Testing](./labs/lab-15.9-ansible-testing.md)
 ## 📚 Additional Resources
 
 ### Official Documentation

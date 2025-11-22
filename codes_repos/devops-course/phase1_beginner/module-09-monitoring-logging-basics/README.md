@@ -1,116 +1,129 @@
-# Module 09: Monitoring and Logging Basics
+# Monitoring and Logging Basics
 
 ## 🎯 Learning Objectives
 
-By the end of this module, you will:
-- Understand the core concepts of monitoring and logging basics
-- Gain hands-on experience with industry-standard tools
-- Apply best practices in real-world scenarios
-- Build production-ready solutions
+By the end of this module, you will have a comprehensive understanding of Observability, including:
+- **Concepts**: The Three Pillars (Metrics, Logs, Traces).
+- **Metrics**: Collecting time-series data with **Prometheus**.
+- **Visualization**: Creating dashboards with **Grafana**.
+- **Logging**: Aggregating logs with the **ELK Stack** or **Loki**.
+- **Alerting**: Designing effective alerts that don't cause fatigue.
 
 ---
 
-## 📖 Module Overview
+## 📖 Theoretical Concepts
 
-**Duration:** 6-8 hours  
-**Difficulty:** Beginner
+### 1. What is Observability?
 
-### Topics Covered
+Monitoring tells you *if* the system is down. Observability tells you *why*.
 
-- Monitoring concepts
-- Prometheus
-- Grafana
-- Log management
-- Alerting
+**The Three Pillars:**
+1.  **Metrics**: "What is happening?" (e.g., CPU is at 90%). Aggregatable, cheap to store.
+2.  **Logs**: "Why is it happening?" (e.g., "NullPointerException at line 42"). Detailed, expensive to store.
+3.  **Traces**: "Where is it happening?" (e.g., Service A called Service B, which took 5s).
 
----
+### 2. Prometheus (Metrics)
 
-## 📚 Theoretical Concepts
+Prometheus is the industry standard for cloud-native monitoring.
+- **Pull Model**: Prometheus scrapes metrics from your app's `/metrics` endpoint.
+- **TSDB**: Time-Series Database optimized for storing numbers over time.
+- **PromQL**: Powerful query language.
+  - `rate(http_requests_total[5m])`: Rate of requests over the last 5 minutes.
 
-### Introduction
+**Metric Types:**
+- **Counter**: Only goes up (e.g., Total Requests).
+- **Gauge**: Goes up and down (e.g., Memory Usage).
+- **Histogram**: Distribution of values (e.g., Request Duration).
 
-[Comprehensive theoretical content will cover the fundamental concepts, principles, and best practices for monitoring and logging basics.]
+### 3. Grafana (Visualization)
 
-### Key Concepts
+Grafana connects to data sources (Prometheus, MySQL, Loki) and visualizes them.
+- **Dashboards**: Collections of panels.
+- **Panels**: Graphs, Gauges, Tables.
+- **Variables**: Dropdowns to filter data (e.g., Select Server).
 
-[Detailed explanations of core concepts with examples and diagrams]
+### 4. Logging Stacks
 
-### Best Practices
-
-[Industry-standard best practices and recommendations]
+- **ELK Stack (Elasticsearch, Logstash, Kibana)**: Powerful, full-text search. Heavy resource usage.
+- **PLG Stack (Promtail, Loki, Grafana)**: "Like Prometheus, but for logs". Indexes labels, not content. Lightweight.
 
 ---
 
 ## 🔧 Practical Examples
 
-### Example 1: Basic Implementation
+### Prometheus Configuration (`prometheus.yml`)
 
-```bash
-# Example commands and code
-echo "Practical examples will be provided"
+```yaml
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'node_exporter'
+    static_configs:
+      - targets: ['localhost:9100']
 ```
 
-### Example 2: Advanced Scenario
+### PromQL Queries
 
-```bash
-# More complex examples
-echo "Advanced use cases and patterns"
+```promql
+# CPU Usage Percentage
+100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+
+# Memory Usage
+node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes
+```
+
+### Logging Best Practices (JSON)
+
+Don't log unstructured text. Log JSON.
+
+**Bad:**
+`User 123 logged in at 10:00`
+
+**Good:**
+```json
+{
+  "event": "user_login",
+  "user_id": 123,
+  "timestamp": "2023-10-27T10:00:00Z",
+  "status": "success"
+}
 ```
 
 ---
 
 ## 🎯 Hands-on Labs
 
-This module includes 10 comprehensive labs:
-
-1. **Lab 09.1** - Introduction and setup
-2. **Lab 09.2** - Core concepts
-3. **Lab 09.3** - Practical implementation
-4. **Lab 09.4** - Advanced features
-5. **Lab 09.5** - Integration patterns
-6. **Lab 09.6** - Security and best practices
-7. **Lab 09.7** - Troubleshooting
-8. **Lab 09.8** - Performance optimization
-9. **Lab 09.9** - Real-world scenarios
-10. **Lab 09.10** - Best practices and review
-
-Complete all labs in the `labs/` directory before proceeding to the next module.
+- [Lab 9.1: Introduction to Monitoring Concepts](./labs/lab-09.1-intro-monitoring.md)
+- [Lab 9.2: Prometheus Setup](./labs/lab-09.2-prometheus-setup.md)
+- [Lab 9.3: Grafana Dashboards](./labs/lab-09.3-grafana-dashboards.md)
+- [Lab 9.4: ELK Stack Basics (Logging)](./labs/lab-09.4-elk-stack.md)
+- [Lab 9.5: Monitoring Capstone Project](./labs/lab-09.5-monitoring-project.md)
 
 ---
 
 ## 📚 Additional Resources
 
 ### Official Documentation
-- [Link to official documentation]
-- [Related tools and frameworks]
+- [Prometheus Documentation](https://prometheus.io/docs/introduction/overview/)
+- [Grafana Documentation](https://grafana.com/docs/)
 
-### Tutorials and Guides
-- [Recommended tutorials]
-- [Video courses]
-
-### Community Resources
-- [Forums and discussion groups]
-- [GitHub repositories]
+### Books
+- "Prometheus: Up & Running" by Brian Brazil.
+- "Site Reliability Engineering" (Google SRE Book).
 
 ---
 
 ## 🔑 Key Takeaways
 
-- [Key concept 1]
-- [Key concept 2]
-- [Key concept 3]
-- [Best practice 1]
-- [Best practice 2]
+1.  **USE Method**: For every resource, check **U**tilization, **S**aturation, and **E**rrors.
+2.  **RED Method**: For every service, check **R**ate, **E**rrors, and **D**uration.
+3.  **Alerts**: Alert on symptoms (High Latency), not causes (High CPU).
+4.  **Correlation**: Use Trace IDs in your logs to link them to traces.
 
 ---
 
 ## ⏭️ Next Steps
 
-1. Complete all 10 labs in the `labs/` directory
-2. Review the key concepts and best practices
-3. Apply what you've learned in a personal project
-4. Proceed to the next module
-
----
-
-**Keep Learning!** 🚀
+1.  Complete the labs to set up your own monitoring stack.
+2.  Proceed to **[Module 10: Cloud Fundamentals](../module-10-cloud-fundamentals-aws/README.md)** to apply these skills in the cloud.

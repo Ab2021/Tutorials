@@ -61,23 +61,19 @@ echo "Advanced use cases and patterns"
 
 ## 🎯 Hands-on Labs
 
-This module includes 10 comprehensive labs:
-
-1. **Lab 21.1** - Introduction and setup
-2. **Lab 21.2** - Core concepts
-3. **Lab 21.3** - Practical implementation
-4. **Lab 21.4** - Advanced features
-5. **Lab 21.5** - Integration patterns
-6. **Lab 21.6** - Security and best practices
-7. **Lab 21.7** - Troubleshooting
-8. **Lab 21.8** - Performance optimization
-9. **Lab 21.9** - Real-world scenarios
-10. **Lab 21.10** - Best practices and review
-
-Complete all labs in the `labs/` directory before proceeding to the next module.
-
----
-
+- [Lab 21.1: Custom Resources](./labs/lab-21.1-custom-resources.md)
+- [Lab 21.1: StatefulSets & Headless Services](./labs/lab-21.1-statefulsets.md)
+- [Lab 21.10: K8S Production](./labs/lab-21.10-k8s-production.md)
+- [Lab 21.2: DaemonSets, Jobs, & CronJobs](./labs/lab-21.2-daemonsets-jobs.md)
+- [Lab 21.2: Operators](./labs/lab-21.2-operators.md)
+- [Lab 21.3: Helm Charts](./labs/lab-21.3-helm-charts.md)
+- [Lab 21.3: Service Mesh with Istio](./labs/lab-21.3-istio-service-mesh.md)
+- [Lab 21.4: Helm Repositories](./labs/lab-21.4-helm-repositories.md)
+- [Lab 21.5: Service Mesh Istio](./labs/lab-21.5-service-mesh-istio.md)
+- [Lab 21.6: Network Policies](./labs/lab-21.6-network-policies.md)
+- [Lab 21.7: Pod Security](./labs/lab-21.7-pod-security.md)
+- [Lab 21.8: Cluster Autoscaling](./labs/lab-21.8-cluster-autoscaling.md)
+- [Lab 21.9: Stateful Applications](./labs/lab-21.9-stateful-applications.md)
 ## 📚 Additional Resources
 
 ### Official Documentation

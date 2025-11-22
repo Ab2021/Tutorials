@@ -61,23 +61,18 @@ echo "Advanced use cases and patterns"
 
 ## 🎯 Hands-on Labs
 
-This module includes 10 comprehensive labs:
-
-1. **Lab 27.1** - Introduction and setup
-2. **Lab 27.2** - Core concepts
-3. **Lab 27.3** - Practical implementation
-4. **Lab 27.4** - Advanced features
-5. **Lab 27.5** - Integration patterns
-6. **Lab 27.6** - Security and best practices
-7. **Lab 27.7** - Troubleshooting
-8. **Lab 27.8** - Performance optimization
-9. **Lab 27.9** - Real-world scenarios
-10. **Lab 27.10** - Best practices and review
-
-Complete all labs in the `labs/` directory before proceeding to the next module.
-
----
-
+- [Lab 27.1: Backstage (Internal Developer Platform)](./labs/lab-27.1-backstage.md)
+- [Lab 27.1: Internal Platforms](./labs/lab-27.1-internal-platforms.md)
+- [Lab 27.10: Platform Evolution](./labs/lab-27.10-platform-evolution.md)
+- [Lab 27.2: Developer Portals](./labs/lab-27.2-developer-portals.md)
+- [Lab 27.2: Golden Paths (Software Templates)](./labs/lab-27.2-software-templates.md)
+- [Lab 27.3: Self Service Infrastructure](./labs/lab-27.3-self-service-infrastructure.md)
+- [Lab 27.4: Golden Paths](./labs/lab-27.4-golden-paths.md)
+- [Lab 27.5: Platform Apis](./labs/lab-27.5-platform-apis.md)
+- [Lab 27.6: Developer Experience](./labs/lab-27.6-developer-experience.md)
+- [Lab 27.7: Platform Metrics](./labs/lab-27.7-platform-metrics.md)
+- [Lab 27.8: Platform Documentation](./labs/lab-27.8-platform-documentation.md)
+- [Lab 27.9: Platform Adoption](./labs/lab-27.9-platform-adoption.md)
 ## 📚 Additional Resources
 
 ### Official Documentation

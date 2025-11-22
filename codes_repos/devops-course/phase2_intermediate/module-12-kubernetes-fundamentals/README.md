@@ -61,23 +61,20 @@ echo "Advanced use cases and patterns"
 
 ## 🎯 Hands-on Labs
 
-This module includes 10 comprehensive labs:
-
-1. **Lab 12.1** - Introduction and setup
-2. **Lab 12.2** - Core concepts
-3. **Lab 12.3** - Practical implementation
-4. **Lab 12.4** - Advanced features
-5. **Lab 12.5** - Integration patterns
-6. **Lab 12.6** - Security and best practices
-7. **Lab 12.7** - Troubleshooting
-8. **Lab 12.8** - Performance optimization
-9. **Lab 12.9** - Real-world scenarios
-10. **Lab 12.10** - Best practices and review
-
-Complete all labs in the `labs/` directory before proceeding to the next module.
-
----
-
+- [Lab 12.1: Introduction to Kubernetes (K8s)](./labs/lab-12.1-intro-k8s.md)
+- [Lab 12.1: K8S Architecture](./labs/lab-12.1-k8s-architecture.md)
+- [Lab 12.10: K8S Troubleshooting](./labs/lab-12.10-k8s-troubleshooting.md)
+- [Lab 12.2: Pods Creation](./labs/lab-12.2-pods-creation.md)
+- [Lab 12.2: Pods & Deployments](./labs/lab-12.2-pods-deployments.md)
+- [Lab 12.3: Deployments](./labs/lab-12.3-deployments.md)
+- [Lab 12.3: Services & Networking](./labs/lab-12.3-services-networking.md)
+- [Lab 12.4: Kubernetes Capstone Project](./labs/lab-12.4-k8s-project.md)
+- [Lab 12.4: Services](./labs/lab-12.4-services.md)
+- [Lab 12.5: Configmaps Secrets](./labs/lab-12.5-configmaps-secrets.md)
+- [Lab 12.6: Persistent Volumes](./labs/lab-12.6-persistent-volumes.md)
+- [Lab 12.7: Namespaces](./labs/lab-12.7-namespaces.md)
+- [Lab 12.8: Ingress Controllers](./labs/lab-12.8-ingress-controllers.md)
+- [Lab 12.9: Rolling Updates](./labs/lab-12.9-rolling-updates.md)
 ## 📚 Additional Resources
 
 ### Official Documentation

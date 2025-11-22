@@ -61,23 +61,18 @@ echo "Advanced use cases and patterns"
 
 ## 🎯 Hands-on Labs
 
-This module includes 10 comprehensive labs:
-
-1. **Lab 23.1** - Introduction and setup
-2. **Lab 23.2** - Core concepts
-3. **Lab 23.3** - Practical implementation
-4. **Lab 23.4** - Advanced features
-5. **Lab 23.5** - Integration patterns
-6. **Lab 23.6** - Security and best practices
-7. **Lab 23.7** - Troubleshooting
-8. **Lab 23.8** - Performance optimization
-9. **Lab 23.9** - Real-world scenarios
-10. **Lab 23.10** - Best practices and review
-
-Complete all labs in the `labs/` directory before proceeding to the next module.
-
----
-
+- [Lab 23.1: Serverless with AWS Lambda & Terraform](./labs/lab-23.1-aws-lambda.md)
+- [Lab 23.1: Lambda Functions](./labs/lab-23.1-lambda-functions.md)
+- [Lab 23.10: Cost Optimization](./labs/lab-23.10-cost-optimization.md)
+- [Lab 23.2: Api Gateway](./labs/lab-23.2-api-gateway.md)
+- [Lab 23.2: Knative Serving (Kubernetes Serverless)](./labs/lab-23.2-knative.md)
+- [Lab 23.3: Event Driven Architecture](./labs/lab-23.3-event-driven-architecture.md)
+- [Lab 23.4: Step Functions](./labs/lab-23.4-step-functions.md)
+- [Lab 23.5: Serverless Framework](./labs/lab-23.5-serverless-framework.md)
+- [Lab 23.6: Sam Templates](./labs/lab-23.6-sam-templates.md)
+- [Lab 23.7: Lambda Layers](./labs/lab-23.7-lambda-layers.md)
+- [Lab 23.8: Cold Start Optimization](./labs/lab-23.8-cold-start-optimization.md)
+- [Lab 23.9: Serverless Monitoring](./labs/lab-23.9-serverless-monitoring.md)
 ## 📚 Additional Resources
 
 ### Official Documentation

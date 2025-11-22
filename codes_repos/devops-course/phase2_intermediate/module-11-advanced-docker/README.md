@@ -61,23 +61,18 @@ echo "Advanced use cases and patterns"
 
 ## 🎯 Hands-on Labs
 
-This module includes 10 comprehensive labs:
-
-1. **Lab 11.1** - Introduction and setup
-2. **Lab 11.2** - Core concepts
-3. **Lab 11.3** - Practical implementation
-4. **Lab 11.4** - Advanced features
-5. **Lab 11.5** - Integration patterns
-6. **Lab 11.6** - Security and best practices
-7. **Lab 11.7** - Troubleshooting
-8. **Lab 11.8** - Performance optimization
-9. **Lab 11.9** - Real-world scenarios
-10. **Lab 11.10** - Best practices and review
-
-Complete all labs in the `labs/` directory before proceeding to the next module.
-
----
-
+- [Lab 11.1: Multi-Stage Builds & Optimization](./labs/lab-11.1-multi-stage-builds.md)
+- [Lab 11.1: Multi Stage Builds](./labs/lab-11.1-multi-stage-builds_extra.md)
+- [Lab 11.10: Production Best Practices](./labs/lab-11.10-production-best-practices.md)
+- [Lab 11.2: Docker Security & Distroless](./labs/lab-11.2-docker-security.md)
+- [Lab 11.2: Image Optimization](./labs/lab-11.2-image-optimization.md)
+- [Lab 11.3: Docker Security Scanning](./labs/lab-11.3-docker-security-scanning.md)
+- [Lab 11.4: Health Checks](./labs/lab-11.4-health-checks.md)
+- [Lab 11.5: Resource Limits](./labs/lab-11.5-resource-limits.md)
+- [Lab 11.6: Docker Networking Advanced](./labs/lab-11.6-docker-networking-advanced.md)
+- [Lab 11.7: Custom Networks](./labs/lab-11.7-custom-networks.md)
+- [Lab 11.8: Docker Swarm Intro](./labs/lab-11.8-docker-swarm-intro.md)
+- [Lab 11.9: Container Orchestration](./labs/lab-11.9-container-orchestration.md)
 ## 📚 Additional Resources
 
 ### Official Documentation

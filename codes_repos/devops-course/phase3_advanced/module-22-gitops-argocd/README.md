@@ -61,23 +61,18 @@ echo "Advanced use cases and patterns"
 
 ## 🎯 Hands-on Labs
 
-This module includes 10 comprehensive labs:
-
-1. **Lab 22.1** - Introduction and setup
-2. **Lab 22.2** - Core concepts
-3. **Lab 22.3** - Practical implementation
-4. **Lab 22.4** - Advanced features
-5. **Lab 22.5** - Integration patterns
-6. **Lab 22.6** - Security and best practices
-7. **Lab 22.7** - Troubleshooting
-8. **Lab 22.8** - Performance optimization
-9. **Lab 22.9** - Real-world scenarios
-10. **Lab 22.10** - Best practices and review
-
-Complete all labs in the `labs/` directory before proceeding to the next module.
-
----
-
+- [Lab 22.1: ArgoCD ApplicationSets](./labs/lab-22.1-applicationsets.md)
+- [Lab 22.1: Gitops Principles](./labs/lab-22.1-gitops-principles.md)
+- [Lab 22.10: Gitops Best Practices](./labs/lab-22.10-gitops-best-practices.md)
+- [Lab 22.2: Argo Rollouts (Canary & Blue-Green)](./labs/lab-22.2-argo-rollouts.md)
+- [Lab 22.2: Argocd Installation](./labs/lab-22.2-argocd-installation.md)
+- [Lab 22.3: Application Deployment](./labs/lab-22.3-application-deployment.md)
+- [Lab 22.4: Sync Strategies](./labs/lab-22.4-sync-strategies.md)
+- [Lab 22.5: Multi Cluster](./labs/lab-22.5-multi-cluster.md)
+- [Lab 22.6: Argocd Projects](./labs/lab-22.6-argocd-projects.md)
+- [Lab 22.7: Automated Rollbacks](./labs/lab-22.7-automated-rollbacks.md)
+- [Lab 22.8: Progressive Delivery](./labs/lab-22.8-progressive-delivery.md)
+- [Lab 22.9: Flux Comparison](./labs/lab-22.9-flux-comparison.md)
 ## 📚 Additional Resources
 
 ### Official Documentation

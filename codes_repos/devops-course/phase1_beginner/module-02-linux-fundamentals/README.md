@@ -703,3 +703,16 @@ After completing the labs, move on to **Module 3: Version Control with Git**.
 ---
 
 **Master the Linux Command Line!** 🐧
+
+## 🎯 Hands-on Labs
+
+- [Lab 2.1: Basic Linux Commands & Navigation](./labs/lab-02.1-basic-commands.md)
+- [Lab 2.10: Bash Automation Project (Capstone)](./labs/lab-02.10-bash-project.md)
+- [Lab 2.2: Linux File System Hierarchy](./labs/lab-02.2-filesystem-hierarchy.md)
+- [Lab 2.3: File Permissions & Ownership](./labs/lab-02.3-file-permissions.md)
+- [Lab 2.4: Process Management](./labs/lab-02.4-process-management.md)
+- [Lab 2.5: Package Management](./labs/lab-02.5-package-management.md)
+- [Lab 2.6: Shell Scripting Basics](./labs/lab-02.6-shell-scripting.md)
+- [Lab 2.7: Text Processing (grep, sed, awk)](./labs/lab-02.7-text-processing.md)
+- [Lab 2.8: System Monitoring](./labs/lab-02.8-system-monitoring.md)
+- [Lab 2.9: Networking Commands](./labs/lab-02.9-networking-commands.md)

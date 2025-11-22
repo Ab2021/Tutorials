@@ -1,394 +1,144 @@
-# Networking Basics
+# Networking Basics for DevOps
 
 ## 🎯 Learning Objectives
 
-By the end of this module, you will have comprehensive understanding of networking basics including:
-- OSI Model and TCP/IP Stack
-- IP Addressing (IPv4, IPv6, CIDR)
-- DNS and Name Resolution
-- HTTP/HTTPS Protocols
-- Load Balancing Concepts
-- Firewalls and Security Groups
-- Network Troubleshooting Tools
-- SSL/TLS and Certificates
-- Reverse Proxies (Nginx, HAProxy)
-- CDN Basics
-- Network Security Best Practices
+By the end of this module, you will have a comprehensive understanding of networking basics, including:
+- **Models**: Understanding the OSI 7-Layer Model and TCP/IP Stack.
+- **Addressing**: Mastering IPv4, Subnetting, and CIDR.
+- **Protocols**: Deep dive into TCP, UDP, DNS, and HTTP/S.
+- **Security**: Implementing Firewalls, SSL/TLS, and SSH.
+- **Troubleshooting**: Using tools like `curl`, `dig`, `netstat`, and `tcpdump`.
 
 ---
 
 ## 📖 Theoretical Concepts
 
-### 1. OSI Model and TCP/IP Stack
+### 1. The OSI Model & TCP/IP
 
-[Comprehensive theoretical content covering osi model and tcp/ip stack]
+The **OSI (Open Systems Interconnection)** model describes how computer systems communicate. While OSI has 7 layers, the practical internet runs on the **TCP/IP** model (4 layers).
 
-**Key Concepts:**
-- Concept 1: Detailed explanation
-- Concept 2: Detailed explanation
-- Concept 3: Detailed explanation
+| Layer (OSI) | Function | Protocol Examples | DevOps Relevance |
+| :--- | :--- | :--- | :--- |
+| **7. Application** | User interface & Data | HTTP, SSH, DNS | Load Balancers, API Gateways |
+| **6. Presentation** | Encryption & Formatting | SSL/TLS, JSON | Encoding, Serialization |
+| **5. Session** | Connection management | Sockets | Session Stickiness |
+| **4. Transport** | Reliable delivery | TCP, UDP | Ports, Retries, Timeouts |
+| **3. Network** | Routing & Addressing | IP, ICMP | VPCs, Subnets, Routing Tables |
+| **2. Data Link** | Physical addressing | Ethernet (MAC) | Virtual Interfaces (veth) |
+| **1. Physical** | Cables & Signals | Fiber, WiFi | Data Center Cabling |
 
-**Real-World Applications:**
-- Application 1
-- Application 2
-- Application 3
+### 2. IP Addressing & CIDR
 
-**Best Practices:**
-- Best practice 1
-- Best practice 2
-- Best practice 3
+Every device needs an IP address.
+- **IPv4**: 32-bit (e.g., `192.168.1.1`). Running out of addresses.
+- **IPv6**: 128-bit (e.g., `2001:0db8::`). The future.
 
-**Common Pitfalls:**
-- Pitfall 1 and how to avoid it
-- Pitfall 2 and how to avoid it
+**CIDR (Classless Inter-Domain Routing):**
+Used to define network ranges.
+- `/32`: 1 IP (Host).
+- `/24`: 256 IPs (Standard LAN). `192.168.1.0/24`.
+- `/16`: 65,536 IPs (Large Network).
+- `/0`: All IPs (`0.0.0.0/0`).
 
-**Code Examples:**
+### 3. Core Protocols
+
+#### TCP vs UDP
+- **TCP (Transmission Control Protocol)**: Reliable. Connection-oriented (3-way handshake). Retransmits lost packets. Used for Web (HTTP), Email (SMTP), File Transfer (FTP).
+- **UDP (User Datagram Protocol)**: Fast. Fire-and-forget. No guarantee of delivery. Used for Streaming, Gaming, DNS.
+
+#### DNS (Domain Name System)
+The phonebook of the internet. Translates `google.com` -> `142.250.190.46`.
+- **A Record**: Hostname to IPv4.
+- **AAAA Record**: Hostname to IPv6.
+- **CNAME**: Alias (www -> root).
+- **TTL (Time To Live)**: Caching duration.
+
+#### HTTP/HTTPS
+- **HTTP**: Cleartext. Port 80.
+- **HTTPS**: Encrypted (TLS). Port 443.
+- **Methods**: GET, POST, PUT, DELETE, PATCH.
+- **Status Codes**: 2xx (Success), 3xx (Redirect), 4xx (Client Error), 5xx (Server Error).
+
+### 4. Network Security
+
+- **Firewalls**: Filter traffic based on rules (Allow Port 80, Deny All).
+- **Security Groups (Cloud)**: Stateful firewalls attached to instances.
+- **SSL/TLS**: Encrypts data in transit. Uses Public/Private key pairs (PKI).
+- **SSH (Secure Shell)**: Encrypted remote access. Uses keys instead of passwords for automation.
+
+---
+
+## 🔧 Practical Examples
+
+### Troubleshooting with CLI Tools
+
+**1. Check Connectivity (Ping)**
 ```bash
-# Example commands and configurations
-echo "Practical examples demonstrating osi model and tcp/ip stack"
+ping google.com
+```
+
+**2. Check DNS (Dig)**
+```bash
+dig google.com +short
+```
+
+**3. Check Ports (Netstat/SS)**
+```bash
+# List listening ports
+ss -tuln
+```
+
+**4. Test HTTP (Curl)**
+```bash
+# Get headers only
+curl -I https://google.com
+```
+
+**5. Capture Traffic (Tcpdump)**
+```bash
+# Capture port 80 traffic
+sudo tcpdump -i eth0 port 80
 ```
 
 ---
 
-### 2. IP Addressing (IPv4, IPv6, CIDR)
-
-[Comprehensive theoretical content covering ip addressing (ipv4, ipv6, cidr)]
-
-**Key Concepts:**
-- Concept 1: Detailed explanation
-- Concept 2: Detailed explanation
-- Concept 3: Detailed explanation
-
-**Real-World Applications:**
-- Application 1
-- Application 2
-- Application 3
-
-**Best Practices:**
-- Best practice 1
-- Best practice 2
-- Best practice 3
-
-**Common Pitfalls:**
-- Pitfall 1 and how to avoid it
-- Pitfall 2 and how to avoid it
-
-**Code Examples:**
-```bash
-# Example commands and configurations
-echo "Practical examples demonstrating ip addressing (ipv4, ipv6, cidr)"
-```
-
----
-
-### 3. DNS and Name Resolution
-
-[Comprehensive theoretical content covering dns and name resolution]
-
-**Key Concepts:**
-- Concept 1: Detailed explanation
-- Concept 2: Detailed explanation
-- Concept 3: Detailed explanation
-
-**Real-World Applications:**
-- Application 1
-- Application 2
-- Application 3
-
-**Best Practices:**
-- Best practice 1
-- Best practice 2
-- Best practice 3
-
-**Common Pitfalls:**
-- Pitfall 1 and how to avoid it
-- Pitfall 2 and how to avoid it
-
-**Code Examples:**
-```bash
-# Example commands and configurations
-echo "Practical examples demonstrating dns and name resolution"
-```
-
----
-
-### 4. HTTP/HTTPS Protocols
-
-[Comprehensive theoretical content covering http/https protocols]
-
-**Key Concepts:**
-- Concept 1: Detailed explanation
-- Concept 2: Detailed explanation
-- Concept 3: Detailed explanation
-
-**Real-World Applications:**
-- Application 1
-- Application 2
-- Application 3
-
-**Best Practices:**
-- Best practice 1
-- Best practice 2
-- Best practice 3
-
-**Common Pitfalls:**
-- Pitfall 1 and how to avoid it
-- Pitfall 2 and how to avoid it
-
-**Code Examples:**
-```bash
-# Example commands and configurations
-echo "Practical examples demonstrating http/https protocols"
-```
-
----
-
-### 5. Load Balancing Concepts
-
-[Comprehensive theoretical content covering load balancing concepts]
-
-**Key Concepts:**
-- Concept 1: Detailed explanation
-- Concept 2: Detailed explanation
-- Concept 3: Detailed explanation
-
-**Real-World Applications:**
-- Application 1
-- Application 2
-- Application 3
-
-**Best Practices:**
-- Best practice 1
-- Best practice 2
-- Best practice 3
-
-**Common Pitfalls:**
-- Pitfall 1 and how to avoid it
-- Pitfall 2 and how to avoid it
-
-**Code Examples:**
-```bash
-# Example commands and configurations
-echo "Practical examples demonstrating load balancing concepts"
-```
-
----
-
-### 6. Firewalls and Security Groups
-
-[Comprehensive theoretical content covering firewalls and security groups]
-
-**Key Concepts:**
-- Concept 1: Detailed explanation
-- Concept 2: Detailed explanation
-- Concept 3: Detailed explanation
-
-**Real-World Applications:**
-- Application 1
-- Application 2
-- Application 3
-
-**Best Practices:**
-- Best practice 1
-- Best practice 2
-- Best practice 3
-
-**Common Pitfalls:**
-- Pitfall 1 and how to avoid it
-- Pitfall 2 and how to avoid it
-
-**Code Examples:**
-```bash
-# Example commands and configurations
-echo "Practical examples demonstrating firewalls and security groups"
-```
-
----
-
-### 7. Network Troubleshooting Tools
-
-[Comprehensive theoretical content covering network troubleshooting tools]
-
-**Key Concepts:**
-- Concept 1: Detailed explanation
-- Concept 2: Detailed explanation
-- Concept 3: Detailed explanation
-
-**Real-World Applications:**
-- Application 1
-- Application 2
-- Application 3
-
-**Best Practices:**
-- Best practice 1
-- Best practice 2
-- Best practice 3
-
-**Common Pitfalls:**
-- Pitfall 1 and how to avoid it
-- Pitfall 2 and how to avoid it
-
-**Code Examples:**
-```bash
-# Example commands and configurations
-echo "Practical examples demonstrating network troubleshooting tools"
-```
-
----
-
-### 8. SSL/TLS and Certificates
-
-[Comprehensive theoretical content covering ssl/tls and certificates]
-
-**Key Concepts:**
-- Concept 1: Detailed explanation
-- Concept 2: Detailed explanation
-- Concept 3: Detailed explanation
-
-**Real-World Applications:**
-- Application 1
-- Application 2
-- Application 3
-
-**Best Practices:**
-- Best practice 1
-- Best practice 2
-- Best practice 3
-
-**Common Pitfalls:**
-- Pitfall 1 and how to avoid it
-- Pitfall 2 and how to avoid it
-
-**Code Examples:**
-```bash
-# Example commands and configurations
-echo "Practical examples demonstrating ssl/tls and certificates"
-```
-
----
-
-### 9. Reverse Proxies (Nginx, HAProxy)
-
-[Comprehensive theoretical content covering reverse proxies (nginx, haproxy)]
-
-**Key Concepts:**
-- Concept 1: Detailed explanation
-- Concept 2: Detailed explanation
-- Concept 3: Detailed explanation
-
-**Real-World Applications:**
-- Application 1
-- Application 2
-- Application 3
-
-**Best Practices:**
-- Best practice 1
-- Best practice 2
-- Best practice 3
-
-**Common Pitfalls:**
-- Pitfall 1 and how to avoid it
-- Pitfall 2 and how to avoid it
-
-**Code Examples:**
-```bash
-# Example commands and configurations
-echo "Practical examples demonstrating reverse proxies (nginx, haproxy)"
-```
-
----
-
-### 10. CDN Basics
-
-[Comprehensive theoretical content covering cdn basics]
-
-**Key Concepts:**
-- Concept 1: Detailed explanation
-- Concept 2: Detailed explanation
-- Concept 3: Detailed explanation
-
-**Real-World Applications:**
-- Application 1
-- Application 2
-- Application 3
-
-**Best Practices:**
-- Best practice 1
-- Best practice 2
-- Best practice 3
-
-**Common Pitfalls:**
-- Pitfall 1 and how to avoid it
-- Pitfall 2 and how to avoid it
-
-**Code Examples:**
-```bash
-# Example commands and configurations
-echo "Practical examples demonstrating cdn basics"
-```
-
----
-
-### 11. Network Security Best Practices
-
-[Comprehensive theoretical content covering network security best practices]
-
-**Key Concepts:**
-- Concept 1: Detailed explanation
-- Concept 2: Detailed explanation
-- Concept 3: Detailed explanation
-
-**Real-World Applications:**
-- Application 1
-- Application 2
-- Application 3
-
-**Best Practices:**
-- Best practice 1
-- Best practice 2
-- Best practice 3
-
-**Common Pitfalls:**
-- Pitfall 1 and how to avoid it
-- Pitfall 2 and how to avoid it
-
-**Code Examples:**
-```bash
-# Example commands and configurations
-echo "Practical examples demonstrating network security best practices"
-```
-
----
-
-## 🔑 Key Takeaways
-
-1. [Key takeaway 1]
-2. [Key takeaway 2]
-3. [Key takeaway 3]
-4. [Key takeaway 4]
-5. [Key takeaway 5]
+## 🎯 Hands-on Labs
+
+- [Lab 4.1: OSI Model & TCP/IP](./labs/lab-04.1-osi-tcpip.md)
+- [Lab 4.10: Networking Capstone](./labs/lab-04.10-networking-project.md)
+- [Lab 4.2: IP Addressing & Subnetting](./labs/lab-04.2-ip-subnetting.md)
+- [Lab 4.3: DNS & Name Resolution](./labs/lab-04.3-dns-basics.md)
+- [Lab 4.4: HTTP & HTTPS Protocols](./labs/lab-04.4-http-https.md)
+- [Lab 4.5: SSH & Remote Access](./labs/lab-04.5-ssh-remote-access.md)
+- [Lab 4.6: Firewalls & Security Groups](./labs/lab-04.6-firewalls.md)
+- [Lab 4.7: Load Balancing Basics](./labs/lab-04.7-load-balancing.md)
+- [Lab 4.8: Troubleshooting Tools (curl, dig, netstat)](./labs/lab-04.8-troubleshooting.md)
+- [Lab 4.9: SSL/TLS & Certificates](./labs/lab-04.9-ssl-tls.md)
 
 ---
 
 ## 📚 Additional Resources
 
 ### Official Documentation
-- [Link to official docs]
+- [Mozilla Developer Network (MDN) - Networking](https://developer.mozilla.org/en-US/docs/Web/HTTP)
+- [RFC Editor (The Standards)](https://www.rfc-editor.org/)
 
-### Tutorials
-- [Tutorial 1]
-- [Tutorial 2]
+### Interactive Tutorials
+- [Mess with DNS](https://messwithdns.net/)
+- [CIDR.xyz](https://cidr.xyz/) - Visual Subnet Calculator.
 
-### Books
-- [Recommended book 1]
-- [Recommended book 2]
+---
+
+## 🔑 Key Takeaways
+
+1.  **It's Always DNS**: When something breaks, check DNS first.
+2.  **Least Privilege**: Only open the ports you absolutely need (e.g., 80, 443, 22).
+3.  **Latency Matters**: The speed of light is finite. CDN and Region selection impact performance.
+4.  **Encryption Everywhere**: Never send sensitive data over HTTP.
 
 ---
 
 ## ⏭️ Next Steps
 
-Complete all 10 labs in the `labs/` directory to gain hands-on experience.
-
----
-
-**Master Networking Basics!** 🚀
+1.  Complete the labs to practice using these tools.
+2.  Proceed to **[Module 5: Docker Fundamentals](../module-05-docker-fundamentals/README.md)** to start building containers.

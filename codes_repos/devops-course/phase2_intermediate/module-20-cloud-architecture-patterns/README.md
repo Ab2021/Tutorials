@@ -61,23 +61,18 @@ echo "Advanced use cases and patterns"
 
 ## 🎯 Hands-on Labs
 
-This module includes 10 comprehensive labs:
-
-1. **Lab 20.1** - Introduction and setup
-2. **Lab 20.2** - Core concepts
-3. **Lab 20.3** - Practical implementation
-4. **Lab 20.4** - Advanced features
-5. **Lab 20.5** - Integration patterns
-6. **Lab 20.6** - Security and best practices
-7. **Lab 20.7** - Troubleshooting
-8. **Lab 20.8** - Performance optimization
-9. **Lab 20.9** - Real-world scenarios
-10. **Lab 20.10** - Best practices and review
-
-Complete all labs in the `labs/` directory before proceeding to the next module.
-
----
-
+- [Lab 20.1: High Availability (Auto Scaling)](./labs/lab-20.1-high-availability.md)
+- [Lab 20.1: High Availability](./labs/lab-20.1-high-availability_extra.md)
+- [Lab 20.10: Architecture Best Practices](./labs/lab-20.10-architecture-best-practices.md)
+- [Lab 20.2: Auto Scaling](./labs/lab-20.2-auto-scaling.md)
+- [Lab 20.2: Disaster Recovery (Cross-Region Replication)](./labs/lab-20.2-disaster-recovery.md)
+- [Lab 20.3: Disaster Recovery](./labs/lab-20.3-disaster-recovery.md)
+- [Lab 20.4: Multi Region](./labs/lab-20.4-multi-region.md)
+- [Lab 20.5: Caching Strategies](./labs/lab-20.5-caching-strategies.md)
+- [Lab 20.6: Cdn Implementation](./labs/lab-20.6-cdn-implementation.md)
+- [Lab 20.7: Microservices Architecture](./labs/lab-20.7-microservices-architecture.md)
+- [Lab 20.8: Event Driven](./labs/lab-20.8-event-driven.md)
+- [Lab 20.9: Serverless Intro](./labs/lab-20.9-serverless-intro.md)
 ## 📚 Additional Resources
 
 ### Official Documentation

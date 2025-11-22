@@ -61,23 +61,18 @@ echo "Advanced use cases and patterns"
 
 ## 🎯 Hands-on Labs
 
-This module includes 10 comprehensive labs:
-
-1. **Lab 18.1** - Introduction and setup
-2. **Lab 18.2** - Core concepts
-3. **Lab 18.3** - Practical implementation
-4. **Lab 18.4** - Advanced features
-5. **Lab 18.5** - Integration patterns
-6. **Lab 18.6** - Security and best practices
-7. **Lab 18.7** - Troubleshooting
-8. **Lab 18.8** - Performance optimization
-9. **Lab 18.9** - Real-world scenarios
-10. **Lab 18.10** - Best practices and review
-
-Complete all labs in the `labs/` directory before proceeding to the next module.
-
----
-
+- [Lab 18.1: Devsecops Principles](./labs/lab-18.1-devsecops-principles.md)
+- [Lab 18.1: SAST with SonarQube](./labs/lab-18.1-sast-sonarqube.md)
+- [Lab 18.10: Incident Response](./labs/lab-18.10-incident-response.md)
+- [Lab 18.2: Container Signing with Cosign](./labs/lab-18.2-container-signing.md)
+- [Lab 18.2: Vulnerability Scanning](./labs/lab-18.2-vulnerability-scanning.md)
+- [Lab 18.3: Secrets Management](./labs/lab-18.3-secrets-management.md)
+- [Lab 18.4: Vault Setup](./labs/lab-18.4-vault-setup.md)
+- [Lab 18.5: Security Policies](./labs/lab-18.5-security-policies.md)
+- [Lab 18.6: Compliance Automation](./labs/lab-18.6-compliance-automation.md)
+- [Lab 18.7: Container Scanning](./labs/lab-18.7-container-scanning.md)
+- [Lab 18.8: Sast Dast](./labs/lab-18.8-sast-dast.md)
+- [Lab 18.9: Security Monitoring](./labs/lab-18.9-security-monitoring.md)
 ## 📚 Additional Resources
 
 ### Official Documentation

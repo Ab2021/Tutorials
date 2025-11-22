@@ -61,23 +61,18 @@ echo "Advanced use cases and patterns"
 
 ## 🎯 Hands-on Labs
 
-This module includes 10 comprehensive labs:
-
-1. **Lab 24.1** - Introduction and setup
-2. **Lab 24.2** - Core concepts
-3. **Lab 24.3** - Practical implementation
-4. **Lab 24.4** - Advanced features
-5. **Lab 24.5** - Integration patterns
-6. **Lab 24.6** - Security and best practices
-7. **Lab 24.7** - Troubleshooting
-8. **Lab 24.8** - Performance optimization
-9. **Lab 24.9** - Real-world scenarios
-10. **Lab 24.10** - Best practices and review
-
-Complete all labs in the `labs/` directory before proceeding to the next module.
-
----
-
+- [Lab 24.1: Distributed Tracing Advanced](./labs/lab-24.1-distributed-tracing-advanced.md)
+- [Lab 24.1: Prometheus Operator](./labs/lab-24.1-prometheus-operator.md)
+- [Lab 24.10: Monitoring At Scale](./labs/lab-24.10-monitoring-at-scale.md)
+- [Lab 24.2: Apm Tools](./labs/lab-24.2-apm-tools.md)
+- [Lab 24.2: Thanos (Long-Term Storage)](./labs/lab-24.2-thanos.md)
+- [Lab 24.3: Custom Instrumentation](./labs/lab-24.3-custom-instrumentation.md)
+- [Lab 24.4: Slo Sli Sla](./labs/lab-24.4-slo-sli-sla.md)
+- [Lab 24.5: Error Budgets](./labs/lab-24.5-error-budgets.md)
+- [Lab 24.6: Synthetic Monitoring](./labs/lab-24.6-synthetic-monitoring.md)
+- [Lab 24.7: Real User Monitoring](./labs/lab-24.7-real-user-monitoring.md)
+- [Lab 24.8: Performance Analysis](./labs/lab-24.8-performance-analysis.md)
+- [Lab 24.9: Capacity Planning](./labs/lab-24.9-capacity-planning.md)
 ## 📚 Additional Resources
 
 ### Official Documentation

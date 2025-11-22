@@ -61,23 +61,18 @@ echo "Advanced use cases and patterns"
 
 ## 🎯 Hands-on Labs
 
-This module includes 10 comprehensive labs:
-
-1. **Lab 30.1** - Introduction and setup
-2. **Lab 30.2** - Core concepts
-3. **Lab 30.3** - Practical implementation
-4. **Lab 30.4** - Advanced features
-5. **Lab 30.5** - Integration patterns
-6. **Lab 30.6** - Security and best practices
-7. **Lab 30.7** - Troubleshooting
-8. **Lab 30.8** - Performance optimization
-9. **Lab 30.9** - Real-world scenarios
-10. **Lab 30.10** - Best practices and review
-
-Complete all labs in the `labs/` directory before proceeding to the next module.
-
----
-
+- [Lab 30.1: Blue Green Deployment](./labs/lab-30.1-blue-green-deployment.md)
+- [Lab 30.1: Feature Flags (Decoupling Deploy from Release)](./labs/lab-30.1-feature-flags.md)
+- [Lab 30.10: Deployment Best Practices](./labs/lab-30.10-deployment-best-practices.md)
+- [Lab 30.2: Canary Releases](./labs/lab-30.2-canary-releases.md)
+- [Lab 30.2: Zero Downtime Database Migrations](./labs/lab-30.2-db-migrations.md)
+- [Lab 30.3: Feature Flags](./labs/lab-30.3-feature-flags.md)
+- [Lab 30.4: Progressive Rollout](./labs/lab-30.4-progressive-rollout.md)
+- [Lab 30.5: Rollback Strategies](./labs/lab-30.5-rollback-strategies.md)
+- [Lab 30.6: Deployment Verification](./labs/lab-30.6-deployment-verification.md)
+- [Lab 30.7: Smoke Testing](./labs/lab-30.7-smoke-testing.md)
+- [Lab 30.8: Deployment Automation](./labs/lab-30.8-deployment-automation.md)
+- [Lab 30.9: Zero Downtime](./labs/lab-30.9-zero-downtime.md)
 ## 📚 Additional Resources
 
 ### Official Documentation

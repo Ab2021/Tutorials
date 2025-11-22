@@ -61,23 +61,18 @@ echo "Advanced use cases and patterns"
 
 ## 🎯 Hands-on Labs
 
-This module includes 10 comprehensive labs:
-
-1. **Lab 14.1** - Introduction and setup
-2. **Lab 14.2** - Core concepts
-3. **Lab 14.3** - Practical implementation
-4. **Lab 14.4** - Advanced features
-5. **Lab 14.5** - Integration patterns
-6. **Lab 14.6** - Security and best practices
-7. **Lab 14.7** - Troubleshooting
-8. **Lab 14.8** - Performance optimization
-9. **Lab 14.9** - Real-world scenarios
-10. **Lab 14.10** - Best practices and review
-
-Complete all labs in the `labs/` directory before proceeding to the next module.
-
----
-
+- [Lab 14.1: Terraform Modules](./labs/lab-14.1-terraform-modules.md)
+- [Lab 14.1: Terraform Modules](./labs/lab-14.1-terraform-modules_extra.md)
+- [Lab 14.10: Enterprise Patterns](./labs/lab-14.10-enterprise-patterns.md)
+- [Lab 14.2: Module Composition](./labs/lab-14.2-module-composition.md)
+- [Lab 14.2: Remote State & Locking](./labs/lab-14.2-remote-state.md)
+- [Lab 14.3: Cloudformation Stacks](./labs/lab-14.3-cloudformation-stacks.md)
+- [Lab 14.4: Pulumi Intro](./labs/lab-14.4-pulumi-intro.md)
+- [Lab 14.5: State Locking](./labs/lab-14.5-state-locking.md)
+- [Lab 14.6: Terraform Import](./labs/lab-14.6-terraform-import.md)
+- [Lab 14.7: Cross Tool Comparison](./labs/lab-14.7-cross-tool-comparison.md)
+- [Lab 14.8: Iac Testing](./labs/lab-14.8-iac-testing.md)
+- [Lab 14.9: Terraform Cloud](./labs/lab-14.9-terraform-cloud.md)
 ## 📚 Additional Resources
 
 ### Official Documentation
