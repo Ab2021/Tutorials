@@ -1,4 +1,18 @@
-# Module 1: Introduction to DevOps
+#!/usr/bin/env python3
+"""
+Comprehensive Content Expander
+Expands all module READMEs with detailed theory and all labs with practical code
+"""
+
+import os
+from pathlib import Path
+
+BASE_PATH = r"H:\My Drive\Codes & Repos\codes_repos\devops-course"
+
+# Comprehensive module content with detailed theory
+def create_module_01_readme():
+    """Module 1: Introduction to DevOps - Comprehensive Theory"""
+    content = """# Module 1: Introduction to DevOps
 
 ## 🎯 Learning Objectives
 
@@ -709,3 +723,15 @@ After completing the labs, move on to **Module 2: Linux Fundamentals**.
 ---
 
 **Master the DevOps Mindset!** 🚀
+"""
+    return content
+
+# Write Module 1 README
+print("Creating comprehensive Module 1 README with detailed theory...")
+module_01_content = create_module_01_readme()
+module_01_path = Path(BASE_PATH) / "phase1_beginner" / "module-01-introduction-devops" / "README.md"
+with open(module_01_path, 'w', encoding='utf-8') as f:
+    f.write(module_01_content)
+print(f"✅ Created: {module_01_path}")
+print(f"   Lines: {len(module_01_content.splitlines())}")
+print(f"   Size: {len(module_01_content)} characters")

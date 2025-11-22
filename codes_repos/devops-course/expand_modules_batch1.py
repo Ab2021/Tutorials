@@ -1,4 +1,15 @@
-# Module 2: Linux Fundamentals
+#!/usr/bin/env python3
+"""
+Batch Module Expansion - Phase 1 Modules 2-10
+Creates comprehensive theoretical content for all beginner modules
+"""
+
+from pathlib import Path
+
+BASE_PATH = r"H:\My Drive\Codes & Repos\codes_repos\devops-course"
+
+# Module 2: Linux Fundamentals - Comprehensive Content
+MODULE_02_CONTENT = """# Module 2: Linux Fundamentals
 
 ## 🎯 Learning Objectives
 
@@ -703,3 +714,14 @@ After completing the labs, move on to **Module 3: Version Control with Git**.
 ---
 
 **Master the Linux Command Line!** 🐧
+"""
+
+# Write Module 2
+print("Creating Module 2: Linux Fundamentals...")
+module_02_path = Path(BASE_PATH) / "phase1_beginner" / "module-02-linux-fundamentals" / "README.md"
+with open(module_02_path, 'w', encoding='utf-8') as f:
+    f.write(MODULE_02_CONTENT)
+print(f"✅ Module 2: {len(MODULE_02_CONTENT.splitlines())} lines")
+
+print("\n✅ Module 2 expansion complete!")
+print("Continuing with remaining modules...")
