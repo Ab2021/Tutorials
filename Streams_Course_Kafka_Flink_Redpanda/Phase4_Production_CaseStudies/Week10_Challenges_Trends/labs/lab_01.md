@@ -1,30 +1,22 @@
-# Lab 01: Hot Key Handling
+# Lab 01: Advanced Challenge 1
 
 ## Difficulty
-🔴 Hard
+ Hard
 
 ## Estimated Time
-90 mins
+60 mins
 
 ## Learning Objectives
-- Challenge
+- Solve advanced streaming challenges
+- Apply cutting-edge techniques
 
 ## Problem Statement
-Implement 'Local Key Aggregation' to mitigate hot keys.
-
-## Starter Code
-```python
-Pre-aggregate before keyBy
-```
-
-## Hints
-<details>
-<summary>Hint 1</summary>
-Focus on the core logic first.
-</details>
+Tackle complex real-world streaming problems using advanced patterns and emerging technologies.
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+Apply all concepts learned throughout the 10-week course.
+Refer to Week 10 daily content for advanced techniques.
 </details>

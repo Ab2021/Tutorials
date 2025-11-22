@@ -1,30 +1,21 @@
-# Lab 10: Handling Poison Pills
+# Lab 10: Observability Lab 10
 
 ## Difficulty
-🟡 Medium
+ Medium
 
 ## Estimated Time
-60 mins
+45 mins
 
 ## Learning Objectives
-- Ops
+- Practice observability techniques
+- Monitor streaming systems
 
 ## Problem Statement
-Implement a deserialization error handler.
-
-## Starter Code
-```python
-try: deserialize except: send_to_dlq
-```
-
-## Hints
-<details>
-<summary>Hint 1</summary>
-Focus on the core logic first.
-</details>
+Apply monitoring and troubleshooting skills to real-world scenarios.
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+Refer to Week 8 daily content for detailed techniques and best practices.
 </details>

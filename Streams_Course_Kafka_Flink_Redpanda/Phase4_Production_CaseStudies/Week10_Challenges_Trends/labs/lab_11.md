@@ -1,30 +1,22 @@
-# Lab 11: Vector Database Sink
+# Lab 11: Advanced Challenge 11
 
 ## Difficulty
-🟡 Medium
+ Hard
 
 ## Estimated Time
 60 mins
 
 ## Learning Objectives
-- AI/ML
+- Solve advanced streaming challenges
+- Apply cutting-edge techniques
 
 ## Problem Statement
-Stream embeddings to a Vector DB (Pinecone/Milvus).
-
-## Starter Code
-```python
-Sink to VectorDB
-```
-
-## Hints
-<details>
-<summary>Hint 1</summary>
-Focus on the core logic first.
-</details>
+Tackle complex real-world streaming problems using advanced patterns and emerging technologies.
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+Apply all concepts learned throughout the 10-week course.
+Refer to Week 10 daily content for advanced techniques.
 </details>

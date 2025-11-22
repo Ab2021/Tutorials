@@ -1,13 +1,14 @@
-# Day2_IoT_Telemetry: Core Concepts
+# Day2 IoT Telemetry - Core
 
-## Core Concepts & Theory
+## Core Content
 
-### Theoretical Foundation
-[Detailed theoretical explanation of the concept...]
+### Overview
+Processing IoT sensor data at scale with Redpanda
 
-### Architectural Reasoning
-[Why is this designed this way? What are the trade-offs?]
+### Key Concepts
+- Real-world implementation patterns
+- Production best practices
+- Performance optimization
 
-### Key Components
-- Component 1
-- Component 2
+### Architecture
+Detailed architecture and design decisions for this use case.

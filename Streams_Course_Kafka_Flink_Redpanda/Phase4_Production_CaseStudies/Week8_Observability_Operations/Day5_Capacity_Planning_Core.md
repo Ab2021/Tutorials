@@ -1,13 +1,16 @@
-# Day5_Capacity_Planning: Core Concepts
+# Capacity Planning
 
-## Core Concepts & Theory
+## Core Concepts
 
-### Theoretical Foundation
-[Detailed theoretical explanation of the concept...]
+### Capacity Factors
+- Throughput (MB/sec)
+- Storage (TB)
+- Retention (days)
+- Replication factor
 
-### Architectural Reasoning
-[Why is this designed this way? What are the trade-offs?]
+### Sizing Formula
+Disk = Throughput  Retention  Replication
 
-### Key Components
-- Component 1
-- Component 2
+### Scaling Strategies
+- Vertical: Bigger machines
+- Horizontal: More machines (preferred)

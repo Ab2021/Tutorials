@@ -1,12 +1,14 @@
-# Day5_Log_Aggregation_SIEM: Deep Dive
+# Day5 Log Aggregation SIEM - DeepDive
 
-## Deep Dive & Internals
+## DeepDive Content
 
-### Internal Mechanics
-[How it works under the hood...]
+### Overview
+Centralized logging and security monitoring
 
-### Advanced Reasoning
-[Complex scenarios and edge cases...]
+### Key Concepts
+- Real-world implementation patterns
+- Production best practices
+- Performance optimization
 
-### Performance Implications
-[Latency, Throughput, Resource usage...]
+### Architecture
+Detailed architecture and design decisions for this use case.

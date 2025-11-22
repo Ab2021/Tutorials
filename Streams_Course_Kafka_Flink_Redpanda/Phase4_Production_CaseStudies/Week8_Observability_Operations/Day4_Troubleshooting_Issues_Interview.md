@@ -1,14 +1,11 @@
-# Day4_Troubleshooting_Issues: Interview Prep
+# Troubleshooting - Interview
 
-## Interview Questions & Challenges
+## Scenarios
 
-### Common Interview Questions
-1. Question 1?
-2. Question 2?
+1. **Scenario: Kafka broker down**
+   - Check: Other brokers taking load?
+   - Fix: Restart broker, check logs
 
-### Production Challenges
-- Challenge 1
-- Challenge 2
-
-### Troubleshooting Scenarios
-[Scenario description...]
+2. **Scenario: Flink job failing**
+   - Check: Exception in logs?
+   - Fix: Fix bug, restore from savepoint

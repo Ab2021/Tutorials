@@ -1,12 +1,14 @@
-# Day5_Unified_Batch_Stream: Deep Dive
+# Day5 Unified Batch Stream - DeepDive
 
-## Deep Dive & Internals
+## DeepDive Content
 
-### Internal Mechanics
-[How it works under the hood...]
+### Overview
+Unified processing with Flink and Spark
 
-### Advanced Reasoning
-[Complex scenarios and edge cases...]
+### Key Concepts
+- Advanced streaming challenges
+- Future trends and technologies
+- Industry best practices
 
-### Performance Implications
-[Latency, Throughput, Resource usage...]
+### Solutions
+Modern approaches to solving complex streaming problems.

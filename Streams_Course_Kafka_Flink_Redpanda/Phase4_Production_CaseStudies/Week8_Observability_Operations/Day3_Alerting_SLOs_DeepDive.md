@@ -1,12 +1,14 @@
-# Day3_Alerting_SLOs: Deep Dive
+# Alerting - Deep Dive
 
-## Deep Dive & Internals
+## Internals
 
-### Internal Mechanics
-[How it works under the hood...]
+### Multi-Window Multi-Burn-Rate
+Google SRE approach:
+- Fast burn (1h window): Page immediately
+- Slow burn (6h window): Ticket
 
-### Advanced Reasoning
-[Complex scenarios and edge cases...]
-
-### Performance Implications
-[Latency, Throughput, Resource usage...]
+### Alert Fatigue
+Avoid:
+- Alerts on metrics, not symptoms
+- Too sensitive thresholds
+- Non-actionable alerts

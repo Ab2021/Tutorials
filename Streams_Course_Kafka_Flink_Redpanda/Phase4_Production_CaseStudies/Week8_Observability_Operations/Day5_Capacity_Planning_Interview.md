@@ -1,14 +1,9 @@
-# Day5_Capacity_Planning: Interview Prep
+# Capacity Planning - Interview
 
-## Interview Questions & Challenges
+## Questions
 
-### Common Interview Questions
-1. Question 1?
-2. Question 2?
+1. **Q: How to size Kafka cluster?**
+   - A: Calculate disk, network, CPU based on throughput and retention
 
-### Production Challenges
-- Challenge 1
-- Challenge 2
-
-### Troubleshooting Scenarios
-[Scenario description...]
+2. **Q: When to add brokers?**
+   - A: When CPU > 70%, disk > 80%, or network saturated

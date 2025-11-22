@@ -1,30 +1,22 @@
-# Lab 03: Flink Checkpoint Monitoring
+# Lab 03: Grafana Dashboard
 
 ## Difficulty
-🟢 Easy
+ Medium
 
 ## Estimated Time
-30 mins
+45 mins
 
 ## Learning Objectives
-- Metrics
-
-## Problem Statement
-Alert on failed checkpoints.
-
-## Starter Code
-```python
-flink_jobmanager_job_numberOfFailedCheckpoints
-```
-
-## Hints
-<details>
-<summary>Hint 1</summary>
-Focus on the core logic first.
-</details>
+- Create Grafana dashboard
+- Visualize metrics
 
 ## Solution
 <details>
-<summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+<summary>Solution</summary>
+
+Import dashboard ID: 7589
+
+`promql
+kafka_consumergroup_lag
+`
 </details>

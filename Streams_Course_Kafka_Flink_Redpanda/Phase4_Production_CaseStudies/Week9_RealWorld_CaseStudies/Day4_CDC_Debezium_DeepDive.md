@@ -1,12 +1,14 @@
-# Day4_CDC_Debezium: Deep Dive
+# Day4 CDC Debezium - DeepDive
 
-## Deep Dive & Internals
+## DeepDive Content
 
-### Internal Mechanics
-[How it works under the hood...]
+### Overview
+Change Data Capture from MySQL to Kafka
 
-### Advanced Reasoning
-[Complex scenarios and edge cases...]
+### Key Concepts
+- Real-world implementation patterns
+- Production best practices
+- Performance optimization
 
-### Performance Implications
-[Latency, Throughput, Resource usage...]
+### Architecture
+Detailed architecture and design decisions for this use case.

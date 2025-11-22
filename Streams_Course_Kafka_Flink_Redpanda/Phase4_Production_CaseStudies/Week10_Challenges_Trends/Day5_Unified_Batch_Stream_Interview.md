@@ -1,14 +1,14 @@
-# Day5_Unified_Batch_Stream: Interview Prep
+# Day5 Unified Batch Stream - Interview
 
-## Interview Questions & Challenges
+## Interview Content
 
-### Common Interview Questions
-1. Question 1?
-2. Question 2?
+### Overview
+Unified processing with Flink and Spark
 
-### Production Challenges
-- Challenge 1
-- Challenge 2
+### Key Concepts
+- Advanced streaming challenges
+- Future trends and technologies
+- Industry best practices
 
-### Troubleshooting Scenarios
-[Scenario description...]
+### Solutions
+Modern approaches to solving complex streaming problems.

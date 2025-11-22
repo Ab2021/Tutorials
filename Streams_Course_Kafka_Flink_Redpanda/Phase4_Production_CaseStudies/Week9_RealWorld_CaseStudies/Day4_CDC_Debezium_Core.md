@@ -1,13 +1,14 @@
-# Day4_CDC_Debezium: Core Concepts
+# Day4 CDC Debezium - Core
 
-## Core Concepts & Theory
+## Core Content
 
-### Theoretical Foundation
-[Detailed theoretical explanation of the concept...]
+### Overview
+Change Data Capture from MySQL to Kafka
 
-### Architectural Reasoning
-[Why is this designed this way? What are the trade-offs?]
+### Key Concepts
+- Real-world implementation patterns
+- Production best practices
+- Performance optimization
 
-### Key Components
-- Component 1
-- Component 2
+### Architecture
+Detailed architecture and design decisions for this use case.

@@ -1,30 +1,21 @@
-# Lab 14: Network Tuning
+# Lab 14: Observability Lab 14
 
 ## Difficulty
-🟡 Medium
+ Medium
 
 ## Estimated Time
 45 mins
 
 ## Learning Objectives
-- Tuning
+- Practice observability techniques
+- Monitor streaming systems
 
 ## Problem Statement
-Tune socket buffer sizes for high throughput.
-
-## Starter Code
-```python
-socket.send.buffer.bytes
-```
-
-## Hints
-<details>
-<summary>Hint 1</summary>
-Focus on the core logic first.
-</details>
+Apply monitoring and troubleshooting skills to real-world scenarios.
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+Refer to Week 8 daily content for detailed techniques and best practices.
 </details>

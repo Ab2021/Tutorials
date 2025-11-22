@@ -1,30 +1,22 @@
-# Lab 13: Feature Engineering Pipeline
+# Lab 13: Advanced Challenge 13
 
 ## Difficulty
-🟡 Medium
+ Hard
 
 ## Estimated Time
 60 mins
 
 ## Learning Objectives
-- AI/ML
+- Solve advanced streaming challenges
+- Apply cutting-edge techniques
 
 ## Problem Statement
-Compute real-time features for ML inference.
-
-## Starter Code
-```python
-Sliding window features
-```
-
-## Hints
-<details>
-<summary>Hint 1</summary>
-Focus on the core logic first.
-</details>
+Tackle complex real-world streaming problems using advanced patterns and emerging technologies.
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+Apply all concepts learned throughout the 10-week course.
+Refer to Week 10 daily content for advanced techniques.
 </details>

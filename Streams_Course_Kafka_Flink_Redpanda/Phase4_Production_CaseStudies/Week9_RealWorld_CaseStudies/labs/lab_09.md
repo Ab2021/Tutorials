@@ -1,30 +1,22 @@
-# Lab 09: Social Media Feed
+# Lab 09: Case Study Lab 9
 
 ## Difficulty
-🔴 Hard
+ Hard
 
 ## Estimated Time
-90 mins
+60 mins
 
 ## Learning Objectives
-- Case Study
+- Apply streaming concepts to real-world scenarios
+- Build end-to-end pipelines
 
 ## Problem Statement
-Fan-out architecture for user feeds.
-
-## Starter Code
-```python
-Produce to user-specific timelines
-```
-
-## Hints
-<details>
-<summary>Hint 1</summary>
-Focus on the core logic first.
-</details>
+Implement a production-grade streaming solution based on case study requirements.
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+Combine techniques from previous weeks to build complete solutions.
+Refer to Week 9 daily content for architecture patterns.
 </details>

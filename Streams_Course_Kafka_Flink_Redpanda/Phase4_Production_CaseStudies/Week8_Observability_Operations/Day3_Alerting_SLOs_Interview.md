@@ -1,14 +1,9 @@
-# Day3_Alerting_SLOs: Interview Prep
+# Alerting - Interview
 
-## Interview Questions & Challenges
+## Questions
 
-### Common Interview Questions
-1. Question 1?
-2. Question 2?
+1. **Q: Difference between SLO and SLA?**
+   - A: SLO is internal target, SLA is external contract
 
-### Production Challenges
-- Challenge 1
-- Challenge 2
-
-### Troubleshooting Scenarios
-[Scenario description...]
+2. **Q: How to reduce alert fatigue?**
+   - A: Alert on SLO violations, not individual metrics

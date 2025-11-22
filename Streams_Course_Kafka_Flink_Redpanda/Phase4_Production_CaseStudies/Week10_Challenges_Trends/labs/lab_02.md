@@ -1,30 +1,22 @@
-# Lab 02: Schema Evolution Test
+# Lab 02: Advanced Challenge 2
 
 ## Difficulty
-🟡 Medium
+ Hard
 
 ## Estimated Time
 60 mins
 
 ## Learning Objectives
-- Challenge
+- Solve advanced streaming challenges
+- Apply cutting-edge techniques
 
 ## Problem Statement
-Produce data with new schema and verify consumer compatibility.
-
-## Starter Code
-```python
-Add field with default value
-```
-
-## Hints
-<details>
-<summary>Hint 1</summary>
-Focus on the core logic first.
-</details>
+Tackle complex real-world streaming problems using advanced patterns and emerging technologies.
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+Apply all concepts learned throughout the 10-week course.
+Refer to Week 10 daily content for advanced techniques.
 </details>

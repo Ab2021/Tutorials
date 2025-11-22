@@ -1,30 +1,21 @@
-# Lab 11: Rolling Restart
+# Lab 11: Observability Lab 11
 
 ## Difficulty
-🔴 Hard
+ Medium
 
 ## Estimated Time
-60 mins
+45 mins
 
 ## Learning Objectives
-- Ops
+- Practice observability techniques
+- Monitor streaming systems
 
 ## Problem Statement
-Perform a rolling restart of the cluster.
-
-## Starter Code
-```python
-Stop broker 1 -> Start -> Wait -> Stop broker 2...
-```
-
-## Hints
-<details>
-<summary>Hint 1</summary>
-Focus on the core logic first.
-</details>
+Apply monitoring and troubleshooting skills to real-world scenarios.
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+Refer to Week 8 daily content for detailed techniques and best practices.
 </details>

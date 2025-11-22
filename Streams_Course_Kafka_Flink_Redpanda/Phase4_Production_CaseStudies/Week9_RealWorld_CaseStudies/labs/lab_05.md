@@ -1,30 +1,22 @@
-# Lab 05: Log Aggregation Pipeline
+# Lab 05: Case Study Lab 5
 
 ## Difficulty
-🟡 Medium
+ Hard
 
 ## Estimated Time
 60 mins
 
 ## Learning Objectives
-- Case Study
+- Apply streaming concepts to real-world scenarios
+- Build end-to-end pipelines
 
 ## Problem Statement
-Parse and filter system logs for errors.
-
-## Starter Code
-```python
-Filter(level='ERROR')
-```
-
-## Hints
-<details>
-<summary>Hint 1</summary>
-Focus on the core logic first.
-</details>
+Implement a production-grade streaming solution based on case study requirements.
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+Combine techniques from previous weeks to build complete solutions.
+Refer to Week 9 daily content for architecture patterns.
 </details>

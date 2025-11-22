@@ -1,30 +1,22 @@
-# Lab 06: Real-time Leaderboard
+# Lab 06: Case Study Lab 6
 
 ## Difficulty
-🟡 Medium
+ Hard
 
 ## Estimated Time
 60 mins
 
 ## Learning Objectives
-- Case Study
+- Apply streaming concepts to real-world scenarios
+- Build end-to-end pipelines
 
 ## Problem Statement
-Maintain a top-10 leaderboard for a game.
-
-## Starter Code
-```python
-ProcessFunction with PriorityQueue
-```
-
-## Hints
-<details>
-<summary>Hint 1</summary>
-Focus on the core logic first.
-</details>
+Implement a production-grade streaming solution based on case study requirements.
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+Combine techniques from previous weeks to build complete solutions.
+Refer to Week 9 daily content for architecture patterns.
 </details>

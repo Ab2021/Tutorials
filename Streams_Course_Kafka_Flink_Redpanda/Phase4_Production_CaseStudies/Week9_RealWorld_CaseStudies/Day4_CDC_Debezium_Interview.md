@@ -1,14 +1,14 @@
-# Day4_CDC_Debezium: Interview Prep
+# Day4 CDC Debezium - Interview
 
-## Interview Questions & Challenges
+## Interview Content
 
-### Common Interview Questions
-1. Question 1?
-2. Question 2?
+### Overview
+Change Data Capture from MySQL to Kafka
 
-### Production Challenges
-- Challenge 1
-- Challenge 2
+### Key Concepts
+- Real-world implementation patterns
+- Production best practices
+- Performance optimization
 
-### Troubleshooting Scenarios
-[Scenario description...]
+### Architecture
+Detailed architecture and design decisions for this use case.

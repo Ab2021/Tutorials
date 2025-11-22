@@ -1,13 +1,14 @@
-# Day3_Late_Data_Correctness: Core Concepts
+# Day3 Late Data Correctness - Core
 
-## Core Concepts & Theory
+## Core Content
 
-### Theoretical Foundation
-[Detailed theoretical explanation of the concept...]
+### Overview
+Handling late-arriving data correctly
 
-### Architectural Reasoning
-[Why is this designed this way? What are the trade-offs?]
+### Key Concepts
+- Advanced streaming challenges
+- Future trends and technologies
+- Industry best practices
 
-### Key Components
-- Component 1
-- Component 2
+### Solutions
+Modern approaches to solving complex streaming problems.

@@ -1,12 +1,14 @@
-# Day3_Clickstream_Analytics: Deep Dive
+# Day3 Clickstream Analytics - DeepDive
 
-## Deep Dive & Internals
+## DeepDive Content
 
-### Internal Mechanics
-[How it works under the hood...]
+### Overview
+Web analytics pipeline with sessionization
 
-### Advanced Reasoning
-[Complex scenarios and edge cases...]
+### Key Concepts
+- Real-world implementation patterns
+- Production best practices
+- Performance optimization
 
-### Performance Implications
-[Latency, Throughput, Resource usage...]
+### Architecture
+Detailed architecture and design decisions for this use case.

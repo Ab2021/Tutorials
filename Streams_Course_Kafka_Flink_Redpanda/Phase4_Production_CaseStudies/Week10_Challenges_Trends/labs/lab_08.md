@@ -1,30 +1,22 @@
-# Lab 08: WASM Filter
+# Lab 08: Advanced Challenge 8
 
 ## Difficulty
-🔴 Hard
+ Hard
 
 ## Estimated Time
 60 mins
 
 ## Learning Objectives
-- Trend
+- Solve advanced streaming challenges
+- Apply cutting-edge techniques
 
 ## Problem Statement
-Write a custom WASM filter for Redpanda.
-
-## Starter Code
-```python
-Rust/Go WASM code
-```
-
-## Hints
-<details>
-<summary>Hint 1</summary>
-Focus on the core logic first.
-</details>
+Tackle complex real-world streaming problems using advanced patterns and emerging technologies.
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+Apply all concepts learned throughout the 10-week course.
+Refer to Week 10 daily content for advanced techniques.
 </details>

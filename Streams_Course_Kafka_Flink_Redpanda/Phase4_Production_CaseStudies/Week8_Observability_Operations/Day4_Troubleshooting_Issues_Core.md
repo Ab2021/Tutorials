@@ -1,13 +1,20 @@
-# Day4_Troubleshooting_Issues: Core Concepts
+# Troubleshooting
 
-## Core Concepts & Theory
+## Core Concepts
 
-### Theoretical Foundation
-[Detailed theoretical explanation of the concept...]
+### Debugging Methodology
+1. Identify symptoms
+2. Form hypothesis
+3. Test hypothesis
+4. Fix and verify
 
-### Architectural Reasoning
-[Why is this designed this way? What are the trade-offs?]
+### Common Issues
+- Consumer lag
+- Broker unavailability
+- Flink job failures
+- Data quality problems
 
-### Key Components
-- Component 1
-- Component 2
+### Tools
+- Logs (ELK stack)
+- Metrics (Prometheus)
+- Traces (Jaeger)

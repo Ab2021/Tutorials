@@ -1,13 +1,19 @@
-# Day2_Monitoring_Flink: Core Concepts
+# Flink Monitoring
 
-## Core Concepts & Theory
+## Core Concepts
 
-### Theoretical Foundation
-[Detailed theoretical explanation of the concept...]
+### Key Flink Metrics
+- numRecordsIn/Out: Throughput
+- checkpointDuration: State snapshot time
+- buffers.outPoolUsage: Backpressure indicator
+- numRestarts: Job stability
 
-### Architectural Reasoning
-[Why is this designed this way? What are the trade-offs?]
+### Metric Types
+- Counter: Cumulative (records processed)
+- Gauge: Current value (buffer usage)
+- Histogram: Distribution (latency percentiles)
 
-### Key Components
-- Component 1
-- Component 2
+### Monitoring Stack
+- Prometheus Reporter
+- Grafana Dashboards
+- Flink Web UI

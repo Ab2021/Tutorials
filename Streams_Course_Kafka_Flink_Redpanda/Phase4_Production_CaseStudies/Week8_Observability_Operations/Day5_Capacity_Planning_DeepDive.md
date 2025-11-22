@@ -1,12 +1,13 @@
-# Day5_Capacity_Planning: Deep Dive
+# Capacity Planning - Deep Dive
 
-## Deep Dive & Internals
+## Advanced Sizing
 
-### Internal Mechanics
-[How it works under the hood...]
+### Network Bandwidth
+- Ingress: Producer traffic
+- Egress: Consumer + Replication traffic
+- Rule: Egress = Ingress  (Consumers + Replication - 1)
 
-### Advanced Reasoning
-[Complex scenarios and edge cases...]
-
-### Performance Implications
-[Latency, Throughput, Resource usage...]
+### CPU Sizing
+- Compression: CPU-intensive
+- Encryption: CPU-intensive
+- Rule: Monitor CPU, scale when > 70%

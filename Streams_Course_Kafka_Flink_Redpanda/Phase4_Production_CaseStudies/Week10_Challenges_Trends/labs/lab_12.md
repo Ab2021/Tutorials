@@ -1,30 +1,22 @@
-# Lab 12: Real-time RAG
+# Lab 12: Advanced Challenge 12
 
 ## Difficulty
-🔴 Hard
+ Hard
 
 ## Estimated Time
-90 mins
+60 mins
 
 ## Learning Objectives
-- AI/ML
+- Solve advanced streaming challenges
+- Apply cutting-edge techniques
 
 ## Problem Statement
-Build a pipeline for Real-time Retrieval Augmented Generation.
-
-## Starter Code
-```python
-Kafka -> Embedding -> VectorDB
-```
-
-## Hints
-<details>
-<summary>Hint 1</summary>
-Focus on the core logic first.
-</details>
+Tackle complex real-world streaming problems using advanced patterns and emerging technologies.
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+Apply all concepts learned throughout the 10-week course.
+Refer to Week 10 daily content for advanced techniques.
 </details>

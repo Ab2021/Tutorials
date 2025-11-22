@@ -1,30 +1,20 @@
-# Lab 04: Log Analysis with ELK
+# Lab 04: Flink Metrics
 
 ## Difficulty
-🟡 Medium
+ Medium
 
 ## Estimated Time
-60 mins
+45 mins
 
 ## Learning Objectives
-- Logging
-
-## Problem Statement
-Ingest Kafka logs into Elasticsearch/Kibana.
-
-## Starter Code
-```python
-Filebeat -> Logstash -> ES
-```
-
-## Hints
-<details>
-<summary>Hint 1</summary>
-Focus on the core logic first.
-</details>
+- Configure Flink metrics
 
 ## Solution
 <details>
-<summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+<summary>Solution</summary>
+
+`yaml
+metrics.reporters: prom
+metrics.reporter.prom.port: 9250
+`
 </details>

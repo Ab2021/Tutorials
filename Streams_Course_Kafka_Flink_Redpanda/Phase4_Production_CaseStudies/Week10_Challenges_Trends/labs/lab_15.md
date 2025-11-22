@@ -1,30 +1,22 @@
-# Lab 15: Final Capstone Project
+# Lab 15: Advanced Challenge 15
 
 ## Difficulty
-🔴 Hard
+ Hard
 
 ## Estimated Time
-120 mins
+60 mins
 
 ## Learning Objectives
-- Capstone
+- Solve advanced streaming challenges
+- Apply cutting-edge techniques
 
 ## Problem Statement
-Design and implement an end-to-end streaming architecture.
-
-## Starter Code
-```python
-Architecture Diagram + Implementation
-```
-
-## Hints
-<details>
-<summary>Hint 1</summary>
-Focus on the core logic first.
-</details>
+Tackle complex real-world streaming problems using advanced patterns and emerging technologies.
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+Apply all concepts learned throughout the 10-week course.
+Refer to Week 10 daily content for advanced techniques.
 </details>

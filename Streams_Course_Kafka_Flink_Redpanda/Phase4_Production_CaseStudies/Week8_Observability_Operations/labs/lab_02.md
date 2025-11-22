@@ -1,30 +1,24 @@
-# Lab 02: Consumer Lag Monitoring
+# Lab 02: Redpanda Metrics
 
 ## Difficulty
-🟢 Easy
+ Easy
 
 ## Estimated Time
-45 mins
+30 mins
 
 ## Learning Objectives
-- Metrics
-
-## Problem Statement
-Create a Grafana dashboard for Consumer Lag.
-
-## Starter Code
-```python
-kafka_consumergroup_lag metric
-```
-
-## Hints
-<details>
-<summary>Hint 1</summary>
-Focus on the core logic first.
-</details>
+- Access Redpanda metrics
+- Configure Prometheus
 
 ## Solution
 <details>
-<summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+<summary>Solution</summary>
+
+`yaml
+# prometheus.yml
+scrape_configs:
+  - job_name: redpanda
+    static_configs:
+      - targets: [redpanda:9644]
+`
 </details>

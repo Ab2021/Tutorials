@@ -1,30 +1,20 @@
-# Lab 05: Distributed Tracing (Jaeger)
+# Lab 05: Alert Rules
 
 ## Difficulty
-🔴 Hard
+ Medium
 
 ## Estimated Time
-90 mins
+45 mins
 
 ## Learning Objectives
-- Tracing
-
-## Problem Statement
-Implement OpenTelemetry tracing in producer/consumer.
-
-## Starter Code
-```python
-tracer.start_span(...)
-```
-
-## Hints
-<details>
-<summary>Hint 1</summary>
-Focus on the core logic first.
-</details>
+- Create alert rules
 
 ## Solution
 <details>
-<summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+<summary>Solution</summary>
+
+`yaml
+alert: HighLag
+expr: lag > 1000
+`
 </details>

@@ -1,13 +1,16 @@
-# Day3_Alerting_SLOs: Core Concepts
+# Alerting & SLOs
 
-## Core Concepts & Theory
+## Core Concepts
 
-### Theoretical Foundation
-[Detailed theoretical explanation of the concept...]
+### SLI/SLO/SLA
+- SLI (Indicator): Metric (P99 latency)
+- SLO (Objective): Target (< 100ms)
+- SLA (Agreement): Contract with penalty
 
-### Architectural Reasoning
-[Why is this designed this way? What are the trade-offs?]
+### Alert Types
+- Symptom-based: User impact (high latency)
+- Cause-based: Root cause (disk full)
 
-### Key Components
-- Component 1
-- Component 2
+### Error Budget
+- 99.9% uptime = 43 minutes downtime/month
+- Burn rate: How fast we consume budget

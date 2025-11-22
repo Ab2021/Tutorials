@@ -1,30 +1,52 @@
-# Lab 01: Prometheus & Grafana Setup
+# Lab 01: Kafka JMX Metrics Export
 
 ## Difficulty
-🟡 Medium
+🟢 Easy
 
 ## Estimated Time
-60 mins
+30 mins
 
 ## Learning Objectives
-- Monitoring
+- Export Kafka JMX metrics
+- Configure JMX Exporter
+- View metrics in Prometheus
 
 ## Problem Statement
-Set up Prometheus to scrape Kafka/Flink metrics.
+Configure Kafka to export JMX metrics using the JMX Prometheus Exporter. Verify metrics are accessible at the HTTP endpoint.
 
 ## Starter Code
-```python
-prometheus.yml config
+```yaml
+# docker-compose.yml
+services:
+  kafka:
+    environment:
+      KAFKA_OPTS: "-javaagent:/path/to/jmx_exporter.jar=7071:/path/to/config.yml"
 ```
 
 ## Hints
 <details>
 <summary>Hint 1</summary>
-Focus on the core logic first.
+Download JMX Exporter JAR from Maven Central.
 </details>
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+```yaml
+# docker-compose.yml
+services:
+  kafka:
+    environment:
+      KAFKA_OPTS: "-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent.jar=7071:/usr/share/jmx_exporter/kafka-broker.yml"
+    volumes:
+      - ./jmx_exporter:/usr/share/jmx_exporter
+```
+
+```bash
+# Verify metrics
+curl http://localhost:7071/metrics | grep kafka_server
+
+# Expected output: kafka_server_BrokerTopicMetrics_MessagesInPerSec
+```
 </details>

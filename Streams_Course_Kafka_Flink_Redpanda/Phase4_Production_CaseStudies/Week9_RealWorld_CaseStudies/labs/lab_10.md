@@ -1,30 +1,22 @@
-# Lab 10: Geo-Fencing
+# Lab 10: Case Study Lab 10
 
 ## Difficulty
-🔴 Hard
+ Hard
 
 ## Estimated Time
-90 mins
+60 mins
 
 ## Learning Objectives
-- Case Study
+- Apply streaming concepts to real-world scenarios
+- Build end-to-end pipelines
 
 ## Problem Statement
-Detect when a vehicle enters a polygon.
-
-## Starter Code
-```python
-Point in Polygon check in Flink
-```
-
-## Hints
-<details>
-<summary>Hint 1</summary>
-Focus on the core logic first.
-</details>
+Implement a production-grade streaming solution based on case study requirements.
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+Combine techniques from previous weeks to build complete solutions.
+Refer to Week 9 daily content for architecture patterns.
 </details>

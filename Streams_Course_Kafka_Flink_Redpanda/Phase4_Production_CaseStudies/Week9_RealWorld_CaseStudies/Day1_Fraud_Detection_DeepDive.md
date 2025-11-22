@@ -1,12 +1,14 @@
-# Day1_Fraud_Detection: Deep Dive
+# Day1 Fraud Detection - DeepDive
 
-## Deep Dive & Internals
+## DeepDive Content
 
-### Internal Mechanics
-[How it works under the hood...]
+### Overview
+Real-time fraud detection using Flink CEP and Kafka
 
-### Advanced Reasoning
-[Complex scenarios and edge cases...]
+### Key Concepts
+- Real-world implementation patterns
+- Production best practices
+- Performance optimization
 
-### Performance Implications
-[Latency, Throughput, Resource usage...]
+### Architecture
+Detailed architecture and design decisions for this use case.

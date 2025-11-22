@@ -1,14 +1,13 @@
-# Day2_Monitoring_Flink: Interview Prep
+# Flink Monitoring - Interview
 
-## Interview Questions & Challenges
+## Questions
 
-### Common Interview Questions
-1. Question 1?
-2. Question 2?
+1. **Q: How to detect Flink backpressure?**
+   - A: Check Web UI Backpressure tab or monitor outPoolUsage metric
 
-### Production Challenges
-- Challenge 1
-- Challenge 2
+2. **Q: What causes high checkpoint duration?**
+   - A: Large state, slow storage, or network issues
 
-### Troubleshooting Scenarios
-[Scenario description...]
+### Troubleshooting
+- High numRestarts: Check logs for exceptions
+- Increasing lag: Scale up parallelism

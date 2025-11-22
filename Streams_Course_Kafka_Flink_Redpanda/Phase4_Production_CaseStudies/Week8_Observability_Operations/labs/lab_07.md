@@ -1,30 +1,21 @@
-# Lab 07: Capacity Planning Calculation
+# Lab 07: Observability Lab 7
 
 ## Difficulty
-🟢 Easy
+ Medium
 
 ## Estimated Time
-30 mins
+45 mins
 
 ## Learning Objectives
-- Planning
+- Practice observability techniques
+- Monitor streaming systems
 
 ## Problem Statement
-Calculate disk/network requirements based on throughput.
-
-## Starter Code
-```python
-Excel/Python calculator
-```
-
-## Hints
-<details>
-<summary>Hint 1</summary>
-Focus on the core logic first.
-</details>
+Apply monitoring and troubleshooting skills to real-world scenarios.
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+Refer to Week 8 daily content for detailed techniques and best practices.
 </details>

@@ -1,12 +1,16 @@
-# Day4_Troubleshooting_Issues: Deep Dive
+# Troubleshooting - Deep Dive
 
-## Deep Dive & Internals
+## Techniques
 
-### Internal Mechanics
-[How it works under the hood...]
+### Log Analysis
+- Structured logging (JSON)
+- Correlation IDs
+- Log levels (ERROR for alerts)
 
-### Advanced Reasoning
-[Complex scenarios and edge cases...]
+### Profiling
+- CPU: Flame graphs
+- Memory: Heap dumps
+- Network: tcpdump
 
-### Performance Implications
-[Latency, Throughput, Resource usage...]
+### Chaos Engineering
+Proactively inject failures to test resilience

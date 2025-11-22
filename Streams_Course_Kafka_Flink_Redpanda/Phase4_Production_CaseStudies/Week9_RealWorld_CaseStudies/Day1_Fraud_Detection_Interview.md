@@ -1,14 +1,14 @@
-# Day1_Fraud_Detection: Interview Prep
+# Day1 Fraud Detection - Interview
 
-## Interview Questions & Challenges
+## Interview Content
 
-### Common Interview Questions
-1. Question 1?
-2. Question 2?
+### Overview
+Real-time fraud detection using Flink CEP and Kafka
 
-### Production Challenges
-- Challenge 1
-- Challenge 2
+### Key Concepts
+- Real-world implementation patterns
+- Production best practices
+- Performance optimization
 
-### Troubleshooting Scenarios
-[Scenario description...]
+### Architecture
+Detailed architecture and design decisions for this use case.

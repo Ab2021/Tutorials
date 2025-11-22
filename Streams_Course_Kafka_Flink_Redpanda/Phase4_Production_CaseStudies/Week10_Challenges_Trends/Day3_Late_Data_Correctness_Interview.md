@@ -1,14 +1,14 @@
-# Day3_Late_Data_Correctness: Interview Prep
+# Day3 Late Data Correctness - Interview
 
-## Interview Questions & Challenges
+## Interview Content
 
-### Common Interview Questions
-1. Question 1?
-2. Question 2?
+### Overview
+Handling late-arriving data correctly
 
-### Production Challenges
-- Challenge 1
-- Challenge 2
+### Key Concepts
+- Advanced streaming challenges
+- Future trends and technologies
+- Industry best practices
 
-### Troubleshooting Scenarios
-[Scenario description...]
+### Solutions
+Modern approaches to solving complex streaming problems.

@@ -1,30 +1,21 @@
-# Lab 06: AlertManager Config
+# Lab 06: Observability Lab 6
 
 ## Difficulty
-🟡 Medium
+ Medium
 
 ## Estimated Time
 45 mins
 
 ## Learning Objectives
-- Alerting
+- Practice observability techniques
+- Monitor streaming systems
 
 ## Problem Statement
-Configure alerts for high lag and broker down.
-
-## Starter Code
-```python
-alertmanager.yml
-```
-
-## Hints
-<details>
-<summary>Hint 1</summary>
-Focus on the core logic first.
-</details>
+Apply monitoring and troubleshooting skills to real-world scenarios.
 
 ## Solution
 <details>
 <summary>Click to reveal solution</summary>
-Solution will be provided after you attempt the problem.
+
+Refer to Week 8 daily content for detailed techniques and best practices.
 </details>

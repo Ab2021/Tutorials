@@ -1,12 +1,17 @@
-# Day2_Monitoring_Flink: Deep Dive
+# Flink Monitoring - Deep Dive
 
-## Deep Dive & Internals
+## Internals
 
-### Internal Mechanics
-[How it works under the hood...]
+### Metric Reporters
+Flink supports multiple reporters simultaneously:
+- JMX (local debugging)
+- Prometheus (production)
+- Datadog, InfluxDB, etc.
 
-### Advanced Reasoning
-[Complex scenarios and edge cases...]
+### Metric Scopes
+- Job-level: Aggregated across all tasks
+- Task-level: Per parallel instance
+- Operator-level: Per transformation
 
-### Performance Implications
-[Latency, Throughput, Resource usage...]
+### Backpressure Detection
+Flink 1.13+ uses task sampling instead of metrics for zero overhead.

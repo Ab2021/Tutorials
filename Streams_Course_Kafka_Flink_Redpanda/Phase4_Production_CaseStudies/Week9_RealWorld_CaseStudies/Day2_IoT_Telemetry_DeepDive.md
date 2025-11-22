@@ -1,12 +1,14 @@
-# Day2_IoT_Telemetry: Deep Dive
+# Day2 IoT Telemetry - DeepDive
 
-## Deep Dive & Internals
+## DeepDive Content
 
-### Internal Mechanics
-[How it works under the hood...]
+### Overview
+Processing IoT sensor data at scale with Redpanda
 
-### Advanced Reasoning
-[Complex scenarios and edge cases...]
+### Key Concepts
+- Real-world implementation patterns
+- Production best practices
+- Performance optimization
 
-### Performance Implications
-[Latency, Throughput, Resource usage...]
+### Architecture
+Detailed architecture and design decisions for this use case.
