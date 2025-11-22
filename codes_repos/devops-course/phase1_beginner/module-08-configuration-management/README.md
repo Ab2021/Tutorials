@@ -1,9 +1,9 @@
-# Module 07: Infrastructure as Code - Introduction
+# Module 08: Configuration Management
 
 ## 🎯 Learning Objectives
 
 By the end of this module, you will:
-- Understand the core concepts of infrastructure as code - introduction
+- Understand the core concepts of configuration management
 - Gain hands-on experience with industry-standard tools
 - Apply best practices in real-world scenarios
 - Build production-ready solutions
@@ -12,16 +12,16 @@ By the end of this module, you will:
 
 ## 📖 Module Overview
 
-**Duration:** 8-10 hours  
+**Duration:** 6-8 hours  
 **Difficulty:** Beginner
 
 ### Topics Covered
 
-- IaC principles
-- Terraform basics
-- CloudFormation intro
-- State management
-- Tool comparison
+- Ansible fundamentals
+- Playbooks
+- Roles
+- Variables
+- Best practices
 
 ---
 
@@ -29,7 +29,7 @@ By the end of this module, you will:
 
 ### Introduction
 
-[Comprehensive theoretical content will cover the fundamental concepts, principles, and best practices for infrastructure as code - introduction.]
+[Comprehensive theoretical content will cover the fundamental concepts, principles, and best practices for configuration management.]
 
 ### Key Concepts
 
@@ -63,16 +63,16 @@ echo "Advanced use cases and patterns"
 
 This module includes 10 comprehensive labs:
 
-1. **Lab 07.1** - Introduction and setup
-2. **Lab 07.2** - Core concepts
-3. **Lab 07.3** - Practical implementation
-4. **Lab 07.4** - Advanced features
-5. **Lab 07.5** - Integration patterns
-6. **Lab 07.6** - Security and best practices
-7. **Lab 07.7** - Troubleshooting
-8. **Lab 07.8** - Performance optimization
-9. **Lab 07.9** - Real-world scenarios
-10. **Lab 07.10** - Best practices and review
+1. **Lab 08.1** - Introduction and setup
+2. **Lab 08.2** - Core concepts
+3. **Lab 08.3** - Practical implementation
+4. **Lab 08.4** - Advanced features
+5. **Lab 08.5** - Integration patterns
+6. **Lab 08.6** - Security and best practices
+7. **Lab 08.7** - Troubleshooting
+8. **Lab 08.8** - Performance optimization
+9. **Lab 08.9** - Real-world scenarios
+10. **Lab 08.10** - Best practices and review
 
 Complete all labs in the `labs/` directory before proceeding to the next module.
 

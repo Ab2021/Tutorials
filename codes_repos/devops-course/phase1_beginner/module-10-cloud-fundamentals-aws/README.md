@@ -1,9 +1,9 @@
-# Module 07: Infrastructure as Code - Introduction
+# Module 10: Cloud Fundamentals (AWS)
 
 ## 🎯 Learning Objectives
 
 By the end of this module, you will:
-- Understand the core concepts of infrastructure as code - introduction
+- Understand the core concepts of cloud fundamentals (aws)
 - Gain hands-on experience with industry-standard tools
 - Apply best practices in real-world scenarios
 - Build production-ready solutions
@@ -17,11 +17,12 @@ By the end of this module, you will:
 
 ### Topics Covered
 
-- IaC principles
-- Terraform basics
-- CloudFormation intro
-- State management
-- Tool comparison
+- AWS services
+- EC2
+- S3
+- VPC
+- IAM
+- Best practices
 
 ---
 
@@ -29,7 +30,7 @@ By the end of this module, you will:
 
 ### Introduction
 
-[Comprehensive theoretical content will cover the fundamental concepts, principles, and best practices for infrastructure as code - introduction.]
+[Comprehensive theoretical content will cover the fundamental concepts, principles, and best practices for cloud fundamentals (aws).]
 
 ### Key Concepts
 
@@ -63,16 +64,16 @@ echo "Advanced use cases and patterns"
 
 This module includes 10 comprehensive labs:
 
-1. **Lab 07.1** - Introduction and setup
-2. **Lab 07.2** - Core concepts
-3. **Lab 07.3** - Practical implementation
-4. **Lab 07.4** - Advanced features
-5. **Lab 07.5** - Integration patterns
-6. **Lab 07.6** - Security and best practices
-7. **Lab 07.7** - Troubleshooting
-8. **Lab 07.8** - Performance optimization
-9. **Lab 07.9** - Real-world scenarios
-10. **Lab 07.10** - Best practices and review
+1. **Lab 10.1** - Introduction and setup
+2. **Lab 10.2** - Core concepts
+3. **Lab 10.3** - Practical implementation
+4. **Lab 10.4** - Advanced features
+5. **Lab 10.5** - Integration patterns
+6. **Lab 10.6** - Security and best practices
+7. **Lab 10.7** - Troubleshooting
+8. **Lab 10.8** - Performance optimization
+9. **Lab 10.9** - Real-world scenarios
+10. **Lab 10.10** - Best practices and review
 
 Complete all labs in the `labs/` directory before proceeding to the next module.
 

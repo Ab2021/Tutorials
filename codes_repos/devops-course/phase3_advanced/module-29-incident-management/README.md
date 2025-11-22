@@ -1,9 +1,9 @@
-# Module 07: Infrastructure as Code - Introduction
+# Module 29: Incident Management
 
 ## 🎯 Learning Objectives
 
 By the end of this module, you will:
-- Understand the core concepts of infrastructure as code - introduction
+- Understand the core concepts of incident management
 - Gain hands-on experience with industry-standard tools
 - Apply best practices in real-world scenarios
 - Build production-ready solutions
@@ -12,16 +12,16 @@ By the end of this module, you will:
 
 ## 📖 Module Overview
 
-**Duration:** 8-10 hours  
-**Difficulty:** Beginner
+**Duration:** 6-8 hours  
+**Difficulty:** Advanced
 
 ### Topics Covered
 
-- IaC principles
-- Terraform basics
-- CloudFormation intro
-- State management
-- Tool comparison
+- Incident response
+- On-call
+- Runbooks
+- Post-mortems
+- Blameless culture
 
 ---
 
@@ -29,7 +29,7 @@ By the end of this module, you will:
 
 ### Introduction
 
-[Comprehensive theoretical content will cover the fundamental concepts, principles, and best practices for infrastructure as code - introduction.]
+[Comprehensive theoretical content will cover the fundamental concepts, principles, and best practices for incident management.]
 
 ### Key Concepts
 
@@ -63,16 +63,16 @@ echo "Advanced use cases and patterns"
 
 This module includes 10 comprehensive labs:
 
-1. **Lab 07.1** - Introduction and setup
-2. **Lab 07.2** - Core concepts
-3. **Lab 07.3** - Practical implementation
-4. **Lab 07.4** - Advanced features
-5. **Lab 07.5** - Integration patterns
-6. **Lab 07.6** - Security and best practices
-7. **Lab 07.7** - Troubleshooting
-8. **Lab 07.8** - Performance optimization
-9. **Lab 07.9** - Real-world scenarios
-10. **Lab 07.10** - Best practices and review
+1. **Lab 29.1** - Introduction and setup
+2. **Lab 29.2** - Core concepts
+3. **Lab 29.3** - Practical implementation
+4. **Lab 29.4** - Advanced features
+5. **Lab 29.5** - Integration patterns
+6. **Lab 29.6** - Security and best practices
+7. **Lab 29.7** - Troubleshooting
+8. **Lab 29.8** - Performance optimization
+9. **Lab 29.9** - Real-world scenarios
+10. **Lab 29.10** - Best practices and review
 
 Complete all labs in the `labs/` directory before proceeding to the next module.
 
