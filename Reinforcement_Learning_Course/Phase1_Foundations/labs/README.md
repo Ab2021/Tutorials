@@ -1,7 +1,7 @@
-# Complexity & Arrays - Labs
+# RL Foundations (Days 1-10) - Labs
 
 ## Overview
-This directory contains 15 hands-on labs for Complexity & Arrays.
+This directory contains 15 hands-on labs for RL Foundations (Days 1-10).
 
 ## Labs Index
 

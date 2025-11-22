@@ -1,7 +1,7 @@
-# Complexity & Arrays - Labs
+# LLM Systems - Labs
 
 ## Overview
-This directory contains 15 hands-on labs for Complexity & Arrays.
+This directory contains 15 hands-on labs for LLM Systems.
 
 ## Labs Index
 

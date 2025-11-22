@@ -1,7 +1,7 @@
-# Complexity & Arrays - Labs
+# Modern AI Topics - Labs
 
 ## Overview
-This directory contains 15 hands-on labs for Complexity & Arrays.
+This directory contains 15 hands-on labs for Modern AI Topics.
 
 ## Labs Index
 

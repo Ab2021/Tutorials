@@ -1,7 +1,7 @@
-# Complexity & Arrays - Labs
+# Policy-Based Methods (Days 21-30) - Labs
 
 ## Overview
-This directory contains 15 hands-on labs for Complexity & Arrays.
+This directory contains 15 hands-on labs for Policy-Based Methods (Days 21-30).
 
 ## Labs Index
 

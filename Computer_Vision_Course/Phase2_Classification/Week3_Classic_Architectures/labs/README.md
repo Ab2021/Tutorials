@@ -1,7 +1,7 @@
-# Complexity & Arrays - Labs
+# Classic Architectures - Labs
 
 ## Overview
-This directory contains 15 hands-on labs for Complexity & Arrays.
+This directory contains 15 hands-on labs for Classic Architectures.
 
 ## Labs Index
 

@@ -1,7 +1,7 @@
-# Complexity & Arrays - Labs
+# Generative Models - Labs
 
 ## Overview
-This directory contains 15 hands-on labs for Complexity & Arrays.
+This directory contains 15 hands-on labs for Generative Models.
 
 ## Labs Index
 

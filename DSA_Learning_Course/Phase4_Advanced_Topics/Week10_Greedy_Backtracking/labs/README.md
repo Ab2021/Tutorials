@@ -1,7 +1,7 @@
-# Complexity & Arrays - Labs
+# Greedy & Backtracking - Labs
 
 ## Overview
-This directory contains 15 hands-on labs for Complexity & Arrays.
+This directory contains 15 hands-on labs for Greedy & Backtracking.
 
 ## Labs Index
 

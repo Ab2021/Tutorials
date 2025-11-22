@@ -1,7 +1,7 @@
-# Complexity & Arrays - Labs
+# Binary Trees - Labs
 
 ## Overview
-This directory contains 15 hands-on labs for Complexity & Arrays.
+This directory contains 15 hands-on labs for Binary Trees.
 
 ## Labs Index
 

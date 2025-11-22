@@ -1,7 +1,7 @@
-# Complexity & Arrays - Labs
+# Image Basics & Classical CV - Labs
 
 ## Overview
-This directory contains 15 hands-on labs for Complexity & Arrays.
+This directory contains 15 hands-on labs for Image Basics & Classical CV.
 
 ## Labs Index
 

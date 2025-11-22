@@ -1,7 +1,7 @@
-# Complexity & Arrays - Labs
+# Building Blocks (Days 11-20) - Labs
 
 ## Overview
-This directory contains 15 hands-on labs for Complexity & Arrays.
+This directory contains 15 hands-on labs for Building Blocks (Days 11-20).
 
 ## Labs Index
 

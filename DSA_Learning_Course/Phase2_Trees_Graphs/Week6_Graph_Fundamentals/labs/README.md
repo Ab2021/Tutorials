@@ -1,7 +1,7 @@
-# Complexity & Arrays - Labs
+# Graph Fundamentals - Labs
 
 ## Overview
-This directory contains 15 hands-on labs for Complexity & Arrays.
+This directory contains 15 hands-on labs for Graph Fundamentals.
 
 ## Labs Index
 

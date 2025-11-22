@@ -1,7 +1,7 @@
-# Complexity & Arrays - Labs
+# ML System Design Principles - Labs
 
 ## Overview
-This directory contains 15 hands-on labs for Complexity & Arrays.
+This directory contains 15 hands-on labs for ML System Design Principles.
 
 ## Labs Index
 

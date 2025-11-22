@@ -1,7 +1,7 @@
-# Complexity & Arrays - Labs
+# Object Detection - Labs
 
 ## Overview
-This directory contains 15 hands-on labs for Complexity & Arrays.
+This directory contains 15 hands-on labs for Object Detection.
 
 ## Labs Index
 

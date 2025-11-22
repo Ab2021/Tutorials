@@ -1,7 +1,7 @@
-# Complexity & Arrays - Labs
+# Case Studies (Days 31-40) - Labs
 
 ## Overview
-This directory contains 15 hands-on labs for Complexity & Arrays.
+This directory contains 15 hands-on labs for Case Studies (Days 31-40).
 
 ## Labs Index
 

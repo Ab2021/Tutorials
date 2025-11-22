@@ -1,7 +1,7 @@
-# Complexity & Arrays - Labs
+# Advanced Topics (Days 31-40) - Labs
 
 ## Overview
-This directory contains 15 hands-on labs for Complexity & Arrays.
+This directory contains 15 hands-on labs for Advanced Topics (Days 31-40).
 
 ## Labs Index
 

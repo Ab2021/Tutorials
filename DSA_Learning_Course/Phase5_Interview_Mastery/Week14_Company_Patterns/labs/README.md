@@ -1,7 +1,7 @@
-# Complexity & Arrays - Labs
+# Company-Specific Patterns - Labs
 
 ## Overview
-This directory contains 15 hands-on labs for Complexity & Arrays.
+This directory contains 15 hands-on labs for Company-Specific Patterns.
 
 ## Labs Index
 

@@ -1,7 +1,7 @@
-# Complexity & Arrays - Labs
+# Python Environment & Tools - Labs
 
 ## Overview
-This directory contains 15 hands-on labs for Complexity & Arrays.
+This directory contains 15 hands-on labs for Python Environment & Tools.
 
 ## Labs Index
 
