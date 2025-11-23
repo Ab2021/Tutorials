@@ -1,70 +1,81 @@
-# Lab 22.5: Multi Cluster
+# Lab 22.5: Multi-Cluster Management
 
 ## Objective
-Learn and practice multi cluster in a hands-on environment.
+Manage multiple Kubernetes clusters with Argo CD.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Add multiple clusters
+- Deploy to different clusters
+- Use ApplicationSets
+- Implement cluster generators
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
-
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
+## Add Clusters
 
 ```bash
-# Example commands
-echo "Solution code will be provided here"
+# Add cluster
+argocd cluster add my-cluster-context
+
+# List clusters
+argocd cluster list
+
+# Remove cluster
+argocd cluster rm https://my-cluster
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Deploy to Multiple Clusters
 
-</details>
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: myapp-prod
+spec:
+  destination:
+    server: https://prod-cluster
+    namespace: default
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: myapp-staging
+spec:
+  destination:
+    server: https://staging-cluster
+    namespace: default
+```
+
+## ApplicationSet
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: cluster-apps
+spec:
+  generators:
+  - list:
+      elements:
+      - cluster: prod
+        url: https://prod-cluster
+      - cluster: staging
+        url: https://staging-cluster
+  template:
+    metadata:
+      name: '{{cluster}}-myapp'
+    spec:
+      source:
+        repoURL: https://github.com/myorg/apps
+        path: apps/myapp
+      destination:
+        server: '{{url}}'
+        namespace: default
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Multiple clusters added  
+✅ Apps deployed to each cluster  
+✅ ApplicationSets working  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 22.6** or complete the module assessment.
+**Time:** 45 min

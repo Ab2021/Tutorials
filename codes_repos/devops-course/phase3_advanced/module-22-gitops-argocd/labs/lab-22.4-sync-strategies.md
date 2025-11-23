@@ -1,70 +1,81 @@
-# Lab 22.4: Sync Strategies
+# Lab 22.4: Argo CD Sync Strategies
 
 ## Objective
-Learn and practice sync strategies in a hands-on environment.
+Configure advanced sync strategies in Argo CD.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Use sync waves
+- Implement sync hooks
+- Configure sync options
+- Handle sync failures
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Sync Waves
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: database-config
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"  # Deploy first
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"  # Deploy second
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Sync Hooks
 
-</details>
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migration
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  template:
+    spec:
+      containers:
+      - name: migrate
+        image: myapp:latest
+        command: ["python", "migrate.py"]
+      restartPolicy: Never
+```
+
+## Sync Options
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+spec:
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - PruneLast=true
+      - RespectIgnoreDifferences=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Sync waves working  
+✅ Hooks executing  
+✅ Sync options configured  
+✅ Retries functional  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 22.5** or complete the module assessment.
+**Time:** 40 min
