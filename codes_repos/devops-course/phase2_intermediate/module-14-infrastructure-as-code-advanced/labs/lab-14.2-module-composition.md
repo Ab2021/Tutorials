@@ -1,70 +1,72 @@
-# Lab 14.2: Module Composition
+# Lab 14.2: Terraform Module Composition
 
 ## Objective
-Learn and practice module composition in a hands-on environment.
+Create reusable Terraform modules and compose them into complex infrastructure.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Create custom Terraform modules
+- Use module inputs and outputs
+- Compose modules for multi-tier architecture
+- Version and publish modules
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Creating a Module
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
+```hcl
+# modules/vpc/main.tf
+variable "cidr_block" {
+  type = string
+}
 
-### Step 3: Verification
-[How to verify the implementation works correctly]
+variable "name" {
+  type = string
+}
 
-## Challenges
+resource "aws_vpc" "main" {
+  cidr_block = var.cidr_block
+  tags = {
+    Name = var.name
+  }
+}
 
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+output "vpc_id" {
+  value = aws_vpc.main.id
+}
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Using the Module
 
-</details>
+```hcl
+# main.tf
+module "vpc" {
+  source = "./modules/vpc"
+  
+  cidr_block = "10.0.0.0/16"
+  name       = "production-vpc"
+}
+
+output "vpc_id" {
+  value = module.vpc.vpc_id
+}
+```
+
+## Module Registry
+
+```hcl
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "5.0.0"
+  
+  name = "my-vpc"
+  cidr = "10.0.0.0/16"
+}
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Created custom module  
+✅ Used module in root configuration  
+✅ Passed variables and outputs  
+✅ Used public registry module  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 14.3** or complete the module assessment.
+**Time:** 40 min

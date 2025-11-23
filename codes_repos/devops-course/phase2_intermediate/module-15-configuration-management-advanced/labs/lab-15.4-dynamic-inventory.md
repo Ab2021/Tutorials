@@ -1,70 +1,66 @@
 # Lab 15.4: Dynamic Inventory
 
 ## Objective
-Learn and practice dynamic inventory in a hands-on environment.
+Use dynamic inventory to automatically discover infrastructure.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Configure AWS dynamic inventory
+- Use inventory plugins
+- Filter and group hosts dynamically
+- Integrate with cloud providers
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## AWS Dynamic Inventory
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+```yaml
+# aws_ec2.yml
+plugin: aws_ec2
+regions:
+  - us-east-1
+filters:
+  tag:Environment: production
+keyed_groups:
+  - key: tags.Role
+    prefix: role
+hostnames:
+  - tag:Name
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Use Dynamic Inventory
 
-</details>
+```bash
+# List hosts
+ansible-inventory -i aws_ec2.yml --list
+
+# Run playbook
+ansible-playbook -i aws_ec2.yml playbook.yml
+```
+
+## Custom Inventory Script
+
+```python
+#!/usr/bin/env python3
+import json
+
+inventory = {
+    "webservers": {
+        "hosts": ["web1.example.com", "web2.example.com"]
+    },
+    "_meta": {
+        "hostvars": {
+            "web1.example.com": {"ansible_host": "10.0.1.10"}
+        }
+    }
+}
+
+print(json.dumps(inventory))
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ AWS dynamic inventory working  
+✅ Hosts auto-discovered  
+✅ Custom inventory script created  
+✅ Groups configured correctly  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 15.5** or complete the module assessment.
+**Time:** 40 min

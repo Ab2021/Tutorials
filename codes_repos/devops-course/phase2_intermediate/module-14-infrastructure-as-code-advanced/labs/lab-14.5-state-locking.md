@@ -1,70 +1,61 @@
-# Lab 14.5: State Locking
+# Lab 14.5: Terraform State Locking
 
 ## Objective
-Learn and practice state locking in a hands-on environment.
+Implement state locking to prevent concurrent modifications.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Configure remote state with locking
+- Use DynamoDB for state locks
+- Handle lock conflicts
+- Implement state encryption
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## S3 Backend with Locking
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+```hcl
+terraform {
+  backend "s3" {
+    bucket         = "my-terraform-state"
+    key            = "prod/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "terraform-locks"
+    encrypt        = true
+  }
+}
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Create DynamoDB Table
 
-</details>
+```bash
+aws dynamodb create-table \
+  --table-name terraform-locks \
+  --attribute-definitions AttributeName=LockID,AttributeType=S \
+  --key-schema AttributeName=LockID,KeyType=HASH \
+  --billing-mode PAY_PER_REQUEST
+```
+
+## Testing Locks
+
+```bash
+# Terminal 1
+terraform apply
+
+# Terminal 2 (while apply running)
+terraform apply
+# Error: state locked
+```
+
+## Force Unlock
+
+```bash
+terraform force-unlock <LOCK_ID>
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Remote state configured  
+✅ DynamoDB locking working  
+✅ Tested concurrent access  
+✅ State encrypted  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 14.6** or complete the module assessment.
+**Time:** 35 min

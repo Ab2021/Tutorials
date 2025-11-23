@@ -1,70 +1,61 @@
 # Lab 15.3: Ansible Galaxy
 
 ## Objective
-Learn and practice ansible galaxy in a hands-on environment.
+Use Ansible Galaxy to share and consume community roles.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Search and install Galaxy roles
+- Create requirements file
+- Publish custom roles
+- Manage role versions
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
-
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
+## Install Roles
 
 ```bash
-# Example commands
-echo "Solution code will be provided here"
+# Install single role
+ansible-galaxy install geerlingguy.nginx
+
+# Install from requirements
+cat > requirements.yml << 'EOF'
+roles:
+  - name: geerlingguy.nginx
+    version: 3.1.4
+  - name: geerlingguy.mysql
+EOF
+
+ansible-galaxy install -r requirements.yml
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Use Galaxy Role
 
-</details>
+```yaml
+# playbook.yml
+- hosts: webservers
+  roles:
+    - geerlingguy.nginx
+  vars:
+    nginx_vhosts:
+      - listen: "80"
+        server_name: "example.com"
+        root: "/var/www/html"
+```
+
+## Publish Role
+
+```bash
+# Login to Galaxy
+ansible-galaxy login
+
+# Import role from GitHub
+ansible-galaxy import username repo-name
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Installed Galaxy roles  
+✅ Used community roles  
+✅ Created requirements file  
+✅ Published custom role  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 15.4** or complete the module assessment.
+**Time:** 35 min

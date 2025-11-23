@@ -1,70 +1,67 @@
-# Lab 13.2: Parallel Jobs
+# Lab 13.2: Parallel Jobs and Matrix Builds
 
 ## Objective
-Learn and practice parallel jobs in a hands-on environment.
+Optimize CI/CD pipelines using parallel execution and matrix strategies.
 
 ## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+- GitHub Actions knowledge
 
-## Instructions
+## Learning Objectives
+- Run jobs in parallel
+- Use matrix builds for multi-platform testing
+- Optimize pipeline execution time
+- Handle job failures
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+---
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
+## Matrix Strategy
 
-### Step 3: Verification
-[How to verify the implementation works correctly]
+```yaml
+name: Matrix Build
 
-## Challenges
+on: [push]
 
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ['3.8', '3.9', '3.10', '3.11']
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install pytest
+      - run: pytest
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Parallel Jobs
 
-</details>
+```yaml
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Linting..."
+  
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Testing..."
+  
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Security scan..."
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
+✅ Matrix builds across platforms  
+✅ Parallel job execution  
+✅ Optimized pipeline time  
 
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 13.3** or complete the module assessment.
+**Estimated Time:** 30 minutes

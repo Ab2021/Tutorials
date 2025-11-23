@@ -1,70 +1,59 @@
-# Lab 13.3: Matrix Builds
+# Lab 13.3: Matrix Builds and Caching
 
 ## Objective
-Learn and practice matrix builds in a hands-on environment.
+Implement advanced matrix strategies and caching for faster builds.
 
 ## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+- GitHub Actions basics
 
-## Instructions
+## Learning Objectives
+- Use include/exclude in matrix
+- Implement dependency caching
+- Cache Docker layers
+- Optimize build times
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+---
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
+## Advanced Matrix
 
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+```yaml
+strategy:
+  matrix:
+    os: [ubuntu, windows]
+    node: [14, 16, 18]
+    include:
+      - os: ubuntu
+        node: 18
+        experimental: true
+    exclude:
+      - os: windows
+        node: 14
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Caching Dependencies
 
-</details>
+```yaml
+- uses: actions/cache@v3
+  with:
+    path: ~/.npm
+    key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+    restore-keys: |
+      ${{ runner.os }}-node-
+```
+
+## Docker Layer Caching
+
+```yaml
+- uses: docker/build-push-action@v4
+  with:
+    cache-from: type=gha
+    cache-to: type=gha,mode=max
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
+✅ Advanced matrix configuration  
+✅ Dependency caching working  
+✅ Build time reduced by 50%+  
 
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 13.4** or complete the module assessment.
+**Estimated Time:** 35 minutes
