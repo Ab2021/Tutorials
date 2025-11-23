@@ -1,44 +1,65 @@
-# Day 29: Efficient Fine-Tuning (PEFT, LoRA, QLoRA)
+# Day 29: Instruction Tuning Datasets
 ## Core Concepts & Theory
 
-### The Problem: Full Fine-Tuning is Expensive
+### The Data is the Model
 
-Fine-tuning a 70B parameter model requires updating 70B weights.
-*   **VRAM:** You need ~800GB+ of GPU memory (A100 clusters) to store gradients and optimizer states (AdamW).
-*   **Storage:** Each checkpoint is 140GB.
-*   **Cost:** Prohibitive for most individuals and startups.
+In SFT, the dataset quality matters more than the model size.
+**LIMA (Less Is More for Alignment):** 1,000 carefully curated examples outperform 100,000 noisy ones.
 
-### 1. PEFT (Parameter-Efficient Fine-Tuning)
+### 1. Classic Instruction Datasets
 
-**Idea:** Freeze the main model weights. Only train a tiny number of extra parameters (adapters).
-*   **Result:** You only update <1% of parameters.
-*   **VRAM:** Drastically reduced (gradients only for adapters).
-*   **Performance:** Comparable to full fine-tuning.
+**A. Alpaca (Stanford):**
+- **Size:** 52k instruction-response pairs.
+- **Method:** Self-Instruct. Use GPT-3.5 to generate synthetic instructions from seed tasks.
+- **Format:** `{"instruction": "...", "input": "...", "output": "..."}`
+- **Limitation:** Synthetic data has "GPT-isms" (overly polite, verbose).
 
-### 2. LoRA (Low-Rank Adaptation)
+**B. ShareGPT:**
+- **Size:** ~90k real conversations scraped from users sharing ChatGPT logs.
+- **Quality:** High (real user queries), but contains PII and toxic content.
+- **Format:** Multi-turn conversations.
 
-Proposed by Hu et al. (2021).
-**Concept:** Matrix decomposition.
-*   Weight update $\Delta W$ is a large matrix.
-*   LoRA approximates it as $\Delta W = A \times B$, where $A$ and $B$ are low-rank matrices.
-*   *Example:* $W$ is $4096 \times 4096$ (16M params). $A$ is $4096 \times 16$, $B$ is $16 \times 4096$ (130k params).
-*   **Inference:** You can merge $A \times B$ back into $W$, so there is **zero latency penalty**.
+**C. Dolly (Databricks):**
+- **Size:** 15k human-written instruction-response pairs.
+- **Method:** Crowdsourcing (employees).
+- **License:** Open (CC-BY-SA).
 
-### 3. QLoRA (Quantized LoRA)
+### 2. Evol-Instruct (WizardLM)
 
-Proposed by Dettmers et al. (2023).
-**Idea:** Squeeze the base model into 4-bit to save memory, then train LoRA adapters on top.
-*   **4-bit NormalFloat (NF4):** An information-theoretically optimal data type for normal distributions (weights).
-*   **Double Quantization:** Quantize the quantization constants to save even more space.
-*   **Paged Optimizers:** Offload optimizer states to CPU RAM if GPU runs out.
-*   **Impact:** You can fine-tune a 65B model on a single 48GB GPU (A6000).
+**Concept:** Iteratively make instructions more complex using an LLM.
+**Algorithm:**
+1. Start with simple instruction: "List fruits."
+2. **Evolve:** "List 10 exotic fruits and explain their health benefits."
+3. **Evolve:** "Compare 10 exotic fruits, rank by antioxidant content, cite studies."
+**Result:** Creates challenging, diverse instructions that push the model's reasoning.
 
-### 4. Other PEFT Methods
+### 3. Data Quality Metrics
 
-*   **Prompt Tuning:** Train soft prompt tokens (embeddings) at the input.
-*   **Prefix Tuning:** Prepend trainable vectors to every attention layer.
-*   **IA3:** Scale activations with learned vectors.
+**A. Instruction Complexity:**
+- Measured by: Verb diversity, sentence length, dependency depth.
+- Simple: "What is X?"
+- Complex: "Compare X and Y, then propose Z."
 
-### Summary
+**B. Response Quality:**
+- Factual Accuracy (NLI check against Wikipedia).
+- Coherence (Perplexity).
+- Safety (Toxicity score).
 
-PEFT/LoRA democratized LLM training. It turned "Fine-tuning" from a Google-scale problem into a "run on your gaming PC" problem.
+### 4. The Contamination Problem
+
+**Issue:** If your instruction dataset contains test set questions from MMLU or HumanEval, your evaluation is invalid.
+**Detection:** N-gram overlap, embedding similarity.
+**Solution:** Deduplication against all known benchmarks before training.
+
+### Summary of Datasets
+
+| Dataset | Size | Source | Quality |
+| :--- | :--- | :--- | :--- |
+| **Alpaca** | 52k | Synthetic (GPT-3.5) | Medium |
+| **ShareGPT** | 90k | Real Users | High (needs cleaning) |
+| **Dolly** | 15k | Human Crowdsourced | High |
+| **Evol-Instruct** | 250k | Evolved (GPT-4) | Very High |
+| **LIMA** | 1k | Curated | Extremely High |
+
+### Next Steps
+In the Deep Dive, we will implement the Evol-Instruct algorithm to generate complex instructions from simple seeds.

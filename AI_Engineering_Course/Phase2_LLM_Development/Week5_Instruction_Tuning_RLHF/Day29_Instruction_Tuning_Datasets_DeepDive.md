@@ -1,82 +1,92 @@
-# Day 29: Efficient Fine-Tuning (PEFT, LoRA, QLoRA)
+# Day 29: Instruction Tuning Datasets
 ## Deep Dive - Internal Mechanics & Advanced Reasoning
 
-### Implementing QLoRA with Hugging Face
+### 1. Self-Instruct Algorithm (Alpaca)
 
-We will fine-tune Llama-3-8B on a single GPU using `bitsandbytes` and `peft`.
+**Goal:** Generate 52k instructions from 175 seed examples.
+**Process:**
+1. **Seed Pool:** Start with 175 human-written (Instruction, Output) pairs.
+2. **Sample:** Randomly select 8 examples from the pool.
+3. **Generate:** Prompt GPT-3.5:
+   > "Here are 8 instruction-response pairs. Generate a new instruction that is different from these."
+4. **Filter:** Check if the new instruction is too similar (ROUGE-L > 0.7) to existing ones. If yes, discard.
+5. **Generate Response:** Use GPT-3.5 to generate the output for the new instruction.
+6. **Add to Pool:** Add the new pair to the pool.
+7. **Repeat:** Until 52k samples.
 
-**Dependencies:** `transformers`, `peft`, `bitsandbytes`, `trl`
+**Cost:** ~$500 using GPT-3.5-turbo (2023 pricing).
 
-```python
-import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
-from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
-from trl import SFTTrainer
+### 2. Evol-Instruct Depth vs. Breadth
 
-# 1. Quantization Config (4-bit)
-bnb_config = BitsAndBytesConfig(
-    load_in_4bit=True,
-    bnb_4bit_quant_type="nf4",
-    bnb_4bit_compute_dtype=torch.float16,
-    bnb_4bit_use_double_quant=True,
-)
+**Depth Evolution (In-Depth):**
+- Add constraints: "Explain in 3 sentences."
+- Add reasoning: "Explain step-by-step."
+- Increase difficulty: "Now consider edge cases."
 
-# 2. Load Base Model
-model_name = "meta-llama/Meta-Llama-3-8B"
-model = AutoModelForCausalLM.from_pretrained(
-    model_name,
-    quantization_config=bnb_config,
-    device_map="auto"
-)
-model = prepare_model_for_kbit_training(model)
+**Breadth Evolution (In-Breadth):**
+- Change topic: "Now apply this to biology instead of physics."
+- Mutate format: "Convert this to a dialogue."
 
-# 3. LoRA Config
-peft_config = LoraConfig(
-    r=16,       # Rank (Low rank = fewer params)
-    lora_alpha=32, # Scaling factor
-    lora_dropout=0.05,
-    bias="none",
-    task_type="CAUSAL_LM",
-    target_modules=["q_proj", "v_proj"] # Apply to Attention layers
-)
+**Prompt Template:**
+```
+I want you to act as a Prompt Rewriter.
+Your objective is to rewrite the given prompt to make it more complex.
+You MUST follow the instructions below:
+- Add more constraints/requirements
+- Replace general concepts with specific ones
+- Increase reasoning steps
 
-model = get_peft_model(model, peft_config)
-model.print_trainable_parameters()
-# Output: "trainable params: 4M || all params: 7B || trainable%: 0.06%"
-
-# 4. Training
-trainer = SFTTrainer(
-    model=model,
-    train_dataset=dataset,
-    peft_config=peft_config,
-    dataset_text_field="text",
-    max_seq_length=512,
-    args=training_args
-)
-
-trainer.train()
+#Given Prompt#: {instruction}
+#Rewritten Prompt#:
 ```
 
-### LoRA Hyperparameters
+### 3. Data Deduplication Pipeline
 
-*   **Rank (r):** The dimension of the low-rank matrices. Typical values: 8, 16, 64. Higher $r$ = more capacity, but more VRAM.
-*   **Alpha ($\alpha$):** Scaling factor. Weight = $W + \frac{\alpha}{r} \Delta W$. Usually set $\alpha = 2r$ or $\alpha = r$.
-*   **Target Modules:** Which layers to adapt?
-    *   `q_proj`, `v_proj`: Standard (Attention).
-    *   `all-linear`: Better performance, slightly more VRAM.
+**Exact Dedup:**
+- Hash each instruction. Remove duplicates.
 
-### Merging Adapters
+**Near Dedup (MinHash LSH):**
+- Convert instruction to n-grams (n=5).
+- Hash each n-gram. Keep top-k hashes (MinHash signature).
+- Use LSH to find similar signatures.
+- If Jaccard similarity > 0.8, remove.
 
-After training, you have the base model + adapter weights (100MB).
-To deploy, you usually **merge** them:
+**Semantic Dedup:**
+- Embed instructions using Sentence-BERT.
+- Cluster embeddings (HDBSCAN).
+- Keep only 1 sample per cluster.
+
+### Code: Simple Evol-Instruct
+
 ```python
-model = model.merge_and_unload()
-model.save_pretrained("merged_model")
+import openai
+
+def evolve_instruction(instruction, evolution_type="depth"):
+    if evolution_type == "depth":
+        prompt = f"""
+Rewrite the following instruction to make it more complex by adding constraints or requiring deeper reasoning.
+
+Original: {instruction}
+Evolved:
+"""
+    else: # breadth
+        prompt = f"""
+Rewrite the following instruction to cover a different but related topic or format.
+
+Original: {instruction}
+Evolved:
+"""
+    
+    response = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.7
+    )
+    
+    return response.choices[0].message.content
+
+# Example
+seed = "List 5 programming languages."
+evolved = evolve_instruction(seed, "depth")
+# Output: "List 5 programming languages, categorize them by paradigm, and explain the primary use case for each."
 ```
-Now it's just a standard Llama-3 model, compatible with vLLM/TGI.
-
-### Summary
-
-*   **QLoRA** is the gold standard for single-GPU fine-tuning.
-*   **Merging** is essential for production inference speed.
-*   **Rank** is the main knob to tune for capacity vs efficiency.
