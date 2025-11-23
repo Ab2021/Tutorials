@@ -1,70 +1,67 @@
-# Lab 10.10: Aws Best Practices
+# Lab 10.10: AWS Best Practices
 
 ## Objective
-Learn and practice aws best practices in a hands-on environment.
+Implement AWS best practices for security, cost, and reliability.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Follow Well-Architected Framework
+- Implement cost optimization
+- Ensure security best practices
+- Design for reliability
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
-
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
+## Security Best Practices
 
 ```bash
-# Example commands
-echo "Solution code will be provided here"
+# Enable MFA for root
+# Use IAM roles instead of access keys
+# Enable CloudTrail
+aws cloudtrail create-trail \
+  --name my-trail \
+  --s3-bucket-name my-cloudtrail-bucket
+
+# Enable GuardDuty
+aws guardduty create-detector --enable
+
+# Encrypt EBS volumes
+aws ec2 create-volume \
+  --size 100 \
+  --encrypted \
+  --kms-key-id arn:aws:kms:...
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Cost Optimization
 
-</details>
+```bash
+# Use Reserved Instances
+# Right-size instances
+# Delete unused resources
+# Use S3 lifecycle policies
+aws s3api put-bucket-lifecycle-configuration \
+  --bucket my-bucket \
+  --lifecycle-configuration file://lifecycle.json
+```
+
+## Reliability
+
+```bash
+# Multi-AZ deployments
+# Auto Scaling
+aws autoscaling create-auto-scaling-group \
+  --auto-scaling-group-name my-asg \
+  --min-size 2 \
+  --max-size 10 \
+  --desired-capacity 3
+
+# Backup automation
+aws backup create-backup-plan \
+  --backup-plan file://backup-plan.json
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Security controls implemented  
+✅ Cost optimization applied  
+✅ High availability configured  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 10.next module** or complete the module assessment.
+**Time:** 40 min

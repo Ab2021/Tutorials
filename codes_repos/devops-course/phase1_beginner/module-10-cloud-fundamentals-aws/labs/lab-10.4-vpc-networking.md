@@ -1,70 +1,79 @@
-# Lab 10.4: Vpc Networking
+# Lab 10.4: VPC and Networking
 
 ## Objective
-Learn and practice vpc networking in a hands-on environment.
+Create and configure AWS VPC with subnets, route tables, and gateways.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Create VPC and subnets
+- Configure route tables
+- Set up Internet Gateway
+- Implement NAT Gateway
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
-
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
+## Create VPC
 
 ```bash
-# Example commands
-echo "Solution code will be provided here"
+# Create VPC
+aws ec2 create-vpc \
+  --cidr-block 10.0.0.0/16 \
+  --tag-specifications 'ResourceType=vpc,Tags=[{Key=Name,Value=my-vpc}]'
+
+VPC_ID=<vpc-id>
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Create Subnets
 
-</details>
+```bash
+# Public subnet
+aws ec2 create-subnet \
+  --vpc-id $VPC_ID \
+  --cidr-block 10.0.1.0/24 \
+  --availability-zone us-east-1a \
+  --tag-specifications 'ResourceType=subnet,Tags=[{Key=Name,Value=public-subnet}]'
+
+# Private subnet
+aws ec2 create-subnet \
+  --vpc-id $VPC_ID \
+  --cidr-block 10.0.2.0/24 \
+  --availability-zone us-east-1a \
+  --tag-specifications 'ResourceType=subnet,Tags=[{Key=Name,Value=private-subnet}]'
+```
+
+## Internet Gateway
+
+```bash
+# Create and attach IGW
+aws ec2 create-internet-gateway \
+  --tag-specifications 'ResourceType=internet-gateway,Tags=[{Key=Name,Value=my-igw}]'
+
+aws ec2 attach-internet-gateway \
+  --vpc-id $VPC_ID \
+  --internet-gateway-id $IGW_ID
+```
+
+## Route Tables
+
+```bash
+# Create route table
+aws ec2 create-route-table \
+  --vpc-id $VPC_ID
+
+# Add route to IGW
+aws ec2 create-route \
+  --route-table-id $RTB_ID \
+  --destination-cidr-block 0.0.0.0/0 \
+  --gateway-id $IGW_ID
+
+# Associate with subnet
+aws ec2 associate-route-table \
+  --subnet-id $SUBNET_ID \
+  --route-table-id $RTB_ID
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ VPC created  
+✅ Public/private subnets configured  
+✅ Internet connectivity working  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 10.5** or complete the module assessment.
+**Time:** 45 min

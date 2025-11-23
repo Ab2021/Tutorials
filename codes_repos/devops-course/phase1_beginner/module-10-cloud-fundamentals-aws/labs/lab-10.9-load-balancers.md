@@ -1,70 +1,62 @@
 # Lab 10.9: Load Balancers
 
 ## Objective
-Learn and practice load balancers in a hands-on environment.
+Configure Application and Network Load Balancers.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Create Application Load Balancer
+- Configure target groups
+- Set up health checks
+- Implement SSL/TLS
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
-
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
+## Application Load Balancer
 
 ```bash
-# Example commands
-echo "Solution code will be provided here"
+# Create ALB
+aws elbv2 create-load-balancer \
+  --name my-alb \
+  --subnets subnet-1 subnet-2 \
+  --security-groups sg-12345
+
+# Create target group
+aws elbv2 create-target-group \
+  --name my-targets \
+  --protocol HTTP \
+  --port 80 \
+  --vpc-id vpc-12345 \
+  --health-check-path /health
+
+# Register targets
+aws elbv2 register-targets \
+  --target-group-arn arn:aws:elasticloadbalancing:... \
+  --targets Id=i-1234567890 Id=i-0987654321
+
+# Create listener
+aws elbv2 create-listener \
+  --load-balancer-arn arn:aws:elasticloadbalancing:... \
+  --protocol HTTP \
+  --port 80 \
+  --default-actions Type=forward,TargetGroupArn=arn:aws:...
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## SSL/TLS
 
-</details>
+```bash
+# HTTPS listener
+aws elbv2 create-listener \
+  --load-balancer-arn arn:aws:... \
+  --protocol HTTPS \
+  --port 443 \
+  --certificates CertificateArn=arn:aws:acm:... \
+  --default-actions Type=forward,TargetGroupArn=arn:aws:...
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ ALB created  
+✅ Targets registered  
+✅ Health checks working  
+✅ SSL configured  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 10.10** or complete the module assessment.
+**Time:** 45 min

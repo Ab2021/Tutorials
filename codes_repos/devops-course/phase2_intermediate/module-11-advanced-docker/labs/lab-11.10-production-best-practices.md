@@ -1,70 +1,85 @@
-# Lab 11.10: Production Best Practices
+# Lab 11.10: Docker Production Best Practices
 
 ## Objective
-Learn and practice production best practices in a hands-on environment.
+Implement Docker best practices for production deployments.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Optimize Dockerfiles
+- Implement health checks
+- Use multi-stage builds
+- Secure containers
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Optimized Dockerfile
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
+```dockerfile
+# Multi-stage build
+FROM node:18-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
 
-### Step 3: Verification
-[How to verify the implementation works correctly]
+FROM node:18-alpine
+# Non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+USER nodejs
 
-## Challenges
+WORKDIR /app
+COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
+COPY --chown=nodejs:nodejs . .
 
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node healthcheck.js
 
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+EXPOSE 3000
+CMD ["node", "server.js"]
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Security Best Practices
 
-</details>
+```dockerfile
+# Use specific versions
+FROM node:18.17.0-alpine3.18
+
+# Scan for vulnerabilities
+RUN apk update && apk upgrade
+
+# Read-only filesystem
+docker run -d \
+  --read-only \
+  --tmpfs /tmp \
+  myapp
+
+# Drop capabilities
+docker run -d \
+  --cap-drop=ALL \
+  --cap-add=NET_BIND_SERVICE \
+  myapp
+
+# Security options
+docker run -d \
+  --security-opt=no-new-privileges:true \
+  myapp
+```
+
+## Logging
+
+```bash
+# JSON logging
+docker run -d \
+  --log-driver json-file \
+  --log-opt max-size=10m \
+  --log-opt max-file=3 \
+  myapp
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Optimized Dockerfile  
+✅ Security hardened  
+✅ Health checks implemented  
+✅ Logging configured  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 11.next module** or complete the module assessment.
+**Time:** 45 min
