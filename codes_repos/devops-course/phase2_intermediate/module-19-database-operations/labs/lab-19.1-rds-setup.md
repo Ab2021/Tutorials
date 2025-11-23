@@ -1,70 +1,50 @@
-# Lab 19.1: Rds Setup
+# Lab 19.1: RDS Setup
 
 ## Objective
-Learn and practice rds setup in a hands-on environment.
+Deploy and manage AWS RDS databases.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Create RDS instances
+- Configure security groups
+- Set up read replicas
+- Implement automated backups
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
-
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
+## Create RDS Instance
 
 ```bash
-# Example commands
-echo "Solution code will be provided here"
+aws rds create-db-instance \
+  --db-instance-identifier mydb \
+  --db-instance-class db.t3.micro \
+  --engine postgres \
+  --master-username admin \
+  --master-user-password MyPassword123 \
+  --allocated-storage 20 \
+  --vpc-security-group-ids sg-12345 \
+  --db-subnet-group-name my-subnet-group \
+  --backup-retention-period 7 \
+  --preferred-backup-window "03:00-04:00"
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Connect to RDS
 
-</details>
+```bash
+psql -h mydb.abc123.us-east-1.rds.amazonaws.com -U admin -d postgres
+```
+
+## Create Read Replica
+
+```bash
+aws rds create-db-instance-read-replica \
+  --db-instance-identifier mydb-replica \
+  --source-db-instance-identifier mydb
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ RDS instance created  
+✅ Connected successfully  
+✅ Read replica configured  
+✅ Backups automated  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 19.2** or complete the module assessment.
+**Time:** 40 min

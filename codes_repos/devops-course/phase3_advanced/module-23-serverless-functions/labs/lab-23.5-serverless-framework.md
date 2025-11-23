@@ -1,70 +1,76 @@
 # Lab 23.5: Serverless Framework
 
 ## Objective
-Learn and practice serverless framework in a hands-on environment.
+Use Serverless Framework for deployment automation.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Install Serverless Framework
+- Define serverless.yml
+- Deploy functions
+- Manage stages
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
-
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
+## Install
 
 ```bash
-# Example commands
-echo "Solution code will be provided here"
+npm install -g serverless
+serverless --version
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Create Service
 
-</details>
+```bash
+serverless create --template aws-python3 --path my-service
+cd my-service
+```
+
+## serverless.yml
+
+```yaml
+service: my-service
+
+provider:
+  name: aws
+  runtime: python3.11
+  region: us-east-1
+
+functions:
+  hello:
+    handler: handler.hello
+    events:
+      - http:
+          path: hello
+          method: get
+  
+  users:
+    handler: handler.users
+    events:
+      - http:
+          path: users
+          method: post
+```
+
+## Deploy
+
+```bash
+# Deploy to dev
+serverless deploy --stage dev
+
+# Deploy to prod
+serverless deploy --stage prod
+
+# Invoke function
+serverless invoke -f hello --stage dev
+
+# View logs
+serverless logs -f hello --stage dev
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Serverless Framework installed  
+✅ Service deployed  
+✅ Functions working  
+✅ Multiple stages managed  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 23.6** or complete the module assessment.
+**Time:** 35 min

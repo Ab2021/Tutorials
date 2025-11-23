@@ -1,70 +1,100 @@
-# Lab 17.1: Elk Stack Setup
+# Lab 17.1: ELK Stack Setup
 
 ## Objective
-Learn and practice elk stack setup in a hands-on environment.
+Set up Elasticsearch, Logstash, and Kibana for centralized logging.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Install ELK stack
+- Configure Logstash pipelines
+- Create Kibana dashboards
+- Query logs with Elasticsearch
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Docker Compose Setup
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+```yaml
+version: '3.8'
+services:
+  elasticsearch:
+    image: elasticsearch:8.11.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+  
+  logstash:
+    image: logstash:8.11.0
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    ports:
+      - "5000:5000"
+  
+  kibana:
+    image: kibana:8.11.0
+    ports:
+      - "5601:5601"
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Logstash Pipeline
 
-</details>
+```ruby
+# logstash.conf
+input {
+  tcp {
+    port => 5000
+    codec => json
+  }
+}
+
+filter {
+  grok {
+    match => { "message" => "%{COMBINEDAPACHELOG}" }
+  }
+  date {
+    match => [ "timestamp", "dd/MMM/yyyy:HH:mm:ss Z" ]
+  }
+}
+
+output {
+  elasticsearch {
+    hosts => ["elasticsearch:9200"]
+    index => "logs-%{+YYYY.MM.dd}"
+  }
+}
+```
+
+## Send Logs
+
+```python
+import logging
+import logstash
+
+logger = logging.getLogger('python-logstash-logger')
+logger.setLevel(logging.INFO)
+logger.addHandler(logstash.TCPLogstashHandler('localhost', 5000))
+
+logger.info('Test log message', extra={'user': 'john', 'action': 'login'})
+```
+
+## Kibana Queries
+
+```
+# Search logs
+status:500
+
+# Time range
+@timestamp:[now-1h TO now]
+
+# Aggregation
+status:* | stats count() by status
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ ELK stack running  
+✅ Logs ingested via Logstash  
+✅ Kibana dashboard created  
+✅ Elasticsearch queries working  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 17.2** or complete the module assessment.
+**Time:** 50 min

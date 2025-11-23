@@ -1,70 +1,81 @@
 # Lab 22.3: Application Deployment
 
 ## Objective
-Learn and practice application deployment in a hands-on environment.
+Deploy and manage applications with Argo CD.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Create Argo CD applications
+- Configure sync policies
+- Monitor deployments
+- Handle rollbacks
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Create Application
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: frontend
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/myorg/app-manifests
+    targetRevision: main
+    path: frontend
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: production
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Manual Sync
 
-</details>
+```bash
+# Sync application
+argocd app sync frontend
+
+# Get status
+argocd app get frontend
+
+# View diff
+argocd app diff frontend
+```
+
+## Rollback
+
+```bash
+# List history
+argocd app history frontend
+
+# Rollback to revision
+argocd app rollback frontend 5
+```
+
+## Health Checks
+
+```yaml
+spec:
+  source:
+    path: frontend
+  ignoreDifferences:
+  - group: apps
+    kind: Deployment
+    jsonPointers:
+    - /spec/replicas
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Application deployed via Argo CD  
+✅ Auto-sync working  
+✅ Rollback tested  
+✅ Health monitoring active  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 22.4** or complete the module assessment.
+**Time:** 40 min

@@ -1,70 +1,73 @@
 # Lab 16.3: Service Discovery
 
 ## Objective
-Learn and practice service discovery in a hands-on environment.
+Configure Prometheus service discovery for dynamic infrastructure.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Use Kubernetes service discovery
+- Configure EC2 service discovery
+- Implement file-based discovery
+- Use relabeling
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Kubernetes Service Discovery
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+```yaml
+# prometheus.yml
+scrape_configs:
+  - job_name: 'kubernetes-pods'
+    kubernetes_sd_configs:
+      - role: pod
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## EC2 Service Discovery
 
-</details>
+```yaml
+scrape_configs:
+  - job_name: 'ec2'
+    ec2_sd_configs:
+      - region: us-east-1
+        port: 9100
+    relabel_configs:
+      - source_labels: [__meta_ec2_tag_Name]
+        target_label: instance
+```
+
+## File-Based Discovery
+
+```yaml
+scrape_configs:
+  - job_name: 'file'
+    file_sd_configs:
+      - files:
+        - '/etc/prometheus/targets/*.json'
+        refresh_interval: 30s
+```
+
+```json
+[
+  {
+    "targets": ["host1:9100", "host2:9100"],
+    "labels": {
+      "env": "production"
+    }
+  }
+]
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ K8s service discovery working  
+✅ EC2 instances auto-discovered  
+✅ File-based discovery configured  
+✅ Relabeling applied correctly  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 16.4** or complete the module assessment.
+**Time:** 40 min

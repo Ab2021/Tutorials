@@ -1,70 +1,71 @@
 # Lab 23.1: Lambda Functions
 
 ## Objective
-Learn and practice lambda functions in a hands-on environment.
+Create and deploy AWS Lambda functions.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Create Lambda functions
+- Configure triggers
+- Use environment variables
+- Monitor with CloudWatch
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Create Function
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
+```python
+# lambda_function.py
+import json
 
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+def lambda_handler(event, context):
+    name = event.get('name', 'World')
+    return {
+        'statusCode': 200,
+        'body': json.dumps(f'Hello, {name}!')
+    }
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Deploy
 
-</details>
+```bash
+# Create deployment package
+zip function.zip lambda_function.py
+
+# Create function
+aws lambda create-function \
+  --function-name my-function \
+  --runtime python3.11 \
+  --role arn:aws:iam::123456789012:role/lambda-role \
+  --handler lambda_function.lambda_handler \
+  --zip-file fileb://function.zip
+```
+
+## Invoke
+
+```bash
+# Synchronous
+aws lambda invoke \
+  --function-name my-function \
+  --payload '{"name":"DevOps"}' \
+  response.json
+
+cat response.json
+```
+
+## API Gateway Trigger
+
+```bash
+# Create API
+aws apigatewayv2 create-api \
+  --name my-api \
+  --protocol-type HTTP \
+  --target arn:aws:lambda:us-east-1:123:function:my-function
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Lambda function created  
+✅ Function invoked successfully  
+✅ API Gateway integrated  
+✅ Logs in CloudWatch  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 23.2** or complete the module assessment.
+**Time:** 40 min

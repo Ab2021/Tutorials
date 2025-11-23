@@ -1,70 +1,88 @@
 # Lab 18.3: Secrets Management
 
 ## Objective
-Learn and practice secrets management in a hands-on environment.
+Securely manage secrets using HashiCorp Vault.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Set up Vault server
+- Store and retrieve secrets
+- Use dynamic secrets
+- Implement secret rotation
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
-
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
+## Vault Setup
 
 ```bash
-# Example commands
-echo "Solution code will be provided here"
+# Start Vault dev server
+vault server -dev
+
+# Set environment
+export VAULT_ADDR='http://127.0.0.1:8200'
+export VAULT_TOKEN='root'
+
+# Enable KV secrets engine
+vault secrets enable -path=secret kv-v2
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Store Secrets
 
-</details>
+```bash
+# Write secret
+vault kv put secret/database username=admin password=secret123
+
+# Read secret
+vault kv get secret/database
+
+# Read JSON
+vault kv get -format=json secret/database | jq -r .data.data.password
+```
+
+## Dynamic Secrets
+
+```bash
+# Enable database secrets
+vault secrets enable database
+
+# Configure PostgreSQL
+vault write database/config/postgresql \
+  plugin_name=postgresql-database-plugin \
+  allowed_roles="readonly" \
+  connection_url="postgresql://{{username}}:{{password}}@localhost:5432/mydb" \
+  username="vault" \
+  password="vaultpass"
+
+# Create role
+vault write database/roles/readonly \
+  db_name=postgresql \
+  creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; GRANT SELECT ON ALL TABLES IN SCHEMA public TO \"{{name}}\";" \
+  default_ttl="1h" \
+  max_ttl="24h"
+
+# Get dynamic credentials
+vault read database/creds/readonly
+```
+
+## Application Integration
+
+```python
+import hvac
+
+client = hvac.Client(url='http://127.0.0.1:8200', token='root')
+
+# Read secret
+secret = client.secrets.kv.v2.read_secret_version(path='database')
+password = secret['data']['data']['password']
+
+# Use dynamic secret
+db_creds = client.read('database/creds/readonly')
+username = db_creds['data']['username']
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Vault server running  
+✅ Static secrets stored  
+✅ Dynamic secrets generated  
+✅ Application integrated  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 18.4** or complete the module assessment.
+**Time:** 50 min

@@ -1,70 +1,70 @@
-# Lab 18.1: Devsecops Principles
+# Lab 18.1: DevSecOps Principles
 
 ## Objective
-Learn and practice devsecops principles in a hands-on environment.
+Implement security practices throughout the DevOps lifecycle.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Shift security left
+- Automate security scanning
+- Implement security gates
+- Practice least privilege
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Security in CI/CD
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
+```yaml
+name: Security Pipeline
 
-### Step 3: Verification
-[How to verify the implementation works correctly]
+on: [push]
 
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+jobs:
+  sast:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run Semgrep
+        run: |
+          pip install semgrep
+          semgrep --config=auto .
+  
+  secrets-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: TruffleHog scan
+        run: |
+          docker run --rm -v "$PWD:/pwd" trufflesecurity/trufflehog:latest filesystem /pwd
+  
+  dependency-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: OWASP Dependency Check
+        run: |
+          dependency-check --scan . --format HTML
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Container Security
 
-</details>
+```dockerfile
+# Use minimal base
+FROM gcr.io/distroless/python3
+
+# Non-root user
+USER nonroot
+
+# Read-only filesystem
+COPY --chown=nonroot:nonroot app.py /app/
+WORKDIR /app
+
+CMD ["app.py"]
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ SAST scanning in CI/CD  
+✅ Secrets scanning automated  
+✅ Dependency checks running  
+✅ Containers running as non-root  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 18.2** or complete the module assessment.
+**Time:** 45 min

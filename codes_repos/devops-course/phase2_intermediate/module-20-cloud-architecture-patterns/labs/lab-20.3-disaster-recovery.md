@@ -1,70 +1,78 @@
 # Lab 20.3: Disaster Recovery
 
 ## Objective
-Learn and practice disaster recovery in a hands-on environment.
+Implement disaster recovery strategies.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Configure cross-region replication
+- Implement backup strategies
+- Test failover procedures
+- Calculate RTO/RPO
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
-
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
+## Cross-Region Replication
 
 ```bash
-# Example commands
-echo "Solution code will be provided here"
+# Enable S3 replication
+aws s3api put-bucket-replication \
+  --bucket source-bucket \
+  --replication-configuration '{
+    "Role": "arn:aws:iam::123456789012:role/replication-role",
+    "Rules": [{
+      "Status": "Enabled",
+      "Priority": 1,
+      "Destination": {
+        "Bucket": "arn:aws:s3:::destination-bucket",
+        "ReplicationTime": {
+          "Status": "Enabled",
+          "Time": {"Minutes": 15}
+        }
+      }
+    }]
+  }'
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## RDS Multi-Region
 
-</details>
+```bash
+# Create read replica in different region
+aws rds create-db-instance-read-replica \
+  --db-instance-identifier mydb-dr \
+  --source-db-instance-identifier arn:aws:rds:us-east-1:123:db:mydb \
+  --region us-west-2
+
+# Promote to standalone
+aws rds promote-read-replica \
+  --db-instance-identifier mydb-dr \
+  --region us-west-2
+```
+
+## Route 53 Failover
+
+```json
+{
+  "Changes": [{
+    "Action": "CREATE",
+    "ResourceRecordSet": {
+      "Name": "app.example.com",
+      "Type": "A",
+      "SetIdentifier": "Primary",
+      "Failover": "PRIMARY",
+      "AliasTarget": {
+        "HostedZoneId": "Z123",
+        "DNSName": "primary-lb.us-east-1.elb.amazonaws.com",
+        "EvaluateTargetHealth": true
+      }
+    }
+  }]
+}
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Cross-region replication configured  
+✅ DR site ready  
+✅ Failover tested  
+✅ RTO/RPO documented  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 20.4** or complete the module assessment.
+**Time:** 50 min

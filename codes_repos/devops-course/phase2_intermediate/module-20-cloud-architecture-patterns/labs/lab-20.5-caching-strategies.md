@@ -1,70 +1,76 @@
 # Lab 20.5: Caching Strategies
 
 ## Objective
-Learn and practice caching strategies in a hands-on environment.
+Implement caching with Redis and CloudFront.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Deploy Redis cluster
+- Implement application caching
+- Configure CDN caching
+- Optimize cache hit rates
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
-
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
+## Redis Setup
 
 ```bash
-# Example commands
-echo "Solution code will be provided here"
+# Docker
+docker run -d --name redis -p 6379:6379 redis:alpine
+
+# ElastiCache
+aws elasticache create-cache-cluster \
+  --cache-cluster-id my-redis \
+  --cache-node-type cache.t3.micro \
+  --engine redis \
+  --num-cache-nodes 1
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Application Caching
 
-</details>
+```python
+import redis
+from functools import wraps
+
+r = redis.Redis(host='localhost', port=6379)
+
+def cache(ttl=300):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            key = f"{func.__name__}:{args}:{kwargs}"
+            cached = r.get(key)
+            if cached:
+                return cached.decode()
+            result = func(*args, **kwargs)
+            r.setex(key, ttl, result)
+            return result
+        return wrapper
+    return decorator
+
+@cache(ttl=600)
+def get_user(user_id):
+    # Expensive database query
+    return db.query(f"SELECT * FROM users WHERE id={user_id}")
+```
+
+## CloudFront CDN
+
+```bash
+aws cloudfront create-distribution \
+  --origin-domain-name mybucket.s3.amazonaws.com \
+  --default-cache-behavior '{
+    "TargetOriginId": "S3-mybucket",
+    "ViewerProtocolPolicy": "redirect-to-https",
+    "MinTTL": 0,
+    "DefaultTTL": 86400,
+    "MaxTTL": 31536000
+  }'
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Redis cluster deployed  
+✅ Application caching working  
+✅ CDN configured  
+✅ Cache hit rate >80%  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 20.6** or complete the module assessment.
+**Time:** 40 min

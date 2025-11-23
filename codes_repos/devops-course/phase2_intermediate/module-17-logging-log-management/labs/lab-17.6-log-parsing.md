@@ -1,70 +1,77 @@
 # Lab 17.6: Log Parsing
 
 ## Objective
-Learn and practice log parsing in a hands-on environment.
+Parse and structure unstructured log data.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Use Grok for pattern matching
+- Parse JSON logs
+- Extract fields from logs
+- Handle parsing failures
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Grok Patterns
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+```ruby
+filter {
+  grok {
+    match => {
+      "message" => "%{IP:client_ip} - - \[%{HTTPDATE:timestamp}\] \"%{WORD:method} %{URIPATHPARAM:request} HTTP/%{NUMBER:http_version}\" %{NUMBER:status} %{NUMBER:bytes}"
+    }
+  }
+}
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## JSON Parsing
 
-</details>
+```ruby
+filter {
+  json {
+    source => "message"
+    target => "parsed"
+  }
+}
+```
+
+## Multiline Logs
+
+```ruby
+input {
+  file {
+    path => "/var/log/app.log"
+    codec => multiline {
+      pattern => "^%{TIMESTAMP_ISO8601}"
+      negate => true
+      what => "previous"
+    }
+  }
+}
+```
+
+## Error Handling
+
+```ruby
+filter {
+  grok {
+    match => { "message" => "%{COMBINEDAPACHELOG}" }
+    tag_on_failure => ["_grokparsefailure"]
+  }
+}
+
+output {
+  if "_grokparsefailure" in [tags] {
+    file {
+      path => "/var/log/logstash/failures.log"
+    }
+  }
+}
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Grok patterns parsing logs  
+✅ JSON logs parsed correctly  
+✅ Multiline logs handled  
+✅ Parse failures logged  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 17.7** or complete the module assessment.
+**Time:** 40 min

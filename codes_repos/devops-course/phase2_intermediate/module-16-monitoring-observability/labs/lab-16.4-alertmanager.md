@@ -1,70 +1,77 @@
 # Lab 16.4: Alertmanager
 
 ## Objective
-Learn and practice alertmanager in a hands-on environment.
+Configure Alertmanager for alert routing and notification.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Set up Alertmanager
+- Configure routing rules
+- Integrate with Slack/PagerDuty
+- Implement alert grouping
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Alertmanager Configuration
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
+```yaml
+# alertmanager.yml
+global:
+  slack_api_url: 'https://hooks.slack.com/services/XXX'
 
-### Step 3: Verification
-[How to verify the implementation works correctly]
+route:
+  group_by: ['alertname', 'cluster']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+  receiver: 'slack'
+  routes:
+    - match:
+        severity: critical
+      receiver: 'pagerduty'
 
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+receivers:
+  - name: 'slack'
+    slack_configs:
+      - channel: '#alerts'
+        text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+  
+  - name: 'pagerduty'
+    pagerduty_configs:
+      - service_key: 'YOUR_KEY'
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Alert Routing
 
-</details>
+```yaml
+routes:
+  - match:
+      team: frontend
+    receiver: frontend-team
+  - match:
+      team: backend
+    receiver: backend-team
+  - match_re:
+      severity: critical|warning
+    receiver: oncall
+```
+
+## Silencing Alerts
+
+```bash
+# Create silence
+amtool silence add alertname=HighCPU --duration=2h --comment="Maintenance"
+
+# List silences
+amtool silence query
+
+# Expire silence
+amtool silence expire <ID>
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Alertmanager receiving alerts  
+✅ Slack notifications working  
+✅ Routing rules configured  
+✅ Alert grouping functional  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 16.5** or complete the module assessment.
+**Time:** 40 min

@@ -1,70 +1,61 @@
 # Lab 19.2: Database Backups
 
 ## Objective
-Learn and practice database backups in a hands-on environment.
+Implement database backup and restore strategies.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Configure automated backups
+- Create manual snapshots
+- Restore from backups
+- Implement point-in-time recovery
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
-
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
+## Automated Backups
 
 ```bash
-# Example commands
-echo "Solution code will be provided here"
+# Enable automated backups
+aws rds modify-db-instance \
+  --db-instance-identifier mydb \
+  --backup-retention-period 7 \
+  --preferred-backup-window "03:00-04:00" \
+  --apply-immediately
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Manual Snapshots
 
-</details>
+```bash
+# Create snapshot
+aws rds create-db-snapshot \
+  --db-instance-identifier mydb \
+  --db-snapshot-identifier mydb-snapshot-2024
+
+# List snapshots
+aws rds describe-db-snapshots \
+  --db-instance-identifier mydb
+```
+
+## Restore from Snapshot
+
+```bash
+aws rds restore-db-instance-from-db-snapshot \
+  --db-instance-identifier mydb-restored \
+  --db-snapshot-identifier mydb-snapshot-2024
+```
+
+## Point-in-Time Recovery
+
+```bash
+aws rds restore-db-instance-to-point-in-time \
+  --source-db-instance-identifier mydb \
+  --target-db-instance-identifier mydb-pitr \
+  --restore-time 2024-01-15T10:30:00Z
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Automated backups configured  
+✅ Manual snapshot created  
+✅ Restored from snapshot  
+✅ PITR tested  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 19.3** or complete the module assessment.
+**Time:** 35 min

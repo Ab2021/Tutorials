@@ -1,70 +1,93 @@
 # Lab 18.4: Vault Setup
 
 ## Objective
-Learn and practice vault setup in a hands-on environment.
+Deploy and configure HashiCorp Vault in production mode.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Deploy Vault with high availability
+- Configure auto-unseal
+- Set up authentication methods
+- Implement policies
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Production Deployment
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
+```hcl
+# vault.hcl
+storage "consul" {
+  address = "127.0.0.1:8500"
+  path    = "vault/"
+}
 
-### Step 3: Verification
-[How to verify the implementation works correctly]
+listener "tcp" {
+  address     = "0.0.0.0:8200"
+  tls_disable = 0
+  tls_cert_file = "/etc/vault/tls/vault.crt"
+  tls_key_file  = "/etc/vault/tls/vault.key"
+}
 
-## Challenges
+seal "awskms" {
+  region     = "us-east-1"
+  kms_key_id = "alias/vault-unseal"
+}
 
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+api_addr = "https://vault.example.com:8200"
+cluster_addr = "https://vault.example.com:8201"
+ui = true
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Initialize Vault
 
-</details>
+```bash
+vault operator init -key-shares=5 -key-threshold=3
+
+# Unseal (3 times with different keys)
+vault operator unseal <key1>
+vault operator unseal <key2>
+vault operator unseal <key3>
+
+# Login
+vault login <root-token>
+```
+
+## Authentication
+
+```bash
+# Enable GitHub auth
+vault auth enable github
+
+# Configure
+vault write auth/github/config organization=myorg
+
+# Map team to policy
+vault write auth/github/map/teams/devops value=devops-policy
+
+# Login
+vault login -method=github token=<github-token>
+```
+
+## Policies
+
+```hcl
+# devops-policy.hcl
+path "secret/data/devops/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
+}
+
+path "database/creds/readonly" {
+  capabilities = ["read"]
+}
+```
+
+```bash
+vault policy write devops-policy devops-policy.hcl
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Vault deployed in HA mode  
+✅ Auto-unseal configured  
+✅ Authentication methods enabled  
+✅ Policies enforced  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 18.5** or complete the module assessment.
+**Time:** 50 min

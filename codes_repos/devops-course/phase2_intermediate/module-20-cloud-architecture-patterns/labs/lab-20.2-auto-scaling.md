@@ -1,70 +1,72 @@
 # Lab 20.2: Auto Scaling
 
 ## Objective
-Learn and practice auto scaling in a hands-on environment.
+Implement auto-scaling for applications.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Configure Auto Scaling Groups
+- Set scaling policies
+- Use target tracking
+- Monitor scaling activities
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
-
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
+## Create Launch Template
 
 ```bash
-# Example commands
-echo "Solution code will be provided here"
+aws ec2 create-launch-template \
+  --launch-template-name my-template \
+  --version-description v1 \
+  --launch-template-data '{
+    "ImageId": "ami-0c55b159cbfafe1f0",
+    "InstanceType": "t2.micro",
+    "SecurityGroupIds": ["sg-12345"]
+  }'
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Create Auto Scaling Group
 
-</details>
+```bash
+aws autoscaling create-auto-scaling-group \
+  --auto-scaling-group-name my-asg \
+  --launch-template LaunchTemplateName=my-template \
+  --min-size 2 \
+  --max-size 10 \
+  --desired-capacity 3 \
+  --vpc-zone-identifier "subnet-1,subnet-2" \
+  --target-group-arns arn:aws:elasticloadbalancing:...
+```
+
+## Scaling Policies
+
+```bash
+# Target tracking - CPU
+aws autoscaling put-scaling-policy \
+  --auto-scaling-group-name my-asg \
+  --policy-name cpu-target-tracking \
+  --policy-type TargetTrackingScaling \
+  --target-tracking-configuration '{
+    "PredefinedMetricSpecification": {
+      "PredefinedMetricType": "ASGAverageCPUUtilization"
+    },
+    "TargetValue": 70.0
+  }'
+
+# Step scaling
+aws autoscaling put-scaling-policy \
+  --auto-scaling-group-name my-asg \
+  --policy-name scale-out \
+  --policy-type StepScaling \
+  --adjustment-type PercentChangeInCapacity \
+  --step-adjustments '[
+    {"MetricIntervalLowerBound": 0, "ScalingAdjustment": 50}
+  ]'
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ ASG created  
+✅ Scaling policies configured  
+✅ Auto-scaling working  
+✅ Metrics monitored  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 20.3** or complete the module assessment.
+**Time:** 40 min

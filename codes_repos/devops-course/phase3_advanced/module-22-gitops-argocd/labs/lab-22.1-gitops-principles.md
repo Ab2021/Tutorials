@@ -1,70 +1,65 @@
-# Lab 22.1: Gitops Principles
+# Lab 22.1: GitOps Principles
 
 ## Objective
-Learn and practice gitops principles in a hands-on environment.
+Understand and implement GitOps principles.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Understand GitOps workflow
+- Implement declarative infrastructure
+- Use Git as source of truth
+- Automate deployments
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## GitOps Workflow
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+```
+1. Developer commits to Git
+2. CI builds and tests
+3. CI updates manifest repo
+4. GitOps operator detects change
+5. Operator applies to cluster
+6. Cluster state matches Git
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Repository Structure
 
-</details>
+```
+gitops-repo/
+├── apps/
+│   ├── frontend/
+│   │   ├── deployment.yaml
+│   │   └── service.yaml
+│   └── backend/
+│       ├── deployment.yaml
+│       └── service.yaml
+├── infrastructure/
+│   ├── namespaces.yaml
+│   └── rbac.yaml
+└── kustomization.yaml
+```
+
+## Kustomize
+
+```yaml
+# kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - apps/frontend/deployment.yaml
+  - apps/frontend/service.yaml
+  - apps/backend/deployment.yaml
+
+images:
+  - name: myapp
+    newTag: v1.2.3
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Git repo structured  
+✅ Declarative manifests  
+✅ Kustomize configured  
+✅ GitOps workflow understood  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 22.2** or complete the module assessment.
+**Time:** 35 min

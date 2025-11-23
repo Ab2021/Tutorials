@@ -1,70 +1,86 @@
 # Lab 17.3: Logstash Pipelines
 
 ## Objective
-Learn and practice logstash pipelines in a hands-on environment.
+Create advanced Logstash pipelines for log processing.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Parse different log formats
+- Use Grok patterns
+- Enrich logs with filters
+- Handle multiple inputs/outputs
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Multi-Input Pipeline
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
+```ruby
+input {
+  file {
+    path => "/var/log/nginx/access.log"
+    type => "nginx"
+  }
+  file {
+    path => "/var/log/app/*.log"
+    type => "application"
+  }
+  beats {
+    port => 5044
+  }
+}
 
-### Step 3: Verification
-[How to verify the implementation works correctly]
+filter {
+  if [type] == "nginx" {
+    grok {
+      match => { "message" => "%{COMBINEDAPACHELOG}" }
+    }
+  }
+  
+  if [type] == "application" {
+    json {
+      source => "message"
+    }
+  }
+  
+  mutate {
+    add_field => { "environment" => "production" }
+  }
+}
 
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+output {
+  if [type] == "nginx" {
+    elasticsearch {
+      hosts => ["localhost:9200"]
+      index => "nginx-%{+YYYY.MM.dd}"
+    }
+  } else {
+    elasticsearch {
+      hosts => ["localhost:9200"]
+      index => "app-%{+YYYY.MM.dd}"
+    }
+  }
+}
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Custom Grok Patterns
 
-</details>
+```
+# patterns/custom
+MYAPP %{TIMESTAMP_ISO8601:timestamp} \[%{LOGLEVEL:level}\] %{GREEDYDATA:message}
+```
+
+```ruby
+filter {
+  grok {
+    patterns_dir => ["/etc/logstash/patterns"]
+    match => { "message" => "%{MYAPP}" }
+  }
+}
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Multiple inputs configured  
+✅ Grok patterns parsing logs  
+✅ Filters enriching data  
+✅ Conditional outputs working  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 17.4** or complete the module assessment.
+**Time:** 45 min

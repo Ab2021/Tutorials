@@ -1,70 +1,90 @@
 # Lab 21.3: Helm Charts
 
 ## Objective
-Learn and practice helm charts in a hands-on environment.
+Package and deploy applications using Helm.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Create Helm charts
+- Use templates and values
+- Deploy with Helm
+- Manage releases
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
-
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
+## Create Chart
 
 ```bash
-# Example commands
-echo "Solution code will be provided here"
+helm create myapp
+
+# Structure:
+myapp/
+├── Chart.yaml
+├── values.yaml
+├── templates/
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   └── ingress.yaml
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Chart.yaml
 
-</details>
+```yaml
+apiVersion: v2
+name: myapp
+version: 1.0.0
+appVersion: "1.0"
+description: My application Helm chart
+```
+
+## values.yaml
+
+```yaml
+replicaCount: 3
+image:
+  repository: nginx
+  tag: "1.21"
+service:
+  type: ClusterIP
+  port: 80
+```
+
+## Template
+
+```yaml
+# templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    spec:
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+```
+
+## Deploy
+
+```bash
+# Install
+helm install myrelease ./myapp
+
+# Upgrade
+helm upgrade myrelease ./myapp
+
+# Rollback
+helm rollback myrelease 1
+
+# Uninstall
+helm uninstall myrelease
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Helm chart created  
+✅ Application deployed  
+✅ Values customized  
+✅ Upgrades working  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 21.4** or complete the module assessment.
+**Time:** 45 min

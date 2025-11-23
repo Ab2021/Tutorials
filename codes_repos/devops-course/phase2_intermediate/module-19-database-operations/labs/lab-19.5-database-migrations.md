@@ -1,70 +1,72 @@
 # Lab 19.5: Database Migrations
 
 ## Objective
-Learn and practice database migrations in a hands-on environment.
+Manage database schema migrations safely.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Use Flyway for migrations
+- Implement versioned migrations
+- Handle rollbacks
+- Test migrations
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
-
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
+## Flyway Setup
 
 ```bash
-# Example commands
-echo "Solution code will be provided here"
+# Install Flyway
+wget https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/9.0.0/flyway-commandline-9.0.0-linux-x64.tar.gz
+tar -xzf flyway-commandline-9.0.0-linux-x64.tar.gz
+
+# Configure
+cat > flyway.conf << 'EOF'
+flyway.url=jdbc:postgresql://localhost:5432/mydb
+flyway.user=admin
+flyway.password=secret
+EOF
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Create Migrations
 
-</details>
+```sql
+-- V1__Create_users_table.sql
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(50) NOT NULL,
+  email VARCHAR(100) NOT NULL
+);
+
+-- V2__Add_created_at.sql
+ALTER TABLE users ADD COLUMN created_at TIMESTAMP DEFAULT NOW();
+```
+
+## Run Migrations
+
+```bash
+# Migrate
+flyway migrate
+
+# Check status
+flyway info
+
+# Validate
+flyway validate
+```
+
+## Rollback Strategy
+
+```sql
+-- V3__Add_status.sql
+ALTER TABLE users ADD COLUMN status VARCHAR(20);
+
+-- U3__Rollback_status.sql (undo)
+ALTER TABLE users DROP COLUMN status;
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Flyway configured  
+✅ Migrations applied  
+✅ Schema versioned  
+✅ Rollback tested  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 19.6** or complete the module assessment.
+**Time:** 40 min

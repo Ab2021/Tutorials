@@ -1,70 +1,77 @@
-# Lab 21.1: Custom Resources
+# Lab 21.1: Custom Resources (CRDs)
 
 ## Objective
-Learn and practice custom resources in a hands-on environment.
+Create and manage Kubernetes Custom Resource Definitions.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Define CRDs
+- Create custom resources
+- Use kubectl with CRDs
+- Implement controllers
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Define CRD
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+```yaml
+# myapp-crd.yaml
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: myapps.example.com
+spec:
+  group: example.com
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                replicas:
+                  type: integer
+                image:
+                  type: string
+  scope: Namespaced
+  names:
+    plural: myapps
+    singular: myapp
+    kind: MyApp
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Create CRD
 
-</details>
+```bash
+kubectl apply -f myapp-crd.yaml
+kubectl get crds
+```
+
+## Use Custom Resource
+
+```yaml
+# myapp-instance.yaml
+apiVersion: example.com/v1
+kind: MyApp
+metadata:
+  name: my-application
+spec:
+  replicas: 3
+  image: nginx:latest
+```
+
+```bash
+kubectl apply -f myapp-instance.yaml
+kubectl get myapps
+kubectl describe myapp my-application
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ CRD created  
+✅ Custom resources deployed  
+✅ kubectl commands working  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 21.2** or complete the module assessment.
+**Time:** 40 min

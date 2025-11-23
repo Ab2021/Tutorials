@@ -1,70 +1,87 @@
 # Lab 16.1: Prometheus Advanced
 
 ## Objective
-Learn and practice prometheus advanced in a hands-on environment.
+Implement advanced Prometheus monitoring with custom metrics and alerting.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Configure Prometheus scraping
+- Create custom metrics
+- Write PromQL queries
+- Set up alerting rules
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Prometheus Configuration
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
+```yaml
+# prometheus.yml
+global:
+  scrape_interval: 15s
 
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+scrape_configs:
+  - job_name: 'app'
+    static_configs:
+      - targets: ['localhost:8080']
+    
+  - job_name: 'node'
+    static_configs:
+      - targets: ['localhost:9100']
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Custom Metrics
 
-</details>
+```python
+from prometheus_client import Counter, Histogram, Gauge, start_http_server
+
+# Counter
+requests_total = Counter('http_requests_total', 'Total HTTP requests')
+
+# Histogram
+request_duration = Histogram('http_request_duration_seconds', 'HTTP request duration')
+
+# Gauge
+active_users = Gauge('active_users', 'Number of active users')
+
+@app.route('/')
+def index():
+    requests_total.inc()
+    with request_duration.time():
+        return "Hello"
+
+start_http_server(8000)
+```
+
+## PromQL Queries
+
+```promql
+# Rate of requests
+rate(http_requests_total[5m])
+
+# 95th percentile latency
+histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
+
+# CPU usage
+100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+```
+
+## Alerting Rules
+
+```yaml
+# alerts.yml
+groups:
+  - name: example
+    rules:
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status="500"}[5m]) > 0.05
+        for: 10m
+        annotations:
+          summary: "High error rate detected"
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Prometheus scraping metrics  
+✅ Custom metrics exposed  
+✅ PromQL queries working  
+✅ Alerts configured  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 16.2** or complete the module assessment.
+**Time:** 45 min

@@ -1,70 +1,66 @@
-# Lab 23.2: Api Gateway
+# Lab 23.2: API Gateway
 
 ## Objective
-Learn and practice api gateway in a hands-on environment.
+Create REST APIs with API Gateway and Lambda.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Create REST API
+- Configure routes and methods
+- Implement authentication
+- Enable CORS
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
-
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
+## Create API
 
 ```bash
-# Example commands
-echo "Solution code will be provided here"
+# Create REST API
+aws apigateway create-rest-api \
+  --name my-api \
+  --description "My REST API"
+
+# Get root resource
+API_ID=<api-id>
+ROOT_ID=$(aws apigateway get-resources --rest-api-id $API_ID --query 'items[0].id' --output text)
+
+# Create resource
+aws apigateway create-resource \
+  --rest-api-id $API_ID \
+  --parent-id $ROOT_ID \
+  --path-part users
+
+# Create method
+aws apigateway put-method \
+  --rest-api-id $API_ID \
+  --resource-id <resource-id> \
+  --http-method GET \
+  --authorization-type NONE
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Lambda Integration
 
-</details>
+```bash
+aws apigateway put-integration \
+  --rest-api-id $API_ID \
+  --resource-id <resource-id> \
+  --http-method GET \
+  --type AWS_PROXY \
+  --integration-http-method POST \
+  --uri arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:123:function:my-function/invocations
+```
+
+## Deploy API
+
+```bash
+aws apigateway create-deployment \
+  --rest-api-id $API_ID \
+  --stage-name prod
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ REST API created  
+✅ Lambda integrated  
+✅ API deployed  
+✅ Endpoints accessible  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 23.3** or complete the module assessment.
+**Time:** 40 min
