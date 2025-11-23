@@ -1,70 +1,70 @@
 # Lab 25.5: Chaos Experiments
 
 ## Objective
-Learn and practice chaos experiments in a hands-on environment.
+Design and execute comprehensive chaos experiments.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Design experiments
+- Test network failures
+- Simulate resource exhaustion
+- Validate recovery
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Network Latency
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
+```yaml
+# network-latency.yaml
+version: 1.0.0
+title: "Network latency injection"
 
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+method:
+  - type: action
+    name: "add-latency"
+    provider:
+      type: python
+      module: chaosistio.fault.actions
+      func: add_delay_fault
+      arguments:
+        virtual_service_name: "myapp"
+        fixed_delay: "5s"
+        percentage: 50
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## CPU Stress
 
-</details>
+```yaml
+# cpu-stress.yaml
+method:
+  - type: action
+    name: "stress-cpu"
+    provider:
+      type: process
+      path: "stress-ng"
+      arguments: "--cpu 4 --timeout 60s"
+```
+
+## Disk Fill
+
+```yaml
+# disk-fill.yaml
+method:
+  - type: action
+    name: "fill-disk"
+    provider:
+      type: python
+      module: chaosaws.ec2.actions
+      func: fill_disk
+      arguments:
+        instance_id: "i-1234567890"
+        path: "/data"
+        size: "5G"
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Network chaos tested  
+✅ Resource exhaustion simulated  
+✅ System recovered  
+✅ Weaknesses identified  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 25.6** or complete the module assessment.
+**Time:** 50 min

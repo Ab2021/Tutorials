@@ -1,70 +1,49 @@
-# Lab 24.2: Apm Tools
+# Lab 24.2: APM Tools
 
 ## Objective
-Learn and practice apm tools in a hands-on environment.
+Implement Application Performance Monitoring with New Relic or Datadog.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Install APM agent
+- Monitor application performance
+- Analyze traces
+- Set up alerts
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## New Relic Setup
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
+```python
+# Install
+pip install newrelic
 
-### Step 3: Verification
-[How to verify the implementation works correctly]
+# Configure
+newrelic-admin generate-config LICENSE_KEY newrelic.ini
 
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+# Run app
+NEW_RELIC_CONFIG_FILE=newrelic.ini newrelic-admin run-program python app.py
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Custom Instrumentation
 
-</details>
+```python
+import newrelic.agent
+
+@newrelic.agent.function_trace()
+def slow_function():
+    # Your code
+    pass
+
+@newrelic.agent.background_task()
+def background_job():
+    # Background task
+    pass
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ APM agent installed  
+✅ Traces visible  
+✅ Performance metrics collected  
+✅ Alerts configured  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 24.3** or complete the module assessment.
+**Time:** 40 min

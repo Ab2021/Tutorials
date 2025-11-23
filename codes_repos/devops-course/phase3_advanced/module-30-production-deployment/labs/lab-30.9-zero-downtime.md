@@ -1,70 +1,99 @@
 # Lab 30.9: Zero Downtime
 
 ## Objective
-Learn and practice zero downtime in a hands-on environment.
+Achieve zero-downtime deployments in production.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Implement rolling updates
+- Configure readiness probes
+- Use connection draining
+- Test zero-downtime
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Kubernetes Rolling Update
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  replicas: 10
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 2        # Max 2 extra pods during update
+      maxUnavailable: 0  # Never go below desired count
+  template:
+    spec:
+      containers:
+      - name: myapp
+        image: myapp:v2.0
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "sleep 15"]
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Load Balancer Configuration
 
-</details>
+```yaml
+# Service with connection draining
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-connection-draining-enabled: "true"
+    service.beta.kubernetes.io/aws-load-balancer-connection-draining-timeout: "60"
+spec:
+  type: LoadBalancer
+  selector:
+    app: myapp
+  ports:
+  - port: 80
+    targetPort: 8080
+```
+
+## Test Zero Downtime
+
+```bash
+#!/bin/bash
+# test-zero-downtime.sh
+
+# Start continuous requests
+while true; do
+  curl -s http://myapp.example.com/health
+  sleep 0.1
+done &
+
+# Deploy new version
+kubectl set image deployment/myapp myapp=myapp:v2.0
+
+# Wait for rollout
+kubectl rollout status deployment/myapp
+
+# Check if any requests failed
+# (Should be zero)
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Rolling update configured  
+✅ Readiness probes working  
+✅ Zero failed requests during deployment  
+✅ Connection draining enabled  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 30.10** or complete the module assessment.
+**Time:** 45 min

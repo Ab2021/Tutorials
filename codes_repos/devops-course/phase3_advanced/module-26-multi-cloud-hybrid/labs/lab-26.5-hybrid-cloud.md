@@ -1,70 +1,69 @@
 # Lab 26.5: Hybrid Cloud
 
 ## Objective
-Learn and practice hybrid cloud in a hands-on environment.
+Implement hybrid cloud architecture connecting on-prem and cloud.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Set up VPN connections
+- Configure hybrid networking
+- Implement data sync
+- Manage hybrid workloads
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
-
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
+## AWS Site-to-Site VPN
 
 ```bash
-# Example commands
-echo "Solution code will be provided here"
+# Create customer gateway
+aws ec2 create-customer-gateway \
+  --type ipsec.1 \
+  --public-ip 203.0.113.12 \
+  --bgp-asn 65000
+
+# Create VPN gateway
+aws ec2 create-vpn-gateway --type ipsec.1
+
+# Create VPN connection
+aws ec2 create-vpn-connection \
+  --type ipsec.1 \
+  --customer-gateway-id cgw-12345 \
+  --vpn-gateway-id vgw-67890
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Hybrid Kubernetes
 
-</details>
+```yaml
+# On-prem node joins cloud cluster
+apiVersion: v1
+kind: Node
+metadata:
+  name: onprem-node-1
+  labels:
+    location: onprem
+spec:
+  taints:
+  - key: location
+    value: onprem
+    effect: NoSchedule
+```
+
+## Data Sync
+
+```bash
+# AWS DataSync
+aws datasync create-location-nfs \
+  --server-hostname onprem-nas.local \
+  --subdirectory /data
+
+aws datasync create-task \
+  --source-location-arn arn:aws:datasync:... \
+  --destination-location-arn arn:aws:datasync:...
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ VPN connection established  
+✅ Hybrid networking working  
+✅ Data syncing between environments  
+✅ Workloads distributed  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 26.6** or complete the module assessment.
+**Time:** 50 min

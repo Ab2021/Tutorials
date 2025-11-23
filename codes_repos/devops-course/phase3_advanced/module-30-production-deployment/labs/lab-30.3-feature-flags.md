@@ -1,70 +1,122 @@
 # Lab 30.3: Feature Flags
 
 ## Objective
-Learn and practice feature flags in a hands-on environment.
+Implement feature flags to decouple deployment from release.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Set up feature flag service
+- Implement flags in code
+- Gradual rollout
+- A/B testing
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## LaunchDarkly Setup
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
+```python
+import ldclient
+from ldclient.config import Config
 
-### Step 3: Verification
-[How to verify the implementation works correctly]
+ldclient.set_config(Config("sdk-key"))
+client = ldclient.get()
 
-## Challenges
+user = {
+    "key": "user@example.com",
+    "email": "user@example.com",
+    "custom": {
+        "groups": ["beta-testers"]
+    }
+}
 
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+# Check flag
+if client.variation("new-checkout", user, False):
+    # New checkout flow
+    render_new_checkout()
+else:
+    # Old checkout flow
+    render_old_checkout()
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Custom Feature Flags
 
-</details>
+```python
+# Simple in-memory flags
+class FeatureFlags:
+    def __init__(self):
+        self.flags = {
+            "new-ui": {"enabled": True, "rollout": 50},  # 50% of users
+            "dark-mode": {"enabled": True, "rollout": 100}
+        }
+    
+    def is_enabled(self, flag_name, user_id):
+        flag = self.flags.get(flag_name)
+        if not flag or not flag["enabled"]:
+            return False
+        
+        # Hash user_id to get consistent percentage
+        hash_val = hash(user_id) % 100
+        return hash_val < flag["rollout"]
+
+flags = FeatureFlags()
+
+# Usage
+if flags.is_enabled("new-ui", user.id):
+    return render_new_ui()
+```
+
+## Gradual Rollout
+
+```python
+# Day 1: 10% of users
+flags.update("new-feature", rollout=10)
+
+# Day 2: 25% of users
+flags.update("new-feature", rollout=25)
+
+# Day 3: 50% of users
+flags.update("new-feature", rollout=50)
+
+# Day 4: 100% of users
+flags.update("new-feature", rollout=100)
+
+# Remove flag from code after full rollout
+```
+
+## A/B Testing
+
+```python
+variant = client.variation("checkout-variant", user, "control")
+
+if variant == "variant-a":
+    # Show variant A
+    show_one_page_checkout()
+elif variant == "variant-b":
+    # Show variant B
+    show_multi_step_checkout()
+else:
+    # Control group
+    show_original_checkout()
+
+# Track conversion
+analytics.track("checkout_completed", {
+    "variant": variant,
+    "user_id": user.id
+})
+```
+
+## Kill Switch
+
+```python
+# Emergency disable feature
+if client.variation("feature-kill-switch", user, False):
+    # Feature is killed, use fallback
+    return fallback_behavior()
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Feature flags implemented  
+✅ Gradual rollout working  
+✅ A/B testing configured  
+✅ Kill switch tested  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 30.4** or complete the module assessment.
+**Time:** 45 min

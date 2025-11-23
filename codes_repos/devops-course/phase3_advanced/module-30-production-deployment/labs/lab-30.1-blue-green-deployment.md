@@ -1,70 +1,100 @@
-# Lab 30.1: Blue Green Deployment
+# Lab 30.1: Blue-Green Deployment
 
 ## Objective
-Learn and practice blue green deployment in a hands-on environment.
+Implement blue-green deployment for zero-downtime releases.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Set up blue-green infrastructure
+- Deploy to green environment
+- Switch traffic
+- Rollback if needed
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Kubernetes Blue-Green
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+```yaml
+# blue-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp-blue
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: myapp
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: myapp
+        version: blue
+    spec:
+      containers:
+      - name: myapp
+        image: myapp:v1.0
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+```yaml
+# service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp
+spec:
+  selector:
+    app: myapp
+    version: blue  # Points to blue initially
+  ports:
+  - port: 80
+```
 
-</details>
+## Deploy Green
+
+```bash
+# Deploy green
+kubectl apply -f green-deployment.yaml
+
+# Test green
+kubectl port-forward deployment/myapp-green 8080:80
+curl localhost:8080
+
+# Switch traffic to green
+kubectl patch service myapp -p '{"spec":{"selector":{"version":"green"}}}'
+
+# Verify
+kubectl get svc myapp -o yaml | grep version
+
+# Delete blue (after verification)
+kubectl delete deployment myapp-blue
+```
+
+## AWS Blue-Green
+
+```bash
+# Create green target group
+aws elbv2 create-target-group \
+  --name myapp-green \
+  --protocol HTTP \
+  --port 80 \
+  --vpc-id vpc-12345
+
+# Register green instances
+aws elbv2 register-targets \
+  --target-group-arn arn:aws:elasticloadbalancing:... \
+  --targets Id=i-green1 Id=i-green2
+
+# Switch listener to green
+aws elbv2 modify-listener \
+  --listener-arn arn:aws:elasticloadbalancing:... \
+  --default-actions Type=forward,TargetGroupArn=arn:...:targetgroup/myapp-green
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Blue and green environments running  
+✅ Traffic switched successfully  
+✅ Zero downtime achieved  
+✅ Rollback tested  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 30.2** or complete the module assessment.
+**Time:** 45 min

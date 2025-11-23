@@ -1,70 +1,45 @@
 # Lab 25.1: Chaos Principles
 
 ## Objective
-Learn and practice chaos principles in a hands-on environment.
+Understand chaos engineering principles and practices.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Understand chaos engineering
+- Define steady state
+- Design chaos experiments
+- Minimize blast radius
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Chaos Engineering Principles
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
+1. **Define Steady State** - Normal system behavior
+2. **Hypothesize** - What could go wrong?
+3. **Inject Failure** - Simulate real-world issues
+4. **Observe** - Monitor system response
+5. **Learn** - Improve resilience
 
-### Step 3: Verification
-[How to verify the implementation works correctly]
+## Experiment Template
 
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+```yaml
+experiment:
+  name: "Pod Failure Test"
+  hypothesis: "System remains available when 1 pod fails"
+  steady_state:
+    - metric: http_success_rate
+      threshold: 99%
+  method:
+    - action: delete_pod
+      target: frontend
+      count: 1
+  rollback:
+    - restore_pod
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
-
-</details>
-
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Chaos principles understood  
+✅ Steady state defined  
+✅ Experiment designed  
+✅ Blast radius minimized  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 25.2** or complete the module assessment.
+**Time:** 30 min

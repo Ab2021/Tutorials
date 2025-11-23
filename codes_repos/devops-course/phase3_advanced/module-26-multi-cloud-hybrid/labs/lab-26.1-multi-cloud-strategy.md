@@ -1,70 +1,63 @@
-# Lab 26.1: Multi Cloud Strategy
+# Lab 26.1: Multi-Cloud Strategy
 
 ## Objective
-Learn and practice multi cloud strategy in a hands-on environment.
+Design and implement multi-cloud architecture.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Understand multi-cloud benefits
+- Design cloud-agnostic architecture
+- Implement abstraction layers
+- Manage multiple providers
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Multi-Cloud Benefits
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
+- **Avoid vendor lock-in**
+- **Leverage best-of-breed services**
+- **Geographic distribution**
+- **Cost optimization**
+- **Disaster recovery**
 
-### Step 3: Verification
-[How to verify the implementation works correctly]
+## Terraform Multi-Cloud
 
-## Challenges
+```hcl
+# AWS resources
+provider "aws" {
+  region = "us-east-1"
+}
 
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
+resource "aws_s3_bucket" "data" {
+  bucket = "my-data-bucket"
+}
 
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
+# Azure resources
+provider "azurerm" {
+  features {}
+}
 
-## Solution
+resource "azurerm_storage_account" "backup" {
+  name                = "backupstorage"
+  resource_group_name = azurerm_resource_group.main.name
+  location            = "eastus"
+}
 
-<details>
-<summary>Click to reveal solution</summary>
+# GCP resources
+provider "google" {
+  project = "my-project"
+  region  = "us-central1"
+}
 
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+resource "google_storage_bucket" "archive" {
+  name     = "archive-bucket"
+  location = "US"
+}
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
-
-</details>
-
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Multi-cloud strategy defined  
+✅ Resources deployed across clouds  
+✅ Abstraction layer implemented  
+✅ Costs compared  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 26.2** or complete the module assessment.
+**Time:** 45 min

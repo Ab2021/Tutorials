@@ -1,70 +1,54 @@
 # Lab 30.4: Progressive Rollout
 
 ## Objective
-Learn and practice progressive rollout in a hands-on environment.
+Implement progressive rollout strategies for safe deployments.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Configure progressive delivery
+- Monitor rollout health
+- Automate rollback
+- Use traffic shaping
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Flagger Progressive Delivery
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+```yaml
+apiVersion: flagger.app/v1beta1
+kind: Canary
+metadata:
+  name: myapp
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: myapp
+  progressDeadlineSeconds: 60
+  service:
+    port: 80
+  analysis:
+    interval: 1m
+    threshold: 5
+    maxWeight: 50
+    stepWeight: 10
+    metrics:
+    - name: request-success-rate
+      thresholdRange:
+        min: 99
+    - name: request-duration
+      thresholdRange:
+        max: 500
+  webhooks:
+    - name: load-test
+      url: http://flagger-loadtester/
+      timeout: 5s
+      metadata:
+        cmd: "hey -z 1m -q 10 -c 2 http://myapp/"
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
-
-</details>
-
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Progressive rollout configured  
+✅ Automated health checks  
+✅ Rollback on failure  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 30.5** or complete the module assessment.
+**Time:** 40 min

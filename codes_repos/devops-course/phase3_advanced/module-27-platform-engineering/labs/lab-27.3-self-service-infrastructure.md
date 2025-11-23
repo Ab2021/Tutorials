@@ -1,70 +1,88 @@
-# Lab 27.3: Self Service Infrastructure
+# Lab 27.3: Self-Service Infrastructure
 
 ## Objective
-Learn and practice self service infrastructure in a hands-on environment.
+Implement self-service infrastructure provisioning.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Create service catalogs
+- Implement approval workflows
+- Automate provisioning
+- Track resource usage
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Terraform Cloud Workspaces
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
+```hcl
+# workspace-template/main.tf
+variable "environment" {
+  type = string
+}
 
-### Step 3: Verification
-[How to verify the implementation works correctly]
+variable "owner" {
+  type = string
+}
 
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+  tags = {
+    Environment = var.environment
+    Owner       = var.owner
+  }
+}
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Self-Service Portal
 
-</details>
+```python
+# Flask API for provisioning
+from flask import Flask, request
+import subprocess
+
+app = Flask(__name__)
+
+@app.route('/provision', methods=['POST'])
+def provision():
+    data = request.json
+    env = data['environment']
+    owner = data['owner']
+    
+    # Create workspace
+    subprocess.run([
+        'terraform', 'workspace', 'new', f"{owner}-{env}"
+    ])
+    
+    # Apply
+    subprocess.run([
+        'terraform', 'apply',
+        '-var', f'environment={env}',
+        '-var', f'owner={owner}',
+        '-auto-approve'
+    ])
+    
+    return {"status": "provisioned"}
+```
+
+## Resource Quotas
+
+```yaml
+# quotas.yaml
+teams:
+  - name: frontend
+    quotas:
+      ec2_instances: 10
+      rds_instances: 2
+      s3_buckets: 5
+  - name: backend
+    quotas:
+      ec2_instances: 20
+      rds_instances: 5
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Service catalog created  
+✅ Self-service provisioning working  
+✅ Approval workflows implemented  
+✅ Quotas enforced  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 27.4** or complete the module assessment.
+**Time:** 45 min

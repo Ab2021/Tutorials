@@ -1,70 +1,58 @@
-# Lab 26.4: Cloud Agnostic Tools
+# Lab 26.4: Cloud-Agnostic Tools
 
 ## Objective
-Learn and practice cloud agnostic tools in a hands-on environment.
+Use cloud-agnostic tools for portability.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Use Kubernetes across clouds
+- Implement Terraform providers
+- Use cloud-agnostic databases
+- Manage secrets universally
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
-
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
+## Kubernetes on Multiple Clouds
 
 ```bash
-# Example commands
-echo "Solution code will be provided here"
+# AWS EKS
+eksctl create cluster --name my-cluster --region us-east-1
+
+# Azure AKS
+az aks create --resource-group myRG --name my-cluster
+
+# GCP GKE
+gcloud container clusters create my-cluster --zone us-central1-a
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Cloud-Agnostic Storage
 
-</details>
+```python
+# Using MinIO (S3-compatible)
+from minio import Minio
+
+client = Minio(
+    "minio.example.com:9000",
+    access_key="ACCESS_KEY",
+    secret_key="SECRET_KEY"
+)
+
+# Works with AWS S3, MinIO, GCS, Azure Blob
+client.fput_object("bucket", "object", "file.txt")
+```
+
+## Universal Secrets
+
+```bash
+# Vault works everywhere
+vault kv put secret/db password=secret
+
+# Application reads from Vault regardless of cloud
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ K8s deployed on multiple clouds  
+✅ Cloud-agnostic storage working  
+✅ Secrets managed universally  
+✅ Applications portable  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 26.5** or complete the module assessment.
+**Time:** 45 min

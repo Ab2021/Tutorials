@@ -1,70 +1,77 @@
 # Lab 27.4: Golden Paths
 
 ## Objective
-Learn and practice golden paths in a hands-on environment.
+Create golden paths for common development workflows.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Define golden paths
+- Create templates
+- Document best practices
+- Measure adoption
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Golden Path: New Service
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
+```yaml
+# .github/workflows/new-service.yaml
+name: Create New Service
 
-### Step 3: Verification
-[How to verify the implementation works correctly]
+on:
+  workflow_dispatch:
+    inputs:
+      service_name:
+        required: true
+      language:
+        type: choice
+        options: [python, nodejs, go]
 
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+jobs:
+  create:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Create from template
+        run: |
+          cookiecutter gh:myorg/service-template-${{ inputs.language }} \
+            service_name=${{ inputs.service_name }}
+      
+      - name: Create repo
+        run: |
+          gh repo create myorg/${{ inputs.service_name }} --private
+          cd ${{ inputs.service_name }}
+          git init
+          git add .
+          git commit -m "Initial commit"
+          git push
+      
+      - name: Setup CI/CD
+        run: |
+          # Auto-configure GitHub Actions
+          # Setup monitoring
+          # Configure alerts
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Service Template
 
-</details>
+```
+service-template/
+├── {{cookiecutter.service_name}}/
+│   ├── src/
+│   ├── tests/
+│   ├── Dockerfile
+│   ├── .github/workflows/ci.yaml
+│   ├── k8s/
+│   │   ├── deployment.yaml
+│   │   └── service.yaml
+│   └── README.md
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Golden paths defined  
+✅ Templates created  
+✅ Automation working  
+✅ Adoption tracked  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 27.5** or complete the module assessment.
+**Time:** 40 min

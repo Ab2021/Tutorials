@@ -1,70 +1,71 @@
 # Lab 28.4: Rightsizing
 
 ## Objective
-Learn and practice rightsizing in a hands-on environment.
+Optimize resource sizing for cost efficiency.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Analyze resource utilization
+- Identify oversized resources
+- Implement rightsizing
+- Measure savings
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
-
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
+## Analyze Utilization
 
 ```bash
-# Example commands
-echo "Solution code will be provided here"
+# Get CPU utilization
+aws cloudwatch get-metric-statistics \
+  --namespace AWS/EC2 \
+  --metric-name CPUUtilization \
+  --dimensions Name=InstanceId,Value=i-1234567890 \
+  --start-time 2024-01-01T00:00:00Z \
+  --end-time 2024-01-31T23:59:59Z \
+  --period 3600 \
+  --statistics Average
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Rightsizing Recommendations
 
-</details>
+```python
+import boto3
+
+ce = boto3.client('ce')
+
+response = ce.get_rightsizing_recommendation(
+    Service='AmazonEC2',
+    PageSize=100
+)
+
+for rec in response['RightsizingRecommendations']:
+    current = rec['CurrentInstance']
+    recommended = rec['ModifyRecommendationDetail']['TargetInstances'][0]
+    
+    print(f"Instance: {current['ResourceId']}")
+    print(f"Current: {current['InstanceType']}")
+    print(f"Recommended: {recommended['InstanceType']}")
+    print(f"Estimated savings: ${rec['EstimatedMonthlySavings']}")
+```
+
+## Implement Changes
+
+```bash
+# Stop instance
+aws ec2 stop-instances --instance-ids i-1234567890
+
+# Modify instance type
+aws ec2 modify-instance-attribute \
+  --instance-id i-1234567890 \
+  --instance-type t3.small
+
+# Start instance
+aws ec2 start-instances --instance-ids i-1234567890
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Utilization analyzed  
+✅ Oversized resources identified  
+✅ Rightsizing implemented  
+✅ Cost savings measured  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 28.5** or complete the module assessment.
+**Time:** 45 min

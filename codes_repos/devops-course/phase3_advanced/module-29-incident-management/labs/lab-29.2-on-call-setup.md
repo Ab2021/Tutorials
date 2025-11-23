@@ -1,70 +1,94 @@
-# Lab 29.2: On Call Setup
+# Lab 29.2: On-Call Setup
 
 ## Objective
-Learn and practice on call setup in a hands-on environment.
+Set up on-call rotation and incident response.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Configure on-call schedules
+- Set up escalation policies
+- Implement runbooks
+- Track incident metrics
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
-
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
+## PagerDuty Setup
 
 ```bash
-# Example commands
-echo "Solution code will be provided here"
+# Create service
+curl -X POST https://api.pagerduty.com/services \
+  -H 'Authorization: Token token=YOUR_TOKEN' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "service": {
+      "name": "Production API",
+      "escalation_policy": {
+        "id": "POLICY_ID"
+      }
+    }
+  }'
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Escalation Policy
 
-</details>
+```yaml
+# escalation-policy.yaml
+name: "Production Escalation"
+escalation_rules:
+  - escalation_delay_in_minutes: 0
+    targets:
+      - type: user
+        id: USER_ID_1
+  - escalation_delay_in_minutes: 15
+    targets:
+      - type: user
+        id: USER_ID_2
+  - escalation_delay_in_minutes: 30
+    targets:
+      - type: schedule
+        id: SCHEDULE_ID
+```
+
+## On-Call Schedule
+
+```yaml
+# schedule.yaml
+name: "Primary On-Call"
+time_zone: "America/New_York"
+schedule_layers:
+  - name: "Weekly Rotation"
+    start: "2024-01-01T00:00:00"
+    rotation_virtual_start: "2024-01-01T00:00:00"
+    rotation_turn_length_seconds: 604800  # 1 week
+    users:
+      - user: USER_1
+      - user: USER_2
+      - user: USER_3
+```
+
+## Runbook
+
+```markdown
+# Incident: API Down
+
+## Severity: P1
+
+## Steps:
+1. Check status page: https://status.example.com
+2. Verify monitoring: https://grafana.example.com
+3. Check recent deployments: `kubectl rollout history deployment/api`
+4. Rollback if needed: `kubectl rollout undo deployment/api`
+5. Notify stakeholders in #incidents Slack channel
+
+## Escalation:
+- 15 min: Page backend team lead
+- 30 min: Page engineering manager
+- 60 min: Page CTO
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ On-call schedule configured  
+✅ Escalation policy working  
+✅ Runbooks documented  
+✅ Incident tracking enabled  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 29.3** or complete the module assessment.
+**Time:** 40 min

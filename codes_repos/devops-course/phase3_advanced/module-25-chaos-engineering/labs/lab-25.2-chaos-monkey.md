@@ -1,70 +1,76 @@
 # Lab 25.2: Chaos Monkey
 
 ## Objective
-Learn and practice chaos monkey in a hands-on environment.
+Implement Chaos Monkey for random instance termination.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Install Chaos Monkey
+- Configure termination rules
+- Monitor impact
+- Verify auto-recovery
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
-
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
+## Chaos Toolkit
 
 ```bash
-# Example commands
-echo "Solution code will be provided here"
+pip install chaostoolkit chaostoolkit-kubernetes
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Experiment
 
-</details>
+```yaml
+# chaos-experiment.yaml
+version: 1.0.0
+title: "Kill random pod"
+description: "Terminate a random frontend pod"
+
+steady-state-hypothesis:
+  title: "Application is healthy"
+  probes:
+    - type: probe
+      name: "app-responds"
+      tolerance: 200
+      provider:
+        type: http
+        url: "http://myapp.com/health"
+
+method:
+  - type: action
+    name: "terminate-pod"
+    provider:
+      type: python
+      module: chaosk8s.pod.actions
+      func: terminate_pods
+      arguments:
+        label_selector: "app=frontend"
+        qty: 1
+        ns: "default"
+    pauses:
+      after: 10
+
+rollbacks:
+  - type: action
+    name: "scale-up"
+    provider:
+      type: python
+      module: chaosk8s.deployment.actions
+      func: scale_deployment
+      arguments:
+        name: "frontend"
+        replicas: 3
+```
+
+## Run Experiment
+
+```bash
+chaos run chaos-experiment.yaml
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Chaos Toolkit installed  
+✅ Experiment executed  
+✅ System recovered  
+✅ Metrics collected  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 25.3** or complete the module assessment.
+**Time:** 40 min

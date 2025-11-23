@@ -1,70 +1,71 @@
 # Lab 30.6: Deployment Verification
 
 ## Objective
-Learn and practice deployment verification in a hands-on environment.
+Verify deployments are successful before completing rollout.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Implement smoke tests
+- Verify health endpoints
+- Check metrics
+- Validate functionality
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
-
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
+## Smoke Tests
 
 ```bash
-# Example commands
-echo "Solution code will be provided here"
+#!/bin/bash
+# smoke-test.sh
+
+API_URL="https://api.example.com"
+
+# Test health endpoint
+if ! curl -f "$API_URL/health"; then
+  echo "Health check failed"
+  exit 1
+fi
+
+# Test critical endpoints
+if ! curl -f "$API_URL/api/users"; then
+  echo "Users endpoint failed"
+  exit 1
+fi
+
+# Check response time
+RESPONSE_TIME=$(curl -o /dev/null -s -w '%{time_total}' "$API_URL")
+if (( $(echo "$RESPONSE_TIME > 1.0" | bc -l) )); then
+  echo "Response time too slow: ${RESPONSE_TIME}s"
+  exit 1
+fi
+
+echo "All smoke tests passed"
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Kubernetes Job
 
-</details>
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: deployment-verification
+spec:
+  template:
+    spec:
+      containers:
+      - name: verify
+        image: curlimages/curl
+        command: ["/bin/sh"]
+        args:
+        - -c
+        - |
+          curl -f http://myapp/health || exit 1
+          curl -f http://myapp/api/status || exit 1
+      restartPolicy: Never
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Smoke tests implemented  
+✅ Health checks passing  
+✅ Metrics validated  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 30.7** or complete the module assessment.
+**Time:** 35 min

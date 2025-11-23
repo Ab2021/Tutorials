@@ -1,70 +1,128 @@
 # Lab 30.10: Deployment Best Practices
 
 ## Objective
-Learn and practice deployment best practices in a hands-on environment.
+Learn and implement deployment best practices.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Follow deployment checklist
+- Implement safety measures
+- Document procedures
+- Measure deployment metrics
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Deployment Checklist
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
+```markdown
+## Pre-Deployment
+- [ ] Code reviewed and approved
+- [ ] All tests passing (unit, integration, e2e)
+- [ ] Security scans completed
+- [ ] Database migrations tested
+- [ ] Rollback plan documented
+- [ ] Stakeholders notified
 
-### Step 3: Verification
-[How to verify the implementation works correctly]
+## During Deployment
+- [ ] Deploy to staging first
+- [ ] Run smoke tests
+- [ ] Monitor metrics (error rate, latency)
+- [ ] Verify health checks
+- [ ] Check logs for errors
 
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+## Post-Deployment
+- [ ] Verify all features working
+- [ ] Monitor for 30 minutes
+- [ ] Update documentation
+- [ ] Notify team of completion
+- [ ] Schedule post-deployment review
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Deployment Metrics
 
-</details>
+```python
+# Track deployment metrics
+metrics = {
+    "deployment_frequency": "10 per day",
+    "lead_time": "2 hours",
+    "mttr": "15 minutes",
+    "change_failure_rate": "5%"
+}
+
+# DORA metrics
+def calculate_dora_metrics():
+    return {
+        "elite": {
+            "deployment_frequency": "Multiple per day",
+            "lead_time": "< 1 hour",
+            "mttr": "< 1 hour",
+            "change_failure_rate": "< 15%"
+        }
+    }
+```
+
+## Safety Measures
+
+```yaml
+# PodDisruptionBudget
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: myapp-pdb
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: myapp
+```
+
+## Documentation
+
+```markdown
+# Deployment Runbook
+
+## Normal Deployment
+1. Merge PR to main
+2. CI/CD automatically deploys to staging
+3. Run smoke tests
+4. Approve production deployment
+5. Monitor for 30 minutes
+
+## Emergency Rollback
+```bash
+kubectl rollout undo deployment/myapp
+```
+
+## Contacts
+- On-call: #oncall-platform
+- Escalation: platform-team@example.com
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Deployment checklist followed  
+✅ Metrics tracked  
+✅ Safety measures in place  
+✅ Documentation complete  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
+**Time:** 40 min
 
-## Troubleshooting
+---
 
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
+## 🎉 Congratulations!
 
-**Issue 2:** [Description]
-- **Solution:** [Fix]
+You've completed all 30 modules of the DevOps course!
 
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
+You now have the skills to:
+- Build and deploy containerized applications
+- Manage infrastructure as code
+- Implement CI/CD pipelines
+- Monitor and observe systems
+- Ensure security and compliance
+- Operate production systems at scale
 
-## Next Steps
-Proceed to **Lab 30.next module** or complete the module assessment.
+**Next Steps:**
+- Apply these skills in real projects
+- Contribute to open source
+- Pursue DevOps certifications
+- Continue learning and growing
+
+**Good luck on your DevOps journey!** 🚀

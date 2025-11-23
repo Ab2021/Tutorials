@@ -1,70 +1,72 @@
 # Lab 30.5: Rollback Strategies
 
 ## Objective
-Learn and practice rollback strategies in a hands-on environment.
+Implement effective rollback strategies for production.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Automate rollback detection
+- Execute rollback procedures
+- Preserve data integrity
+- Test rollback processes
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
-
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
+## Kubernetes Rollback
 
 ```bash
-# Example commands
-echo "Solution code will be provided here"
+# View rollout history
+kubectl rollout history deployment/myapp
+
+# Rollback to previous version
+kubectl rollout undo deployment/myapp
+
+# Rollback to specific revision
+kubectl rollout undo deployment/myapp --to-revision=3
+
+# Check rollback status
+kubectl rollout status deployment/myapp
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Automated Rollback
 
-</details>
+```yaml
+# ArgoCD automated rollback
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: myapp
+spec:
+  strategy:
+    canary:
+      steps:
+      - setWeight: 20
+      - pause: {duration: 5m}
+      - setWeight: 40
+      - pause: {duration: 5m}
+      analysis:
+        templates:
+        - templateName: success-rate
+        startingStep: 2
+      trafficRouting:
+        istio:
+          virtualService:
+            name: myapp
+```
+
+## Database Rollback
+
+```sql
+-- Use migrations with down scripts
+-- V1__create_users.sql (up)
+CREATE TABLE users (id INT, name VARCHAR(100));
+
+-- V1__create_users_down.sql (down)
+DROP TABLE users;
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Rollback procedures documented  
+✅ Automated rollback working  
+✅ Data integrity maintained  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 30.6** or complete the module assessment.
+**Time:** 40 min

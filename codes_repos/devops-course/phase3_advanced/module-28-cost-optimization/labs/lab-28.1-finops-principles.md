@@ -1,70 +1,79 @@
-# Lab 28.1: Finops Principles
+# Lab 28.1: FinOps Principles
 
 ## Objective
-Learn and practice finops principles in a hands-on environment.
+Implement FinOps practices for cloud cost optimization.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Understand FinOps framework
+- Track cloud spending
+- Implement cost allocation
+- Optimize resources
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
-
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
+## Cost Visibility
 
 ```bash
-# Example commands
-echo "Solution code will be provided here"
+# AWS Cost Explorer
+aws ce get-cost-and-usage \
+  --time-period Start=2024-01-01,End=2024-01-31 \
+  --granularity MONTHLY \
+  --metrics BlendedCost \
+  --group-by Type=DIMENSION,Key=SERVICE
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Tagging Strategy
 
-</details>
+```hcl
+# Terraform tagging
+locals {
+  common_tags = {
+    Environment = var.environment
+    Team        = var.team
+    CostCenter  = var.cost_center
+    Project     = var.project
+  }
+}
+
+resource "aws_instance" "web" {
+  ami           = "ami-12345"
+  instance_type = "t2.micro"
+  tags          = local.common_tags
+}
+```
+
+## Cost Alerts
+
+```bash
+# Create budget
+aws budgets create-budget \
+  --account-id 123456789012 \
+  --budget '{
+    "BudgetName": "Monthly-Budget",
+    "BudgetLimit": {
+      "Amount": "1000",
+      "Unit": "USD"
+    },
+    "TimeUnit": "MONTHLY",
+    "BudgetType": "COST"
+  }' \
+  --notifications-with-subscribers '[{
+    "Notification": {
+      "NotificationType": "ACTUAL",
+      "ComparisonOperator": "GREATER_THAN",
+      "Threshold": 80
+    },
+    "Subscribers": [{
+      "SubscriptionType": "EMAIL",
+      "Address": "team@example.com"
+    }]
+  }]'
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Cost visibility implemented  
+✅ Tagging strategy applied  
+✅ Budgets and alerts configured  
+✅ Cost reports generated  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 28.2** or complete the module assessment.
+**Time:** 40 min

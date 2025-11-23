@@ -1,70 +1,69 @@
 # Lab 30.7: Smoke Testing
 
 ## Objective
-Learn and practice smoke testing in a hands-on environment.
+Create comprehensive smoke tests for production deployments.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Design smoke test suites
+- Test critical paths
+- Automate execution
+- Integrate with CI/CD
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Smoke Test Suite
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
+```python
+import requests
+import pytest
 
-### Step 3: Verification
-[How to verify the implementation works correctly]
+BASE_URL = "https://api.example.com"
 
-## Challenges
+def test_health():
+    response = requests.get(f"{BASE_URL}/health")
+    assert response.status_code == 200
+    assert response.json()["status"] == "healthy"
 
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
+def test_authentication():
+    response = requests.post(f"{BASE_URL}/auth/login", json={
+        "username": "test@example.com",
+        "password": "password"
+    })
+    assert response.status_code == 200
+    assert "token" in response.json()
 
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
+def test_critical_endpoint():
+    response = requests.get(f"{BASE_URL}/api/products")
+    assert response.status_code == 200
+    assert len(response.json()) > 0
 
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+def test_database_connectivity():
+    response = requests.get(f"{BASE_URL}/api/status/db")
+    assert response.json()["database"] == "connected"
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## CI/CD Integration
 
-</details>
+```yaml
+# .github/workflows/deploy.yaml
+- name: Deploy to production
+  run: kubectl apply -f k8s/
+
+- name: Wait for rollout
+  run: kubectl rollout status deployment/myapp
+
+- name: Run smoke tests
+  run: |
+    pytest tests/smoke/ --verbose
+    if [ $? -ne 0 ]; then
+      kubectl rollout undo deployment/myapp
+      exit 1
+    fi
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Smoke tests cover critical paths  
+✅ Tests run automatically  
+✅ Failures trigger rollback  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 30.8** or complete the module assessment.
+**Time:** 40 min

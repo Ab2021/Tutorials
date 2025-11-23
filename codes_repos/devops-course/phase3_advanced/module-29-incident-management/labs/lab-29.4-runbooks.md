@@ -1,70 +1,96 @@
 # Lab 29.4: Runbooks
 
 ## Objective
-Learn and practice runbooks in a hands-on environment.
+Create effective runbooks for incident response.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Write clear runbooks
+- Automate common tasks
+- Test runbooks
+- Keep documentation updated
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Runbook Template
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
+```markdown
+# Runbook: [Service Name] - [Issue Type]
 
-### Step 3: Verification
-[How to verify the implementation works correctly]
+## Overview
+Brief description of the issue and its impact.
 
-## Challenges
+## Severity: [P0/P1/P2/P3]
 
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
+## Symptoms
+- Error rate > 5%
+- Latency > 1s
+- 500 errors in logs
 
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
+## Investigation Steps
 
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
+### 1. Check Metrics
 ```bash
-# Example commands
-echo "Solution code will be provided here"
+# Prometheus query
+rate(http_requests_total{status="500"}[5m])
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+### 2. Check Logs
+```bash
+kubectl logs -l app=myapp --tail=100 | grep ERROR
+```
 
-</details>
+### 3. Check Recent Changes
+```bash
+kubectl rollout history deployment/myapp
+git log --since="1 hour ago" --oneline
+```
+
+## Resolution Steps
+
+### Quick Fix
+```bash
+# Restart pods
+kubectl rollout restart deployment/myapp
+```
+
+### Rollback
+```bash
+kubectl rollout undo deployment/myapp
+```
+
+## Escalation
+- 15 min: Page team lead
+- 30 min: Page manager
+- 60 min: Executive escalation
+
+## Post-Incident
+- [ ] Create incident report
+- [ ] Schedule post-mortem
+- [ ] Update runbook with learnings
+```
+
+## Automated Runbook
+
+```python
+# auto-remediate.py
+import subprocess
+
+def check_health():
+    result = subprocess.run(['curl', 'http://api/health'], capture_output=True)
+    return result.returncode == 0
+
+def restart_service():
+    subprocess.run(['kubectl', 'rollout', 'restart', 'deployment/api'])
+
+if not check_health():
+    print("Service unhealthy, restarting...")
+    restart_service()
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Runbooks created for common issues  
+✅ Clear investigation steps  
+✅ Automation implemented  
+✅ Runbooks tested  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 29.5** or complete the module assessment.
+**Time:** 40 min

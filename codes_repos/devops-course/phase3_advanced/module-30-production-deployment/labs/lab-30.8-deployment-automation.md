@@ -1,70 +1,75 @@
 # Lab 30.8: Deployment Automation
 
 ## Objective
-Learn and practice deployment automation in a hands-on environment.
+Fully automate deployment pipelines from commit to production.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Automate entire deployment flow
+- Implement approval gates
+- Configure notifications
+- Track deployment metrics
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Complete Deployment Pipeline
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
+```yaml
+name: Production Deployment
 
-### Step 3: Verification
-[How to verify the implementation works correctly]
+on:
+  push:
+    branches: [main]
 
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build Docker image
+        run: docker build -t myapp:${{ github.sha }} .
+      - name: Push to registry
+        run: docker push myapp:${{ github.sha }}
+  
+  deploy-staging:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to staging
+        run: |
+          kubectl set image deployment/myapp myapp=myapp:${{ github.sha }} -n staging
+          kubectl rollout status deployment/myapp -n staging
+      - name: Run smoke tests
+        run: pytest tests/smoke/
+  
+  approve:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    steps:
+      - uses: trstringer/manual-approval@v1
+        with:
+          approvers: platform-team
+          minimum-approvals: 1
+  
+  deploy-production:
+    needs: approve
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to production
+        run: |
+          kubectl set image deployment/myapp myapp=myapp:${{ github.sha }} -n production
+          kubectl rollout status deployment/myapp -n production
+      - name: Verify deployment
+        run: ./scripts/verify-deployment.sh
+      - name: Notify Slack
+        run: |
+          curl -X POST ${{ secrets.SLACK_WEBHOOK }} \
+            -d '{"text":"Deployed myapp:${{ github.sha }} to production"}'
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
-
-</details>
-
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Fully automated pipeline  
+✅ Approval gates working  
+✅ Notifications sent  
+✅ Zero manual steps  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 30.9** or complete the module assessment.
+**Time:** 45 min

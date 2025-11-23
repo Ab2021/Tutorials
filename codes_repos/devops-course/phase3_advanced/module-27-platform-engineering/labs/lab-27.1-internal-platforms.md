@@ -1,70 +1,90 @@
 # Lab 27.1: Internal Platforms
 
 ## Objective
-Learn and practice internal platforms in a hands-on environment.
+Build internal developer platforms (IDPs).
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Design IDP architecture
+- Implement self-service
+- Create golden paths
+- Measure developer experience
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Platform Components
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+```yaml
+# Platform stack
+components:
+  - name: "Developer Portal"
+    tool: "Backstage"
+  - name: "CI/CD"
+    tool: "GitHub Actions"
+  - name: "Infrastructure"
+    tool: "Terraform Cloud"
+  - name: "Observability"
+    tool: "Datadog"
+  - name: "Secrets"
+    tool: "Vault"
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Backstage Setup
 
-</details>
+```bash
+npx @backstage/create-app
+
+# Configure
+cat > app-config.yaml << 'EOF'
+app:
+  title: Developer Platform
+
+backend:
+  database:
+    client: pg
+    connection:
+      host: localhost
+      user: postgres
+      password: secret
+
+catalog:
+  locations:
+    - type: url
+      target: https://github.com/myorg/catalog/blob/main/catalog-info.yaml
+EOF
+```
+
+## Service Template
+
+```yaml
+# template.yaml
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: nodejs-service
+spec:
+  type: service
+  parameters:
+    - title: Service Info
+      properties:
+        name:
+          type: string
+        owner:
+          type: string
+  steps:
+    - id: fetch
+      name: Fetch template
+      action: fetch:template
+      input:
+        url: ./skeleton
+    - id: publish
+      name: Publish to GitHub
+      action: publish:github
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ IDP architecture designed  
+✅ Backstage deployed  
+✅ Service templates created  
+✅ Self-service working  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 27.2** or complete the module assessment.
+**Time:** 50 min

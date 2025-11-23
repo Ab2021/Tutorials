@@ -1,70 +1,132 @@
 # Lab 30.2: Canary Releases
 
 ## Objective
-Learn and practice canary releases in a hands-on environment.
+Implement canary deployments for gradual rollouts.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Deploy canary version
+- Route percentage of traffic
+- Monitor canary metrics
+- Promote or rollback
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Kubernetes Canary
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+```yaml
+# stable-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp-stable
+spec:
+  replicas: 9
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+        version: stable
+    spec:
+      containers:
+      - name: myapp
+        image: myapp:v1.0
+---
+# canary-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp-canary
+spec:
+  replicas: 1  # 10% traffic
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+        version: canary
+    spec:
+      containers:
+      - name: myapp
+        image: myapp:v2.0
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Service (Both Versions)
 
-</details>
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp
+spec:
+  selector:
+    app: myapp  # Matches both stable and canary
+  ports:
+  - port: 80
+```
+
+## Monitor Canary
+
+```promql
+# Error rate for canary
+rate(http_requests_total{version="canary",status=~"5.."}[5m])
+/
+rate(http_requests_total{version="canary"}[5m])
+
+# Compare to stable
+rate(http_requests_total{version="stable",status=~"5.."}[5m])
+/
+rate(http_requests_total{version="stable"}[5m])
+```
+
+## Promote Canary
+
+```bash
+# If canary is healthy, promote
+kubectl scale deployment myapp-canary --replicas=10
+kubectl scale deployment myapp-stable --replicas=0
+kubectl delete deployment myapp-stable
+
+# Rename canary to stable
+kubectl patch deployment myapp-canary -p '{"metadata":{"name":"myapp-stable"}}'
+```
+
+## Flagger (Automated Canary)
+
+```yaml
+apiVersion: flagger.app/v1beta1
+kind: Canary
+metadata:
+  name: myapp
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: myapp
+  service:
+    port: 80
+  analysis:
+    interval: 1m
+    threshold: 5
+    maxWeight: 50
+    stepWeight: 10
+    metrics:
+    - name: request-success-rate
+      thresholdRange:
+        min: 99
+    - name: request-duration
+      thresholdRange:
+        max: 500
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Canary deployed  
+✅ Traffic split working  
+✅ Metrics monitored  
+✅ Automated promotion/rollback  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 30.3** or complete the module assessment.
+**Time:** 50 min
