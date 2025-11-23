@@ -566,7 +566,7 @@ This comprehensive course covers the entire spectrum of modern AI engineering, f
 
 ---
 
-# 📚 PHASE 4: Production & MLOps for LLMs (Days 64-84)
+
 
 ## Week 10: LLM Deployment & Serving
 
@@ -688,6 +688,8 @@ This comprehensive course covers the entire spectrum of modern AI engineering, f
 
 ---
 
+# 📚 PHASE 4: Production & MLOps for LLMs (Days 78-91)
+
 ## Week 12: Case Studies & Real-World Applications
 
 ### Day 78: Case Study - Conversational AI (Customer Support)
@@ -748,7 +750,7 @@ This comprehensive course covers the entire spectrum of modern AI engineering, f
 
 ---
 
-# 📚 PHASE 5: Advanced Topics & Future Trends (Days 85-105)
+
 
 ## Week 13: Multimodal AI & Vision-Language Models
 
@@ -810,124 +812,125 @@ This comprehensive course covers the entire spectrum of modern AI engineering, f
 
 ---
 
-## Week 14: Emerging Techniques & Advanced Architectures
+# 📚 PHASE 5: Advanced Topics & Future Trends (Days 92-105)
 
-### Day 92: Mixture of Experts (MoE) Architecture
-**Focus**: Sparse activation, routing, scaling without cost explosion
-- MoE fundamentals: expert networks and gating
-- Sparse activation and conditional computation
-- Routing algorithms and load balancing
-- Switch Transformer, GLaM, Mixtral
-- **Challenges**: Training instability, expert load imbalance
+## Week 14: Specialized Applications
 
-### Day 93: Sparse Models & Efficient Scaling
-**Focus**: Activation sparsity, weight sparsity, efficiency gains
-- Sparsity in neural networks
-- Structured vs unstructured sparsity
-- Pruning techniques for LLMs
-- Sparse attention mechanisms
-- **Challenges**: Hardware support, accuracy preservation
+### Day 92: Code Generation & Copilots
+**Focus**: FIM, Context awareness, Repo-level understanding
+- Fill-In-the-Middle (FIM) objective
+- Repository-level context (RAG for code)
+- Copilot architecture and latency
+- Security and license compliance
+- **Challenges**: Context window limits, hallucinated APIs
 
-### Day 94: Long-Context Models (>100K tokens)
-**Focus**: Extended context windows, sparse attention, memory
-- Long-context challenges (quadratic attention)
-- Sparse attention patterns (Longformer, BigBird)
-- Recurrent mechanisms (RWKV, Mamba)
-- Retrieval-augmented approaches for infinite context
-- **Challenges**: Training on long sequences, positional encoding limits
+### Day 93: Data Analysis Agents
+**Focus**: Text-to-SQL, Pandas agents, Sandboxing
+- Text-to-SQL generation and correction
+- Code Interpreter pattern (Pandas/Python)
+- Sandboxing and safe execution
+- Handling large datasets
+- **Challenges**: Schema complexity, hallucinated columns
 
-### Day 95: Retrieval-Enhanced Models
-**Focus**: RETRO, Memorizing Transformers, k-NN LM
-- RETRO: Retrieval-Enhanced Transformer
-- Memorizing Transformers
-- k-NN Language Models
-- Parameter reduction via retrieval
-- **Challenges**: Retrieval latency, index maintenance
+### Day 94: Creative Writing & Content Agents
+**Focus**: Style transfer, Long-form generation, SEO
+- Style mimicry and persona adoption
+- Long-form content planning (outline -> draft)
+- SEO optimization and keyword integration
+- Human-in-the-loop co-writing
+- **Challenges**: Repetitive phrasing, losing the plot
 
-### Day 96: Model Merging & Model Soup
-**Focus**: Weight averaging, task vectors, model combination
-- Model soup: averaging fine-tuned models
-- Task vectors and arithmetic
-- DARE, TIES merging methods
-- Composite models
-- **Challenges**: Interference, performance unpredictability
+### Day 95: Customer Support & Conversational AI
+**Focus**: RAG, Sentiment analysis, Escalation
+- Support agent architecture
+- Sentiment detection and tone adaptation
+- Escalation to human agents
+- PII redaction and security
+- **Challenges**: User frustration, hallucinated policies
 
-### Day 97: Continual Learning & Lifelong Adaptation
-**Focus**: Avoiding catastrophic forgetting, incrementa learning
-- Continual learning for LLMs
-- Elastic Weight Consolidation (EWC)
-- Progressive Neural Networks
-- Experience replay strategies
-- **Challenges**: Memory growth, task interference
+### Day 96: Legal & Compliance Agents
+**Focus**: Contract review, E-Discovery, Privacy
+- Contract analysis and risk extraction
+- E-Discovery and semantic search
+- Regulatory compliance checking
+- Privacy-preserving architectures
+- **Challenges**: High accuracy requirements, liability
 
-### Day 98: Neurosymbolic AI & Hybrid Systems
-**Focus**: Combining neural and symbolic reasoning
-- Neurosymbolic AI paradigm
-- Structured reasoning with LLMs
-- Knowledge graphs and LLM integration
-- Logical reasoning augmentation
-- **Challenges**: Integration complexity, scalability
+### Day 97: Healthcare & Medical Agents
+**Focus**: Scribing, CDSS, HIPAA
+- Medical scribing and summarization
+- Clinical Decision Support Systems (CDSS)
+- Medical entity extraction (ICD-10)
+- HIPAA compliance and de-identification
+- **Challenges**: Safety-critical errors, bias
+
+### Day 98: Finance & Trading Agents
+**Focus**: Sentiment analysis, Earnings calls, 10-K RAG
+- Financial sentiment analysis (FinBERT)
+- Earnings call summarization
+- Quantitative trading signals from text
+- 10-K document analysis
+- **Challenges**: Non-stationarity, look-ahead bias
 
 ---
 
-## Week 15: Ethics, Challenges & Future of AI Engineering
+## Week 15: Multimodal AI & Future Trends
 
-### Day 99: AI Ethics & Responsible AI Development
-**Focus**: Ethical frameworks, accountability, transparency
-- AI ethics principles (fairness, transparency, accountability)
-- Responsible AI development practices
-- Stakeholder considerations
-- Ethical decision-making frameworks
-- **Challenges**: Conflicting values, enforcement
+### Day 99: Multimodal AI Fundamentals
+**Focus**: ViT, CLIP, LLaVA
+- Vision Transformers (ViT)
+- Contrastive Language-Image Pre-training (CLIP)
+- Large Language and Vision Assistant (LLaVA)
+- Visual Instruction Tuning
+- **Challenges**: Modality gap, visual hallucinations
 
-### Day 100: Privacy & Data Protection
-**Focus**: Federated learning, differential privacy, secure computation
-- Privacy concerns in LLM training and deployment
-- Federated learning for decentralized training
-- Differential privacy mechanisms
-- Secure multi-party computation
-- **Challenges**: Privacy-utility trade-off, implementation complexity
+### Day 100: Audio & Speech AI
+**Focus**: Whisper, TTS, Audio Embeddings
+- Automatic Speech Recognition (Whisper)
+- Text-to-Speech (TTS) architectures
+- Audio embeddings (CLAP)
+- Real-time voice agents
+- **Challenges**: Latency, cocktail party problem
 
-### Day 101: Environmental Impact & Green AI
-**Focus**: Energy consumption, carbon footprint, efficiency
-- Carbon footprint of training LLMs
-- Energy-efficient architectures
-- Green AI principles
-- Model efficiency vs performance trade-offs
-- **Challenges**: Measurement accuracy, industry adoption
+### Day 101: Video Understanding & Generation
+**Focus**: Sora, DiT, Video-LLMs
+- Video generation (Sora, Diffusion Transformers)
+- Video understanding (Video-LLaMA)
+- Temporal consistency
+- Applications in surveillance and media
+- **Challenges**: Compute cost, flicker, temporal coherence
 
-### Day 102: Hallucination & Factuality Challenges
-**Focus**: Hallucination detection, mitigation, factuality
-- Hallucination taxonomy and causes
-- Detection methods (consistency checks, retrieval verification)
-- Mitigation strategies (retrieval grounding, uncertainty)
-- Factuality benchmarks
-- **Challenges**: Perfect factuality unattainable, detection reliability
+### Day 102: Robotics & Embodied AI
+**Focus**: RT-2, VLA, Sim-to-Real
+- Vision-Language-Action (VLA) models
+- Robotic Transformer (RT-2)
+- Sim-to-Real transfer
+- Foundation models for control
+- **Challenges**: Data scarcity, safety, reality gap
 
-### Day 103: Interpretability & Explainability
-**Focus**: Attention visualization, probing, mechanistic interpretability
-- Interpretability vs explainability
-- Attention visualization and analysis
-- Probing classifiers for internal representations
-- Mechanistic interpretability
-- **Challenges**: Complexity of explanations, faithfulness
+### Day 103: Edge AI & Small Language Models
+**Focus**: Phi-3, Quantization, On-Device RAG
+- Small Language Models (SLMs)
+- Quantization for edge (GGUF, CoreML)
+- On-device RAG and privacy
+- Speculative decoding on edge
+- **Challenges**: Battery, heat, memory constraints
 
-### Day 104: Regulation & Governance
-**Focus**: EU AI Act, safety standards, compliance
-- AI regulation landscape (EU AI Act, US executive orders)
-- Safety standards and certification
-- Compliance requirements for high-risk AI
-- Industry self-regulation initiatives
-- **Challenges**: Rapid technology change, global coordination
+### Day 104: AGI, Superalignment & Ethics
+**Focus**: Alignment, Safety, Superintelligence
+- Paths to AGI
+- The Alignment Problem
+- Superalignment (Weak-to-Strong Generalization)
+- Mechanistic Interpretability
+- **Challenges**: Instrumental convergence, reward hacking
 
-### Day 105: Future Trends & Research Frontiers
-**Focus**: AGI, reasoning, efficiency, human-AI collaboration
-- Path toward Artificial General Intelligence (AGI)
-- Improved reasoning capabilities
-- Ultra-efficient models
-- Human-AI collaboration paradigms
-- Emerging research directions
-- **Open questions**: Consciousness, alignment, control
+### Day 105: Capstone: Building a Multimodal Future
+**Focus**: "Jarvis" Architecture, End-to-End System
+- Integrating Vision, Voice, and Action
+- Latency orchestration
+- Continuous learning
+- The future of AI Engineering
+- **Goal**: Build a complete multimodal assistant
 
 ---
 
