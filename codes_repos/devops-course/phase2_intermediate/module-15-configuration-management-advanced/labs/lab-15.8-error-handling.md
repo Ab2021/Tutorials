@@ -1,70 +1,84 @@
-# Lab 15.8: Error Handling
+# Lab 15.8: Ansible Error Handling
 
 ## Objective
-Learn and practice error handling in a hands-on environment.
+Implement robust error handling in Ansible playbooks.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Use block/rescue/always
+- Handle failures gracefully
+- Implement retries
+- Debug playbook issues
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Block/Rescue/Always
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+```yaml
+- name: Error handling example
+  block:
+    - name: Risky task
+      command: /usr/bin/risky_command
+      register: result
+    
+    - name: Process result
+      debug:
+        msg: "Success: {{ result.stdout }}"
+  
+  rescue:
+    - name: Handle error
+      debug:
+        msg: "Task failed, running recovery"
+    
+    - name: Recovery action
+      command: /usr/bin/recovery_script
+  
+  always:
+    - name: Cleanup
+      file:
+        path: /tmp/tempfile
+        state: absent
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Ignore Errors
 
-</details>
+```yaml
+- name: Task that might fail
+  command: /usr/bin/might_fail
+  ignore_errors: yes
+  register: result
+
+- name: Continue only if succeeded
+  debug:
+    msg: "Previous task succeeded"
+  when: result is succeeded
+```
+
+## Retries
+
+```yaml
+- name: Retry on failure
+  uri:
+    url: http://api.example.com
+    status_code: 200
+  register: result
+  until: result.status == 200
+  retries: 5
+  delay: 10
+```
+
+## Failed When
+
+```yaml
+- name: Custom failure condition
+  command: /usr/bin/check_status
+  register: result
+  failed_when: "'ERROR' in result.stdout"
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Error handling working  
+✅ Retries functional  
+✅ Custom failure conditions  
+✅ Cleanup always runs  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 15.9** or complete the module assessment.
+**Time:** 35 min

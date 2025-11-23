@@ -1,70 +1,68 @@
 # Lab 16.6: Distributed Tracing
 
 ## Objective
-Learn and practice distributed tracing in a hands-on environment.
+Implement distributed tracing with Jaeger.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Set up Jaeger
+- Instrument applications
+- Analyze traces
+- Optimize performance
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Jaeger Setup
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+```yaml
+# docker-compose.yml
+version: '3'
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686"
+      - "14268:14268"
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Instrument Python App
 
-</details>
+```python
+from jaeger_client import Config
+from opentracing.ext import tags
+from opentracing.propagation import Format
+
+def init_tracer(service_name):
+    config = Config(
+        config={
+            'sampler': {'type': 'const', 'param': 1},
+            'logging': True,
+        },
+        service_name=service_name,
+    )
+    return config.initialize_tracer()
+
+tracer = init_tracer('my-service')
+
+@app.route('/api/users')
+def get_users():
+    with tracer.start_active_span('get-users') as scope:
+        scope.span.set_tag(tags.HTTP_METHOD, 'GET')
+        scope.span.set_tag(tags.HTTP_URL, '/api/users')
+        
+        users = fetch_users()
+        
+        scope.span.set_tag(tags.HTTP_STATUS_CODE, 200)
+        return jsonify(users)
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Jaeger running  
+✅ Traces collected  
+✅ Performance analyzed  
+✅ Bottlenecks identified  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 16.7** or complete the module assessment.
+**Time:** 45 min
