@@ -1,70 +1,90 @@
-# Lab 07.6: State Management
+# Lab 07.5: Terraform State Management
 
 ## Objective
-Learn and practice state management in a hands-on environment.
+Understand and manage Terraform state effectively.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Understand state file structure
+- Use remote state
+- Implement state locking
+- Perform state operations
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Remote State (S3)
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+```hcl
+terraform {
+  backend "s3" {
+    bucket         = "my-terraform-state"
+    key            = "prod/terraform.tfstate"
+    region         = "us-east-1"
+    encrypt        = true
+    dynamodb_table = "terraform-locks"
+  }
+}
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## State Commands
 
-</details>
+```bash
+# List resources in state
+terraform state list
+
+# Show specific resource
+terraform state show aws_instance.web
+
+# Move resource
+terraform state mv aws_instance.web aws_instance.web_server
+
+# Remove from state (doesn't delete resource)
+terraform state rm aws_instance.old
+
+# Pull current state
+terraform state pull > terraform.tfstate.backup
+```
+
+## Import Existing Resources
+
+```bash
+# Import EC2 instance
+terraform import aws_instance.web i-1234567890abcdef0
+
+# Import S3 bucket
+terraform import aws_s3_bucket.data my-bucket-name
+```
+
+## State Locking
+
+```bash
+# Create DynamoDB table for locking
+aws dynamodb create-table \
+  --table-name terraform-locks \
+  --attribute-definitions AttributeName=LockID,AttributeType=S \
+  --key-schema AttributeName=LockID,KeyType=HASH \
+  --billing-mode PAY_PER_REQUEST
+```
+
+## Workspace Management
+
+```bash
+# Create workspace
+terraform workspace new staging
+
+# List workspaces
+terraform workspace list
+
+# Switch workspace
+terraform workspace select prod
+
+# Show current workspace
+terraform workspace show
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Remote state configured  
+✅ State locking working  
+✅ State operations performed  
+✅ Workspaces used  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 07.7** or complete the module assessment.
+**Time:** 45 min
