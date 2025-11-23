@@ -1,70 +1,89 @@
 # Lab 06.6: Deployment Automation
 
 ## Objective
-Learn and practice deployment automation in a hands-on environment.
+Automate deployments to different environments.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Deploy to staging/production
+- Use environment-specific configs
+- Implement approval gates
+- Rollback on failure
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Multi-Environment Deployment
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
+```yaml
+name: Deploy
 
-### Step 3: Verification
-[How to verify the implementation works correctly]
+on:
+  push:
+    branches: [main, develop]
 
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+jobs:
+  deploy-staging:
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v3
+      - name: Deploy to staging
+        run: |
+          kubectl set image deployment/myapp \
+            myapp=myapp:${{ github.sha }} \
+            -n staging
+  
+  deploy-production:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://myapp.com
+    steps:
+      - uses: actions/checkout@v3
+      - name: Deploy to production
+        run: |
+          kubectl set image deployment/myapp \
+            myapp=myapp:${{ github.sha }} \
+            -n production
+      - name: Verify deployment
+        run: |
+          kubectl rollout status deployment/myapp -n production
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Approval Gates
 
-</details>
+```yaml
+  deploy-production:
+    needs: deploy-staging
+    environment:
+      name: production
+    steps:
+      # Manual approval required before this runs
+      - name: Deploy
+        run: ./deploy.sh
+```
+
+## Rollback on Failure
+
+```yaml
+  - name: Deploy
+    id: deploy
+    run: kubectl apply -f k8s/
+  
+  - name: Verify
+    id: verify
+    run: ./verify-deployment.sh
+  
+  - name: Rollback on failure
+    if: failure()
+    run: kubectl rollout undo deployment/myapp
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Staging auto-deploys  
+✅ Production requires approval  
+✅ Rollback on failure  
+✅ Deployment verified  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 06.7** or complete the module assessment.
+**Time:** 40 min

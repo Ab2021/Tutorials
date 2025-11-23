@@ -1,70 +1,79 @@
 # Lab 06.7: Pipeline Triggers
 
 ## Objective
-Learn and practice pipeline triggers in a hands-on environment.
+Configure different pipeline triggers for various scenarios.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Trigger on push/PR
+- Schedule pipelines
+- Manual triggers
+- Webhook triggers
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Push Triggers
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+```yaml
+on:
+  push:
+    branches: [main, develop, 'release/**']
+    paths:
+      - 'src/**'
+      - 'Dockerfile'
+    tags:
+      - 'v*'
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Pull Request Triggers
 
-</details>
+```yaml
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+```
+
+## Scheduled Triggers
+
+```yaml
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM
+    - cron: '0 0 * * 0'  # Weekly on Sunday
+```
+
+## Manual Triggers
+
+```yaml
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      version:
+        description: 'Version to deploy'
+        required: true
+```
+
+## Workflow Call
+
+```yaml
+on:
+  workflow_call:
+    inputs:
+      config-path:
+        required: true
+        type: string
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Push triggers working  
+✅ Scheduled jobs running  
+✅ Manual dispatch configured  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 06.8** or complete the module assessment.
+**Time:** 30 min

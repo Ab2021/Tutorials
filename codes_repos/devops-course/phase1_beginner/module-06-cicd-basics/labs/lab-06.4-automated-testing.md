@@ -1,70 +1,103 @@
-# Lab 06.4: Automated Testing
+# Lab 06.4: Automated Testing in CI/CD
 
 ## Objective
-Learn and practice automated testing in a hands-on environment.
+Integrate automated testing into CI/CD pipelines.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Implement unit, integration, and e2e tests in pipelines
+- Configure test reporting
+- Set up code coverage
+- Fail builds on test failures
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Unit Tests
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
+```yaml
+# .github/workflows/test.yaml
+name: Automated Testing
 
-### Step 3: Verification
-[How to verify the implementation works correctly]
+on: [push, pull_request]
 
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: pip install pytest pytest-cov
+      
+      - name: Run unit tests
+        run: pytest tests/unit/ --cov=src --cov-report=xml
+      
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Integration Tests
 
-</details>
+```yaml
+  integration-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run integration tests
+        run: pytest tests/integration/
+        env:
+          DATABASE_URL: postgresql://postgres:test@localhost/test
+```
+
+## E2E Tests
+
+```yaml
+  e2e-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Start application
+        run: docker-compose up -d
+      - name: Run E2E tests
+        run: |
+          npm install cypress
+          npx cypress run
+      - name: Upload test videos
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: cypress-videos
+          path: cypress/videos
+```
+
+## Test Reporting
+
+```yaml
+  - name: Publish test results
+    uses: EnricoMi/publish-unit-test-result-action@v2
+    if: always()
+    with:
+      files: |
+        test-results/**/*.xml
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Unit tests running in CI  
+✅ Integration tests with DB  
+✅ E2E tests automated  
+✅ Test reports published  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 06.5** or complete the module assessment.
+**Time:** 45 min

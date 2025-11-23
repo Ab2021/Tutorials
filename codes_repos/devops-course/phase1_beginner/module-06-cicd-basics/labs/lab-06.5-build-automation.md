@@ -1,70 +1,104 @@
 # Lab 06.5: Build Automation
 
 ## Objective
-Learn and practice build automation in a hands-on environment.
+Automate application builds across different languages and platforms.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Build Docker images in CI
+- Cache build dependencies
+- Build multi-platform images
+- Optimize build times
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Docker Build
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
+```yaml
+name: Build
 
-### Step 3: Verification
-[How to verify the implementation works correctly]
+on: [push]
 
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: myapp:${{ github.sha }},myapp:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Multi-Platform Builds
 
-</details>
+```yaml
+      - name: Build multi-platform
+        uses: docker/build-push-action@v4
+        with:
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: myapp:${{ github.sha }}
+```
+
+## Language-Specific Builds
+
+### Node.js
+```yaml
+  - uses: actions/setup-node@v3
+    with:
+      node-version: '18'
+      cache: 'npm'
+  - run: npm ci
+  - run: npm run build
+```
+
+### Go
+```yaml
+  - uses: actions/setup-go@v4
+    with:
+      go-version: '1.21'
+      cache: true
+  - run: go build -v ./...
+```
+
+### Python
+```yaml
+  - uses: actions/setup-python@v4
+    with:
+      python-version: '3.11'
+      cache: 'pip'
+  - run: pip install -r requirements.txt
+  - run: python setup.py build
+```
+
+## Build Artifacts
+
+```yaml
+  - name: Upload artifacts
+    uses: actions/upload-artifact@v3
+    with:
+      name: build-artifacts
+      path: dist/
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Docker images built automatically  
+✅ Multi-platform support  
+✅ Build caching working  
+✅ Artifacts uploaded  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 06.6** or complete the module assessment.
+**Time:** 40 min

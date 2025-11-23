@@ -1,70 +1,95 @@
 # Lab 06.10: Pipeline Best Practices
 
 ## Objective
-Learn and practice pipeline best practices in a hands-on environment.
+Implement CI/CD pipeline best practices.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Optimize pipeline performance
+- Implement security best practices
+- Handle failures gracefully
+- Monitor pipeline health
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Performance Optimization
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [14, 16, 18]
+      fail-fast: false  # Don't cancel other jobs
+    steps:
+      - uses: actions/checkout@v3
+      
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'npm'  # Cache dependencies
+      
+      - run: npm ci  # Faster than npm install
+      - run: npm test
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Security Best Practices
 
-</details>
+```yaml
+  security:
+    steps:
+      # Scan for secrets
+      - uses: trufflesecurity/trufflehog@main
+      
+      # Dependency scanning
+      - run: npm audit
+      
+      # Container scanning
+      - uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: myapp:latest
+          severity: 'CRITICAL,HIGH'
+```
 
-## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+## Error Handling
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
+```yaml
+  deploy:
+    steps:
+      - name: Deploy
+        id: deploy
+        continue-on-error: true
+        run: ./deploy.sh
+      
+      - name: Rollback on failure
+        if: steps.deploy.outcome == 'failure'
+        run: ./rollback.sh
+      
+      - name: Notify team
+        if: failure()
+        run: |
+          curl -X POST ${{ secrets.SLACK_WEBHOOK }} \
+            -d '{"text":"Pipeline failed!"}'
+```
 
-## Troubleshooting
+## Monitoring
 
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
+```yaml
+  - name: Report metrics
+    run: |
+      echo "build_duration_seconds ${{ job.duration }}" | \
+        curl --data-binary @- http://pushgateway:9091/metrics/job/ci
+```
 
-**Issue 2:** [Description]
-- **Solution:** [Fix]
+## Best Practices Checklist
 
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
+✅ Use caching for dependencies  
+✅ Run tests in parallel  
+✅ Scan for security vulnerabilities  
+✅ Implement proper error handling  
+✅ Monitor pipeline performance  
+✅ Use secrets for sensitive data  
+✅ Fail fast on critical errors  
+✅ Notify team on failures  
 
-## Next Steps
-Proceed to **Lab 06.next module** or complete the module assessment.
+**Time:** 40 min

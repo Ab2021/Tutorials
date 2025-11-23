@@ -1,70 +1,81 @@
-# Lab 06.9: Environment Variables
+# Lab 06.9: Environment Variables and Secrets
 
 ## Objective
-Learn and practice environment variables in a hands-on environment.
+Manage environment variables and secrets securely in CI/CD.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Use environment variables
+- Store secrets securely
+- Use GitHub Secrets
+- Manage different environments
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Environment Variables
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
+```yaml
+env:
+  NODE_ENV: production
+  API_URL: https://api.example.com
 
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+jobs:
+  build:
+    env:
+      BUILD_ENV: staging
+    steps:
+      - run: echo "NODE_ENV is $NODE_ENV"
+      - run: echo "BUILD_ENV is $BUILD_ENV"
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## GitHub Secrets
 
-</details>
+```yaml
+jobs:
+  deploy:
+    steps:
+      - name: Deploy
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: ./deploy.sh
+```
+
+## Environment-Specific Secrets
+
+```yaml
+jobs:
+  deploy-staging:
+    environment: staging
+    steps:
+      - run: echo "Deploying to staging"
+        env:
+          API_KEY: ${{ secrets.STAGING_API_KEY }}
+  
+  deploy-production:
+    environment: production
+    steps:
+      - run: echo "Deploying to production"
+        env:
+          API_KEY: ${{ secrets.PRODUCTION_API_KEY }}
+```
+
+## Vault Integration
+
+```yaml
+      - name: Import Secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: https://vault.example.com
+          token: ${{ secrets.VAULT_TOKEN }}
+          secrets: |
+            secret/data/production database_url | DATABASE_URL ;
+            secret/data/production api_key | API_KEY
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Environment variables configured  
+✅ Secrets stored securely  
+✅ Different env configs working  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 06.10** or complete the module assessment.
+**Time:** 35 min

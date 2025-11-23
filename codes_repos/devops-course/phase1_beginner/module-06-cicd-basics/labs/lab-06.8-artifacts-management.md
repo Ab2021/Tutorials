@@ -1,70 +1,83 @@
 # Lab 06.8: Artifacts Management
 
 ## Objective
-Learn and practice artifacts management in a hands-on environment.
+Manage build artifacts in CI/CD pipelines.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Upload/download artifacts
+- Share artifacts between jobs
+- Store test results
+- Manage artifact retention
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Upload Artifacts
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+```yaml
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: npm run build
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist-files
+          path: dist/
+          retention-days: 7
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Download Artifacts
 
-</details>
+```yaml
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: dist-files
+          path: dist/
+      
+      - name: Deploy
+        run: ./deploy.sh dist/
+```
+
+## Test Results
+
+```yaml
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: |
+            test-results/**/*.xml
+            coverage/**
+```
+
+## Docker Images as Artifacts
+
+```yaml
+      - name: Build image
+        run: docker build -t myapp:${{ github.sha }} .
+      
+      - name: Save image
+        run: docker save myapp:${{ github.sha }} > myapp.tar
+      
+      - name: Upload image
+        uses: actions/upload-artifact@v3
+        with:
+          name: docker-image
+          path: myapp.tar
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Artifacts uploaded  
+✅ Artifacts shared between jobs  
+✅ Test results stored  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 06.9** or complete the module assessment.
+**Time:** 35 min
