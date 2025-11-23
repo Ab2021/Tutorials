@@ -1,70 +1,93 @@
-# Lab 28.5: Reserved Instances
+# Lab 28.5: Reserved Instances Strategy
 
 ## Objective
-Learn and practice reserved instances in a hands-on environment.
+Implement reserved instances strategy for cost optimization.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Analyze usage patterns
+- Calculate RI savings
+- Purchase reserved instances
+- Monitor RI utilization
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## Usage Analysis
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
+```python
+import boto3
+from datetime import datetime, timedelta
 
-### Step 3: Verification
-[How to verify the implementation works correctly]
+ce = boto3.client('ce')
 
-## Challenges
+# Get RI recommendations
+response = ce.get_reservation_purchase_recommendation(
+    Service='Amazon Elastic Compute Cloud - Compute',
+    LookbackPeriodInDays='SIXTY_DAYS',
+    TermInYears='ONE_YEAR',
+    PaymentOption='NO_UPFRONT'
+)
 
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+for recommendation in response['Recommendations']:
+    details = recommendation['RecommendationDetails']
+    print(f"Instance Type: {details['InstanceDetails']['EC2InstanceDetails']['InstanceType']}")
+    print(f"Recommended quantity: {details['RecommendedNumberOfInstancesToPurchase']}")
+    print(f"Estimated monthly savings: ${details['EstimatedMonthlySavingsAmount']}")
+    print(f"Estimated savings percentage: {details['EstimatedSavingsPercentage']}%")
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## RI Purchase
 
-</details>
+```python
+# Purchase RI
+ec2 = boto3.client('ec2')
+
+response = ec2.purchase_reserved_instances_offering(
+    InstanceCount=10,
+    ReservedInstancesOfferingId='offering-id',
+    DryRun=False
+)
+
+print(f"Reserved Instances ID: {response['ReservedInstancesId']}")
+```
+
+## RI Utilization Monitoring
+
+```python
+# Get RI utilization
+response = ce.get_reservation_utilization(
+    TimePeriod={
+        'Start': (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d'),
+        'End': datetime.now().strftime('%Y-%m-%d')
+    },
+    Granularity='MONTHLY'
+)
+
+for result in response['UtilizationsByTime']:
+    utilization = result['Total']
+    print(f"RI Utilization: {utilization['UtilizationPercentage']}%")
+    print(f"Unused hours: {utilization['TotalActualHours'] - utilization['TotalRunningHours']}")
+```
+
+## Savings Plan
+
+```python
+# Get Savings Plan recommendations
+response = ce.get_savings_plans_purchase_recommendation(
+    SavingsPlansType='COMPUTE_SP',
+    TermInYears='ONE_YEAR',
+    PaymentOption='NO_UPFRONT',
+    LookbackPeriodInDays='SIXTY_DAYS'
+)
+
+for recommendation in response['SavingsPlansPurchaseRecommendation']['SavingsPlansPurchaseRecommendationDetails']:
+    print(f"Hourly commitment: ${recommendation['HourlyCommitmentToPurchase']}")
+    print(f"Estimated monthly savings: ${recommendation['EstimatedMonthlySavingsAmount']}")
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ Usage analyzed  
+✅ RI recommendations generated  
+✅ RIs purchased  
+✅ Utilization monitored  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 28.6** or complete the module assessment.
+**Time:** 45 min

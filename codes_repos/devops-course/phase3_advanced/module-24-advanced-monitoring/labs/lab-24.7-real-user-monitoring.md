@@ -1,70 +1,87 @@
 # Lab 24.7: Real User Monitoring
 
 ## Objective
-Learn and practice real user monitoring in a hands-on environment.
+Implement Real User Monitoring (RUM) for frontend applications.
 
-## Prerequisites
-- Completed previous labs in this module
-- Required tools installed (see GETTING_STARTED.md)
+## Learning Objectives
+- Set up RUM tools
+- Track user interactions
+- Monitor page performance
+- Analyze user experience
 
-## Instructions
+---
 
-### Step 1: Setup
-[Detailed setup instructions will be provided]
+## RUM with Datadog
 
-### Step 2: Implementation
-[Step-by-step implementation guide]
-
-### Step 3: Verification
-[How to verify the implementation works correctly]
-
-## Challenges
-
-### Challenge 1: Basic Implementation
-[Challenge description and requirements]
-
-### Challenge 2: Advanced Scenario
-[More complex challenge building on the basics]
-
-## Solution
-
-<details>
-<summary>Click to reveal solution</summary>
-
-### Solution Steps
-
-```bash
-# Example commands
-echo "Solution code will be provided here"
+```html
+<script>
+  (function(h,o,u,n,d) {
+    h=h[d]=h[d]||{q:[],onReady:function(c){h.q.push(c)}}
+    d=o.createElement(u);d.async=1;d.src=n
+    n=o.getElementsByTagName(u)[0];n.parentNode.insertBefore(d,n)
+  })(window,document,'script','https://www.datadoghq-browser-agent.com/datadog-rum.js','DD_RUM')
+  
+  DD_RUM.onReady(function() {
+    DD_RUM.init({
+      clientToken: 'YOUR_CLIENT_TOKEN',
+      applicationId: 'YOUR_APP_ID',
+      site: 'datadoghq.com',
+      service: 'my-web-app',
+      env: 'production',
+      version: '1.0.0',
+      sampleRate: 100,
+      trackInteractions: true,
+      defaultPrivacyLevel: 'mask-user-input'
+    })
+  })
+</script>
 ```
 
-**Explanation:**
-[Detailed explanation of the solution]
+## Custom User Actions
 
-</details>
+```javascript
+// Track custom action
+DD_RUM.addAction('checkout_completed', {
+  orderId: '12345',
+  amount: 99.99,
+  items: 3
+})
+
+// Track errors
+DD_RUM.addError(new Error('Payment failed'), {
+  userId: 'user123',
+  paymentMethod: 'credit_card'
+})
+
+// Add user context
+DD_RUM.setUser({
+  id: 'user123',
+  name: 'John Doe',
+  email: 'john@example.com',
+  plan: 'premium'
+})
+```
+
+## Performance Monitoring
+
+```javascript
+// Monitor Core Web Vitals
+DD_RUM.onReady(function() {
+  // LCP, FID, CLS automatically tracked
+  
+  // Custom timing
+  const startTime = performance.now()
+  doExpensiveOperation()
+  const duration = performance.now() - startTime
+  
+  DD_RUM.addTiming('expensive_operation', duration)
+})
+```
 
 ## Success Criteria
-✅ [Criterion 1]
-✅ [Criterion 2]
-✅ [Criterion 3]
+✅ RUM configured  
+✅ User interactions tracked  
+✅ Performance monitored  
+✅ User experience analyzed  
 
-## Key Learnings
-- [Key concept 1]
-- [Key concept 2]
-- [Best practice 1]
-
-## Troubleshooting
-
-### Common Issues
-**Issue 1:** [Description]
-- **Solution:** [Fix]
-
-**Issue 2:** [Description]
-- **Solution:** [Fix]
-
-## Additional Resources
-- [Link to official documentation]
-- [Related tutorial or article]
-
-## Next Steps
-Proceed to **Lab 24.8** or complete the module assessment.
+**Time:** 40 min
