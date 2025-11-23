@@ -2,7 +2,7 @@ Incomplete Lab Files Report
 ================================================================================
 
 Total labs: 339
-Incomplete: 233
+Incomplete: 167
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase1_beginner\module-01-introduction-devops\labs\lab-01.1-devops-culture.md
   - Placeholders: ['\\[Expected output\\]']
@@ -13,16 +13,7 @@ H:\My Drive\Codes & Repos\codes_repos\devops-course\phase1_beginner\module-01-in
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase1_beginner\module-03-version-control-git\labs\lab-03.9-git-hooks.md
   - Placeholders: ['TODO:']
 
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase1_beginner\module-06-cicd-basics\labs\lab-06.1-cicd-concepts.md
-  - Lines: 48
-
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase1_beginner\module-06-cicd-basics\labs\lab-06.10-pipeline-best-practices.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase1_beginner\module-06-cicd-basics\labs\lab-06.2-github-actions-intro.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase1_beginner\module-06-cicd-basics\labs\lab-06.3-pipeline-creation.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase1_beginner\module-06-cicd-basics\labs\lab-06.4-automated-testing.md
@@ -43,16 +34,7 @@ H:\My Drive\Codes & Repos\codes_repos\devops-course\phase1_beginner\module-06-ci
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase1_beginner\module-06-cicd-basics\labs\lab-06.9-environment-variables.md
   - Lines: 48
 
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase1_beginner\module-07-infrastructure-as-code-intro\labs\lab-07.1-iac-concepts.md
-  - Lines: 48
-
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase1_beginner\module-07-infrastructure-as-code-intro\labs\lab-07.10-infrastructure-versioning.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase1_beginner\module-07-infrastructure-as-code-intro\labs\lab-07.2-terraform-installation.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase1_beginner\module-07-infrastructure-as-code-intro\labs\lab-07.3-terraform-basics.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase1_beginner\module-07-infrastructure-as-code-intro\labs\lab-07.4-cloudformation-intro.md
@@ -73,16 +55,7 @@ H:\My Drive\Codes & Repos\codes_repos\devops-course\phase1_beginner\module-07-in
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase1_beginner\module-07-infrastructure-as-code-intro\labs\lab-07.9-terraform-plan-apply.md
   - Lines: 48
 
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase1_beginner\module-10-cloud-fundamentals-aws\labs\lab-10.1-aws-account-setup.md
-  - Lines: 48
-
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase1_beginner\module-10-cloud-fundamentals-aws\labs\lab-10.10-aws-best-practices.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase1_beginner\module-10-cloud-fundamentals-aws\labs\lab-10.2-ec2-instances.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase1_beginner\module-10-cloud-fundamentals-aws\labs\lab-10.3-s3-storage.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase1_beginner\module-10-cloud-fundamentals-aws\labs\lab-10.4-vpc-networking.md
@@ -109,15 +82,6 @@ H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-1
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-11-advanced-docker\labs\lab-11.10-production-best-practices.md
   - Lines: 48
 
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-11-advanced-docker\labs\lab-11.2-image-optimization.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-11-advanced-docker\labs\lab-11.3-docker-security-scanning.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-11-advanced-docker\labs\lab-11.4-health-checks.md
-  - Lines: 48
-
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-11-advanced-docker\labs\lab-11.5-resource-limits.md
   - Lines: 48
 
@@ -133,16 +97,7 @@ H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-1
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-11-advanced-docker\labs\lab-11.9-container-orchestration.md
   - Lines: 48
 
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-12-kubernetes-fundamentals\labs\lab-12.1-k8s-architecture.md
-  - Lines: 48
-
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-12-kubernetes-fundamentals\labs\lab-12.10-k8s-troubleshooting.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-12-kubernetes-fundamentals\labs\lab-12.2-pods-creation.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-12-kubernetes-fundamentals\labs\lab-12.3-deployments.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-12-kubernetes-fundamentals\labs\lab-12.4-services.md
@@ -163,17 +118,11 @@ H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-1
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-12-kubernetes-fundamentals\labs\lab-12.9-rolling-updates.md
   - Lines: 48
 
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-13-advanced-cicd\labs\lab-13.1-multi-stage-pipelines.md
-  - Lines: 48
-
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-13-advanced-cicd\labs\lab-13.10-advanced-workflows.md
   - Lines: 48
 
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-13-advanced-cicd\labs\lab-13.2-parallel-jobs.md
-  - Lines: 48
-
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-13-advanced-cicd\labs\lab-13.3-matrix-builds.md
-  - Lines: 48
+  - Lines: 46
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-13-advanced-cicd\labs\lab-13.4-integration-testing.md
   - Lines: 48
@@ -199,9 +148,6 @@ H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-1
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-14-infrastructure-as-code-advanced\labs\lab-14.10-enterprise-patterns.md
   - Lines: 48
 
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-14-infrastructure-as-code-advanced\labs\lab-14.2-module-composition.md
-  - Lines: 48
-
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-14-infrastructure-as-code-advanced\labs\lab-14.3-cloudformation-stacks.md
   - Lines: 48
 
@@ -209,10 +155,7 @@ H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-1
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-14-infrastructure-as-code-advanced\labs\lab-14.5-state-locking.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-14-infrastructure-as-code-advanced\labs\lab-14.6-terraform-import.md
-  - Lines: 48
+  - Lines: 47
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-14-infrastructure-as-code-advanced\labs\lab-14.7-cross-tool-comparison.md
   - Lines: 48
@@ -223,9 +166,6 @@ H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-1
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-14-infrastructure-as-code-advanced\labs\lab-14.9-terraform-cloud.md
   - Lines: 48
 
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-15-configuration-management-advanced\labs\lab-15.1-ansible-roles.md
-  - Lines: 48
-
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-15-configuration-management-advanced\labs\lab-15.10-enterprise-automation.md
   - Lines: 48
 
@@ -233,10 +173,7 @@ H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-1
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-15-configuration-management-advanced\labs\lab-15.3-ansible-galaxy.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-15-configuration-management-advanced\labs\lab-15.4-dynamic-inventory.md
-  - Lines: 48
+  - Lines: 47
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-15-configuration-management-advanced\labs\lab-15.5-custom-modules.md
   - Lines: 48
@@ -253,19 +190,10 @@ H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-1
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-15-configuration-management-advanced\labs\lab-15.9-ansible-testing.md
   - Lines: 48
 
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-16-monitoring-observability\labs\lab-16.1-prometheus-advanced.md
-  - Lines: 48
-
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-16-monitoring-observability\labs\lab-16.10-observability-patterns.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-16-monitoring-observability\labs\lab-16.2-custom-metrics.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-16-monitoring-observability\labs\lab-16.3-service-discovery.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-16-monitoring-observability\labs\lab-16.4-alertmanager.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-16-monitoring-observability\labs\lab-16.5-grafana-advanced.md
@@ -283,25 +211,16 @@ H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-1
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-16-monitoring-observability\labs\lab-16.9-slo-sli-setup.md
   - Lines: 48
 
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-17-logging-log-management\labs\lab-17.1-elk-stack-setup.md
-  - Lines: 48
-
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-17-logging-log-management\labs\lab-17.10-logging-best-practices.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-17-logging-log-management\labs\lab-17.2-elasticsearch-basics.md
   - Lines: 48
 
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-17-logging-log-management\labs\lab-17.3-logstash-pipelines.md
-  - Lines: 48
-
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-17-logging-log-management\labs\lab-17.4-kibana-dashboards.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-17-logging-log-management\labs\lab-17.5-fluentd-setup.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-17-logging-log-management\labs\lab-17.6-log-parsing.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-17-logging-log-management\labs\lab-17.7-log-retention.md
@@ -313,19 +232,10 @@ H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-1
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-17-logging-log-management\labs\lab-17.9-centralized-logging.md
   - Lines: 48
 
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-18-security-compliance\labs\lab-18.1-devsecops-principles.md
-  - Lines: 48
-
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-18-security-compliance\labs\lab-18.10-incident-response.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-18-security-compliance\labs\lab-18.2-vulnerability-scanning.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-18-security-compliance\labs\lab-18.3-secrets-management.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-18-security-compliance\labs\lab-18.4-vault-setup.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-18-security-compliance\labs\lab-18.5-security-policies.md
@@ -344,21 +254,18 @@ H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-1
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-19-database-operations\labs\lab-19.1-rds-setup.md
-  - Lines: 48
+  - Lines: 39
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-19-database-operations\labs\lab-19.10-database-security.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-19-database-operations\labs\lab-19.2-database-backups.md
-  - Lines: 48
+  - Lines: 47
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-19-database-operations\labs\lab-19.3-point-in-time-recovery.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-19-database-operations\labs\lab-19.4-read-replicas.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-19-database-operations\labs\lab-19.5-database-migrations.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-19-database-operations\labs\lab-19.6-connection-pooling.md
@@ -379,16 +286,7 @@ H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-2
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-20-cloud-architecture-patterns\labs\lab-20.10-architecture-best-practices.md
   - Lines: 48
 
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-20-cloud-architecture-patterns\labs\lab-20.2-auto-scaling.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-20-cloud-architecture-patterns\labs\lab-20.3-disaster-recovery.md
-  - Lines: 48
-
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-20-cloud-architecture-patterns\labs\lab-20.4-multi-region.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-20-cloud-architecture-patterns\labs\lab-20.5-caching-strategies.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-20-cloud-architecture-patterns\labs\lab-20.6-cdn-implementation.md
@@ -403,25 +301,16 @@ H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-2
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase2_intermediate\module-20-cloud-architecture-patterns\labs\lab-20.9-serverless-intro.md
   - Lines: 48
 
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-21-advanced-kubernetes\labs\lab-21.1-custom-resources.md
-  - Lines: 48
-
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-21-advanced-kubernetes\labs\lab-21.10-k8s-production.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-21-advanced-kubernetes\labs\lab-21.2-operators.md
   - Lines: 48
 
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-21-advanced-kubernetes\labs\lab-21.3-helm-charts.md
-  - Lines: 48
-
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-21-advanced-kubernetes\labs\lab-21.4-helm-repositories.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-21-advanced-kubernetes\labs\lab-21.5-service-mesh-istio.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-21-advanced-kubernetes\labs\lab-21.6-network-policies.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-21-advanced-kubernetes\labs\lab-21.7-pod-security.md
@@ -433,16 +322,7 @@ H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-21-ad
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-21-advanced-kubernetes\labs\lab-21.9-stateful-applications.md
   - Lines: 48
 
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-22-gitops-argocd\labs\lab-22.1-gitops-principles.md
-  - Lines: 48
-
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-22-gitops-argocd\labs\lab-22.10-gitops-best-practices.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-22-gitops-argocd\labs\lab-22.2-argocd-installation.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-22-gitops-argocd\labs\lab-22.3-application-deployment.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-22-gitops-argocd\labs\lab-22.4-sync-strategies.md
@@ -463,22 +343,13 @@ H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-22-gi
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-22-gitops-argocd\labs\lab-22.9-flux-comparison.md
   - Lines: 48
 
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-23-serverless-functions\labs\lab-23.1-lambda-functions.md
-  - Lines: 48
-
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-23-serverless-functions\labs\lab-23.10-cost-optimization.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-23-serverless-functions\labs\lab-23.2-api-gateway.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-23-serverless-functions\labs\lab-23.3-event-driven-architecture.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-23-serverless-functions\labs\lab-23.4-step-functions.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-23-serverless-functions\labs\lab-23.5-serverless-framework.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-23-serverless-functions\labs\lab-23.6-sam-templates.md
@@ -500,18 +371,12 @@ H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-24-ad
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-24-advanced-monitoring\labs\lab-24.2-apm-tools.md
-  - Lines: 48
+  - Lines: 36
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-24-advanced-monitoring\labs\lab-24.3-custom-instrumentation.md
   - Lines: 48
 
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-24-advanced-monitoring\labs\lab-24.4-slo-sli-sla.md
-  - Lines: 48
-
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-24-advanced-monitoring\labs\lab-24.5-error-budgets.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-24-advanced-monitoring\labs\lab-24.6-synthetic-monitoring.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-24-advanced-monitoring\labs\lab-24.7-real-user-monitoring.md
@@ -524,21 +389,15 @@ H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-24-ad
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-25-chaos-engineering\labs\lab-25.1-chaos-principles.md
-  - Lines: 48
+  - Lines: 36
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-25-chaos-engineering\labs\lab-25.10-building-resilience.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-25-chaos-engineering\labs\lab-25.2-chaos-monkey.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-25-chaos-engineering\labs\lab-25.3-failure-injection.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-25-chaos-engineering\labs\lab-25.4-resilience-testing.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-25-chaos-engineering\labs\lab-25.5-chaos-experiments.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-25-chaos-engineering\labs\lab-25.6-blast-radius.md
@@ -554,7 +413,7 @@ H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-25-ch
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-26-multi-cloud-hybrid\labs\lab-26.1-multi-cloud-strategy.md
-  - Lines: 48
+  - Lines: 49
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-26-multi-cloud-hybrid\labs\lab-26.10-multi-cloud-management.md
   - Lines: 48
@@ -566,10 +425,7 @@ H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-26-mu
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-26-multi-cloud-hybrid\labs\lab-26.4-cloud-agnostic-tools.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-26-multi-cloud-hybrid\labs\lab-26.5-hybrid-cloud.md
-  - Lines: 48
+  - Lines: 42
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-26-multi-cloud-hybrid\labs\lab-26.6-cloud-migration.md
   - Lines: 48
@@ -583,19 +439,10 @@ H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-26-mu
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-26-multi-cloud-hybrid\labs\lab-26.9-vendor-lock-in.md
   - Lines: 48
 
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-27-platform-engineering\labs\lab-27.1-internal-platforms.md
-  - Lines: 48
-
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-27-platform-engineering\labs\lab-27.10-platform-evolution.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-27-platform-engineering\labs\lab-27.2-developer-portals.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-27-platform-engineering\labs\lab-27.3-self-service-infrastructure.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-27-platform-engineering\labs\lab-27.4-golden-paths.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-27-platform-engineering\labs\lab-27.5-platform-apis.md
@@ -613,19 +460,10 @@ H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-27-pl
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-27-platform-engineering\labs\lab-27.9-platform-adoption.md
   - Lines: 48
 
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-28-cost-optimization\labs\lab-28.1-finops-principles.md
-  - Lines: 48
-
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-28-cost-optimization\labs\lab-28.10-cost-governance.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-28-cost-optimization\labs\lab-28.2-cost-visibility.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-28-cost-optimization\labs\lab-28.3-resource-tagging.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-28-cost-optimization\labs\lab-28.4-rightsizing.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-28-cost-optimization\labs\lab-28.5-reserved-instances.md
@@ -649,16 +487,7 @@ H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-29-in
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-29-incident-management\labs\lab-29.10-continuous-improvement.md
   - Lines: 48
 
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-29-incident-management\labs\lab-29.2-on-call-setup.md
-  - Lines: 48
-
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-29-incident-management\labs\lab-29.3-pagerduty-integration.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-29-incident-management\labs\lab-29.4-runbooks.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-29-incident-management\labs\lab-29.5-post-mortems.md
   - Lines: 48
 
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-29-incident-management\labs\lab-29.6-incident-communication.md
@@ -673,33 +502,6 @@ H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-29-in
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-29-incident-management\labs\lab-29.9-blameless-culture.md
   - Lines: 48
 
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-30-production-deployment\labs\lab-30.1-blue-green-deployment.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-30-production-deployment\labs\lab-30.10-deployment-best-practices.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-30-production-deployment\labs\lab-30.2-canary-releases.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-30-production-deployment\labs\lab-30.3-feature-flags.md
-  - Lines: 48
-
 H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-30-production-deployment\labs\lab-30.4-progressive-rollout.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-30-production-deployment\labs\lab-30.5-rollback-strategies.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-30-production-deployment\labs\lab-30.6-deployment-verification.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-30-production-deployment\labs\lab-30.7-smoke-testing.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-30-production-deployment\labs\lab-30.8-deployment-automation.md
-  - Lines: 48
-
-H:\My Drive\Codes & Repos\codes_repos\devops-course\phase3_advanced\module-30-production-deployment\labs\lab-30.9-zero-downtime.md
-  - Lines: 48
+  - Lines: 47
 
