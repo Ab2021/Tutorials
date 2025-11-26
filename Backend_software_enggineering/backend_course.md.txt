@@ -1,0 +1,389 @@
+Week 1 — Backend Fundamentals (Days 1–5)
+
+Day 1 – Course Kickoff & Role of Modern Backend Engineer
+
+Topics: Course overview; 2025 backend landscape; distributed, event-driven, AI-powered backends; responsibilities of a backend + AI engineer.
+
+Hands-on: Set up repo, basic folder structure; install language runtime(s) (Python/Node/Go), Docker, Git.
+
+Day 2 – Languages for Backend in 2025
+
+Topics: Python (FastAPI), Node.js, Go, Java/.NET, Rust; pros/cons; where each shines (microservices, AI, infra).
+
+Hands-on: “Hello world” HTTP endpoints in 2 languages (e.g., Python + Node).
+
+Day 3 – HTTP, REST & Web Basics
+
+Topics: HTTP/1.1 vs HTTP/2 vs HTTP/3; request/response lifecycle; headers; methods; status codes; idempotency.
+
+Hands-on: Build a small REST service with 3–4 endpoints, correct methods & status codes.
+
+Day 4 – RESTful API Principles
+
+Topics: Resources vs actions; URL design; statelessness; JSON as default; error modeling.
+
+Hands-on: Design a small REST resource model (Users, Orders); implement CRUD endpoints.
+
+Day 5 – Database Fundamentals Overview
+
+Topics: Relational vs NoSQL vs cache vs time-series vs vector DBs; ACID; CAP; where each fits.
+
+Hands-on: Spin up Postgres + Redis + a vector DB (e.g., Qdrant) using Docker; connect from a small script.
+
+Week 2 — Databases & Auth Foundations (Days 6–10)
+
+Day 6 – Relational Databases & SQL Basics
+
+Topics: Tables, rows, columns; primary keys; basic SELECT/INSERT/UPDATE/DELETE.
+
+Hands-on: Create schema for users & orders; write basic queries.
+
+Day 7 – Normalization, Indexes & Transactions
+
+Topics: 1NF/2NF/3NF, when to denormalize; indexes (single, composite); transactions & isolation levels.
+
+Hands-on: Normalize a simple schema; add indexes; run EXPLAIN ANALYZE on sample queries.
+
+Day 8 – NoSQL: Document & Key-Value Stores
+
+Topics: MongoDB document modeling; embedding vs referencing; Redis structures (strings, hashes, sets).
+
+Hands-on: Model a “user with settings + history” in Mongo; implement simple cache with Redis.
+
+Day 9 – Intro to Vector Databases
+
+Topics: Embeddings, high-dimensional vectors, similarity search; Pinecone/Weaviate/Qdrant overview.
+
+Hands-on: Generate embeddings for sample text with an API or local model; store/query in vector DB.
+
+Day 10 – Auth & Security Basics
+
+Topics: Auth vs authz; JWT; password hashing (bcrypt/Argon2); HTTPS/TLS basics.
+
+Hands-on: Implement user signup/login, hashed passwords, issue/verify JWTs for API endpoints.
+
+Week 3 — Architecture Patterns: Microservices, Events, Serverless (Days 11–15)
+
+Day 11 – Monolith vs Microservices
+
+Topics: Monolith pros/cons; microservices pros/cons; bounded contexts; data ownership per service.
+
+Hands-on: Identify candidate services from a small domain (e.g., ecommerce).
+
+Day 12 – Microservice Design & Boundaries
+
+Topics: Service contracts; avoiding shared DB; synchronous vs async interactions.
+
+Hands-on: Split existing monolithic API into 2 separate services (Users, Orders).
+
+Day 13 – API Gateway & Backend for Frontend (BFF)
+
+Topics: API gateway responsibilities; request aggregation; BFF for mobile/web/3rd-party APIs.
+
+Hands-on: Add a simple gateway (NGINX/Express/FastAPI) to route to 2 microservices.
+
+Day 14 – Event-Driven Architecture & Message Brokers
+
+Topics: Events vs commands; Kafka/RabbitMQ/EventBridge; pub/sub and loose coupling.
+
+Hands-on: Publish “order_created” events; consume them from a separate service.
+
+Day 15 – Event Sourcing & CQRS (Intro)
+
+Topics: Event store; rebuilding state; CQRS read vs write models; auditing & time-travel debugging.
+
+Hands-on: Simple event-sourced model for a bank account or order history.
+
+Week 4 — Containers, Kubernetes & Cloud Services (Days 16–20)
+
+Day 16 – Docker & Containerization
+
+Topics: Images, containers, layers; Dockerfile, multi-stage builds; security basics.
+
+Hands-on: Containerize User & Order services; run via Docker Compose.
+
+Day 17 – Kubernetes Fundamentals
+
+Topics: Pods, Deployments, ReplicaSets, Services; desired state; self-healing.
+
+Hands-on: Deploy a single service to minikube/kind with Deployment + Service.
+
+Day 18 – K8s Config & Networking
+
+Topics: ConfigMaps, Secrets, Ingress; basic RBAC; readiness/liveness probes.
+
+Hands-on: Add config via ConfigMap & Secret; expose services via Ingress.
+
+Day 19 – Infra as Code with Terraform
+
+Topics: Terraform basics; HCL; providers; state; plan/apply workflow.
+
+Hands-on: Use Terraform to provision a DB + bucket + message queue in a cloud/“localstack”-like setup.
+
+Day 20 – GitOps & Cloud Platform Services
+
+Topics: GitOps (ArgoCD/Flux); managed DBs (RDS, Cloud SQL); object storage (S3/GCS); queues (SQS/Pub/Sub).
+
+Hands-on: Set up a simple GitOps flow: Git commit → ArgoCD sync to K8s.
+
+Week 5 — Advanced API Design: REST, GraphQL, gRPC (Days 21–25)
+
+Day 21 – REST API Best Practices
+
+Topics: Resource model refinement; pagination (cursor vs offset); filtering; consistent error format.
+
+Hands-on: Add cursor pagination + filtering to list endpoints.
+
+Day 22 – API Versioning & Stability
+
+Topics: URL vs header versioning; deprecation strategies; backwards compatibility.
+
+Hands-on: Introduce /v2 for one endpoint while keeping /v1 working.
+
+Day 23 – GraphQL Fundamentals
+
+Topics: Schema design; queries, mutations; resolvers; n+1 problem; batching.
+
+Hands-on: Add a GraphQL gateway in front of existing REST services.
+
+Day 24 – gRPC & Protobuf
+
+Topics: .proto files; codegen; unary & streaming RPCs; gRPC for internal microservice communication.
+
+Hands-on: Implement a gRPC service for “analytics” and call it from an API service.
+
+Day 25 – API Documentation & Developer Experience
+
+Topics: OpenAPI/Swagger; GraphQL schema docs; client codegen; API style guides.
+
+Hands-on: Generate OpenAPI spec & host Swagger UI; write a short API usage guide.
+
+Week 6 — Data, Caching & Scaling (Days 26–30)
+
+Day 26 – Advanced Relational Design & Performance
+
+Topics: Complex joins; composite indexes; covering indexes; partitioning.
+
+Hands-on: Optimize slow queries using EXPLAIN ANALYZE; add indexes/partitioning.
+
+Day 27 – NoSQL Patterns & Trade-offs
+
+Topics: MongoDB patterns; Redis use cases (rate limiting, sessions, leaderboards).
+
+Hands-on: Implement API rate limiting using Redis; store sessions in Redis.
+
+Day 28 – Vector DB Deep Dive & Hybrid Search
+
+Topics: ANN indexes (HNSW); vector vs keyword search; metadata filtering; hybrid ranking.
+
+Hands-on: Build a hybrid search over a small document corpus (embedding + keyword).
+
+Day 29 – Database Scaling Strategies
+
+Topics: Vertical vs horizontal; read replicas; sharding; connection pooling; DB circuit breakers.
+
+Hands-on: Simulate read replica usage in app config; set up connection pooling.
+
+Day 30 – Data Pipelines & Backups
+
+Topics: Backup & restore; schema migrations (Flyway/Alembic); data lifecycle; archiving.
+
+Hands-on: Add migrations; implement backup + restore for a small DB.
+
+Week 7 — Security, AuthZ, Testing & Quality (Days 31–35)
+
+Day 31 – Advanced Auth with OAuth2 & MFA
+
+Topics: OAuth2 flows; delegated access; integrating social login; multi-factor auth.
+
+Hands-on: Implement OAuth2 login with a provider sandbox (or mock).
+
+Day 32 – Application Security & OWASP
+
+Topics: OWASP Top 10 for APIs; input validation; CSRF/XSS/SQLi prevention; secure headers.
+
+Hands-on: Add validation layer; configure security headers; demonstrate & fix a simple injection.
+
+Day 33 – Secrets & Secure Config
+
+Topics: Secret managers (Vault, cloud secrets); key rotation; security logging; audit events.
+
+Hands-on: Move secrets from env vars to a secret manager (or mock) and integrate.
+
+Day 34 – Testing Strategy & Tools
+
+Topics: Unit vs integration vs E2E; mocking; coverage; flaky tests.
+
+Hands-on: Write unit+integration tests for 2 services; enforce test coverage in CI.
+
+Day 35 – Contract & E2E Testing
+
+Topics: Consumer-driven contracts (Pact); automated E2E flows; test environments.
+
+Hands-on: Create a contract test between gateway and a microservice; run an E2E “order lifecycle” test.
+
+Week 8 — Observability, Performance & Resilience (Days 36–40)
+
+Day 36 – Observability Foundations
+
+Topics: Metrics, logs, traces; choosing KPIs (latency, error rates, saturation).
+
+Hands-on: Add structured logging (JSON) with correlation IDs to services.
+
+Day 37 – Distributed Tracing with OpenTelemetry
+
+Topics: Spans, trace IDs, context propagation; visualizing traces (Jaeger/Zipkin).
+
+Hands-on: Instrument 2–3 services with OpenTelemetry and inspect a trace.
+
+Day 38 – Monitoring & Dashboards
+
+Topics: Prometheus scraping; Grafana dashboards; alert rules; SLOs/SLIs/SLAs.
+
+Hands-on: Create dashboards for latency, error rate, throughput; set simple alerts.
+
+Day 39 – Performance Tuning & Caching
+
+Topics: Latency decomposition; HTTP & CDN caching; app-level cache; cache invalidation.
+
+Hands-on: Add HTTP caching headers for static assets; implement application-level cache for an expensive query.
+
+Day 40 – Resilience & Chaos Engineering
+
+Topics: Timeouts, retries, circuit breakers, bulkheads; chaos experiments.
+
+Hands-on: Introduce a circuit breaker around a flaky service; run a chaos test (kill pods, inject latency).
+
+Week 9 — LLM & RAG Integration (Days 41–45)
+
+Day 41 – LLM Landscape & APIs
+
+Topics: GPT-4, Claude, Gemini, Llama/Mistral; trade-offs; context windows; pricing; API usage patterns.
+
+Hands-on: Call 1–2 LLM APIs; build a simple “chat completion” endpoint.
+
+Day 42 – Prompt Engineering
+
+Topics: System/user/assistant roles; zero-/few-shot; chain-of-thought; output formatting (JSON).
+
+Hands-on: Design prompts for summarization, Q&A & structured JSON output.
+
+Day 43 – RAG Fundamentals
+
+Topics: Limitations of raw LLM; RAG pipeline (ingest → chunk → embed → store → retrieve → generate); chunking strategies.
+
+Hands-on: Implement a basic RAG flow over a small doc set using your vector DB.
+
+Day 44 – Advanced RAG: Hybrid Search, HyDE, Reranking
+
+Topics: Hybrid retrieval; HyDE (hypothetical docs); reranking with cross-encoders; contextual compression.
+
+Hands-on: Add query rewriting & reranking stage; implement simple compression to reduce context size.
+
+Day 45 – LLM Observability & Evaluation
+
+Topics: Relevance, faithfulness, citation accuracy; RAGAS/TruLens-like frameworks; latency & token usage metrics.
+
+Hands-on: Build a basic eval harness that scores a batch of Q&A pairs; log tokens and cost per request.
+
+Week 10 — Agentic AI Systems (Days 46–50)
+
+Day 46 – Agents 101 & Architectures
+
+Topics: What is an agent; ReAct vs Plan-Execute vs Reflection; components (LLM, tools, planner, memory).
+
+Hands-on: Build a simple ReAct-style agent that can use a calculator or date tool.
+
+Day 47 – Tools & Function Calling
+
+Topics: Defining tools (schema, parameters); safe tool separation (read vs write); error handling & retries.
+
+Hands-on: Add tools for DB read-only queries and external HTTP API calls; enforce safety checks.
+
+Day 48 – Memory & Long-Term Personalization
+
+Topics: Short-term vs long-term memory; episodic vs semantic; vector-based memory; personalization.
+
+Hands-on: Implement agent memory backed by your vector DB; retrieve past context for new tasks.
+
+Day 49 – Multi-Agent Orchestration
+
+Topics: Specialized agents; supervisor-worker pattern; peer-to-peer agents; communication channels.
+
+Hands-on: Build a system with a supervisor agent + 2 worker agents (researcher, writer), coordinating via a message bus or shared store.
+
+Day 50 – Production Agent Systems: Safety, Observability & Cost
+
+Topics: Logging reasoning + tool calls; guardrails (max iterations, allowed tools); budget limits; model tiering (small vs large models).
+
+Hands-on: Add detailed logs, iteration limits, budget checks and alerts for your agentic subsystem.
+
+Week 11 — Capstone: AI Knowledge Management System (Days 51–55)
+
+Day 51 – Capstone Architecture & Service Decomposition
+
+Topics: Design “KnowledgeCloud”: API Gateway, Auth Service, Document Service, Indexing Service, Search Service, Agent Service, Notification Service.
+
+Hands-on: Draw architecture diagrams; define APIs, events & DB schemas.
+
+Day 52 – Document Service & Storage Pipeline
+
+Topics: Document upload, S3/GCS/MinIO storage; metadata in Postgres; emitting document.uploaded events.
+
+Hands-on: Implement upload endpoint; save file to object storage; publish event to Kafka/RabbitMQ.
+
+Day 53 – Indexing & RAG Search Services
+
+Topics: Text extraction (PDF/Docx), semantic chunking, embeddings, vector DB indexing; hybrid search.
+
+Hands-on: Build an Indexing Service; implement Search Service with RAG + hybrid retrieval + citations.
+
+Day 54 – Agent Service & Tools for KnowledgeCloud
+
+Topics: Tools: document_search, document_summarize, compare_documents, create_report, update_document with human approval; ReAct-style loop.
+
+Hands-on: Implement Agent Service integrated with Search & Document APIs; support long-running tasks via async jobs/notifications.
+
+Day 55 – Testing, Load Testing & Hardening KnowledgeCloud
+
+Topics: Unit, integration, E2E tests; RAG eval on real docs; load testing (Locust/k6); security review.
+
+Hands-on: Write E2E tests for “upload → index → query → agent report”; run load tests; fix bottlenecks.
+
+Week 12 — Deploy, Optimize, Advanced Topics & Career (Days 56–60)
+
+Day 56 – CI/CD & Deployment of Capstone
+
+Topics: CI pipeline (tests, lint, security scan); CD with blue-green/canary; feature flags for risky features.
+
+Hands-on: Wire CI/CD to deploy KnowledgeCloud to K8s (staging then prod); demo a blue-green or canary rollout.
+
+Day 57 – Monitoring KnowledgeCloud in Production
+
+Topics: Production dashboards for latency, errors, token usage, queue lag, indexing backlog; alerts and runbooks.
+
+Hands-on: Build Grafana dashboards; define alert rules; write a simple incident runbook.
+
+Day 58 – Cost Optimization for LLM & Infra
+
+Topics: Model tiering (small vs large model routing); LLM response caching; batching embeddings; cloud cost levers (autoscaling, rightsizing).
+
+Hands-on: Implement semantic cache for LLM responses; route simple queries to a smaller model; compute approximate cost per 1k requests.
+
+Day 59 – Advanced Topics & Future Directions
+
+Topics: WebAssembly for plugins/serverless; edge computing (Cloudflare Workers, Lambda@Edge); blockchain integration & audit trails; advanced event sourcing & CQRS; emerging AI patterns (agentic RAG, multimodal, domain fine-tuning).
+
+Hands-on: Small spike: e.g., deploy a simple function to an edge platform OR run a Wasm module in a backend context.
+
+Day 60 – Wrap-Up, Portfolio & Career Paths
+
+Topics: Recap of all modules; mapping skills to roles (Backend Engineer, Platform, SRE, AI Engineer, Architect); continuing education plan.
+
+Hands-on:
+
+Polish GitHub repos for course projects + capstone.
+
+Write a short architecture case study for KnowledgeCloud.
+
+Make a checklist of next steps (blog posts, OSS contributions, certs).
