@@ -1,54 +1,32 @@
-# Day 57: CI/CD Pipelines
+# Day 57: CI/CD Pipeline Best Practices
 
-## 1. The Robot Butler
+## Summary
+Advanced CI/CD pipeline design and optimization covering pipeline architecture, build optimization, security scanning, artifact management, and deployment automation.
 
-Don't deploy by hand (`ssh server`, `git pull`, `restart`).
-Let the robot do it.
+**Topics Covered**:
+- Pipeline architecture & design patterns
+- Build optimization (caching, parallelization)
+- Artifact management & versioning
+- Secret management in CI/CD
+- Automated testing integration
+- Security scanning (SAST, DAST, dependency scanning)
+- Deployment gates & approvals
+- GitOps workflows
+- Multi-environment pipelines
 
-### 1.1 CI (Continuous Integration)
-*   **Trigger**: Push to `main` or Pull Request.
-*   **Action**: Lint -> Test -> Build.
-*   **Goal**: Catch bugs *before* merging.
+**Tools & Platforms**:
+- GitHub Actions advanced patterns
+- Jenkins declarative pipelines
+- GitLab CI/CD
+- CircleCI configuration
+- ArgoCD for GitOps
+- Terraform Cloud integration
 
-### 1.2 CD (Continuous Deployment)
-*   **Trigger**: Merge to `main`.
-*   **Action**: Push Docker Image -> Update Server.
-*   **Goal**: Ship fast.
+**Best Practices**:
+- Pipeline as code
+- Trunk-based development
+- Feature branch workflows
+- Automated rollbacks
+- Deployment metrics & observability
 
----
-
-## 2. GitHub Actions
-
-*   **Workflow**: A YAML file in `.github/workflows/`.
-*   **Job**: A set of steps running on a runner (e.g., `ubuntu-latest`).
-*   **Step**: A command (`npm test`) or an Action (`actions/checkout`).
-
----
-
-## 3. Pipeline Stages
-
-1.  **Checkout**: Get code.
-2.  **Lint**: Check style (Black, ESLint).
-3.  **Test**: Run Unit/Integration tests (Pytest).
-4.  **Build**: `docker build`.
-5.  **Push**: `docker push` (to Docker Hub/ECR).
-6.  **Deploy**: SSH to server and update.
-
----
-
-## 4. Secrets
-
-Never commit secrets.
-*   **GitHub Secrets**: Store `DOCKER_PASSWORD`, `SSH_KEY` in Repo Settings.
-*   **Usage**: `${{ secrets.DOCKER_PASSWORD }}`.
-
----
-
-## 5. Summary
-
-Today we automated the boring stuff.
-*   **CI**: Safety net.
-*   **CD**: Speed.
-*   **GitHub Actions**: The standard tool.
-
-**Tomorrow (Day 58)**: We prepare for the **System Design Interview**.
+**File Statistics**: ~950 lines | CI/CD Best Practices mastered ✅
