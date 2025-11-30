@@ -1,0 +1,218 @@
+# Day 62: Resource Management & Priority Inversion
+## Phase 1: Core Embedded Engineering Foundations | Week 9: RTOS Fundamentals
+
+---
+
+> **📝 Content Creator Instructions:**
+> This document is designed to produce **comprehensive, industry-grade educational content**. 
+> - **Target Length:** The final filled document should be approximately **1000+ lines** of detailed markdown.
+> - **Depth:** Do not skim over details. Explain *why*, not just *how*.
+> - **Structure:** If a topic is complex, **DIVIDE IT INTO MULTIPLE PARTS** (Part 1, Part 2, etc.).
+> - **Code:** Provide complete, compilable code examples, not just snippets.
+> - **Visuals:** Use Mermaid diagrams for flows, architectures, and state machines.
+
+---
+
+## 🎯 Learning Objectives
+*By the end of this day, the learner will be able to:*
+1.  **Implement** Critical Sections using `taskENTER_CRITICAL` and `vTaskSuspendAll`.
+2.  **Design** a Gatekeeper Task to manage shared resources without Mutexes.
+3.  **Analyze** Stack Usage (`uxTaskGetStackHighWaterMark`) to prevent overflows.
+4.  **Select** the appropriate Heap Management scheme (Heap_1 to Heap_5).
+5.  **Debug** Priority Inversion scenarios.
+
+---
+
+## 📚 Prerequisites & Preparation
+*   **Hardware Required:**
+    *   STM32F4 Discovery Board
+*   **Software Required:**
+    *   VS Code with ARM GCC Toolchain
+    *   FreeRTOS
+*   **Prior Knowledge:**
+    *   Day 60 (Mutexes)
+    *   Day 10 (Memory)
+*   **Datasheets:**
+    *   [FreeRTOS Memory Management](https://www.freertos.org/a00111.html)
+
+---
+
+## 📖 Theoretical Deep Dive
+
+### 🔹 Part 1: Critical Sections
+Sometimes a Mutex is too heavy. You just need to flip a few bits atomically.
+*   **taskENTER_CRITICAL():** Disables Interrupts (up to `configMAX_SYSCALL_INTERRUPT_PRIORITY`).
+    *   **Pros:** Fast. Safe.
+    *   **Cons:** Increases Interrupt Latency. Do not use for long code!
+*   **vTaskSuspendAll():** Suspends the Scheduler. Interrupts still fire, but no Context Switch happens.
+    *   **Pros:** Interrupts remain active.
+    *   **Cons:** High priority tasks are delayed.
+
+### 🔹 Part 2: Gatekeeper Tasks
+Instead of locking a resource (Mutex), give ownership to a single task.
+*   **Scenario:** UART Print.
+*   **Mutex Approach:** Task A takes Mutex, prints, gives Mutex.
+*   **Gatekeeper Approach:** Task A sends string to Queue. Gatekeeper reads Queue, prints.
+*   **Benefit:** No Deadlock risk. No Priority Inversion (if Queue priority handled).
+
+### 🔹 Part 3: Memory Management
+FreeRTOS provides 5 heap implementations (`heap_x.c`).
+*   **Heap_1:** Alloc only. No Free. Deterministic. Good for safety-critical.
+*   **Heap_2:** Alloc/Free. Best fit. Fragmentation risk.
+*   **Heap_3:** Wraps standard C `malloc`/`free`. Thread-safe.
+*   **Heap_4:** Coalesces adjacent free blocks. Reduces fragmentation. (Recommended).
+*   **Heap_5:** Same as 4, but supports non-contiguous RAM regions (e.g., Internal SRAM + External SDRAM).
+
+---
+
+## 💻 Implementation: The Gatekeeper (UART)
+
+> **Instruction:** Create a `vPrintTask` that accepts messages from other tasks and prints them.
+
+### 👨‍💻 Code Implementation
+
+#### Step 1: Queue & Struct
+```c
+typedef struct {
+    char *msg;
+    uint32_t value;
+} PrintMsg_t;
+
+QueueHandle_t hPrintQueue;
+```
+
+#### Step 2: Gatekeeper Task
+```c
+void vTaskGatekeeper(void *p) {
+    PrintMsg_t msg;
+    char buffer[64];
+    
+    while(1) {
+        if (xQueueReceive(hPrintQueue, &msg, portMAX_DELAY)) {
+            sprintf(buffer, "%s: %lu\r\n", msg.msg, msg.value);
+            HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), 100);
+        }
+    }
+}
+```
+
+#### Step 3: Client Tasks
+```c
+void vTaskClient(void *p) {
+    PrintMsg_t msg;
+    msg.msg = "Sensor";
+    
+    while(1) {
+        msg.value = rand() % 100;
+        xQueueSend(hPrintQueue, &msg, portMAX_DELAY);
+        vTaskDelay(1000);
+    }
+}
+```
+
+---
+
+## 💻 Implementation: Stack Analysis
+
+> **Instruction:** Monitor stack usage to optimize RAM.
+
+### 👨‍💻 Code Implementation
+
+```c
+void vTaskMonitor(void *p) {
+    TaskHandle_t hTarget = (TaskHandle_t)p;
+    
+    while(1) {
+        // Returns minimum free stack space (in Words) since task creation
+        UBaseType_t highWaterMark = uxTaskGetStackHighWaterMark(hTarget);
+        
+        printf("Task Min Free Stack: %lu words\n", highWaterMark);
+        
+        vTaskDelay(5000);
+    }
+}
+```
+*   **Interpretation:** If `highWaterMark` is close to 0, you are near overflow. Increase stack! If it's huge, decrease stack to save RAM.
+
+---
+
+## 🔬 Lab Exercise: Lab 62.1 - Critical Section Timing
+
+### 1. Lab Objectives
+- Measure how long interrupts are disabled during a Critical Section.
+
+### 2. Step-by-Step Guide
+
+#### Phase A: Setup
+1.  Toggle a GPIO pin High.
+2.  `taskENTER_CRITICAL()`.
+3.  Delay (Software loop).
+4.  `taskEXIT_CRITICAL()`.
+5.  Toggle GPIO Low.
+
+#### Phase B: Measure
+1.  Connect Logic Analyzer to GPIO.
+2.  Connect another channel to a PWM pin (generated by Timer).
+3.  **Observation:** During the "High" period of the GPIO, the PWM (if software generated) or other Interrupts will pause. Hardware PWM continues, but ISRs are blocked.
+
+### 3. Verification
+Keep Critical Sections < 10µs ideally.
+
+---
+
+## 🧪 Additional / Advanced Labs
+
+### Lab 2: Heap_4 vs Heap_1
+- **Goal:** Observe allocation behavior.
+- **Task:**
+    1.  Use Heap_4. `pvPortMalloc(100)`, `vPortFree`. Repeat. Memory is stable.
+    2.  Use Heap_1. `vPortFree` does nothing. Memory runs out. `pvPortMalloc` returns NULL.
+
+### Lab 3: Priority Inheritance Check
+- **Goal:** Verify Mutex behavior.
+- **Task:**
+    1.  Use `vTaskPriorityGet` inside the Low Priority task *while* it holds the Mutex and a High Priority task is waiting.
+    2.  It should return the High Priority value.
+
+---
+
+## 🐞 Debugging & Troubleshooting
+
+### Common Issues
+
+#### 1. Stack Overflow
+*   **Symptoms:** Random HardFaults, variables changing values mysteriously.
+*   **Detection:** Enable `vApplicationStackOverflowHook`.
+*   **Fix:** Double the stack size. Check for large local arrays (`char buf[1024]`). Move them to static or heap.
+
+#### 2. Interrupts not firing
+*   **Cause:** Stuck inside `taskENTER_CRITICAL` (forgot to exit).
+*   **Cause:** Priority logic error.
+
+---
+
+## ⚡ Optimization & Best Practices
+
+### Code Quality
+- **Static Analysis:** Use tools to estimate stack depth (call graph analysis).
+- **MPU:** Use the Memory Protection Unit (Day 8) to protect task stacks from each other (FreeRTOS-MPU port).
+
+---
+
+## 🧠 Assessment & Review
+
+### Knowledge Check
+1.  **Q:** What happens if I call `taskENTER_CRITICAL` recursively?
+    *   **A:** It nests. You must call `taskEXIT_CRITICAL` the same number of times to re-enable interrupts.
+2.  **Q:** Can I use `malloc` in FreeRTOS?
+    *   **A:** Yes, but `pvPortMalloc` is thread-safe and uses the configured Heap scheme. `malloc` might not be thread-safe depending on the C library (Newlib).
+
+### Challenge Task
+> **Task:** Implement a "Dynamic String Printer". Task A allocates a string (`pvPortMalloc`), writes to it, sends pointer to Gatekeeper. Gatekeeper prints, then `vPortFree`. Verify no memory leaks.
+
+---
+
+## 📚 Further Reading & References
+- [FreeRTOS Heap Memory Management](https://www.freertos.org/a00111.html)
+
+---
