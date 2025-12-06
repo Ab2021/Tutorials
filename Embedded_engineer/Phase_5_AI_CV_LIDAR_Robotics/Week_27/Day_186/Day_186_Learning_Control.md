@@ -232,15 +232,4 @@ Training on 1 CPU core is slow.
 
 ---
 
-## 🔗 External Resources
-### 📜 Open Source Libraries
-- [DLR-RM/stable-baselines3](https://github.com/DLR-RM/stable-baselines3) - PyTorch Reinforcement Learning implementations.
-- [DLR-RM/rl-baselines3-zoo](https://github.com/DLR-RM/rl-baselines3-zoo) - Training framework and zoo of pretrained agents.
-
-### 📺 Video Tutorials
-- [Deep Reinforcement Learning for Walking Robots](https://www.youtube.com/results?search_query=Deep+Reinforcement+Learning+for+Walking+Robots) - MathWorks tutorial using Simscape.
-- [Intro to RL for Robotics](https://www.youtube.com/results?search_query=Introduction+to+Reinforcement+Learning+Robotics) - Theoretical foundations.
-
----
-
 **Day 186 Complete**

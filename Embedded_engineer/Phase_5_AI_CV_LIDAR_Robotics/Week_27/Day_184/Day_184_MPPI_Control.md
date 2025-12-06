@@ -326,15 +326,4 @@ Instead of sampling 30 inputs ($u_0 \dots u_{29}$), sample 3 Control Points for 
 
 ---
 
-## 🔗 External Resources
-### 📜 Open Source Libraries
-- [tud-amr/mppi-isaac](https://github.com/tud-amr/mppi-isaac) - Model Predictive Path Integral (MPPI) control using Isaac Gym.
-- [danielmohansahu/mppi-control-implementation](https://github.com/danielmohansahu/mppi-control-implementation) - Clearpath Jackal MPPI implementation.
-
-### 📺 Video Tutorials
-- [LTC21 Tutorial MPPI](https://www.youtube.com/results?search_query=LTC21+Tutorial+MPPI) - Detailed walkthrough of MPPI core concepts.
-- [AutoRally MPPI](https://www.youtube.com/results?search_query=AutoRally+MPPI) - Aggressive driving on the AutoRally platform using MPPI.
-
----
-
 **Day 184 Complete**

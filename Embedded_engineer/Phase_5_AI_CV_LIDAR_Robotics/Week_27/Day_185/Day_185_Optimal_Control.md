@@ -285,15 +285,4 @@ For nonlinear systems:
 
 ---
 
-## 🔗 External Resources
-### 📜 Open Source Libraries
-- [AtsushiSakai/PythonRobotics](https://github.com/AtsushiSakai/PythonRobotics) - LQR and MPC implementations in Python.
-- [optimal_control_examples](https://github.com/andrespulido8/optimal_control_examples) - Direct Collocation and Single Shooting examples.
-
-### 📺 Video Tutorials
-- [CMU 16-745: Optimal Control](https://www.youtube.com/results?search_query=CMU+16-745+Optimal+Control) - Full lecture series by Prof. Zac Manchester.
-- [Optimal Control Trajectory Optimization](https://www.youtube.com/results?search_query=Optimal+Control+Trajectory+Optimization) - Tutorial by Alphonsus Adu-Bredu.
-
----
-
 **Day 185 Complete**

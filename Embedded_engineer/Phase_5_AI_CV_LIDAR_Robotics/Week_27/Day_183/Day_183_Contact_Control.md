@@ -273,15 +273,4 @@ LCP solvers iterate.
 
 ---
 
-## 🔗 External Resources
-### 📜 Open Source Libraries
-- [ToyotaResearchInstitute/idto](https://github.com/ToyotaResearchInstitute/idto) - Inverse Dynamics Trajectory Optimization for Contact-Implicit Planning.
-- [dojo-sim/ContactImplicitMPC.jl](https://github.com/dojo-sim/ContactImplicitMPC.jl) - Fast contact-implicit MPC implementation in Julia.
-
-### 📺 Video Tutorials
-- [Contact-Implicit MPC (IJRR)](https://www.youtube.com/results?search_query=Contact-Implicit+MPC) - Controlling Diverse Quadruped Motions Without Pre-Planned Contact Modes.
-- [Staged Contact Optimization](https://www.youtube.com/results?search_query=Staged+Contact+Optimization) - Combining Contact-Implicit and Multi-Phase Hybrid Trajectory Optimization.
-
----
-
 **Day 183 Complete**

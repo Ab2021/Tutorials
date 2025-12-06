@@ -273,15 +273,4 @@ if __name__ == "__main__":
 
 ---
 
-## 🔗 External Resources
-### 📜 Open Source Libraries
-- [leggedrobotics/legged_gym](https://github.com/leggedrobotics/legged_gym) - Isaac Gym environments for training legged locomotion.
-- [qiayuanl/legged_control](https://github.com/qiayuanl/legged_control) - OCS2 and ROS 2 Control implementation for Unitree robots.
-
-### 📺 Video Tutorials
-- [Optimization-based Control of Legged Robots](https://www.youtube.com/results?search_query=Optimization-based+Control+of+Legged+Robots) - 2023 Course on multi-body dynamics.
-- [Gait Optimization for Legged Robots](https://www.youtube.com/results?search_query=Gait+Optimization+for+Legged+Robots) - Trajectory generation techniques.
-
----
-
 **Day 188 Complete**

@@ -274,15 +274,4 @@ graph TD
 
 ---
 
-## 🔗 External Resources
-### 📜 Historical Context
-- [Boston Dynamics Spot Launch](https://www.youtube.com/results?search_query=Boston+Dynamics+Spot+Launch) - State of the art in commercial legged robotics.
-- [MIT Mini Cheetah](https://www.youtube.com/results?search_query=MIT+Mini+Cheetah) - Agile dynamic maneuvers.
-
-### 📜 Reference Papers
-- "Dynamic Locomotion in the MIT Cheetah 3 Through Convex Model-Predictive Control" (IROS 2018).
-- "Raibert Hopper Control" (1986) - The foundational work on legged balance.
-
----
-
 **(End of Week 27. Next: Week 28 - Future Technologies)**

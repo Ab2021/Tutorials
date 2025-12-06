@@ -272,15 +272,4 @@ Writing FEM from scratch is hard.
 
 ---
 
-## 🔗 External Resources
-### 📜 Open Source Libraries
-- [jgilin/soft-robot-simulator](https://github.com/jgilin/soft-robot-simulator) - PyBullet based simulation for cable-driven robots.
-- [skriegman/evosoro](https://github.com/skriegman/evosoro) - Evolutionary Soft Robotics Simulator.
-
-### 📺 Video Tutorials
-- [Soft Robotics Control (IEEE)](https://www.youtube.com/results?search_query=Soft+Robotics+Control+IEEE) - Design and Applications overview.
-- [Controlling Soft Robots in Task Space](https://www.youtube.com/results?search_query=Controlling+Soft+Robots+in+Task+Space) - Model-based approaches.
-
----
-
 **Day 187 Complete**
