@@ -1,0 +1,643 @@
+Comprehensive Machine Learning Platform Engineer Course (60 Days)
+
+This intensive program spans approximately 60 days, covering Kubernetes, Ray, GPU infrastructure, observability, and operations. It integrates best practices from Ray’s documentation and industry reports. For example, Ray’s unique scheduling is distributed (bottom-up) with a central Global Control Store (GCS) that must be made fault-tolerant via Redis
+usenix.org
+docs.ray.io
+. Similarly, Kubernetes fundamentals and multi-tenant design ensure a stable foundation. Each day’s topics and hands-on exercises are outlined below.
+
+Week 1: Kubernetes Fundamentals & Orchestration
+Day 1: Kubernetes Architecture & Cluster Setup
+
+Morning: Study the Kubernetes control plane (API server, controller-manager, scheduler) and worker nodes (kubelet, container runtime). Understand the flat network model and how Pods, Nodes, and Services interact.
+
+Afternoon: Lab: Install a local cluster (e.g., with Minikube or Kind). Inspect components with kubectl cluster-info and kubectl get nodes.
+
+Evening: Deploy a simple multi-container app (e.g., frontend + backend). Verify Pod-to-Service connectivity. Use kubectl exec and kubectl logs to debug any issues.
+
+Key Point: Kubernetes provides built-in DNS-based service discovery so that pods can resolve services by name
+kubernetes.io
+.
+
+Day 2: Pod Workloads & Lifecycle
+
+Morning: Learn about Deployments, ReplicaSets, StatefulSets, and DaemonSets. Compare when to use each (stateless vs stateful workloads). Study pod lifecycle events and status phases.
+
+Afternoon: Lab: Create a Deployment with 3 replicas, then perform rolling updates and rollbacks (e.g. change the container image version). Explore kubectl rollout status.
+
+Evening: Dive into Init Containers and Sidecars patterns. Practice injecting environment variables via ConfigMaps/Secrets into Pods.
+
+Troubleshooting: Simulate common errors (e.g. CrashLoopBackOff) and diagnose via kubectl describe pod and logs.
+
+Day 3: Kubernetes Networking
+
+Morning: Cover Services (ClusterIP, NodePort, LoadBalancer) and Ingress. Understand networking fundamentals (CNI plugins) and Service discovery (CoreDNS).
+
+Afternoon: Lab: Deploy multiple services and configure an Ingress (e.g., NGINX) to route traffic to them. Experiment with NetworkPolicies to restrict traffic.
+
+Evening: Simulate pod-to-pod communication issues (e.g. DNS failures). Use kubectl get endpoints and nslookup inside pods to troubleshoot.
+
+Key Point: K8s DNS ensures pods can contact services by DNS names
+kubernetes.io
+. Large clusters may exhaust Pod IPs; recognize “ContainerCreating” due to CNI IP exhaustion as an infra issue.
+
+Day 4: Storage & Configuration
+
+Morning: Explore Volumes, PersistentVolumeClaims (PVCs), StorageClasses, and how data persists across pod restarts. Use cloud storage (e.g. AWS EBS, GCP PVs) or NFS/EFS.
+
+Afternoon: Lab: Deploy a StatefulSet (e.g., a database) with a PVC. Verify data persistence after pod rescheduling.
+
+Evening: Manage ConfigMaps and Secrets. Update a running application by changing a ConfigMap (trigger a rolling restart).
+
+Practice: Review failure modes like stuck PVC binding or volume contention. Check events (kubectl get events) for I/O errors.
+
+Day 5: RBAC & Multi-Tenancy
+
+Morning: Study Kubernetes RBAC: ServiceAccounts, Roles, ClusterRoles, RoleBindings. Understand how to isolate teams using Namespaces, ResourceQuotas, and LimitRanges.
+
+Afternoon: Lab: Create two namespaces (e.g. data-science and dev-ops) with different resource quotas. Set up Roles so only certain users can create RayClusters in a namespace.
+
+Evening: Case Study: Design an RBAC scheme for an ML organization with admin, dev, and read-only roles.
+
+Key Point: Enforce least privilege; e.g. only a cluster-admin can approve GPU assignment. ResourceQuotas can prevent one team from hogging all GPUs.
+
+Day 6: Scheduling & Resource Management
+
+Morning: Deep dive into the Kubernetes scheduler. Learn about node selectors, affinities, taints and tolerations for specialized hardware (e.g. GPU nodes).
+
+Afternoon: Study Resource Requests/Limits and QoS classes. Understand how Pods are placed based on these.
+
+Evening: Lab: Label some nodes as GPU-capable. Use taints (e.g. nvidia.com/gpu:NoSchedule) so only GPU-Pods can land. Deploy a Pod that requests a GPU; watch scheduling decisions.
+
+Practice: Troubleshoot a Pod stuck in Pending due to scheduling conflicts (e.g. unsatisfied nodeAffinity or insufficient resources).
+
+Day 7: Review & Mini-Project
+
+Full Day: Integrate Week 1 concepts.
+
+Build a mini Kubernetes workflow: e.g., deploy a training job that writes to shared storage, an inference service behind an Ingress, and set up monitoring basics (metrics-server or Prometheus Operator).
+
+Document all Kubernetes commands used and common troubleshooting steps (runbook style).
+
+Evening: Self-assessment on core K8s knowledge and troubleshooting scenarios.
+
+Week 2: Ray Core Concepts & KubeRay Integration
+Day 8: Ray Architecture & GCS
+
+Morning: Study Ray’s internal architecture. Ray’s scheduler is distributed and bottom-up with a centralized metadata store (GCS)
+usenix.org
+. Understand that the GCS holds actor locations, object directory, and resource state.
+
+Afternoon: Learn about Ray Head and Worker processes. Lab: Start a local Ray cluster (ray start --head, then ray start --address) and inspect the Ray Dashboard. Observe resource allocations.
+
+Evening: Key Concept: If the GCS is not backed by external storage, a head-node crash loses cluster state. KubeRay uses Redis for high availability (GCS fault tolerance) so state can recover
+docs.ray.io
+.
+
+Day 9: Ray Tasks, Actors & Ownership
+
+Morning: Differentiate Ray Tasks (stateless functions) vs Actors (stateful class instances)
+docs.anyscale.com
+. Learn their lifecycles: tasks start and finish, actors persist in memory.
+
+Afternoon: Lab: Write a simple Ray program with several @ray.remote functions (tasks) and an @ray.remote actor that maintains internal state. Run locally, observe behavior when tasks and actors complete.
+
+Evening: Troubleshoot: Simulate “GPU deadlock”: spawn N actors each holding 1 GPU. Even if idle, they block GPUs. Contrast with tasks which release resources when done.
+
+Key Point: A “Zombie Actor” can linger if the creator fails. Use ray list actors --detail to find and terminate orphan actors. Properly call ray.kill(actor) to clean up.
+
+Day 10: Ray Object Store & Memory Management
+
+Morning: Understand Ray’s object store (Plasma). It lives in shared memory (/dev/shm) by default (30% of RAM)
+docs.ray.io
+. Large objects (e.g., tensors) are placed here for zero-copy access.
+
+Afternoon: Lab: Configure a tiny object store (--object-store-memory=100MB) and run a script that ray.put() a large NumPy array. Watch the dashboard spill metric grow
+docs.ray.io
+.
+
+Evening: Learn garbage collection nuances. Unused ObjectRefs must be deleted to free memory. If a container’s heap + object store exceeds its Kubernetes memory limit, the Linux OOM killer will kill the process. Tune object_store_memory and K8s limits accordingly.
+
+Day 11: Ray Serialization & Networking
+
+Morning: Explore serialization: Ray uses Pickle (enhanced with cloudpickle) to send tasks across processes
+docs.ray.io
+. Not all Python objects can be sent.
+
+Exercise: Attempt to pass a live DB connection or thread lock into a remote task – it will fail. Instead, initialize such resources inside the remote function or Actor constructor to avoid pickling errors.
+
+Afternoon: Study Ray’s network requirements. Each Ray worker binds random TCP ports (default range 10002–19999
+docs.ray.io
+) for object transfer. The head node’s GCS listens on port 6379 by default
+docs.ray.io
+.
+
+Evening: Practice: Simulate a firewall issue: start a Ray head on one host and worker on another with blocked ports. Observe “Worker failed to join cluster.” Use nc or telnet to verify connectivity on GCS and worker ports.
+
+Day 12: Lab – Local Ray Cluster Configuration
+
+Morning: Lab: Bring up a two-node Ray cluster on your machine (or VMs). On node A: ray start --head --port=6379 --include-dashboard. On node B: ray start --address=nodeA:6379. Confirm both appear in ray status.
+
+Afternoon: Stress Test: Start a head with limited CPUs (--num-cpus=2). Submit a task requiring 4 CPUs (e.g. @ray.remote(num_cpus=4)). Use ray status to see it stuck in PENDING. This mimics a “pending pod” in K8s.
+
+Evening: Spilling Demo: As in Day 10, force object spilling. Measure the slowdown of a simulated training job under constant spilling. Document “Spilled Bytes” metrics.
+
+Debrief: Review how these behaviors (pending tasks, memory spills) map to K8s issues (Pods Pending, node OOM).
+
+Day 13: KubeRay CRDs & Operator Pattern
+
+Morning: Learn Kubernetes Operators. KubeRay is a custom operator for Ray. It introduces CRDs: RayCluster, RayJob, RayService
+docs.ray.io
+. The operator watches these CRs and maintains Pods/Services accordingly.
+
+Afternoon: Lab: Deploy the KubeRay operator via Helm. Create a basic RayCluster CR (with 1 head, 1 worker). Verify KubeRay creates the corresponding Pods and Service (e.g. raycluster-head-svc).
+
+Evening: Explore CRDs:
+
+RayCluster: Manages a long-lived cluster. Good for interactive use.
+
+RayJob: Defines a one-off job; operator creates a cluster, runs a command, then deletes the cluster
+docs.ray.io
+. Ideal for batch training.
+
+RayService: Tailored to Ray Serve (inference), bundling a RayCluster with Serve DAG and enabling zero-downtime updates
+docs.ray.io
+.
+
+Key Point: Use RayService for production model serving (HA with rolling upgrades); use RayJob for batch jobs to save cost; use RayCluster for persistent clusters (e.g. Jupyter sessions).
+
+Day 14: RayCluster Specification & Heterogeneous Pools
+
+Morning: Inspect the RayCluster YAML schema. Notice headGroupSpec and workerGroupSpecs.
+
+Afternoon: Lab: Configure a RayCluster with:
+
+A powerful head node (e.g. 2 CPUs, 4Gi RAM, no GPU) for control processes.
+
+Two worker groups: one CPU-only (for data prep), one GPU nodes (e.g. nvidia.com/gpu: 1).
+
+Enable autoscaling (enableInTreeAutoscaling: true) with min/max replicas.
+
+Evening: Scale Test: Submit tasks requiring GPUs (@ray.remote(num_gpus=1)). Observe KubeRay’s autoscaler: it will update the RayCluster CR to increase replicas. Pending pods will trigger the Kubernetes Cluster Autoscaler to provision new nodes.
+
+Check: Ensure GPU requests align with node capacity (e.g., don’t request 2 GPUs on a 1-GPU node). Confirm the autoscaler scales out as needed.
+
+Day 15: Kubernetes Networking for Ray
+
+Morning: Ensure a “flat” network: every Pod must reach the head and each other. Verify that the head has a stable DNS name (e.g. mycluster-head-svc).
+
+Afternoon: Troubleshoot: Simulate a CoreDNS issue: e.g. disable DNS in a worker pod and try to ray.init(address="mycluster-head-svc:6379"). Observe the failure. Fix by ensuring DNS (kube-dns/CoreDNS) is running well.
+
+Evening: In cloud clusters, watch out for subnet exhaustion (each Pod needs an IP). If workers remain ContainerCreating due to “No more IPs”, treat this as infra failure.
+
+Security Note: The Ray Dashboard listens on port 8265 by default. Do not expose it publicly without auth. Industry warning: Ray’s dashboard is unauthenticated, making exposed clusters vulnerable
+thehackernews.com
+. Best practice is to use SSH/kubectl port-forward or put it behind an authenticated proxy
+thehackernews.com
+.
+
+Day 16: Persistent Storage & Checkpointing
+
+Morning: Understand that Kubernetes Pods are ephemeral. Use PVCs for persistence. For example, attach a PVC to Redis in the head pod so GCS state (via Redis) is stored on disk
+docs.ray.io
+.
+
+Afternoon: Lab: Configure GCS fault tolerance: mount a PVC to Redis (e.g. 8Gi) so if the head pod restarts, it recovers cluster metadata
+docs.ray.io
+. Verify by deleting the head pod and watching Ray recover.
+
+Evening: Model Checkpoints: Ensure training jobs write checkpoints externally. Options: mount an NFS/EFS shared volume, or use object storage (S3/GCS). Ray Train requires a shared storage (e.g. S3 bucket) so all workers can write checkpoints
+docs.ray.io
+.
+
+Best Practice: Do NOT write checkpoints to the container’s local disk, as that is lost on pod failure. Use storage_path="s3://..." in Ray Train or mount a cluster file system.
+
+Day 17: Autoscaling and the Double-Scheduler Challenge
+
+Morning: Dive into autoscaling. The Ray autoscaler (in the controller) sees resource demand and bumps replicas in the RayCluster CR. Kubernetes Cluster Autoscaler then adds nodes for pending pods.
+
+Afternoon: Troubleshoot: Common pitfalls:
+
+enableInTreeAutoscaling must be true.
+
+Task resource requests must match node resource types (if you request 2 GPUs but nodes have max 1, auto-scale won’t solve it).
+
+Check for Namespace ResourceQuotas blocking new pods.
+
+Evening: Case: Submit a job requiring more GPUs than available. See how RayCluster CR scales, then nodes spin up. If it doesn’t scale, examine the RayCluster CR’s status and pod events (kubectl get events).
+
+Day 18: RayJob & RayService in Practice
+
+Morning: Use RayJob for a batch ML task. Provide a Python script to RayJob.spec.entrypoint. The operator will create a transient RayCluster, run the job, then tear down.
+
+Afternoon: Use RayService for serving. Define a serveConfigV2 with deployments and autoscaling policies. Deploy a RayService and send sample inference requests.
+
+Evening: Simulate an update: change the model code/URI in RayService. Observe the operator launching new replicas (green), waiting for them to be healthy, then routing traffic (blue-green rollout)
+docs.ray.io
+.
+
+Debug: If a RayJob shows “Succeeded” but no output, check head pod logs. Often errors are hidden in driver logs or exceptions swallowed.
+
+Week 3: NVIDIA GPUs & Distributed Training
+Day 19: GPU Fundamentals & Device Plugin
+
+Morning: Learn NVIDIA GPU basics (CUDA cores, memory). In Kubernetes, GPUs are exposed via the NVIDIA Device Plugin. It runs as a DaemonSet and advertises nvidia.com/gpu resources to the Kubelet.
+
+Afternoon: Lab: Deploy the NVIDIA device plugin DaemonSet. Label nodes with GPUs and ensure kubectl describe node shows nvidia.com/gpu: 4 (or however many).
+
+Evening: Create a Pod requesting limits: nvidia.com/gpu=1. Inside, check echo $NVIDIA_VISIBLE_DEVICES – the plugin will set this env var so the container sees only the allocated GPU
+github.com
+.
+
+Key Point: GPUs are not overcommitted. In K8s, you must specify GPU in both requests and limits equally. A Pod needing 1 GPU must have requests.gpu: 1.
+
+Day 20: Multi-Instance GPUs (MIG)
+
+Morning: Study MIG (on Ampere/H100 cards). MIG partitions a GPU into multiple isolated instances. In K8s, the plugin can expose MIG device slices as resources like nvidia.com/mig-1g.5gb.
+
+Afternoon: Lab: Enable MIG on an A100 GPU. Configure the plugin with --mig-strategy=mixed. Check kubectl describe node to see MIG resources (e.g. mig-1g.5gb).
+
+Evening: Deploy two Pods requesting a small MIG slice each. Observe they run concurrently on the same GPU.
+
+Trade-off: MIG provides hardware isolation and is great for inference microservices. However, it disables NVLink between slices, so it’s less ideal for large-scale distributed training.
+
+Day 21: GPU Scheduling Strategies
+
+Morning: Gang scheduling: distributed training (e.g. PyTorch DDP) requires many GPUs together. Ray solves “all-or-nothing” with Placement Groups.
+
+Afternoon: Exercise: Create a Placement Group with strategy STRICT_PACK. Submit Ray tasks/actors that use this PG. Ray will wait until all requested GPUs are available before starting
+docs.ray.io
+.
+
+Evening: Locality: Try PACK vs SPREAD placement strategies. Observe how tasks get placed. Understand that PACK maximizes locality (on same node), while SPREAD balances across nodes.
+
+Key Point: Placement groups enable gang scheduling for training jobs, ensuring the job only runs when its full resource bundle is reserved
+docs.ray.io
+.
+
+Day 22: NCCL, InfiniBand, and Network Optimization
+
+Morning: Review NCCL (Nvidia’s Collective Communications Library). It auto-detects network interfaces (preferring NVLink for intra-node, InfiniBand/EFA for inter-node).
+
+Afternoon: Lab: Run a distributed all-reduce job (e.g. Ray Train with 2 nodes, 2 GPUs each). Export NCCL_DEBUG=INFO and check logs to see if it’s using TCP or IB.
+
+Evening: If only TCP is seen, ensure that InfiniBand/EFA drivers are installed and enabled. Check shared memory size (/dev/shm) because NCCL uses it for intra-node comms.
+
+Troubleshoot: A common ticket is “training 10x slower” – likely running over TCP. Ensure high-speed fabrics and that security groups/firewalls allow the chosen transports.
+
+Day 23: GPU Driver & Hardware Debugging
+
+Morning: Practice using nvidia-smi to monitor GPU health and processes. Check driver compatibility (CUDA vs driver).
+
+Afternoon: Investigate real GPU errors: look in dmesg for Xid codes. For example, Xid 48 is a double-bit ECC error, meaning hardware memory failure
+docs.nvidia.com
+.
+
+Evening: Case: Xid 79 (“GPU has fallen off the bus”) means the GPU lost PCIe connection
+docs.nvidia.com
+. Response: cordon and drain the node. Replace or reset the GPU.
+
+Procedure: On detecting Xid errors, use Prometheus/DCGM alerts. If a node has any Xid error, automatically cordon it via a script or integration (e.g. NVIDIA DCGM integration) to avoid further jobs landing there.
+
+Day 24: GPU Resource Quotas & Fair Share
+
+Morning: Implement fair sharing of GPUs using Kubernetes ResourceQuotas per namespace. Enforce limits so one team’s Ray cluster doesn’t steal all GPUs.
+
+Afternoon: Use Kubernetes PriorityClasses for critical jobs. For example, assign high priority to short-lived inference serving pods to avoid preemption.
+
+Evening: Simulation: Have two Ray training jobs compete for GPUs. Experiment with setting min_replicas > 0 in RayService to always reserve some GPUs for serving (prevent cold starts).
+
+Key Point: A well-architected cluster uses quotas and priorities to ensure fair, predictable GPU allocation across tenants.
+
+Day 25: GPU Monitoring & Health Checks
+
+Morning: Deploy the NVIDIA DCGM exporter (as a DaemonSet) to expose GPU metrics to Prometheus. Metrics include temperature, utilization, and ECC errors
+github.com
+.
+
+Afternoon: Lab: Set up Prometheus to scrape DCGM exporter (ServiceMonitor). Import NVIDIA’s Grafana dashboards (available in the exporter repo) for GPU utilization and temperature.
+
+Evening: Alerting: Configure alerts on critical metrics: e.g., GPU temp > 80°C, or ECC error count > 0. This proactive alerting lets you drain a node before it fails. For example, DCGM exposes DCGM_FI_DEV_GPU_TEMP and DCGM_FI_DEV_ECC_DBE_VOL_TOTAL.
+
+Week 4: Ray Serve and Production Inference
+Day 26: Ray Serve Architecture
+
+Morning: Study Ray Serve’s components. There are three actor types: a global Controller that manages serve state, an HTTP Proxy actor (by default on the head node) that receives requests, and Replica actors running the model
+docs.ray.io
+.
+
+Afternoon: Lab: Deploy a RayService with one simple model (e.g. a fast API). Send test HTTP requests. Use serve.status() to inspect the Controller.
+
+Evening: Learn about proxy placement. By default, one proxy on head can become a bottleneck. In high-load scenarios, configure proxy_location: EveryNode so each worker also runs a proxy, allowing the external load balancer to distribute traffic.
+
+Day 27: Inference Graphs and Model Composition
+
+Morning: Ray Serve supports DAG pipelines. A deployment graph can chain multiple models (e.g., preprocessing → model → postprocessing).
+
+Afternoon: Exercise: Create a multi-stage Serve deployment: e.g. A → B → C. Push data through it and monitor latency at each stage. In the dashboard, each stage shows a queue length.
+
+Evening: Bottleneck Analysis: If stage B is slow, A will build up requests. Ray Serve’s autoscaler targets requests-per-replica (target_num_ongoing_requests_per_replica) to scale downstream deployments.
+
+Best Practice: Decouple workloads: do not pack preprocessing and inference into one replica if their scaling needs differ. Use separate deployments so each can scale to its own load.
+
+Day 28: Zero-Downtime Updates with RayService
+
+Morning: Deep dive RayService updates. On config change (e.g. new model version), the operator creates a new “green” RayCluster and Serve replicas while keeping the “blue” (old) running
+docs.ray.io
+.
+
+Afternoon: Lab: Simulate updating a model: change the code in the RayService YAML and apply. Watch in kubectl how new pods spin up, then traffic shifts.
+
+Evening: Debug Stuck Updates: If new replicas fail to start (misconfiguration, missing libraries), the status remains UPDATING. Inspect Controller logs. Remember that rollout doubles resource usage (old+new). Plan capacity accordingly.
+
+Day 29: Scaling Ray Serve & Latency Tuning
+
+Morning: Configure the Ray Serve autoscaler. Understand that it uses metrics like concurrent requests to scale out/in.
+
+Afternoon: Exercise: Simulate a traffic burst. Observe cold starts when new replicas launch (Docker pull, model loading). Tune autoscaling config: set min_replicas > 0 to keep warm instances, and increase downscale_delay_s to avoid rapid scale-down between bursts.
+
+Evening: Find the golden signal for serving: queue length is the best indicator of saturation. An alert on high queue length (>100) is more actionable than one on CPU. Low latency SLA requires lower target_num_ongoing_requests_per_replica.
+
+Day 30: High Availability & Failure Domains
+
+Morning: Design for resilience. Ray Serve automatically restarts crashed replicas (due to code bug). If a node fails, Kubernetes relocates pods.
+
+Afternoon: Multi-Zone Deployment: Apply topologySpreadConstraints so Serve replicas are spread across zones. For example:
+
+topologySpreadConstraints:
+- maxSkew: 1
+  topologyKey: topology.kubernetes.io/zone
+  whenUnsatisfiable: DoNotSchedule
+  labelSelector:
+    matchLabels:
+      app.kubernetes.io/name: ray-worker
+
+
+This ensures an AZ outage still leaves some replicas alive.
+
+Evening: Chaos Test: Kill one zone (cordon and drain all nodes in a zone). Verify that the Ray Serve endpoint continues serving (traffic flows to surviving replicas).
+
+Week 5: Observability, Logging & Incident Management
+Day 31: Prometheus & Metrics Collection
+
+Morning: Deploy Prometheus (e.g. via Prometheus Operator) to scrape Kubernetes and Ray. Ray’s built-in metrics exporter listens on port 8080 by default, so configure a Service/ServiceMonitor to scrape it.
+
+Afternoon: Lab: Import the official Ray Grafana dashboards (JSON) which display cluster resources, queue lengths, object store usage, and GPU metrics. Create a dashboard panel for Ray objects spilling to disk (should be zero ideally).
+
+Evening: Practice: Write PromQL queries for key ML platform signals: e.g. per-replica request rate, pod CPU usage, GPU utilization.
+
+Day 32: Golden Signals & Alerting
+
+Morning: Define Golden Signals for ML platforms (latency, error rate, throughput, saturation). Use Serve-specific metrics where possible.
+
+Afternoon: Exercise: Configure Alertmanager (or PagerDuty) for alerts like: high serve_deployment_processing_latency_ms (P99 > 500ms), sudden drop or spike in serve_deployment_request_counter, or sustained high serve_replica_queue_len.
+
+Evening: Tuning: Ensure alerts focus on symptoms (e.g. high latency, high queue) rather than causes (e.g. CPU%). This reduces noise – high CPU is fine if latency is low. Document alert playbooks.
+
+Day 33: Centralized Logging
+
+Morning: Ray logs (raylet.out, worker.out, driver.out) live under /tmp/ray/session_latest/logs on each pod. Manually gathering logs from 100+ nodes is impractical.
+
+Afternoon: Lab: Deploy a log-collector (e.g. Fluentd/Fluentbit DaemonSet). For Ray, use a sidecar that tails /tmp/ray/session_latest/logs
+github.com
+, forwarding to a central store (Elasticsearch, Grafana Loki, Splunk, etc.).
+
+Evening: Practice: Query logs by trace ID or job ID. E.g. driver.out has Python exceptions, raylet.out has resource errors. Build a structured logging schema (metadata: cluster, pod, job).
+
+Day 34: Distributed Tracing (OpenTelemetry)
+
+Morning: Learn OpenTelemetry (OTEL) concepts: spans, traces, context propagation. Instrument a Ray-based Python service with OTEL to trace RPC calls (or simulate via logging if short on time).
+
+Afternoon: Lab: Add OTEL to a Ray Serve deployment (or any microservice). Visualize a trace in Jaeger or Grafana Tempo. Use it to diagnose high latency in a multi-step request (e.g. our DAG pipeline).
+
+Evening: Link traces to dashboards and logs. For example, a Serve request ID in logs can tie to an OTEL trace.
+
+Day 35: PagerDuty & Incident Workflows
+
+Morning: Set up an alerting rule in Prometheus to trigger PagerDuty (or OpsGenie). Define escalation policies (e.g. page on-call if no ACK in 10 minutes).
+
+Afternoon: Study on-call best practices: chat-ops, runbooks, severity levels.
+
+Evening: Drill: Simulate a page: e.g. spike in latency triggers alert. Practice responding: escalate internally if needed, or resolve by scaling or restarting service. Document triage steps for common incidents.
+
+Week 6: ML Frameworks & Cloud Infrastructure
+Day 36: PyTorch Fundamentals & Distributed Training
+
+Morning: Brush up on PyTorch: tensors, autograd, nn.Module. Learn DistributedDataParallel (DDP) basics.
+
+Afternoon: Lab: Write a simple DDP training script (on 2 GPUs). Run on a single machine to verify training. Then, integrate with Ray Train to run the same script across multiple pods.
+
+Evening: Troubleshoot: Encounter “hung workers” if not all tensors on GPU or if backend mismatch. Confirm all GPUs are visible (torch.cuda.is_available()). Use NCCL for multi-node all-reduce.
+
+Day 37: TensorFlow at Scale
+
+Morning: Review TensorFlow/Keras: tf.data, model definition. Learn tf.distribute.MultiWorkerMirroredStrategy.
+
+Afternoon: Lab: Convert an existing Keras model to distributed training. Use Ray Train’s TensorFlow trainer or native TF strategy across 2 Pods.
+
+Evening: Compare PyTorch vs TF distributed logs: e.g., worker 0 vs worker N in logs. Ensure data sharding is correct. Identify common TF issues (e.g., having a chief worker, multiple workers).
+
+Day 38: Inference Optimization & Model Serving Patterns
+
+Morning: Learn model optimization: quantization, using ONNX or TensorRT for faster inference.
+
+Afternoon: Lab: Take a pre-trained model, export it to ONNX, and serve via Ray Serve. Optionally try TensorRT engine (e.g., use NVIDIA Triton).
+
+Evening: Practice: Benchmark inference latency/throughput differences. Implement request batching in Ray Serve and measure improvement. Document how batching affects tail-latency.
+
+Day 39: AWS for ML Workloads
+
+Morning: AWS fundamentals: EKS for Kubernetes, EC2 GPU instances (p-series, g-series), storage (EBS, EFS, S3), IAM.
+
+Afternoon: Lab: Provision an EKS cluster with GPU nodes. Deploy KubeRay on it. Configure an IAM Role for Service Accounts (IRSA) that allows Pods to access S3.
+
+Evening: Cost Optimization: Choose right GPU instance type for workload. Use spot instances for training clusters to save costs (but ensure checkpointing). Document trade-offs.
+
+Day 40: GCP for ML Workloads
+
+Morning: GCP fundamentals: GKE (Kubernetes), Compute Engine GPUs, Google Cloud Storage, Filestore, service accounts.
+
+Afternoon: Lab: Deploy a Ray cluster on GKE with GPUs. Use Workload Identity for access to GCS. Mount a Filestore (NFS) for shared storage.
+
+Evening: Comparison: Note differences between AWS and GCP: e.g. GPU quotas, network performance. Use GCP’s monitoring (Stackdriver) alongside Prometheus if desired.
+
+Day 41: Azure & Hybrid/Multi-Cloud
+
+Morning: Azure fundamentals: AKS, VM-based GPU (NC, ND series), Azure Blob Storage/Files, AAD identities.
+
+Afternoon: Lab: Design a hybrid architecture: e.g., on-prem (local K8s with GPUs) plus AKS. Use a multi-cluster Kubernetes federation or replicated data pipelines.
+
+Evening: Multi-Cloud Trade-offs: Discuss data egress costs, consistency of tooling (e.g., use Terraform for all clouds), and strategies (e.g., MinIO on-prem vs cloud S3).
+
+Day 42: CI/CD & Infrastructure as Code
+
+Full Day: Build an ML platform CI/CD pipeline.
+
+Write IaC (Terraform or Pulumi) to create a K8s cluster and VPC.
+
+Manage Ray and application manifests via Helm or Kustomize in Git.
+
+Set up a GitOps flow (e.g., ArgoCD) so changes to model serving configs automatically deploy to prod.
+
+Include automated testing: e.g., smoke tests of the model API after deploy.
+
+Evening: Document deployment runbooks and rollback procedures (e.g. Helm rollback or shadow pilot deployments).
+
+Week 7: Advanced Troubleshooting & Platform Reliability
+Day 43: Kubernetes Troubleshooting Deep Dive
+
+Morning: Common K8s issues: ImagePullBackOff, CrashLoopBackOff, Evicted pods. Study real kubectl describe pod outputs.
+
+Afternoon: Lab: Inject faults: e.g., delete a container image from registry, fill disk on a node, simulate network partition (taint a master). Troubleshoot each scenario with logs and events.
+
+Evening: Learn tools: kubectl cluster-info dump, k9s UI. Practice isolating problems to node vs control-plane vs application.
+
+Day 44: Ray & Distributed System Debugging
+
+Morning: Ray-specific failures: head node not starting (inspect head pod logs for GCS or OOM errors), worker pods repeatedly restarting.
+
+Afternoon: Lab: Run a Ray job that deadlocks (e.g. circular actor dependencies). Use ray status and the dashboard’s Timeline to find where tasks are stuck.
+
+Evening: Practice using ray memory --stats-only to see object store usage, and ray timeline to profile. Identify and fix a memory leak or a task serialization bug.
+
+Day 45: Network Troubleshooting
+
+Morning: Investigate CNI (Weave, Calico, etc.). Practice kubectl exec and tools like tcpdump inside pods to trace packets.
+
+Afternoon: Lab: Break DNS by pointing /etc/resolv.conf to a wrong nameserver. Break Service connectivity by creating a faulty Service. Use dig and nc to pinpoint.
+
+Evening: Study Service Mesh (e.g. Istio) for advanced traffic management. Understand how sidecars (Envoy) affect debugging (they inject delays/telemetry).
+
+Day 46: Storage & Performance Issues
+
+Morning: Diagnose PVC issues: pending claims (no PV), stuck finalizers. Solve I/O bottlenecks: use fio to benchmark a PVC.
+
+Afternoon: Lab: Profile data pipelines: use perf or py-spy on your data loading code to find slowdowns.
+
+Evening: Optimize I/O: use noatime, fast storage classes, or data caching (Memcached or Redis for repeated reads). Document solutions for common data throughput problems.
+
+Day 47: Root Cause Analysis & Postmortems
+
+Morning: Learn RCA methodology (5 Whys, fishbone). Study an ML platform outage postmortem (blameless).
+
+Afternoon: Exercise: Given a hypothetical failure scenario (e.g. users report 500 errors in inference API), map out an RCA. Identify primary/secondary causes, timeline of events, and resolution steps.
+
+Evening: Draft a postmortem report template. Emphasize learning and prevention (e.g. automate detection next time).
+
+Day 48: Automation & Scripting
+
+Morning: Use Python Kubernetes client and Ray SDK for automation tasks.
+
+Afternoon: Lab: Write a “bad node detector”: a script that lists K8s nodes, checks node metrics (via DCGM or ray state API) for GPU errors, then kubectl cordon/drain affected nodes and kills Ray workers on them.
+
+Evening: Build other utilities: e.g., a scheduled job that backs up Ray cluster state (Redis RDB) or auto-scales a cluster based on time of day.
+
+Day 49: SRE Practices for ML Platforms
+
+Morning: Define SLIs/SLOs for ML services (e.g. “99% of inference requests <100ms”). Learn about error budgets.
+
+Afternoon: Chaos Engineering: Introduce faults randomly (node reboots, network delays) to test resilience of Ray clusters. Ensure SLIs hold or incident is expected.
+
+Evening: Document toil reduction: identify repetitive tasks (e.g. node recovery) and automate them (runbooks, scripts).
+
+Week 8: Soft Skills, Collaboration & Security
+Day 50: Customer Support Best Practices
+
+Morning: Role-play L1 ticket triage. Learn how to clarify requirements and set expectations with data scientists. Practice empathetic communication (e.g. reframe “My code is slow” to a specific tech cause).
+
+Afternoon: Develop a process for logging and prioritizing support tickets (severity, impact).
+
+Evening: Scenario: Handle a “prideful data scientist” who resists containerizing code. Work through their concerns, guiding them to solutions without being dismissive.
+
+Day 51: Knowledge Base & Documentation
+
+Morning: Structure an internal KB: sections for Ray troubleshooting, Kubernetes ops, GPU issues. Use decision trees for common problems.
+
+Afternoon: Lab: Write a runbook entry for “Ray head pod CrashLoopBackOff”. Include checks (memory limits, Redis config), commands to inspect logs, and mitigations.
+
+Evening: Audit existing docs: check for staleness (e.g. old Ray versions) and update. Practice writing clear step-by-step guides.
+
+Day 52: Cross-Functional Collaboration
+
+Morning: Learn to translate technical issues for non-technical stakeholders (e.g., product managers). Role-play explaining an outage in plain language.
+
+Afternoon: Exercise: Given a vague problem statement from a researcher (“I think Kubernetes is broken”), practice asking clarifying questions to get to the root issue.
+
+Evening: Cultivate teamwork skills: how to hand off issues to SRE or escalate to L2. Emphasize transparent, courteous communication.
+
+Day 53: Capacity Planning & Resource Allocation
+
+Morning: Forecast GPU/node needs based on historical usage (use Prometheus metrics to project growth).
+
+Afternoon: Lab: Build a spreadsheet/model for capacity planning (e.g. Number of GPUs per team vs ML project pipeline schedules).
+
+Evening: Design fair scheduling: assign priorities or quotas per team, enforce ResourceQuotas. Plan for seasonal spikes (e.g. product launches or research deadlines).
+
+Day 54: Security & Compliance
+
+Morning: Kubernetes security best practices (PodSecurityPolicies, PSAs, network policies, image scanning).
+
+Afternoon: Lab: Harden the cluster: run a security scan (e.g. kube-bench, Clair). Implement a PodSecurityPolicy (or Open Policy Agent) to forbid privileged containers.
+
+Evening: Secrets management: use Kubernetes Secrets or Hashicorp Vault for sensitive keys. Use imagePullSecrets and scan images for CVEs.
+
+Check: Document a checklist for ML platforms (e.g. ensure Ray dashboard isn’t exposed, up-to-date patches on nodes).
+
+Day 55: On-Call Readiness
+
+Morning: On-call best practices: how to handle pages, manage alert fatigue, and burnout prevention.
+
+Afternoon: Drill: Simulate a night-time page. Have the engineer triage an urgent alert (e.g. “GPU node down”). Time yourself.
+
+Evening: Review communication protocols for shift hand-offs and escalation. Prepare a personal incident checklist (contacts, keyboard shortcuts, etc.).
+
+Day 56: Integrated Platform Scenario
+
+Full Day: Tie it all together with a complex, realistic scenario:
+
+A large distributed training job fails intermittently with “CUDA error”.
+
+Users report the Ray cluster seems unresponsive.
+
+The RayService inference API is slow and occasionally times out.
+Task: Triage the issues: check GPU health, logs, autoscaler status, node metrics. Identify root causes (e.g. driver bug, resource saturation).
+
+Evening: Write a post-incident report with action items (e.g. “Update CUDA driver”, “Add node auto-restart”). This consolidates learning from previous weeks.
+
+Week 9: Interview Prep & Capstone (Optional)
+Day 57: System Design Interviews
+
+Morning: Review system design frameworks. Practice designing an ML platform architecture on a whiteboard: include Kubernetes, Ray, storage, and monitoring.
+
+Afternoon: Exercise: Sketch a multi-tenant Ray inference platform for 50 data scientists. Detail network, storage, and security.
+
+Evening: Get feedback from peers or mentors on your designs and trade-offs.
+
+Day 58: Behavioral Interview Prep
+
+Morning: Prepare STAR stories (Situation-Task-Action-Result) for common behavioral questions: handling outages, prioritizing tasks, conflict resolution.
+
+Afternoon: Role-play: Conduct mock behavioral interviews focusing on on-call incidents, teamwork, and learning from failure.
+
+Evening: Review communication skills: tone, clarity, conciseness. Practice summarizing technical topics to non-technical interviewers.
+
+Day 59: Technical Deep Dives
+
+Morning: Drill down on tough topics: the flow of a Pod scheduling, the anatomy of a Ray task execution. Practice explaining them clearly.
+
+Afternoon: Whiteboard: Draw end-to-end request flows: e.g. "When I do ray.put() on a cluster, what happens?" or "What happens from Pod creation to running on a node?"
+
+Evening: Review past technical interview questions: e.g., “How does Kubernetes perform leader election?” or “How does Ray’s Global Control Store handle failures?”.
+
+Day 60: Troubleshooting Interview Practice & Capstone Review
+
+Morning: Simulated troubleshooting: given log snippets and symptoms (e.g. “ImagePullBackOff” or “Worker joined and then left”), diagnose the cause step-by-step.
+
+Afternoon: Present a mini capstone: e.g., show a deployed multi-tenant Ray cluster you built, describe its architecture and how it handles scaling and failures.
+
+Evening: Reflect on gaps. Review key concepts or tools you feel less confident about. Ensure readiness for interview day.
+
+Notes on Learning Resources: Throughout the course, refer to official documentation and community resources for deeper understanding. Citations above link to Ray and Kubernetes docs that explain core principles
+usenix.org
+docs.anyscale.com
+docs.ray.io
+. Hands-on practice (labs) solidifies concepts. By completing this curriculum, you will have the in-depth, practical knowledge to deploy and support large-scale distributed ML workloads on Kubernetes using Ray and GPUs.
