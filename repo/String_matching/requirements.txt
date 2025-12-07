@@ -1,0 +1,46 @@
+# String Matching - BM25 Based Similarity Scoring
+# Core dependencies
+
+# Data processing
+pandas>=1.5.3
+numpy
+openpyxl
+xlsxwriter
+xlwt
+
+# Text similarity
+rank_bm25>=0.2.2
+rapidfuzz>=3.0.0
+
+# Date parsing
+python-dateutil
+
+# NLP utilities
+nltk>=3.7
+
+# Graph algorithms for clustering
+networkx>=2.8
+
+# Validation
+pydantic>=1.10.6
+
+# HTTP requests (if needed for API)
+requests
+
+# Other utilities
+more_itertools
+tqdm
+
+# =============================================================================
+# OPTIONAL: For BERT/SentenceTransformer-based semantic matching
+# Uncomment below to enable semantic embeddings
+# =============================================================================
+# sentence-transformers>=2.2.0
+# torch>=1.9.0
+# scikit-learn>=1.0.0
+
+# =============================================================================
+# OPTIONAL: For PySpark-based parallel processing (Databricks)
+# These are typically pre-installed in Databricks environments
+# =============================================================================
+# pyspark>=3.0.0
