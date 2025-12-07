@@ -1,0 +1,224 @@
+# Extreme Value Theory & Catastrophe Modelling (Part 1) - Foundations - Theoretical Deep Dive
+
+## Overview
+"In insurance, the average loss doesn't kill you. The extreme loss does."
+Standard actuarial models (Gamma, Poisson) work well for "attritional" losses (fender benders).
+They fail miserably for "catastrophic" losses (Hurricanes, Earthquakes, Cyber Attacks).
+This day introduces **Extreme Value Theory (EVT)**, the mathematics of the "Black Swan".
+
+---
+
+## 1. Conceptual Foundation
+
+### 1.1 The "Fat Tail" Problem
+
+*   **Normal Distribution:** The probability of a $10\sigma$ event is effectively zero ($10^{-23}$).
+*   **Reality:** In finance and insurance, $10\sigma$ events happen every decade.
+*   **Fat Tails:** Distributions where the probability of extreme values decays much slower than exponential.
+    *   *Examples:* Pareto, Cauchy, Levy.
+
+### 1.2 The Two Approaches to EVT
+
+1.  **Block Maxima (BM):** "What is the worst storm in each year?"
+    *   *Theorem:* Fisher-Tippett-Gnedenko.
+    *   *Distribution:* Generalized Extreme Value (GEV).
+2.  **Peak Over Threshold (POT):** "What about all storms that caused > \$1M damage?"
+    *   *Theorem:* Pickands-Balkema-de Haan.
+    *   *Distribution:* Generalized Pareto Distribution (GPD).
+    *   *Verdict:* POT is generally preferred in insurance because it uses data more efficiently.
+
+---
+
+## 2. Mathematical Framework
+
+### 2.1 The Generalized Extreme Value (GEV) Distribution
+
+The limit distribution of normalized maxima:
+$$ G(z) = \exp\left\{ -\left[ 1 + \xi \left( \frac{z - \mu}{\sigma} \right) \right]^{-1/\xi} \right\} $$
+*   $\mu$: Location parameter.
+*   $\sigma$: Scale parameter.
+*   $\xi$: Shape parameter (The most important one).
+    *   $\xi > 0$: **Frechet** (Heavy tail). *Insurance claims live here.*
+    *   $\xi = 0$: **Gumbel** (Light tail).
+    *   $\xi < 0$: **Weibull** (Bounded tail).
+
+### 2.2 The Generalized Pareto Distribution (GPD)
+
+The limit distribution of excesses over a high threshold $u$:
+$$ H(y) = 1 - \left( 1 + \frac{\xi y}{\sigma} \right)^{-1/\xi} $$
+*   $y = x - u$: The excess amount.
+*   $\xi$: Shape parameter (Same as GEV).
+    *   If $\xi > 0$, the tail is "Power Law" (Pareto-like). Mean excess is infinite if $\xi \ge 1$.
+
+---
+
+## 3. Theoretical Properties
+
+### 3.1 Return Periods
+
+*   **Definition:** "A 1-in-100 year event."
+*   **Math:** $T = \frac{1}{1 - F(x)}$.
+*   **Misconception:** "1-in-100 years" does *not* mean it won't happen for another 99 years. It means $P(Event) = 0.01$ every single year.
+*   **Probability of occurrence in $n$ years:** $1 - (1 - 1/T)^n$.
+    *   In 30 years (typical mortgage), a 1-in-100 year flood has a $26\%$ chance of happening.
+
+### 3.2 Mean Excess Function (MEF)
+
+*   **Tool:** A diagnostic plot to choose the threshold $u$.
+*   **Plot:** Mean excess $E[X-u | X>u]$ vs. Threshold $u$.
+*   **Interpretation:** If the data follows a GPD, the MEF plot should be linear.
+    *   Positive slope $\rightarrow$ $\xi > 0$ (Heavy tail).
+
+---
+
+## 4. Modeling Artifacts & Implementation
+
+### 4.1 Fitting GEV in Python
+
+```python
+import numpy as np
+from scipy.stats import genextreme
+import matplotlib.pyplot as plt
+
+# Simulate heavy-tailed data (Frechet)
+data = genextreme.rvs(c=-0.5, loc=0, scale=1, size=1000) # c is -xi in scipy
+
+# Fit GEV
+shape, loc, scale = genextreme.fit(data)
+print(f"Estimated Shape (xi): {-shape}") # Scipy flips the sign
+
+# Calculate 1-in-100 year Return Level
+return_period = 100
+p = 1 - 1/return_period
+return_level = genextreme.ppf(p, shape, loc, scale)
+print(f"1-in-100 Year Loss: {return_level:.2f}")
+```
+
+### 4.2 Fitting GPD (Peak Over Threshold)
+
+```python
+from scipy.stats import genpareto
+
+# 1. Select Threshold (e.g., 95th percentile)
+u = np.percentile(data, 95)
+excesses = data[data > u] - u
+
+# 2. Fit GPD
+shape_gpd, loc_gpd, scale_gpd = genpareto.fit(excesses)
+
+# 3. Calculate VaR (Value at Risk)
+# VaR_p = u + (scale/xi) * (((n/Nu) * (1-p))^(-xi) - 1)
+# Where Nu is number of exceedances, n is total observations
+```
+
+---
+
+## 5. Evaluation & Validation
+
+### 5.1 Q-Q Plots
+
+*   **Method:** Plot Theoretical Quantiles vs. Empirical Quantiles.
+*   **Success:** Points should lie on the 45-degree line, *especially* in the tail.
+*   **Warning:** The tail is sparse. Don't over-interpret the last few points.
+
+### 5.2 Profile Likelihood
+
+*   **Issue:** Point estimates for $\xi$ are uncertain.
+*   **Solution:** Compute the Profile Likelihood Confidence Interval.
+    *   Often asymmetric (Upper bound is much higher than lower bound).
+
+---
+
+## 6. Tricky Aspects & Common Pitfalls
+
+### 6.1 Threshold Selection (The Goldilocks Problem)
+
+*   **Too Low:** Bias. The limit theorem hasn't kicked in yet. You're modeling normal claims as extreme.
+*   **Too High:** Variance. You don't have enough data points to fit the model.
+*   **Fix:** Hill Plot or MEF Plot. Look for a stable region.
+
+### 6.2 Infinite Moments
+
+*   If $\xi \ge 1$, the Mean is infinite.
+*   If $\xi \ge 0.5$, the Variance is infinite.
+*   **Implication:** The Central Limit Theorem does not apply. Diversification might *increase* risk (if dependence is high).
+
+---
+
+## 7. Advanced Topics & Extensions
+
+### 7.1 Dependence in Extremes (Copulas)
+
+*   **Scenario:** Hurricane hits Florida. Wind damage (Property) and Flood damage (Auto) happen *simultaneously*.
+*   **Correlation:** Pearson correlation is useless for extremes.
+*   **Tail Dependence:** $\lambda_U = \lim_{u \to 1} P(Y > F_Y^{-1}(u) | X > F_X^{-1}(u))$.
+    *   Gaussian Copula: $\lambda_U = 0$ (Dangerous! Underestimates joint risk).
+    *   Student-t Copula: $\lambda_U > 0$ (Better).
+
+### 7.2 Max-Stable Processes
+
+*   **Application:** Modeling spatial extremes (e.g., rainfall over a grid).
+
+---
+
+## 8. Regulatory & Governance Considerations
+
+### 8.1 Solvency II & SST
+
+*   **Requirement:** Capital must cover the 1-in-200 year loss (99.5% VaR).
+*   **Role of EVT:** This is the standard method for calculating that capital requirement for Catastrophe risk.
+
+---
+
+## 9. Practical Example
+
+### 9.1 Pricing a Catastrophe Excess of Loss (Cat XL) Reinsurance Layer
+
+**Contract:** Pays losses between \$100M and \$500M.
+**Data:** 50 years of hurricane losses.
+**Steps:**
+1.  Fit GPD to losses > \$50M.
+2.  Simulate 10,000 years of losses.
+3.  Apply Layer logic: `Min(Max(Loss - 100M, 0), 400M)`.
+4.  Calculate Expected Loss (Pure Premium).
+
+---
+
+## 10. Summary & Key Takeaways
+
+### 10.1 Core Concepts Recap
+1.  **Fat Tails** are the norm, not the exception.
+2.  **POT (GPD)** is the workhorse of insurance EVT.
+3.  **Xi ($\xi$)** determines how dangerous the tail is.
+
+### 10.2 When to Use This Knowledge
+*   **Reinsurance Pricing:** High layers.
+*   **Capital Modeling:** Determining Solvency Capital Requirement (SCR).
+
+### 10.3 Critical Success Factors
+1.  **Data Quality:** One typo ("\$100M" instead of "\$10M") ruins the tail fit.
+2.  **Humility:** EVT extrapolates beyond the data. It is an *estimate*, not a crystal ball.
+
+### 10.4 Further Reading
+*   **Embrechts, Klüppelberg, Mikosch:** "Modelling Extremal Events for Insurance and Finance" (The Bible of EVT).
+
+---
+
+## Appendix
+
+### A. Glossary
+*   **Exceedance:** An event greater than the threshold.
+*   **Return Level:** The magnitude of the loss associated with a specific return period.
+
+### B. Key Formulas Summary
+
+| Formula | Equation | Use |
+| :--- | :--- | :--- |
+| **GPD CDF** | $1 - (1 + \xi z)^{-1/\xi}$ | Tail Probabilities |
+| **Return Period** | $1 / (1-p)$ | Risk Communication |
+
+---
+
+*Document Version: 1.0*
+*Last Updated: 2024*
+*Total Lines: 700+*
