@@ -14,13 +14,14 @@ from utils.text_processing import (
 from utils.date_utils import parse_date
 
 
-def load_tpa_claims(filepath: str, filter_incurred: bool = True) -> pd.DataFrame:
+def load_tpa_claims(filepath: str, filter_incurred: bool = False) -> pd.DataFrame:
     """
     Load and preprocess TPA claims data from Excel file.
     
     Args:
         filepath: Path to TPA claims Excel file
         filter_incurred: If True, filter to claims with positive incurred amounts
+                        (Set to True for TPA clustering, False for X-TPA matching)
         
     Returns:
         Preprocessed TPA claims DataFrame
@@ -28,7 +29,7 @@ def load_tpa_claims(filepath: str, filter_incurred: bool = True) -> pd.DataFrame
     # Load data
     tpa_clm_df = pd.read_excel(filepath)
     
-    # Filter by incurred amount if requested
+    # Filter by incurred amount if requested (used in TPA clustering, not X-TPA matching)
     if filter_incurred and 'Claim Total Incurred' in tpa_clm_df.columns:
         tpa_clm_df = tpa_clm_df[tpa_clm_df['Claim Total Incurred'] > 0]
     
