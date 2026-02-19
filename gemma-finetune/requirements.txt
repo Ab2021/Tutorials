@@ -1,0 +1,129 @@
+# ============================================================================
+# GEMMA FINE-TUNING — PYTHON DEPENDENCIES
+# ============================================================================
+# Install with: pip install -r requirements.txt
+#
+# IMPORTANT NOTES:
+#   • You need Python >= 3.10
+#   • A CUDA-capable NVIDIA GPU is strongly recommended (>= 8 GB VRAM)
+#   • You need a Hugging Face account with Gemma access:
+#       1. Go to https://huggingface.co/google/gemma-2b
+#       2. Accept the license agreement
+#       3. Create an access token: https://huggingface.co/settings/tokens
+#       4. Set it: export HF_TOKEN=your_token_here
+# ============================================================================
+
+# ---------------------------------------------------------------------------
+# 1. PyTorch — The deep learning framework (GPU version)
+# ---------------------------------------------------------------------------
+# PyTorch is the foundational library that runs the neural network computations.
+# We install the CUDA 12.1 build for GPU acceleration.
+# If you don't have a GPU, pip will fall back to the CPU wheel automatically.
+# Version 2.2+ is required for torch.compile improvements.
+torch>=2.2.0
+
+# ---------------------------------------------------------------------------
+# 2. Hugging Face Transformers — Model loading & tokenization
+# ---------------------------------------------------------------------------
+# Provides the Gemma model architecture, tokenizer, and training utilities.
+# We need >= 4.38.0 because Gemma support was added in that release.
+transformers>=4.38.0
+
+# ---------------------------------------------------------------------------
+# 3. PEFT (Parameter-Efficient Fine-Tuning) — LoRA adapters
+# ---------------------------------------------------------------------------
+# Instead of updating ALL 2 billion parameters (which needs 100+ GB VRAM),
+# PEFT/LoRA adds tiny "adapter" layers (~2M params) on top of the frozen
+# base model. This drops VRAM usage from ~50 GB to ~6 GB.
+#
+# KEY CONCEPT — LoRA (Low-Rank Adaptation):
+#   • Freezes the original model weights
+#   • Inserts small trainable matrices into attention layers
+#   • At inference, merges adapters back → zero overhead
+peft>=0.8.0
+
+# ---------------------------------------------------------------------------
+# 4. bitsandbytes — 4-bit Quantization engine
+# ---------------------------------------------------------------------------
+# Compresses the model's 16-bit weights down to 4-bit, cutting memory by ~4x.
+# This is what makes it possible to fine-tune a 2B-param model on an 8 GB GPU.
+#
+# KNOWN ISSUES:
+#   • Only works on NVIDIA GPUs with CUDA
+#   • If you see "libcudart.so not found", run:
+#       export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+#   • On Windows, use WSL2 — native Windows is not well supported
+bitsandbytes>=0.42.0
+
+# ---------------------------------------------------------------------------
+# 5. Hugging Face Datasets — Dataset downloading & processing
+# ---------------------------------------------------------------------------
+# Handles downloading the Amazon Reviews dataset from the Hugging Face Hub,
+# automatic caching, train/test splitting, and memory-efficient streaming.
+datasets>=2.16.0
+
+# ---------------------------------------------------------------------------
+# 6. Accelerate — Distributed training & mixed precision
+# ---------------------------------------------------------------------------
+# Required by Transformers for efficient GPU utilization.
+# Handles: device placement, mixed-precision (fp16/bf16), gradient accumulation.
+# Even for single-GPU training, this is mandatory.
+accelerate>=0.27.0
+
+# ---------------------------------------------------------------------------
+# 7. TRL (Transformer Reinforcement Learning) — SFTTrainer
+# ---------------------------------------------------------------------------
+# Provides `SFTTrainer`, a high-level trainer specifically designed for
+# supervised fine-tuning of LLMs. It handles:
+#   • Prompt formatting / chat templates
+#   • Packing multiple short examples into one sequence (efficiency)
+#   • Integration with PEFT/LoRA out of the box
+trl>=0.7.0
+
+# ---------------------------------------------------------------------------
+# 8. SentencePiece — Tokenizer backend for Gemma
+# ---------------------------------------------------------------------------
+# Gemma uses a SentencePiece tokenizer (not BPE). This C++ library must be
+# installed for the tokenizer to work. Without it you'll see:
+#   "ImportError: sentencepiece is not installed"
+sentencepiece>=0.1.99
+
+# ---------------------------------------------------------------------------
+# 9. Protobuf — Required by SentencePiece
+# ---------------------------------------------------------------------------
+# Google's serialization format, needed to load the tokenizer vocabulary file.
+protobuf>=3.20.0
+
+# ---------------------------------------------------------------------------
+# 10. ROUGE Score — Evaluation metric for generated text
+# ---------------------------------------------------------------------------
+# Measures overlap between generated recommendation and reference text.
+# ROUGE-1 = unigram overlap, ROUGE-2 = bigram, ROUGE-L = longest subsequence.
+rouge-score>=0.1.2
+
+# ---------------------------------------------------------------------------
+# 11. NLTK — Natural Language Toolkit (for BLEU score)
+# ---------------------------------------------------------------------------
+# We use nltk.translate.bleu_score for computing BLEU, another standard
+# metric for evaluating text generation quality.
+nltk>=3.8.0
+
+# ---------------------------------------------------------------------------
+# 12. Triton — Compiler backend for torch.compile (Linux only)
+# ---------------------------------------------------------------------------
+# torch.compile's default "inductor" backend uses Triton to generate optimized
+# GPU kernels. Without Triton, torch.compile falls back to "eager" mode
+# (no speedup). Triton is Linux-only.
+#
+# KNOWN ISSUES:
+#   • Not available on Windows or macOS
+#   • Requires matching CUDA version
+#   • If install fails, training still works — just without torch.compile speedup
+triton>=2.2.0; sys_platform == "linux"
+
+# ---------------------------------------------------------------------------
+# 13. Wandb (Optional) — Experiment tracking & visualization
+# ---------------------------------------------------------------------------
+# If you want to track your training runs with beautiful dashboards.
+# Set WANDB_DISABLED=true to skip, or run `wandb login` to set up.
+# wandb>=0.16.0
