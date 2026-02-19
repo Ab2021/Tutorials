@@ -20,7 +20,10 @@ This folder contains **deep theoretical material** going far beyond the basics. 
 | 12 | [12_gpu_architecture_cuda.md](./12_gpu_architecture_cuda.md) | GPU internals, CUDA programming model, memory hierarchy, Tensor Cores |
 | 13 | [13_advanced_evaluation.md](./13_advanced_evaluation.md) | BERTScore, METEOR, human eval frameworks, statistical significance |
 | 14 | [14_practical_experiments.md](./14_practical_experiments.md) | Hands-on experiments with code: ablation studies, debugging training |
+| 15 | [15_torch_compile_and_kernel_design.md](./15_torch_compile_and_kernel_design.md) | **torch.compile pipeline**, Triton kernel codegen, kernel fusion, tiling, custom kernels, CUDA graphs, roofline analysis |
 
 ---
 
 > **Prerequisites:** Basic Python knowledge. No prior ML experience needed — guide #1 starts from scratch.
+> 
+> **Deep dive into compilation:** Guide #15 pairs with guide #12 (GPU Architecture) to give a complete picture from Python code to GPU silicon execution.
