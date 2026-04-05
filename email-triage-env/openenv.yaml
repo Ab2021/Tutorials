@@ -1,0 +1,49 @@
+name: email_triage_env
+version: "1.0.0"
+description: >
+  Email Triage RL Environment — Classify emails by department and priority.
+  An OpenEnv-compatible environment for training and evaluating LLM agents
+  on real-world email classification tasks with deterministic grading.
+
+author: hackathon-team
+license: MIT
+
+tasks:
+  - name: easy
+    description: "3 straightforward emails with obvious keywords (billing, tech support, sales)"
+    num_emails: 3
+  - name: medium
+    description: "5 emails with some ambiguity and cross-department characteristics"
+    num_emails: 5
+  - name: hard
+    description: "8 emails with misleading subjects, spam, and edge cases"
+    num_emails: 8
+
+action_space:
+  department:
+    type: string
+    options: [billing, technical_support, sales, human_resources, general_inquiry]
+  priority:
+    type: string
+    options: [low, medium, high, urgent]
+  reasoning:
+    type: string
+    optional: true
+
+observation_space:
+  email_id: string
+  email_subject: string
+  email_body: string
+  email_sender: string
+  email_metadata: object
+  emails_remaining: integer
+  feedback: string
+  score_so_far: float
+
+reward:
+  type: dense
+  range: [-0.05, 1.0]
+  description: >
+    Department match: +0.6, Priority match: +0.3, Valid inputs: +0.1,
+    Adjacent priority: +0.1 partial credit, Invalid input: -0.05.
+    Final score combines accuracy and average step reward.

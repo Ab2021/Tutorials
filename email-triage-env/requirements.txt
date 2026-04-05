@@ -1,0 +1,11 @@
+# Core dependencies
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.0.0
+requests>=2.31.0
+
+# OpenEnv core (optional — server works without it)
+# openenv-core>=0.1.0
+
+# For inference.py LLM calls
+openai>=1.0.0
