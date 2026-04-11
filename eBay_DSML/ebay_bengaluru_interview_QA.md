@@ -802,4 +802,620 @@ BEHAVIORAL
 
 ---
 
+## 🐍 SECTION 8: DSA PYTHON — FULL QUESTION BANK
+
+> **Files:** `python_practice/04_dsa_coding_patterns.py` (Patterns 1–8) · `python_practice/05_dsa_advanced_patterns.py` (Patterns 9–15)
+
+---
+
+### 📦 PATTERN REFERENCE MAP
+
+| Pattern | Topics Covered | Key Problems |
+|---|---|---|
+| HashMap | Two Sum, Group Anagrams, Prefix Sum | Q-P1 |
+| Two Pointers | Palindrome, 3Sum, Container Water | Q-P2 |
+| Sliding Window | Min Window, Longest Unique Substr | Q-P3 |
+| Sorting/Intervals | Merge Intervals, Meeting Rooms | Q-P4 |
+| Heaps | Kth Largest, Merge K Sorted | Q-P5 |
+| Binary Search | Rotated Array, Find Peak | Q-P6 |
+| Stacks | Valid Parens, Daily Temperatures | Q-P7 |
+| Greedy/DP | Kadane, Coin Change, Max Profit | Q-P8 |
+| Linked Lists | Reverse, Cycle, Merge, Reorder | Q-P9 |
+| Trees | BFS, DFS, LCA, Diameter, Serialize | Q-P10 |
+| Graphs | Islands, Topo Sort, Dijkstra, Union-Find | Q-P11 |
+| DP Classic | LCS, LIS, Word Break, Edit Distance, Knapsack | Q-P12 |
+| Backtracking | Permutations, N-Queens, Subsets, Word Search | Q-P13 |
+| Trie | Autocomplete, Word Search II | Q-P14 |
+| Bit Manipulation | XOR, Count Bits, Power of Two | Q-P15 |
+
+---
+
+### LINKED LIST QUESTIONS
+
+---
+
+#### Q26. Reverse a Linked List
+
+**Pattern:** Iterative pointer swap · **TC:** O(n) · **SC:** O(1)
+
+```python
+def reverse_linked_list(head):
+    prev, cur = None, head
+    while cur:
+        nxt = cur.next      # save next node
+        cur.next = prev     # reverse the link
+        prev = cur          # move prev forward
+        cur = nxt           # move cur forward
+    return prev             # prev is the new head
+```
+
+---
+
+#### Q27. Detect and Find Cycle Start (Floyd's Algorithm)
+
+**Pattern:** Fast/Slow pointers · **TC:** O(n) · **SC:** O(1)
+
+```python
+def find_cycle_start(head):
+    slow = fast = head
+    # Phase 1: detect cycle
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+        if slow is fast:
+            # Phase 2: find start — reset slow to head
+            slow = head
+            while slow is not fast:
+                slow = slow.next
+                fast = fast.next
+            return slow   # cycle start node
+    return None
+```
+
+**Key Insight:** After meeting, resetting one pointer to head and advancing both one step at a time leads them to meet exactly at the cycle start. This works because the distance from head→cycle_start equals meeting_point→cycle_start.
+
+---
+
+#### Q28. Remove N-th Node from End (One Pass)
+
+**Pattern:** Two-pointer gap · **TC:** O(L) · **SC:** O(1)
+
+```python
+def remove_nth_from_end(head, n):
+    dummy = ListNode(0, head)
+    fast = slow = dummy
+    for _ in range(n + 1):   # gap of n+1 between fast and slow
+        fast = fast.next
+    while fast:
+        slow = slow.next
+        fast = fast.next
+    slow.next = slow.next.next  # skip the target
+    return dummy.next
+```
+
+---
+
+#### Q29. Reorder List (L0→Ln→L1→Ln-1→...)
+
+**Pattern:** Find mid → Reverse 2nd half → Interleave · **TC:** O(n) · **SC:** O(1)
+
+```python
+def reorder_list(head):
+    # Step 1: find middle (slow/fast pointers)
+    slow, fast = head, head
+    while fast and fast.next:
+        slow = slow.next; fast = fast.next.next
+
+    # Step 2: reverse second half
+    prev, cur = None, slow.next
+    slow.next = None
+    while cur:
+        nxt = cur.next; cur.next = prev; prev = cur; cur = nxt
+    second = prev
+
+    # Step 3: merge (interleave)
+    first = head
+    while second:
+        tmp1, tmp2 = first.next, second.next
+        first.next = second; second.next = tmp1
+        first = tmp1; second = tmp2
+```
+
+---
+
+### TREE QUESTIONS
+
+---
+
+#### Q30. Level-Order Traversal (BFS)
+
+**Pattern:** BFS with queue, group by level · **TC:** O(n) · **SC:** O(n)
+
+```python
+from collections import deque
+
+def level_order(root):
+    if not root: return []
+    result, q = [], deque([root])
+    while q:
+        level = []
+        for _ in range(len(q)):       # process all nodes at this depth
+            node = q.popleft()
+            level.append(node.val)
+            if node.left:  q.append(node.left)
+            if node.right: q.append(node.right)
+        result.append(level)
+    return result
+```
+
+---
+
+#### Q31. Diameter of Binary Tree
+
+**Pattern:** Post-order DFS, track max path through each node · **TC:** O(n) · **SC:** O(h)
+
+```python
+def diameter_of_binary_tree(root):
+    ans = [0]
+    def depth(node):
+        if not node: return 0
+        l, r = depth(node.left), depth(node.right)
+        ans[0] = max(ans[0], l + r)   # diameter through this node
+        return 1 + max(l, r)
+    depth(root)
+    return ans[0]
+```
+
+**eBay Context:** Finding the longest dependency chain in a seller's supply graph.
+
+---
+
+#### Q32. Lowest Common Ancestor (LCA)
+
+**Pattern:** Post-order DFS — if both subtrees return non-null, current node is LCA · **TC:** O(n) · **SC:** O(h)
+
+```python
+def lowest_common_ancestor(root, p, q):
+    if not root or root is p or root is q:
+        return root
+    left  = lowest_common_ancestor(root.left,  p, q)
+    right = lowest_common_ancestor(root.right, p, q)
+    # If both sides found something, this node is the LCA
+    return root if left and right else (left or right)
+```
+
+---
+
+#### Q33. Serialize / Deserialize Binary Tree
+
+**Pattern:** Pre-order DFS with '#' as null marker · **TC:** O(n) · **SC:** O(n)
+
+```python
+def serialize(root):
+    if not root: return '#'
+    return f"{root.val},{serialize(root.left)},{serialize(root.right)}"
+
+def deserialize(data):
+    vals = iter(data.split(','))
+    def build():
+        v = next(vals)
+        if v == '#': return None
+        node = TreeNode(int(v))
+        node.left  = build()
+        node.right = build()
+        return node
+    return build()
+```
+
+---
+
+#### Q34. All Root-to-Leaf Paths Summing to Target
+
+**Pattern:** DFS backtracking with path tracking · **TC:** O(n) · **SC:** O(h)
+
+```python
+def path_sum_ii(root, target):
+    result = []
+    def dfs(node, remaining, path):
+        if not node: return
+        path.append(node.val)
+        if not node.left and not node.right and remaining == node.val:
+            result.append(list(path))
+        else:
+            dfs(node.left,  remaining - node.val, path)
+            dfs(node.right, remaining - node.val, path)
+        path.pop()     # backtrack
+    dfs(root, target, [])
+    return result
+```
+
+---
+
+### GRAPH QUESTIONS
+
+---
+
+#### Q35. Number of Islands (DFS Flood Fill)
+
+**Pattern:** DFS, mark visited in-place · **TC:** O(m×n) · **SC:** O(m×n)
+
+```python
+def num_islands(grid):
+    rows, cols = len(grid), len(grid[0])
+    def dfs(r, c):
+        if r < 0 or r >= rows or c < 0 or c >= cols or grid[r][c] != '1':
+            return
+        grid[r][c] = '0'   # sink the land
+        for dr, dc in [(1,0),(-1,0),(0,1),(0,-1)]:
+            dfs(r+dr, c+dc)
+
+    count = 0
+    for r in range(rows):
+        for c in range(cols):
+            if grid[r][c] == '1':
+                dfs(r, c); count += 1
+    return count
+```
+
+---
+
+#### Q36. Course Schedule — Topological Sort (Kahn's BFS)
+
+**Pattern:** In-degree array + BFS · **TC:** O(V+E) · **SC:** O(V+E)
+
+```python
+from collections import defaultdict, deque
+
+def can_finish(numCourses, prerequisites):
+    graph  = defaultdict(list)
+    in_deg = [0] * numCourses
+    for dest, src in prerequisites:
+        graph[src].append(dest)
+        in_deg[dest] += 1
+
+    q = deque(c for c in range(numCourses) if in_deg[c] == 0)
+    processed = 0
+    while q:
+        node = q.popleft(); processed += 1
+        for nbr in graph[node]:
+            in_deg[nbr] -= 1
+            if in_deg[nbr] == 0:
+                q.append(nbr)
+    return processed == numCourses  # True = no cycle
+```
+
+**eBay Context:** Validate that microservice deployment pipelines have no circular dependencies.
+
+---
+
+#### Q37. Shortest Path — Dijkstra's Algorithm
+
+**Pattern:** Min-heap (priority queue) · **TC:** O((V+E) log V) · **SC:** O(V)
+
+```python
+import heapq
+from collections import defaultdict
+
+def dijkstra(graph, start):
+    # graph = {node: [(neighbor, weight), ...]}
+    dist = defaultdict(lambda: float('inf'))
+    dist[start] = 0
+    heap = [(0, start)]   # (cost, node)
+
+    while heap:
+        d, u = heapq.heappop(heap)
+        if d > dist[u]: continue   # stale entry — skip
+        for v, w in graph.get(u, []):
+            if dist[u] + w < dist[v]:
+                dist[v] = dist[u] + w
+                heapq.heappush(heap, (dist[v], v))
+    return dict(dist)
+```
+
+---
+
+#### Q38. Number of Connected Components — Union-Find
+
+**Pattern:** DSU with path compression · **TC:** O(E·α(n)) ≈ O(E) · **SC:** O(n)
+
+```python
+def count_components(n, edges):
+    parent = list(range(n))
+
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]  # path compression
+            x = parent[x]
+        return x
+
+    def union(a, b):
+        ra, rb = find(a), find(b)
+        if ra == rb: return False
+        parent[ra] = rb; return True
+
+    components = n
+    for a, b in edges:
+        if union(a, b): components -= 1
+    return components
+```
+
+---
+
+### DYNAMIC PROGRAMMING QUESTIONS
+
+---
+
+#### Q39. Longest Common Subsequence (LCS)
+
+**Pattern:** 2D DP · **TC:** O(m×n) · **SC:** O(m×n)
+
+```python
+def lcs(text1, text2):
+    m, n = len(text1), len(text2)
+    dp = [[0]*(n+1) for _ in range(m+1)]
+    for i in range(1, m+1):
+        for j in range(1, n+1):
+            if text1[i-1] == text2[j-1]:
+                dp[i][j] = dp[i-1][j-1] + 1
+            else:
+                dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+    return dp[m][n]
+```
+
+**eBay Context:** Detect near-duplicate listing titles (similarity score via LCS).
+
+---
+
+#### Q40. Longest Increasing Subsequence (O(n log n))
+
+**Pattern:** Patience sorting with binary search · **TC:** O(n log n) · **SC:** O(n)
+
+```python
+import bisect
+
+def lis(nums):
+    tails = []
+    for n in nums:
+        pos = bisect.bisect_left(tails, n)
+        if pos == len(tails): tails.append(n)
+        else: tails[pos] = n
+    return len(tails)
+```
+
+---
+
+#### Q41. Edit Distance (Levenshtein)
+
+**Pattern:** 2D DP · **TC:** O(m×n) · **SC:** O(m×n) (or O(n) with rolling array)
+
+```python
+def edit_distance(word1, word2):
+    m, n = len(word1), len(word2)
+    dp = [[0]*(n+1) for _ in range(m+1)]
+    for i in range(m+1): dp[i][0] = i
+    for j in range(n+1): dp[0][j] = j
+    for i in range(1, m+1):
+        for j in range(1, n+1):
+            if word1[i-1] == word2[j-1]:
+                dp[i][j] = dp[i-1][j-1]
+            else:
+                dp[i][j] = 1 + min(dp[i-1][j],   # delete
+                                   dp[i][j-1],   # insert
+                                   dp[i-1][j-1]) # replace
+    return dp[m][n]
+```
+
+---
+
+#### Q42. 0/1 Knapsack
+
+**Pattern:** 1D DP (iterate capacity in reverse to ensure each item used once) · **TC:** O(n×W) · **SC:** O(W)
+
+```python
+def knapsack(weights, values, capacity):
+    dp = [0] * (capacity + 1)
+    for w, v in zip(weights, values):
+        for c in range(capacity, w - 1, -1):   # RIGHT to LEFT avoids reuse
+            dp[c] = max(dp[c], dp[c - w] + v)
+    return dp[capacity]
+```
+
+---
+
+### BACKTRACKING QUESTIONS
+
+---
+
+#### Q43. All Subsets (Power Set)
+
+**Pattern:** Include/exclude each element · **TC:** O(2ⁿ × n) · **SC:** O(n)
+
+```python
+def subsets(nums):
+    result = []
+    def bt(start, current):
+        result.append(list(current))
+        for i in range(start, len(nums)):
+            current.append(nums[i])
+            bt(i + 1, current)
+            current.pop()        # backtrack
+    bt(0, [])
+    return result
+```
+
+---
+
+#### Q44. Combination Sum (Reuse Allowed)
+
+**Pattern:** Backtracking with pruning (sorted candidates) · **TC:** O(2^(t/min)) · **SC:** O(t/min)
+
+```python
+def combination_sum(candidates, target):
+    candidates.sort()
+    result = []
+    def bt(start, remaining, path):
+        if remaining == 0:
+            result.append(list(path)); return
+        for i in range(start, len(candidates)):
+            if candidates[i] > remaining: break   # pruning
+            path.append(candidates[i])
+            bt(i, remaining - candidates[i], path)  # i allows reuse
+            path.pop()
+    bt(0, target, [])
+    return result
+```
+
+---
+
+#### Q45. N-Queens
+
+**Pattern:** DFS with column + diagonal sets for O(1) conflict checking · **TC:** O(n!) · **SC:** O(n)
+
+```python
+def n_queens(n):
+    result = []
+    cols = set(); d1 = set(); d2 = set()
+    def bt(row, board):
+        if row == n:
+            result.append([''.join(r) for r in board]); return
+        for col in range(n):
+            if col in cols or (row-col) in d1 or (row+col) in d2: continue
+            cols.add(col); d1.add(row-col); d2.add(row+col)
+            board[row][col] = 'Q'
+            bt(row + 1, board)
+            board[row][col] = '.'; cols.discard(col)
+            d1.discard(row-col); d2.discard(row+col)
+    bt(0, [['.']*n for _ in range(n)])
+    return result
+```
+
+---
+
+### TRIE QUESTION
+
+---
+
+#### Q46. Trie — Insert, Search, Autocomplete
+
+**Pattern:** Linked TrieNodes with children dict · **TC:** O(L) per op · **SC:** O(Σ × L × W)
+
+```python
+class TrieNode:
+    def __init__(self):
+        self.children = {}
+        self.is_end   = False
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word):
+        node = self.root
+        for ch in word:
+            node = node.children.setdefault(ch, TrieNode())
+        node.is_end = True
+
+    def search(self, word):
+        node = self.root
+        for ch in word:
+            if ch not in node.children: return False
+            node = node.children[ch]
+        return node.is_end
+
+    def starts_with(self, prefix):
+        node = self.root
+        for ch in prefix:
+            if ch not in node.children: return False
+            node = node.children[ch]
+        return True
+
+    def autocomplete(self, prefix):
+        """Return all words with given prefix."""
+        node = self.root
+        for ch in prefix:
+            if ch not in node.children: return []
+            node = node.children[ch]
+        results = []
+        def dfs(n, path):
+            if n.is_end: results.append(prefix + path)
+            for ch, child in n.children.items():
+                dfs(child, path + ch)
+        dfs(node, '')
+        return results
+```
+
+**eBay Context:** Powers search bar autocomplete — as user types "iph", instantly suggests "iphone 15", "iphone 14 pro", etc.
+
+---
+
+### BIT MANIPULATION QUESTIONS
+
+---
+
+#### Q47. Single Number (XOR)
+
+**TC:** O(n) · **SC:** O(1)
+
+```python
+def single_number(nums):
+    result = 0
+    for n in nums:
+        result ^= n     # a^a=0, a^0=a → all pairs cancel out
+    return result
+```
+
+---
+
+#### Q48. Count Set Bits for 0..n (DP)
+
+**TC:** O(n) · **SC:** O(n)
+
+```python
+def count_bits(n):
+    dp = [0] * (n + 1)
+    for i in range(1, n + 1):
+        dp[i] = dp[i >> 1] + (i & 1)  # right-shift + check last bit
+    return dp
+```
+
+---
+
+## 🗺️ DSA PATTERN DECISION TREE
+
+```
+What type of problem is this?
+│
+├─ "Find/count pairs or subarrays"     → HashMap / Prefix Sum
+├─ "Shortest path, fewest steps"       → BFS (unweighted) / Dijkstra (weighted)
+├─ "All solutions / arrangements"      → Backtracking
+├─ "Optimize over overlapping subproblems" → Dynamic Programming
+├─ "Find in sorted array"             → Binary Search
+├─ "Top-K / running median"           → Heap
+├─ "Matching brackets / next greater" → Stack (Monotonic)
+├─ "Connected components / cycles"    → Union-Find / DFS
+├─ "Prefix queries / autocomplete"    → Trie
+├─ "Reverse / detect cycle (linked)"  → Two Pointers (slow/fast)
+└─ "Deduplicate / check uniqueness"   → HashSet / XOR (bits)
+```
+
+---
+
+## ⏱️ COMPLEXITY CHEAT SHEET
+
+| Algorithm | Time | Space |
+|---|---|---|
+| Two Sum (HashMap) | O(n) | O(n) |
+| Binary Search | O(log n) | O(1) |
+| BFS / DFS | O(V+E) | O(V) |
+| Merge Sort | O(n log n) | O(n) |
+| Heap push/pop | O(log n) | O(k) |
+| Dijkstra | O((V+E) log V) | O(V) |
+| DP — LCS/Edit Distance | O(m×n) | O(m×n) |
+| LIS (patience sort) | O(n log n) | O(n) |
+| Union-Find (path compress) | O(α(n)) ≈ O(1) | O(n) |
+| Trie insert/search | O(L) | O(Σ×L×W) |
+| Backtracking (permutations) | O(n! × n) | O(n) |
+
+---
+
 *Sources: Glassdoor (2024–2025), LeetCode Discuss, Reddit r/cscareerquestions, InterviewQuery.com, DataInterview.com, Prepfully, GeeksForGeeks, YouTube interview breakdowns*
