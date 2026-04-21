@@ -1,4 +1,4 @@
-# 🏪 Flipkart — AI Agents & Advanced Analytics Across Every Domain
+﻿# 🏪 Flipkart — AI Agents & Advanced Analytics Across Every Domain
 ### How Flipkart Uses ML, GenAI & Agents in Production | Challenges & Your Bridge Points
 
 > **Purpose of this document:** Understand Flipkart's real AI deployments domain-by-domain.
@@ -153,16 +153,16 @@ Models used:
 
 ---
 
-## 💳 DOMAIN 2: RISK, FRAUD & CREDIT (Adhish's Core Domain)
+## 💳 DOMAIN 2: RISK, FRAUD & CREDIT (Alex's Core Domain)
 
-> ⚠️ **HIGHEST PRIORITY SECTION.** Adhish published specifically on EMI risk at Flipkart.
+> ⚠️ **HIGHEST PRIORITY SECTION.** Alex published specifically on EMI risk at Flipkart.
 > Know this domain cold. This is where the deepest technical discussion will happen.
 
 ### What Flipkart Built
 
 #### 2A. Flipkart Pay Later & EMI — Credit Risk System
 
-Based on Adhish's published work: **"Portfolio Risk Management Model for EMI-based loans in E-Commerce"**
+Based on Alex's published work: **"Portfolio Risk Management Model for EMI-based loans in E-Commerce"**
 
 ```
 PROBLEM: Traditional credit scoring (CIBIL) doesn't work for e-commerce
@@ -182,7 +182,7 @@ SYSTEM ARCHITECTURE:
 │     Output: Credit limit assignment (₹5K / ₹10K / ₹20K etc.)   │
 │                                                                  │
 │  2. TRANSACTION-LEVEL RISK SCORING (Real-time, 300+ features)    │
-│     [Adhish's published work focuses HERE]                       │
+│     [Alex's published work focuses HERE]                       │
 │     Features include:                                            │
 │     ├── EMI history: On-time payments, partial payments, arrears │
 │     ├── Purchase behavior: Category, amount, frequency, timing   │
@@ -204,7 +204,7 @@ SYSTEM ARCHITECTURE:
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-**Key Technical Insight from Adhish's Paper:**
+**Key Technical Insight from Alex's Paper:**
 The system doesn't just score at onboarding — it monitors the **portfolio post-acquisition** continuously. If a customer's risk profile deteriorates (earning signals drop, missed payments at other lenders), the system proactively:
 - Reduces transaction authorization limit
 - Blocks new EMI applications
@@ -319,7 +319,7 @@ Output: Structured investigation report → human review decision
 
 ### 🔗 YOUR BRIDGE POINTS
 
-> **Critical — Connect directly to Adhish's work:**
+> **Critical — Connect directly to Alex's work:**
 > "Reading your EMI risk paper, the insight that post-acquisition monitoring is as important
 > as onboarding scoring resonates deeply with my work at Chubb. In insurance, claims mature
 > over 12-18 months — initial claim approval isn't the risk moment; it's the ongoing lifecycle.
@@ -828,7 +828,7 @@ For EVERY Flipkart domain you discuss, follow this structure:
 
 | Flipkart Domain | Your Closest Experience | Bridge Statement |
 |---|---|---|
-| EMI/Credit Risk | Insurance fraud RAG system | "Post-acquisition monitoring at claims lifecycle level — same philosophy as Adhish's EMI paper" |
+| EMI/Credit Risk | Insurance fraud RAG system | "Post-acquisition monitoring at claims lifecycle level — same philosophy as Alex's EMI paper" |
 | Transaction Fraud | Chubb fraud detection | "My RAG + LLM fraud system architecture maps directly — I'd scale the embedding layer" |
 | Search/Ranking | CLV model (behavioral features) | "Velocity features, behavioral signals — same feature engineering philosophy at different scale" |
 | SLAP Shopping Agent | Agentic BI tool (LangChain) | "ReAct pattern, multi-tool orchestration — built this at Chubb, ready to scale" |
@@ -851,7 +851,7 @@ For EVERY Flipkart domain you discuss, follow this structure:
 - **"VisNet"** — Flipkart's internal visual similarity model for multimodal search
 - **"350M+ customers, 500K+ sellers, 10M+ daily transactions"** — scale numbers to anchor all designs
 - **"Big Billion Days"** — 50-100x traffic spike → every ML system must have BBD-mode handling
-- **"Adhish's paper"** — 300+ features, transaction-level delinquency, post-acquisition portfolio risk
+- **"Alex's paper"** — 300+ features, transaction-level delinquency, post-acquisition portfolio risk
 - **"1-10-100 rule at Flipkart"** — 1% improvement in fraud detection = ₹100 crores+ saved at their scale
 - **"FTRL (Follow The Regularized Leader)"** — Flipkart's online learning algorithm for real-time personalization
 - **"CUPED"** — Controlled Using Pre-Experiment Data — variance reduction in A/B tests

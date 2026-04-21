@@ -1,5 +1,5 @@
-# 🎯 Answering Strategy, Frameworks & Evaluation Deep Dive
-### Flipkart Senior Data Scientist — Adhish Prasoon Interview
+﻿# 🎯 Answering Strategy, Frameworks & Evaluation Deep Dive
+### Flipkart Senior Data Scientist — Alex Rivera Interview
 
 > **Purpose of this document:** How to *structure and deliver* answers, not just what to say.
 > Covers: (1) Universal answering frameworks, (2) Deep evaluation methodology for every project —
@@ -13,7 +13,7 @@
 
 ### 🧩 Framework 1: The PEDAL Method (for ML/Technical Questions)
 
-Use this for ANY ML concept or system design question Adhish asks.
+Use this for ANY ML concept or system design question Alex asks.
 
 ```
 P — Problem framing       → "The problem we're solving is..."
@@ -50,7 +50,7 @@ When asked "Walk me through your project" — use this structure consistently:
 ```
 
 > ⚡ **Key habit:** NEVER jump to Model Selection without first covering Business Context + Problem Formulation.
-> Adhish will interrupt you and ask "what was the business problem?" if you skip this — pre-empt it.
+> Alex will interrupt you and ask "what was the business problem?" if you skip this — pre-empt it.
 
 ---
 
@@ -67,13 +67,13 @@ R — Result      → Quantified outcome (%, time saved, cost, AUC improvement)
 ```
 
 > ⚡ The "+" (Reflection) is what separates Senior candidates from Mid-level ones.
-> Adhish is a Research Director — he values intellectual honesty and growth mindset.
+> Alex is a Research Director — he values intellectual honesty and growth mindset.
 
 ---
 
 ### 🧩 Framework 4: How to Handle "I Don't Know" Situations
 
-Adhish will probe until he finds your boundary. This is intentional — he wants to see how you reason under uncertainty.
+Alex will probe until he finds your boundary. This is intentional — he wants to see how you reason under uncertainty.
 
 **Do NOT say:** "I don't know" and stop.
 
@@ -88,7 +88,7 @@ Adhish will probe until he finds your boundary. This is intentional — he wants
 **Example — If asked about a paper/method you haven't read:**
 > "I'm not familiar with that specific paper, but from what I understand about the broader approach to [topic], I'd reason that the key challenge would be [X], and a principled solution would address it by [Y]. Is that the direction they took, or did they solve it differently? I'd love to understand their approach."
 
-This shows intellectual curiosity and structured thinking — far more valuable to Adhish than memorized answers.
+This shows intellectual curiosity and structured thinking — far more valuable to Alex than memorized answers.
 
 ---
 
@@ -104,7 +104,7 @@ Level 4 — Derivation: "Taking the Taylor expansion of the loss around F_{m-1}.
 Level 5 — Critique: "The limitation of this approximation is...and what XGBoost improves..."
 ```
 
-> ⚡ Start at Level 2. If Adhish says "can you go deeper?" → move to Level 3, then 4.
+> ⚡ Start at Level 2. If Alex says "can you go deeper?" → move to Level 3, then 4.
 > If he nods and moves on → stop. Don't over-explain unprompted.
 
 ---
@@ -148,7 +148,7 @@ Evaluate this layer independently BEFORE plugging it into the RAG pipeline.
 - Did NOT rely on hand-labeling every claim (too expensive) — hand-labeled 500 "gold standard" cases for evaluation only
 - Labeling functions: IF procedure_date - injury_date > 180 days → potential red flag, IF claimant has 3+ prior claims in 12 months → elevated risk, etc.
 
-**Why this matters to Adhish:**
+**Why this matters to Alex:**
 > "I evaluated the IE layer separately because in a complex pipeline, if your retrieval is broken, you can't tell if it's the extractor or the RAG. Isolating components is critical for debugging — same principle you'd apply in any modular ML system."
 
 ---
@@ -265,7 +265,7 @@ results = evaluate(
 
 #### LAYER 3: Business Evaluation
 
-This is what Adhish cares about most — did the system actually solve a real problem?
+This is what Alex cares about most — did the system actually solve a real problem?
 
 **Offline Business Proxy Metrics:**
 
@@ -652,7 +652,7 @@ Iteration 2 (XGBoost + BERT embeddings + structured):
 | **Calibration (Brier Score)** | 0.08 | Well-calibrated — a predicted 30% risk patient actually has ~30% readmission rate |
 | **Decision Curve Analysis** | Positive net benefit | Model is better than "flag all" or "flag none" across clinical thresholds |
 
-**Why Calibration Matters (Critical talking point with Adhish):**
+**Why Calibration Matters (Critical talking point with Alex):**
 
 > "One metric I spent significant time on was calibration — not just AUC. In healthcare risk models, a physician acts on the predicted probability, not just the rank order. If my model says 40% readmission risk, I need that 40% to be meaningful. I used Platt scaling to post-hoc calibrate the BERT + XGBoost model, and measured calibration quality with a reliability diagram and Brier score. Uncalibrated models in healthcare can lead to systematic under- or over-treatment."
 
@@ -812,7 +812,7 @@ AUC 0.82 → 0.89 (+0.07) →
 
 ---
 
-## PART 4: ANTICIPATED ADHISH FOLLOW-UP QUESTIONS & RESPONSES
+## PART 4: ANTICIPATED Alex FOLLOW-UP QUESTIONS & RESPONSES
 
 ---
 

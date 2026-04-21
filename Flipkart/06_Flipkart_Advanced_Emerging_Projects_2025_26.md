@@ -1,4 +1,4 @@
-# 🚀 Flipkart — Advanced & Emerging Projects (2025–2026)
+﻿# 🚀 Flipkart — Advanced & Emerging Projects (2025–2026)
 ### The Full Picture: What Flipkart Is Actively Building Beyond Core E-Commerce
 
 > **Purpose:** Deep research-backed briefing on Flipkart's most exciting frontier AI projects.
@@ -230,7 +230,7 @@ Goal: < 100ms scoring; <0.1% fraud rate (UPI industry benchmark)
 ---
 
 ### 🔗 Your Bridge
-> "The super.money credit underwriting problem is the consumer fintech analogue of Adhish's
+> "The super.money credit underwriting problem is the consumer fintech analogue of Alex's
 > EMI risk modeling — same core challenge: use first-party behavioral signals to underwrite
 > thin-file users where bureau data is sparse. My insurance fraud work used a similar philosophy:
 > claims behavioral signals (not just static policyholder attributes) drove the most predictive features."
@@ -702,7 +702,7 @@ GUARDRAILS (Critical for consumer trust):
 |---|---|
 | When asked about Flipkart's strategy | *"The OneTech initiative — rebuilding the entire platform as AI-native while maintaining business continuity — that's the hardest engineering challenge I've seen: changing engines in a flying plane."* |
 | When asked about quick commerce | *"Flipkart Minutes' hyper-local demand forecasting at the pincode × 30-minute granularity — that's where Temporal Fusion Transformers really shine. The spatio-temporal version of what I built for forecasting at Axtria."* |
-| When asked about fintech | *"super.money's bureau-light credit model using first-party Flipkart behavioral signals to underwrite thin-file users — that's a brilliant example of data moat monetization. Directly parallels the EMI risk modeling work Adhish published."* |
+| When asked about fintech | *"super.money's bureau-light credit model using first-party Flipkart behavioral signals to underwrite thin-file users — that's a brilliant example of data moat monetization. Directly parallels the EMI risk modeling work Alex published."* |
 | When asked about future of AI shopping | *"Agentic commerce — where the agent acts across the full shopping lifecycle, not just recommends — that's what I believe is the 2-year trajectory. It's where my Agentic BI work at Chubb has been heading."* |
 | On India-specific challenge | *"The V3 strategy is brilliant — Vernacular, Video, Voice — because the next 200M users aren't English-first and aren't desktop-first. Every ML system needs to be designed for a ₹8000 phone on 2G. That's a hard constraint that changes architecture fundamentally."* |
 

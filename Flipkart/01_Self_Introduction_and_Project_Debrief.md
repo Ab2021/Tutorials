@@ -1,7 +1,7 @@
-# 🎯 Self-Introduction & Deep Project Debrief
+﻿# 🎯 Self-Introduction & Deep Project Debrief
 ### Flipkart — Senior Data Scientist Interview
 
-> **Candidate:** Abhishek Bhardwaj | **Interviewer:** Adhish Prasoon (Research Director, DS @ Flipkart | PhD, University of Copenhagen)
+> **Candidate:** Alex Chen | **Interviewer:** Alex Rivera (Research Director, DS @ Flipkart | PhD, University of Copenhagen)
 
 ---
 
@@ -11,7 +11,7 @@
 
 ---
 
-> "Hi Adhish, I'm Abhishek Bhardwaj — a Senior Data Scientist and AI/ML Engineering Lead based in Bengaluru with **9+ years of end-to-end ML experience**, spanning healthcare, life sciences, and insurance domains.
+> "Hi Alex, I'm Alex Chen — a Senior Data Scientist and AI/ML Engineering Lead based in Bengaluru with **9+ years of end-to-end ML experience**, spanning healthcare, life sciences, and insurance domains.
 >
 > Currently I'm at **Chubb**, where I lead AI initiatives focused on **insurance fraud detection and risk modeling** — my most impactful work there has been architecting a production-grade **Agentic AI + RAG pipeline** using LLMs to identify potentially fraudulent claims across long-tail claim lifecycles. The system combines unstructured claims data, NLP transformers, and real-time risk scoring — it was recognized with multiple awards including the **Q1 2025 STAR Award**.
 >

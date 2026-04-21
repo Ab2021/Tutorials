@@ -1,10 +1,10 @@
-# ⚡ LLM Inference Optimization — Deep Dive
+﻿# ⚡ LLM Inference Optimization — Deep Dive
 ### KV Cache · Flash Attention · Paged Attention (vLLM) · Quantization · Speculative Decoding · Batching
 
 > **Why this matters for Flipkart:**
 > SLAP (shopping agent) + Seller AI + Fraud Investigator — all LLM-powered, all serving 350M+ users.
 > Inference efficiency = latency SLAs met + cost controlled + throughput scaled.
-> Adhish (PhD, ML systems) WILL ask about inference if you claim production LLM experience.
+> Alex (PhD, ML systems) WILL ask about inference if you claim production LLM experience.
 
 ---
 
@@ -1078,7 +1078,7 @@ COMBINED TP + PP:
 
 ---
 
-## 🎯 INTERVIEW Q&A — EXPECT THESE FROM ADHISH
+## 🎯 INTERVIEW Q&A — EXPECT THESE FROM Alex
 
 ### Q1: "Walk me through why Flash Attention is faster. What's the bottleneck it solves?"
 

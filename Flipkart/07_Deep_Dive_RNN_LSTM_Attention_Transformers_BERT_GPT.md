@@ -1,9 +1,9 @@
-# 🧠 Deep Dive: RNN → LSTM → Attention → Transformers → BERT → GPT → Inference
+﻿# 🧠 Deep Dive: RNN → LSTM → Attention → Transformers → BERT → GPT → Inference
 ### Progressive Technical Mastery for Flipkart Senior Data Scientist Interview
 
 > **How to read this:** Each section builds on the previous.
 > Start at RNNs even if you "know" them — the framing of WHY each innovation came is critical.
-> Adhish (PhD, CNN/DL background) can go very deep. Know the math, the intuition, AND the limitation at each step.
+> Alex (PhD, CNN/DL background) can go very deep. Know the math, the intuition, AND the limitation at each step.
 
 ---
 

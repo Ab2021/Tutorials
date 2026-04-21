@@ -1,5 +1,5 @@
-# 🔍 Resume Deep Dive — Every Claim, Every Counter Question
-### What Adhish (PhD, Research Director) Will Attack and How to Defend It
+﻿# 🔍 Resume Deep Dive — Every Claim, Every Counter Question
+### What Alex (PhD, Research Director) Will Attack and How to Defend It
 
 > **How to use this:** Read each resume claim. Then read WHY an interviewer would
 > question it, WHAT the exact counter question sounds like, and HOW to answer it
@@ -712,7 +712,7 @@
 
 ---
 
-## DEEP DIVE QUESTIONS — Expect These From Adhish (PhD Background)
+## DEEP DIVE QUESTIONS — Expect These From Alex (PhD Background)
 
 ---
 

@@ -1,4 +1,4 @@
-# 🗺️ Flipkart Senior Data Scientist — Interview Game Plan
+﻿# 🗺️ Flipkart Senior Data Scientist — Interview Game Plan
 ### Process, Strategy & Execution Playbook
 
 ---
@@ -7,7 +7,7 @@
 
 | Attribute | Detail |
 |---|---|
-| **Name** | Adhish Prasoon |
+| **Name** | Alex Rivera |
 | **Current Role** | Research Director, Data Science @ Flipkart (since June 2021) |
 | **Education** | PhD (Machine Learning, University of Copenhagen) + M.Tech (IIT Bombay) |
 | **PhD Research** | Voxel classification for medical image segmentation using CNNs; Co-author of *"Deep feature learning for knee cartilage segmentation using triplanar CNN"* (MICCAI 2013) |
@@ -15,7 +15,7 @@
 | **Previous** | SVP Data Science @ Info Edge (Naukri, Jeevansathi, 99acres) |
 | **Style** | Academic rigor + industry pragmatism — will PROBE depth on fundamentals |
 
-### 🧠 What Adhish Is Looking For (inferred from background):
+### 🧠 What Alex Is Looking For (inferred from background):
 1. **Mathematical depth** — Can you derive things? Do you understand WHY algorithms work?
 2. **Production mindset** — Have you shipped things? Do you understand deployment challenges?
 3. **Creative problem framing** — Can you turn a fuzzy business ask into a precise ML problem?
@@ -83,7 +83,7 @@ Round 7: Hiring Manager / Culture (45 min)
 
 3. **Full-Stack MLOps Experience**
    - MLflow + Kubeflow + Airflow + GCP + Docker/K8s — shows production mindset
-   - Adhish's research background means HE values deployment experience (researchers often lack this)
+   - Alex's research background means HE values deployment experience (researchers often lack this)
 
 4. **Knowledge Graph (Neo4j) Experience**
    - Directly relevant: Flipkart's fraud linkage verification uses graph-based approaches
@@ -101,7 +101,7 @@ Round 7: Hiring Manager / Culture (45 min)
 - [ ] Review logistic regression derivation + XGBoost math (Section A of Q&A doc)
 - [ ] Practice RAG evaluation framework (Ragas metrics — faithfulness, relevance, recall)
 - [ ] Revise BERT attention mechanism + transformer architecture
-- [ ] Read Adhish's MICCAI 2013 triplanar CNN paper abstract (know his academic context)
+- [ ] Read Alex's MICCAI 2013 triplanar CNN paper abstract (know his academic context)
 
 ### Day 2 (System Design + Coding)
 - [ ] Practice fraud system design out loud (use system design in Q&A doc — time yourself 40 min)
@@ -239,7 +239,7 @@ GROUP BY cohort_month
 
 ## 🚨 COMMON MISTAKES TO AVOID
 
-1. **Don't just say XGBoost — explain WHY** (Adhish will push you on math)
+1. **Don't just say XGBoost — explain WHY** (Alex will push you on math)
 2. **Don't ignore evaluation metrics** — always tie model performance to business metric
 3. **Don't skip deployment** — always mention how model goes to production and how it's monitored
 4. **Don't be generic about Flipkart** — show you understand their specific fraud/risk context
@@ -254,7 +254,7 @@ GROUP BY cohort_month
 >
 > I also find Flipkart's approach to AI particularly thoughtful — the Triksha framework for LLM security, the human-in-the-loop philosophy for high-stakes decisions — this is exactly the responsible AI deployment mindset I believe in. 
 >
-> And specifically, Adhish's published work on EMI risk modeling — that's the kind of rigorous, end-to-end thinking about credit risk at e-commerce scale that I want to learn from and contribute to."
+> And specifically, Alex's published work on EMI risk modeling — that's the kind of rigorous, end-to-end thinking about credit risk at e-commerce scale that I want to learn from and contribute to."
 
 ---
 

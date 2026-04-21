@@ -1,8 +1,8 @@
-# 🧠 Key Interview Questions & Model Answers
-### Tailored for: Adhish Prasoon | Research Director, DS @ Flipkart
+﻿# 🧠 Key Interview Questions & Model Answers
+### Tailored for: Alex Rivera | Research Director, DS @ Flipkart
 ### PhD (Machine Learning, University of Copenhagen) | M.Tech IIT Bombay
 
-> **Key Intel on Adhish:**
+> **Key Intel on Alex:**
 > - PhD focused on **voxel/pixel classification for medical image segmentation** using deep learning + CNNs (MICCAI 2013, triplanar CNN paper)
 > - Published: *"Portfolio Risk Management Model for EMI-based loan in E-Commerce"* — 300+ features, transaction-level delinquency prediction
 > - Former SVP Data Science at Info Edge (Naukri, Jeevansathi, 99acres)
@@ -13,7 +13,7 @@
 
 ## SECTION A: ML FUNDAMENTALS & MATHEMATICAL DEPTH
 
-> ⚠️ Adhish will go deep. Don't just say "XGBoost works well here" — explain WHY mathematically.
+> ⚠️ Alex will go deep. Don't just say "XGBoost works well here" — explain WHY mathematically.
 
 ---
 
@@ -37,7 +37,7 @@ $$\frac{\partial \mathcal{L}}{\partial w} = \frac{1}{N} X^T (\hat{y} - y)$$
 
 With L2 regularization: add λ||w||² → gradient becomes: X^T(ŷ - y)/N + 2λw
 
-**Adhish follow-up:** *"Why is log-loss preferred over MSE for classification?"*
+**Alex follow-up:** *"Why is log-loss preferred over MSE for classification?"*
 > MSE loss with sigmoid creates vanishing gradients — the gradient is σ(z)(1-σ(z))*(ŷ-y), which becomes tiny at extremes. Cross-entropy gradient is simply (ŷ - y), avoiding vanishing gradient problem. Also, cross-entropy is the proper probabilistic loss — it maximizes likelihood under Bernoulli assumption.
 
 ---
@@ -85,7 +85,7 @@ For log-loss: residuals = (y_i - ŷ_i) = true label minus predicted probability
 
 ---
 
-### Q4: How do CNNs capture spatial hierarchies? (Adhish's PhD area — expect this connection)
+### Q4: How do CNNs capture spatial hierarchies? (Alex's PhD area — expect this connection)
 
 **Model Answer:**
 CNNs learn hierarchical spatial representations through:
@@ -93,7 +93,7 @@ CNNs learn hierarchical spatial representations through:
 2. **Parameter sharing:** Same filter across spatial locations → drastically reduces parameters
 3. **Hierarchical composition:** Layer 1 detects edges → Layer 2 detects shapes → Layer 3 detects objects
 
-**Adhish's triplanar CNN (MICCAI 2013):**
+**Alex's triplanar CNN (MICCAI 2013):**
 His PhD work used 3 separate 2D CNNs on the xy, yz, zx planes of a 3D medical volume to classify each voxel — this is a clever approximation of full 3D convolution at a fraction of the compute cost.
 
 **How to connect this to your work:**
@@ -144,7 +144,7 @@ $$\text{MultiHead}(Q,K,V) = \text{Concat}(head_1, ..., head_H) W^O$$
 
 ## SECTION B: ML SYSTEM DESIGN
 
-> Adhish's published work on EMI risk modeling shows he designs end-to-end production risk systems. Expect system design questions framed as business problems.
+> Alex's published work on EMI risk modeling shows he designs end-to-end production risk systems. Expect system design questions framed as business problems.
 
 ---
 
@@ -358,7 +358,7 @@ Query → Embedding → Vector DB Search →
 
 ## SECTION D: STATISTICS & PROBABILITY
 
-> Adhish has strong quantitative background — expect probability and Bayesian reasoning questions.
+> Alex has strong quantitative background — expect probability and Bayesian reasoning questions.
 
 ---
 
@@ -487,7 +487,7 @@ $$F_1 = \frac{2 \cdot \text{Precision} \cdot \text{Recall}}{\text{Precision} + \
 
 ---
 
-## SECTION F: QUESTIONS TO ASK ADHISH
+## SECTION F: QUESTIONS TO ASK Alex
 
 > Asking smart questions shows you've done your homework on HIS work. This is a differentiator.
 
