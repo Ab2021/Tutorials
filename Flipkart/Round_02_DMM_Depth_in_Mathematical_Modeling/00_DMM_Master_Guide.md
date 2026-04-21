@@ -611,3 +611,614 @@ Strategies used:
 ---
 
 *See companion files: 02_ML_Algorithm_Derivations.md, 03_Deep_Learning_Math.md, 04_Transformer_Attention_Math.md, 08_Statistical_Testing_AandB.md*
+
+---
+---
+
+# 🔥 BLOCK G: SURVIVAL ANALYSIS & CLINICAL ML MATH
+### (From EXL Patient Readmission + Survival Analysis Projects)
+
+---
+
+## Q31: Derive the Kaplan-Meier estimator. Why is it the correct estimator for right-censored data?
+
+**Setup:** We observe $n$ patients. Each has an event time $T_i$ or a censoring time $C_i$ (whichever comes first). We observe $t_i = \min(T_i, C_i)$ and the indicator $\delta_i = \mathbf{1}(T_i \leq C_i)$.
+
+**Kaplan-Meier (Product-Limit) Estimator:**
+
+At each observed event time $t_{(j)}$ (sorted, distinct event times), let:
+- $d_j$ = number of events (deaths/readmissions) at time $t_{(j)}$
+- $n_j$ = number of subjects at risk *just before* $t_{(j)}$ (haven't had event or been censored yet)
+
+$$\hat{S}(t) = \prod_{t_{(j)} \leq t} \left(1 - \frac{d_j}{n_j}\right)$$
+
+**Why censoring is handled correctly:**
+- Censored subjects reduce $n_j$ at their censoring time — they "leave the risk set"
+- They do NOT contribute a death at that time
+- This is the key insight: by reducing the denominator only (not numerator), KM correctly accounts for the fact that censored patients *could* have experienced the event if followed longer
+- If censoring is non-informative (independent of $T$), this gives an unbiased estimate of the true survival function
+
+**Example (3 patients, events at t=1,3, censored at t=2):**
+```
+t=1: n=3, d=1  →  factor = (1 - 1/3) = 2/3
+t=2: n=2, d=0, censored=1  →  no factor (no event), n drops to 1
+t=3: n=1, d=1  →  factor = (1 - 1/1) = 0
+
+S(t):
+  t < 1:  1.0
+  1 ≤ t < 3:  2/3 ≈ 0.667
+  t ≥ 3:  2/3 × 0 = 0.0
+```
+
+**Log-rank test** (comparing two survival curves): Tests $H_0$: $S_1(t) = S_2(t)$ for all $t$.
+$$\chi^2 = \frac{(O_1 - E_1)^2}{E_1} + \frac{(O_2 - E_2)^2}{E_2}$$
+where $O$ = observed events, $E$ = expected events under $H_0$.
+
+---
+
+## Q32: Derive the Cox Proportional Hazards partial likelihood. Why doesn't it need to estimate the baseline hazard?
+
+**Model:** $h(t | x_i) = h_0(t) \exp(\beta^T x_i)$
+
+The "trick" in Cox (1972) is to construct a likelihood that focuses only on the *ordering* of events, not their timing:
+
+**Partial Likelihood:**
+
+At each event time $t_{(i)}$, given that one event occurred, the probability that it was specifically subject $i$ (given the risk set $\mathcal{R}(t_{(i)})$):
+
+$$P(\text{subject } i \text{ fails} | \text{one failure from } \mathcal{R}(t_{(i)})) = \frac{h(t_{(i)}|x_i)}{\sum_{j \in \mathcal{R}(t_{(i)})} h(t_{(i)}|x_j)}$$
+
+$$= \frac{h_0(t_{(i)}) \exp(\beta^T x_i)}{\sum_{j \in \mathcal{R}(t_{(i)})} h_0(t_{(i)}) \exp(\beta^T x_j)}$$
+
+$$= \frac{\exp(\beta^T x_i)}{\sum_{j \in \mathcal{R}(t_{(i)})} \exp(\beta^T x_j)}$$
+
+🔑 **The $h_0(t)$ cancels out!** Both numerator and denominator contain it, so it divides away.
+
+**Full partial likelihood (over all D events):**
+$$L(\beta) = \prod_{i:\delta_i=1} \frac{\exp(\beta^T x_i)}{\sum_{j \in \mathcal{R}(t_{(i)})} \exp(\beta^T x_j)}$$
+
+Maximize this to get $\hat{\beta}$ — **no need to estimate $h_0(t)$**. This is why Cox is "semi-parametric":
+- Non-parametric part: $h_0(t)$ — left completely unspecified
+- Parametric part: $\exp(\beta^T x)$ — modeled explicitly
+
+**Log partial likelihood gradient (score equation):**
+$$\frac{\partial \log L}{\partial \beta} = \sum_{i:\delta_i=1} \left[ x_i - \frac{\sum_{j \in \mathcal{R}(t_i)} x_j \exp(\beta^T x_j)}{\sum_{j \in \mathcal{R}(t_i)} \exp(\beta^T x_j)} \right] = 0$$
+
+This is the observed minus expected covariate for the failing subject — same structure as logistic regression!
+
+---
+
+## Q33: What is the Proportional Hazards (PH) assumption? How do you test and fix violations?
+
+**The PH assumption:** The hazard ratio between two subjects is constant over time.
+
+$$\frac{h(t | x_i)}{h(t | x_j)} = \frac{\exp(\beta^T x_i)}{\exp(\beta^T x_j)} = \text{constant in } t$$
+
+**Testing with Schoenfeld residuals:**
+
+For each event $i$ and covariate $k$, the Schoenfeld residual is:
+$$r_{ik} = x_{ik} - \hat{E}[x_k | \text{failing at } t_i]$$
+
+Under PH, these residuals should be *uncorrelated with time*. Plot $r_{ik}$ vs. $t_i$:
+- Flat/random pattern → PH holds ✅
+- Trend (upward/downward) → PH violated ❌
+
+**Fixes when PH is violated:**
+
+| Fix | When to Use |
+|---|---|
+| **Stratified Cox** | PH violated for a categorical covariate (e.g., age group). Allow each stratum its own $h_0(t)$, share $\beta$. |
+| **Time-varying coefficients** | PH violated continuously. Model $\beta(t) = \beta_0 + \beta_1 \cdot g(t)$ where $g(t)$ is a smooth function of time. |
+| **Accelerated Failure Time (AFT)** | Alternative parametric model: $\log T = \beta^T x + \sigma \epsilon$. Doesn't require PH at all. |
+
+**From your EXL work:** Young patients' readmission hazard spiked in first 7 days then dropped; elderly patients' hazard monotonically increased → PH violated for age group → used **stratified Cox** by age bracket.
+
+---
+
+## Q34: Derive the expected value and variance of the exponential distribution. Connect to survival modeling.
+
+**Exponential distribution:** $f(t) = \lambda e^{-\lambda t}$, $t \geq 0$, $\lambda > 0$
+
+**Expected value:**
+$$E[T] = \int_0^\infty t \lambda e^{-\lambda t} dt$$
+
+Integration by parts ($u = t$, $dv = \lambda e^{-\lambda t} dt$):
+$$= \left[-t e^{-\lambda t}\right]_0^\infty + \int_0^\infty e^{-\lambda t} dt = 0 + \left[-\frac{1}{\lambda} e^{-\lambda t}\right]_0^\infty = \frac{1}{\lambda}$$
+
+**Variance:**
+$$E[T^2] = \int_0^\infty t^2 \lambda e^{-\lambda t} dt = \frac{2}{\lambda^2}$$
+$$\text{Var}(T) = E[T^2] - (E[T])^2 = \frac{2}{\lambda^2} - \frac{1}{\lambda^2} = \frac{1}{\lambda^2}$$
+
+**Survival and hazard functions:**
+$$S(t) = P(T > t) = e^{-\lambda t}$$
+$$h(t) = \frac{f(t)}{S(t)} = \frac{\lambda e^{-\lambda t}}{e^{-\lambda t}} = \lambda \quad \text{(constant!)}$$
+
+**Key insight:** Exponential distribution has **constant hazard** — the "memoryless" property. A patient who has survived 30 days has the same hazard as a new patient. This is often unrealistic in clinical settings (recovery usually reduces readmission risk over time) → use Weibull ($h(t) = \lambda\alpha t^{\alpha-1}$) which allows increasing or decreasing hazard.
+
+---
+
+---
+
+# 🔥 BLOCK H: CAUSAL INFERENCE & A/B TESTING MATH
+### (From EXL Propensity Modeling + A/B Testing + Axtria MMM Attribution)
+
+---
+
+## Q35: Derive the Potential Outcomes Framework (Rubin Causal Model). What is the Fundamental Problem of Causal Inference?
+
+**Notation:**
+- $Y_i(1)$ = potential outcome for unit $i$ if treated ($T_i = 1$)
+- $Y_i(0)$ = potential outcome for unit $i$ if untreated ($T_i = 0$)
+- We observe: $Y_i = T_i \cdot Y_i(1) + (1-T_i) \cdot Y_i(0)$
+
+**Individual Treatment Effect (ITE):**
+$$\tau_i = Y_i(1) - Y_i(0)$$
+
+**The Fundamental Problem:** We can NEVER observe both $Y_i(1)$ and $Y_i(0)$ for the same unit simultaneously. One is always the **counterfactual** (unobserved).
+
+**Average Treatment Effect (ATE) — what we estimate instead:**
+$$\text{ATE} = E[Y(1) - Y(0)] = E[Y(1)] - E[Y(0)]$$
+
+**Why simple comparison $E[Y|T=1] - E[Y|T=0]$ is biased (without randomization):**
+
+$$E[Y|T=1] - E[Y|T=0] = \underbrace{E[Y(1)|T=1] - E[Y(0)|T=1]}_{\text{ATT (what we want)}} + \underbrace{E[Y(0)|T=1] - E[Y(0)|T=0]}_{\text{Selection Bias}}$$
+
+Selection bias arises because treated and untreated groups differ in their baseline outcomes. Example: sicker patients (lower $Y(0)$) are more likely to receive treatment → treated group looks worse even if treatment helps.
+
+**Randomization eliminates selection bias:** If $T \perp (Y(0), Y(1))$, then $E[Y(0)|T=1] = E[Y(0)|T=0]$. Selection bias = 0.
+
+---
+
+## Q36: Derive the Inverse Probability Weighting (IPW) estimator for ATE. Why does it work?
+
+**Setting:** Observational study. Treatment assignment not random, confounded by $X$.
+
+**Key assumption (Unconfoundedness):** $(Y(0), Y(1)) \perp T | X$
+
+**Propensity score:** $e(x) = P(T=1|X=x)$
+
+**IPW estimator:**
+$$\hat{\tau}_{IPW} = \frac{1}{n}\sum_{i=1}^n \left[\frac{T_i Y_i}{e(X_i)} - \frac{(1-T_i)Y_i}{1-e(X_i)}\right]$$
+
+**Why it works — intuition via reweighting:**
+
+Treated units with $e(x) = P(T=1|X=x) = 0.1$ look like they "accidentally" got treated. They are very similar to the control group. Upweighting them (by $1/0.1 = 10$) makes the treated group representative of the full population.
+
+**Formal proof of unbiasedness:**
+$$E\left[\frac{T_i Y_i}{e(X_i)}\right] = E\left[\frac{T_i Y_i(1)}{e(X_i)}\right]$$
+$$= E\left[E\left[\frac{T_i Y_i(1)}{e(X_i)} \bigg| X_i, Y_i(1)\right]\right]$$
+$$= E\left[\frac{Y_i(1)}{e(X_i)} \cdot E[T_i | X_i]\right] = E\left[\frac{Y_i(1)}{e(X_i)} \cdot e(X_i)\right] = E[Y_i(1)]$$
+
+Similarly for the control term. Therefore $E[\hat{\tau}_{IPW}] = E[Y(1)] - E[Y(0)] = \text{ATE}$. ✅
+
+**Practical issue:** IPW has high variance when propensity scores are near 0 or 1 (some weights become very large). Fix: **Doubly Robust estimator** — combines IPW with outcome model. Consistent if EITHER the propensity model OR the outcome model is correctly specified (but not necessarily both).
+
+---
+
+## Q37: Derive the Difference-in-Differences (DiD) estimator. What is the parallel trends assumption?
+
+**Setup:** Two groups (Treatment, Control), two time periods (Pre, Post). Treatment happens between Pre and Post.
+
+| | Pre | Post |
+|---|---|---|
+| **Treatment** | $\bar{Y}_{T,pre}$ | $\bar{Y}_{T,post}$ |
+| **Control** | $\bar{Y}_{C,pre}$ | $\bar{Y}_{C,post}$ |
+
+**DiD estimator:**
+$$\hat{\tau}_{DiD} = \underbrace{(\bar{Y}_{T,post} - \bar{Y}_{T,pre})}_{\text{change in treatment}} - \underbrace{(\bar{Y}_{C,post} - \bar{Y}_{C,pre})}_{\text{change in control}}$$
+
+**Why it works:** Subtracting the control group's change removes the **time trend** (any outcome change that would have happened regardless of treatment).
+
+**Regression formulation:**
+$$Y_{it} = \alpha + \beta_1 \text{Treatment}_i + \beta_2 \text{Post}_t + \beta_3 (\text{Treatment}_i \times \text{Post}_t) + \epsilon_{it}$$
+
+$\hat{\beta}_3$ is the DiD estimate. $\beta_3 = \hat{\tau}_{DiD}$.
+
+**Parallel Trends Assumption:** In the absence of treatment, the treatment and control groups would have evolved in parallel:
+$$E[Y_{T}(0)_{post} - Y_{T}(0)_{pre}] = E[Y_{C}(0)_{post} - Y_{C}(0)_{pre}]$$
+
+**Testing:** Plot pre-period trends for both groups. If they're parallel before treatment, we have evidence the assumption holds. **Falsification test:** Check for "anticipation effects" 1-2 periods before treatment — there should be none.
+
+**Flipkart application:** If Flipkart launches a new seller support feature in South India (treatment) but not North India (control), DiD estimates the causal impact on seller revenue by comparing revenue changes between regions.
+
+---
+
+## Q38: Explain CUPED (Controlled-Experiment Using Pre-Experiment Data) mathematically. How much variance does it reduce?
+
+**Problem:** Standard A/B test variance is large because users are noisy. We need 2-4 weeks of data to get enough power.
+
+**CUPED insight:** Pre-experiment behavior ($X_i$) correlates with post-experiment outcome ($Y_i$). Use $X_i$ to predict and subtract out the predictable part of $Y_i$, reducing residual variance.
+
+**CUPED estimator:**
+$$\tilde{Y}_i = Y_i - \theta(X_i - \bar{X})$$
+
+where $\theta$ chosen to minimize variance of $\tilde{Y}_i$:
+$$\theta^* = \frac{\text{Cov}(Y_i, X_i)}{\text{Var}(X_i)} = \text{Pearson correlation} \times \frac{\sigma_Y}{\sigma_X}$$
+
+This is exactly the OLS coefficient of regressing $Y$ on $X$!
+
+**Variance reduction:**
+$$\text{Var}(\tilde{Y}) = \text{Var}(Y) - \frac{\text{Cov}(Y,X)^2}{\text{Var}(X)} = \text{Var}(Y)(1 - \rho^2)$$
+
+**Variance reduction factor** = $1 - \rho^2$, where $\rho$ = correlation between pre/post metrics.
+
+**Concrete example:** If $\rho = 0.7$ (typical for purchase frequency in e-commerce):
+- Variance reduced by $1 - 0.49 = 51\%$
+- Required sample size reduced by $51\%$
+- Or you get same statistical power in **half the time** → cut A/B test duration from 4 weeks to 2 weeks
+
+**Key property:** CUPED is unbiased. The treatment estimate $\hat{\tau}_{CUPED} = \bar{\tilde{Y}}_T - \bar{\tilde{Y}}_C = \bar{Y}_T - \bar{Y}_C$ (same as original estimator in expectation, lower variance).
+
+---
+
+## Q39: Derive the Markov Chain attribution model used in your Axtria MMM project.
+
+**Setup:** Customer journey as a Markov Chain. States = marketing channels + Start + Conversion + Null (dropout).
+
+**Transition matrix $P$:** $P_{ij}$ = probability of transitioning from channel $i$ to channel $j$.
+
+**Absorption analysis:** Conversion and Null are absorbing states. The probability of being absorbed into Conversion = the **conversion probability**.
+
+**Computing conversion probability:**
+
+Partition the transition matrix:
+$$P = \begin{pmatrix} Q & R \\ 0 & I \end{pmatrix}$$
+
+where:
+- $Q$ = transitions among transient (non-absorbing) states
+- $R$ = transitions from transient states to absorbing states
+- $I$ = identity (absorbing states stay absorbed)
+
+**Fundamental matrix:** $N = (I - Q)^{-1}$
+
+$N_{ij}$ = expected number of times the chain is in transient state $j$, given it started in state $i$.
+
+**Absorption probability matrix:**
+$$B = N \cdot R$$
+
+$B_{i, \text{Conv}}$ = probability of eventually converting, starting from state $i$.
+
+**Removal Effect for channel $k$:**
+1. Compute $P(\text{Conv})$ using full transition matrix $P$
+2. Set row $k$ of $P$ to route entirely to Null: $P_{k, \text{Null}} = 1$, $P_{k,j} = 0$ for all other $j$
+3. Recompute $P(\text{Conv}_{-k})$ with channel $k$ removed
+4. Removal Effect of channel $k$ = $1 - P(\text{Conv}_{-k}) / P(\text{Conv})$
+
+**Normalization:** Attribution credit for channel $k$ = $\frac{RE_k}{\sum_j RE_j}$ (so all credits sum to 1).
+
+**Why the homepage bias problem you faced:** Channels with near-100% pass-through probability (everyone visits homepage) have high RE because removing them routes everyone to Null. Fix: weight RE by channel's *exclusive* contribution (customers who visited ONLY that channel).
+
+---
+
+## Q40: Explain Thompson Sampling for Multi-Armed Bandits. Derive the regret bound.
+
+**Problem:** $K$ arms (ad campaigns, recommendation policies). Each arm has unknown reward distribution. Explore to learn vs. exploit to earn.
+
+**Thompson Sampling (Bayesian approach):**
+
+For Bernoulli rewards, maintain a Beta posterior for each arm:
+- Prior: $\theta_k \sim \text{Beta}(\alpha_k, \beta_k)$ (typically $\alpha_k = \beta_k = 1$, uniform)
+- After observing $s_k$ successes and $f_k$ failures:
+  - Posterior: $\theta_k | \text{data} \sim \text{Beta}(\alpha_k + s_k, \beta_k + f_k)$
+
+**At each round:**
+1. For each arm $k$, **sample** $\tilde{\theta}_k \sim \text{Beta}(\alpha_k + s_k, \beta_k + f_k)$
+2. Pull arm $k^* = \arg\max_k \tilde{\theta}_k$
+3. Observe reward, update posterior
+
+**Why this balances exploration-exploitation:**
+- Arms with uncertain estimates (few pulls) have wide Beta distributions → high sampling variance → frequently get lucky sample and get pulled → **exploration**
+- Arms with many successful pulls have narrow, high-mean distributions → consistently sampled high → **exploitation**
+
+**Regret:** $R_T = \sum_{t=1}^T \mu^* - \mu_{k_t}$ (difference from optimal arm total reward)
+
+**Thompson Sampling achieves:** $E[R_T] = O\left(\sum_{k:\mu_k < \mu^*} \frac{\log T}{\Delta_k}\right)$
+
+where $\Delta_k = \mu^* - \mu_k$ is the gap from optimal. This is **asymptotically optimal** (matches Lai-Robbins lower bound).
+
+**Versus UCB (Upper Confidence Bound):**
+$$UCB_k(t) = \bar{\mu}_k + \sqrt{\frac{2\ln t}{n_k}}$$
+
+| | Thompson Sampling | UCB |
+|---|---|---|
+| Framework | Bayesian | Frequentist |
+| Mechanism | Sample from posterior | Optimism under uncertainty |
+| Prior knowledge | Can incorporate | Cannot |
+| Empirical performance | Often better | Theoretically tighter |
+
+---
+
+---
+
+# 🔥 BLOCK I: OPTIMIZATION, DISTRIBUTED COMPUTING & ADVANCED TOPICS
+### (From MMM Genetic Algorithms + PySpark CLV + Bayesian Optimization)
+
+---
+
+## Q41: Explain Bayesian Optimization mathematically. Why did you use it for hyperparameter tuning instead of grid search?
+
+**Setting:** Optimize $f(\theta)$ (e.g., validation AUC as function of hyperparameters) where each evaluation is expensive (costs minutes of training).
+
+**Core idea:** Build a probabilistic surrogate model of $f$ using observed evaluations. Use this model to decide where to evaluate next — balancing exploration (uncertain regions) and exploitation (promising regions).
+
+**Surrogate model: Gaussian Process (GP)**
+
+A GP defines a distribution over functions:
+$$f(\theta) \sim \mathcal{GP}(m(\theta), k(\theta, \theta'))$$
+
+where $m(\theta)$ = mean function, $k(\theta, \theta')$ = kernel (covariance between any two points).
+
+After observing $\mathcal{D} = \{(\theta_i, f_i)\}_{i=1}^n$, the posterior is:
+$$f(\theta^*) | \mathcal{D} \sim \mathcal{N}(\mu(\theta^*), \sigma^2(\theta^*))$$
+
+$$\mu(\theta^*) = k(\theta^*, \mathbf{\theta})[K(\mathbf{\theta}, \mathbf{\theta}) + \sigma_n^2 I]^{-1}\mathbf{f}$$
+$$\sigma^2(\theta^*) = k(\theta^*, \theta^*) - k(\theta^*, \mathbf{\theta})[K + \sigma_n^2 I]^{-1}k(\mathbf{\theta}, \theta^*)$$
+
+**Acquisition function (where to sample next):**
+
+**Expected Improvement (EI):**
+$$\text{EI}(\theta) = E[\max(f(\theta) - f^+, 0)]$$
+
+where $f^+ = \max_i f(\theta_i)$ (current best). For a GP with posterior mean $\mu$ and std $\sigma$:
+
+$$\text{EI}(\theta) = (\mu(\theta) - f^+)\Phi(Z) + \sigma(\theta)\phi(Z)$$
+
+where $Z = \frac{\mu(\theta) - f^+}{\sigma(\theta)}$, $\Phi$ = CDF, $\phi$ = PDF of standard normal.
+
+**Next point:** $\theta_{n+1} = \arg\max_\theta \text{EI}(\theta)$
+
+**Why better than grid/random search:**
+- Grid search: exponential in dimensions ($10^d$ for $d$ hyperparameters, each with 10 values)
+- Random search: ignores what was learned from previous evaluations
+- Bayesian Opt: each new point is chosen based on ALL previous evaluations → 15% improvement in accuracy using only 20 evaluations vs. grid search's 1000 (from your Axtria work)
+
+---
+
+## Q42: Explain Genetic Algorithms for multi-objective optimization. How did you use them in Marketing Mix Modeling?
+
+**Biological analogy → Mathematical operation:**
+
+| Biology | Math |
+|---|---|
+| Chromosome | Solution vector $x = [x_1, x_2, ..., x_d]$ (budget allocation) |
+| Population | Set of $N$ candidate solutions |
+| Fitness | Objective function value $f(x)$ (revenue) |
+| Selection | Keep top-$k$ solutions by fitness |
+| Crossover | Combine two parent solutions: child inherits parts from each |
+| Mutation | Random perturbation: $x_j \leftarrow x_j + \mathcal{N}(0, \sigma^2)$ |
+
+**Single-objective GA for budget allocation:**
+1. Initialize: $N=100$ random budget allocations, subject to $\sum x_k = B$ (total budget)
+2. Evaluate: score each allocation using MMM response curves
+3. Select: keep top 50% by revenue
+4. Crossover: pair parents, for each dimension sample from one parent
+5. Mutate: with probability $p_m = 0.01$, perturb a random channel's allocation
+6. Repeat steps 2-5 for $G=500$ generations
+
+**Multi-objective GA (NSGA-II) for your case:**
+
+You had competing objectives: maximize revenue AND maximize brand awareness AND satisfy budget constraints.
+
+**Pareto front:** A solution is Pareto-optimal if no other solution is better on ALL objectives simultaneously. NSGA-II finds the entire Pareto front.
+
+**Why GA over convex optimization?**
+- MMM response curves are non-convex (saturation effects create local optima)
+- Hard constraints on channel minimums/maximums are easy to enforce via mutation operators (project back to feasible region)
+- Multi-objective: GA naturally discovers the Pareto front, while gradient methods find a single point
+
+**The Corner Solution problem you solved:**
+Without constraints, GA found $x_{TV} = 0$ (zero TV budget). Added a mutation operator that enforces $x_k \geq 0.5 \times x_k^{historical}$. This creates a "feasibility boundary" that prevents degenerate solutions while still allowing significant reallocation.
+
+---
+
+## Q43: Derive the math behind PySpark's Salting technique for data skew. What's the theoretical speedup?
+
+**Problem (Data Skew):**
+
+In your EXL CLV project, `groupBy("customer_id")` caused massive skew. One VIP corporate account had 10 million transactions vs. average user's 50.
+
+**Without salting:**
+- All 10M VIP transactions route to ONE reducer (by hash of customer_id)
+- That reducer takes $O(10M)$ while all other reducers finish quickly
+- Total time = max across reducers = $O(10M)$ for that one partition
+
+**Salting algorithm:**
+
+**Step 1 — Add salt:**
+```python
+n_salts = 10
+df = df.withColumn("salt", (F.rand() * n_salts).cast("int"))
+df = df.withColumn("salted_key", 
+    F.concat(F.col("customer_id").cast("string"), 
+             F.lit("_"), 
+             F.col("salt"))
+)
+```
+
+**Step 2 — First aggregation on salted key:**
+```python
+partial_agg = df.groupBy("salted_key", "customer_id") \
+    .agg(F.sum("amount").alias("partial_sum"), 
+         F.count("*").alias("partial_count"))
+```
+
+**Step 3 — Final aggregation, remove salt:**
+```python
+final_agg = partial_agg.groupBy("customer_id") \
+    .agg(F.sum("partial_sum").alias("total_amount"),
+         F.sum("partial_count").alias("total_count"))
+```
+
+**Theoretical speedup:**
+
+Without salting: max partition size $= M$ (VIP record count), time $\propto M$
+
+With $S$ salts: VIP's 10M transactions split across $S$ reducers $\approx M/S$ each.
+
+New max $\approx \max\left(\frac{M}{S}, \frac{\sum_{\text{normal}}}{N_{\text{partitions}}}\right)$
+
+In your case: $M = 10M$ transactions, $S = 10$ salts → each salt partition $= 1M$ transactions. Normal users: $\sim 50$ each across 2000 partitions = 25K avg. New bottleneck = 1M vs. old 10M → **10x speedup** on that join operation.
+
+**Cost:** Two groupBy passes instead of one. For $n$ rows: $O(n \log n)$ → $O(n \log n)$ (same asymptotic, different constant). Practically: 10-40% additional CPU time which is well worth the I/O savings from eliminating skew.
+
+---
+
+## Q44: Explain the mathematics of TF-IDF and why character n-grams outperform word tokens for fuzzy entity matching.
+
+**TF-IDF:**
+
+**Term Frequency:** $\text{TF}(t, d) = \frac{\text{count of term }t\text{ in document }d}{\text{total terms in }d}$
+
+(Variants: raw count, log-normalized, binary)
+
+**Inverse Document Frequency:** $\text{IDF}(t) = \log\frac{N}{|\{d: t \in d\}|}$
+
+(Smoothed variant: $\log\frac{N + 1}{|\{d: t \in d\}| + 1} + 1$ to avoid division by zero)
+
+**TF-IDF:** $\text{TF-IDF}(t, d) = \text{TF}(t, d) \times \text{IDF}(t)$
+
+High TF-IDF → term appears frequently in THIS document but rarely in the corpus → discriminative.
+
+**Why character n-grams dominate for entity matching:**
+
+Consider "Johnson & Johnson" vs. "Jhonson & Jhonson" (typo):
+
+**Word token comparison:**
+- Vocabulary: {Johnson, Jhonson, &}
+- Vector A: [2, 0, 1], Vector B: [0, 2, 1]
+- Cosine similarity = $\frac{0 \times 0 + 0 \times 0 + 1 \times 1}{\sqrt{5} \times \sqrt{5}} = \frac{1}{5} = 0.2$
+
+Very low! A single character typo completely destroys word-level similarity.
+
+**Character 3-gram comparison:**
+- A: {"Joh", "ohn", "hns", "nso", "son", ... }
+- B: {"Jho", "hns", "nso", "son", ... } ← shares "hns", "nso", "son"
+
+Jaccard similarity = $\frac{|A \cap B|}{|A \cup B|}$. With 12 unique grams in A, 12 in B, 6 shared: $J = 6/18 = 0.33$
+
+More robust — ONE typo changes only 3 grams (the affected 3-grams containing the typo character) vs. the entire word token.
+
+**Mathematical characterization:**
+
+For a string of length $L$ with a single character substitution at position $p$:
+- Word tokens: similarity drops to 0 for the affected word
+- Character n-grams: similarity drops by at most $\frac{n}{L-n+1}$ (proportional to n-gram length over total grams)
+
+For $L=10$, $n=3$: drop at most $3/8 = 37.5\%$. This degradation is gradual and proportional to the error — exactly what you want for fuzzy matching.
+
+---
+
+## Q45: Prove that SMOTE creates synthetic minority samples in the convex hull of existing minority samples. Why is this a limitation?
+
+**SMOTE Algorithm:**
+
+For each minority sample $x_i$:
+1. Find K nearest neighbors in minority class: $\{x_{i1}, x_{i2}, ..., x_{iK}\}$
+2. Randomly choose one neighbor $x_{il}$
+3. Generate synthetic sample: $\tilde{x} = x_i + \lambda(x_{il} - x_i)$ where $\lambda \sim \text{Uniform}(0,1)$
+
+**Proof that $\tilde{x}$ lies in the convex hull:**
+
+$\tilde{x} = x_i + \lambda(x_{il} - x_i) = (1-\lambda)x_i + \lambda x_{il}$
+
+This is a **convex combination** of $x_i$ and $x_{il}$ (since $0 \leq \lambda \leq 1$ and $(1-\lambda) + \lambda = 1$). Therefore $\tilde{x}$ lies on the line segment between $x_i$ and $x_{il}$ — inside the convex hull of minority samples. ✅
+
+**Limitations:**
+
+1. **Does not extrapolate beyond observed minority region:** If minority class occupies a small, irregular manifold in feature space, SMOTE only fills that manifold — doesn't extend it. Novel fraud patterns that exist NEAR but outside the observed region are missed.
+
+2. **Ignores majority class:** SMOTE can generate synthetic points that fall into dense majority regions (the boundary between classes), creating mislabeled training examples. **SMOTE+Tomek Links** addresses this by removing synthetic points too close to majority.
+
+3. **Inapplicable to non-tabular data:** Cannot interpolate between claim text documents or fraud network embeddings. Only use SMOTE on tabular numerical features.
+
+**Alternative — class weight scaling (your preferred approach):**
+
+`scale_pos_weight = n_negatives / n_positives` in XGBoost achieves similar effect mathematically by up-weighting minority class gradient contributions, without creating synthetic samples. Zero risk of generating boundary-violating samples.
+
+---
+
+## Q46: Derive the ELBO (Evidence Lower BOund) used in Variational Autoencoders. Why is it a lower bound?
+
+**Setup:** VAE learns a latent variable model. We want to maximize $\log P(x)$ but it's intractable (requires integrating over all possible $z$).
+
+**ELBO derivation:**
+
+$$\log P(x) = \log \int P(x, z) dz = \log \int P(x|z)P(z) dz$$
+
+Multiply and divide by posterior approximation $Q(z|x)$:
+
+$$= \log \int Q(z|x) \frac{P(x,z)}{Q(z|x)} dz = \log E_{Q(z|x)}\left[\frac{P(x,z)}{Q(z|x)}\right]$$
+
+**Jensen's inequality** ($\log$ is concave, so $\log E[X] \geq E[\log X]$):
+
+$$\log P(x) \geq E_{Q(z|x)}\left[\log \frac{P(x,z)}{Q(z|x)}\right]$$
+
+This is the **ELBO** — a lower bound on $\log P(x)$.
+
+**Decompose ELBO:**
+$$\text{ELBO} = E_{Q(z|x)}[\log P(x|z)] - D_{KL}(Q(z|x) \| P(z))$$
+
+| Term | Interpretation |
+|---|---|
+| $E_{Q(z|x)}[\log P(x|z)]$ | **Reconstruction loss** — how well does decoded $z$ reproduce $x$? |
+| $D_{KL}(Q(z|x) \| P(z))$ | **Regularization** — how close is the learned posterior to the prior? |
+
+**The gap:** $\log P(x) - \text{ELBO} = D_{KL}(Q(z|x) \| P(x|z)) \geq 0$
+
+As we improve the approximation $Q$, ELBO tightens toward $\log P(x)$.
+
+**Connection to fraud embedding:** VAE learns a structured latent space. Fraud claims cluster in certain regions; legitimate claims in others. The KL term prevents the latent space from collapsing to arbitrary codes.
+
+---
+
+---
+
+## 🔢 EXPANDED MATHEMATICAL FORMULAS CHEAT SHEET
+
+| Concept | Formula |
+|---|---|
+| Logistic regression gradient | $\frac{1}{N}X^T(\hat{y} - y)$ |
+| XGBoost leaf score | $w_j^* = -\frac{\sum g_i}{\sum h_i + \lambda}$ |
+| XGBoost split gain | $\frac{1}{2}\left[\frac{G_L^2}{H_L+\lambda} + \frac{G_R^2}{H_R+\lambda} - \frac{G^2}{H+\lambda}\right] - \gamma$ |
+| Attention | $\text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V$ |
+| KL Divergence | $\sum P(x)\log\frac{P(x)}{Q(x)}$ |
+| Brier Score | $\frac{1}{N}\sum(\hat{y}_i - y_i)^2$ |
+| F-beta | $\frac{(1+\beta^2)PR}{\beta^2 P + R}$ |
+| Bayes' Theorem | $P(A\|B) = \frac{P(B\|A)P(A)}{P(B)}$ |
+| Information Gain | $H(S) - \sum_v \frac{\|S_v\|}{\|S\|}H(S_v)$ |
+| Cox PH Hazard | $h(t\|x) = h_0(t)\exp(\beta^Tx)$ |
+| Cox Partial Likelihood | $L(\beta) = \prod_{i:\delta_i=1} \frac{\exp(\beta^T x_i)}{\sum_{j \in R(t_i)} \exp(\beta^T x_j)}$ |
+| Kaplan-Meier | $\hat{S}(t) = \prod_{t_{(j)} \leq t}\left(1 - \frac{d_j}{n_j}\right)$ |
+| Contrastive Loss (InfoNCE) | $-\log\frac{\exp(\text{sim}(z_i,z_j)/\tau)}{\sum_{k\neq i}\exp(\text{sim}(z_i,z_k)/\tau)}$ |
+| NDCG | $\sum_{i=1}^k \frac{2^{rel_i}-1}{\log_2(i+1)}$ / IDCG |
+| IPW ATE Estimator | $\frac{1}{n}\sum\left[\frac{T_i Y_i}{e(X_i)} - \frac{(1-T_i)Y_i}{1-e(X_i)}\right]$ |
+| DiD Estimator | $(\bar{Y}_{T,post} - \bar{Y}_{T,pre}) - (\bar{Y}_{C,post} - \bar{Y}_{C,pre})$ |
+| CUPED Variance Reduction | $\text{Var}(\tilde{Y}) = \text{Var}(Y)(1 - \rho^2)$ |
+| Thompson Sampling Regret | $O\left(\sum_{k:\mu_k<\mu^*}\frac{\log T}{\Delta_k}\right)$ |
+| Beta-Binomial Conjugate | Prior $\text{Beta}(\alpha,\beta)$ + $k$ successes → Posterior $\text{Beta}(\alpha+k, \beta+n-k)$ |
+| SMOTE Synthetic Sample | $\tilde{x} = (1-\lambda)x_i + \lambda x_{il}$ where $\lambda \sim U(0,1)$ |
+| ELBO (VAE) | $E_{Q(z\|x)}[\log P(x\|z)] - D_{KL}(Q(z\|x)\|P(z))$ |
+| Markov Removal Effect | $1 - P(\text{Conv}_{-k}) / P(\text{Conv})$ |
+| Jaro-Winkler | Jaro + $p \cdot l \cdot (1 - \text{Jaro})$ where $l$=common prefix len, $p \leq 0.25$ |
+| MinHash Jaccard Error | $\text{Var}(\hat{J}) = \frac{J(1-J)}{k}$ for $k$ hash functions |
+
+---
+
+## 🚦 COMMON DMM PITFALLS TO AVOID IN THE INTERVIEW
+
+| ❌ Mistake | ✅ What to Do Instead |
+|---|---|
+| Deriving from memory without structure | Always state assumptions first, then derive step-by-step |
+| Confusing AUC-ROC with PR-AUC | Explicitly say: "For imbalanced data like fraud, PR-AUC is more informative because..." |
+| Forgetting the $\sqrt{d_k}$ scaling in attention | Always justify why: variance of dot products grows with dimension → softmax saturates |
+| Saying "XGBoost uses gradient" without specifying order | XGBoost uses 2nd-order (gradient + hessian); sklearn GBM uses 1st-order only |
+| Not connecting math to your resume | After every derivation, add: "In my [project], this manifested as..." |
+| Forgetting log-likelihood vs. likelihood | Always take log for numerical stability and to convert products to sums |
+| Confusing MLE and MAP | MLE = maximize $P(D\|w)$; MAP = maximize $P(w\|D) \propto P(D\|w) P(w)$ |
+| Can't explain WHY KL divergence is asymmetric | $D_{KL}(P\|Q)$ weights by $P$; infinite when $Q(x)=0$ but $P(x)>0$ → mode-seeking vs mode-covering |
+| Forgetting the PH assumption for Cox | Always mention: "subject to the proportional hazards assumption, which I verified with Schoenfeld residuals" |
+| Not knowing when correlation ≠ causation | Always connect to causal inference: "correlation doesn't imply causation because of selection bias / confounders" |
+
+---
+
+*See companion files: 02_Causal_Inference_Math_Grind.md, 03_Optimization_Loss_Functions_Grind.md, 04_Transformer_Attention_Math.md, 08_Statistical_Testing_AandB.md*
