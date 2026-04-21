@@ -15,6 +15,7 @@
 | **05** | [05_LLM_Security_Responsible_AI_Deep_Dive.md](./05_LLM_Security_Responsible_AI_Deep_Dive.md) | 6 threat categories, RAI pillars, Bedrock Guardrails, evaluation checklist | Day 2 of prep |
 | **06** | [06_LangChain_Deep_Dive_Technical.md](./06_LangChain_Deep_Dive_Technical.md) | LCEL internals, RAG pipeline, agents, memory, tools — full code + 7 technical Q&As | Day 1-2 of prep |
 | **07** | [07_LangGraph_Deep_Dive_Technical.md](./07_LangGraph_Deep_Dive_Technical.md) | State machine model, nodes/edges, HITL, checkpointing, parallel agents + 7 Q&As | Day 2 of prep |
+| **08** | [08_LangChain_Practical_Issues_Bugs.md](./08_LangChain_Practical_Issues_Bugs.md) | Real-world production gotchas, agent failures, LCEL bugs, and debugging | Day 2 of prep |
 
 ---
 
