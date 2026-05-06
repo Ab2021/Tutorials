@@ -1,0 +1,582 @@
+SET1
+-----
+This video outlines exam strategies for the AWS Certified Generative AI Developer – Professional (AIP-C01) certification by providing sample scenarios. Here are the detailed steps and reasoning provided for the architectural patterns discussed:
+
+1. RAG System Metadata Filtering (0:00 - 2:40)
+
+Requirement: Filter outdated documents without changing the foundation model.
+Strategy: Configure metadata fields (e.g., version, effective date) in the knowledge base and apply metadata filters at query time.
+Reasoning: Metadata filtering ensures only valid documents are retrieved, preventing outdated information from reaching the model without the cost or complexity of fine-tuning.
+2. Real-Time Streaming APIs (2:40 - 4:54)
+
+Requirement: Display responses as tokens are generated in a chat interface.
+Strategy: Use Converse Stream or Invoke Model with Response Stream APIs.
+Reasoning: Streaming allows the UI to render text immediately, reducing perceived latency compared to waiting for a full response generation.
+3. PII Protection with Bedrock Guardrails (4:54 - 7:14)
+
+Requirement: Log prompts and responses for compliance while masking PII.
+Strategy: Enable Bedrock Guardrails combined with model invocation logging.
+Reasoning: Guardrails automatically mask PII before storage, minimizing custom code and ensuring compliance by preventing unmasked PII from ever hitting the log storage.
+4. Cost Optimization via Prompt Caching (7:14 - 9:46)
+
+Requirement: Reduce token costs when prompts contain static system instructions and few-shot examples.
+Strategy: Place static content before the cache checkpoint using Bedrock prompt caching.
+Reasoning: Caching static prefixes avoids re-processing identical tokens on every request, which can reduce costs by up to 90% for that portion of the prompt.
+5. Hallucination Detection (9:46 - 12:21)
+
+Requirement: Systematically measure response faithfulness to source documents.
+Strategy: Use Bedrock model evaluations with RAG evaluation jobs.
+Reasoning: This is a managed service that uses an 'LLM-as-a-judge' approach, avoiding the need for custom glue code or manual reviews.
+6. High-Scale Batch Processing (12:21 - 15:29)
+
+Requirement: Process 50 million items where a 24-hour lead time is acceptable.
+Strategy: Configure Amazon Bedrock batch inference.
+Reasoning: This is purpose-built for high-volume, time-tolerant offline workloads, handling parallelism and infrastructure management automatically.
+7. Multi-Agent Context Management (15:29 - 18:18)
+
+Requirement: Multiple agents needing access to the same shared conversation text.
+Strategy: Utilize Amazon Bedrock Agent Core memory.
+Reasoning: Agent Core memory is specifically designed to manage shared state across specialized agents without building custom orchestration logic.
+8. Data Lineage and Traceability (18:18 - 21:05)
+
+Requirement: Demonstrate which documents contributed to specific AI responses.
+Strategy: Enable AWS CloudTrail for API auditing and use AWS Glue Data Catalog to propagate document identifiers to vector store metadata.
+Reasoning: This provides a two-layered audit trail: CloudTrail confirms who made the request, while metadata tags confirm what data source was utilized.
+9. Intelligent Prompt Routing (21:05 - 23:46)
+
+Requirement: Optimize costs for mixed traffic (70% simple FAQ, 30% complex tasks).
+Strategy: Implement Amazon Bedrock intelligent prompt routing.
+Reasoning: This automatically directs simpler queries to smaller, cheaper models, reserving expensive, larger models only for complex tasks.
+10. Pre-production Model Comparison (23:46 - 25:59)
+
+Requirement: Compare foundation models on the same test data offline.
+Strategy: Use Bedrock model evaluations with the compare feature.
+Reasoning: Running side-by-side evaluations in a controlled environment is safer and more repeatable than performing A/B testing on live production traffic.
+-----
+SET2
+----
+This video serves as an intensive prep session for the AWS Certified Generative AI Developer (AIP-C01) exam. It breaks down 12 complex scenarios, focusing on architectural best practices for Amazon Bedrock.
+
+Here is a detailed breakdown of the key architectural patterns covered:
+
+Semantic Caching & Cost Optimization:
+
+To reduce costs for FAQ bots, avoid simple string matching (A). Instead, use deterministic request hashing with CloudFront (D) to catch semantically identical questions (0:00-2:57).
+For guaranteed capacity during high-demand events like product launches, always select Provisioned Throughput (C), rather than standard on-demand scaling or caching (7:25-9:24).
+Security & Governance:
+
+Use Amazon Bedrock Guardrails (A) for policy enforcement (blocking competitor mentions/harmful content) rather than system prompts or fine-tuning, as it provides better defense-in-depth (5:21-7:24).
+To control access to sensitive documents in a RAG (Retrieval-Augmented Generation) system, separate Knowledge Bases by confidentiality level (B) to ensure access is controlled before retrieval (11:41-13:57).
+To keep GenAI traffic entirely private, use Interface VPC Endpoints with AWS PrivateLink (D) to ensure no data ever traverses the public internet (26:35-28:50).
+RAG & Agent Architecture:
+
+Cross-modal search: Use Amazon Titan Multimodal Embeddings (C) to map images and text into a shared vector space (2:58-5:20).
+Chunking strategy: For long documents, implement Hierarchical Chunking (D). This uses small child chunks for precise retrieval and larger parent chunks to provide the necessary context to the model (21:36-24:10).
+Tool integration: Use the Amazon Bedrock Agent Core Gateway (D) to automatically expose REST APIs as tools using OpenAPI specifications, eliminating manual coding (13:58-15:56).
+Observability & CI/CD:
+
+Quality Gates: Integrate Bedrock model evaluations directly into your CI/CD pipeline (A) to automatically fail deployments if quality metrics regress (9:26-11:40).
+Monitoring: Enable Model Invocation Logging to CloudWatch (A) to centralize visibility into token usage, latency, and costs across all applications (17:43-19:43).
+
+To prevent a Bedrock-powered assistant from hallucinating information, the video states that you should enable contextual grounding checks in Amazon Bedrock Guardrails. This feature evaluates whether responses are supported by the provided context and relevant to the query; if the grounding confidence is too low, the response is blocked.
+The video states that you can automatically block regressions by integrating Amazon Bedrock model evaluations directly into your CI/CD pipeline. Specifically, you should add a pipeline stage that runs these evaluations against a test dataset and fails the deployment if the quality metrics fall below defined baseline thresholds. (09:50 - 11:08)
+----
+SET 3
+----
+This video provides a deep dive into architecture and strategy for the AWS Certified Generative AI Developer (AIP-C01) exam. It breaks down complex scenarios into manageable, best-practice design patterns. Here is a detailed summary of the core topics covered:
+
+Embedding Cost Optimization (0:01 - 3:37):
+
+Problem: Reducing costs for high-dimensional vector search.
+Reasoning: Avoid removing data or switching models. The most effective method is to reconfigure dimensionality (e.g., using 384 or 512 dimensions for Titan models) to align with domain needs, reducing storage and compute costs without sacrificing semantic quality.
+RAG System Evaluation (3:37 - 6:44):
+
+Problem: Validating retrieval relevance before deployment.
+Reasoning: Do not rely on end-to-end model generation metrics. Use retrieve-only evaluation to isolate the retrieval layer from the generative layer, ensuring context coverage and relevance are measured independently.
+Document Preprocessing (6:44 - 9:42):
+
+Problem: Preparing complex documents for foundation models.
+Reasoning: For semantic understanding (not just basic OCR), use Amazon Bedrock Data Automation. It is purpose-built to convert unstructured PDFs and images into structured JSON/HTML, preserving document layout and relationships.
+Resiliency and Regional Continuity (9:42 - 12:51):
+
+Problem: Automatic recovery during regional service disruptions.
+Reasoning: Utilize Amazon Bedrock cross-region inference profiles. This managed capability handles failover automatically within your chosen geographic scope, eliminating the need for complex, manually maintained infrastructure stacks.
+Enterprise Access Control (12:51 - 15:49):
+
+Problem: Enforcing department-level access to specific models.
+Reasoning: Move away from application-level logic. Use IAM Identity Center to map department groups to permission sets with least-privilege IAM policies, ensuring security is enforced at the AWS resource layer.
+Conversational Context Management (15:49 - 18:28):
+
+Problem: Managing long conversations without hitting context limits or performance degradation.
+Reasoning: Instead of truncation or increasing context windows, implement conversation summarization. Compressing older history retains key facts and user preferences while keeping the token count optimized.
+Feedback Loops for Prompt Engineering (18:28 - 21:04):
+
+Problem: Improving models based on low-quality user interactions.
+Reasoning: Capture feedback via API and store context in DynamoDB. Trigger Amazon A2I (Augmented AI) to route low-rated responses to subject matter experts, creating structured annotations that directly inform prompt engineering improvements.
+According to the video, you should avoid increasing chunk sizes because it leads to a decline in retrieval precision (0:59 - 3:16).
+
+Here is the reasoning:
+
+Semantic Dilution: Larger chunks incorporate too much surrounding text, which can dilute the specific semantic meaning of the content. This makes it harder for the model to retrieve highly relevant information.
+Quality Trade-off: While larger chunks reduce the total number of embeddings and potentially lower costs, they negatively impact search quality. In the context of the AWS exam, this is considered a trade-off in performance rather than a clean cost optimization strategy.
+How to lower embedding costs?
+The video states that the most cost-effective way to reduce embedding generation costs for Amazon Titan embeddings is to reconfigure the embedding model to use lower dimensionality that still fits your domain requirements (0:33 - 0:38). Using lower dimensions results in smaller vectors, which leads to less storage usage in your vector database, lower memory usage, faster similarity searches, and lower overall costs (1:33 - 1:44).
+
+The speaker explicitly advises against the following approaches:
+
+Removing older content: This reduces the system's value rather than optimizing it (2:19 - 2:34).
+Switching to a third-party model: This introduces unnecessary migration effort, re-embedding costs, and operational complexity (2:39 - 2:50).
+Increasing chunk sizes: While this reduces the total number of embeddings, it harms search quality by diluting semantic meaning, making it a quality trade-off rather than a clean optimization
+---
+Set4
+---
+This video covers a series of architectural patterns and best practices for the AWS Certified Generative AI Developer (AIP-C01) exam. Below is a detailed breakdown of the key scenarios discussed:
+
+1. Event-Driven Document Ingestion (0:00 - 2:30)
+
+Scenario: Synchronizing an S3 vector store automatically with minimal code.
+Solution: Use S3 Event Notifications to trigger a Lambda function that calls the start-ingestion-job on the Bedrock Knowledge Base.
+Reasoning: This is a native, event-driven approach that avoids polling (EventBridge) or manual scanning (Glue), ensuring near real-time freshness.
+2. Text-to-SQL Query Safety (2:30 - 6:30)
+
+Scenario: Preventing malicious SQL generation in text-to-SQL applications.
+Solution: Implement Defense-in-Depth: (1) Model generates SQL, (2) Lambda validates syntax/logic, (3) Execute via a read-only database role limited to approved views.
+Reasoning: You cannot trust the LLM; therefore, database-level permissions act as the final, unbreakable safety layer.
+3. Model Governance & Documentation (6:30 - 9:00)
+
+Scenario: Managing metadata, intended use, and lineage for custom models.
+Solution: Use SageMaker Model Registry with Model Cards.
+Reasoning: Model Cards provide structured, versioned, and programmatic documentation that travels with the model, preventing documentation drift.
+4. Large Model Deployment (9:00 - 11:35)
+
+Scenario: Deploying 30B+ parameter models without timeout errors.
+Solution: Use GPU instances with model parallel loading and increase container startup timeouts.
+Reasoning: Large models require massive GPU memory and longer initialization times; standard serverless or lambda configurations cannot support these resource demands.
+5. RAG Evaluation Metrics (11:35 - 13:45)
+
+Scenario: Diagnosing why RAG returns correct answers but cites irrelevant documents.
+Solution: Focus on citation precision and context relevance from RAG evaluation jobs.
+Reasoning: Standard metrics like Rouge measure text similarity; specific RAG metrics identify the link between the retrieved context and the final claim.
+6. Human-in-the-Loop Orchestration (16:00 - 18:05)
+
+Scenario: Adding human approval for high-risk AI responses.
+Solution: Use AWS Step Functions with Task Tokens.
+Reasoning: This allows the workflow to pause asynchronously, wait for external human intervention, and resume with state intact without constant resource consumption.
+7. Data Residency (18:05 - 21:45)
+
+Scenario: Ensuring sensitive data never leaves a specific geographic region.
+Solution: Deploy AWS Outposts for local processing and de-identification before sending non-sensitive data to Bedrock.
+Reasoning: Standard VPC endpoints only secure network traffic; strict residency requires physical control over where the compute occurs.
+8. Configuration Management (21:45 - 24:39)
+
+Scenario: Switching models without redeploying code, with gradual rollouts.
+Solution: Use AWS AppConfig.
+Reasoning: AppConfig enables controlled, safe configuration deployments with built-in rollback mechanisms, whereas updating Lambda environment variables is operationally risky and causes cold.
+To achieve automatic synchronization of a vector store when documents in Amazon S3 are added or updated, the recommended approach is to use an event-driven architecture (0:00 - 2:30).
+
+The most efficient configuration:
+
+Configure S3 Event Notifications: Set up these notifications to monitor your S3 bucket for file creation or update events (0:26 - 0:30).
+Trigger a Lambda Function: Have these events trigger an AWS Lambda function (0:30 - 0:35).
+Call Ingestion Job: The Lambda function then calls the StartIngestionJob operation on your Amazon Bedrock Knowledge Base (0:35 - 0:40).
+Why this is the best practice:
+
+Native & Near Real-Time: Unlike polling (using EventBridge) or periodic scanning (using Glue), this method reacts immediately to changes without wasted processing or scheduling delays (1:41 - 1:50).
+Minimal Code: This leverages native AWS service integrations, requiring significantly less custom code compared to building complex workflows or manual sync logic.
+How to fix RAG citation errors?
+According to the speaker, when a RAG application returns correct answers but cites irrelevant documents, you should focus on specific RAG evaluation metrics to diagnose the issue. Specifically, you should analyze citation precision and context relevance from RAG evaluation jobs (12:11 - 12:16). The speaker explains that these metrics are designed to determine whether retrieved passages are relevant to the user query and whether the citations actually support the claims made in the generated response (12:45 - 13:00).
+The video states that for managing model metadata, documentation, and preventing documentation drift, the recommended architectural solution is to use the Amazon SageMaker Model Registry integrated with programmatic model cards (06:46 - 07:15).
+
+Key reasons for this approach include:
+
+Structured and Versioned: Model cards are purpose-built to store information like intended use, limitations, and training data sources in a structured, version-aware format that is tied directly to the model lifecycle (07:42 - 07:54).
+Prevents Drift: Because the documentation travels with the model version, it remains synchronized as the model evolves, which meets the requirements of auditors and responsible AI frameworks (07:58 - 08:12).
+---Set5----
+This video covers nine practice scenarios for the AWS Certified Generative AI Developer – Professional (AIP-C01) exam. Each scenario focuses on architectural best practices for deploying, managing, and governing generative AI systems on AWS.
+
+Here are the key takeaways from the practice questions:
+
+Model Evaluation (0:00 - 2:37): To align Bedrock agent responses with ground truth, use Bedrock model evaluations with correctness and completeness metrics. These metrics handle paraphrasing effectively, unlike keyword overlap or embedding similarity.
+
+Automated Data Validation (2:38 - 5:30): Use AWS Glue Data Quality to enforce schema and data integrity. This approach uses declarative rule sets and minimizes custom code compared to Lambda or manual validation.
+
+Tool Portability (5:31 - 8:33): Implement the Model Context Protocol (MCP) to ensure tool consistency across different agent frameworks, preventing the need for custom wrappers for every new framework.
+
+Auditability & Compliance (8:34 - 11:17): Capture API activity, including the identity of the IAM principal, using AWS CloudTrail. This is the standard for tracking control plane and runtime API operations.
+
+Vector Search Performance (11:18 - 13:44): If an OpenSearch index suffers from high latency due to millions of small shards, consolidate them into fewer, larger shards (ideally 30–50 GB) to reduce coordination overhead.
+
+RAG Freshness (13:45 - 16:10): When a RAG system retrieves semantically similar but outdated data, the issue is typically in the retrieval configuration. Verify metadata filtering to ensure outdated documents are correctly excluded.
+
+Enterprise Access Control (16:11 - 18:51): Use Amazon Q Business with its native connectors and Identity Center integration to respect existing corporate permissions across S3, SharePoint, and Salesforce with minimal development.
+
+Agentic Reasoning (18:52 - 21:23): For workflows requiring explicit, auditable reasoning steps and conditional branching, use AWS Step Functions to orchestrate the process. This provides visibility into the decision-making logic, unlike embedding logic inside a single model prompt.
+Why avoid many small vector search shards?
+According to the video (11:18 - 13:44), you should avoid having millions of small shards in your OpenSearch vector index because it significantly degrades performance and increases query latency. Here is the breakdown of why this happens:
+
+Coordination Overhead: Each individual shard must independently run an approximate nearest neighbor search. Once these searches are complete, the system must coordinate and aggregate the results from all shards. When you have too many small shards, the coordination overhead becomes the primary bottleneck, dominating the total query time.
+Reduced Cache Locality: Fewer, larger shards improve cache locality, which makes the traversal of HNSW (Hierarchical Navigable Small World) graphs much more efficient.
+Best Practice: For optimal performance, the video suggests consolidating your index into fewer, larger shards, ideally in the 30 to 50 GB range per shard.
+What prevents outdated documents from appearing?
+To prevent a RAG (Retrieval-Augmented Generation) system from retrieving factually outdated documents, the focus must be on retrieval configuration rather than the generation model (14:38 - 14:57).
+
+According to the video, the most effective approach is to verify metadata filtering (15:00 - 15:25). You must ensure that:
+
+Proper Metadata Exists: Documents are correctly tagged with relevant metadata, such as timestamps or versioning info.
+Filters are Applied: Your retrieval queries are correctly configured to apply these metadata filters at query time.
+Exclusion Logic: The filters are effectively set to exclude any documents that do not meet your freshness requirements (15:10 - 15:25).
+If outdated documents are appearing in your results, it is typically a sign that your filtering logic is missing, misconfigured, or not being applied correctly during the retrieval process.
+How to check AI response accuracy?
+Evaluating AI response accuracy, particularly in a generative AI context like the AWS Bedrock scenarios discussed in the video, requires moving beyond simple keyword matching. Here are the professional approaches suggested in the video (0:00 - 2:37) and industry standards:
+
+Ground Truth Comparison: Use model-based evaluation frameworks to compare AI outputs against 'ground truth' answers provided by subject matter experts. This allows the system to judge correctness (is the answer factually accurate?) and completeness (does it cover all key requirements?).
+Semantic Evaluation: Avoid relying on cosine similarity or keyword overlap alone. These methods often fail because they cannot detect subtle factual errors or handle natural paraphrasing effectively.
+Operational Monitoring: While not a direct measure of factual accuracy, you should maintain separate operational metrics (like latency) to monitor system health, ensuring that evaluation overhead does not compromise the user experience.
+For more complex workflows, such as agentic reasoning (18:52 - 21:23), the video suggests explicit orchestration (e.g., using AWS Step Functions). By breaking down reasoning into visible, auditable steps, you create a trail that allows human reviewers to verify the decision-making process at every branch.
+What makes embedding similarity unreliable for evaluation?
+Embedding similarity is considered unreliable for evaluating generative AI accuracy because it measures semantic proximity rather than factual correctness (1:47 - 1:57).
+
+Key reasons include:
+
+Similarity vs. Accuracy: Two responses can be semantically similar or share a related context while one remains factually incorrect or hallucinated (1:50 - 1:57).
+Lack of Precision: Cosine similarity cannot distinguish between subtle factual errors that change the meaning of an answer entirely, even if the surrounding context is related (1:54 - 2:00).
+For accurate evaluation against ground truth, the video recommends using Amazon Bedrock model evaluations with metrics specifically designed for correctness (accuracy relative to the ground truth) and completeness (coverage of key points), which are better equipped to handle paraphrasing than simple embedding comparisons.
+---Set6---
+This video provides a deep dive into architectural strategies for the AWS Certified Generative AI Developer – Professional (AIP-C01) exam. The following breakdown organizes the key technical scenarios and the reasoning behind each best-practice solution:
+
+1. Balancing Safety and Utility (0:01-2:30)
+
+Scenario: Managing sensitive medical queries.
+Deep Reasoning: The goal is to provide educational value without bypassing safety.
+Solution: Use Amazon Bedrock Guardrails to filter harmful content while allowing legitimate topics. You should also enable PII masking to protect user data, rather than blocking all health-related queries or routing every request to a human (which is non-scalable).
+2. Cost Management for Power Users (2:33-5:01)
+
+Scenario: High costs driven by a few users sending long prompts.
+Deep Reasoning: Global limits or model downgrades penalize all users and degrade quality.
+Solution: Implement per-user token budgets using API Gateway usage plans combined with the CountTokens API to track usage precisely and enforce limits on specific heavy consumers.
+3. Security Testing Strategies (5:04-7:17)
+
+Scenario: Preventing sensitive information leaks via prompt injection.
+Deep Reasoning: Never rely on static configurations (like Guardrails alone). Security requires systematic verification.
+Solution: Create a test suite of adversarial prompts and automate their execution through AWS Step Functions to ensure defenses are consistently validated before deployment.
+4. API Interaction Standards (7:20-9:39)
+
+Scenario: Formatting requests for the Bedrock Converse API.
+Deep Reasoning: The Converse API does not support legacy plain-text strings.
+Solution: Use a structured messages array where each object contains a role (e.g., 'user', 'assistant') and a content array. This ensures predictable turn management.
+5. Integrating Custom Models (9:47-11:50)
+
+Scenario: Deploying a SageMaker-trained model via Bedrock runtime APIs.
+Solution: Use Amazon Bedrock Custom Model Import. This allows you to bring your own model architecture into Bedrock, making it accessible via standard Bedrock inference APIs without managing infrastructure endpoints.
+6. Foundation Model Governance (11:53-15:20)
+
+Scenario: Documenting lineage and tracking training data.
+Deep Reasoning: Governance requires a lifecycle approach connecting data to the model.
+Solution: Use SageMaker Model Registry (for model cards and versioning) integrated with the AWS Glue Data Catalog (for data lineage and source tracking).
+7. Following AWS Best Practices (15:23-18:25)
+
+Solution: For GenAI-specific architectural guidance, refer to the AWS Well-Architected Framework – Generative AI Lens. It is the authoritative resource for design patterns, RAG implementation, and hallucination mitigation.
+How to handle personal data in medical prompts?
+The video states that when dealing with sensitive medical prompts, companies should configure Amazon Bedrock Guardrails to filter harmful content while allowing for educational health information, and specifically recommends enabling PII masking to protect personal health information. (0:30 - 1:45)
+What tracks data lineage for foundation models?
+According to the architectural strategies discussed in the video (12:07 - 15:20), achieving comprehensive foundation model governance requires a combination of services to bridge the gap between machine learning models and the data used to train them. The recommended approach involves:
+
+SageMaker Model Registry: Used to handle the model-side of governance. This service allows teams to track model versions, associated training jobs, and specific artifacts. It also utilizes model cards to maintain structured documentation for each version.
+AWS Glue Data Catalog: Used to handle the data-side of governance. It serves as the authoritative source for tracking datasets, metadata, and transformations, providing the necessary data lineage to understand the origins and history of the training data.
+By integrating these two services, organizations can establish full-lifecycle traceability, connecting specific data sources to the training processes, resulting model versions, and final deployments.
+How to stop power users from wasting money?
+The video suggests that to control costs without impacting other users, companies should implement per-user token budgets using API Gateway usage plans. By combining these plans with the CountTokens API, organizations can track consumption precisely and enforce limits specifically on heavy power users.
+What makes caching poor for cost control?
+According to the speaker, caching is an ineffective strategy for controlling costs in this scenario because it only addresses repeated queries. The primary cost drivers in the company are 'power users' who send novel, long prompts; therefore, caching provides little benefit as it does not reduce the high cost associated with these unique and extensive requests.
+---Set7--
+This video introduces a structured exam preparation series for the AWS Certified Generative AI Developer – Professional (AIP-C01). Here is a detailed breakdown of the exam and the approach provided in this series:
+
+1. Exam Structure & Strategy (0:46 - 0:59)
+
+The certification consists of 85 questions.
+The format is primarily single-answer, though it occasionally features multi-answer questions (clearly indicated during the exam).
+Core Objective: The series emphasizes moving beyond rote memorization to develop the architectural mindset and strategic thinking required by AWS.
+2. Core Exam Domains (1:02 - 1:42)
+To pass, candidates must master three critical domains:
+
+Foundational Model Integration and Data Management: Focuses on Retrieval-Augmented Generation (RAG), Knowledge Bases, embedding techniques, vector stores, and data pre-processing (1:02 - 1:13).
+Implementation and Integration: Covers API integration, agents, complex workflows, and production deployment patterns (1:17 - 1:26).
+AI Safety, Security, and Governance: Addresses guardrails, troubleshooting, testing strategies, evaluation, and debugging (1:28 - 1:42).
+3. Series Format
+
+The channel provides a comprehensive playlist of long-form and short-form videos (0:26 - 0:38).
+Each practice question includes the relevant domain identification in the top right corner of the slide to help candidates track their progress across the exam syllabus (1:44 - 1:47).
+--set8-
+This video provides a deep dive into scenario-based practice questions for the AWS Certified Generative AI Developer – Professional (AIP-C01) exam. Each question is broken down to explain the underlying architectural principles expected by AWS. Here are the key technical concepts covered:
+
+Observability and Latency (0:01 - 3:00):
+
+Challenge: Measuring end-to-end latency across API Gateway, Lambda, and Bedrock.
+Solution: Use AWS X-Ray for distributed tracing. Unlike simple metrics, X-Ray provides a single trace across services, capturing cold starts and network hops which are invisible to isolated logging.
+Input Quality and Pre-processing (3:03 - 5:27):
+
+Challenge: Normalizing noisy transcripts from Amazon Transcribe before inference.
+Solution: Always clean data at the source. Use AWS Lambda with Amazon Comprehend to normalize text. This is preferred over fine-tuning the model or adjusting temperature, as it addresses the root cause of input noise cost-effectively.
+Compute Deployment Models (5:29 - 8:07):
+
+Challenge: Balancing compute profiles for disparate tools (lightweight vs. heavy CPU-intensive).
+Solution: Use a hybrid approach with MCP (Model Context Protocol). Deploy lightweight tasks to Lambda and heavy dependencies to Amazon ECS. This optimizes cost and performance while abstracting the compute layer from the Bedrock Agent.
+Automated Monitoring and Fairness (8:09 - 10:09):
+
+Challenge: Continuous bias detection in SageMaker models.
+Solution: Utilize SageMaker Model Monitor paired with SageMaker Clarify. Clarify computes fairness metrics, while Model Monitor ensures continuous automated tracking with CloudWatch alarms.
+Safe Deployment Strategies (10:19 - 13:07):
+
+Challenge: Implementing automatic rollbacks for Lambda functions.
+Solution: Use AWS CodeDeploy with Canary or Linear traffic shifting. If error rates (monitored by CloudWatch) spike, CodeDeploy automatically rolls back traffic, ensuring system reliability.
+Evaluation and Hybrid Search (13:10 - 18:35):
+
+Challenge: Addressing subjective response style/tone issues and optimizing search.
+Solution: For tone, use Bedrock model evaluations (helpfulness/coherence metrics). For hybrid search, leverage native Amazon OpenSearch capabilities that combine vector similarity with keyword (BM25) matching for superior retrieval.
+Intelligent Model Routing (18:37 - 20:37):
+
+Challenge: Automatic switching between models based on request complexity.
+Solution: Use Bedrock Intelligent Prompt Routing. It evaluates input complexity and routes traffic to the appropriate model model without requiring client-side code changes.
+Why avoid fine-tuning on noisy data?
+According to the video, you should avoid fine-tuning a model on noisy data for several key reasons (4:58 - 5:11):
+
+Reinforces poor input quality: Instead of addressing the underlying issue of noisy or unstructured data (such as transcripts with filler words), fine-tuning essentially teaches the model to accept and perpetuate those flaws.
+Costly and inefficient: The process is described as both expensive and unnecessary, as it does not actually solve the root problem of data quality.
+Best Practice: The recommended architectural principle is to clean the data at the source (as close to the origin as possible) using preprocessing tools like Amazon Comprehend before the data ever reaches the foundation model.
+How to fix tone in RAG apps?
+When users complain about the response style or tone in a RAG application that is otherwise providing factually correct answers, the issue should be addressed through subjective quality evaluation rather than correctness metrics (14:10-15:00).
+
+To identify and fix these issues, the video recommends the following steps:
+
+Use Amazon Bedrock Model Evaluations: Utilize built-in evaluation tools that focus on helpfulness and coherence metrics. These are designed to assess readability, structure, and clarity (14:33-14:55).
+Leverage "LLM as a Judge": These evaluations help determine if the response sounds appropriate for the intended user and maintains the desired style (14:40-15:00).
+Analyze User Feedback: Combine the metrics from model evaluations with direct user feedback to pinpoint exactly where the tone or style deviates from expectations. This allows you to iteratively adjust your prompts or system instructions to better align with the preferred persona (14:56-15:05).
+What to avoid:
+
+Do not focus on latency (speed) or correctness/faithfulness metrics, as these do not measure subjective experience and will not help you solve tone-related complaints (15:13-15:58).
+---Set9---
+This video breaks down key architectural patterns for building secure, scalable, and observable Generative AI applications on AWS. Here are the core concepts explained through practice scenarios for the AIP-C01 exam:
+
+Defense-in-Depth for GenAI (0:00 - 2:18):
+
+The Concept: Security must be layered so that if one control fails, others are in place to stop threats.
+Recommended Architecture: Use AWS WAF at the edge, Amazon Comprehend for pre-processing, Bedrock Guardrails at the model level, and Lambda for post-processing. Relying on a single control creates a single point of failure.
+Strategic Capacity Planning (2:19 - 4:58):
+
+The Concept: Align capacity models with traffic patterns rather than raw scale.
+Deep Insight: For highly variable workloads (spiky traffic), On-Demand capacity is the most cost-effective choice. Reserve Provisioned Throughput only for predictable, sustained high-volume traffic to avoid unnecessary costs.
+Agent Observability & Debugging (4:59 - 7:15):
+
+The Concept: When agents fail (e.g., infinite loops), visibility is critical.
+The Solution: Use Agent Traces. These allow developers to see the model's reasoning chain, helping pinpoint the exact step or ambiguous tool response that triggered the failure, which metrics alone cannot reveal.
+Row-Level Security in RAG (7:22 - 9:58):
+
+The Concept: Restricting document access based on user authorization.
+The Best Practice: Do not rely on storage-level (S3) policies for RAG results. Instead, store security metadata with your documents and apply filters at query time to ensure the model only processes content the user is permitted to see.
+Serverless API Architecture (9:59 - 12:15):
+
+The Concept: Optimizing for interactive, low-latency GenAI APIs.
+The Solution: Combine Amazon API Gateway with Lambda. To address cold starts, use Lambda Provisioned Concurrency to keep execution environments warm, ensuring immediate responses for users.
+IAM-First Access Control (12:16 - 14:36):
+
+The Concept: Authorization must be granular.
+The Key takeaway: Access to Amazon Bedrock models should be managed exclusively through IAM Policies and Execution Roles (using model ARNs) rather than network isolation or storage-based bucket policies.
+How to fix agent infinite loops?
+To fix and debug infinite loops in a Bedrock Agent, the video explains that you must first identify the root cause rather than simply masking the symptoms.
+
+Key debugging approach:
+
+Enable Agent Traces: The most effective way to debug is to use agent traces (5:32). These traces provide deep visibility into the model's reasoning steps, why it decided to call a specific tool, the exact output returned by that tool, and the logic behind subsequent re-attempts (6:04 - 6:24).
+Why other methods fail:
+
+Lambda timeouts (5:16): These only stop the execution but fail to explain why the agent keeps retrying the loop.
+Reducing context window (5:20): This merely masks the symptom and degrades the agent's performance without addressing the underlying reasoning failure.
+CloudWatch metrics (5:25): These only confirm that looping is occurring, but they lack the granular insight into the 'why' required to fix the issue.
+Why avoid layering only one safety control?
+Avoiding reliance on a single safety control is critical for maintaining a defense-in-depth architecture, as explained in the video (1:02-1:38).
+
+Here is why layering multiple independent controls is necessary:
+
+Elimination of Single Points of Failure: If you rely on only one control—such as a single Lambda function or just Bedrock Guardrails—a failure at that specific point leaves your entire application vulnerable. By stacking layers like AWS WAF, Amazon Comprehend, Guardrails, and post-processing Lambda, each layer acts as an independent barrier.
+Catching Different Threats: Different security controls are designed to mitigate different types of risks. For example, AWS WAF operates at the edge to block malicious traffic, while Comprehend handles PII detection, and Guardrails sanitize model outputs. Combining these ensures a comprehensive safety net that one tool alone cannot provide (1:25).
+Resilience: The core philosophy of defense-in-depth is that if one layer fails, the others are still in place to protect your application. Relying on a single mechanism is never sufficient for robust GenAI safety (2:09-2:16).
+When does provisioned throughput make sense?
+According to the video, provisioned throughput is only recommended when traffic patterns are predictable, demand is sustained, and the application is consistently hitting quotas (3:35-3:46).
+
+Conversely, the speaker notes that on-demand capacity should be the default starting strategy, as it is designed for variable workloads where traffic spikes at certain times and drops significantly at others, allowing you to pay per token without the long-term commitments associated with provisioned throughput (3:22-3:32).
+How to handle document security in RAG?
+The video states that for row-level security in a RAG (Retrieval-Augmented Generation) system, you should store access control metadata with the documents and filter retrieval results in the application code based on the user's permissions. This approach allows you to maintain a single knowledge base while enforcing fine-grained access control without the need to re-index data. (7:36 - 9:07).
+--Set9--
+This video provides a deep dive into three critical technical scenarios relevant to the AWS Certified Generative AI Developer – Professional (AIP-C01) exam. Here is a detailed breakdown of the scenarios and the engineering reasoning behind the solutions:
+
+1. Minimizing Time-to-First-Token (TTFT) (0:00 - 2:28)
+The Goal: Reduce the latency between sending a request and receiving the initial output token in Amazon Bedrock.
+The Solution: Use streaming APIs combined with the latency-optimized performance configuration.
+Deep Reasoning: TTFT is a measure of the first-token delay, not total throughput.
+Streaming allows tokens to reach the user as soon as they are generated, providing perceived responsiveness.
+The 'latency-optimized' configuration in Bedrock specifically tunes the model infrastructure to prioritize quick start-up over maximum token throughput, which is essential for interactive chat.
+Other options like increasing Lambda memory (which affects compute, not model inference latency) or cross-region inference (which introduces potential network overhead) do not directly address TTFT.
+2. Maintaining RAG System Consistency (2:29 - 4:53)
+The Goal: Ensure that a Retrieval-Augmented Generation (RAG) system produces consistent answers after source document updates.
+The Solution: Maintain a regression test dataset with expected outcomes and run Amazon Bedrock model evaluations after ingestion.
+Deep Reasoning: Because LLMs are inherently non-deterministic, simple methods like response hashing will fail (the hash will change even if the answer is accurate).
+Automated evaluation using a fixed ground-truth dataset provides a reliable benchmark to verify quality.
+Monitoring user satisfaction or latency are lagging indicators that only detect problems after they have already reached the end-user.
+3. Structured Data Extraction from Invoices (4:54 - 6:35)
+The Goal: Extract structured data (vendor name, line items, totals) from invoices for downstream analysis.
+The Solution: Utilize Amazon Textract with the Analyze Document feature (for forms and tables).
+Deep Reasoning: OCR tools like Amazon Rekognition detect objects/text but lack the context of document structure.
+Amazon Textract is designed specifically to interpret document layouts, identifying tables, forms, and key-value pairs, outputting them as structured JSON.
+Amazon Comprehend is for natural language processing on raw text, and AWS Glue DataBrew is for tabular data transformation; neither can read or interpret visual invoice structures directly.
+Why avoid response hashes for RAG testing?
+The video explains that response hashing should be avoided because Large Language Models (LLMs) are non-deterministic. Consequently, response hashes will almost always differ, even when the generated answers are accurate and acceptable. (4:11 - 4:20)
+Why use regression testing for RAG systems?
+The video explains that regression testing is necessary for RAG systems because their behavior changes whenever the underlying content is updated. By maintaining a fixed set of test questions and defining expected outcomes, teams can verify that answers remain consistent and identify potential quality issues before they reach end users. (3:19 - 3:54)
+Why does AI output vary for same inputs?
+Large Language Models are considered non-deterministic primarily because of how they generate text. Instead of following a rigid, static path, they function by calculating the probability distribution of the next possible tokens (words or word parts) based on the input context.
+
+As explained in the video (4:13-4:23), this probabilistic nature is a core feature of their architecture:
+
+Sampling: When generating text, LLMs use sampling strategies (often controlled by a parameter called temperature). Rather than always choosing the single most likely word, the model selects from a range of high-probability candidates. This introduces variability, which makes the model more creative and conversational but also ensures that the output is not strictly repeatable.
+Impact on Consistency: Because of this inherent randomness, two separate requests with the exact same input may result in different phrasings or structure. This is why, as noted in the video, simple techniques like comparing response hashes are ineffective for regression testing in RAG systems; the output content will frequently change even when the factual accuracy remains consistent.
+---Set10---
+This video serves as an intensive practice session for the AWS Certified Generative AI Developer – Professional (AIP-C01) exam. It breaks down complex architectural requirements into actionable patterns and AWS service selections. Here is a detailed breakdown of the core scenarios discussed:
+
+1. Orchestration & Resilience Patterns
+Complex Workflows: For chaining multiple foundation model calls with conditional logic and state management, AWS Step Functions is the recommended service (0:04-2:30). It is superior to custom Lambda logic or EventBridge because it provides built-in state, retries, and visual workflow debugging.
+Resiliency (Circuit Breaker): To handle timeouts and service instability in GenAI applications, the Circuit Breaker pattern implemented via Step Functions is the standard (4:43-7:16). This allows the system to "fail fast" and return fallbacks instead of causing cascading failures or waiting for long timeouts.
+2. Compliance, Auditing, & Cost Management
+Compliance Reporting: To track user access to models and knowledge bases for audit purposes, the gold standard is delivering AWS CloudTrail logs to S3 and querying them with Amazon Athena (2:31-4:43).
+Data Integrity: To ensure training data in S3 remains immutable and auditable, use S3 Object Lock in compliance mode combined with CloudTrail S3 data events (14:24-16:24).
+Cost Attribution: To gain granular insight into Bedrock usage by team or application, combine cost allocation tags for billing visibility with Model Invocation Logs for specific usage attribution (16:26-19:27).
+3. Performance & Observability
+Latency Analysis: When debugging slow Bedrock agents, use AWS X-Ray distributed tracing (7:20-9:39). By using subsegments, architects can isolate whether latency originates from the model, tool execution, or cold starts.
+Vector Search Scalability: As catalogs scale (e.g., to 10 million items), choosing appropriate embedding dimensionality and indexing is critical (9:42-12:00). Maximizing dimensions blindly harms performance; instead, balance precision against query latency and storage costs.
+Batch Throughput: For large offline batch jobs, use Bedrock batch inference with provisioned throughput units to guarantee capacity and predictable completion times (28:11-30:43).
+4. Network & Security Architecture
+Edge Proximity: To provide low-latency access for mobile users, use AWS Wavelength for the 5G edge, keeping back-end application logic close to the user while calling regional Bedrock endpoints (23:52-25:51).
+Comprehensive Encryption: To meet strict regulatory requirements for data at rest and in transit, implement a architecture using S3 with customer-managed KMS keys, VPC Endpoints for private transit, and TLS encryption for all API communications (25:52-28:07).
+What makes high dimensionality bad for scale?
+According to the speaker, high embedding dimensionality becomes problematic at scale because it negatively impacts three key areas: (09:42 - 11:24)
+
+Storage size: Each vector requires more bytes to store, which significantly increases the total storage footprint as the item catalog grows.
+Query latency: A higher number of dimensions leads to more complex distance calculations during searches, causing the system to slow down.
+Index efficiency: The overall effectiveness of the search index decreases, making it more difficult to maintain performance as you reach millions of items.
+Ultimately, the speaker notes that while higher dimensions might offer more semantic precision at a small scale, they become prohibitively expensive and inefficient as the catalog expands to 10 million items or more. (10:47 - 11:22)
+Why avoid retries during service outages?
+The video explains that the Circuit Breaker pattern is essential for system resilience because it prevents a failing service from being overwhelmed by continued traffic, which can make outages worse. (5:41 - 6:52)
+
+Specifically, the speaker notes that:
+
+Failing fast is preferable to waiting for long timeouts because it protects the user experience by providing an immediate fallback response instead of forcing the user to wait for a connection that is likely to fail anyway. (5:58 - 6:09)
+Avoiding retries is critical during periods of instability because constant retry logic can add excessive load to a downstream service that is already struggling, effectively worsening the outage. (6:46 - 6:52)
+AWS Step Functions is recommended for this implementation because it can track failure thresholds across executions and automatically trigger fallback logic, ensuring the application remains responsive even when the underlying foundation model or service is unstable. (6:12 - 6:25)
+---Set11---
+Question #1 (Topic: Exam A)
+
+A retail company has a generative AI (GenAI) product recommendation application that uses Amazon Bedrock. The application suggests products to customers based on browsing history and demographics. The company needs to implement fairness evaluation across multiple demographic groups to detect and measure bias in recommendations between two prompt approaches. The company wants to collect and monitor fairness metrics in real time. The company must receive an alert if the fairness metrics show a discrepancy of more than 15% between demographic groups. The company must receive weekly reports that compare the performance of the two prompt approaches.
+Which solution will meet these requirements with the LEAST custom development effort?
+A. Configure an Amazon CloudWatch dashboard to display default metrics from Amazon Bedrock API calls. Create custom metrics based on model outputs. Set up Amazon EventBridge rules to invoke AWS lambda functions that perform post-processing analysis on model responses and publish custom fairness metrics.
+B. Create the two prompt variants in Amazon Bedrock Prompt Management. Use Amazon Bedrock Flows to deploy the prompt variants with defined traffic allocation. Configure Amazon Bedrock guardrails that have content filters to monitor demographic fairness. Set up Amazon CloudWatch alarms on the GuardrailContentSource dimension that use InvocationsIntervened metrics to detect recommendation discrepancy threshold violations.
+C. Set up Amazon SageMaker Clarify to analyze model outputs. Publish fairness metrics to Amazon CloudWatch. Create CloudWatch composite alarms that combine SageMaker Clarify bias metrics with Amazon Bedrock latency metrics to provide a comprehensive fairness evaluation dashboard.
+D. Create an Amazon Bedrock model evaluation job to compare fairness between the two prompt variants. Enable model invocation logging in Amazon CloudWatch. Set up CloudWatch alarms for InvocationsIntervened metrics with a dimension for each demographic group.
+Answer: C
+Next Question
+Question #2 (Topic: Exam A)
+
+A finance company is developing an AI assistant to help clients plan investments and manage their portfolios. The company identifies several high-risk conversation patterns such as requests for specific stock recommendations or guaranteed returns. High-risk conversation patterns could lead to regulatory violations if the company cannot implement appropriate controls.
+The company must ensure that the AI assistant does not provide inappropriate financial advice, generate content about competitors, or make claims that are not factually grounded in the company's approved financial guidance. The company wants to use Amazon Bedrock Guardrails to implement a solution.
+Which combination of steps will meet these requirements? (Choose three.)
+A. Add the high-risk conversation patterns to a denied topics guardrail.
+B. Configure a content filter guardrail to filter prompts that contain the high-risk conversation patterns.
+C. Configure a content filter guardrail to filter prompts that contain competitor names.
+D. Add the names of competitors as custom word filters. Set the input and output actions to block.
+E. Set a low grounding score threshold.
+F. Set a high grounding score threshold.
+Answer: ADF
+Next Question
+Question #3 (Topic: Exam A)
+
+A company has deployed an AI assistant as a React application that uses AWS Amplify, an AWS AppSync GraphQL API, and Amazon Bedrock Knowledge Bases. The application uses the GraphQL API to call the Amazon Bedrock RetrieveAndGenerate API for knowledge base interactions. The company configures an AWS Lambda resolver to use the RequestResponse invocation type.
+Application users report frequent timeouts and slow response times. Users report these problems more frequently for complex questions that require longer processing.
+The company needs a solution to fix these performance issues and enhance the user experience.
+Which solution will meet these requirements?
+A. Use AWS Amplify AI Kit to implement streaming responses from the GraphQL API and to optimize client-side rendering.
+B. Increase the timeout value of the Lambda resolver. Implement retry logic with exponential backoff.
+C. Update the application to send an API request to an Amazon SQS queue. Update the AWS AppSync resolver to poll and process the queue.
+D. Change the RetrieveAndGenerate API to the InvokeModelWithResponseStream API. Update the application to use an Amazon API Gateway WebSocket API to support the streaming response.
+Answer: A
+Next Question
+Question #4 (Topic: Exam A)
+
+An ecommerce company operates a global product recommendation system that needs to switch between multiple foundation models (FM) in Amazon Bedrock based on regulations, cost optimization, and performance requirements. The company must apply custom controls based on proprietary business logic, including dynamic cost thresholds, AWS Region-specific compliance rules, and real-time A/B testing across multiple FMs. The system must be able to switch between FMs without deploying new code. The system must route user requests based on complex rules including user tier, transaction value, regulatory zone, and real-time cost metrics that change hourly and require immediate propagation across thousands of concurrent requests.
+Which solution will meet these requirements?
+A. Deploy an AWS Lambda function that uses environment variables to store routing rules and Amazon Bedrock FM IDs. Use the Lambda console to update the environment variables when business requirements change. Configure an Amazon API Gateway REST API to read request parameters to make routing decisions.
+B. Deploy Amazon API Gateway REST API request transformation templates to implement routing logic based on request attributes. Store Amazon Bedrock FM endpoints as REST API stage variables. Update the variables when the system switches between models.
+C. Configure an AWS Lambda function to fetch routing configurations from the AWS AppConfig Agent for each user request. Run business logic in the Lambda function to select the appropriate FM for each request. Expose the FM through a single Amazon API Gateway REST API endpoint.
+D. Use AWS Lambda authorizers for an Amazon API Gateway REST API to evaluate routing rules that are stored in AWS AppConfig. Return authorization contexts based on business logic. Route requests to model-specific Lambda functions for each Amazon Bedrock FM.
+Answer: C
+Next Question
+Question #5 (Topic: Exam A)
+
+A company is developing an internal generative AI (GenAI) assistant that uses Amazon Bedrock to summarize corporate documents for multiple business units. The GenAI assistant must generate responses in a consistent format that includes a document summary, classification of business risks, and terms that are flagged for review. The GenAI assistant must adapt the tone of responses for each user's business unit, such as legal, human resources, or finance. The GenAI assistant must block hate speech, inappropriate topics, and sensitive information such as personal health information.
+The company needs a solution to centrally manage prompt variants across business units and teams. The company wants to minimize ongoing orchestration efforts and maintenance for post-processing logic. The company also wants to have the ability to adjust content moderation criteria for the GenAI assistant over time.
+Which solution will meet these requirements with the LEAST maintenance overhead?
+A. Use Amazon Bedrock Prompt Management to configure reusable templates and business unit-specific prompt variants. Apply Amazon Bedrock guardrails that have category filters and sensitive term lists to block prohibited content.
+B. Use Amazon Bedrock Prompt Management to define base templates. Enforce business unit-specific tone by using system prompt variables. Configure Amazon Bedrock guardrails to apply audience-based threshold tuning. Manage the guardrails by using an internal administration API.
+C. Use Amazon Bedrock with business unit-based instruction injection in API calls. Store response formatting rules in Amazon DynamoDB. Use AWS Step functions to validate responses. Use Amazon Comprehend to apply content filters after the GenAI assistant generates responses.
+D. Use Amazon Bedrock with custom prompt templates that are stored in Amazon DynamoDB. Create one AWS Lambda function to select business unit-specific prompts. Create a second Lambda function to call Amazon Comprehend to filter prohibited content from responses.
+Answer: A
+---Set12--
+Question #6 (Topic: Exam A)
+
+A financial services company is building a customer support application that retrieves relevant financial regulation documents from a database based on semantic similarities to user queries. The application must integrate with Amazon Bedrock to generate responses. The application must be able to search documents that are in English, Spanish, and Portuguese. The application must filter documents by metadata such as publication date, regulatory agency, and document type.
+The database stores approximately 10 million document embeddings. To minimize operational overhead, the company wants a solution that minimizes management and maintenance effort. The application must provide low-latency responses for real-time customer interactions.
+Which solution will meet these requirements?
+A. Use Amazon OpenSearch Serverless to provide vector search capabilities and metadata filtering. Connect to Amazon Bedrock Knowledge Bases to enable Retrieval Augmented Generation (RAG) capabilities that use an Anthropic Claude foundation model (FM).
+B. Deploy an Amazon Aurora PostgreSQL database with the pgvector extension. Define tables to store embeddings and metadata. Use SQL queries to perform similarity searches. Send retrieved documents to Amazon Bedrock to generate responses.
+C. Use Amazon S3 Vectors to configure a vector index and non-filterable metadata fields. Integrate S3 Vectors with Amazon Bedrock to enable Retrieval Augmented Generation (RAG) capabilities.
+D. Set up an Amazon Neptune Analytics graph database. Configure a vector index that has appropriate dimensionality to store document embeddings. Use Amazon Bedrock to perform graph-based retrieval and to generate responses.
+Answer: A
+Next Question
+Question #7 (Topic: Exam A)
+
+A medical company is building a generative AI (GenAI) application that uses RAG to provide evidence-based medical information. The application uses Amazon OpenSearch Service to retrieve vector embeddings. Users report that searches frequently miss results that contain exact medical terms and acronyms and return too many semantically similar but irrelevant documents. The company needs to improve retrieval quality and maintain low end user latency, even as the document collection grows to millions of documents.
+Which solution will meet these requirements with the LEAST operational overhead?
+A. Configure hybrid search by combining vector similarity with keyword matching to improve semantic understanding and exact term and acronym matching.
+B. Increase the dimensions of the vector embeddings from 384 to 1536. Use a post-processing AWS Lambda function to filter out irrelevant results after retrieval.
+C. Replace OpenSearch Service with Amazon Kendra. Use query expansion to handle medical acronyms and terminology variants during pre-processing.
+D. Implement a two-stage retrieval architecture in which initial vector search results are re-ranked by an ML model that is hosted on Amazon SageMaker AI.
+Answer: A
+Next Question
+Question #8 (Topic: Exam A)
+
+A company runs a generative AI (GenAI)-powered summarization application in an application AWS account that uses Amazon Bedrock. The application architecture includes an Amazon API Gateway REST API that forwards requests to AWS Lambda functions that are attached to private VPC subnets. The application summarizes sensitive customer records that the company stores in a governed data lake in a centralized data storage account. The company has enabled Amazon S3, Amazon Athena, and AWS Glue in the data storage account.
+The company must ensure that calls that the application makes to Amazon Bedrock use only private connectivity between the company's application VPC and Amazon Bedrock. The company's data lake must provide fine-grained column-level access across the company's AWS accounts.
+Which solution will meet these requirements?
+A. In the application account, create interface VPC endpoints for Amazon Bedrock runtimes. Run Lambda functions in private subnets. Use IAM conditions on inference and data-plane policies to allow calls only to approved endpoints and roles. In the data storage account, use AWS Lake Formation LF-tag-based access control to create table and column-level cross-account grants.
+B. Run Lambda functions in private subnets. Configure a NAT gateway to provide access to Amazon Bedrock and the data lake. Use S3 bucket policies and ACLs to manage permissions. Export AWS CloudTrail logs to Amazon S3 to perform weekly reviews.
+C. Create a gateway endpoint only for Amazon S3 in the application account. Invoke Amazon Bedrock through public endpoints. Use database-level grants in AWS Lake Formation to manage data access. Stream AWS CloudTrail logs to Amazon CloudWatch Logs. Do not set up metric filters or alarms.
+D. Use VPC endpoints to provide access to Amazon Bedrock and Amazon S3 in the application account. Use only IAM path-based policies to manage data lake access. Send AWS CloudTrail logs to Amazon CloudWatch Logs. Periodically create dashboards and allow public fallback for cross-Region reads to reduce setup time.
+Answer: A
+Next Question
+Question #9 (Topic: Exam A)
+
+A media company must use Amazon Bedrock to implement a robust governance process for AI-generated content. The company needs to manage hundreds of prompt templates. Multiple teams use the templates across multiple AWS Regions to generate content. The solution must provide version control with approval workflows that include notifications for pending reviews. The solution must also provide detailed audit trails that document prompt activities and consistent prompt parameterization to enforce quality standards.
+Which solution will meet these requirements?
+A. Configure Amazon Bedrock Studio prompt templates. Use Amazon CloudWatch to create dashboards that display prompt usage metrics. Store the approval status of content in Amazon DynamoDB. Use AWS Lambda functions to enforce approvals.
+B. Use Amazon Bedrock Prompt Management to implement version control. Configure AWS CloudTrail for audit logging. Use IAM policies to control approval permissions. Create parameterized prompt templates by specifying variables.
+C. Use AWS Step Functions to create an approval workflow. Store prompts as documents in Amazon S3. Use tags to implement version control. Use Amazon EventBridge to send notifications.
+D. Deploy Amazon SageMaker Canvas with prompt templates that are stored in Amazon S3. Use AWS CloudFormation to implement version control. Use AWS Config to enforce approval policies.
+Answer: B
+Next Question
+Question #10 (Topic: Exam A)
+
+A company is developing a customer support application that uses Amazon Bedrock foundation models (FMs) to provide real-time AI assistance to the company's employees. The application must display AI-generated responses character by character as the responses are generated. The application needs to support thousands of concurrent users with minimal latency. The responses typically take 15 to 45 seconds to finish.
+Which solution will meet these requirements?
+A. Configure an Amazon API Gateway WebSocket API with an AWS Lambda integration. Configure the WebSocket API to invoke the Amazon Bedrock InvokeModelWithResponseStream API and stream partial responses through WebSocket connections.
+B. Configure an Amazon API Gateway REST API with an AWS Lambda integration. Configure the REST API to invoke the Amazon Bedrock standard InvokeModel API and implement frontend client-side polling every 100 ms for complete response chunks.
+C. Implement direct frontend client connections to Amazon Bedrock by using IAM user credentials and the InvokeModelWithResponseStream API without any intermediate gateway or proxy layer.
+D. Configure an Amazon API Gateway HTTP API with an AWS Lambda integration. Configure the HTTP API to cache complete responses in an Amazon DynamoDB table and serve the responses through multiple paginated GET requests to frontend clients.
+Answer: A
+----
