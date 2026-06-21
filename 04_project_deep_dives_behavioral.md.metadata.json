@@ -1,0 +1,5 @@
+{
+  "summary": "Comprehensive project deep dives and behavioral interview prep document. Covers every Chubb project (fraud detection RAG, BERT LoRA fine-tuning, LangGraph Agentic Data Scientist, Underwriters Assistance Tool) with 8-10 drill-down questions and model answers each. Axtria projects (MMM with adstock/saturation/genetic algorithm, omnichannel attribution with Markov chains and attention mechanisms, Pharma Rep GenAI with Neo4j). CVS Health/EXL projects (CLV, patient readmission, survival analysis, NLP entity matching). Full section on behavioral/STAR questions and Solution Architect mindset questions.",
+  "updatedAt": "2026-06-20T17:38:57.256886600Z",
+  "userFacing": true
+}

@@ -1,0 +1,5 @@
+{
+  "summary": "Comprehensive Agentic AI interview prep document for Abhishek Bhardwaj's Huge Solutions Architect interview. Covers: ReAct pattern, LangGraph deep dive with StateGraph/nodes/edges, context management strategies (compression, Zep/MemGPT/Letta), multi-agent systems (MCP, A2A, supervisor patterns), AgentOps in production (observability, guardrails, cost management), advanced patterns (LLM-as-judge, MoA, CRAG), and Huge-specific agentic use cases. Each section has model answers, cross-questions, trap questions, and code snippets.",
+  "updatedAt": "2026-06-20T17:29:02.554832800Z",
+  "userFacing": true
+}

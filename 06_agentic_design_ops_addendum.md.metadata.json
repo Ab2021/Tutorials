@@ -1,0 +1,5 @@
+{
+  "summary": "An addendum covering advanced Agentic Design and Ops patterns, ensuring no gaps in the interview prep. It covers Human-in-the-Loop (HITL) approval flows, Memory Architectures (Episodic/Semantic/Procedural), Durable Execution (Temporal/LangGraph Cloud) for stateful agents, advanced AgentOps telemetry (OpenTelemetry, AgentOps framework), and deterministic testing for agents.",
+  "updatedAt": "2026-06-20T17:58:05.607364Z",
+  "userFacing": true
+}

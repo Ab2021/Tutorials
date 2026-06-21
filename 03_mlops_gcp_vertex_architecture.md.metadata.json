@@ -1,0 +1,5 @@
+{
+  "summary": "Comprehensive MLOps, GCP Vertex AI, and production ML architecture interview prep. Covers: MLOps maturity levels, MLflow/Kubeflow deep dives, Vertex AI Pipelines (KFP v2), Vertex AI Training/Prediction/Monitoring/Feature Store/Vector Search/Agent Builder, Terraform for GCP ML infrastructure, Kubernetes for ML workloads, model serving (vLLM/Triton/TorchServe), quantization (INT8/GPTQ/AWQ), data drift/concept drift detection algorithms (PSI/KS/MMD), Delta Lake/BigQuery/Dataflow for ML data engineering, ML security (prompt injection/adversarial attacks), and Huge-specific multi-tenant ML platform design.",
+  "updatedAt": "2026-06-20T17:34:49.023226900Z",
+  "userFacing": true
+}

@@ -1,0 +1,5 @@
+{
+  "summary": "Comprehensive RAG & Vector Infrastructure interview prep for Huge Solutions Architect role. Covers: Naive/Advanced/Modular RAG, chunking strategies, embedding models, HNSW/IVF/PQ indexing, hybrid retrieval with RRF, HyDE/CRAG/Self-RAG/Adaptive RAG advanced techniques, FAISS deep dive, vector DB comparison (Chroma/Pinecone/Qdrant/Weaviate/pgvector/Vertex AI Vector Search), semantic caching (GPTCache), semantic routing, RAGAS evaluation framework, GraphRAG with Neo4j, multi-tenant RAG for Huge clients, and production RAG security/PII handling.",
+  "updatedAt": "2026-06-20T17:31:52.538966700Z",
+  "userFacing": true
+}
