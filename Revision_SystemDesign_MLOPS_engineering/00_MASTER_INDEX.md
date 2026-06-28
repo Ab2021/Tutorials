@@ -76,6 +76,7 @@ This revision added the following major topic blocks across the tutorial set (no
 
 **02_algorithms_cheat_sheet.md** (already updated in prior round)
 - Model selection rationale, LightGBM internals, survival analysis depth, MMM defense, algorithm scenarios
+- MMM scalability and operational limits
 
 **03_mlops_pipeline_deep_dive.md**
 - ML CI/CD stage-by-stage with evaluation gates
@@ -95,6 +96,7 @@ This revision added the following major topic blocks across the tutorial set (no
 - Cost/latency/quality triangle
 - New design templates: recommendation, search/ad ranking, ETA prediction, content moderation, ETL/data quality, schema evolution
 - Deeper multi-tenant ML platform architecture
+- Multi-modal clinical prediction system (ICU outcomes)
 
 **05_fraud_analytics_mastery.md**
 - Lift/gain/decile analysis
@@ -110,6 +112,8 @@ This revision added the following major topic blocks across the tutorial set (no
 - Fairness and disparate impact
 - Reason codes and explainability
 - Adversarial drift
+- Transaction-level vs cart-level fraud prediction
+- Early fraud detection timing
 
 **06_answer_strategy_playbook.md**
 - Verbal coding question framework
@@ -136,12 +140,15 @@ This revision added the following major topic blocks across the tutorial set (no
 - Cloud/MLOps follow-ups
 - System design trade-offs
 - Behavioral and leadership follow-ups
+- Model debugging follow-ups: multicollinearity, train/val/test recall gaps, quantile regression, network-effect A/B tests
 
 **10_behavioral_leadership.md**
 - Additional leadership scenarios
 - Hiring and team building
 - Cross-functional collaboration
 - Leadership one-liners
+- Evaluating and adopting new AI/ML technologies
+- Model cards, governance, and responsible AI
 
 **11_agentic_ai_deep_dive.md (new file)**
 - What makes a system agentic
@@ -171,6 +178,7 @@ This revision added the following major topic blocks across the tutorial set (no
 - Cross-validation and leakage prevention
 - Missing data strategies
 - Experimental design and power analysis
+- Advanced 2026 lead-level topics: model cards/AI governance, RLHF/DPO, network-effect A/B testing, double machine learning, quantile regression, double descent, CNN/RNN/Transformer basics, elastic weight consolidation
 
 **13_interview_pattern_answers.md (new file)**
 - Actual questions extracted from all 11 failed interview transcripts
@@ -178,6 +186,7 @@ This revision added the following major topic blocks across the tutorial set (no
 - Interviewer intent, common traps, and strong closing lines
 - Per-interview pattern groups: Lead DS, Fraud Analytics, AI Solutions Architect, Agentic AI, Senior DS, Data Scientist coding/case, AI Project Lead
 - Universal red flags and first-30-second answer template
+- Additional patterns: technology adoption, ICU multi-modal design, transaction/cart-level fraud, early detection timing, train/val/test recall gap, multicollinearity algorithms, stochastic calculus, experience narrative, when not to use ML, direct-answer discipline
 
 ---
 

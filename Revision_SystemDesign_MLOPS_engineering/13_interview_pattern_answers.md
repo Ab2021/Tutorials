@@ -1039,3 +1039,158 @@ This signals that you are evaluating the role as a leader, not just answering qu
 ---
 
 *End of file. Add future interview patterns here as new transcripts become available.*
+
+---
+
+## Section 15 — Additional Past-Interview Patterns (Second Review)
+
+### 15.1 Evaluating and adopting new AI/ML technologies
+
+**Question (as asked):** *"Describe your approach to evaluating and adopting new AI/ML technologies like agentic AI, RAG, or prompt engineering for business problems."*
+
+**Best-answer structure:**
+
+1. Map the business problem and constraints (latency, cost, compliance).
+2. Review recent literature, benchmarks, and production war stories.
+3. Audit limitations: cost at scale, vendor lock-in, drift, operational complexity.
+4. Run a time-boxed POC on representative data with a clear success metric.
+5. Present trade-offs and a phased rollout plan.
+
+**Strong closing line:**
+> "I do not adopt technology because it is trending. I adopt it when a POC proves it solves the business problem better than existing options within our constraints."
+
+---
+
+### 15.2 ICU patient health outcomes from multi-modal data
+
+**Question (as asked):** *"How would you design an ML solution to predict ICU patient health outcomes using medical devices, EHR, and clinical notes?"*
+
+**Best-answer structure:**
+
+- **Data**: Kafka/MQTT for vitals, FHIR/HL7 for EHR, de-identified notes.
+- **Features**: rolling vitals, lab trends, comorbidities, clinical note embeddings.
+- **Model**: start with interpretable gradient boosting; add transformers only if validated.
+- **Serving**: real-time lightweight scoring + comprehensive batch scoring at admission.
+- **Safety**: human-in-the-loop, model cards, bias checks, audit trail.
+
+**Common trap:** Designing a system that makes direct medical decisions without human oversight.
+
+---
+
+### 15.3 Transaction-level vs cart-level fraud prediction
+
+**Question (as asked):** *"Would you choose transaction-level or cart-level predictions for fraud detection?"*
+
+**Best-answer structure:**
+
+- Start with transaction-level for speed and simple decline logic.
+- Add cart/session-level when fraud patterns span multiple transactions.
+- Use both: transaction-level for immediate action, cart-level for deeper review.
+
+**Common trap:** Picking one without explaining when the other adds value.
+
+---
+
+### 15.4 Early fraud detection timing
+
+**Question (as asked):** *"How would you implement the requirement to detect fraud as soon as possible?"*
+
+**Best-answer structure:**
+
+- Use earliest-available signals: device, IP, account age, amount, velocity.
+- Lightweight cascade model at entry; heavier model later.
+- Cost-sensitive learning that penalizes late detection.
+- Stage-specific thresholds, not a single magic parameter.
+
+**Common trap:** Claiming there is one model parameter that controls early detection.
+
+---
+
+### 15.5 Investigating high train/val recall but low test recall
+
+**Question (as asked):** *"A model gets 95% recall on training, 80% on validation, and 30% on test. What do you investigate?"*
+
+**Best-answer structure:**
+
+- Check for distribution shift between validation and test (PSI/KS).
+- Verify validation split mirrors production time structure.
+- Look for leakage: target leakage, preprocessing leakage, future information.
+- Inspect preprocessing: were scalers/encoders fit on full data?
+- Re-run with strict time-based split and holdout.
+
+**Common trap:** Only saying "overfitting" without explaining the validation-test gap.
+
+---
+
+### 15.6 Algorithm to remove multicollinearity
+
+**Question (as asked):** *"Can you think of any algorithm that helps get rid of multicollinearity?"*
+
+**Best-answer structure:**
+
+- **PCA**: transforms correlated features into orthogonal components.
+- **Ridge regression**: shrinks correlated coefficients, stabilizes estimates.
+- **Lasso**: can drop redundant features entirely.
+- **VIF**: diagnostic tool to identify and remove redundant features.
+
+**Common trap:** Mentioning only one technique. Interviewers want a toolkit.
+
+---
+
+### 15.7 Stochastic calculus in quant roles
+
+**Question (as asked):** *"Is stochastic calculus used in quant roles?"*
+
+**Best-answer structure:**
+
+- Yes, in derivatives pricing, risk modeling, and quantitative finance.
+- It models random processes (Brownian motion, SDEs) for options and hedging.
+- It is different from ML: stochastic calculus builds theoretical models with assumptions; ML learns patterns from data.
+- They can complement: ML for pattern detection, stochastic models for structured financial risk.
+
+**Common trap:** Saying stochastic calculus and ML are the same.
+
+---
+
+### 15.8 Experience narrative for "years of ML experience"
+
+**Question (as asked):** *"How many total years of experience do you have in machine learning?"*
+
+**Best-answer structure:**
+
+- Give the number directly.
+- Then anchor it with progression: analysis → modeling → deployment → leadership.
+- Mention 2-3 concrete project types, not every project.
+- Connect to the target role.
+
+**Strong closing line:**
+> "I have [X] years in ML, with the last [Y] focused on production fraud and marketing analytics systems from prototyping through deployment."
+
+---
+
+### 15.9 When companies use ML excessively
+
+**Question (as asked):** *"Many companies use ML models everywhere. How do you decide when NOT to use ML?"*
+
+**Best-answer structure:**
+
+- When a simple rule or deterministic calculation is sufficient.
+- When data is too sparse or labels are unreliable.
+- When interpretability, auditability, or latency requirements make ML inappropriate.
+- When the cost of building, monitoring, and maintaining an ML system outweighs the benefit.
+- Example: a rule "decline all transactions from sanctioned countries" is better than a model.
+
+**Common trap:** Defaulting to ML for every problem.
+
+---
+
+### 15.10 Power of the direct answer
+
+Many of your failed interviews showed the interviewer saying *"I am not getting an answer."* The fix is the same in all cases:
+
+1. One-sentence direct answer.
+2. One reason.
+3. One example.
+4. Stop.
+
+If the interviewer asks again, repeat the direct answer in different words rather than adding new topics.
