@@ -705,3 +705,169 @@ MCC is a balanced measure for binary classification that uses all four cells of 
 ### "Why is the harmonic mean used in F1 instead of a regular average?"
 
 > "A regular average can hide weakness. For example, 25% precision and 75% recall gives an arithmetic average of 50%, same as 50% precision and 50% recall. But the harmonic mean gives 37.5% for the first case and 50% for the second. The harmonic mean forces the model to be good at both precision and recall to score well."
+
+---
+
+## SECTION 17: DATA VERSIONING AND DVC
+
+### Why Version Data
+
+A model is a function of code + data + hyperparameters. Without versioning data, you cannot reproduce a model or debug why performance changed.
+
+### DVC (Data Version Control)
+
+DVC versions large files and directories by storing metadata in Git and actual data in remote storage such as S3, GCS, or Azure Blob.
+
+**What to version with DVC:**
+- Raw datasets
+- Processed feature files
+- Trained model artifacts
+- Large configuration files
+
+**DVC vs Delta Lake:**
+- DVC: version files and artifacts
+- Delta Lake: version structured tables with time travel
+- MLflow: link code, data version, and model together
+
+### Best Practice
+
+Use Git for code, DVC for large artifacts, Delta Lake for structured feature tables, and MLflow for experiment and model registry metadata.
+
+### Interview One-Liner
+
+> "I version code with Git, structured data with Delta Lake, and large artifacts with DVC. MLflow ties them together by recording the data version and code commit for every training run."
+
+---
+
+## SECTION 18: ADVANCED DISTRIBUTION DISTANCE METRICS
+
+### KL Divergence
+
+Kullback-Leibler divergence measures how much information is lost when using distribution Q to approximate distribution P. It is not symmetric.
+
+**Use case:** comparing model score distributions between training and production.
+
+### Jensen-Shannon Divergence
+
+Jensen-Shannon divergence is a symmetric, smoothed version of KL divergence bounded between 0 and 1.
+
+**Advantages over KL:**
+- Symmetric
+- Bounded
+- Handles zero bins better
+
+**Use case:** drift detection when you want a stable, bounded metric.
+
+### Wasserstein Distance
+
+Wasserstein distance measures how much probability mass must move to align two distributions. It is useful when the location of the distribution shift matters, not just the shape.
+
+### Interview One-Liner
+
+> "For operational drift monitoring I use PSI and KS. When I need a bounded symmetric metric for analysis, I use Jensen-Shannon divergence. Wasserstein distance is useful when I care about where the distribution shifted, not just that it shifted."
+
+---
+
+## SECTION 19: LABEL DRIFT AND FEEDBACK LOOPS
+
+### Label Drift
+
+Label drift means the distribution of the target variable has changed over time. In fraud, this can happen when the business approves more policies in a region with higher or lower fraud rates.
+
+### Detection
+
+- Track the rate of positive labels over time
+- Compare label distribution by segment
+- Check whether label maturation windows are consistent
+
+### Feedback Loops
+
+A model can influence the labels it is trained on:
+- Fraud model flags claims → SIU investigates flagged claims → labels are mostly from flagged claims → model learns to replicate its own bias
+- Recommendation model recommends popular items → users click them → clicks confirm popularity → model becomes more popular-biased
+
+### Mitigation
+
+- Randomly sample some unselected cases for labeling
+- Use propensity weighting
+- Hold out a population that does not see the model's decisions
+- Monitor model performance on a neutral holdout set
+
+### Interview One-Liner
+
+> "Label drift and feedback loops are subtle. I track label rates over time, randomly sample cases that bypass the model for labeling, and maintain a holdout set where the model does not influence the outcome. This keeps training data representative."
+
+---
+
+## SECTION 20: MODEL EVALUATION GATES
+
+### What Is a Model Evaluation Gate
+
+An evaluation gate is a checkpoint that prevents a model from moving forward unless it meets defined criteria.
+
+### Common Gates
+
+| Gate | Purpose |
+|---|---|
+| Performance gate | Model beats champion or baseline by required margin |
+| Guardrail gate | No degradation on fairness, latency, calibration |
+| Reproducibility gate | Same result can be reproduced from recorded code and data |
+| Business gate | Meets operational constraints like false positive budget |
+| Security gate | No PII leakage, no adversarial vulnerabilities |
+
+### Why Gates Matter
+
+Gates prevent bad models from reaching production and create accountability. They also make promotion decisions objective rather than based on hope.
+
+### Interview One-Liner
+
+> "Before promoting any model, I run it through performance, guardrail, reproducibility, business, and security gates. This ensures the model is better than what we have, does not break constraints, and can be reproduced."
+
+---
+
+## SECTION 21: SLOs AND SLIs FOR ML SERVICES
+
+### Definitions
+
+- **SLI:** Service Level Indicator — a measurable metric
+- **SLO:** Service Level Objective — target value for the SLI
+- **SLA:** Service Level Agreement — contract with consequences
+- **Error budget:** allowed unreliability before pausing changes
+
+### Example ML SLOs
+
+| SLI | Example SLO |
+|---|---|
+| p99 latency | < 200ms |
+| Error rate | < 0.1% |
+| Availability | 99.9% |
+| Feature freshness | < 5 minutes |
+| Prediction drift PSI | < 0.1 |
+
+### Error Budget Policy
+
+When the error budget is consumed, pause feature work and focus on reliability.
+
+### Interview One-Liner
+
+> "I define SLOs for latency, error rate, availability, feature freshness, and prediction drift. An error budget tells the team when to stop shipping features and fix reliability."
+
+---
+
+## SECTION 22: ADDITIONAL FUNDAMENTAL INTERVIEW SCENARIOS
+
+### "What is the difference between a feature store and a data warehouse?"
+
+> "A feature store provides point-in-time correct features and training-serving consistency. A data warehouse stores data for analytics but does not guarantee that the features used at training time match those used at inference time. A feature store is built on top of the warehouse and adds ML-specific abstractions."
+
+### "How do you know if a model is overfitting?"
+
+> "I compare training and validation metrics. If training AUC is much higher than validation AUC, the model is overfitting. I fix it with regularization, more data, simpler model, or early stopping."
+
+### "What is the bias-variance tradeoff?"
+
+> "High bias means the model is too simple and underfits. High variance means the model is too complex and overfits. The goal is to find the complexity that minimizes total error on unseen data."
+
+### "When would you use a parametric vs non-parametric model?"
+
+> "Parametric models like logistic regression make strong assumptions and need less data but may underfit complex patterns. Non-parametric models like gradient boosting or k-NN are more flexible but need more data and can overfit. I choose based on data size, feature complexity, and interpretability needs."

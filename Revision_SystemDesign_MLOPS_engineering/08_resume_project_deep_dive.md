@@ -310,3 +310,158 @@ Use this for any resume project:
 
 > "A client wanted a deep neural network for a small tabular dataset. I pushed back by building a logistic regression baseline first. It achieved 85% of the target performance with full interpretability. The client agreed to use it as the production model. This taught me to let the data and metrics make the case rather than argue from opinion."
 
+---
+
+## CHUBB FRAUD SYSTEM — DETAILED ARCHITECTURE AND OPS
+
+### End-to-End Architecture Blocks
+
+| Block | Components | Purpose |
+|---|---|---|
+| Ingestion | Snowflake, Synapse, CRM events, ISO watchlists | Collect structured and unstructured data |
+| Feature Engineering | Databricks, PySpark, Delta Lake | Compute behavioral, network, temporal, NLP features |
+| Online Feature Store | Redis | Serve pre-computed features with sub-5ms latency |
+| Offline Feature Store | Delta Lake | Store point-in-time correct features for training |
+| Real-Time Model | FastAPI, Kubernetes, LightGBM | Score claims synchronously at submission |
+| Batch Model | Airflow, Databricks, XGBoost | Score all claims nightly with richer features |
+| NLP Enrichment | Celery, OpenAI embeddings, FAISS, GPT-4o | Extract binary fraud flags from claim notes |
+| Knowledge Graph | Neo4j / graph store | Detect fraud rings and provide network features |
+| Model Registry | MLflow | Version models, stages, metadata |
+| Monitoring | Prometheus/Grafana, PSI/KS checks, SIU feedback loop | Detect drift and degradation |
+| Feedback | SIU confirmations, labeled claims | Drive retraining and prompt improvement |
+
+### Operational Runbook for Chubb Fraud System
+
+**Daily batch job failure:**
+- Check Airflow DAG status and Databricks cluster logs
+- Verify input data freshness and row counts
+- If feature store write fails, hold previous day's features and alert
+- If scoring fails, use previous day's scores with a note
+
+**Real-time latency spike:**
+- Check Redis latency and hit rate
+- Check Kubernetes pod CPU/memory and HPA scaling
+- Check downstream API dependencies
+- If model latency exceeds SLA, activate fallback rule-based scoring
+
+**RAG pipeline faithfulness drop:**
+- Pause NLP flag ingestion
+- Review recent prompt changes and model version changes
+- Run LLM-as-judge on fixed ground truth set
+- Update prompt or retrieval strategy before resuming
+
+**Model drift alert:**
+- Investigate whether shift is data pipeline issue or real pattern change
+- If real and sustained, collect new labels and retrain challenger
+- A/B test challenger before promotion
+
+---
+
+## AXTRIA MMM PIPELINE — DETAILED ARCHITECTURE AND OPS
+
+### End-to-End Architecture Blocks
+
+| Block | Components | Purpose |
+|---|---|---|
+| Ingestion | ERP, Nielsen TV, Google Ads, Facebook Ads, vendor invoices, weather/econ data | Collect weekly spend and sales data |
+| Data Integration | Python ETL / Databricks | Merge channels into weekly granularity |
+| Feature Engineering | Adstock, saturation, lag, calendar features | Capture carryover and diminishing returns |
+| Model Layer | Linear regression baseline, XGBoost with SHAP | Predict sales and attribute channels |
+| Optimization | SciPy constrained optimizer | Recommend budget allocation |
+| Delivery | Streamlit/Excel/PowerPoint | Present results to stakeholders |
+| Monitoring | Holdout MAPE, business sanity checks | Detect model degradation |
+| Feedback | Business team input, holdout actuals | Refine adstock parameters and channel definitions |
+
+### Operational Runbook for MMM
+
+**Data source delay:**
+- Flag weeks with imputed spend
+- Exclude high-imputation weeks from validation if needed
+- Communicate delay impact to stakeholders
+
+**Channel correlation detected:**
+- Review VIF and correlation matrix
+- Combine channels or apply regularization
+- Re-run attribution and compare with business priors
+
+**MAPE degradation:**
+- Check for structural breaks (new product launch, competitor action)
+- Validate adstock and saturation parameters
+- Consider retraining with more recent data or adding external regressors
+
+**Stakeholder challenge on attribution:**
+- Show comparison across attribution models
+- Explain assumptions and limitations
+- Offer sensitivity analysis on adstock parameters
+
+---
+
+## EXL HEALTH READMISSION — DETAILED ARCHITECTURE AND OPS
+
+### End-to-End Architecture Blocks
+
+| Block | Components | Purpose |
+|---|---|---|
+| Ingestion | EHR, claims data, SDOH sources | Collect clinical and demographic data |
+| Feature Engineering | Python/PySpark | Build diagnosis, procedure, comorbidity, prior admission features |
+| Leakage Prevention | Temporal cutoffs before discharge | Ensure only pre-discharge features are used |
+| Model Layer | Logistic regression, Random Forest | Predict 30-day readmission risk |
+| Calibration | Platt scaling, Brier score | Ensure risk scores match true probabilities |
+| Serving | Batch scoring or API integration | Provide risk scores to care coordinators |
+| Monitoring | AUROC, precision at top decile, calibration | Track model performance |
+| Feedback | Readmission outcomes, clinician input | Drive retraining and feature updates |
+
+### Operational Runbook for Readmission Model
+
+**Data leakage alert:**
+- Audit feature timestamps against discharge date
+- Remove any feature that could not have been known at discharge
+- Add tests to enforce temporal cutoffs
+
+**Calibration drift:**
+- Re-run reliability diagrams on recent predictions
+- Re-apply Platt scaling on a fresh validation set
+- Communicate score interpretation changes to clinicians
+
+**Clinician trust issue:**
+- Provide SHAP-based reason codes
+- Show decile performance and case examples
+- Involve clinicians in feature definition and threshold selection
+
+**Regulatory audit:**
+- Provide model card with features, performance, and limitations
+- Show no protected attributes used as features
+- Document validation methodology and temporal splits
+
+---
+
+## PROJECT-SPECIFIC INCIDENT AND OPS STORIES
+
+### Chubb: Memory Leak in FastAPI Scorer
+
+> "We had a memory leak causing pods to OOM every 72 hours. I used Grafana to spot linear memory growth, then added tracemalloc profiling. The root cause was a SHAP explainer initialized per request. I moved it to startup, tested in staging for 5 days, and added a memory alert. Pod uptime went from 72 hours to 30+ days."
+
+### Axtria: Client Disputed Channel Attribution
+
+> "A client thought TV was under-credited. I built a side-by-side comparison of last-touch, first-touch, and Markov attribution on the same dataset. The Markov model showed TV's removal effect was larger than last-touch suggested. The client accepted the model after seeing the concrete example and sensitivity analysis."
+
+### EXL: Temporal Leakage Almost Shipped
+
+> "During validation I noticed a feature based on post-discharge diagnosis codes had leaked into training. I caught it because I enforce feature-availability timestamps. I removed the feature, rebuilt the model, and added a CI check that rejects any feature whose latest timestamp is after the prediction point."
+
+---
+
+## ADDITIONAL PROJECT FOLLOW-UPS
+
+### "How do you ensure the Chubb fraud model is reproducible?"
+
+> "We record the code commit, Delta Lake table version or timestamp, feature pipeline version, and model artifact in MLflow for every training run. To reproduce, I check out the code, read the data at the recorded version, and load the model by run_id."
+
+### "What is the SLA for the Axtria MMM refresh?"
+
+> "We refresh the MMM model monthly with the latest 3 years of weekly data. The optimization and reporting deck are delivered within 5 business days of data cutoff. If a major channel has missing data, we flag it and may delay the refresh."
+
+### "How is the EXL readmission model deployed?"
+
+> "It is deployed as a batch scorer that runs nightly and writes risk scores to a care management dashboard. Some clients also consume it through an internal API. We chose batch because care coordinators plan outreach the next day; real-time scoring was unnecessary."
+

@@ -540,7 +540,7 @@ Translate metrics into investigator time and money:
 ---
 
 ## SECTION 9: IMBALANCED DATA STRATEGIES BEYOND SMOTE
-n
+
 ### Hierarchy of Techniques
 
 **1. Algorithm-level weighting (always try first):**
@@ -694,3 +694,253 @@ A score of 0.80 should mean 80% of such claims are actually fraud. Poor calibrat
 ### "What would you do if the model starts flagging too many genuine claims?"
 
 > "I would first check the false positive rate and recent feature distributions. If a feature drifted, such as a new claim type with different amount patterns, I would retrain or exclude the affected population. If the threshold is too aggressive, I would raise it temporarily. I would also review the fallback rules and ensure the threshold optimization uses current business costs."
+
+---
+
+## SECTION 14: GRAPHRAG FOR FRAUD INVESTIGATION
+
+### What Is GraphRAG
+
+GraphRAG combines knowledge graphs with retrieval-augmented generation. Instead of retrieving isolated text chunks, it retrieves connected entities and relationships so the LLM can reason over multi-hop fraud evidence.
+
+### Why Traditional RAG Is Not Enough for Fraud
+
+Fraud evidence often lives in relationships:
+- A claimant shares a phone with a known fraudster
+- A provider works on multiple suspicious claims
+- A vehicle appears in unrelated claims with different owners
+
+Plain text RAG misses these relational patterns because chunks are processed in isolation.
+
+### GraphRAG Architecture for Fraud
+
+1. **Entity extraction:** parse claims, policies, and notes to extract entities (claimant, provider, address, vehicle, phone)
+2. **Graph construction:** store entities and relationships in a property graph
+3. **Community detection:** group related entities into communities
+4. **Summarization:** generate community summaries that capture multi-hop patterns
+5. **Retrieval:** given a new claim, retrieve relevant entities, neighbors, and community summaries
+6. **Generation:** LLM reasons over the retrieved graph context to produce structured fraud indicators
+
+### When to Use GraphRAG
+
+- Fraud patterns are relational rather than purely textual
+- Investigators ask multi-hop questions like "who else is connected to this provider?"
+- You need explainable reasoning grounded in the graph
+
+### Interview One-Liner
+
+> "For fraud, I would use GraphRAG when the evidence is relational. I extract entities from claims and notes, build a knowledge graph, retrieve connected entities and community summaries, and use the LLM to reason over the graph context. This catches ring patterns that plain text RAG misses."
+
+---
+
+## SECTION 15: LABEL MATURATION AND SELECTION BIAS
+
+### Label Maturation Problem
+
+Fraud labels are not available immediately. A claim flagged today may not be confirmed as fraud for 4 to 6 weeks.
+
+**Implications:**
+- Recent claims have no confirmed labels
+- Training data is always slightly stale
+- A/B tests must wait for label maturation
+- Performance metrics on recent data are unreliable
+
+### Handling Label Maturation
+
+- Define a label maturity window (e.g., 45 days) and only use labels after that window
+- For recent claims, use proxy labels: SIU referral, amount paid, claim closure without recovery
+- Clearly separate mature metrics from immature metrics in dashboards
+
+### Selection Bias From Your Own Model
+
+If your model blocks or holds suspicious claims, those claims get investigated more often. This creates a feedback loop:
+- The model flags certain patterns
+- Investigators review flagged claims and confirm some as fraud
+- Training data over-represents flagged patterns
+- The model becomes even more confident in those patterns
+
+### Mitigating Selection Bias
+
+- Include a random sample of unflagged claims in SIU review
+- Use propensity scoring to weight samples
+- Track model performance on a holdout set that bypasses the production filter
+- Monitor for model-induced bias in label distribution
+
+### Interview One-Liner
+
+> "Fraud labels mature with a 4 to 6 week lag, so I only use confirmed labels after a maturity window. I also watch for selection bias: if we only label claims the model flags, we reinforce our own predictions. I mitigate this by randomly sampling unflagged claims for review."
+
+---
+
+## SECTION 16: ANOMALY DETECTION FOR COLD-START AND NOVEL FRAUD
+
+### When Supervised Models Fail
+
+- New fraud schemes have no labeled examples
+- Cold-start entities have no history
+- Fraudsters intentionally behave differently from historical patterns
+
+### Anomaly Detection Approaches
+
+| Approach | Best For | Example |
+|---|---|---|
+| Statistical outlier detection | Simple univariate anomalies | Claim amount 10x above normal |
+| Isolation Forest | Multivariate outliers | Unusual combination of features |
+| Autoencoder | High-dimensional data | Reconstruction error for new claim patterns |
+| One-class SVM | Limited normal data | Profile of genuine claims |
+| Clustering + distance | Group deviation | Claim far from normal claimant clusters |
+
+### Combining Anomaly and Supervised Models
+
+- Anomaly model scores new/cold-start cases
+- Supervised model scores cases with sufficient history
+- A gating model decides which score to trust based on entity history
+
+### Interview One-Liner
+
+> "For cold-start claims and novel fraud, I use anomaly detection as a parallel signal. An isolation forest or autoencoder flags patterns that deviate from normal behavior. I combine this with the supervised fraud score so new entities are not invisible to the system."
+
+---
+
+## SECTION 17: SEQUENCE AND BEHAVIORAL MODELING
+
+### Why Sequences Matter
+
+A single claim may look normal, but a sequence of actions can reveal fraud:
+- Multiple small claims leading up to a large claim
+- Rapid policy changes before a claim
+- Claimant switches providers frequently
+
+### Sequence Features
+
+- Time between claims
+- Order of claim types
+- Changes in claim amounts over time
+- Provider switching patterns
+- Policy change timing
+
+### Models for Sequences
+
+- **RNN/LSTM/GRU:** capture temporal dependencies
+- **Transformer:** capture long-range patterns
+- **Markov models:** model transition probabilities between states
+
+### When to Use Sequence Models
+
+Use sequence models when the order and timing of events are predictive. For most fraud problems, well-engineered sequence features fed into XGBoost or LightGBM are sufficient and more interpretable.
+
+### Interview One-Liner
+
+> "I model sequences by extracting time-based and order-based features such as time-between-claims and provider-switching patterns. For most fraud use cases, gradient boosting with sequence features is enough. I would use an LSTM or Transformer only if long-range order is critical and labeled data is ample."
+
+---
+
+## SECTION 18: FAIRNESS AND DISPARATE IMPACT
+
+### Why Fairness Matters in Fraud
+
+A model that systematically flags claims from certain demographics, ZIP codes, or policy types creates regulatory and reputational risk.
+
+### Fairness Metrics
+
+- **Demographic parity:** flag rates are similar across groups
+- **Equalized odds:** false positive and false negative rates are similar across groups
+- **Calibration within groups:** predicted probabilities match actual rates within each group
+
+### Detecting Disparate Impact
+
+- Slice model performance by protected attributes where legally permitted
+- Compare flag rates, precision, and recall across groups
+- Check if certain features act as proxies for protected attributes
+
+### Mitigation Strategies
+
+- Remove or limit proxy features
+- Apply fairness constraints during training
+- Calibrate separately within groups
+- Use human review for groups where the model is less accurate
+
+### Interview One-Liner
+
+> "I evaluate fraud models for disparate impact by slicing precision, recall, and flag rates across relevant groups. If I find a proxy feature creating bias, I remove or constrain it. I also calibrate within groups and route borderline cases to human review."
+
+---
+
+## SECTION 19: REASON CODES AND EXPLAINABILITY
+
+### Why Reason Codes Matter
+
+Investigators, regulators, and customers need to know why a claim was flagged.
+
+### Generating Reason Codes
+
+- SHAP top factors for each prediction
+- Rule firing: which business rules triggered
+- Graph-derived reasons: connected to known fraud ring
+- NLP-derived reasons: specific fraud indicators from claim notes
+
+### Format for Investigators
+
+```
+Flag reason: High claim amount relative to policy history
+Supporting factor: Claim amount is 4x the claimant's 90-day average
+Confidence: 0.91
+Additional signals: Provider has 15% historical fraud rate; claimant filed 3 claims in 30 days
+```
+
+### Regulatory Explainability
+
+- Provide top 3 to 5 factors per decision
+- Ensure factors are business-meaningful, not just model internals
+- Avoid using protected attributes as reason codes
+
+### Interview One-Liner
+
+> "Every fraud flag is accompanied by reason codes from SHAP, business rules, graph signals, and NLP indicators. I limit these to the top 3 to 5 business-meaningful factors so investigators and regulators can understand the decision."
+
+---
+
+## SECTION 20: ADVERSARIAL DRIFT AND FRAUDSTER ADAPTATION
+
+### What Is Adversarial Drift
+
+Fraudsters study your model's behavior and adjust to evade detection. This is concept drift driven by intelligent adversaries.
+
+### Signs of Adversarial Drift
+
+- Sudden drop in model performance on specific segments
+- New patterns that exploit known model weaknesses
+- Increase in claims that narrowly miss thresholds
+- Feedback from SIU about novel schemes
+
+### Defensive Strategies
+
+- Monitor performance by segment and flag sudden drops
+- Use ensemble models so no single weak point is exploitable
+- Keep some rules and anomaly detection as non-learned signals
+- Regularly rotate features and retrain
+- Add randomization to thresholds and review queues so fraudsters cannot game the system
+
+### Interview One-Liner
+
+> "I assume fraudsters will adapt. I monitor segment-level performance, maintain ensembles and non-learned signals like rules and anomaly detection, and avoid deterministic thresholds that can be gamed. Regular retraining and feature rotation reduce exploitability."
+
+---
+
+## SECTION 21: ADDITIONAL FRAUD OPS SCENARIOS
+
+### "Your offline PR-AUC improved, but online fraud loss did not drop. Why?"
+
+> "Possible reasons: label maturation means recent labels are incomplete, the offline test set does not match production distribution, selection bias from our own flags inflates offline metrics, or the new model's calibration changed so thresholds no longer produce the intended action. I would verify by waiting for mature labels, running an A/B test, and checking calibration and threshold impact."
+
+### "How do you handle a new fraud scheme with no labeled examples?"
+
+> "First, I work with SIU to characterize the pattern. Then I engineer features that capture it. I use anomaly detection to surface similar cases for rapid labeling. Once I have enough confirmed examples, I retrain the supervised model and A/B test before full rollout."
+
+### "How do you prevent the model from gaming the system?"
+
+> "I avoid publishing exact thresholds or feature logic. I use ensemble models and maintain rule-based and anomaly-based signals that are harder to reverse-engineer. I monitor for edge-seeking behavior, where claims cluster just below thresholds, and I adjust thresholds or add features accordingly."
+
+### "What is the right balance between automation and human review?"
+
+> "High-confidence fraud can be auto-routed to investigation. Low-confidence cases go to human review. Anything involving large amounts, protected classes, or novel patterns should default to human review. The balance is set by precision, cost, and risk appetite."

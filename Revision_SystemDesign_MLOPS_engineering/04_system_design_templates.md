@@ -980,3 +980,341 @@ You can optimize any two of: cost, latency, model quality. The third will suffer
 ### How to Close a System Design Answer
 
 > "To summarize, I would start with a simple REST scoring service on Kubernetes for real-time decisions, backed by Redis online features and an offline XGBoost batch model. I would add a RAG/NLP pipeline for unstructured data and a Neo4j knowledge graph for ring detection. Monitoring covers input drift, prediction drift, and business outcomes. Rollback and fallback are pre-defined. What area would you like me to go deeper on?"
+
+---
+
+## SECTION 17: DESIGN 4 — RECOMMENDATION SYSTEM
+
+### Block 1: Problem Scope
+
+**Goal:** Recommend relevant items to users (products, movies, content).
+**Scale:** 10M users, 1M items, 100M interactions/day.
+**Latency:** < 100ms for real-time recommendations.
+**Constraints:** personalization, freshness, diversity, business rules.
+
+### Block 2: Data Ingestion
+
+- **User interactions:** clicks, views, purchases, ratings — Kafka events
+- **Item metadata:** categories, descriptions, prices — batch load to data warehouse
+- **User profiles:** demographics, preferences — batch/refreshed daily
+- **Context:** time of day, device, location — real-time at request time
+
+### Block 3: Feature Engineering
+
+- **User features:** recent interests, historical purchase categories, average price point
+- **Item features:** popularity, category, price, text/image embeddings
+- **Interaction features:** recency, frequency, implicit signals (dwell time, skip rate)
+- **Two-tower embeddings:** separate user and item towers, dot product for scoring
+
+### Block 4: Model Layer
+
+**Candidate generation (fast, recall-focused):**
+- Collaborative filtering: users who viewed X also viewed Y
+- Approximate nearest neighbor on user/item embeddings
+- Content-based filtering for cold-start items
+
+**Ranking (slower, precision-focused):**
+- Gradient-boosted ranker or neural ranker
+- Features: user-item affinity, popularity, freshness, diversity, business constraints
+- Loss: pairwise ranking loss or softmax cross-entropy
+
+**Re-ranking:**
+- Diversity rules
+- Business rules (promote sponsored items within limits)
+- Freshness boost for new items
+
+### Block 5: Serving Layer
+
+- Pre-compute candidate pools in batch
+- Real-time API fetches user profile, runs ANN retrieval, scores top-K candidates with ranking model
+- Cache popular user recommendations
+- A/B test ranking models on recommendation click-through rate and downstream conversion
+
+### Block 6: Monitoring
+
+- Offline: recall@K, NDCG, MAP
+- Online: click-through rate, conversion rate, dwell time, coverage (% items recommended)
+- Guardrails: bad recommendations rate, inappropriate content rate
+
+### Block 7: Feedback Loop
+
+- Capture user clicks and skips
+- Update embeddings and ranking model on a schedule
+- Handle feedback loops: popular items get more exposure, reinforcing popularity — use exploration/exploitation balance
+
+**Interview one-liner:**
+> "A production recommender has three stages: candidate generation with collaborative filtering and ANN, ranking with a learned model, and re-ranking for diversity and business rules. I monitor both offline ranking metrics and online engagement, and I balance exploration so new items get a chance."
+
+---
+
+## SECTION 18: DESIGN 5 — SEARCH AND AD RANKING SYSTEM
+
+### Block 1: Problem Scope
+
+**Goal:** Rank search results or ads by relevance/expected value.
+**Scale:** 100K queries/second, billions of documents/ads.
+**Latency:** < 50ms p99.
+**Primary metric:** click-through rate, conversion rate, or revenue.
+
+### Block 2: Data Ingestion
+
+- **Queries:** real-time search logs
+- **Documents/ads:** batch index with metadata
+- **Click/conversion feedback:** delayed, often hours to days
+- **User context:** device, location, time, search history
+
+### Block 3: Feature Engineering
+
+- **Query features:** length, category intent, location
+- **Document/ad features:** relevance score, quality score, bid, historical CTR
+- **User features:** location, device, recent searches
+- **Query-document features:** BM25, semantic similarity, click history for this query-document pair
+
+### Block 4: Model Layer
+
+- **Retrieval:** inverted index + ANN for semantic matches
+- **Ranking:** LambdaMART, XGBoost, or neural ranker
+- **Objective:** maximize expected utility (clicks, conversions, revenue)
+- **Calibration:** predicted probabilities should match actual click rates for ad pricing
+
+### Block 5: Serving Layer
+
+- Query arrives → retrieval engine fetches candidate set
+- Feature lookup from feature store
+- Ranker scores candidates
+- Apply business rules and filters
+- Return top-K
+
+### Block 6: Monitoring
+
+- Online: CTR, conversion rate, revenue per query, latency, error rate
+- Offline: NDCG, precision@K on labeled query-result pairs
+- Calibration: reliability diagrams for predicted CTR
+
+### Block 7: Feedback Loop
+
+- Log every impression, click, and conversion
+- Retrain ranker on delayed labels
+- A/B test new rankers against production baseline
+- Monitor for position bias and selection bias
+
+**Interview one-liner:**> "Search ranking uses retrieval to fetch candidates, a learned ranker to score them using query-document and context features, and calibration so predicted click probabilities match reality for pricing. I log impressions and clicks, handle delayed feedback, and A/B test before rollout."
+
+---
+
+## SECTION 19: DESIGN 6 — ETA / DEMAND PREDICTION SYSTEM
+
+### Block 1: Problem Scope
+
+**Goal:** Predict delivery ETA or ride arrival time.
+**Scale:** millions of trips/day.
+**Latency:** < 50ms per request.
+**Primary metric:** MAE or RMSE of predicted vs actual time.
+
+### Block 2: Data Ingestion
+
+- Historical trip records: start time, route, distance, weather, traffic, driver, vehicle type
+- Real-time traffic: streaming traffic speed data
+- Weather, events: batch/external APIs
+
+### Block 3: Feature Engineering
+
+- Route features: distance, number of turns, road types
+- Temporal features: hour of day, day of week, holidays
+- Traffic features: current segment speeds, historical averages
+- Driver/restaurant features: historical prep/delivery times
+- Weather features: rain, snow, temperature
+
+### Block 4: Model Layer
+
+- Baseline: heuristic based on distance and average speed
+- Advanced: gradient boosting or neural network with route and traffic features
+- For ETA, regression with MAE or custom loss penalizing late predictions more than early ones
+
+### Block 5: Serving Layer
+
+- Real-time API receives origin, destination, and context
+- Route engine computes candidate path
+- Model predicts ETA for each path segment
+- Aggregate and return ETA with confidence interval
+
+### Block 6: Monitoring
+
+- MAE, RMSE, bias (are we systematically early or late?)
+- Segment-level errors to identify bad routes or traffic data
+- Customer complaints about late deliveries
+
+### Block 7: Feedback Loop
+
+- Compare predicted vs actual ETAs
+- Retrain model weekly or daily depending on data volume
+- Update traffic and weather features continuously
+
+**Interview one-liner:**> "An ETA system combines route computation with a regression model that uses distance, traffic, weather, and historical segment speeds. I monitor MAE and bias, and I penalize late predictions more than early ones because customer impact is asymmetric."
+
+---
+
+## SECTION 20: DESIGN 7 — CONTENT MODERATION CLASSIFIER
+
+### Block 1: Problem Scope
+
+**Goal:** Detect toxic, harmful, or policy-violating user-generated content.
+**Scale:** millions of posts/day.
+**Latency:** < 100ms for synchronous decisions.
+**Primary metric:** precision and recall per violation category.
+
+### Block 2: Data Ingestion
+
+- User posts, images, videos
+- Human moderator labels
+- User reports
+
+### Block 3: Feature Engineering
+
+- Text: embeddings, keyword lists, language detection
+- Images: vision embeddings, object detection, OCR text
+- User history: prior violations, report rate, account age
+
+### Block 4: Model Layer
+
+- Lightweight rules for obvious violations
+- Text classifier (BERT or smaller transformer) for nuanced text
+- Image classifier for visual content
+- Ensemble for final decision
+
+### Block 5: Serving Layer
+
+- Synchronous API for live posts: allow, flag for review, or block
+- Asynchronous pipeline for uploaded media
+- Human review queue for borderline cases
+
+### Block 6: Monitoring
+
+- Per-category precision/recall
+- False positive rate (legitimate content blocked)
+- Appeal rate and overturn rate
+- Throughput and latency
+
+### Block 7: Feedback Loop
+
+- Moderator labels feed back into training data
+- Handle adversarial evasion by monitoring new slang, image perturbations
+- Balance automation with human review for high-stakes categories
+
+**Interview one-liner:**> "Content moderation uses rules for obvious cases, BERT-based classifiers for text, and vision models for images. Borderline cases go to human review. I monitor per-category precision/recall and false positive rate because blocking legitimate content is a serious user experience issue."
+
+---
+
+## SECTION 21: ETL AND DATA QUALITY SYSTEM DESIGN
+
+### Why Data Quality Is a System Design Concern
+
+Bad data silently breaks models. Data quality must be designed into the pipeline, not added later.
+
+### Data Quality Checks
+
+| Check | Purpose | Example |
+|---|---|---|
+| Schema validation | Columns exist with correct types | claim_amount is numeric |
+| Null rate check | Missing values within expected range | provider_id null rate < 1% |
+| Distribution check | Values within expected range | claim_amount between 0 and 10M |
+| Freshness check | Data arrived on time | Claims table updated within 1 hour |
+| Volume check | Row counts within expected range | Daily claims between 5K and 50K |
+| Uniqueness check | Primary keys are unique | claim_id has no duplicates |
+| Referential check | Foreign keys resolve | policy_id exists in policy table |
+
+### ETL Pipeline Block
+
+```
+Source systems
+    → Ingestion (batch or streaming)
+    → Validation layer
+    → Transformation
+    → Feature store / data warehouse
+    → Downstream consumers
+```
+
+### Handling Data Quality Failures
+
+- **Warn:** minor deviation, pipeline continues, alert owner
+- **Block:** severe deviation, pipeline halts, downstream models use last known good data
+- **Quarantine:** suspect rows written to quarantine table for investigation
+
+### Interview One-Liner
+
+> "I design data quality into the ETL pipeline with schema, null, distribution, freshness, volume, uniqueness, and referential checks. Severe issues block the pipeline and alert the owner; minor issues warn and continue. Suspect rows are quarantined for review."
+
+---
+
+## SECTION 22: SCHEMA EVOLUTION IN ML SYSTEMS
+
+### Why It Matters
+
+Upstream producers change schemas. If the feature pipeline does not handle this, models receive wrong inputs and predictions fail silently.
+
+### Schema Contract Approach
+
+- Define expected schema per feature pipeline version
+- Validate incoming data against the contract
+- Version the contract alongside model versions
+
+### Handling Different Change Types
+
+- **New column:** warn and ignore for current model; may be useful for next model
+- **Removed column:** fail if the model requires it; activate fallback
+- **Type change:** fail and alert
+- **New category value:** handle via unknown-category encoding or retraining plan
+
+### Interview One-Liner
+
+> "I enforce schema contracts at ingestion and inference. Breaking changes fail the pipeline. Additive changes trigger warnings. Each model version is tied to a specific schema contract so we can reproduce behavior and detect mismatches."
+
+---
+
+## SECTION 23: MULTI-TENANT ML PLATFORM — DEEPER ARCHITECTURE
+
+### High-Level Architecture
+
+```
+Tenant requests
+    → API Gateway (authentication, rate limiting, routing)
+    → Tenant Router (selects model variant and features)
+    → Feature Store (tenant-isolated or tenant-aware features)
+    → Model Serving (shared or tenant-specific models)
+    → Monitoring (per-tenant metrics)
+    → Billing (cost attribution)
+```
+
+### Key Components
+
+- **Tenant router:** maps tenant to correct model version and feature set
+- **Feature isolation:** logical separation of tenant data in feature store
+- **Model registry per tenant:** or shared registry with tenant-tagged versions
+- **Per-tenant monitoring:** dashboards and alerts per tenant
+- **Cost attribution:** track compute, storage, API calls per tenant
+
+### Operational Patterns
+
+- Shared infrastructure with tenant-specific weights/calibration
+- Separate namespaces for high-value tenants
+- Gradual rollout per tenant
+
+### Interview One-Liner
+
+> "A multi-tenant ML platform has a tenant router, isolated feature namespaces, shared or tenant-specific models, per-tenant monitoring, and cost attribution. This balances operational efficiency with customization and data isolation."
+
+---
+
+## SECTION 24: ADDITIONAL SYSTEM DESIGN SCENARIOS
+
+### "Design a real-time feature platform."
+
+> "I would use Kafka for streaming events, Flink or Spark Structured Streaming for real-time aggregations, Redis for online serving, and Delta Lake for offline historical storage. The same computation logic runs in both paths to prevent training-serving skew. A schema registry validates event schemas."
+
+### "How do you design for low-latency inference at scale?"
+
+> "I minimize request-time computation by pre-computing features and caching hot entities. I use small, quantized models or ONNX. I deploy on Kubernetes with HPA and keep minimum replicas warm. I avoid synchronous calls to slow dependencies and use circuit breakers."
+
+### "Design a system for A/B testing ML models."
+
+> "Randomize by the unit that receives treatment, not by request. Use a consistent hash on user/claim ID so the same entity always sees the same model. Log model version with every prediction. Wait for lagged labels before computing metrics. Monitor guardrails and have a rollback plan."

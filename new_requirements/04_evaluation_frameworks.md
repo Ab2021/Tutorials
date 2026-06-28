@@ -1,0 +1,642 @@
+# EVALUATION FRAMEWORKS — Ragas, Promptfoo, Regression Testing, Human Review
+## How to know if your AI system actually works. The differentiator that gets you hired.
+
+---
+
+## SECTION 1: WHY EVALUATION IS THE MOST IMPORTANT SKILL
+
+### The Problem with AI Systems
+
+Unlike a traditional software function (input → deterministic output), AI systems:
+- Can fail silently (wrong answer that sounds correct)
+- Degrade gradually (LLM version changes, data drift)
+- Fail on edge cases that unit tests can't anticipate
+
+**The consulting firm's nightmare:** Deploy AI for a client, AI looks great in demo, fails on real client data. Client loses trust. Deal lost.
+
+**What gets you hired:** "I don't deploy AI without a validated evaluation framework. Here's my process..."
+
+### The Four Evaluation Questions
+
+1. **Is the answer correct?** (Ground truth comparison)
+2. **Is the answer faithful to the retrieved documents?** (No hallucination)
+3. **Will it stay correct after I change the prompt/model?** (Regression testing)
+4. **Does it work for the client's actual use cases?** (Acceptance testing)
+
+---
+
+## SECTION 2: RAGAS — COMPLETE GUIDE
+
+### Setup
+
+```python
+# Install
+pip install ragas langchain-openai
+
+# Initialize with models
+from ragas import EvaluationDataset, evaluate
+from ragas.llms import LangchainLLMWrapper
+from ragas.embeddings import LangchainEmbeddingsWrapper
+from ragas.metrics import (
+    faithfulness,
+    answer_relevancy,
+    context_recall,
+    context_precision,
+    answer_correctness,
+    answer_similarity
+)
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+
+# Use stronger model for evaluation (GPT-4o judges the answers)
+evaluator_llm = LangchainLLMWrapper(ChatOpenAI(model="gpt-4o", temperature=0))
+evaluator_embeddings = LangchainEmbeddingsWrapper(OpenAIEmbeddings(model="text-embedding-3-small"))
+```
+
+### The Five Core Metrics — Deep Dive
+
+**1. FAITHFULNESS**
+```
+What it measures: Are all claims in the generated answer supported by the retrieved context?
+
+How it's computed:
+1. LLM decomposes the answer into individual statements
+2. For each statement, LLM checks: "Is this statement supported by the context?"
+3. Faithfulness = (# supported statements) / (total statements)
+
+Score range: 0 to 1 (1 = every statement is grounded in context)
+
+Production threshold: > 0.85 for SME use cases (clients will catch errors)
+
+Low faithfulness diagnosis:
+- LLM is using training knowledge instead of retrieved context
+- Fix: Stronger "only use context" instruction in system prompt
+- Fix: Temperature = 0 for extraction tasks
+```
+
+**2. ANSWER RELEVANCY**
+```
+What it measures: Does the answer actually address the question asked?
+
+How it's computed:
+1. LLM generates N synthetic questions from the answer (reverse engineering)
+2. Compute cosine similarity between original question and synthetic questions
+3. Answer relevancy = mean similarity
+
+Score range: 0 to 1 (1 = perfectly on topic)
+
+Low relevancy diagnosis:
+- Answer is vague ("I can help you with that question...")
+- Answer addresses related but different question
+- Fix: More specific prompt instructing to directly answer the question
+```
+
+**3. CONTEXT RECALL**
+```
+What it measures: Did the retrieval pipeline surface all the information needed to answer?
+
+How it's computed:
+1. LLM decomposes the ground truth answer into individual statements
+2. For each statement, checks: "Is this covered by the retrieved context?"
+3. Context recall = (# statements covered by context) / (total statements)
+
+Score range: 0 to 1
+
+Low context recall diagnosis:
+- Relevant chunks not being retrieved
+- Fix: Improve chunking (chunks too small, missing context)
+- Fix: Improve retrieval (top_k too low, embedding model weak for domain)
+- Fix: Add hybrid search
+```
+
+**4. CONTEXT PRECISION**
+```
+What it measures: Are the retrieved chunks actually relevant? (No noise)
+
+How it's computed:
+1. For each retrieved chunk, LLM checks: "Is this relevant to the question?"
+2. Context precision = (# relevant chunks) / (total retrieved chunks)
+
+Score range: 0 to 1
+
+Low context precision diagnosis:
+- Too many irrelevant chunks retrieved (too high top_k)
+- Embedding model doesn't distinguish topics well
+- Fix: Add reranking, reduce top_k, improve metadata filtering
+```
+
+**5. ANSWER CORRECTNESS** (Requires ground truth)
+```
+What it measures: Is the answer factually correct compared to the known correct answer?
+
+How it's computed: Combination of factual correctness + semantic similarity to ground truth
+
+Score range: 0 to 1
+
+Requires: A curated ground truth dataset (this is the hard part!)
+```
+
+### Running a Full Ragas Evaluation
+
+```python
+# Step 1: Build ground truth dataset
+ground_truth_data = [
+    {
+        "user_input": "What are the payment terms in our contract with Fornitore ABC?",
+        "retrieved_contexts": [...],  # Populated by your RAG system
+        "response": "...",            # Generated by your RAG system
+        "reference": "Payment terms are 30 days net from invoice date, with 2% early payment discount for within 10 days."
+    },
+    # ... 50-100 representative cases
+]
+
+# Step 2: Run RAG on all test cases to populate retrieved_contexts and response
+def populate_with_rag(ground_truth_data: list[dict]) -> list[dict]:
+    for case in ground_truth_data:
+        rag_result = rag_query(case["user_input"], client_id="evaluation_client")
+        case["retrieved_contexts"] = [s["text"] for s in rag_result.sources]
+        case["response"] = rag_result.answer
+    return ground_truth_data
+
+# Step 3: Evaluate
+populated = populate_with_rag(ground_truth_data)
+dataset = EvaluationDataset.from_list(populated)
+
+results = evaluate(
+    dataset=dataset,
+    metrics=[faithfulness, answer_relevancy, context_recall, context_precision, answer_correctness],
+    llm=evaluator_llm,
+    embeddings=evaluator_embeddings
+)
+
+print(results)
+# Expected output:
+# faithfulness       0.891
+# answer_relevancy   0.847
+# context_recall     0.762
+# context_precision  0.810
+# answer_correctness 0.743
+```
+
+### Ragas in Production — Continuous Evaluation
+
+```python
+# Schedule weekly evaluation run
+import schedule
+
+def weekly_ragas_evaluation():
+    """Run weekly on sample of real queries"""
+    
+    # Sample 50 real queries from last week's logs
+    recent_queries = query_log_db.get_recent(days=7, sample_size=50)
+    
+    # Get domain expert to provide ground truth for sampled queries
+    # (automation limit: you need human review for ground truth)
+    
+    # Run evaluation
+    metrics = evaluate_rag_system(recent_queries)
+    
+    # Compare to baseline
+    baseline = metrics_db.get_baseline()
+    for metric, value in metrics.items():
+        if value < baseline[metric] - 0.05:  # 5% degradation threshold
+            alert_team(f"RAGAS DEGRADATION: {metric} dropped from {baseline[metric]:.2f} to {value:.2f}")
+    
+    # Save new baseline if better
+    if metrics["faithfulness"] > baseline["faithfulness"]:
+        metrics_db.update_baseline(metrics)
+    
+    # Send weekly report
+    send_evaluation_report(metrics, baseline)
+
+schedule.every().monday.at("09:00").do(weekly_ragas_evaluation)
+```
+
+---
+
+## SECTION 3: PROMPTFOO — PROMPT REGRESSION TESTING
+
+### What Promptfoo Is
+
+Promptfoo tests prompts like code tests. Run assertions against LLM outputs to catch prompt regressions.
+
+```yaml
+# promptfoo.yaml — Test configuration
+description: "SME Invoice Extraction Prompt Tests"
+
+# The prompt being tested
+prompts:
+  - file://prompts/invoice_extraction.txt
+
+# LLMs to test against (test across multiple models)
+providers:
+  - id: openai:gpt-4o
+    config:
+      temperature: 0
+  - id: anthropic:claude-3-5-sonnet-20241022
+    config:
+      temperature: 0
+
+# Test cases
+tests:
+  - description: "Extract standard invoice fields"
+    vars:
+      document_text: |
+        FATTURA N. 2025-0123
+        Data: 15/01/2025
+        Fornitore: Rossi e Figli SRL
+        P.IVA: IT01234567890
+        TOTALE: € 1.234,56
+    assert:
+      # Check that extracted JSON has required fields
+      - type: contains-json
+        value:
+          invoice_number: "2025-0123"
+          total_amount: 1234.56
+      # Check that it doesn't hallucinate extra fields
+      - type: javascript
+        value: |
+          output.supplier_name.includes("Rossi")
+      # Check response time
+      - type: latency
+        threshold: 5000  # max 5 seconds
+
+  - description: "Handle missing data gracefully"
+    vars:
+      document_text: |
+        This is a delivery note, not an invoice.
+        Items shipped to via Roma 1.
+    assert:
+      # Should NOT confidently extract invoice fields from non-invoice
+      - type: javascript
+        value: |
+          const parsed = JSON.parse(output);
+          return parsed.invoice_number === null || parsed.invoice_number === "";
+
+  - description: "Italian language invoice"
+    vars:
+      document_text: |
+        Gentile Cliente, in allegato trova la fattura per i servizi resi nel mese di Dicembre...
+    assert:
+      - type: llm-rubric
+        value: "The response correctly identifies this as a service invoice and extracts relevant fields"
+```
+
+**Running promptfoo:**
+```bash
+# Run tests
+npx promptfoo eval
+
+# Compare against previous run (regression detection)
+npx promptfoo eval --repeat 1 --compare
+
+# Generate HTML report
+npx promptfoo eval --output-path results.html
+```
+
+---
+
+## SECTION 4: HUMAN REVIEW LOOPS — PRODUCTION NECESSITY
+
+### When Human Review Is Mandatory
+
+- **Before client goes live:** 100% human review of outputs on representative sample
+- **Ongoing spot check:** 5-10% of production outputs reviewed by domain expert
+- **After model/prompt changes:** Review all changes on fixed test set
+- **When metrics signal degradation:** Full review of recent outputs
+
+### Building a Human Review Interface
+
+```python
+# Simple human review API endpoint
+@app.post("/review/submit")
+async def submit_human_review(
+    review: HumanReview,
+    reviewer_id: str = Depends(verify_reviewer_token)
+):
+    """
+    review: {
+        "query_id": "...",
+        "rating": 1-5,
+        "is_faithful": true/false,
+        "is_helpful": true/false,
+        "correct_answer": "...",  # Optional correction
+        "notes": "..."
+    }
+    """
+    # Save review
+    review_db.insert(review, reviewer_id=reviewer_id)
+    
+    # Trigger retraining if enough negative feedback
+    negative_reviews = review_db.count_negative(last_n=100)
+    if negative_reviews / 100 > 0.15:  # >15% negative in last 100 queries
+        alert_team("High negative review rate. Check latest outputs.")
+    
+    return {"status": "review saved", "query_id": review.query_id}
+
+# Admin endpoint to get queries pending review
+@app.get("/review/queue")
+async def get_review_queue(reviewer_id: str = Depends(verify_reviewer_token)):
+    pending = query_db.get_unreviewed(limit=20, client_id=reviewer_id)
+    return pending
+```
+
+### Review Sampling Strategy
+
+```python
+# Don't review randomly — review the HARD cases
+def sample_for_review(queries: list[Query], n: int = 20) -> list[Query]:
+    # Priority 1: Low confidence scores
+    low_confidence = [q for q in queries if q.confidence < 0.6]
+    
+    # Priority 2: "No documents found" cases
+    no_docs = [q for q in queries if q.chunks_retrieved == 0]
+    
+    # Priority 3: Very long answers (might be hallucinating)
+    long_answers = [q for q in queries if len(q.answer) > 1500]
+    
+    # Priority 4: New query patterns (not seen before)
+    novel_queries = detect_novel_queries(queries)
+    
+    # Combine and deduplicate
+    priority_sample = low_confidence[:5] + no_docs[:5] + long_answers[:5] + novel_queries[:5]
+    
+    # Fill remaining with random sample
+    remaining = n - len(priority_sample)
+    random_sample = random.sample([q for q in queries if q not in priority_sample], remaining)
+    
+    return priority_sample + random_sample
+```
+
+---
+
+## SECTION 5: FAILURE ANALYSIS — ROOT CAUSE METHODOLOGY
+
+### The Four-Level Failure Taxonomy
+
+```
+Level 1: RETRIEVAL FAILURE
+- Did the relevant document exist in the index? (Coverage)
+- Was the document retrieved? (Recall)
+- Was the retrieved content sufficient? (Precision)
+
+Level 2: CONTEXT QUALITY FAILURE
+- Was the chunk boundary wrong (split important info across chunks)?
+- Was the chunk too noisy (header/footer contamination)?
+- Was the chunk too short (lost context)?
+
+Level 3: GENERATION FAILURE
+- Did the LLM ignore the context and use training knowledge?
+- Did the LLM misinterpret the question?
+- Did the LLM fail to extract the right information from context?
+- Was the output format wrong?
+
+Level 4: SYSTEM FAILURE
+- Timeout or API error
+- Prompt injection
+- Context window overflow
+- Rate limiting
+```
+
+### Failure Analysis Notebook
+
+```python
+# For each failed query, trace through the pipeline to find root cause
+
+def analyze_failure(query_id: str):
+    query = query_log.get(query_id)
+    
+    print(f"QUERY: {query.question}")
+    print(f"EXPECTED: {query.expected_answer}")
+    print(f"GOT: {query.actual_answer}")
+    print(f"FAITHFULNESS SCORE: {query.faithfulness}")
+    
+    # Level 1: Was the document even in the index?
+    doc_in_index = check_document_indexed(query.expected_source_doc)
+    print(f"Level 1 - Document indexed: {doc_in_index}")
+    
+    if not doc_in_index:
+        print("ROOT CAUSE: Document not in index → fix indexing pipeline")
+        return
+    
+    # Level 2: Was it retrieved?
+    all_retrieved = get_retrieved_chunks(query_id)
+    relevant_retrieved = [c for c in all_retrieved if check_relevance(query.question, c)]
+    print(f"Level 2 - Chunks retrieved: {len(all_retrieved)}, Relevant: {len(relevant_retrieved)}")
+    
+    if len(relevant_retrieved) == 0:
+        print("ROOT CAUSE: Retrieval failure → adjust chunking or retrieval strategy")
+        
+        # Diagnose further
+        top_similarity = max_similarity_to_ground_truth(query.question, all_retrieved)
+        print(f"  Top similarity to query: {top_similarity:.3f}")
+        if top_similarity < 0.7:
+            print("  → Embedding model poor for this domain vocabulary")
+        else:
+            print("  → Similarity score threshold too high, or top_k too low")
+        return
+    
+    # Level 3: Generation failure
+    print(f"Level 3 - Context quality: {len(relevant_retrieved)} relevant chunks available")
+    print(f"  LLM used context correctly: {query.faithfulness > 0.8}")
+    
+    if query.faithfulness < 0.8:
+        print("ROOT CAUSE: Generation failure → LLM ignoring context or hallucinating")
+        print("  Fix: Stronger 'only use context' instruction, lower temperature")
+```
+
+---
+
+## SECTION 6: EVALUATION FOR AGENTIC SYSTEMS
+
+### What's Different About Evaluating Agents
+
+Standard RAG: evaluate single question → answer pair.
+Agents: evaluate a multi-step trajectory → did the agent complete the task correctly?
+
+### Trajectory Evaluation
+
+```python
+from dataclasses import dataclass
+from enum import Enum
+
+class ToolCallResult(Enum):
+    CORRECT = "correct"           # Tool was appropriate AND arguments were correct
+    UNNECESSARY = "unnecessary"   # Tool called but wasn't needed
+    WRONG_TOOL = "wrong_tool"     # Should have used different tool
+    WRONG_ARGS = "wrong_args"     # Right tool, wrong arguments
+
+@dataclass
+class AgentTrajectory:
+    task: str
+    tool_calls: list[dict]       # Sequence of tool calls with arguments
+    final_answer: str
+    expected_tool_sequence: list[str]
+    expected_answer: str
+
+def evaluate_agent_trajectory(trajectory: AgentTrajectory) -> dict:
+    metrics = {}
+    
+    # 1. Task completion: Did agent produce a final answer?
+    metrics["task_completed"] = trajectory.final_answer != ""
+    
+    # 2. Answer correctness: Is final answer correct?
+    metrics["answer_correct"] = evaluate_semantic_similarity(
+        trajectory.final_answer,
+        trajectory.expected_answer
+    ) > 0.85
+    
+    # 3. Tool efficiency: Did agent use appropriate tools?
+    actual_tools = [t["name"] for t in trajectory.tool_calls]
+    expected_tools = trajectory.expected_tool_sequence
+    
+    metrics["unnecessary_tool_calls"] = len([t for t in actual_tools if t not in expected_tools])
+    metrics["missing_tool_calls"] = len([t for t in expected_tools if t not in actual_tools])
+    metrics["tool_sequence_correct"] = actual_tools == expected_tools
+    
+    # 4. Human escalation appropriateness: Did agent escalate when needed?
+    should_have_escalated = requires_human_approval(trajectory.task)
+    did_escalate = any(t["name"] == "request_human_approval" for t in trajectory.tool_calls)
+    metrics["escalation_appropriate"] = should_have_escalated == did_escalate
+    
+    return metrics
+
+# Golden test cases for agent evaluation
+AGENT_TEST_CASES = [
+    {
+        "task": "Find all overdue invoices from Fornitore X and send me a summary",
+        "expected_tool_sequence": ["search_invoices", "get_invoice_details"],
+        "expected_final_action": "return_summary",  # NOT send_email (not authorized)
+        "should_escalate": False  # Task is read-only
+    },
+    {
+        "task": "Send reminder email to all clients with invoices overdue > 30 days",
+        "expected_tool_sequence": ["search_invoices", "request_human_approval"],
+        "expected_final_action": None,  # Waits for human approval
+        "should_escalate": True  # Email sending always needs approval
+    }
+]
+```
+
+---
+
+## SECTION 7: COST-AWARE EVALUATION
+
+### Track Cost per Evaluation Run
+
+```python
+def track_evaluation_costs():
+    """Monitor cost of your evaluation runs — they can get expensive!"""
+    
+    # Running Ragas with GPT-4o as judge can cost $1-5 per 100 test cases
+    # Run promptfoo across multiple models multiplies cost
+    
+    costs = {
+        "ragas_run_100_cases": {
+            "model": "gpt-4o",
+            "input_tokens_per_case": 2000,   # Context + metrics prompt
+            "output_tokens_per_case": 200,    # Score + explanation
+            "total_input_tokens": 200_000,    # 100 cases * 2000
+            "total_output_tokens": 20_000,
+            "cost_usd": (200_000 * 5 + 20_000 * 15) / 1_000_000  # ≈ $1.30
+        }
+    }
+    
+    # Use cheaper models for routine evaluation
+    # Reserve GPT-4o judge for final acceptance testing
+    # Use gpt-4o-mini for intermediate evaluation during development: $0.15/1M tokens
+```
+
+---
+
+## SECTION 8: BUILDING THE EVALUATION DATASET (Practical Guide)
+
+### For Italian SME Client — How to Get Ground Truth
+
+**Challenge:** SME clients don't have annotated Q&A datasets. You must CREATE one.
+
+**Step 1: Shadow collection (first 2 weeks)**
+```
+Log all user queries (question + retrieved chunks + generated answer)
+Don't evaluate yet — collect real-world question patterns
+```
+
+**Step 2: Domain expert annotation session (1-2 hours with client)**
+```
+Present: "Here are 50 questions users have asked. For each one:
+1. Is the answer correct? (Yes/No/Partially)
+2. If no, what's the correct answer?
+3. Is anything missing from the answer?"
+```
+
+**Step 3: Synthesize additional test cases**
+```python
+# Use LLM to generate diverse test questions from documents
+def generate_test_questions(document_text: str, n: int = 20) -> list[dict]:
+    prompt = f"""
+    Given this business document, generate {n} diverse questions a business user might ask.
+    Include:
+    - Simple factual questions ("What is the payment due date?")
+    - Comparative questions ("What are the differences between plan A and plan B?")
+    - Aggregation questions ("How many items are in section 3?")
+    - Negative questions ("What does the contract NOT cover?")
+    
+    For each question, provide the expected answer based on the document.
+    
+    Document: {document_text}
+    
+    Return JSON: [{{"question": "...", "expected_answer": "..."}}]
+    """
+    
+    response = llm.generate(prompt)
+    return json.loads(response)
+```
+
+**Step 4: Maintain the dataset**
+```
+- Add new cases when failures occur in production
+- Minimum 50 cases per client domain before going live
+- Re-validate with client domain expert quarterly
+```
+
+---
+
+## SECTION 9: EVALUATION REPORTING FOR NON-TECHNICAL CLIENTS
+
+### Business-Friendly Metrics
+
+Never show Ragas scores to an Italian SME owner. Translate:
+
+| Technical Metric | Business Translation |
+|-----------------|---------------------|
+| Faithfulness: 0.91 | "The system only says things supported by your documents 91% of the time" |
+| Context Recall: 0.78 | "When an answer exists in your documents, the system finds it 78% of the time" |
+| 6 false answers / 100 queries | "Out of 100 questions, 6 might be inaccurate — we review these in the weekly report" |
+| P99 latency: 4.2s | "In the rare worst case, it takes about 4 seconds to respond" |
+| Cost: €0.03 per query | "Each question costs about 3 euro cents. At 500 queries/day that's €15/day" |
+
+### Weekly Client Report Template
+
+```markdown
+# AI Assistant Weekly Report — [Client Name]
+## Week of [Date]
+
+### Usage
+- Total queries: 234
+- Active users: 8
+- Most common question topics: invoices (45%), contracts (30%), policies (25%)
+
+### Quality
+- System correctly answered: 218 out of 234 queries (93%)
+- Cases flagged for review: 16 (reviewed by our team, 3 improvements made)
+
+### Performance  
+- Average response time: 2.3 seconds
+- Cost this week: €34
+
+### Improvements Made This Week
+- Added 12 new documents to the knowledge base
+- Improved accuracy on invoice date questions (+5%)
+
+### Issues Identified
+- System struggles with multi-year contract comparisons → investigating
+```

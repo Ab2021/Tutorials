@@ -61,6 +61,101 @@
 
 ---
 
+## 📝 LATEST REVISION SUMMARY — COMPREHENSIVE GAPS CLOSED
+
+This revision added the following major topic blocks across the tutorial set (no prior content deleted):
+
+**01_ml_fundamentals_basics.md**
+- DVC and data versioning
+- KL / Jensen-Shannon / Wasserstein divergence
+- Label drift, feedback loops, selection bias
+- Model evaluation gates
+- SLOs/SLIs for ML services
+
+**02_algorithms_cheat_sheet.md** (already updated in prior round)
+- Model selection rationale, LightGBM internals, survival analysis depth, MMM defense, algorithm scenarios
+
+**03_mlops_pipeline_deep_dive.md**
+- ML CI/CD stage-by-stage with evaluation gates
+- Experiment tracking vs model registry distinction
+- DVC, schema evolution, data contracts
+- SLOs, error budgets, scheduled vs event-driven retraining
+- Model retirement
+- Advanced drift metrics (JS divergence) and tools (Evidently, NannyML)
+- Model serialization risks (pickle)
+- Multi-tenant ML platform ops
+
+**04_system_design_templates.md**
+- Vector DB and ANN trade-offs
+- Agentic AI system design
+- Knowledge graph integration
+- Online vs offline inference, multi-tenancy, resilience
+- Cost/latency/quality triangle
+- New design templates: recommendation, search/ad ranking, ETA prediction, content moderation, ETL/data quality, schema evolution
+- Deeper multi-tenant ML platform architecture
+
+**05_fraud_analytics_mastery.md**
+- Lift/gain/decile analysis
+- Explaining metrics to non-technical stakeholders
+- Imbalanced data beyond SMOTE
+- Fraud-specific evaluation metrics and expected fraud value
+- Advanced SQL blocking
+- Calibration depth
+- GraphRAG for fraud investigation
+- Label maturation and selection bias
+- Anomaly detection for cold-start/novel fraud
+- Sequence and behavioral modeling
+- Fairness and disparate impact
+- Reason codes and explainability
+- Adversarial drift
+
+**06_answer_strategy_playbook.md**
+- Verbal coding question framework
+- Programming languages and tools framing
+- Handling "why not X?" counter-proposals
+- Anticipating follow-ups
+- Mock interview closing and questions to ask
+
+**07_simplicity_vs_complexity.md**
+- LLM/RAG vs rules/classical ML decision framework
+- Deep learning vs classical ML
+- Production maintainability, team skill fit, cost-benefit
+- Anti-overengineering checklist
+
+**08_resume_project_deep_dive.md**
+- SOAR storytelling framework
+- Detailed architecture and ops runbooks for Chubb, Axtria, EXL
+- Project-specific incident stories
+
+**09_followup_questions_bank.md**
+- Statistical tests and experiment design
+- Multi-label/multi-class evaluation
+- LLM evaluation and guardrails
+- Cloud/MLOps follow-ups
+- System design trade-offs
+- Behavioral and leadership follow-ups
+
+**10_behavioral_leadership.md**
+- Additional leadership scenarios
+- Hiring and team building
+- Cross-functional collaboration
+- Leadership one-liners
+
+**11_agentic_ai_deep_dive.md (new file)**
+- What makes a system agentic
+- State machines vs ReAct vs LangGraph
+- Tool use, structured output, memory/context/KV cache
+- System/user prompts, reflection, guardrails
+- Observability, GraphRAG-style fraud investigation design
+- Evaluation, deployment trade-offs, cost/latency control
+- Skills and MCPs
+- Prompt injection defense
+- Orchestrator-workers, supervisor, peer-to-peer patterns
+- Observability tools, behavior-based testing, loop detection
+- Lead-level expectations
+
+---
+
 ## 🎯 THE GOLDEN ANSWER TEMPLATE
 
 For EVERY technical question, use this structure:
