@@ -944,3 +944,45 @@ Fraudsters study your model's behavior and adjust to evade detection. This is co
 ### "What is the right balance between automation and human review?"
 
 > "High-confidence fraud can be auto-routed to investigation. Low-confidence cases go to human review. Anything involving large amounts, protected classes, or novel patterns should default to human review. The balance is set by precision, cost, and risk appetite."
+
+---
+
+## SECTION 22: TRANSACTION-LEVEL VS CART-LEVEL FRAUD PREDICTION
+
+### The Two Framings
+
+- **Transaction-level**: each individual transaction gets a fraud score. Good when any single transaction can be fraudulent and you want fast action.
+- **Cart-level / session-level**: the whole shopping cart or session gets one score. Useful when fraud is only visible from a sequence of related transactions, such as card testing followed by a high-value purchase.
+
+### How to Decide
+
+- Start with transaction-level because it is simpler and allows fast rejection of bad payments.
+- Add cart/session-level when you see fraud patterns that span multiple transactions, like repeated small authorizations before a large one.
+- Often use both: transaction-level for immediate decline, cart-level for post-auth review.
+
+### Interview One-Liner
+
+> "I default to transaction-level scoring for speed and simplicity. I add cart or session-level scoring only when fraud patterns clearly span multiple transactions, and I use the two layers together — fast decline at transaction level and deeper review at cart level."
+
+---
+
+## SECTION 23: EARLY FRAUD DETECTION TIMING
+
+### The Business Goal
+
+Detect fraud as early as possible in the transaction or claim lifecycle without creating excessive false alarms.
+
+### How to Prioritize Early Detection
+
+- **Feature timing**: use features available at the earliest possible moment — device, IP, entry channel, account age, amount, and velocity.
+- **Cascade scoring**: lightweight real-time model at entry; heavier model later when more signals arrive.
+- **Cost-sensitive learning**: penalize late detection more heavily in the loss function by assigning higher cost to false negatives that occur late.
+- **Threshold by stage**: lower threshold for early-stage flags to catch subtle signals; tighten as more evidence accumulates.
+
+### No Magic Parameter
+
+There is rarely a single "early detection parameter." Early detection is achieved by feature availability, model cascade design, and business rules that act on minimal evidence.
+
+### Interview One-Liner
+
+> "Early fraud detection comes from using the earliest-available signals in a lightweight cascade model, then escalating as richer features arrive. I tune the cost of late detection and stage-specific thresholds, not a single magic parameter."

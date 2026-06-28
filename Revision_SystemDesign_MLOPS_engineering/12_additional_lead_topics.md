@@ -571,3 +571,59 @@ The smallest effect size that is both statistically significant and business mea
 ### "Explain transfer learning in simple terms."
 
 > "Transfer learning is using knowledge from a large, related problem to solve a smaller problem faster and with less data. For example, a model trained on millions of general text sentences can be fine-tuned on a few thousand fraud claim notes to classify them."
+
+---
+
+## SECTION 16: ADVANCED 2026 LEAD-LEVEL TOPICS
+
+### Model Cards and AI Governance
+
+A model card documents purpose, data, performance, limitations, and intended use. At lead level, governance includes:
+- Segment-level performance and bias checks
+- Out-of-scope use statements
+- Approval history and owner contact
+- Incident register and remediation log
+
+### RLHF and DPO for LLM Alignment
+
+- **RLHF (Reinforcement Learning from Human Feedback)**: train a reward model from human preferences, then fine-tune the LLM with policy-gradient methods to maximize reward while staying close to the base model.
+- **DPO (Direct Preference Optimization)**: skips the explicit reward model and optimizes directly on preference pairs, making it simpler and more stable.
+
+When to mention: when asked how to align LLM outputs with business or safety constraints. DPO is often preferred for production because it is simpler.
+
+### A/B Testing with Network Effects
+
+When the treatment of one user affects another, simple randomization fails.
+- **Cluster randomization**: randomize by group, region, or marketplace rather than individual.
+- **Switchback testing**: alternate treatment on/off by time window to account for network effects.
+- **Synthetic control**: construct a weighted control group from unaffected units when only one treated unit exists.
+
+### Double Machine Learning
+
+A causal inference technique that uses machine learning to estimate nuisance parameters while still producing valid treatment-effect estimates. Useful when many confounders are present and you do not want to assume a linear relationship.
+
+### Quantile Regression / Pinball Loss
+
+Predicts a chosen quantile of the target distribution rather than the mean. Used when the cost of under-prediction differs from over-prediction, such as inventory planning or wait-time estimation. Pinball loss penalizes overestimation and underestimation asymmetrically based on the quantile.
+
+### Double Descent
+
+As model capacity increases beyond the interpolation threshold, test error can decrease again after initially increasing. It challenges the classical bias-variance story and matters for capacity planning with over-parameterized models.
+
+### CNN, RNN, and Transformer Basics
+
+| Architecture | Strength | Typical use |
+|---|---|---|
+| CNN | Local pattern detection with shared filters | Images, spatial data |
+| RNN | Sequential memory via hidden state | Time series, text (legacy) |
+| Transformer | Self-attention captures long-range context | Modern NLP, vision, multi-modal |
+
+For retrieval, transformers like BERT produce contextual embeddings. For generation, decoder-only transformers predict the next token.
+
+### Elastic Weight Consolidation
+
+A continual learning technique that protects important weights when training a model on new tasks. Used when an LLM or fraud model must learn new patterns without forgetting old ones.
+
+### Interview One-Liner
+
+> "Lead-level interviews now expect model cards, alignment methods like DPO, causal-aware experimentation such as switchback testing, and awareness of over-parameterized phenomena like double descent. I treat these as part of the broader production-governance toolkit."

@@ -237,4 +237,19 @@
 **Q: "How do you prioritize multiple ML projects?"**> "I prioritize by expected business value, data readiness, model feasibility, and strategic alignment. A project with high value and clean data should go first. A high-value project with poor data quality needs a data collection phase before modeling."
 
 **Q: "What would your first 90 days look like in a lead role?"**> "First 30 days: understand current systems, team strengths, and key pain points. Days 30-60: deliver a quick win, often a monitoring dashboard or baseline model fix. Days 60-90: define roadmap, evaluation framework, and team rituals. I avoid changing everything at once."
-"
+
+---
+
+## CATEGORY 14: MODEL DEBUGGING AND MULTICOLLINEARITY FOLLOW-UPS
+
+**Q: "Can you think of any algorithm that helps get rid of multicollinearity in features?"**
+> "The cleanest algorithmic fixes are PCA, which creates orthogonal components, and Ridge/Lasso regularization, which shrinks or removes correlated coefficients. For linear models I also check Variance Inflation Factor (VIF) and drop or combine redundant features."
+
+**Q: "How do you investigate a model with high recall on training and validation but very low recall on test?"**
+> "I suspect distribution shift, data leakage, or a validation split that does not match production. I check PSI and KS between validation and test features, verify that the validation period is from the same distribution as test, look for time-based leakage, and re-run a time-aware split. I also check if the test set was preprocessed with statistics from training data."
+
+**Q: "When do you use quantile regression?"**
+> "When the business cares about a specific quantile rather than the mean prediction, such as the 90th percentile of wait time or the 5th percentile of demand. Pinball loss gives asymmetric penalties for over- versus under-prediction."
+
+**Q: "How do you handle network effects in an A/B test?"**
+> "I use cluster randomization, switchback testing by time window, or synthetic control. The right choice depends on whether the effect spills over between users and how many units I can randomize."

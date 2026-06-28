@@ -753,3 +753,28 @@ Because you cannot easily A/B test TV spend, use holdout time periods for valida
 ### "Why does LightGBM use leaf-wise growth?"
 
 > "Leaf-wise growth lets the tree focus on the leaf that gives the biggest error reduction, rather than growing all leaves level by level. This creates deeper, more expressive trees and usually higher accuracy on large datasets. The risk is overfitting on small data, which we control with min_data_in_leaf and num_leaves."
+
+---
+
+## SECTION 16: MARKETING MIX MODELING — SCALABILITY AND OPERATIONAL LIMITS
+
+### When MMM Becomes Hard to Scale
+
+MMM is powerful, but it has practical ceilings:
+
+- **Granularity**: weekly national data works well; daily SKU-store data strains the regression assumptions and requires many parameters.
+- **Heterogeneity**: a single model across very different markets can hide local dynamics. Regional hierarchical models or separate models may be needed.
+- **Feature engineering load**: adstock, saturation, seasonality, and holiday transforms must be maintained across channels.
+- **Retraining cadence**: spend and response patterns change; MMM is not a set-and-forget model.
+- **Validation difficulty**: you cannot A/B test TV or outdoor spend easily, so holdout time periods and causal reasoning matter.
+
+### Scaling Strategies
+
+- **Modular pipelines**: separate data prep, transformation, modeling, and allocation optimization so each piece can evolve.
+- **Hierarchical models**: national-level MMM plus market-level adjustment layers.
+- **Bayesian MMM**: encodes prior beliefs and produces uncertainty intervals for budget decisions.
+- **Automated diagnostics**: MAPE, R-squared, residual checks, and parameter stability reports after every retrain.
+
+### Interview One-Liner
+
+> "MMM works best at weekly national granularity. When scaling to many regions or SKUs, I use hierarchical or Bayesian structures, modular pipelines, and automated holdout diagnostics. The real bottleneck is validation, because you cannot A/B test offline media."

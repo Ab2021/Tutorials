@@ -59,6 +59,7 @@
 | 10_behavioral_leadership.md | Lead role behavioral questions using STAR method | MEDIUM |
 | 11_agentic_ai_deep_dive.md | Agentic AI: state machines, tool calling, guardrails, reflection, deployment | HIGH |
 | 12_additional_lead_topics.md | Python, SQL, time series, RecSys, causal inference, data engineering | HIGH |
+| 13_interview_pattern_answers.md | Best-answer patterns extracted from all 11 past failed interviews | CRITICAL |
 
 ---
 
@@ -170,6 +171,13 @@ This revision added the following major topic blocks across the tutorial set (no
 - Cross-validation and leakage prevention
 - Missing data strategies
 - Experimental design and power analysis
+
+**13_interview_pattern_answers.md (new file)**
+- Actual questions extracted from all 11 failed interview transcripts
+- Lead-level "best answer" structure for each question
+- Interviewer intent, common traps, and strong closing lines
+- Per-interview pattern groups: Lead DS, Fraud Analytics, AI Solutions Architect, Agentic AI, Senior DS, Data Scientist coding/case, AI Project Lead
+- Universal red flags and first-30-second answer template
 
 ---
 

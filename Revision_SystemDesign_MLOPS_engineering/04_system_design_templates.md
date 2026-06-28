@@ -1318,3 +1318,48 @@ Tenant requests
 ### "Design a system for A/B testing ML models."
 
 > "Randomize by the unit that receives treatment, not by request. Use a consistent hash on user/claim ID so the same entity always sees the same model. Log model version with every prediction. Wait for lagged labels before computing metrics. Monitor guardrails and have a rollback plan."
+
+---
+
+## SECTION 25: MULTI-MODAL CLINICAL PREDICTION SYSTEM (ICU OUTCOMES)
+
+### Problem Statement
+
+Predict ICU patient health outcomes using multiple data sources: medical devices (vital signs streams), EHR (diagnoses, medications, labs), and clinical notes.
+
+### Design Walkthrough
+
+**1. Data ingestion**
+- Medical devices: Kafka or MQTT for high-frequency streams; downsample and validate ranges.
+- EHR: batch extract via FHIR/HL7 into Delta Lake.
+- Notes: NLP pipeline with de-identification before any LLM/BERT processing.
+
+**2. Feature engineering**
+- Time-series features: rolling mean, trend, alarms, device-derived severity scores.
+- Structured features: comorbidities, lab values, medication history.
+- Text features: entity extraction, clinical note embeddings, medication/diagnosis mentions.
+
+**3. Modeling**
+- Early warning: LightGBM/XGBoost on tabular features for interpretability and speed.
+- Complex cases: small transformer or multimodal fusion if data supports it.
+- Always compare against simple clinical scores (APACHE, SOFA) as baseline.
+
+**4. Serving**
+- Real-time scoring from streaming vitals via FastAPI with Redis for precomputed patient context.
+- Asynchronous comprehensive scoring for new admissions using batch EHR + notes.
+- Human-in-the-loop: predictions feed a dashboard, not a direct medical decision.
+
+**5. Safety and governance**
+- De-identify and restrict PHI access.
+- Model cards record intended use, patient populations, and failure modes.
+- Bias checks across demographics; continuous validation against outcomes.
+- Regulatory: maintain audit trail, versioning, and rollback.
+
+**6. Monitoring**
+- Input drift on vital sign distributions and lab ordering patterns.
+- Performance drift on mortality/length-of-stay labels after maturation.
+- Alert clinical stakeholders when model confidence is low.
+
+### Interview One-Liner
+
+> "For ICU outcome prediction I fuse streaming vitals, structured EHR, and clinical notes. I use interpretable gradient boosting for early warnings, keep all PHI de-identified, require human-in-the-loop for clinical decisions, and validate against simple clinical baselines and outcome data before trusting any signal."

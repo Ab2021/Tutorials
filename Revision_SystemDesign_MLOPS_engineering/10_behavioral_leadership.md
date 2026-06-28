@@ -303,3 +303,56 @@ Use these to signal leadership without overstating:
 - "I translate between business goals and technical trade-offs."
 - "I believe the best ML systems are the ones the team can operate and improve."
 - "I treat failures as data and build better processes from them."
+
+---
+
+## SECTION 11: EVALUATING AND ADOPTING NEW AI/ML TECHNOLOGIES
+
+### The Research-First Approach
+
+When a business owner asks about a new technology, I do not default to using it. My process:
+
+1. **Map the business problem**: what decision will the system change, and what are latency, cost, and compliance constraints?
+2. **Landscape review**: recent papers, industry benchmarks, and production war stories for similar use cases.
+3. **Limitation audit**: cost at scale, vendor lock-in, model drift, operational complexity, regulatory exposure.
+4. **Rapid POC**: build a small end-to-end prototype on a representative slice of data with a clear success metric.
+5. **Stakeholder recommendation**: present trade-offs, risk, and a phased rollout plan.
+
+### Interview One-Liner
+
+> "I evaluate new AI/ML technologies by first mapping the business problem, then auditing cost, scale, and operational risk before running a time-boxed POC with a clear success metric."
+
+---
+
+## SECTION 12: MODEL CARDS, GOVERNANCE, AND RESPONSIBLE AI
+
+### What Is a Model Card
+
+A model card is a structured document that records a model's purpose, training data, performance, limitations, intended use, and known failure modes. It is the baseline for AI governance.
+
+### Why It Matters at Lead Level
+
+- Regulated clients and auditors ask for provenance.
+- Teams cannot operate models they do not understand.
+- Downstream consumers need to know uncertainty and bias.
+
+### What to Include
+
+- Intended use and out-of-scope uses
+- Training data source, version, and representativeness
+- Performance by subgroup and key segments
+- Fairness and bias assessment
+- Known limitations and failure modes
+- Monitoring and retraining cadence
+- Contact owner and approval history
+
+### Responsible AI Practices
+
+- Document false-positive/false-negative costs by subgroup.
+- Maintain human-in-the-loop overrides for high-risk decisions.
+- Review model cards before every major release.
+- Track incidents and remediation in a central register.
+
+### Interview One-Liner
+
+> "I treat model cards and AI governance as part of the production contract, not an afterthought. Every production model has documented intended use, segment-level performance, known limitations, and an owner."
