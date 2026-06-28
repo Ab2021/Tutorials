@@ -1,104 +1,126 @@
-# AI SYSTEM DESIGN SCENARIOS FOR ITALIAN SMEs (v1 - CONCEPTUAL & ARCHITECTURAL)
-## Real-world whiteboard scenarios, trade-offs, and architectures (No Code)
+# AI SYSTEM DESIGN SCENARIOS: THE MASTERCLASS (v1)
+## Real-world whiteboard architectures tailored to YOUR Resume (No Code)
+
+> **Critical Context:** When interviewing for a Lead AI Engineer role, you cannot rely on generic internet examples. You must use the 7-Block framework to deconstruct the exact projects on your resume: **Chubb Fraud Detection, Axtria MMM, and EXL Health Readmission.** If they ask for a system design, you pivot the whiteboard to one of these three architectures.
 
 ---
 
-## 1. HOW TO APPROACH SYSTEM DESIGN INTERVIEWS
+## SECTION 1: THE 7-BLOCK ARCHITECTURE FRAMEWORK
 
-When an interviewer says, "Design an AI system for X," do not jump immediately to vectors and LangGraph. Use the **7-Block Framework** tailored for Consulting:
+For ANY system design question, walk to the whiteboard and draw these 7 blocks in order. 
 
-1.  **Business Goal & Baseline:** What is the manual process? What is the success metric?
-2.  **Constraints:** Data privacy (GDPR), budget, latency, legacy software integration.
-3.  **Data Ingestion & Cleaning:** How does messy real-world data enter the system?
-4.  **The AI Engine (Core):** RAG, Classification, Extraction, or Agents.
-5.  **Execution & Delivery (UI/UX):** How does the human interact with it? (Copilot vs. Autonomous).
-6.  **Evaluation & Guardrails:** How do we prove it works and prevent disasters?
-7.  **Infrastructure & Cost:** Cloud vs. On-Premise, caching, scaling.
-
----
-
-## SCENARIO A: THE LEGAL CONTRACT ANALYZER
-
-**Prompt:** An Italian commercial law firm wants to build an internal tool. Lawyers currently spend 10 hours a week reading 100-page lease agreements to check if they comply with a specific set of new property laws. 
-
-### 1. Business Goal & Constraints
--   **Goal:** Reduce manual reading time; highlight non-compliant clauses.
--   **Constraints (Critical):** Extreme data privacy. Client contracts cannot be sent to public APIs. Absolute accuracy required (hallucinations cause lawsuits).
--   **Baseline:** Paralegals manually reading and highlighting PDFs.
-
-### 2. Architecture & Data Flow
--   **Ingestion Layer:** Paralegal uploads a PDF into a secure local web interface.
--   **Processing (OCR):** Because legal PDFs might be scanned, we run a local OCR process (e.g., Tesseract with Italian models) to guarantee full text extraction.
--   **AI Core (Local LLM):** Since data cannot leave the firm, we deploy a local inference server running a quantized model (e.g., Llama-3-70B if they have a GPU, or 8B if CPU bound). 
--   **Prompting Strategy (Map-Reduce):** Instead of RAG, we use a chunked analysis pipeline. The system breaks the 100-page document into sections (Articles/Clauses). It passes each clause to the local LLM with the prompt: *"Analyze this clause against Property Law X. Does it comply? Extract the conflicting text."*
--   **UI Delivery:** A side-by-side view. The original PDF on the left. The AI's flagged clauses on the right. 
-
-### 3. Evaluation & Guardrails
--   **The Guardrail:** The system is purely an "Augmented Reader." It does not rewrite the contract. It only flags potential issues for a lawyer to verify. 
--   **Evaluation:** We establish a "Golden Dataset" of 50 historically problematic contracts. Before deploying a new version of the prompt or model, the system must achieve 99% Recall (it must catch every violation the humans caught).
+1.  **Block 1: Problem Scope & Constraints** → What is the scale? Latency? Business SLA?
+2.  **Block 2: Data Ingestion** → How does messy data enter the system? (Kafka, Airflow, Batch).
+3.  **Block 3: Feature Engineering** → The hardest part (Temporal leakage, Feature Stores).
+4.  **Block 4: The Intelligence Core (Model Layer)** → RAG, XGBoost, Ensembles.
+5.  **Block 5: Execution & UI (Serving)** → FastAPI, Kubernetes, Async Queues.
+6.  **Block 6: Monitoring & Guardrails** → PSI, Data Drift, Faithfulness metrics.
+7.  **Block 7: Telemetry & Feedback Loop** → Retraining triggers and human corrections.
 
 ---
 
-## SCENARIO B: THE LOGISTICS EMAIL AUTOMATION
+## SCENARIO A: REAL-TIME FRAUD DETECTION (Based on Chubb)
 
-**Prompt:** A mid-sized logistics company receives 500 emails a day from clients asking "Where is my shipment?" or "Can I change the delivery address?" A human dispatcher reads these, looks up the ID in their legacy ERP, and replies. They want to automate this.
+**Prompt:** "Design a system to detect insurance fraud at the moment a claim is submitted."
 
-### 1. Business Goal & Constraints
--   **Goal:** Reduce response time from hours to minutes; free up the dispatcher.
--   **Constraints:** The ERP is a 15-year-old on-premise SQL database with no API. Hallucinating a delivery date will infuriate customers.
--   **Baseline:** Dispatcher copy-pasting tracking numbers.
+### Block 1: Scope & Constraints
+-   **Goal:** Increase fraud referral rate to Special Investigative Unit (SIU) while maintaining precision above 60%.
+-   **Scale & Latency:** 10,000 claims/day real-time (SLA < 200ms) + 1M claims overnight batch (SLA: 6 AM).
+-   **Constraints:** Regulatory explainability required (No black-box neural networks for the final decision).
 
-### 2. Architecture & Data Flow
--   **Ingestion:** An email listener (via IMAP or a webhook like n8n) triggers when a new email arrives in `support@logistics.it`.
--   **AI Core 1 (Classification & Extraction):** A fast, cheap cloud model (GPT-4o-mini) reads the email. It classifies the intent (Status Request vs. Address Change) and extracts entities (Tracking Number: IT123456).
--   **Integration Layer (The ERP Hack):** Since there is no API, we write a Python microservice that acts as an adapter. It takes the tracking number, runs a direct SQL `SELECT` query against the legacy ERP database (Read-Only access), and formats the result as JSON.
--   **AI Core 2 (Generation):** The JSON data (Status: In Transit, Location: Milan) is passed back to the LLM to draft a polite, professional reply in Italian.
--   **Delivery (Human-in-the-Loop):** The email is NOT sent automatically. It is saved in the dispatcher's "Drafts" folder. The dispatcher reviews and hits "Send."
+### Block 2: Data Ingestion
+-   **Real-Time Path:** Claim submission hits a Kafka topic (`claim-events`). FastAPI consumer reads the event.
+-   **Batch Path:** Airflow CronJob at 2 AM triggers an ETL pipeline reading from Snowflake and ISO watchlists.
 
-### 3. Evaluation & Guardrails
--   **Guardrail:** Read-only access to the ERP. The AI cannot modify database records (e.g., it cannot actually change the address; it drafts a reply saying "A human will contact you to confirm the address change").
--   **Evaluation:** Track the "Send-As-Is" rate. If the dispatcher edits the AI's drafted email less than 10% of the time, the system is highly successful.
+### Block 3: Feature Engineering & Storage
+-   **Offline Store (Delta Lake):** PySpark calculates 90-day behavioral aggregates (e.g., `avg_claim_amount_90d`). We strictly enforce **Temporal Cutoffs** (only using data available *before* the claim) to prevent data leakage.
+-   **Online Store (Redis):** Nightly batch jobs push these pre-calculated features to Redis. During real-time inference, the API fetches them in < 5ms.
 
----
+### Block 4: The Intelligence Core (Hybrid ML + RAG)
+-   **The Structured Model:** LightGBM for real-time (sub-15ms speed). XGBoost for overnight batch (better probability calibration).
+-   **The Unstructured Pipeline (RAG):** For the adjuster's claim notes, we use an asynchronous Celery worker. It embeds the text, searches a FAISS vector DB for similar historical fraud cases, and uses GPT-4o to extract 30 binary fraud flags. These flags feed into the next day's XGBoost run.
 
-## SCENARIO C: THE MANUFACTURING EQUIPMENT TROUBLESHOOTER
+### Block 5: Serving Layer
+-   FastAPI deployed on Kubernetes. Configured with Horizontal Pod Autoscaling (HPA) targeting 70% CPU utilization.
+-   Models are loaded into memory *once* at pod startup to prevent Out-Of-Memory (OOM) crashes.
 
-**Prompt:** A factory makes industrial packaging machines. When a machine breaks down at a client site, technicians spend hours searching through PDF manuals, wiring diagrams, and past maintenance logs to figure out the fix. Design an AI assistant for the technicians.
+### Block 6: Monitoring & Guardrails
+-   **Input Monitoring:** Calculate Population Stability Index (PSI) daily on the top 20 features to detect data drift.
+-   **Output Monitoring:** Track the predicted score distribution to ensure the risk tiering thresholds remain valid.
 
-### 1. Business Goal & Constraints
--   **Goal:** Reduce Mean Time To Repair (MTTR) by surfacing technical answers instantly.
--   **Constraints:** Technicians are on the factory floor using mobile devices (often with bad cell reception). Manuals contain highly technical jargon and diagrams.
--   **Baseline:** Ctrl+F through massive PDFs.
-
-### 2. Architecture & Data Flow
--   **Ingestion (The Knowledge Base):** We process three data sources: PDF Manuals, Past Maintenance Logs (Jira/Excel), and CAD diagrams (metadata only). 
--   **Chunking Strategy (Critical):** Standard token chunking will destroy technical manuals. We implement Semantic Document Chunking—chunking specifically by headers, error codes, and chapter boundaries. 
--   **Vector Database:** Qdrant or Weaviate, hosted in a stable cloud environment. 
--   **Retrieval Strategy (Hybrid RAG):** Pure semantic search fails on specific part numbers (e.g., "Error Code E-404" vs "Error Code E-405"). We must use Hybrid Search. We combine Dense Vector search (for conceptual queries like "machine making grinding noise") with BM25 Keyword Search (for exact part numbers). 
--   **Delivery:** A mobile-friendly progressive web app (PWA) where a technician can type or voice-dictate their issue.
-
-### 3. Evaluation & Guardrails
--   **Guardrail:** The AI must explicitly cite its sources with page numbers. "Replace the valve (Source: Maintenance Manual, Page 42)." If the LLM generates a fix without a source, the system is instructed to append a warning: "No documentation found for this procedure. Consult senior engineering."
--   **Evaluation:** Context Precision is the key metric here. When a technician searches an error code, the correct page of the manual MUST be in the top 3 retrieved chunks, otherwise the system is useless.
+### Block 7: Feedback Loop
+-   SIU investigators review flagged claims and confirm/deny fraud 4 weeks later.
+-   These confirmed outcomes are written to a `labeled_claims` table, triggering an automated weekly PR-AUC evaluation to check for model degradation.
 
 ---
 
-## SCENARIO D: THE ACCOUNTING INVOICE RECONCILIATION
+## SCENARIO B: OMNICHANNEL MARKETING MIX MODELING (Based on Axtria)
 
-**Prompt:** An accounting firm processes thousands of invoices a month for their clients. They want an AI to extract data from vendor invoices (which come in 100 different layouts) and format it for their accounting software.
+**Prompt:** "Design a system to attribute sales ROI to different marketing channels and optimize weekly budgets."
 
-### 1. Business Goal & Constraints
--   **Goal:** Eliminate manual data entry.
--   **Constraints:** High volume. High accuracy requirement (a missed decimal point costs money). PII and Financial data present. 
--   **Baseline:** Manual typing into an Excel sheet.
+### Block 1: Scope & Constraints
+-   **Goal:** Maximize total sales given a fixed budget.
+-   **Scale:** Weekly granularity, 3 years of historical data per run.
+-   **Constraints:** Highly correlated channels (multicollinearity). Diminishing returns on spend.
 
-### 2. Architecture & Data Flow
--   **Ingestion:** Batch processing pipeline runs overnight on a secure cloud storage bucket.
--   **AI Core (Structured Output):** This is not a conversational AI; this is an Information Extraction pipeline. We use an LLM configured with "Structured Outputs" (e.g., forcing the LLM to return data matching a strict Pydantic JSON schema). 
--   **Schema Design:** The LLM is forced to extract: `invoice_number`, `date`, `vendor_name`, `vat_total`, `grand_total`. 
--   **Validation Layer:** Code-based validation runs *after* the LLM. It checks the math: does `subtotal + vat == grand_total`? If the math fails, the LLM hallucinated, or the OCR failed.
--   **Delivery:** Data is pushed to a staging table in the accounting software. Invoices that failed the math check are flagged in red for human review. 
+### Block 2: Data Ingestion
+-   Extract data from ERP (Sales), Nielsen (TV spend), and Google/FB APIs (Digital spend).
+-   Merge into a weekly time-series dataset using Databricks.
 
-### 3. Cost & Infrastructure
--   **Cost Optimization:** Processing 10,000 invoices via standard API calls is expensive. We architect this to use the OpenAI Batch API. We bundle the invoices, send them at night, and get the results the next morning for 50% of the cost.
--   **Evaluation:** Precision is far more important than Recall. We would rather the AI say "I cannot read this invoice" (low recall) than extract the wrong total amount (low precision). We evaluate against a test set of 200 highly complex, messy invoices.
+### Block 3: Feature Engineering (The Secret Sauce)
+-   **Adstock Transformation:** Spend effect carries over to future weeks. `Adstock(t) = Spend(t) + decay * Adstock(t-1)`.
+-   **Saturation:** Diminishing returns modeled mathematically (e.g., negative exponential).
+-   **Calendar/Lag Features:** Holidays, seasonality indices, and 2-week lags for slow channels.
+
+### Block 4: The Intelligence Core (XGBoost + Markov)
+-   **Baseline:** Linear regression provides interpretable coefficients (baseline ROI).
+-   **Advanced Model:** XGBoost naturally captures the S-curve saturation and channel synergy interactions (e.g., TV boosting Digital).
+-   **Attribution:** For multi-touch digital journeys, we use Markov Chains to calculate the "removal effect" of a channel, distributing credit fairly across the sequence rather than just "last-click."
+
+### Block 5: Serving & Optimization
+-   The models do not run in real-time. They run in Databricks notebooks offline.
+-   **The Optimizer:** We use SciPy constrained optimization. Objective: Maximize predicted sales from the XGBoost model. Constraints: Total budget < X, TV budget > Y.
+-   Results are served via a Streamlit dashboard for stakeholders.
+
+### Block 6: Monitoring & Guardrails
+-   **Holdout Validation:** The last 3 months of data are strictly held out. We monitor the Mean Absolute Percentage Error (MAPE). If MAPE > 10%, the model requires investigation.
+-   **Business Sanity Checks:** If the model suggests $0 TV spend (which violates business reality), we constrain the optimization space.
+
+### Block 7: Feedback Loop
+-   Quarterly retraining with the freshest data.
+-   If business stakeholders dispute the attribution, we run a sensitivity analysis on the Adstock decay parameters to prove robustness.
+
+---
+
+## SCENARIO C: PATIENT READMISSION PREDICTION (Based on EXL Health)
+
+**Prompt:** "Design a system to predict if a hospital patient will be readmitted within 30 days."
+
+### Block 1: Scope & Constraints
+-   **Goal:** Identify top 10% of high-risk patients for proactive nurse outreach.
+-   **Constraints:** Severe regulatory compliance (HIPAA). Absolute necessity for clinical explainability (No black boxes).
+
+### Block 2: Data Ingestion
+-   Nightly batch extract from Electronic Health Records (EHR), claims databases, and Social Determinants of Health (SDOH) external feeds.
+
+### Block 3: Feature Engineering (Leakage Prevention)
+-   **The Trap:** Data Leakage. If we include a diagnosis code that was entered *after* the patient was discharged, the model learns the future.
+-   **The Fix:** Strict temporal cutoffs. Features are joined using an `AS_OF` timestamp matching the exact hour of hospital discharge.
+-   Features engineered: Charlson Comorbidity Index, prior admission counts, length of stay.
+
+### Block 4: The Intelligence Core
+-   Started with Logistic Regression as the interpretable baseline.
+-   Moved to Random Forest / XGBoost for higher AUROC.
+-   **Survival Analysis:** Used Kaplan-Meier curves to model *when* patients drop off care programs, identifying the 2-month mark as the critical intervention window.
+
+### Block 5: Serving Layer
+-   Batch scoring. A nightly Airflow DAG scores all patients discharged that day.
+-   The scores are written to the Care Management Dashboard via a secure API.
+
+### Block 6: Monitoring & Guardrails
+-   **Calibration is Critical:** A risk score of 0.8 MUST mean an 80% real-world probability of readmission. We use Platt Scaling and monitor the Brier Score. If the model becomes overconfident, clinicians lose trust.
+-   **Explainability:** Every prediction must be accompanied by SHAP values (e.g., "High Risk due to: 3 prior admissions, high comorbidity score").
+
+### Block 7: Feedback Loop
+-   Track actual 30-day outcomes. Compare against the predicted deciles (Capture Rate).
+-   Gather qualitative feedback from the nurses: Was the outreach actually helpful, or was the patient fundamentally unpreventable (e.g., planned chemo)?
