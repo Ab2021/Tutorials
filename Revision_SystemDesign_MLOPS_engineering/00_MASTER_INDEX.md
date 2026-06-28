@@ -58,6 +58,7 @@
 | 09_followup_questions_bank.md | All follow-up question patterns seen in interviews + answers | HIGH |
 | 10_behavioral_leadership.md | Lead role behavioral questions using STAR method | MEDIUM |
 | 11_agentic_ai_deep_dive.md | Agentic AI: state machines, tool calling, guardrails, reflection, deployment | HIGH |
+| 12_additional_lead_topics.md | Python, SQL, time series, RecSys, causal inference, data engineering | HIGH |
 
 ---
 
@@ -153,6 +154,22 @@ This revision added the following major topic blocks across the tutorial set (no
 - Orchestrator-workers, supervisor, peer-to-peer patterns
 - Observability tools, behavior-based testing, loop detection
 - Lead-level expectations
+
+**12_additional_lead_topics.md (new file)**
+- Python for data science and ML interviews
+- SQL for data science and ML interviews
+- Time series forecasting
+- Recommendation system algorithms
+- Model compression: ONNX, quantization, pruning, distillation
+- Transfer learning
+- Causal inference basics
+- Data engineering basics: lakehouse, ETL/ELT, streaming
+- Clustering and dimensionality reduction
+- Outlier detection
+- Feature selection methods
+- Cross-validation and leakage prevention
+- Missing data strategies
+- Experimental design and power analysis
 
 ---
 
