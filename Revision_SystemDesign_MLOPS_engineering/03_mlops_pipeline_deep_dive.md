@@ -1431,3 +1431,201 @@ In production, prefer framework-native formats or ONNX. Avoid pickle for models 
 ### "How do you retire a model?"
 
 > "I identify models that are unused or below SLO, notify stakeholders, archive the model and data artifacts, remove it from serving and monitoring, and retain audit logs for compliance before decommissioning storage."
+
+---
+
+## SECTION 30: LLM / GENAAI PLATFORM MLOPS — PRODUCTION PATTERNS (FROM AXTRIA PROD.TXT)
+
+> Standard MLOps covers traditional ML models. This section covers the additional MLOps layer required for production LLM systems — the patterns I built at Axtria for an enterprise multi-tenant GenAI platform.
+
+---
+
+### The Key Differences: Traditional ML MLOps vs LLM MLOps
+
+| Concern | Traditional ML MLOps | LLM / GenAI MLOps |
+|---|---|---|
+| Artifact to version | Model weights (.pkl, .whl) | Model weights + Prompt templates + Tool definitions |
+| Training trigger | Data drift / label availability | Rarely retrained; prompt changes are the primary "update" |
+| Evaluation | Offline AUC, RMSE on labeled test set | LLM-as-judge, human annotation, behavioral assertions |
+| Monitoring | PSI, feature drift, prediction drift | Token usage, cost, latency, quality scores, hallucination rate |
+| Serving | REST API with deterministic output | WebSocket streaming with non-deterministic output |
+| Failures | Model returns wrong score | Agent loops, hallucination, context overflow, cost blowout |
+| Observability | Prometheus/Grafana metrics | LLM trace platforms (Langfuse, LangSmith) |
+
+---
+
+### Prompt Versioning — Treating Prompts Like Code
+
+**Why prompts must be versioned:**
+- A single word change in a system prompt can drastically change agent behavior
+- Without versioning, you cannot reproduce a specific agent run or debug a regression
+- Prompt changes are the most frequent "deployment" in a production LLM system
+
+**How to version prompts:**
+- Store prompt templates in Git with semantic versioning (v1.2.0)
+- Every agent execution logs the prompt version alongside the trace ID
+- Never hardcode prompts inline in Python — load from a versioned template store
+- On every prompt change: run the full evaluation suite on the fixed test set before merging
+
+**Prompt Registry Pattern:**
+```
+prompt_registry/
+  ├── fraud_agent_system_prompt/
+  │     ├── v1.0.0.txt    ← original
+  │     ├── v1.1.0.txt    ← added citation requirement
+  │     └── v2.0.0.txt    ← breaking change, new output schema
+  └── sql_agent_system_prompt/
+        └── v1.0.0.txt
+```
+
+**Interview One-Liner:**
+> "I treat prompts as code: versioned in Git, loaded from a template registry, evaluated on a fixed test set before every merge. When an agent behavior changes, the first question is: which prompt version was running?"
+
+---
+
+### LLM Evaluation CI/CD — Quality Gates Before Deployment
+
+**The Problem:** Deploying a new prompt or swapping to a new model version (e.g., GPT-4o → GPT-4o-mini) can degrade quality silently. Without automated evaluation, you discover the regression when users complain.
+
+**The Solution — Evaluation as a CI/CD Gate:**
+
+```
+Prompt Change Commit
+    → CI Trigger
+    → Load Fixed Evaluation Test Set (e.g., 200 representative queries)
+    → Run all queries through new prompt version
+    → Score each output with LLM-as-Judge (Langfuse automated scoring):
+        - Completeness ≥ 0.85
+        - Helpfulness ≥ 0.80
+        - Trajectory ≤ 5 steps (agent efficiency)
+        - Faithfulness ≥ 0.90 (no hallucination)
+    → Compare against baseline scores
+    → If any dimension regresses by > 5%: BLOCK deployment, alert team
+    → If all pass: promote to staging, then production
+```
+
+**Why LLM-as-Judge over human evaluation at every CI run:**
+- Human evaluation is accurate but slow (hours per run) and expensive
+- LLM-as-Judge runs in seconds, scales infinitely, and is consistent
+- Human annotation is reserved for periodic deep reviews and catching systematic judge errors
+
+---
+
+### Token Budget Enforcement — Cost as a First-Class SLO
+
+**Why token budgets matter:**
+- Unconstrained agents can loop and accumulate thousands of dollars in API costs (the "$47K LangChain incident")
+- Token costs scale linearly with usage — a 10x traffic spike means 10x cost without budgets
+
+**Budget enforcement layers at Axtria:**
+
+| Layer | Control | Enforcement Point |
+|---|---|---|
+| Per-task token cap | Max tokens per single agent execution | LangGraph state check at each node |
+| Per-session cost cap | Max $ spend per user session | Redis counter incremented per LLM call |
+| Daily cost alert | Alert when daily spend > threshold | Langfuse cost tracking + alerting |
+| Model routing | Cheap model for extraction, expensive for reasoning | LangGraph node-level model config |
+
+**Model Routing Strategy (reduce cost without sacrificing quality):**
+
+| Agent Step | Model Choice | Reason |
+|---|---|---|
+| Intent classification | GPT-4o-mini / small model | Binary classification, cheap |
+| Simple extraction | GPT-4o-mini | Structured output, no deep reasoning |
+| SQL generation | GPT-4o | Accuracy critical, schema-aware reasoning |
+| Complex multi-step reasoning | GPT-4o / Claude | Full capability needed |
+| Reflection / Judge | GPT-4o | Accuracy of critique is critical |
+
+**Interview One-Liner:**
+> "I treat token cost as a first-class SLO. I enforce per-task token caps in the state machine, per-session cost caps tracked in Redis, and route simple steps to cheap models and complex reasoning to expensive models. Without this, a looping agent can generate thousands of dollars of API spend overnight."
+
+---
+
+### Secrets Management — Vault over Environment Variables
+
+**The problem with environment variables:**
+- Environment variables are dumped in crash reports, visible in Kubernetes pod descriptions, and often logged accidentally
+- Rotating a secret requires a pod restart (downtime) or a complex rolling update
+- No audit trail of who read the secret or when
+
+**HashiCorp Vault at Axtria:**
+- All API keys (OpenAI, Anthropic), DB passwords, and integration credentials stored in Vault
+- Vault injects secrets at pod startup via sidecar or Kubernetes Secrets Operator
+- Secrets are short-lived and auto-rotate — compromised keys expire within hours
+- Full audit log: every secret read is logged with the requesting service identity
+- Secret rotation does NOT require pod restart — Vault pushes the new value dynamically
+
+**Interview One-Liner:**
+> "I use HashiCorp Vault for all secrets. Keys are injected at runtime, auto-rotate, and every read is audited. This means a compromised API key expires within hours and I have a full record of which service accessed it and when."
+
+---
+
+### WebSocket Serving — MLOps Considerations
+
+**Traditional ML serving:** stateless REST, request → response, easy to load balance and monitor.
+
+**LLM WebSocket serving:** stateful streaming connection — different operational requirements:
+
+**Challenges and solutions at Axtria:**
+
+| Challenge | Solution |
+|---|---|
+| Connection persistence across pod restarts | Load balancer with sticky sessions (same pod for session duration) |
+| Monitoring streaming latency | Track time-to-first-token (TTFT) and token-per-second rate via Langfuse |
+| Dead connections from slow generation | Async keepalive ping every 15 seconds |
+| Backpressure when client is slow | Async queue on server side; don't block LLM generation |
+| Session memory across pod failures | Redis-backed memory; any pod can resume any session |
+
+**Key Metrics for WebSocket LLM Serving:**
+- **TTFT (Time to First Token):** Target < 500ms. This is user-perceived latency.
+- **TPS (Tokens per Second):** Average throughput of token delivery
+- **Session drop rate:** % of sessions that disconnect before completion
+- **Memory hit rate:** % of sessions that successfully load prior Redis context
+
+---
+
+### Multi-Tenant LLM Platform — Operational Runbook
+
+**Scenario 1: Tenant reports their RAG is returning wrong documents**
+1. Pull Langfuse traces for the affected user's session
+2. Check tenant_id filter on the vector retrieval call — is it correctly scoped?
+3. Check chunking configuration for that tenant's documents — are chunks too large/small?
+4. Check embedding model version — if it changed, re-embed the tenant's document corpus
+5. Check RRF fusion weights — if BM25 is dominating, semantic matches may be suppressed
+
+**Scenario 2: Agent costs spike 10x overnight**
+1. Pull Langfuse cost dashboard — identify which agent type is responsible
+2. Check for looping agents: look for sessions with > N LLM calls
+3. Check loop detection guards — did they fire? If not, why?
+4. Check if a new prompt version was deployed — did it introduce an ambiguous instruction causing re-tries?
+5. Tighten per-task token cap and per-session cost cap; roll back suspect prompt version
+
+**Scenario 3: Quality scores drop after model version update**
+1. Compare Langfuse quality scores for 7 days pre vs post model version change
+2. Identify which dimension regressed (completeness? faithfulness? trajectory?)
+3. Run fixed evaluation test set on old and new model versions to isolate
+4. If regressed: pin to previous model version; refine prompt for new version compatibility
+5. Never treat a model upgrade as a no-op — always gate on evaluation scores
+
+**Scenario 4: New tenant onboarding**
+1. Insert tenant record into tenants table (triggers RLS policy automatically)
+2. Create tenant's document storage partition in vector store
+3. Run document ingestion pipeline for tenant's initial corpus
+4. Provision JWT credentials and test all 6 AI surfaces in staging with tenant context
+5. Enable in production; monitor first 48 hours of Langfuse traces for anomalies
+
+---
+
+### Interview Q&A: LLM MLOps
+
+**Q: "How do you monitor a production LLM system?"**
+> "I layer two types of monitoring. Infrastructure monitoring via Prometheus/Grafana: API latency, error rates, WebSocket connection counts, Redis memory usage. LLM-specific monitoring via Langfuse: token usage and cost per task, quality scores (completeness, helpfulness, trajectory, faithfulness), hallucination rate from the reflection layer, and human escalation rate. When quality scores drop, I compare the current prompt version and model version against the baseline to isolate the cause."
+
+**Q: "What is a prompt regression and how do you prevent it?"**
+> "A prompt regression is when a change to a prompt template causes the agent to perform worse on previously-working tasks — typically silent, discovered only when users complain. I prevent it by treating prompts as code with Git versioning, running every prompt change through an automated evaluation suite on a fixed test set, scoring with LLM-as-judge across completeness, helpfulness, and faithfulness dimensions, and blocking deployment if any dimension regresses by more than 5%."
+
+**Q: "How do you control LLM API costs at scale?"**
+> "Three layers. First, model routing: cheap models (GPT-4o-mini) for classification and extraction, expensive models only for complex reasoning. Second, per-task token caps enforced in the state machine — the agent physically cannot exceed the budget regardless of looping. Third, per-session and daily cost caps tracked in Redis, with Langfuse alerting when thresholds are exceeded. The goal is treating cost as an SLO, not an afterthought."
+
+**Q: "How do you ensure data isolation in a multi-tenant LLM platform?"**
+> "Four enforcement points. Database layer: PostgreSQL Row-Level Security — physically impossible for one tenant's query to return another's data. Vector retrieval layer: every query carries a mandatory tenant_id filter at the retrieval step, not in application code. LLM context: tenant data is never co-mingled in a single prompt. Secrets: Vault-managed credentials with per-tenant API key scoping where supported. Defense in depth — no single layer can be the sole isolation guarantee."

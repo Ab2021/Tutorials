@@ -465,3 +465,156 @@ Use this for any resume project:
 
 > "It is deployed as a batch scorer that runs nightly and writes risk scores to a care management dashboard. Some clients also consume it through an internal API. We chose batch because care coordinators plan outreach the next day; real-time scoring was unnecessary."
 
+---
+
+## PROJECT 4: AXTRIA — ENTERPRISE GENAAI PLATFORM (FROM PROD.TXT)
+
+### Project Overview (30-second pitch)
+> "At Axtria, I led the AI engineering for an enterprise GenAI platform — turning LLMs into reliable, observable, multi-tenant production systems. I architected a multi-agent orchestration layer on LangGraph StateGraph serving 6 production AI surfaces through a unified FastAPI backend with 30+ REST endpoints, with Langfuse observability integrated across every agent execution path and Row-Level Security for strict tenant data isolation."
+
+---
+
+### Q: Walk me through the full Axtria GenAI platform architecture
+
+**The platform has four main layers:**
+
+**Layer 1 — API Gateway and Authentication**
+- FastAPI backend with 30+ REST endpoints covering all 6 AI surfaces
+- JWT + OAuth2 on every endpoint — stateless, scalable authentication
+- HashiCorp Vault for secrets management — LLM API keys, DB passwords injected at runtime; never in environment variables or code
+- Multi-tenant Row-Level Security enforced at the PostgreSQL database layer
+
+**Layer 2 — Agent Orchestration (LangGraph StateGraph)**
+- A central StateGraph with conditional routing based on user intent classification
+- Intent classifier node routes traffic to the appropriate domain agent:
+
+| Surface | Agent Pattern | Use Case |
+|---|---|---|
+| Text-to-Agent | Orchestrator-Workers | Natural language → structured agentic workflow |
+| Text-to-SQL | Single agent + DB tool | Natural language → validated SQL query |
+| RAG | RAG agent + vector retrieval | Document Q&A with source citations |
+| Multi-Agent | Supervisor or Orchestrator-Workers | Complex multi-step tasks |
+| Chat | Multi-turn with Redis memory | Stateful conversation |
+| Automation | Async agent with status polling | Background workflow execution |
+
+- Plan-and-Execute framework: LLM emits a complete structured JSON execution plan with sequential steps and cross-step result chaining before any tool call is made; dynamic module loading at execution time
+
+**Layer 3 — Retrieval and Memory**
+- Hybrid RAG: dense vector search (ChromaDB / pgvector) combined with sparse BM25 retrieval, fused via Reciprocal Rank Fusion (RRF)
+- End-to-end document processing: upload → chunking with configurable overlap → embedding → dual indexing → retrieval
+- Redis-backed chat memory for stateful multi-turn conversations (survives pod restarts, scales across replicas)
+
+**Layer 4 — Real-Time Delivery, Resilience, and Observability**
+- WebSocket streaming with chunked LLM token responses and async keepalive pings
+- LLM-powered error recovery: semantic failures trigger automatic intent reformulation persisted to Redis-backed state
+- Langfuse integrated across every agent path: generation-level tracing, token usage tracking, automated quality scoring (completeness, helpfulness, trajectory, faithfulness)
+
+---
+
+### Q: Why LangGraph StateGraph instead of a simpler LangChain chain?
+
+**Answer:**
+> "LangChain chains are sequential and deterministic — good for simple single-path pipelines. The Axtria platform needs to serve 6 different AI surfaces from one backend. The routing decision (Text-to-SQL vs RAG vs Multi-Agent) depends on the user's intent, which requires conditional branching that a linear chain simply cannot model.
+>
+> LangGraph StateGraph models the workflow as an explicit directed graph with typed nodes and conditional edges. Key advantages:
+> 1. **Conditional routing:** Based on intent classification, traffic routes to the right domain agent without if-else spaghetti in application code
+> 2. **Testability:** Each node is independently testable — I can unit test the SQL agent without running the full platform
+> 3. **Persistence and Checkpointing:** Built-in checkpointing means executions can be paused, resumed, and replayed for debugging
+> 4. **Auditability:** Full state machine trace captured at every node transition — essential for enterprise clients"
+
+---
+
+### Q: How did you design multi-tenancy in the platform?
+
+**Answer:**
+> "My guiding principle: never trust application-layer filtering for security. A single missed WHERE clause in application code exposes one client's data to another client — that is a catastrophic failure mode.
+>
+> I implemented Row-Level Security (RLS) at the PostgreSQL layer. Every table has a `tenant_id` column. RLS policies are enforced by the database engine — a query from Tenant A's session physically cannot return rows where `tenant_id ≠ tenant_A`. This is enforced at the lowest possible layer and cannot be bypassed by application code bugs.
+>
+> For the AI retrieval layer, every vector chunk is tagged with `tenant_id` at write time. Every RAG query includes a mandatory `where tenant_id = X` filter at the vector store layer — not in Python application code.
+>
+> Vault manages all secrets: LLM API keys, database passwords, and third-party credentials are injected at runtime — never stored in environment variables or code repositories."
+
+---
+
+### Q: Why plan-and-execute instead of ReAct?
+
+**Answer:**
+> "ReAct (Reason, Act, Observe) makes one decision at a time. This is flexible for exploratory tasks but has three problems in enterprise production:
+> 1. **Expensive:** Every decision requires an LLM call — a 10-step task needs 10 planning calls on top of 10 tool execution calls
+> 2. **Unpredictable:** The agent's path through the task varies run-to-run, making it hard to guarantee SLAs
+> 3. **Hard to validate:** You can't inspect the plan before execution begins — if step 3 fails, 2 LLM calls are wasted
+>
+> Plan-and-Execute solves this: the LLM emits a complete JSON execution plan upfront. All steps are defined, cross-step result references are declared, and the executor validates the plan before making a single tool call. The plan is a first-class artifact that can be logged, replayed, and compared across runs. For enterprise clients who need predictable, auditable execution, this is the right pattern."
+
+---
+
+### Q: How did you handle LLM failures in production?
+
+**Answer:**
+> "I distinguish two failure types with different recovery strategies:
+>
+> **Transient failures** (network timeout, rate limit): exponential backoff retry, up to 3 attempts. No LLM involvement — pure infrastructure retry.
+>
+> **Semantic failures** (the tool returns no results, the query is malformed, retrieval returns irrelevant docs): these cannot be solved by retrying the same action. The LLM must reformulate the intent — rewriting the query or changing the tool call parameters. This is what I call the LLM-powered error recovery layer.
+>
+> Critically, all recovery state (original intent, failure details, reformulation attempts) is persisted to Redis. If the API pod crashes mid-recovery, the next pod picks up exactly where the previous one left off. If N reformulations all fail, the system escalates to human review — it never silently returns an empty or hallucinated answer."
+
+---
+
+### Q: How did you build observability into the agent system?
+
+**Answer:**
+> "I integrated Langfuse across every agent execution path. Every LLM call is recorded: exact prompt, model version, temperature, token count, cost, and latency. All calls within one agent run are grouped under a single trace ID so I can see the full execution trajectory.
+>
+> Beyond raw logging, I configured automated quality scoring on every generation across four dimensions:
+> - **Completeness:** did the agent address all parts of the question?
+> - **Helpfulness:** was the response actionable and relevant?
+> - **Trajectory:** did the agent take the optimal sequence of steps, or did it call unnecessary tools?
+> - **Faithfulness:** are factual claims supported by retrieved evidence?
+>
+> When a prompt change or model update is deployed, I compare average quality scores before and after to detect regressions before users notice them. I also enabled human annotation — investigators can rate agent outputs directly in the Langfuse UI, and that feedback feeds back into evaluation and prompt refinement."
+
+---
+
+### Q: How did you lead the team on this platform?
+
+**Answer:**
+> "I led a cross-functional team of 8+ engineers and product people. My focus was on setting standards and mentoring rather than controlling every decision:
+>
+> 1. **Agentic AI patterns:** Internal mentoring sessions on state machine design, structured output enforcement, guardrail patterns, and critically — when NOT to use agents (default to deterministic workflows)
+> 2. **Evaluation hygiene:** Mandated that every prompt change goes through automated quality scoring on a fixed test set before deployment — no more 'it seems to work' deployments
+> 3. **Production LLM hygiene:** Established team conventions for prompt versioning, token budget enforcement, cost alerting, and error recovery patterns
+>
+> On the business side: I worked closely with Sales and Product to translate enterprise client requirements into feasible technical architectures — assessing what LLMs can and cannot reliably do, scoping projects honestly, and setting expectations before work begins."
+
+---
+
+### SOAR Summary — Axtria GenAI Platform
+
+**Situation:** Axtria needed to deliver multiple AI-powered product features to enterprise clients without compromising data isolation, observability, or reliability.
+
+**Objective:** Build a single, secure, observable, multi-tenant GenAI platform serving 6 AI surfaces at production scale.
+
+**Action:** Architected LangGraph StateGraph with conditional routing, plan-and-execute framework, hybrid RAG (ChromaDB/pgvector + BM25 + RRF), WebSocket streaming, Redis-backed memory, Langfuse observability, JWT/Vault security, and PostgreSQL RLS for multi-tenancy. Led a cross-functional team of 8+, mentored 5+ engineers on agentic AI patterns and production LLM hygiene.
+
+**Result:** 6 production AI surfaces live through a single FastAPI backend. Full agent observability with automated quality scoring. Multi-tenant data isolation enforced at the database layer. Real-time streaming reducing perceived latency by ~90% vs blocking REST. LLM error recovery layer preventing silent agent failures.
+
+---
+
+### Architecture Summary Table — Axtria GenAI Platform
+
+| Block | Technology | Purpose |
+|---|---|---|
+| API Layer | FastAPI, 30+ endpoints | Unified entry point for all 6 AI surfaces |
+| Auth | JWT, OAuth2, Vault | Secure every endpoint; secrets managed outside code |
+| Multi-tenancy | PostgreSQL Row-Level Security | Database-enforced tenant isolation |
+| Agent Orchestration | LangGraph StateGraph | Conditional routing across domain agents |
+| Execution Framework | Plan-and-Execute JSON | Structured planning before tool execution |
+| Retrieval | ChromaDB/pgvector + BM25 + RRF | Hybrid dense+sparse RAG pipeline |
+| Memory | Redis | Stateful multi-turn conversation across pod restarts |
+| Streaming | WebSocket + async keepalive | Real-time token-by-token LLM delivery |
+| Error Recovery | LLM intent reformulation + Redis state | Semantic failure recovery with full audit trail |
+| Observability | Langfuse | Generation tracing, quality scoring, cost tracking |
+| Evaluation | Automated scoring (completeness, helpfulness, trajectory, faithfulness) | Regression detection on every deployment |
+

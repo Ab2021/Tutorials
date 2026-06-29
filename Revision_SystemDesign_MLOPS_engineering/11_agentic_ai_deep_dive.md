@@ -723,3 +723,198 @@ Agents can repeat the same tool call with the same arguments, cycle between stat
 ### "How do you design a multi-agent system at scale?"
 
 > "I choose an orchestration pattern based on the task. For parallel evidence gathering, I use orchestrator-workers. For specialized agents, I use a supervisor. I define shared state schemas, tool contracts, and observability across all agents. Each agent has its own guardrails and budget."
+
+---
+
+## SECTION 24: PRODUCTION MULTI-AGENT PLATFORM — AXTRIA ENTERPRISE GENAAI (FROM RESUME)
+
+### Platform Overview (30-Second Pitch)
+
+> "At Axtria, I led the AI engineering work on an enterprise GenAI platform. My focus was turning LLMs into reliable, observable, multi-tenant production systems — serving 6 production AI surfaces (Text-to-Agent, Text-to-SQL, RAG, Multi-Agent) through a unified FastAPI backend with 30+ REST endpoints. This is real production LLM orchestration at scale."
+
+---
+
+### Architecture: Multi-Agent Orchestration with LangGraph StateGraph
+
+**Why LangGraph StateGraph instead of a linear chain:**
+- LangGraph models the workflow as an explicit state machine graph with typed nodes and conditional edges
+- Conditional routing means: based on the user's intent classification, the system routes to the domain-specific agent (Text-to-SQL agent vs RAG agent vs Multi-Agent orchestrator)
+- Each node (state) is testable in isolation — a critical requirement for production
+- Built-in persistence and checkpointing means you can pause, resume, and replay any execution for debugging
+
+**The 6 Production AI Surfaces:**
+
+| Surface | What It Does | Agent Pattern |
+|---|---|---|
+| Text-to-Agent | Natural language → structured agent workflow | Orchestrator-Workers |
+| Text-to-SQL | Natural language → validated SQL query | Single agent with DB tool |
+| RAG | Document Q&A with source citation | RAG agent with vector retrieval |
+| Multi-Agent | Complex tasks requiring multiple specialized agents | Supervisor or Orchestrator-Workers |
+| Chat | Stateful multi-turn conversation | Multi-turn with Redis memory |
+| Automation | Background agentic workflow execution | Async agent with status polling |
+
+**Unified FastAPI Backend (30+ REST Endpoints):**
+- Single backend exposes all 6 AI surfaces under one API
+- JWT + OAuth2 authentication on every endpoint
+- Vault-managed secrets — API keys and DB credentials never stored in code or environment variables
+- Row-Level Security (RLS) enforced at the database layer for tenant isolation
+
+---
+
+### Plan-and-Execute Agent Framework (Key Architecture Decision)
+
+**What it is:**
+Instead of a pure ReAct loop (think, act, observe, repeat), the LLM first emits a complete structured JSON execution plan with all steps. Then the executor runs the steps sequentially, chaining results.
+
+**Why plan-and-execute over ReAct:**
+- ReAct makes one decision at a time — if step 3 fails, the agent has already wasted 2 LLM calls
+- Plan-and-execute makes the agent think holistically upfront — the plan can be validated before execution starts
+- Cross-step result chaining means step 3 can reference the output of step 1 by name in the plan
+- Dynamic module loading means the executor can load the right tool module at runtime without hardcoding every possible path
+
+**What the JSON plan looks like (conceptually):**
+```
+{
+  "plan_id": "abc123",
+  "steps": [
+    {"step": 1, "action": "retrieve_company_data", "params": {"company_id": "{{input.company_id}}"}},
+    {"step": 2, "action": "run_sql_query", "params": {"query": "...", "context": "{{step_1.result}}"}},
+    {"step": 3, "action": "generate_summary", "params": {"data": "{{step_2.result}}"}}
+  ]
+}
+```
+
+**Interview One-Liner:**
+> "I built a plan-and-execute agent where the LLM emits a complete JSON execution plan upfront. The executor then runs each step, chains results across steps, and loads tool modules dynamically. This is more predictable than a pure ReAct loop because the plan can be validated and logged before a single tool call is made."
+
+---
+
+### Real-Time AI Streaming with WebSockets
+
+**Why WebSockets instead of REST for LLM responses:**
+- LLM generation is token-by-token — a REST response blocks until the entire response is generated
+- WebSocket allows chunked streaming: each token is sent to the frontend as it is generated
+- This dramatically reduces perceived latency from 10+ seconds to an immediate first-token response
+- Async keepalive pings prevent WebSocket connections from timing out during slow LLM generation
+
+**Implementation Pattern:**
+1. Client connects to WebSocket endpoint
+2. Server receives the query and begins LLM generation
+3. Each LLM token chunk is pushed to the client over the socket as it arrives
+4. A keepalive ping is sent every N seconds if generation is slow
+5. Final chunk signals completion; socket remains open for follow-up turns
+
+**Redis-Backed Chat Memory for Stateful Multi-Turn Conversations:**
+- Storing conversation history in-process memory means it dies when the pod restarts
+- Redis persists the conversation history outside the API pod
+- Every turn appends to the Redis key for that session
+- Session TTL (time-to-live) ensures memory is cleaned up automatically
+- Multiple API pods can serve the same user without losing context
+
+**Interview One-Liner:**
+> "I built real-time LLM streaming over WebSocket with chunked responses and async keepalives. Conversation memory is backed by Redis so it survives pod restarts and scales across multiple API replicas. This gives users a responsive chat experience without losing multi-turn context."
+
+---
+
+### LLM-Powered Error Recovery and Intent Reformulation
+
+**The Problem:**
+Agents fail. A SQL query returns no results. A tool call times out. A retrieval returns irrelevant documents. A naive system just fails with an error.
+
+**The Solution — Redis-Persisted Error Recovery:**
+1. The agent attempts an action and it fails
+2. The failure is classified: transient (retry) vs semantic (reformulate intent)
+3. For semantic failures: the LLM reformulates the intent — it rewrites the query or changes the tool call parameters
+4. The reformulated attempt is retried
+5. The original intent, the failure, and the reformulation are all persisted to Redis-backed state
+6. If reformulation also fails N times, the agent escalates to human or falls back to a safe default
+
+**Why Redis for error state persistence:**
+- If the API pod crashes mid-recovery, the state is not lost
+- The next pod picks up where the previous one left off
+- Full audit trail of all recovery attempts is available for observability
+
+**Interview One-Liner:**
+> "I built an LLM-powered error recovery layer. When an agent action fails semantically (not just transiently), the LLM reformulates the intent — automatically rewriting the query. The original intent, failure, and reformulation are persisted to Redis so recovery survives pod restarts and provides a full audit trail."
+
+---
+
+### Observability: Langfuse Integration Across Every Agent Path
+
+**What Langfuse provides:**
+- Generation-level tracing: every LLM call is recorded with the exact prompt, model, temperature, token count, cost, and latency
+- Automated quality scoring: configurable scoring functions evaluate each generation for completeness, helpfulness, and trajectory adherence
+- Token usage tracking: aggregate token spend by agent type, user, or tenant
+- Session-level traces: all LLM calls within one agent run are grouped into a single trace
+
+**Why Langfuse over just logging:**
+- Logs capture raw text — Langfuse captures structured, queryable agent traces
+- Can run evaluation functions over historical traces to detect quality regressions
+- UI for browsing, filtering, and comparing agent runs without writing SQL
+- Supports human annotation — investigators can rate agent outputs directly in the UI
+
+**Quality Scoring Dimensions:**
+
+| Dimension | What It Measures |
+|---|---|
+| Completeness | Did the agent address all parts of the question? |
+| Helpfulness | Was the response actionable and relevant? |
+| Trajectory | Did the agent take the optimal sequence of steps? |
+| Faithfulness | Are factual claims supported by retrieved evidence? |
+
+**Interview One-Liner:**
+> "I integrated Langfuse across every agent execution path. Every LLM call is traced with token usage, cost, and latency. Automated scoring checks completeness, helpfulness, and trajectory. I can query historical traces to detect quality regressions and have investigators annotate outputs directly."
+
+---
+
+### Security and Multi-Tenancy Architecture
+
+**JWT + OAuth2 Authentication:**
+- Every API endpoint is protected by JWT validation
+- OAuth2 flows handle third-party identity providers (SSO)
+- Token expiry and refresh managed by the auth layer
+- Vault (HashiCorp Vault) manages all secrets — API keys, DB passwords, LLM API keys are injected at runtime, never stored in environment variables or code
+
+**Row-Level Security (RLS) for Tenant Data Isolation:**
+- A single database stores data for multiple tenants
+- RLS policies at the PostgreSQL layer ensure a query from Tenant A can never return rows belonging to Tenant B
+- The application sets the tenant context at the start of each request
+- RLS filters are applied automatically by the database — no application-layer if-else needed
+- This is safer than filtering in application code because it cannot be accidentally bypassed
+
+**Why RLS over separate databases per tenant:**
+- Separate databases are operationally expensive: N schemas to migrate, N backup jobs, N monitoring streams
+- RLS achieves the same isolation with a single database schema
+- Tenant onboarding is just inserting a new tenant record, not provisioning a new DB instance
+
+**Interview One-Liner:**
+> "I secured the platform with JWT, OAuth2, and Vault-managed secrets. For multi-tenancy, I use Row-Level Security at the PostgreSQL layer rather than filtering in application code. RLS cannot be accidentally bypassed and makes tenant onboarding trivial — no new database instances per client."
+
+---
+
+### Interview Q&A: Axtria Production Platform
+
+**Q: "How did you handle multi-tenancy in your LLM platform?"**
+> "I used Row-Level Security at the database layer. Every row is tagged with a tenant_id. When a request comes in, the application sets the tenant context in the database session, and PostgreSQL's RLS policies filter all queries to that tenant's rows automatically. This is safer than application-layer filtering because it cannot be accidentally bypassed, and simpler to maintain than separate databases per tenant."
+
+**Q: "How did you make your agent system observable?"**
+> "I integrated Langfuse across every agent execution path. Every LLM call is traced with the full prompt, model version, token count, cost, and latency. Automated scoring functions evaluate completeness, helpfulness, and trajectory for every generation. I can browse traces in the Langfuse UI, detect regressions by comparing average quality scores before and after a prompt change, and have investigators annotate agent outputs directly."
+
+**Q: "Why did you choose a plan-and-execute framework over ReAct?"**
+> "ReAct makes one decision at a time, which is flexible but expensive and hard to validate. Plan-and-execute makes the LLM think holistically upfront — it emits a complete JSON execution plan with all steps before any tool is called. I can validate and log the plan before execution begins, making the system more predictable and auditable. Cross-step result chaining means the agent can reference outputs from previous steps without another LLM call."
+
+**Q: "How do you handle LLM failures in production?"**
+> "I distinguish transient failures (retry with exponential backoff) from semantic failures (intent reformulation). For semantic failures, the LLM rewrites the query or reformulates the intent. All recovery state is persisted to Redis so it survives pod restarts. If reformulation fails N times, the system escalates to human review rather than returning a hallucinated or empty answer."
+
+**Q: "How did you build WebSocket streaming for LLM responses?"**
+> "I built a WebSocket endpoint that opens a connection per session. As the LLM generates tokens, each chunk is immediately pushed to the client, giving sub-second first-token latency instead of waiting for the full response. Async keepalive pings prevent socket timeouts during slow generation. Conversation history is stored in Redis so it survives pod restarts and scales across multiple API replicas."
+
+---
+
+## SECTION 25: CONNECTING AXTRIA PRODUCTION PLATFORM TO THE req_1.txt ROLE
+
+The upcoming role requires: RAG pipelines, agentic workflows, document processing, APIs, Docker, evaluation frameworks, cloud vs on-premise decisions, vector storage, data privacy.
+
+**How to position the Axtria platform in that interview:**
+
+> "I've already built exactly what this role describes. At Axtria, I architected a multi-agent orchestration platform on LangGraph serving 6 production AI surfaces through a unified FastAPI backend. I built hybrid RAG combining dense vector search with BM25 sparse retrieval. I built real-time streaming over WebSocket with Redis-backed multi-turn memory. I designed Row-Level Security for multi-tenant data isolation, which directly addresses the GDPR and data privacy constraints this role requires for Italian SME clients. The difference going from enterprise to SME is the deployment footprint — I'd replace the enterprise Kubernetes cluster with a docker-compose stack deployable on the client's on-premise hardware, and swap the hosted LLM for a local Llama-3 model if data sovereignty requires it."

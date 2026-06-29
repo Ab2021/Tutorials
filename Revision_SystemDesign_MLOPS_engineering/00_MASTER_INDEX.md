@@ -226,3 +226,81 @@ STEP 6 — METRICS (always close with numbers)
 6. Stop mixing deployment and research answers — separate concerns clearly
 7. Stop offering quantization for LightGBM unless the interviewer brings it up
 8. Stop listing tools — describe the WORKFLOW the tools enable
+
+---
+
+## 📝 REVISION ROUND 2 — PROD.TXT INTEGRATION (2026-06-29)
+
+> Source: `prod.txt` — Axtria Enterprise GenAI Platform (production system built by Abhishek)
+> Rule: No content deleted. All existing content preserved. New sections appended to relevant files.
+
+### What was added across files:
+
+**03_mlops_pipeline_deep_dive.md — Section 30 (NEW)**
+- Traditional ML MLOps vs LLM / GenAI MLOps comparison table
+- Prompt versioning: Git-backed prompt registry, semantic versioning, evaluation gate on every merge
+- LLM Evaluation CI/CD: automated quality gates (completeness, helpfulness, trajectory, faithfulness) blocking deployment on regression
+- Token budget enforcement: per-task caps in LangGraph state, per-session Redis counters, model routing by step
+- Model routing table: GPT-4o-mini for classification/extraction, GPT-4o for reasoning/reflection
+- HashiCorp Vault secrets management: why Vault beats env vars, auto-rotation, audit trail
+- WebSocket serving MLOps: TTFT monitoring, sticky sessions, async keepalive, Redis memory hit rate
+- Multi-tenant LLM platform operational runbook: 4 incident scenarios with step-by-step resolution
+- Interview Q&A: monitoring LLM systems, prompt regression prevention, cost control, tenant isolation
+
+**04_system_design_templates.md — DESIGN X (NEW)**
+- Full 7-block architecture for Multi-Tenant Enterprise GenAI Platform (Axtria)
+- Document ingestion pipeline with dual indexing (ChromaDB/pgvector + BM25) and tenant_id tagging
+- LangGraph StateGraph conditional routing with intent classification node
+- Plan-and-Execute framework: why it beats ReAct for enterprise (predictability, auditability)
+- Hybrid RAG with Reciprocal Rank Fusion (RRF) and Cross-Encoder reranking
+- WebSocket streaming architecture diagram, Redis memory pattern, LLM error recovery flow
+- PostgreSQL RLS with SQL example, comparison to separate-DB-per-tenant approach
+- Langfuse observability: quality scoring dimensions, regression detection workflow, human annotation
+- System design interview 3-step playbook: scope → 7 blocks → tradeoffs
+
+**08_resume_project_deep_dive.md — PROJECT 4 (NEW)**
+- 30-second pitch for Axtria GenAI Platform (new project added to resume narrative)
+- Full architecture Q&A: 4-layer platform walk-through (API, Orchestration, Retrieval, Delivery)
+- Why LangGraph over LangChain chains: conditional routing, testability, persistence, auditability
+- Multi-tenancy design: RLS vs application filtering, vector layer tenant filter, Vault secrets
+- Plan-and-execute vs ReAct: cost, predictability, validation advantages
+- LLM failure handling: transient vs semantic failures, Redis-persisted recovery state, escalation
+- Langfuse observability: quality scoring dimensions, regression detection, human annotation loop
+- Team leadership: agentic AI mentoring, evaluation hygiene mandates, production LLM standards
+- SOAR summary with quantified results
+- Architecture summary table: 11-row mapping of technology to purpose
+
+**11_agentic_ai_deep_dive.md — Sections 24 & 25 (NEW)**
+- Section 24: Production Multi-Agent Platform — full architectural narrative from prod.txt
+- LangGraph StateGraph: 6 AI surfaces table, conditional routing rationale
+- Plan-and-Execute: JSON plan structure, cross-step chaining, dynamic module loading
+- WebSocket streaming: why over REST, async keepalive, chunked token delivery
+- Redis-backed memory: stateful multi-turn across pod restarts, TTL cleanup
+- LLM error recovery: transient vs semantic classification, intent reformulation, Redis state persistence
+- Langfuse observability: 4-dimension quality scoring table, regression detection workflow
+- Security: JWT/OAuth2/Vault stack, RLS vs separate databases, tenant onboarding simplicity
+- 5 interview Q&A answers for the Axtria platform
+- Section 25: Positioning bridge — how Axtria platform experience maps to req_1.txt role requirements (RAG, agentic, Docker, data privacy, GDPR, Italian SME on-premise)
+
+---
+
+## 🔑 THE AXTRIA PRODUCTION PLATFORM — KEY FACTS TO MEMORIZE
+
+Use these when any interviewer asks about your current/recent work:
+
+| Fact | Detail |
+|---|---|
+| Platform type | Multi-tenant enterprise GenAI platform |
+| AI surfaces served | 6 (Text-to-Agent, Text-to-SQL, RAG, Multi-Agent, Chat, Automation) |
+| Orchestration framework | LangGraph StateGraph with conditional routing |
+| Execution pattern | Plan-and-Execute (LLM emits JSON plan before any tool call) |
+| Retrieval | Hybrid RAG: ChromaDB/pgvector (dense) + BM25 (sparse) + RRF fusion |
+| Memory | Redis-backed conversation memory (survives pod restarts) |
+| Streaming | WebSocket with chunked tokens + async keepalive pings |
+| Error recovery | LLM intent reformulation + Redis-persisted recovery state |
+| Observability | Langfuse: generation tracing, token cost, quality scoring |
+| Quality dimensions | Completeness, Helpfulness, Trajectory, Faithfulness |
+| Auth | JWT + OAuth2 + HashiCorp Vault secrets |
+| Multi-tenancy | PostgreSQL Row-Level Security (database-layer isolation) |
+| Team | 8+ engineers + product; mentored 5+ on agentic AI patterns |
+| API backend | FastAPI with 30+ REST endpoints |

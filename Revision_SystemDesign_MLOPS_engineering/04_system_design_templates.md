@@ -1363,3 +1363,234 @@ Predict ICU patient health outcomes using multiple data sources: medical devices
 ### Interview One-Liner
 
 > "For ICU outcome prediction I fuse streaming vitals, structured EHR, and clinical notes. I use interpretable gradient boosting for early warnings, keep all PHI de-identified, require human-in-the-loop for clinical decisions, and validate against simple clinical baselines and outcome data before trusting any signal."
+
+---
+
+## DESIGN X: MULTI-TENANT ENTERPRISE GENAAI PLATFORM (AXTRIA — FROM PROD.TXT)
+
+> This is a real system I built. Use this design to answer: "Design a production LLM platform," "Design a multi-tenant AI system," or "How would you build an agentic AI backend?"
+
+### Block 1: Problem Scope
+
+**Business goal:** Deliver 6 AI-powered product surfaces (Text-to-Agent, Text-to-SQL, RAG, Multi-Agent, Chat, Automation) to enterprise clients through a single, secure, observable backend.
+
+**Key constraints:**
+- Multi-tenancy: strict data isolation between clients — one client cannot see another's data
+- Real-time UX: LLM responses must stream token-by-token; no blocking REST waits
+- Observability: every LLM call, tool call, and agent state transition must be traced
+- Security: secrets never stored in code; all endpoints authenticated
+- Reliability: agent failures must be recovered gracefully, not silently dropped
+
+**Scale:** 30+ REST endpoints, 6 AI surfaces, 8+ person engineering team, enterprise SLA
+
+---
+
+### Block 2: Data Ingestion and Document Processing
+
+**Document pipeline (for RAG surface):**
+```
+Document Upload (PDF, DOCX, TXT)
+    → Chunking with configurable overlap (e.g., 512 tokens, 64 token overlap)
+    → Embedding generation (text-embedding-3-small)
+    → Dual indexing:
+        - Dense index: ChromaDB / pgvector (for semantic similarity search)
+        - Sparse index: BM25 (for exact keyword and token matching)
+    → tenant_id tagged on every chunk at write time
+```
+
+**Why dual indexing matters:**
+- Dense search finds semantically similar content ("revenue" ≈ "income")
+- BM25 finds exact matches (invoice numbers, product codes, proper nouns)
+- Neither alone is sufficient; both together cover the full retrieval space
+
+**Structured data ingestion (for Text-to-SQL surface):**
+- Database schema introspection at session start
+- Schema metadata stored per tenant for the LLM to use in query generation
+- Query results validated before returning to user
+
+---
+
+### Block 3: Agent Orchestration Layer (LangGraph StateGraph)
+
+**Why LangGraph StateGraph over a linear chain:**
+- The platform serves 6 different AI surfaces — a linear chain cannot handle conditional routing
+- StateGraph defines explicit nodes (states) and conditional edges (routing decisions)
+- Each node is independently testable
+- Built-in checkpointing enables pause/resume and debugging of any execution
+
+**Routing Logic (conditional edges):**
+```
+User Request
+    → Intent Classifier Node
+    → Conditional Edge:
+        - "data_query"     → Text-to-SQL Agent
+        - "document_qa"    → RAG Agent
+        - "complex_task"   → Multi-Agent Orchestrator
+        - "conversation"   → Chat Agent with Redis memory
+        - "automation"     → Async Background Agent
+```
+
+**Plan-and-Execute Framework:**
+Instead of ReAct (one-step-at-a-time), the LLM emits a complete JSON execution plan upfront:
+- All steps defined before any tool call is made
+- Cross-step result chaining: step N can reference output of step M by variable name
+- Dynamic module loading: executor loads the right tool module at runtime
+- Plan can be logged and validated before execution begins
+
+**Why plan-and-execute over ReAct for this use case:**
+- ReAct is exploratory and flexible but makes one decision at a time — expensive and hard to validate
+- Enterprise clients need predictable, auditable execution paths — plan-and-execute delivers this
+- The plan is a first-class artifact: it can be reviewed, replayed, and compared across runs
+
+---
+
+### Block 4: Retrieval — Hybrid RAG with RRF Fusion
+
+**Full Hybrid Retrieval Pipeline:**
+```
+User Query
+    → Embed query (text-embedding-3-small)
+    → Parallel search:
+        - Dense: cosine similarity against pgvector/ChromaDB (top-K results)
+        - Sparse: BM25 token matching against keyword index (top-K results)
+    → Reciprocal Rank Fusion (RRF):
+        - Score(doc) = Σ 1/(k + rank_i) for each ranking list
+        - Documents appearing high in both lists score highest
+    → Reranking (Cross-Encoder) for final top-5 selection
+    → Inject into LLM prompt with source citations
+    → Generate answer grounded in retrieved content
+```
+
+**Tenant isolation in retrieval:**
+- Every vector chunk is tagged with `tenant_id` at write time
+- Every retrieval query includes a mandatory `where tenant_id = X` filter
+- This filter is enforced at the retrieval layer, not application code
+
+---
+
+### Block 5: Real-Time Serving — WebSocket Streaming and Redis Memory
+
+**WebSocket Streaming Architecture:**
+```
+Client (browser / app)
+    → WebSocket connection to FastAPI endpoint
+    → Server begins LLM generation
+    → Each token chunk → pushed immediately over socket
+    → Async keepalive ping every 15s (prevents timeout during slow generation)
+    → Final chunk signals completion
+    → Socket remains open for follow-up turns
+```
+
+**Redis-Backed Conversation Memory:**
+```
+Turn 1: user message + assistant response → stored in Redis under session_id key
+Turn 2: read prior history from Redis → prepend to new prompt → LLM generates
+Turn N: Redis TTL expires automatically → memory cleaned up
+```
+
+**Why Redis for memory, not in-process:**
+- Pod restarts (Kubernetes rolling deploys, crashes) lose in-process state
+- Multiple API replicas can serve the same session without context loss
+- TTL ensures automatic cleanup without a separate garbage collection job
+
+**LLM-Powered Error Recovery Layer:**
+```
+Agent action fails
+    → Classify failure: transient vs semantic
+    → Transient: exponential backoff retry (3 attempts)
+    → Semantic: LLM intent reformulation
+        - Original intent + failure details → LLM rewrites query/params
+        - Reformulated attempt retried
+        - All state persisted to Redis (survives pod restart)
+    → If N reformulations fail → escalate to human review
+```
+
+---
+
+### Block 6: Security and Multi-Tenancy
+
+**Authentication Stack:**
+- JWT validation on every API request (stateless, scalable)
+- OAuth2 flows for SSO integration (enterprise identity providers)
+- Vault (HashiCorp) manages all secrets at runtime injection
+
+**Why Vault over environment variables:**
+- Environment variables are often logged, leaked in crash reports, or visible in container orchestration UIs
+- Vault injects secrets at runtime with audit logging and rotation
+- Secrets can be rotated without redeploying the application
+
+**Row-Level Security for Tenant Data Isolation:**
+```sql
+-- PostgreSQL RLS policy (simplified)
+CREATE POLICY tenant_isolation ON documents
+    FOR ALL
+    USING (tenant_id = current_setting('app.current_tenant')::uuid);
+
+-- Application sets tenant context at request start
+SET app.current_tenant = 'tenant_A_uuid';
+-- Now ALL queries on documents automatically filtered to tenant_A's rows
+```
+
+**Why RLS over application-layer filtering:**
+- Application filtering relies on developers always adding the WHERE clause — one mistake exposes all data
+- RLS is enforced by the database engine — it cannot be bypassed by application bugs
+- Audit-friendly: RLS policies are inspectable and versioned separately from application code
+- Tenant onboarding: just insert a new tenant record — no new database instance needed
+
+---
+
+### Block 7: Observability — Langfuse Integration
+
+**What is traced per LLM call:**
+- Exact prompt (system + user messages)
+- Model version and temperature
+- Token count (prompt + completion)
+- Cost in dollars
+- Latency (time to first token, total generation time)
+- All grouped under a session trace ID
+
+**Automated Quality Scoring (after every generation):**
+
+| Dimension | What It Checks |
+|---|---|
+| Completeness | Did the response address all parts of the question? |
+| Helpfulness | Is the response actionable and accurate? |
+| Trajectory | Did the agent use the optimal tool sequence? |
+| Faithfulness | Are factual claims supported by retrieved evidence? |
+
+**Regression Detection Workflow:**
+1. Baseline: measure average quality scores over 7 days
+2. Deploy prompt change or model update
+3. Run automated evaluation on fixed test set
+4. Compare new scores against baseline
+5. If degradation > threshold: block deployment or alert team
+
+**Human Annotation Loop:**
+- Investigators and end users can rate agent outputs directly in Langfuse UI
+- Human feedback is logged and can trigger retraining or prompt refinement
+
+**Interview One-Liner:**
+> "I integrated Langfuse across every agent execution path. Every LLM call is traced with tokens, cost, latency, and model version. Automated scoring checks completeness, helpfulness, trajectory, and faithfulness on every generation. I detect quality regressions by comparing scores before and after every deployment against a fixed test set."
+
+---
+
+### System Design Interview: "Design a Multi-Tenant LLM Platform"
+
+**Step 1 — Scope it:**
+> "Before I design, let me ask: how many tenants? How strict is the isolation requirement? Do we need real-time streaming or batch responses? What are the AI surfaces (Q&A, SQL, automation)?"
+
+**Step 2 — The 7-Block Walk:**
+
+1. **Problem:** Multi-tenant enterprise LLM platform, strict data isolation, real-time streaming, 6 AI surfaces
+2. **Ingestion:** Document upload pipeline with chunking, dual indexing (dense + sparse), tenant_id on every chunk
+3. **Agent Orchestration:** LangGraph StateGraph with intent-based conditional routing, plan-and-execute framework
+4. **Retrieval:** Hybrid RAG (pgvector + BM25) with RRF fusion, tenant-filtered at retrieval layer
+5. **Serving:** WebSocket streaming, Redis-backed memory, LLM error recovery with intent reformulation
+6. **Security:** JWT/OAuth2, Vault secrets, PostgreSQL RLS for tenant isolation
+7. **Observability:** Langfuse traces every LLM call; automated quality scoring; regression detection on deployment
+
+**Step 3 — Tradeoffs to mention:**
+- Plan-and-execute vs ReAct: predictability and auditability vs flexibility
+- RLS vs separate databases: operational simplicity vs absolute isolation
+- WebSocket vs REST: streaming UX vs infrastructure simplicity
+- Redis memory vs in-process: resilience vs latency overhead
