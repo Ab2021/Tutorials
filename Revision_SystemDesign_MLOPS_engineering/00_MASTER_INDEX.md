@@ -304,3 +304,24 @@ Use these when any interviewer asks about your current/recent work:
 | Multi-tenancy | PostgreSQL Row-Level Security (database-layer isolation) |
 | Team | 8+ engineers + product; mentored 5+ on agentic AI patterns |
 | API backend | FastAPI with 30+ REST endpoints |
+
+---
+
+## ðŸ“ REVISION ROUND 3 â€” PROD.TXT FULL CROSS-REFERENCE (2026-06-29)
+
+> Goal: Make every bullet in `prod.txt` discoverable across the tutorial set.
+> Rule: No content deleted. All existing content above is preserved.
+
+| prod.txt Theme | Exact Source Phrase | Covered In |
+|---|---|---|
+| Platform Architecture | "I lead the AI engineering work on Axtria's enterprise GenAI platform." | 00, 06, 08, 10, 11, 13 |
+| Platform Architecture | "Architected a multi-agent AI orchestration platform on LangGraph StateGraph... serving 6 production AI surfaces... through a unified FastAPI backend with 30+ REST endpoints." | 03, 04, 08, 11, 13 |
+| Execution Pattern | "Designed a plan-and-execute agent framework where LLMs emit structured JSON execution plans..." | 04, 08, 09, 11, 13 |
+| Retrieval & RAG | "Engineered a hybrid RAG pipeline combining dense vector search (ChromaDB / pgvector) with sparse BM25 retrieval..." | 03, 04, 08, 11 |
+| Real-time & Resilience | "Built real-time AI streaming over WebSocket with chunked LLM responses, async keepalive pings, and Redis-backed chat memory..." | 03, 04, 08, 11 |
+| Error Recovery | "Implemented an LLM-powered error recovery layer with Redis-persisted state and intent reformulation..." | 03, 04, 08, 11, 13 |
+| Observability | "Integrated Langfuse across every agent execution path: generation-level tracing, token usage tracking, automated quality scoring (completeness, helpfulness, trajectory)." | 03, 04, 08, 11 |
+| Security | "Secured the platform with JWT, OAuth2, Vault-managed secrets, and Row-Level Security for tenant data isolation." | 03, 04, 08, 10, 11, 12, 13 |
+| Leadership | "Lead a cross-functional team of 8+ engineers and product folk; mentored 5+ engineers on agentic AI patterns, evaluation, and production LLM hygiene." | 08, 10, 11 |
+
+**How to use this cross-reference:** When an interviewer asks about any theme above, open the mapped files and quote the exact source phrase first, then expand with the surrounding architecture detail.

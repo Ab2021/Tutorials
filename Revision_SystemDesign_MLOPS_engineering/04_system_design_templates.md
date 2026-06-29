@@ -1594,3 +1594,25 @@ SET app.current_tenant = 'tenant_A_uuid';
 - RLS vs separate databases: operational simplicity vs absolute isolation
 - WebSocket vs REST: streaming UX vs infrastructure simplicity
 - Redis memory vs in-process: resilience vs latency overhead
+
+---
+
+### DESIGN X — Source Text Alignment (prod.txt)
+
+Keep the exact resume language in mind when whiteboarding this design:
+
+> "I lead the AI engineering work on Axtria's enterprise GenAI platform. My focus: turning LLMs into reliable, observable, multi-tenant production systems."
+
+| prod.txt Bullet | Maps to DESIGN X Block |
+|---|---|
+| "Architected a multi-agent AI orchestration platform on LangGraph StateGraph with conditional routing... serving 6 production AI surfaces... through a unified FastAPI backend with 30+ REST endpoints." | Block 1 (scope), Block 3 (orchestration) |
+| "Designed a plan-and-execute agent framework where LLMs emit structured JSON execution plans with sequential steps, cross-step result chaining, and dynamic module loading." | Block 3 (plan-and-execute) |
+| "Engineered a hybrid RAG pipeline combining dense vector search (ChromaDB / pgvector) with sparse BM25 retrieval — end-to-end document processing from upload through chunking, embedding, and LLM-augmented generation." | Block 2 (ingestion), Block 4 (retrieval) |
+| "Built real-time AI streaming over WebSocket with chunked LLM responses, async keepalive pings, and Redis-backed chat memory for stateful multi-turn conversations." | Block 5 (serving, memory) |
+| "Implemented an LLM-powered error recovery layer with Redis-persisted state and intent reformulation — agents recover gracefully via automatic query rewriting when execution fails." | Block 5 (error recovery) |
+| "Integrated Langfuse across every agent execution path: generation-level tracing, token usage tracking, automated quality scoring (completeness, helpfulness, trajectory)." | Block 7 (observability) |
+| "Secured the platform with JWT, OAuth2, Vault-managed secrets, and Row-Level Security for tenant data isolation." | Block 6 (security) |
+| "Lead a cross-functional team of 8+ engineers and product folk; mentored 5+ engineers on agentic AI patterns, evaluation, and production LLM hygiene." | Block 1 (team / scale) |
+
+**30-Second Pitch for DESIGN X:**
+> "I lead the AI engineering work on Axtria's enterprise GenAI platform, turning LLMs into reliable, observable, multi-tenant production systems. The platform serves 6 AI surfaces through a FastAPI backend with 30+ endpoints, uses LangGraph StateGraph for conditional agent routing, hybrid RAG for retrieval, WebSocket streaming with Redis memory, Langfuse observability, and PostgreSQL RLS for tenant isolation."

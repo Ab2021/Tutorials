@@ -778,3 +778,23 @@ MMM is powerful, but it has practical ceilings:
 ### Interview One-Liner
 
 > "MMM works best at weekly national granularity. When scaling to many regions or SKUs, I use hierarchical or Bayesian structures, modular pipelines, and automated holdout diagnostics. The real bottleneck is validation, because you cannot A/B test offline media."
+
+---
+
+## SECTION 17: PROD.TXT CONNECTION â€” ALGORITHMS TO AGENTIC PLATFORM DECISIONS
+
+The algorithm selection principles in this file also apply to the Axtria GenAI platform:
+
+| Algorithm Principle | GenAI Platform Decision |
+|---|---|
+| Start with simple baseline (logistic regression) | Start with deterministic workflow; add agency only with evidence. |
+| Model selection matrix | Model routing: GPT-4o-mini for classification/extraction, GPT-4o for reasoning/reflection. |
+| XGBoost vs LightGBM tradeoff | Plan-and-execute vs ReAct tradeoff: predictability/auditability vs flexibility. |
+| Histogram binning / GOSS efficiency | Token budget enforcement and per-step cost caps in LangGraph state. |
+| Probability calibration | Faithfulness scoring and citation requirements ground LLM outputs in evidence. |
+| Ensemble hierarchy | Orchestrator-workers pattern: specialist agents assembled by a coordinator. |
+| Complexity must earn its place | 6 AI surfaces + multi-tenancy + streaming justify LangGraph, hybrid RAG, Redis, and RLS. |
+
+### Interview One-Liner
+
+> "The same algorithm-selection discipline I use for XGBoost vs LightGBM â€” start simple, justify complexity with a metric failure, and monitor production behavior â€” is how I design agentic AI platforms: deterministic workflow first, agency only where it solves a specific problem, and always with observability and cost guardrails."

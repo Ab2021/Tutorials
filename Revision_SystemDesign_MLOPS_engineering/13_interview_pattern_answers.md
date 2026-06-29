@@ -1194,3 +1194,63 @@ Many of your failed interviews showed the interviewer saying *"I am not getting 
 4. Stop.
 
 If the interviewer asks again, repeat the direct answer in different words rather than adding new topics.
+
+---
+
+## Section 16 â€” Axtria GenAI Platform Patterns
+
+### 16.1 "Design a multi-tenant LLM platform"
+
+**Best-answer structure:**
+
+1. **Scope:** "Before I design, I need to know: number of tenants, isolation requirement, AI surfaces, real-time vs batch need."
+2. **7-block walkthrough:**
+   - **Problem:** Serve 6 AI surfaces with strict tenant isolation and real-time streaming.
+   - **Ingestion:** Document upload â†’ chunking â†’ dual indexing (ChromaDB/pgvector dense + BM25 sparse), `tenant_id` on every chunk.
+   - **Orchestration:** LangGraph StateGraph with intent-based conditional routing and plan-and-execute JSON plans.
+   - **Retrieval:** Hybrid RAG with Reciprocal Rank Fusion, tenant-filtered at retrieval layer.
+   - **Serving:** WebSocket streaming, Redis-backed memory, LLM error recovery with intent reformulation.
+   - **Security:** JWT + OAuth2, Vault-managed secrets, PostgreSQL RLS.
+   - **Observability:** Langfuse traces every LLM call, automated quality scoring, regression detection.
+3. **Tradeoffs:** plan-and-execute vs ReAct; RLS vs separate DBs per tenant; WebSocket vs REST; Redis memory vs in-process state.
+
+**Strong closing line:**
+> "I built exactly this at Axtria: a multi-tenant enterprise GenAI platform with 6 AI surfaces, hybrid RAG, WebSocket streaming, and PostgreSQL Row-Level Security for tenant isolation."
+
+### 16.2 "Why plan-and-execute over ReAct?"
+
+**Best-answer structure:**
+
+- **Direct answer:** "ReAct makes one decision at a time; plan-and-execute emits a complete structured JSON plan before any tool call."
+- **Why it matters in production:** Enterprise clients need predictable, auditable execution paths. A validated plan can be logged, replayed, and compared across runs.
+- **Cost/efficiency:** ReAct can waste LLM calls if an early step fails. Plan-and-execute catches plan-level issues before execution.
+- **Cross-step chaining:** The plan can reference outputs from earlier steps by name, reducing the need for additional LLM reasoning calls.
+
+**Common trap:** Saying ReAct is "bad." It is good for open-ended exploration; plan-and-execute is better for auditable enterprise workflows.
+
+### 16.3 "How do you secure an LLM platform?"
+
+**Best-answer structure:**
+
+- **Auth:** JWT + OAuth2 on every endpoint.
+- **Secrets:** HashiCorp Vault injects LLM API keys and DB passwords at runtime; never in env vars or code.
+- **Tenant isolation:** PostgreSQL Row-Level Security enforces `tenant_id` filtering at the database engine level.
+- **Retrieval isolation:** Every vector query carries a mandatory `tenant_id` filter at the vector store.
+- **Prompt injection defense:** Validate inputs, separate trusted system instructions from untrusted user content, restrict tool privileges, require human approval for destructive actions.
+- **Audit:** Langfuse traces every LLM call with tenant context.
+
+**Strong closing line:**
+> "I secure the platform with defense in depth: JWT/OAuth2 for auth, Vault for secrets, and PostgreSQL RLS so tenant isolation cannot be bypassed by an application bug."
+
+### 16.4 "How do you turn LLMs into reliable production systems?"
+
+**Best-answer structure:**
+
+- Treat the LLM as a component in an engineered system, not a magic box.
+- Use structured JSON plans (plan-and-execute) so execution is validated and auditable.
+- Add an LLM-powered error recovery layer with Redis-persisted state and automatic intent reformulation.
+- Instrument every agent path with Langfuse for generation-level tracing, token usage, cost, and quality scoring.
+- Enforce multi-tenant isolation at the database layer and cap cost with per-task token budgets and model routing.
+
+**Strong closing line:**
+> "Reliability comes from engineering around the LLM: structured plans, Redis-persisted recovery, Langfuse observability, and strict cost and security guardrails."

@@ -356,3 +356,20 @@ A model card is a structured document that records a model's purpose, training d
 ### Interview One-Liner
 
 > "I treat model cards and AI governance as part of the production contract, not an afterthought. Every production model has documented intended use, segment-level performance, known limitations, and an owner."
+
+---
+
+## SECTION 13: LEADING THE AXTRIA GENAI PLATFORM TEAM
+
+### "Tell me about leading a cross-functional AI platform team"
+
+> **S:** At Axtria, I was asked to lead the AI engineering work on an enterprise GenAI platform that would expose multiple AI surfaces to enterprise clients.
+>
+u003e **T:** I was accountable for turning LLMs into reliable, observable, multi-tenant production systems and for growing the team that would build and operate the platform.
+>
+u003e **A:** I set three standards for the team. First, every agentic workflow had to start as a deterministic workflow and earn dynamic agency with evidence. Second, every prompt change had to pass automated quality scoring on a fixed test set before deployment — no more "it seems to work" releases. Third, every production component needed observability, a fallback path, and a cost budget from day one. I ran weekly mentoring sessions for 5+ engineers on agentic AI patterns, structured output enforcement, and production LLM hygiene, and I paired each junior engineer with ownership of a specific evaluation metric or surface so they learned end-to-end.
+>
+u003e **R:** We shipped 6 production AI surfaces through a unified FastAPI backend. The platform had full Langfuse observability, PostgreSQL Row-Level Security for tenant isolation, and a documented error-recovery runbook. The team could operate the system without relying on me for every incident.
+
+**One-liner for "what is your leadership style?"**
+> "I lead by setting standards and giving ownership. At Axtria I led 8+ engineers and product folk, mentored 5+ engineers on agentic AI patterns and production LLM hygiene, and made evaluation and observability non-negotiable parts of every deployment."

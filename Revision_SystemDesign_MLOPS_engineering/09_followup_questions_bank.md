@@ -253,3 +253,31 @@
 
 **Q: "How do you handle network effects in an A/B test?"**
 > "I use cluster randomization, switchback testing by time window, or synthetic control. The right choice depends on whether the effect spills over between users and how many units I can randomize."
+
+---
+
+## CATEGORY 15: PROD.TXT / AXTRIA GENAI PLATFORM FOLLOW-UPS
+
+**Q: "Why a unified FastAPI backend for 6 AI surfaces?"**
+> "A single backend gives one authentication boundary, one observability integration point, and one deployment pipeline. At Axtria, the platform serves 6 production AI surfaces — Text-to-Agent, Text-to-SQL, RAG, Multi-Agent, Chat, and Automation — through a unified FastAPI backend with 30+ REST endpoints. Without unification, each surface would duplicate auth, logging, cost control, and tenant isolation logic."
+
+**Q: "How does plan-and-execute JSON work?"**
+> "The LLM emits a complete structured JSON execution plan before any tool is called. Each step has an action, parameters, and references to outputs from earlier steps via cross-step result chaining. The executor validates the plan, dynamically loads the right tool module, and runs the steps sequentially. This makes the plan a first-class artifact that can be logged, replayed, and audited."
+
+**Q: "Why hybrid RAG with dense + BM25?"**
+> "Dense embeddings capture semantic similarity but miss exact identifiers like invoice numbers, product codes, and proper nouns. BM25 sparse retrieval covers those. I engineered a hybrid RAG pipeline at Axtria combining dense vector search through ChromaDB / pgvector with sparse BM25 retrieval, fused with Reciprocal Rank Fusion, so both semantic and lexical signals contribute."
+
+**Q: "How does WebSocket streaming reduce latency?"**
+> "LLM generation produces tokens one at a time. A blocking REST response waits for the entire completion. WebSocket streams each chunk as it is generated, so the user sees the first token in milliseconds. At Axtria I added async keepalive pings so slow generations do not kill the connection."
+
+**Q: "How does Redis error recovery work?"**
+> "When an agent action fails semantically, the original intent and failure details are persisted to Redis. The LLM reformulates the intent — rewriting the query or tool parameters — and retries. Because the state is in Redis, if the API pod crashes mid-recovery the next pod resumes exactly where the previous one left off. After N failed reformulations the system escalates to a human."
+
+**Q: "What does Langfuse trace in production?"**
+> "Langfuse is integrated across every agent execution path. It records generation-level traces: the exact prompt, model version, temperature, token count, cost, and latency. It also supports automated quality scoring on completeness, helpfulness, trajectory, and faithfulness, and provides a UI for human annotation."
+
+**Q: "How is tenant isolation enforced?"**
+> "Four layers: JWT + OAuth2 for authentication, HashiCorp Vault for secrets management, and PostgreSQL Row-Level Security at the database layer. RLS policies mean a query from Tenant A physically cannot return rows belonging to Tenant B, regardless of application bugs. Vector retrieval also carries a mandatory tenant_id filter at the store layer."
+
+**Q: "How did you lead the platform team?"**
+> "I lead a cross-functional team of 8+ engineers and product folk. I focused on mentoring 5+ engineers on agentic AI patterns, evaluation discipline, and production LLM hygiene — for example, requiring every prompt change to pass automated quality scoring on a fixed test set before deployment."

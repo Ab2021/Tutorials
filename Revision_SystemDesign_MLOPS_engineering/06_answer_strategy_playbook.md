@@ -479,3 +479,24 @@ Always end with a hand-off:
 ### Strong Closing Line
 
 > "Thank you for the conversation. I'm excited about the opportunity to build production ML systems here. Based on what you've shared, the fraud detection and LLM work aligns closely with what I've done at Chubb and what I want to do next at scale."
+
+---
+
+## SECTION 8: GENAI PLATFORM EXPERIENCE â€” SOAR ANSWER TEMPLATE
+
+Use this when the interviewer asks: *"Tell me about your GenAI / agentic AI platform experience."*
+
+**Situation:**
+> "At Axtria, I led the AI engineering work on an enterprise GenAI platform. My focus: turning LLMs into reliable, observable, multi-tenant production systems."
+
+**Objective:**
+> "The goal was to serve 6 production AI surfaces â€” Text-to-Agent, Text-to-SQL, RAG, Multi-Agent, Chat, and Automation â€” through a single unified FastAPI backend with 30+ REST endpoints, without compromising data isolation, observability, or reliability."
+
+**Action:**
+> "I architected a multi-agent orchestration layer on LangGraph StateGraph with conditional routing across domain-specific agents. I designed a plan-and-execute framework where LLMs emit structured JSON execution plans before any tool call. I built hybrid RAG with dense vector search plus BM25 sparse retrieval, WebSocket streaming with Redis-backed memory, and an LLM-powered error recovery layer with Redis-persisted state. I integrated Langfuse across every agent execution path for generation-level tracing, token usage tracking, and automated quality scoring. I secured the platform with JWT, OAuth2, Vault-managed secrets, and PostgreSQL Row-Level Security for tenant isolation."
+
+**Result:**
+> "Six AI surfaces went live through one backend. We had full observability with automated quality scoring on completeness, helpfulness, trajectory, and faithfulness. Tenant data isolation was enforced at the database layer. Real-time streaming cut perceived latency by roughly 90% versus blocking REST."
+
+**One-liner to memorize:**
+> "I lead the AI engineering work on Axtria's enterprise GenAI platform. My focus: turning LLMs into reliable, observable, multi-tenant production systems."

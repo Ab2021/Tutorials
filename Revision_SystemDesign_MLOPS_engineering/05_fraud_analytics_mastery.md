@@ -986,3 +986,26 @@ There is rarely a single "early detection parameter." Early detection is achieve
 ### Interview One-Liner
 
 > "Early fraud detection comes from using the earliest-available signals in a lightweight cascade model, then escalating as richer features arrive. I tune the cost of late detection and stage-specific thresholds, not a single magic parameter."
+
+---
+
+## SECTION 24: AGENTIC AI / GENAI PLATFORM HYGIENE FOR FRAUD RAG
+
+### Transferring Production LLM Patterns to Fraud Systems
+
+The Axtria enterprise GenAI platform patterns from `prod.txt` apply directly to fraud RAG / agentic investigation systems:
+
+| Platform Pattern | Fraud RAG Application |
+|---|---|
+| Plan-and-execute JSON plans | A fraud investigation agent plans evidence gathering before calling tools, making the workflow auditable and reproducible. |
+| Hybrid RAG (dense + BM25) | Retrieve similar confirmed-fraud cases with both semantic and lexical matching, improving recall of subtle modus operandi. |
+| WebSocket streaming | Underwriters see extracted flags and reasoning as they are generated, reducing wait time. |
+| Redis-backed memory | Multi-turn fraud Q&A sessions retain case context across pod restarts. |
+| LLM error recovery with intent reformulation | If a SQL query against the claims database returns nothing, the agent rewrites the query and retries. |
+| Langfuse quality scoring | Automated scoring on completeness, helpfulness, faithfulness, and trajectory of the investigation output. |
+| JWT + OAuth2 + Vault | Secure access to the fraud copilot for authorized investigators only; audit every secret access. |
+| PostgreSQL RLS | In a multi-client SIU setup, one client's cases cannot leak to another client's investigators. |
+
+### Interview One-Liner
+
+> "I apply the same production LLM hygiene to fraud RAG that I used at Axtria: hybrid retrieval, structured agent plans, Redis-persisted state, Langfuse observability, and database-layer tenant isolation."

@@ -501,7 +501,7 @@ Use this for any resume project:
 
 **Layer 3 — Retrieval and Memory**
 - Hybrid RAG: dense vector search (ChromaDB / pgvector) combined with sparse BM25 retrieval, fused via Reciprocal Rank Fusion (RRF)
-- End-to-end document processing: upload → chunking with configurable overlap → embedding → dual indexing → retrieval
+- End-to-end document processing: upload → chunking with configurable overlap → embedding → dual indexing → retrieval → LLM-augmented generation (prod.txt exact phrase: "end-to-end document processing from upload through chunking, embedding, and LLM-augmented generation")
 - Redis-backed chat memory for stateful multi-turn conversations (survives pod restarts, scales across replicas)
 
 **Layer 4 — Real-Time Delivery, Resilience, and Observability**
@@ -617,4 +617,39 @@ Use this for any resume project:
 | Error Recovery | LLM intent reformulation + Redis state | Semantic failure recovery with full audit trail |
 | Observability | Langfuse | Generation tracing, quality scoring, cost tracking |
 | Evaluation | Automated scoring (completeness, helpfulness, trajectory, faithfulness) | Regression detection on every deployment |
+
+---
+
+### PROJECT 4 â€” Source Statement (verbatim from prod.txt)
+
+When the interviewer asks "What did you build at Axtria?", start with the exact lead:
+
+> "I lead the AI engineering work on Axtria's enterprise GenAI platform. My focus: turning LLMs into reliable, observable, multi-tenant production systems."
+
+**Platform Architecture**
+> "Architected a multi-agent AI orchestration platform on LangGraph StateGraph with conditional routing across domain-specific agents â€” serving 6 production AI surfaces (Text-to-Agent, Text-to-SQL, RAG, Multi-Agent) through a unified FastAPI backend with 30+ REST endpoints."
+> "Designed a plan-and-execute agent framework where LLMs emit structured JSON execution plans with sequential steps, cross-step result chaining, and dynamic module loading."
+
+**Retrieval & RAG**
+> "Engineered a hybrid RAG pipeline combining dense vector search (ChromaDB / pgvector) with sparse BM25 retrieval â€” end-to-end document processing from upload through chunking, embedding, and LLM-augmented generation."
+
+**Real-time & Resilience**
+> "Built real-time AI streaming over WebSocket with chunked LLM responses, async keepalive pings, and Redis-backed chat memory for stateful multi-turn conversations."
+> "Implemented an LLM-powered error recovery layer with Redis-persisted state and intent reformulation â€” agents recover gracefully via automatic query rewriting when execution fails."
+
+**Observability & Quality**
+> "Integrated Langfuse across every agent execution path: generation-level tracing, token usage tracking, automated quality scoring (completeness, helpfulness, trajectory)."
+
+**Security & Multi-tenancy**
+> "Secured the platform with JWT, OAuth2, Vault-managed secrets, and Row-Level Security for tenant data isolation."
+
+**Leadership**
+> "Lead a cross-functional team of 8+ engineers and product folk; mentored 5+ engineers on agentic AI patterns, evaluation, and production LLM hygiene."
+
+---
+
+### Q: How do you turn LLMs into reliable production systems?
+
+**Answer:**
+> "The key is treating LLMs as a component in a larger engineered system, not as a magic box. At Axtria I did this in four ways. First, I built a plan-and-execute framework so the LLM emits a structured JSON execution plan before any tool call â€” the plan is validated, logged, and auditable. Second, I added an error recovery layer that classifies failures as transient or semantic; semantic failures trigger automatic intent reformulation persisted to Redis so recovery survives pod restarts. Third, I integrated Langfuse across every agent execution path for generation-level tracing, token usage tracking, and automated quality scoring on completeness, helpfulness, and trajectory. Finally, I enforced multi-tenant isolation at the database layer via PostgreSQL Row-Level Security and managed all secrets with Vault, because reliability is meaningless without security."
 

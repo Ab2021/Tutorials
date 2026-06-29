@@ -871,3 +871,23 @@ When the error budget is consumed, pause feature work and focus on reliability.
 ### "When would you use a parametric vs non-parametric model?"
 
 > "Parametric models like logistic regression make strong assumptions and need less data but may underfit complex patterns. Non-parametric models like gradient boosting or k-NN are more flexible but need more data and can overfit. I choose based on data size, feature complexity, and interpretability needs."
+
+---
+
+## SECTION 23: PROD.TXT CONNECTION — FROM FUNDAMENTALS TO THE AXTRIA PLATFORM
+
+The fundamentals in this file underpin the Axtria enterprise GenAI platform described in `prod.txt`:
+
+| Fundamental Concept | Platform Application |
+|---|---|
+| Evaluation gates and SLOs | Langfuse quality scoring gates (completeness, helpfulness, trajectory, faithfulness) block prompt regressions. |
+| Bias-variance tradeoff | Plan-and-execute reduces variance in agent paths; model routing selects cheaper models for low-variance tasks. |
+| Precision / recall / PR-AUC | Quality scoring and human escalation rate are the PR-AUC equivalents for agentic systems. |
+| Calibration | Agent confidence must be grounded in retrieved evidence; faithfulness scoring is a calibration layer. |
+| Cross-validation | Fixed evaluation test sets and Langfuse regression comparisons act as the "holdout" for every prompt change. |
+| Distribution drift (PSI/KS) | Prediction drift and quality-score drift in Langfuse replace feature-drift checks for LLM systems. |
+| Feature leakage prevention | Temporal cutoffs and tenant isolation prevent leakage across sessions and clients. |
+
+### Interview One-Liner
+
+> "The ML fundamentals in this file are the same ones I apply to the Axtria GenAI platform: evaluation gates, bias-variance control, calibration, and drift detection — just expressed through agent traces, quality scores, and token budgets instead of traditional model metrics."

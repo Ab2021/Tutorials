@@ -627,3 +627,52 @@ A continual learning technique that protects important weights when training a m
 ### Interview One-Liner
 
 > "Lead-level interviews now expect model cards, alignment methods like DPO, causal-aware experimentation such as switchback testing, and awareness of over-parameterized phenomena like double descent. I treat these as part of the broader production-governance toolkit."
+
+---
+
+## SECTION 17: ENTERPRISE GENAI SECURITY & MULTI-TENANCY
+
+This section connects the Axtria platform security model to lead-level interview answers.
+
+### Authentication Stack
+
+- **JWT (JSON Web Tokens):** Stateless, signed tokens used on every API request. The FastAPI backend validates the token and extracts user identity and tenant membership.
+- **OAuth2:** Supports enterprise SSO flows such as OIDC / SAML identity providers. OAuth2 handles token issuance and refresh so the application does not manage passwords.
+
+### Secrets Management with HashiCorp Vault
+
+- All LLM API keys, database passwords, and integration credentials live in Vault.
+- Vault injects secrets at pod startup via a sidecar or Kubernetes Secrets Operator.
+- Secrets are short-lived and auto-rotate, so a compromised key expires within hours.
+- Every secret read is audited with the requesting service identity.
+
+### Multi-Tenancy with PostgreSQL Row-Level Security (RLS)
+
+- Every tenant-scoped table includes a `tenant_id` column.
+- RLS policies are attached to the table; PostgreSQL enforces them automatically for every query in the session.
+- The application sets the tenant context at the start of each request:
+  ```sql
+  SET app.current_tenant = 'tenant_A_uuid';
+  ```
+- A query from Tenant A cannot return rows where `tenant_id` is different, regardless of whether the application remembers the WHERE clause.
+
+### Tenant Isolation in the Retrieval Layer
+
+- Every vector chunk is tagged with `tenant_id` at ingestion time.
+- Every RAG query includes a mandatory `tenant_id` filter at the vector store layer, not in application code.
+- This prevents cross-tenant retrieval even if the orchestration layer is misconfigured.
+
+### Defense in Depth Summary
+
+| Layer | Control |
+|---|---|
+| Network | TLS for all client and service-to-service traffic |
+| Auth | JWT + OAuth2 on every endpoint |
+| Secrets | Vault-managed, rotated, audited |
+| Database | PostgreSQL RLS policies |
+| Retrieval | Mandatory `tenant_id` filter at vector store |
+| Audit | Langfuse traces every LLM call with tenant context |
+
+### Interview One-Liner
+
+> "I secure multi-tenant GenAI platforms with defense in depth: JWT + OAuth2 for auth, Vault for secrets, and PostgreSQL Row-Level Security so tenant isolation is enforced by the database engine and cannot be bypassed by application bugs."

@@ -341,3 +341,50 @@ Before presenting a design, ask yourself:
 7. Am I using the right tool, not the most exciting tool?
 
 If you answer no to any of these, reconsider the design.
+
+---
+
+## EXAMPLE 4: MULTI-AGENT AI ORCHESTRATION (AXTRIA GENAI PLATFORM)
+
+This example shows how the simplicity ladder applies to the platform described in `prod.txt`.
+
+**WRONG approach:**
+> "I built a multi-agent orchestration platform with LangGraph StateGraph, conditional routing, plan-and-execute JSON plans, hybrid RAG, WebSocket streaming, Redis memory, Vault secrets, and PostgreSQL RLS — all from day one."
+
+**Interviewer reaction:** "That sounds overengineered for a single chatbot. Why do you need all of that?"
+
+**RIGHT approach:**
+> "If the requirement was just a single FAQ chatbot, I would start with a simple RAG chain over a few documents and a REST API. That is Rung 3-4 on the simplicity ladder.
+>
+u003e At Axtria, the requirement was different: the business needed to expose 6 distinct AI surfaces (Text-to-Agent, Text-to-SQL, RAG, Multi-Agent, Chat, Automation) to enterprise clients through a single backend. A simple chain could not route among 6 surfaces or enforce different safety and latency needs per surface.
+>
+u003e That specific failure is what justified climbing the ladder: LangGraph StateGraph for conditional routing, plan-and-execute for auditable multi-step workflows, hybrid RAG for document Q&A, WebSocket streaming for real-time UX, Redis memory for stateful multi-turn sessions, and RLS for tenant isolation. Each component maps to a specific requirement that a simpler approach could not meet."
+
+**The difference:** The complexity is justified by the number of surfaces, the multi-tenancy requirement, and the real-time streaming need — not by the existence of the tools.
+
+---
+
+## GENAI PLATFORM ONE-LINE JUSTIFICATIONS
+
+Memorize these to defend the Axtria architecture choices:
+
+**LangGraph StateGraph over a single chain:**
+> "A single chain could not route among 6 AI surfaces. StateGraph gives explicit conditional routing, per-surface guardrails, and an auditable state machine."
+
+**Plan-and-execute over ReAct:**
+> "ReAct makes one decision at a time and is hard to validate. Plan-and-execute emits a complete JSON plan before any tool call, making execution predictable and auditable for enterprise clients."
+
+**Hybrid RAG over dense-only retrieval:**
+> "Dense embeddings miss exact identifiers like invoice numbers and product codes. BM25 covers those. The combination reduces hallucination and improves citation precision."
+
+**WebSocket streaming over blocking REST:**
+> "LLM generation is token-by-token. WebSocket pushes each chunk immediately, cutting perceived latency by ~90% versus waiting for the full response."
+
+**Redis-backed memory over in-process state:**
+> "In-process memory dies on pod restart. Redis lets any API replica resume the same session and provides TTL cleanup automatically."
+
+**PostgreSQL RLS over application-layer filtering:**
+> "One missed WHERE clause exposes one tenant's data to another. RLS is enforced by the database engine and cannot be bypassed by application bugs."
+
+**Langfuse observability over plain logs:**
+> "Logs are unstructured text. Langfuse captures structured traces, token usage, cost, latency, and automated quality scores per generation, with regression detection on every deployment."

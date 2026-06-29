@@ -918,3 +918,58 @@ The upcoming role requires: RAG pipelines, agentic workflows, document processin
 **How to position the Axtria platform in that interview:**
 
 > "I've already built exactly what this role describes. At Axtria, I architected a multi-agent orchestration platform on LangGraph serving 6 production AI surfaces through a unified FastAPI backend. I built hybrid RAG combining dense vector search with BM25 sparse retrieval. I built real-time streaming over WebSocket with Redis-backed multi-turn memory. I designed Row-Level Security for multi-tenant data isolation, which directly addresses the GDPR and data privacy constraints this role requires for Italian SME clients. The difference going from enterprise to SME is the deployment footprint — I'd replace the enterprise Kubernetes cluster with a docker-compose stack deployable on the client's on-premise hardware, and swap the hosted LLM for a local Llama-3 model if data sovereignty requires it."
+
+---
+
+## SECTION 26: PROD.TXT QUICK REFERENCE
+
+Use this section as a flashcard for the exact language from `prod.txt`.
+
+> "I lead the AI engineering work on Axtria's enterprise GenAI platform. My focus: turning LLMs into reliable, observable, multi-tenant production systems."
+
+### Platform Architecture
+> "Architected a multi-agent AI orchestration platform on LangGraph StateGraph with conditional routing across domain-specific agents — serving 6 production AI surfaces (Text-to-Agent, Text-to-SQL, RAG, Multi-Agent) through a unified FastAPI backend with 30+ REST endpoints."
+
+> "Designed a plan-and-execute agent framework where LLMs emit structured JSON execution plans with sequential steps, cross-step result chaining, and dynamic module loading."
+
+- See **Section 24** for the full architecture narrative.
+- See **Section 16** for why a state machine / LangGraph beats ReAct in production.
+
+### Retrieval & RAG
+> "Engineered a hybrid RAG pipeline combining dense vector search (ChromaDB / pgvector) with sparse BM25 retrieval — end-to-end document processing from upload through chunking, embedding, and LLM-augmented generation."
+
+- See **Section 10** for the fraud investigation agent design that uses hybrid retrieval.
+- See **Section 5** for memory and context management.
+
+### Real-time & Resilience
+> "Built real-time AI streaming over WebSocket with chunked LLM responses, async keepalive pings, and Redis-backed chat memory for stateful multi-turn conversations."
+
+> "Implemented an LLM-powered error recovery layer with Redis-persisted state and intent reformulation — agents recover gracefully via automatic query rewriting when execution fails."
+
+- See **Section 24** for WebSocket and Redis memory details.
+- See **Section 8** for guardrails and **Section 22** for loop detection.
+
+### Observability & Quality
+> "Integrated Langfuse across every agent execution path: generation-level tracing, token usage tracking, automated quality scoring (completeness, helpfulness, trajectory)."
+
+- See **Section 9** for observability fundamentals.
+- See **Section 20** for observability tools.
+
+### Security & Multi-tenancy
+> "Secured the platform with JWT, OAuth2, Vault-managed secrets, and Row-Level Security for tenant data isolation."
+
+- See **Section 8** for guardrails and PII handling.
+- See **Section 17** for prompt injection defense.
+
+### Leadership
+> "Lead a cross-functional team of 8+ engineers and product folk; mentored 5+ engineers on agentic AI patterns, evaluation, and production LLM hygiene."
+
+- See **Section 15** for lead-level expectations.
+
+---
+
+### Additional Interview Q&A: Axtria Platform Scope
+
+**Q: "What was your scope at Axtria?"**
+> "I lead the AI engineering work on Axtria's enterprise GenAI platform. My focus: turning LLMs into reliable, observable, multi-tenant production systems. I owned the architecture of a multi-agent orchestration layer on LangGraph StateGraph serving 6 production AI surfaces through a unified FastAPI backend with 30+ REST endpoints, and I led a cross-functional team of 8+ engineers and product folk while mentoring 5+ engineers on agentic AI patterns, evaluation, and production LLM hygiene."
+
