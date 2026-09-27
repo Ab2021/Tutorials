@@ -370,7 +370,9 @@ python code/08_quantize.py --model ./out/merged --method gptq --bits 4 --group-s
        --desc-act --out ./out
 python code/08_quantize.py --model ./out/merged --method gguf --quant-type Q4_K_M
 python code/08_quantize.py --model meta-llama/Llama-3.1-8B-Instruct --method bnb --bits 4
-#   --method choices: gptq | awq | bnb | gguf | hqq        --bits: 2 | 3 | 4 | 8
+#   --method choices: gptq | awq | bnb | gguf      --bits: 2 | 3 | 4 | 8
+#   (no `hqq` — it is deliberately absent. It was once listed but fell through to the
+#    AWQ branch, silently writing an AWQ checkpoint into a directory named `hqq-4bit`.)
 #   --quant-type choices: Q2_K Q3_K_S Q3_K_M Q4_K_S Q4_K_M Q5_K_M Q6_K Q8_0 F16
 #   --desc-act is a STORE_TRUE flag (default off). --calib-samples default 256.
 #   ⚠ the script's own VRAM table (--eval-only) is the fastest way to sanity-check a fit.

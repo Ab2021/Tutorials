@@ -42,7 +42,7 @@ quantisation (CH-10/CH-11) and it is far cheaper.
 | **The T² correction** | `∂L/∂z ∝ 1/T²` | — | Without `× T²`, raising T shrinks gradients |
 | **Dark-knowledge bits** | `H(p) = −Σ p_i log p_i` | — | A confident one-hot ≈ 0 bits; a soft one carries more |
 | **Logit storage** | `vocab × precision × tokens` | — | 150k × 4 B × 1M = **600 GB** |
-| **Top-k storage** | `k × (4 + 4) × tokens` (index + value) | k=20 | 20 × 8 × 1M = **160 MB** |
+| **Top-k storage** | `k × (4 B index + value bytes) × tokens` | value = 2 B fp16, 4 B fp32 | k=20 fp16: 20 × 6 B × 1M = **120 MB**. Same k in fp32: 20 × 8 B = **160 MB** |
 | **Compression ratio** | `teacher_params / student_params` | — | 70B → 1B = 70× |
 
 ### 2.1 Why `T²` — the derivation in one line
@@ -334,9 +334,12 @@ python code/07_distillation.py --from-teacher --teacher Qwen/Qwen2.5-32B-Instruc
 python code/07_distillation.py --from-teacher --teacher Qwen/Qwen2.5-32B-Instruct \
     --prompts data/prompts.jsonl --n 5000 --out data/seqkd.jsonl
 # 2. Filter the raw generations (refusals, boilerplate, instruction-echoing survive
-#    generation and are imitated faithfully), then train as ordinary SFT:
-python code/data/make_instruction_data.py --filter --in data/seqkd.jsonl
-python code/01_sft_lora.py --data data/seqkd.jsonl --out out/student
+#    generation and are imitated faithfully), then train as ordinary SFT.
+#    NOTE: there is no --filter flag anywhere. make_instruction_data.py's
+#    quality_filter() only runs on data it generated in the same process, so it
+#    cannot be pointed at an existing jsonl. Read 20 rows and write the rule you
+#    actually need — see CH-09 §5.2b.
+python code/01_sft_lora.py --data data/seqkd.jsonl --output out/student
 
 # ── Token-level KD: the soft-target loss, and its storage problem ───────────
 # Requires a SHARED VOCABULARY — the script exits early if the tokenizers differ.

@@ -21,7 +21,7 @@
 - **The API surface is two calls.** `client.tunings.tune(base_model=..., training_dataset=..., config=...)` to start [45:16]; `client.models.generate_content(model=tuning_job.tuned_model.endpoint, contents=...)` to infer [54:13]. Everything else in the notebook is authentication, token counting, cost estimation, and cleanup.
 - **The prerequisite chain is longer than the code.** GCP project ID, a region (`us-central1` by default [21:02]), a **billing account with a payment method actually attached** [29:40] (the free tier does *not* cover this — [28:27]), a **Cloud Storage bucket in the same region** holding the JSONL [43:53], and a Colab session authenticated as **the same Google identity that owns the project** [23:38]. The instructor's own warning [19:53]: *"this fine tuning is not very straightforward. Whatever code they have given you in the documentation if you're directly going to be executed it will not work until and unless you are not doing a proper setup."*
 - **Vertex's JSONL schema is *not* OpenAI's.** OpenAI: `{"messages": [{"role": "system"\|"user"\|"assistant", "content": "..."}]}`. Vertex: `{"systemInstruction": {"role": "system", "parts": [{"text": "..."}]}, "contents": [{"role": "user", "parts": [{"text": "..."}]}, {"role": "model", "parts": [{"text": "..."}]}]}`. Note `parts` (an array), `text` (nested inside `parts`), and `role: "model"` where OpenAI says `assistant`. Full schema, plus the newer `messages`-shaped variant, in §4.2.
-- **Only two tuning methods exist and one of them is not in this video.** Supervised fine-tuning and preference tuning [11:13]. The video covers SFT only; preference tuning maps to CS-14/CS-24/CS-25/CS-27.
+- **The video presents two tuning methods; the API enum exposes three.** The instructor covers supervised fine-tuning and mentions preference tuning [11:13], and the video's scope is SFT only. The `tuningMethod` field itself accepts three values — `SUPERVISED_TUNING`, `DISTILLATION` and `PREFERENCE_TUNING` — with availability varying by model family and generation (§7.1). Read the API as the superset: two of its three methods are outside this video's scope, and preference tuning maps to CS-14/CS-24/CS-25/CS-27.
 - **Two weight-update regimes are exposed [13:14]:** parameter-efficient fine-tuning (PEFT — a LoRA-style adapter, selected via `adapterSize`) and full fine-tuning. On Vertex this is **not your choice of library**; it is a field in the tuning spec, and it materially changes quality, cost and whether the tuned model can be exported at all. §7.5.
 - **You do not need a GPU, and this is the point of the whole design.** The instructor switches Colab to a CPU-only runtime [18:50]: *"I'm not going to train the model on my own server. The model is being trained over the Google server only."* There is no VRAM arithmetic in this module — there is a **token arithmetic** instead, and §11 does it.
 - **The default validation split is automatic and easy to forget.** If you supply only a training file, Vertex holds out a slice for you. If you want control you must pass a *second* GCS URI. The video never mentions this; the automatic metrics it points at [51:36] are computed against that held-out slice, so if you don't know what the split was, you don't know what the metrics mean. §4.5 and §12.
@@ -58,7 +58,7 @@ Those two strings are the entire deliverable. The second one is the one that bil
 | **"We want Gemini but with our tone"** | The base model is good; the delivery is wrong. Format/style SFT is the cheapest possible win (CS-13 §4.1). | ~1k–10k examples and one tuning job. Genuinely cheap. |
 | **"We cannot get GPU quota"** | A100/H100 quota requests take days-to-weeks and are often denied for new accounts. Vertex SFT needs no GPU. | You inherit Vertex's price floor. |
 | **"Legal says the data cannot leave our tenancy"** | GCS in your project, Vertex training under your project's IAM. | You must verify Vertex's data-handling terms — "in your project" is not the same as "never leaves Google". |
-| **"We need it cheaper than GPT-4"** | A tuned 2.5 Flash at $5/1M training tokens looks irresistible next to a frontier model. | The endpoint's hourly fee is 10⁴× the training fee. §11.4. |
+| **"We need it cheaper than GPT-4"** | A tuned 2.5 Flash at $5/1M training tokens looks irresistible next to a frontier model. | The demo's training run cost $0.00282; the idle endpoint it created costs ~$1,459/month. **The endpoint is ~5×10⁵ times the training run** — the token rate tells you nothing about the run rate. §11.4, §16.6. |
 | **"Our competitor fine-tuned on OpenAI, so we'll do Gemini"** | Vendor diversification. | Two divergent schemas, two eval harnesses, two cost models. §13. |
 
 ### 1.3 The naive approach, and exactly how it fails
@@ -99,7 +99,7 @@ You are not performing fine-tuning. You are **submitting a specification and rec
 your JSONL in GCS
    │
    ├─ vendor reads N training tokens (you are billed for these)
-   ├─ vendor holds out a validation slice (default split; you are not billed for it)
+   ├─ vendor holds out a validation slice (default split; assumed not billed — verify, §6.10)
    ├─ vendor applies a LoRA-style adapter to the base model's weights
    │     └─ rank = adapterSize  (1 / 4 / 8 / 16 / 32)
    ├─ vendor minimises the same next-token cross-entropy as CS-13,
@@ -494,7 +494,7 @@ The ratio between the top row and the bottom row is the whole story: **the endpo
 
 ## 5. The End-to-End Pipeline
 
-### 5.1 The eleven stages (the video shows nine of them)
+### 5.1 The twelve stages (the video shows eleven of them)
 
 ```text
   ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -844,6 +844,22 @@ average:                                56
 per line: line 1, line 2, line 4 … (ascending order)
 top 10 largest examples: (shown)
 ```
+
+#### 6.5.1 The gap this histogram exposes but the video never closes
+
+The function above produces exactly the statistics you need to ask the next question — and then the video moves on to cost without asking it. **`max: 62` is the number that matters, and its meaning is: every one of these 10 examples fits, and nothing was ever truncated.** On a 62-token dataset you cannot observe the failure mode. On your dataset you can, and it is silent.
+
+**What the video never mentions anywhere, in any section:** sequence length, padding, truncation, packing, or the per-example token limit.
+
+| Question | Why it matters | What the video says | What to do |
+|---|---|---|---|
+| **Is there a per-example token limit?** | Vertex's supervised tuning rejects or truncates examples beyond a context bound, and the bound is not exposed as a knob you can set. | Nothing. | Find the documented limit for your model generation, then assert `max_len <= limit` locally and **refuse the upload** rather than discovering it at job time. `code/14_vertex_gemini_finetune.py` does exactly this: `--validate` prints a per-example length distribution and a `--max-example-tokens` guard, and `--upload` exits non-zero while any row is over it. |
+| **Does a too-long example get truncated, or does the job fail?** | Truncation is the dangerous answer: the job succeeds, you are billed for the tokens, and the *target* turn may have been cut off — leaving an example whose assistant turn is half a sentence (§4.1 item 4). | Nothing. | Assume truncation until proven otherwise, and make the max-length assertion a hard stop. |
+| **Is anything padded, and does the padding contribute loss?** | Not your concern on a managed service — you cannot see the collator. Unlike CS-13 §5, where you own the masking and the `IGNORE_INDEX`, here the vendor masks the prompt turns (§4.1 item 6) and pads as it sees fit. | Nothing. | Nothing to set. Just know that the loss number you see is not computed the way yours would be. |
+| **Where does the length limit interact with the split?** | A length filter applied *after* the hold-out split changes the split's distribution; applied *before*, it changes your reported row counts and your cost estimate. | Nothing. | Filter first, then split, then report both counts (§4.5). |
+| **Does packing exist here?** | CS-13 §7 and CH-12 §6 use packing to avoid wasting padding compute. On a per-token-billed managed service, packing would change your **bill**, not just your speed. | Nothing. | Do not assume it. If your examples average 60 tokens and the limit is thousands, you are being billed for sequences padded to some internal bucket — ask. |
+
+**The honest summary:** every length decision that CS-13 asks you to make deliberately is made for you here, silently, by a collator you cannot inspect. That is the trade you accepted in the four clauses (§1). The one thing you *can* do is **assert on your side and refuse to upload** — which is exactly what `--max-example-tokens` and the `--upload` guard in `code/14_vertex_gemini_finetune.py` are for.
 
 ### 6.6 Stage 3b — the cost estimator (the video's second helper)
 
@@ -1324,7 +1340,7 @@ Q1 is asked first because it is the only question that makes the rest non-option
 |---|---|---|
 | **No artefact you can take with you** | Vendor lock-in is total and structural [3:35]. | Exit cost = re-doing the fine-tune on an open model. |
 | **Idle endpoints bill per hour** | The default outcome of following this tutorial is a running endpoint you have forgotten about. | Order **$1–5/hour ≈ $1,000–$3,600/month**. Verify the rate. |
-| **Hyperparameter surface is tiny** | Four knobs, one of which you should not touch. No schedulers, no warmup, no LoRA target-module selection. | You cannot reproduce a paper's recipe. |
+| **Hyperparameter surface is tiny** | Four knobs, **two of which you should not touch on a first run** (`learningRateMultiplier` and `batchSize` — §7.3). No schedulers, no warmup, no LoRA target-module selection. | You cannot reproduce a paper's recipe. |
 | **No early stopping, no checkpoint selection** | The job runs to completion and bills for every epoch. | Costs money; risks overfitting with no automatic guard. |
 | **Fixed ~15–20 minute overhead per job** [50:56] | Iteration is slow at small data scale, where compute is ~0. | 100 experiments = 33 hours of wall-clock. |
 | **Metrics are log-loss and next-token accuracy** | Neither correlates well with task success on open-ended generation. | You will need your own eval harness anyway (§12). |
@@ -1470,7 +1486,7 @@ A `TuningJob` is a *record*. Deleting it removes the metrics, the experiment lin
 |---|---|---|---|---|---|
 | 1 | **Tuning (training tokens)** | $/1M tokens read × epochs | **$0.00282** [22:53] | $10–$300 per job | Trivial |
 | 2 | **Endpoint deployment** | **$/hour the deployment exists** | not measured | **$700–$3,700 / month** | **Dominant** |
-| 3 | **Tuned-model inference** | $/1M input + $/1M output tokens, at a premium over base | ~$0.00002 | $3–$50 / month at low traffic | Small |
+| 3 | **Tuned-model inference** | $/1M input + $/1M output tokens, at a premium over base | ~$0.00002 | **$3–$12 / month** at the §4.6 volume (5M input + 1M output); ~$50/month at 4–5× that traffic — still an order of magnitude below line 2 | Small |
 | 4 | **Artefact storage** | No published hourly charge identified for the Gemini tuned-model artefact; **verify** | $0 | $0 (unpublished) | Negligible/none |
 
 **The ratio between line 1 and line 2 at demo scale is roughly 500,000 : 1.** Every budgeting mistake in this module is a failure to notice that ratio.

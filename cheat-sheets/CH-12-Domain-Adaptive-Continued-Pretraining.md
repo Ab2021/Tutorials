@@ -51,8 +51,8 @@ training loss.
 | **Chars from tokens** | `tokens ≈ chars / 4` | English | 4,000 chars ≈ 1,000 tokens |
 | **Replay mix** | `D̂ = (1−ρ)·D_domain + ρ·D_general` | ρ by **token** count | 80M domain + 4.2M general ≈ ρ 0.05 |
 | **Effective batch** | `micro × accum × seq` | tokens/step | 1 × 8 × 2048 = 16,384 (the script's default) |
-| **Steps per epoch** | `ceil(chunks / (micro × accum))` | — | 20,000 chunks / 32 = 625 steps |
-| **Warmup steps** | `total_steps × warmup_ratio` | — | 625 × 0.03 ≈ 19 steps |
+| **Steps per epoch** | `ceil(chunks / (micro × accum))` | not tokens/step — **sequences** | 20,000 chunks / (1 × 8) = 2,500 steps |
+| **Warmup steps** | `total_steps × warmup_ratio` | — | 2,500 × 0.03 = 75 steps |
 | **Perplexity** | `PPL = exp(mean NLL)` over **non-pad tokens only** | — | loss 9.66 → `e^9.66` ≈ 15,760 |
 | **Uniform-vocab floor** | `ln(V)` | V = vocab | TinyLlama V=32,000 → `ln(32000)` = **10.37** |
 | **Bits per byte** | `BPB = total NLL / (bytes × ln 2)` | tokenizer-invariant | The only way to compare PPL after re-tokenising |
@@ -234,7 +234,7 @@ Four things the script does **right** and the video's notebook does not:
 |---|---|---|
 | 1 | `padding=False` + `DataCollatorForLanguageModeling(tok, mlm=False)` | Pads per batch and pads **labels with `-100`**. The notebook's `padding="max_length"` + `labels = input_ids.copy()` trains on pads — ~85% of the loss on a ~75-token chunk at `max_length=512` (CS-12 §4.3.4). |
 | 2 | `labels` are **not** pre-shifted | HF's `Trainer` drops the last logit and the first label internally. Pre-shifting gives a doubly-shifted objective that still looks like it converges (CS-12 §4.3.2). |
-| 3 | SHA-256 exact + MinHash near-duplicate dedup, before chunking | Chunking after dedup avoids boundary near-duplicates (CS-12 §5.1). |
+| 3 | MinHash near-duplicate dedup, before chunking | Chunking after dedup avoids boundary near-duplicates (CS-12 §5.1). It has **no exact-hash pre-pass** — add one; it is O(N) and free (§9.3). |
 | 4 | A volume verdict printed before training | `<1M` → "use RAG or SFT-only"; `1–10M` → "style/jargon shift"; `≥10M` → "meaningful adaptation". |
 
 Two things it does **not** do, which you must add (§5.3, §5.4): it prints a replay line but
@@ -360,7 +360,7 @@ python code/common/memory.py --model 8B --method qlora --tokens 80000000 --gpu-t
 
 # ── Downstream: the SFT stage that makes the CPT checkpoint useful (CH-13) ──
 python code/01_sft_lora.py --model ./out/dapt --data code/data/sample_sft.jsonl
-python code/09_merge_and_export.py --adapter out/sft-lora --out out/merged
+python code/09_merge_and_export.py --base <base-model> --adapter out/sft-lora --out out/merged
 ```
 
 **Flag reference (script defaults in bold):**
@@ -517,7 +517,7 @@ the pipeline to be the part that misses the deadline (CS-12 §11.6).
 
 | Dimension | LoRA | Full FT |
 |---|---|---|
-| Trainable params (1.1B, all 7 projections, r=32) | ~9M (0.8%) | 1.1B (100%) |
+| Trainable params (1.1B, all 7 projections, r=32) | **~25M (2.3%)** — TinyLlama shapes: 22 layers, hidden 2048, 4 KV heads, intermediate 5632 | 1.1B (100%) |
 | 1B training VRAM | 2.4 GB (r16, §7 table) | **14.5–19.9 GB** |
 | 7B training VRAM | 14.7 GB (r16) | 91.6 GB |
 | Forgetting | **less** — the frozen base structurally protects general capability | more — every weight moves |
@@ -741,4 +741,4 @@ a run you cannot trust.
 | Run the same pipeline without hand-written loops | **CH-15 / CS-15 — LLaMA-Factory**, **CS-16 — Unsloth** |
 | Compress the domain model into something servable | CS-08 / CS-09 — Distillation |
 | See the exact pipeline code with the traps pre-checked | `code/03_continued_pretraining.py`, `code/common/memory.py` |
-| Practice being interviewed on this | IQ-12 — Domain adaptation questions (CS-12 §19 has 10 with answers) |
+| Self-check before you ship | CS-12 §19 — 10 domain-adaptation questions with answers, and the §17 misconception list |

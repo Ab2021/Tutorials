@@ -37,7 +37,7 @@ for — there the fallback is **silent** and you pay full price for zero speedup
 
 | Concept | Formula | Symbols | Worked example |
 |---|---|---|---|
-| **4-bit weight memory** | `P × 4.5 bits / 8 / 1024³` GiB | `P` = params (NF4 + absmax + double-quant metadata) | 1.1B → 0.62 GiB; 8B → 4.5 GiB (CS-16 §11.1) |
+| **4-bit weight memory** | `P × 4.5 bits / 8` bytes; ÷ 1e9 for **GB**, ÷ 1024³ for **GiB** | `P` = params (NF4 + absmax + double-quant metadata) | 1.1B → 0.62 **GB** = 0.58 **GiB**; 8B → 4.50 **GB** = 4.19 **GiB** |
 | **16-bit weight memory** | `P × 2 bytes / 1024³` GiB | — | 8B bf16 → 16.0 GiB |
 | **LoRA params per projection** | `r × d_in + d_out × r` | `A:[r,d_in]`, `B:[d_out,r]` | `q_proj` 2048×2048, r=32 → 131,072 |
 | **Total adapter params** | `n_layers × Σ_p (r·d_in + d_out·r)` | p ∈ {q,k,v,o,gate,up,down} | TinyLlama r=32/7 modules → **25,231,360** |
@@ -190,7 +190,7 @@ Below ~100 you are memorising; above ~10,000 you bought capacity you did not nee
 
 ## 5. Copy-Paste Code Snippets
 
-### 5.1 Canonical Unsloth SFT (runnable; the shape of `code/02_sft_unsloth.py --train`)
+### 5.1 Canonical Unsloth SFT (runnable; the shape of `code/02_sft_unsloth.py`)
 
 ```python
 import unsloth                      # MUST be first import (CS-16 S4.1)
@@ -425,16 +425,34 @@ print(repr(t.apply_chat_template([{'role':'user','content':'hi'},
 rm -rf ~/.triton/cache
 ```
 
-> **Correction:** as of this writing, `python code/02_sft_unsloth.py --dry-run` — the exact
-> command CH-13 §6 tells you to run — **crashes immediately**:
-> `TypeError: TrainPlan.__init__() got an unexpected keyword argument 'size'` (verified by
-> running it). `code/common/memory.py`'s `TrainPlan` has fields
-> `model, method, seq_len, batch, grad_accum, ...` — there is no `size` and no `batch_size` —
-> and the next line calls `_print_plan(plan, full_finetune=..., lora=...)` while `_print_plan`
-> takes exactly one argument. `method` is also a required positional argument that is never
-> passed. Until that is fixed, use the `--dry-run` checks in CH-13 §12 instead, and treat the
-> plan/pre-flight block of `code/02_sft_unsloth.py` as untested. The training path
-> (`_train`) is separate and unaffected.
+> **Correction (retracted — and the retraction is the lesson).** An earlier revision of this
+> sheet stated that `python code/02_sft_unsloth.py --dry-run` — the exact command CH-13 §6
+> tells you to run — **crashes immediately** with
+> `TypeError: TrainPlan.__init__() got an unexpected keyword argument 'size'`, that
+> `_print_plan` was called with `full_finetune=`/`lora=` keyword arguments it did not accept,
+> and that `method` was never passed. **That was true of an earlier revision of the script and
+> is not true now.** Both defects were fixed: `memory.TrainPlan` takes
+> `model, method, seq_len, batch, grad_accum, ...` and `_print_plan(plan)` is called with
+> exactly one argument. Re-run, `--dry-run` exits **0** and prints the full plan block.
+>
+> **What went wrong with the correction itself, because it repeats in miniature every failure
+> mode this handbook warns about.** A claim about *broken tooling* was written into a cheat
+> sheet, read and re-quoted by two other modules, and survived the fix that made it false.
+> Nobody re-ran the one command that settles it. The cost is not the stale paragraph — it is
+> that a reader who trusted it skipped the pre-flight check that would have caught a real OOM.
+> **Never carry forward a "this is broken" claim without a date and without re-running it**;
+> a stale correctness claim is worse than no claim, because it actively diverts people away
+> from a working tool.
+>
+> **A related live defect found while re-testing, since the dry-run was worth re-running:**
+> `sniff_size` in `code/common/memory.py` used to misread the standard Unsloth repo suffix.
+> `sniff_size("unsloth/Llama-3.1-8B-bnb-4bit", "8B")` returned **"4B"** — the `4b` inside
+> `-bnb-4bit` matched the "4B" preset, and dict order put "4B" ahead of "7B"/"8B"/"9B" — so
+> `02_sft_unsloth.py --dry-run` planned its own 7B default with 4B arithmetic and printed
+> `weights 1.86 GB` instead of ~3.9 GB. Every FITS verdict was optimistic. Fixed: the suffix
+> is stripped, a candidate followed by `bit` is rejected, and the **longest** match wins
+> rather than the first. The default plan now reads `7B | method=qlora | weights 3.26 GB |
+> TOTAL 5.27 GB`. If you are holding a printed plan from before that fix, throw it away.
 
 ---
 
@@ -664,7 +682,7 @@ your pinned version by checking `attn_mod` as in §5.3.)*
 
 | Error message | Meaning | Fix |
 |---|---|---|
-| `TypeError: TrainPlan.__init__() got an unexpected keyword argument 'size'` | `code/02_sft_unsloth.py --dry-run` is broken (see the Correction in §6) | Use CH-13 §12's checks; do not rely on that pre-flight block |
+| `TypeError: TrainPlan.__init__() got an unexpected keyword argument 'size'` | **Fixed — this no longer occurs.** Was: `TrainPlan` constructed with a `size=` kwarg it did not accept (see the retraction in §6) | If you still see it you are on a stale checkout. `--dry-run` now exits 0; re-pull rather than working around it |
 | `ImportError: cannot import name 'SFTConfig' from 'trl'` | `transformers`/`trl` pin violated by a later install | Reinstall the exact pin set (§6); never `pip install -U` in a working env |
 | `Missing dependency: <e>` then `pip install unsloth` | `code/02_sft_unsloth.py` caught an `ImportError` at train time | Install **unsloth before** upgrading torch/transformers/trl |
 | `AssertionError: Please enable GPU runtime` | CPU-only torch (wrong `cuXXX` wheel) or no GPU attached | Reinstall torch from the wheel index matching `nvidia-smi` |

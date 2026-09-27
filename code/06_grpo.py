@@ -47,7 +47,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from common.memory import TrainPlan, _print_plan       # noqa: E402
+from common.memory import TrainPlan, _print_plan, sniff_size   # noqa: E402
 
 DEFAULTS = dict(
     model="Qwen/Qwen2.5-1.5B-Instruct",
@@ -203,7 +203,7 @@ def main() -> None:
     print("     Above 80%, the task is too easy — the model gains nothing.")
 
     plan = TrainPlan(
-        model=next((m for m in ["1.5B", "1B", "3B", "7B", "8B"] if m.lower() in a.model.lower()), "1.5B"),
+        model=sniff_size(a.model, "1.5B"),
         method="qlora" if a.quant == "4bit" else "lora",
         seq_len=a.max_prompt_len + a.max_completion_len,
         batch=a.batch * a.num_generations,     # the group is generated in one batch

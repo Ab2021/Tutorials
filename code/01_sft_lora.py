@@ -34,7 +34,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from common import data_utils as du                      # noqa: E402
-from common.memory import TrainPlan, _print_plan         # noqa: E402
+from common.memory import TrainPlan, _print_plan, sniff_size   # noqa: E402
 
 # --------------------------------------------------------------------------------------
 # Defaults. These are the *safe* defaults, chosen so a first run does not fail.
@@ -127,8 +127,7 @@ def main() -> None:
     method = "full" if a.quant == "none" and a.lora_targets == "none" else (
         "qlora" if a.quant == "4bit" else "lora")
     _print_plan(TrainPlan(
-        model=next((m for m in ["1.5B", "1B", "3B", "7B", "8B", "13B", "70B"]
-                    if m.lower() in a.model.lower()), "7B"),
+        model=sniff_size(a.model, "7B"),
         method=method, seq_len=a.max_seq_len, batch=a.batch, grad_accum=a.grad_accum,
         lora_r=a.lora_r, grad_checkpointing=a.grad_checkpointing,
     ))

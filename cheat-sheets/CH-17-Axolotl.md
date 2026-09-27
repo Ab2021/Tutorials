@@ -96,7 +96,6 @@ HOW MANY GPUs?
 ├─ 2–8, LoRA/QLoRA → FSDP2 (`fsdp_version: 2` + `fsdp_config:`) — Axolotl's recommendation
 ├─ 2–8, existing ZeRO JSONs → deepspeed: deepspeed_configs/zero2.json (then 3 if OOM)
 └─ weights don't fit at all → ZeRO-3 + offload, or FSDP2 with offload_params: true
-
 HAVE YOU VALIDATED?
 └─ No → STOP. `axolotl preprocess config.yml --debug --debug-num-examples 3` — §4.5.
 ```
@@ -860,7 +859,7 @@ hyperparameter.
 |---|---|---|
 | 1 | YAML parses | `python -c "import yaml,sys; yaml.safe_load(open(sys.argv[1]))" starter_sft.yaml` |
 | 2 | Schema valid, no unknown keys | Run once with `strict: true`; delete the file if it complains |
-| 3 | No deprecated keys | The `grep -nE 'flash_attention\|dpo_beta\|training_dype…'` sweep in §6 |
+| 3 | No deprecated keys | The `grep -nE 'flash_attention\|dpo_beta\|training_type…'` sweep in §6 |
 | 4 | `type:` matches the data's real shape | Print one line of the JSONL and look at it |
 | 5 | Template renders the model's own markers | `tokenizer.apply_chat_template(...)` vs the `preprocess --debug` printout |
 | 6 | EOS/EOT position is **labelled** | Same printout — last labelled token must be the terminator, not `-100` |

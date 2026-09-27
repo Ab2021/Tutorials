@@ -23,7 +23,7 @@ specific platform without reading the Status warning below.
 >
 > The stated reason is the important part: newer base models follow instructions and formats well
 > enough that **prompting is cheaper and faster than fine-tuning**. That is the same conclusion
-> CH-18 §4.12 and §9.1 reach from first principles, arriving from the vendor's side.
+> CS-18 §4.12 and §13.1 reach from first principles, arriving from the vendor's side.
 >
 > **Treat every date above as a prompt to go and re-check the live status page, not as a fact** —
 > wind-downs get extended and reversed. The *shape* to plan around is: hosted fine-tuning is being
@@ -44,7 +44,7 @@ specific platform without reading the Status warning below.
 |---|---|---|
 | 1 | **The whole API is four calls.** upload → create → poll → chat. | Everything else is validation and arithmetic you do *before* spending money. |
 | 2 | **`{"messages": [...]}` JSONL, one object per line — nothing else.** | The only accepted format. `function`/`assistant`/`system`/`user`/`tool`. |
-| 3 | **10 examples is the API minimum, not the useful minimum.** | 50–100 distinct rows is the smallest thing worth a job (CS-18 §10.1). |
+| 3 | **10 examples is the API minimum, not the useful minimum.** | 50–100 distinct rows is the smallest thing worth a job (CS-18 §10 #1). |
 | 4 | **Training is billed per 1M TRAINING TOKENS, not per hour.** | Only **reinforcement** fine-tuning is hourly (CS-18 §11.1). |
 | 5 | **The billed count is bigger than your visible count.** | ~3 tokens per message + 3 reply priming. **+19.6%** measured on short examples (CS-18 §4.5.2). |
 | 6 | **`n_epochs` is resolved for you if you leave it `"auto"`.** | `min(25, 100 // N)` below 100 rows — a 10-row dataset trains for **10 epochs** (CS-18 §4.8). |
@@ -206,11 +206,9 @@ elif len(data) * TARGET_EPOCHS > MAX_TARGET_EXAMPLES:
 | Training rows | `N × 3` | Regime | Resolved `n_epochs` | Billed passes |
 |---|---|---|---|---|
 | **10** | 30 | 1 — "too little data, crank the epochs" | **10** | 100 examples-worth |
-| 25 | 75 | 1 | **4** | 100 |
 | 33 | 99 | 1 | **3** | 99 |
 | 50 | 150 | 2 — flat | **3** | 150 |
 | 1,000 | 3,000 | 2 | **3** | 3,000 |
-| 8,333 | 24,999 | 2 | **3** | 24,999 |
 | 8,400 | 25,200 | 3 — "too much data, throttle" | **2** | 16,800 |
 | 25,000 | 75,000 | 3 | **1** | 25,000 |
 | 200,000 | 600,000 | 3 | **1** | 200,000 |
@@ -260,7 +258,7 @@ size.
 | Goal | Examples | Evidence |
 |---|---|---|
 | API will accept the file | **10** | The platform's guard rail, not a target |
-| Practical floor for a behaviour change | **50–100** | CS-18 §10.1; better than most tutorials |
+| Practical floor for a behaviour change | **50–100** | CS-18 §10 #1; better than most tutorials |
 | Format / style adoption | 100 – 1,000 | CH-13 §4.3 |
 | A narrow task with real diversity | 500 – 5,000 | The cost-justified case in CS-18 §15.2 used 8,000 |
 | Preference pairs (DPO) | 100+ before signal is meaningful | Pairs, not rows, are the scarce resource |
@@ -457,15 +455,13 @@ print(model_id, j.trained_tokens, j.hyperparameters)   # <- READ THE RESOLVED KN
 ```
 
 ```python
-# The metrics CSV — the only place the loss curves live.
+# The metrics CSV — the only place the loss curves live. Columns: step, train_loss,
+# valid_loss, full_valid_loss, train_mean_token_accuracy, valid_mean_token_accuracy.
 csv_id = client.fine_tuning.jobs.retrieve(job.id).result_files[0]
 print(client.files.content(csv_id).text)
-# columns: step, train_loss, valid_loss, full_valid_loss,
-#          train_mean_token_accuracy, valid_mean_token_accuracy
 
-# Clean up: retention is YOUR responsibility. Files persist until deleted.
-client.files.delete(train_file.id)
-client.files.delete(val_file.id)
+# Retention is YOUR responsibility: files persist until deleted.
+client.files.delete(train_file.id); client.files.delete(val_file.id)
 ```
 
 ### 5.4 The one evaluation to run first — `identical_outputs`
@@ -686,9 +682,8 @@ promising things it cannot deliver, or refusals that cost more in support ticket
 | `train_loss → ~0` | Memorisation (typical below 100 rows) | Cut `n_epochs`; get more *distinct* data; you have a template |
 | Both losses flat from step 1 | LR multiplier too low, wrong file, or no signal | Raise the multiplier 2× once; confirm the file; confirm the base model can do the task when prompted |
 | Loss goes to NaN | LR multiplier far too high, or one pathological row | Reset to 1.0; trim the longest examples |
-| `trained_tokens` far below your estimate | **Silent truncation** of over-long rows | Compare your longest rows to the per-example cap; pre-truncate yourself (§10) |
-| `succeeded` but `fine_tuned_model` is `null` | Short poll window — the ID lags the status | Poll on `fine_tuned_model is not None`, not on `status` alone |
-| Job stuck in `queued` for hours | Provider capacity | Wait. Do not cancel and restart — a restart rejoins the same queue |
+| `trained_tokens` far below your estimate | **Silent truncation** of over-long rows | Compare your longest rows to the per-example cap; pre-truncate yourself (§2.1) |
+| `succeeded` but `fine_tuned_model` is `null`, or `queued` for hours | The ID lags the status; or provider capacity | Poll on `fine_tuned_model is not None`. Do not cancel and restart — a restart rejoins the same queue |
 | Output truncated mid-JSON | `max_tokens` too low | Raise it, and add `response_format` so the decoder cannot open an object it cannot close |
 | Cost per call doubled overnight | Prompt grew, or cache hit rate collapsed | Alert on cost-per-1k-calls; pin the prompt; keep the stable prefix first |
 | Quality drops in production but not in tests | The system prompt differs from training | Hash the system prompt and assert it at import time (§12) |
@@ -774,8 +769,7 @@ promising things it cannot deliver, or refusals that cost more in support ticket
 |---|---|---|
 | API minimum examples | **10** | A guard rail, not a target |
 | Practical minimum | **50–100** | Below this you ship a template |
-| Per-message overhead | **3 tokens** | Plus **3** for reply priming |
-| Measured overhead, short examples | **+19.6%** | 562 → 672 (CS-18 §4.5.2) |
+| Per-message overhead | **3 tokens** (+3 reply priming) | Measured **+19.6%** on short examples: 562 → 672 (CS-18 §4.5.2) |
 | Auto epochs, N < 100 | **`min(25, 100 // N)`** | 10 rows → **10 epochs** |
 | Auto epochs, N in [34, 8333] | **3** | The flat regime |
 | Auto epochs, N > 8333 | **`max(1, 25000 // N)`** | 200,000 rows → 1 epoch |
@@ -785,8 +779,7 @@ promising things it cannot deliver, or refusals that cost more in support ticket
 | Break-even | **`P_f < P_b/2 − 2O`** | Assumes 2× markup and 4:1 output:input |
 | Self-host crossover (3B LoRA, 1×24 GB) | **~230k–460k calls/month** | Below it, hosted wins |
 | Hours per month | **730** | The multiplier for any hourly rate (CH-19 §10) |
-| Tokens per word | **≈1.33** | English prose, ±15% |
-| Chars per token | **≈4** | English |
+| Tokens per word / chars per token | **≈1.33** / **≈4** | English prose, ±15% |
 | Per-example cap in the reference impl. | **16,385** | **Stale** for the `gpt-4.1` line — verify (§10) |
 | Job status machine | `validating_files` → `queued` → `running` → `succeeded`/`failed`/`cancelled` | Poll to a terminal state |
 | `identical_outputs` no-op threshold | **> 0.90** | The fine-tune did nothing |
@@ -821,8 +814,7 @@ promising things it cannot deliver, or refusals that cost more in support ticket
 | Job fails in `validating_files` | One bad line fails the whole file | The local validator is a *convenience*, not a safety net — the server would have caught it too; run it locally because round trips are slow |
 | `messages` is a string/dict/int | The type hole the cookbook validator leaves open | Guard with `isinstance(messages, list)` before iterating |
 | `trained_tokens` well below your sum | Silent truncation of over-long rows | Re-budget with the correct per-example cap; pre-truncate yourself |
-| Job `succeeded`, model is a no-op | LR multiplier too low, rows truncated, or the wrong file | `identical_outputs` (§5.4) |
-| Fine-tuned model behaves exactly like the base | Same as above | Compare 50 completions; if byte-identical, nothing happened |
+| Job `succeeded`, model is a no-op | LR multiplier too low, rows truncated, or the wrong file | `identical_outputs` (§5.4); if 50 completions are byte-identical, nothing happened |
 
 ---
 
@@ -837,8 +829,8 @@ export BASE_MODEL=gpt-4.1-mini-2025-04-14          # a dated SNAPSHOT, not the a
 export SUFFIX=support-v1                           # <=18 chars
 export TRAIN=code/data/sample_sft.jsonl
 
-# 0. Re-check the platform's fine-tuning status page and deprecation list FIRST.
-#    The Status warning at the top of this file is a prompt to go and look.
+# 0. Re-check the fine-tuning status/deprecation page FIRST. The Status warning at the
+#    top of this file is a prompt to go and look, not a fact.
 
 # 1. Validate locally — costs nothing, catches everything structural
 python code/13_openai_finetune.py --data $TRAIN --validate

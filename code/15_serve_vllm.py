@@ -41,7 +41,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from common.memory import inference_gb, kv_cache_gb      # noqa: E402
+from common.memory import inference_gb, kv_cache_gb, sniff_size   # noqa: E402
 
 
 def main() -> None:
@@ -59,14 +59,19 @@ def main() -> None:
     p.add_argument("--quant-bits", type=float, default=2.0,
                    help="Weight bits per param, for the VRAM estimate (2=fp16, 1=int8, 0.5=int4)")
     p.add_argument("--n-requests", type=int, default=48)
+    p.add_argument("--dry-run", action="store_true",
+                   help="Print the VRAM budget and the exact launch command, start nothing. "
+                        "This is what the budget block above always does; the flag exists so "
+                        "the script behaves like every other script in code/ and so that "
+                        "'--dry-run' from a cheat sheet or a CI check does not fail with "
+                        "'unrecognized arguments'.")
     a = p.parse_args()
 
     # ----------------------------------------------------------------------------------
     # VRAM budget BEFORE you launch — the most common vLLM failure is an OOM at startup
     # because max_model_len was set larger than the KV cache can fit.
     # ----------------------------------------------------------------------------------
-    size = next((m for m in ["0.5B", "1B", "1.5B", "2B", "3B", "7B", "8B", "13B",
-                             "14B", "32B", "70B"] if m.lower() in a.model.lower()), "7B")
+    size = sniff_size(a.model, "7B")
     print(f"\n  ── VRAM budget ({size}, max_model_len={a.max_model_len}) ──")
     weights = inference_gb(size, 1, 1, a.quant_bits, framework_overhead_gb=0)
     for conc in (1, 8, 32, 128):
@@ -79,15 +84,25 @@ def main() -> None:
     print("  max_concurrency, so an over-large max_model_len fails at startup, not at")
     print("  request time — which is at least a fast failure.\n")
 
+    if a.dry_run:
+        print(f"  --dry-run: nothing launched. The command --serve would run:\n")
+        print("   ", " ".join(_serve_cmd(a)) if not a.benchmark else
+              "python 15_serve_vllm.py --benchmark "
+              f"--model {a.model} --concurrency {' '.join(map(str, a.concurrency))}")
+        print()
+        return
+
     if a.serve:
         _serve(a)
     elif a.benchmark:
         _benchmark(a)
     else:
-        print("  Pass --serve or --benchmark.\n")
+        print("  Pass --serve or --benchmark (or --dry-run to see the plan).\n")
 
 
-def _serve(a) -> None:
+def _serve_cmd(a) -> list[str]:
+    """The vLLM launch command. Built in one place so --dry-run prints exactly what
+    --serve would execute, rather than a hand-copied approximation that drifts."""
     cmd = [
         sys.executable, "-m", "vllm.entrypoints.openai.api_server",
         "--model", a.model,
@@ -101,6 +116,11 @@ def _serve(a) -> None:
         # Serving the adapter unmerged lets you hot-swap between adapters over one base,
         # which is far more memory-efficient than running N merged models.
         cmd += ["--enable-lora", "--lora-modules", f"finetuned={a.adapter}"]
+    return cmd
+
+
+def _serve(a) -> None:
+    cmd = _serve_cmd(a)
 
     print("  launching vLLM:")
     print("   ", " ".join(cmd))

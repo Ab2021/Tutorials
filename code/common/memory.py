@@ -44,6 +44,7 @@ from __future__ import annotations
 
 import argparse
 import math
+import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -68,19 +69,77 @@ force_utf8()
 MODEL_PRESETS: dict[str, dict] = {
     "0.5B":  dict(params=0.5,  layers=24,  hidden=896,  heads=14, kv_heads=2),
     "1B":    dict(params=1.1,  layers=22,  hidden=2048, heads=32, kv_heads=4),
+    "1.1B":  dict(params=1.1,  layers=22,  hidden=2048, heads=32, kv_heads=4),
     "1.5B":  dict(params=1.5,  layers=28,  hidden=1536, heads=12, kv_heads=2),
     "2B":    dict(params=2.0,  layers=26,  hidden=2048, heads=16, kv_heads=4),
     "3B":    dict(params=3.0,  layers=28,  hidden=3072, heads=24, kv_heads=8),
+    "4B":    dict(params=4.0,  layers=36,  hidden=2560, heads=32, kv_heads=8),
     "7B":    dict(params=7.0,  layers=32,  hidden=4096, heads=32, kv_heads=32),
     "8B":    dict(params=8.0,  layers=32,  hidden=4096, heads=32, kv_heads=8),
+    "9B":    dict(params=9.0,  layers=42,  hidden=3584, heads=16, kv_heads=8),
+    "12B":   dict(params=12.0, layers=40,  hidden=5120, heads=32, kv_heads=8),
     "13B":   dict(params=13.0, layers=40,  hidden=5120, heads=40, kv_heads=40),
     "14B":   dict(params=14.0, layers=48,  hidden=5120, heads=40, kv_heads=8),
+    "22B":   dict(params=22.0, layers=56,  hidden=5120, heads=32, kv_heads=8),
+    "27B":   dict(params=27.0, layers=62,  hidden=5376, heads=32, kv_heads=16),
     "32B":   dict(params=32.0, layers=64,  hidden=5120, heads=40, kv_heads=8),
     "70B":   dict(params=70.0, layers=80,  hidden=8192, heads=64, kv_heads=8),
     "405B":  dict(params=405.0, layers=126, hidden=16384, heads=128, kv_heads=8),
 }
 
 GB = 1024 ** 3
+
+
+# Quantisation / format suffixes that contain a digit followed by 'b' and are NOT a model
+# size. `unsloth/...-bnb-4bit` is the standard 4-bit Unsloth repo name, so this is the
+# common case, not an exotic one. Each pattern is anchored at the end of the id.
+_SIZE_SUFFIX_NOISE = re.compile(
+    r"[-_/](?:bnb[-_]?)?(?:4|8)bit"          # -bnb-4bit, -4bit, -bnb-8bit
+    r"|[-_/](?:gptq|awq|exl2|gguf|fp8|int4|int8|nf4)(?:[-_].*)?$"
+    r"|[-_](?:q[2-8]_[a-z0-9_]+|iq[1-4]_[a-z0-9_]+)$",   # GGUF k-quant tags
+    re.IGNORECASE,
+)
+
+
+def sniff_size(model_id: str, default: str = "7B") -> str:
+    """Map a model id to the closest preset label, e.g. 'Qwen2.5-32B-Instruct' -> '32B'.
+
+    Three separate traps live here, and all three have been observed in this repo:
+
+    1. **Substring matching.** `"2b" in "32b"` is True, so `next(m for m in SIZES if m in
+       model_id)` returns "2B" for a 32B model — every planning table then printed for a
+       model 16x too small.
+
+    2. **Insertion order deciding ties.** Even with a token-boundary regex, iterating
+       `MODEL_PRESETS` in declaration order makes the result depend on where a label sits
+       in that dict. "4B" is declared before "7B"/"8B"/"9B", so any id containing a
+       standalone "4b" wins over its real size.
+
+    3. **Quantisation suffixes look like sizes.** `unsloth/Qwen2.5-7B-Instruct-bnb-4bit`
+       contains `4bit`, and `4b` there is preceded by `-` and followed by `i` — so it
+       passes both lookarounds and matches the "4B" preset. Reproduced:
+       `sniff_size("unsloth/Llama-3.1-8B-bnb-4bit", "8B")` returned **"4B"**, and so did
+       the 7B and 9B variants. The three most common fine-tuning sizes silently planned
+       with 4B arithmetic — 4-bit weights for a 7B model came out as 1.86 GB instead of
+       ~3.9 GB — and every FITS/DOES-NOT-FIT verdict downstream was wrong in the
+       optimistic direction. `1.5B` and `3B` escaped only by accident of dict order,
+       which is exactly what made it hard to notice.
+
+    The fix is to strip the quantisation suffix (1), reject any candidate that is part of
+    a bit-width token (2), and pick the LONGEST match rather than the first (3).
+    """
+    haystack = _SIZE_SUFFIX_NOISE.sub("", model_id.lower())
+
+    best: str | None = None
+    for label in MODEL_PRESETS:
+        # (?<![0-9.]) stops "2b" matching inside "32b" or "1.5b";
+        # (?![0-9]) stops "1b" matching the front of a "1b5"-shaped label;
+        # (?![a-z]) stops "4b" matching inside a "4bit"/"4ba"-shaped token that the
+        # suffix strip above did not catch (e.g. a vendor's own "-4b-preview").
+        pat = rf"(?<![0-9.]){re.escape(label.lower())}(?![0-9a-z])"
+        if re.search(pat, haystack) and (best is None or len(label) > len(best)):
+            best = label
+    return best or default
 
 
 # --------------------------------------------------------------------------------------

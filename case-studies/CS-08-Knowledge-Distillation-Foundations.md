@@ -17,7 +17,7 @@
 
 - **Knowledge distillation (KD) trains a small "student" model to reproduce a large "teacher" model's full output *distribution*, not just the one-hot answer.** The instructor's analogy [6:05]: a student who gets the teacher's class notes passes the exam with less effort than one who studies everything from scratch. The notes are the **soft labels**.
 - **The single most important number in this module: a soft target with 3 classes carries up to 3 numbers per example instead of 1.** For a 32,000-token vocabulary the teacher's per-position distribution carries up to 32,000 numbers. That is the entire value proposition — you are trading *labels* for *supervision density*.
-- **The loss is `L = α·CE(student, hard_labels) + (1−α)·T²·KL(student_soft ‖ teacher_soft)`** — but see the naming trap in §7.1: the notebook writes it as `alpha*loss_soft + (1-alpha)*loss_hard` with `alpha=0.7`, i.e. **the notebook's α weights the *soft* term while Hinton's α weights the *hard* term.** Get this backwards in an interview and you will look like you copied a blog.
+- **The loss is `L = α·T²·KL(teacher_soft ‖ student_soft) + (1−α)·CE(hard_labels, student)` — `α` weights the *soft* term**, with `α = 0.7` a common default. The notebook (cells 20, 39), CH-08 §4 and `code/07_distillation.py` all agree on this direction, and so does Hinton's paper, which keeps the *lower* weight on the hard targets. But see §7.1: **Hinton's paper contains no `α` at all**, and a large body of textbook and blog material assigns the same letter to the *hard* term — so "Hinton's α weights X" is never a safe thing to say.
 - **The `T²` factor exists because scaling the teacher's logits by `1/T` scales the KL gradient by `1/T`.** Multiplying the loss by `T²` restores the gradient to `O(1)`. Without it, at `T → ∞` the soft term's gradient vanishes and KD silently degrades into ordinary cross-entropy training. Derivation in §4.2; worked numeric proof in §4.2.4.
 - **Two mechanisms make KD work, and they are different things:** (1) *dark knowledge* — the teacher's non-argmax probabilities encode inter-class similarity (a "3" gets probability mass on "8" and "5"); (2) *regularization* — soft targets have far lower variance than one-hot targets, so the student overfits less on small datasets. Hinton's MNIST experiment (§13.1) isolates mechanism (1) by deleting a whole class from the transfer set.
 - **Taxonomy in one line:** you can distill *logits* (response-based), *features* (FitNets/hint layers), *relations* (RKD: distances, angles), *attention maps*, or *data* (data-free KD). You can do it *offline*, *online* (mutual learning), *generationally* (born-again), or *without any data at all*.
@@ -148,7 +148,7 @@ Every line of that loop maps to a specific paragraph in the Hinton paper, and ev
 | **Hard label / hard target** | The one-hot ground truth, e.g. `[1, 0, 0]` [28:51]–[29:46]. | The ordinary supervised signal | People assume hard labels become irrelevant in KD. They do not — see §7.1 on α |
 | **Dark knowledge** | The information encoded in the *non-argmax* entries of a teacher's output: which wrong answers the teacher considered plausible, and how plausible. | The mechanism that makes soft targets worth more than one-hot | People think it means "hidden layers." It means the tail of the output distribution |
 | **Temperature (T)** | The divisor applied to logits before softmax: `softmax(z/T)`. `T=1` is the model's native distribution. | Controls how much of the tail is visible | **T is never used at inference.** Set T=1 for serving, always |
-| **α (alpha)** | The interpolation weight between the soft and hard losses. | The single most mis-set hyperparameter | **The notebook and the paper assign α to opposite terms.** §7.1 |
+| **α (alpha)** | The interpolation weight between the soft and hard losses. | The single most mis-set hyperparameter | **Hinton's paper defines no α; reimplementations assign the symbol to opposite terms.** §7.1 |
 | **T² factor** | The `T²` multiplier on the KL term. | Restores gradient magnitude under `1/T` logit scaling | People drop it, it "works", and the soft term silently contributes nothing |
 | **Response-based KD** | Distilling the final output layer only (logits/soft targets). Hinton's original. | Simplest, cheapest, works when architectures differ | Confused with "logit matching," which specifically means matching raw logits in the high-T limit |
 | **Feature-based KD** | Distilling intermediate hidden representations (FitNets "hint layers"). | Richer signal, more plumbing | Requires dimension alignment (a regressor) |
@@ -331,7 +331,7 @@ Substituting into the `T²`-scaled gradient:
 ∂L_soft'/∂z_k = T (p_k − q_k) ≈ (1/K) [ (z_k − v_k) − (z̄ − v̄) ]
 ```
 
-**Every `T` has cancelled.** The `T²` factor makes the KD gradient converge, as `T → ∞`, to a *fixed, `T`-independent quantity*: the (mean-centred) difference between student and teacher logits. This is Hinton's remark that at high temperature "the distillation is equivalent to minimizing `½(z_i − v_i)²`." Note the direct consequence: **at high T the offset `z̄ − v̄` becomes unconstrained**, which is why the original paper recommends the hard-label term with `α ≈ 0.1` — the mean logit has to be pinned by something.
+**Every `T` has cancelled.** The `T²` factor makes the KD gradient converge, as `T → ∞`, to a *fixed, `T`-independent quantity*: the (mean-centred) difference between student and teacher logits. This is Hinton's remark that at high temperature "the distillation is equivalent to minimizing `½(z_i − v_i)²`." Note the direct consequence: **at high T the offset `z̄ − v̄` becomes unconstrained**, which is why the original paper keeps a hard-label term at a *lower* relative weight (0.5 on the hard term in the ASR experiments, §4.1) — the mean logit has to be pinned by something. (The paper states this weight in words, not as an `α`; see §7.1.)
 
 **Step 5 — the interview answer, in one sentence.** *"Because `∂KL/∂z = (p − q)/T` scales as `1/T`, so without `T²` the soft-target gradient shrinks as you raise `T` and the soft term silently disappears into the hard-label term; `T²` restores the gradient to `O(1)` and, in the high-temperature limit, makes the loss reduce to matching teacher logits."*
 
@@ -396,10 +396,13 @@ Compare the T=1 gradient on the cat logit, which is `(p − q) = 0.50 − 0.70 =
 
 | Convention | Formula | Substitution | Result |
 |---|---|---|---|
-| Notebook (`α` weights **soft**) | `α·L_soft + (1−α)·L_hard` | `0.7(0.09812) + 0.3(0.6931)` | **0.2766** |
-| Hinton (`α` weights **hard**) | `α·L_hard + (1−α)·L_soft` | `0.1(0.6931) + 0.9(0.09812)` | **0.1576** |
+| `α` names the **soft** term — this notebook (cells 20, 39), CH-08 §4, `code/07_distillation.py`, and Hinton's *direction* | `α·L_soft + (1−α)·L_hard` | `0.7(0.09812) + 0.3(0.6931)` | **0.2766** |
+| `α` names the **hard** term — a large family of textbook and blog reimplementations | `α·L_hard + (1−α)·L_soft` | `0.1(0.6931) + 0.9(0.09812)` | **0.1576** |
 
-The two numbers differ by 76% for the same physical situation. This is why §7.1 exists.
+The two numbers differ by 76% for the same physical situation — same teacher, same student,
+same `T`, same data. **Only the assignment of the symbol differs.** Note also that the second
+row is *not* "Hinton's convention": the paper defines no `α`, and it weights the soft term the
+same way the first row does. §7.1 has the source text.
 
 **Where the dark knowledge is, quantified.** Extend the example: suppose there is a real 4th class, `car`, and the teacher gives it 0.001 while the student gives it 0.01. Its contribution to the KL is `0.001·ln(0.001/0.01) = 0.001·(−2.303) = −0.0023` nats. **The informative classes are the top two or three, not the tail of 32,000.** This is why production LLM KD caches top-k logits (k ≈ 20–100), not the full vocabulary — §11.3.
 
@@ -1116,7 +1119,7 @@ The notebook's own summary of the result (cells 72-73):
 | Param | What it does | Typical | Safe range | Too high → | Too low → | Framework flag |
 |---|---|---|---|---|---|---|
 | **`T`** (temperature) | Divides the logits before softmax; controls how much of the teacher's tail reaches the student | 2–4 for encoders; **3–20 for LLM token-level KD** | `[1, 20]`; beyond 20 the linearisation of §4.2.3 makes the objective ≈ logit matching whether you want it or not | The teacher's distribution flattens toward uniform; the mean logit becomes unconstrained; `L_soft` stops being informative and you are back to label smoothing | Nothing is transferred except the argmax; the student receives a harder label than the data already gave it | `torch.softmax(logits / T)`; **set `T=1` at inference, always** |
-| **`α`** (soft weight) | Interpolates soft and hard losses | 0.5–0.9 weighting the **soft** term in this notebook's convention (0.1–0.5 in Hinton's) | `[0.3, 0.9]` soft-weighted | The hard term is too weak to anchor the mean logit; the student drifts on classes the teacher never saw | You have re-derived ordinary supervised training with a small extra loss term | `loss = alpha*loss_soft + (1-alpha)*loss_hard` |
+| **`α`** (soft weight) | Interpolates soft and hard losses | 0.5–0.9 weighting the **soft** term in this notebook's convention — which is also Hinton's direction (he kept the *lower* weight on the hard targets: 0.5 relative in the ASR runs, §4.1) | `[0.3, 0.9]` soft-weighted | The hard term is too weak to anchor the mean logit; the student drifts on classes the teacher never saw | You have re-derived ordinary supervised training with a small extra loss term | `loss = alpha*loss_soft + (1-alpha)*loss_hard` |
 | **`T²`** | Restores gradient magnitude under `1/T` logit scaling | **always on** | `1.0` (i.e. never off) | — | The soft term silently scales as `1/T` and vanishes for large `T` | `* (temperature ** 2)` |
 | **`lr`** (student) | Optimiser step size | `1e-3` for a tiny MLP; `5e-5` for a BERT student; `1e-5 – 2e-5` for an LLM student | `[1e-5, 1e-3]` depending on depth | Divergence, or a student that collapses onto the teacher's argmax and then cannot refine | The student never leaves its initialization; the soft term looks "too weak" | `optim.Adam/AdamW(student.parameters(), lr=...)` |
 | **`batch_size`** | Examples per step | 16 (BERT section), 64 (MNIST) | `[8, 256]` | With a fixed `lr`, larger batches reduce gradient noise and need a higher `lr`; also blows activation memory | Noisy gradients; with **RKD enabled**, a batch under ~16 destroys the relation term (§4.5.3) | `DataLoader(batch_size=...)` |
@@ -1130,22 +1133,70 @@ The notebook's own summary of the result (cells 72-73):
 
 ### 7.1 The `α` convention trap — read this before you copy a loss function
 
-There are two conventions in circulation with the **same symbol** and **opposite meanings**:
+**Hinton's paper contains no `α`.** Open arXiv:1503.02531 and search the loss section for the
+symbol: it is not there. The paper describes "a **weighted average of two different objective
+functions**" and states the weights in prose, naming the terms *in order*:
 
-| Source | Formula | `α` weights | `α = 0.7` means |
+> "The **first** objective function is the cross entropy with the **soft targets**…"
+> "The **second** objective function is the cross entropy with the **correct labels**."
+> "…the best results were generally obtained by using a *condiderably lower weight on the
+> second objective function*." [sic — the typo is in the paper]
+> "…used a **relative weight of 0.5 on the cross-entropy for the hard targets**." (§4.1, ASR)
+
+Read that carefully, because it settles the direction that the rest of this literature argues
+about: Hinton names the **soft** targets first, names the **hard** targets second, and puts the
+**lower** weight on the second one. **The soft term gets the larger weight.** That is the same
+direction as this notebook and as `code/07_distillation.py`, and it is *not* what a lot of
+secondhand material says.
+
+So the trap is not "Hinton inverts the notebook". The trap is that **`α` is a symbol invented
+by reimplementers, and they assigned it to opposite terms**:
+
+| Where you meet it | Formula | `α` weights | `α = 0.7` means |
 |---|---|---|---|
-| **Hinton, Vinyals & Dean (2015)** | `L = α·L_hard + (1−α)·L_soft` | the **hard** term | 30% soft — a light touch of dark knowledge |
-| **This notebook (cells 20, 39)** and the majority of 2023-era blog implementations | `L = α·L_soft + (1−α)·L_hard` | the **soft** term | 70% soft — a heavy dose |
+| **Hinton, Vinyals & Dean (2015)** | *no `α`* — "a weighted average", soft first, lower weight on the second (hard) term | — | not expressible as an `α`; the ASR runs used 0.5 *on the hard term* |
+| **This notebook (cells 20, 39)**, CH-08 §4, `code/07_distillation.py`, and most modern LLM KD code | `L = α·L_soft + (1−α)·L_hard` | the **soft** term | 70 % soft — a heavy dose of dark knowledge. **This is Hinton's direction.** |
+| **A large family of textbook, course and blog reimplementations** | `L = α·L_hard + (1−α)·L_soft` | the **hard** term | 70 % hard — a light touch of dark knowledge |
 
-Both are used in the wild, both appear in production code, and the numbers are not interchangeable — the §4.2.4 worked example produces **0.2766** under the notebook's reading and **0.1576** under Hinton's, a 76% difference for the same physical situation.
+**Where the third row comes from, and why it is so persistent.** Hinton writes that the
+*second* objective — the hard one — carries the lower weight. If you read the paper
+top-to-bottom and define `α` as "the weight on the second objective", you get `α` on the
+**hard** term with a *small* best value (0.1–0.5, matching his ASR weight of 0.5). That is a
+perfectly faithful reading of the paper's *sentence* and an unfaithful reading of its
+*physics*, and it has propagated into a great many slides. Hence the widespread folklore that
+"Hinton's `α ≈ 0.1` weights the hard term" — a claim about a symbol the paper never uses.
+
+The two rows produce different totals for identical physics: the §4.2.4 worked example gives
+**0.2766** with `α` on soft and **0.1576** with `α` on hard — a 76 % difference — even though
+the loss, the teacher, the student and `T` are all the same. **Nothing about the model changed;
+only the name did.**
 
 Rules that prevent the bug:
 
-1. **Never write `alpha` in a config without a comment naming the term it weights.** `alpha_soft` (the notebook's BERT cell) is a good name; `alpha` is not.
-2. **Check the sign of the effect when you change it.** Raising `α` under the notebook convention should *improve* student–teacher agreement. If it makes agreement worse, you have mislabelled the term and are now training on a mixture that is mostly cross-entropy.
-3. **In an interview, state the convention explicitly before you use the symbol.** "Hinton's `α` weights the hard term" is the answer that signals you have read the paper.
+1. **Never write `alpha` in a config without a comment naming the term it weights.** `alpha_soft`
+   (the notebook's BERT cell) is a good name; `alpha` is not. This is the single highest-value
+   habit in the module, because it survives a convention change *and* a code review.
+2. **Read the mixture expression, never the flag name or the citation.** The one-line test is
+   `grep -n 'alpha' <the file>` and look at which term sits in the product.
+3. **Check the sign of the effect when you change it.** Raising `α` while it names the soft term
+   should *improve* student–teacher agreement. If raising it makes agreement worse, the term is
+   mislabelled and you are training something that is mostly cross-entropy.
+4. **In an interview, do not say "Hinton's α weights the hard term."** It is the common answer
+   and it is a misattribution. The answer that signals you actually read the paper is:
+   *"The paper has no α — it calls it a weighted average, names the soft-target term first, and
+   puts the lower weight on the hard targets. The α you see in code is a reimplementation
+   symbol; the same letter names the soft term in most modern code and the hard term in a large
+   minority of earlier material, so read the expression."*
 
-> **Correction:** because the notebook comments the loss only as `alpha * loss_soft + (1 - alpha) * loss_hard`, and the course's spoken explanation describes `alpha` as "one more hyperparameter for regularising the value of this KL divergence" [1:01:04] without naming which side it weights, a reader who goes from this video to the paper will silently invert the term. That inversion produces a model that trains, converges, and is measurably worse — with no error message.
+> **Correction (of this card).** Earlier versions of §0, §4.2.4, §7, §7.1 and §19 stated that
+> "Hinton's `α` weights the hard term" and presented the notebook-vs-paper split as two
+> *opposite* conventions. Both halves were wrong in the same way: the paper defines no `α`, and
+> its stated weighting runs in the **same** direction as the notebook. The real defect — the
+> symbol being assigned to opposite terms by different reimplementations — is unchanged and
+> still the reason this section exists; it is just not a paper-versus-notebook disagreement.
+> The interview advice in rule 4 above is therefore the *inverse* of the advice this card used
+> to give. Verify against the primary source before repeating a claim of the form "paper X
+> defines `α` as…", especially for a paper old enough to have accumulated a folklore layer.
 
 ### 7.2 Temperature — how to actually pick one
 
@@ -1971,7 +2022,7 @@ Distillation from a **third-party model's outputs** is a different question, and
 ## 18. Key Takeaways
 
 1. **The whole idea in one line:** the student learns the teacher's *belief*, not the label — and a belief over `K` classes carries up to `K` numbers where a label carries 1.
-2. **`L = α·L_soft + (1−α)·L_hard`, and the notebook's `α` weights the soft term while Hinton's weights the hard one.** Say which convention you mean, every time.
+2. **`L = α·L_soft + (1−α)·L_hard` — the notebook's `α` weights the soft term, and so does Hinton's weighting, though his paper defines no `α` at all.** Say which term your symbol names, every time.
 3. **`L_soft = KL(q‖p)` and `∂L_soft/∂z = (p − q)/T`.** The gradient is `1/T` of what it was, which is why `T²` exists: multiply by `T²` and the high-temperature limit becomes plain logit matching.
 4. **At high `T`, `T²·KL → ½(z − v)²` and the mean logit becomes unconstrained** — which is *why* the hard term is not optional.
 5. **`teacher.eval()` and `torch.no_grad()` are mandatory, and the optimizer must be built over `student.parameters()`.** Each prevents a different silent failure.
@@ -2065,7 +2116,7 @@ Quotes are transcribed from the video's auto-captions and normalised only for pu
 
 | Paper | Year | Why it matters here |
 |---|---|---|
-| Hinton, Vinyals & Dean, *Distilling the Knowledge in a Neural Network*, arXiv:1503.02531 | 2015 | The origin. Temperature, soft targets, `T²`, the α convention, the 3-ablated MNIST experiment (§4.2, §13.1) |
+| Hinton, Vinyals & Dean, *Distilling the Knowledge in a Neural Network*, arXiv:1503.02531 | 2015 | The origin. Temperature, soft targets, `T²`, the weighted average of soft and hard objectives (the paper defines no `α` — §7.1), the 3-ablated MNIST experiment (§4.2, §13.1) |
 | Buciluǎ, Caruana & Niculescu-Mizil, *Model Compression*, KDD | 2006 | The actual ancestor: train a small model on an ensemble's *labels*. No temperature, no soft targets |
 | Kim & Rush, *Sequence-Level Knowledge Distillation*, EMNLP | 2016 | Seq-KD vs word-KD, and the beam-search-as-mode argument (§4.5.10) |
 | Gou, Yu, Maybank & Tao, *Knowledge Distillation: A Survey*, IJCV | 2021 | The standard taxonomy reference. The instructor's recommended survey at the end of the video |

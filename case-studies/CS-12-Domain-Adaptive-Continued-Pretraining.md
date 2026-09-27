@@ -1345,17 +1345,23 @@ The notebook's **8-bit** run is between the two: 1.1e9 × 1 B = 1.1 GB for the b
 
 #### 4.11.3 Compute for the runs that matter
 
-FLOPs for a training run: $\text{FLOPs} \approx 6 \cdot P \cdot T$ where $T$ is tokens seen (the factor 6 = 2 for the forward pass + 4 for the backward). For LoRA, $P$ is replaced by $P_{adapter}$ for the backward but the forward still costs the full model, so a practical approximation is $3 P T + 3 P_{adapter} T \approx 3 P T$.
+FLOPs for a **full** fine-tuning run: $\text{FLOPs} \approx 6 \cdot P \cdot T$, where $T$ is tokens seen and the factor 6 = 2 for the forward pass + 4 for the backward. For **LoRA** — which is what every CPT run in this module and in `code/03_continued_pretraining.py` actually does — the backward pass only walks the adapter, but the forward still costs the full model, so the practical approximation is $3 P T + 3 P_{adapter} T \approx 3 P T$. **Half the FLOPs of full FT, for the same forward pass.**
 
-| Run | $T$ | Effective $P$ | FLOPs | A100-80GB hours (@ 300 TFLOP/s effective, ~40% MFU) | Rental cost @ \$2.50/hr |
+> **Correction (this table used to state one formula and compute another).** The heading gave $\text{FLOPs} \approx 6PT$ while every row but the demo was computed at $3PT$ — and the demo row at $6PT$. The 3× was the right choice for LoRA, and the prose above said so; the heading simply contradicted it. The table below is labelled per column so the two cannot drift again. Two further corrections made at the same time: the old header labelled "300 TFLOP/s effective" as "~40% MFU", which is incoherent — 40% of an A100's **312** TFLOP/s dense bf16 peak is **125** TFLOP/s, and 300 TFLOP/s would be 96% MFU, a number no training run reaches. The effective-throughput figure is now 109 TFLOP/s, which *is* 35% MFU on an A100-80GB, and it is the same 35% `common/memory.py` assumes by default. Because the old table ran at ~2.75× the throughput and at half the FLOPs, its dollar figures were low by roughly 5×.
+
+| Run | $T$ | Effective $P$ (LoRA) | FLOPs @ $3PT$ | A100-80GB hours @ **109 TFLOP/s** (= 35% MFU) | Rental @ \$2.50/hr |
 |---|---|---|---|---|---|
-| Notebook demo (4 chunks × 5 epochs) | 1.5 K | 1.1 B | 1.0e13 | **0.00001 h** (≈ 0.04 s) | < \$0.01 |
-| T2, 8B model | 8 M | 8 B | 1.9e17 | **0.18 h** | \$0.45 |
-| **T3, 8B model** | **80 M** | **8 B** | **1.9e18** | **1.8 h** | **\$4.50** |
-| T3, 1.1B model | 11 M | 1.1 B | 3.6e16 | **0.03 h** | \$0.09 |
-| T4, 8B model | 800 M | 8 B | 1.9e19 | **17.8 h** | \$44 |
-| T5, 8B model, 8B tokens | 8 B | 8 B | 1.9e20 | **178 h** | \$445 |
-| T5, 8B model, 80B tokens | 80 B | 8 B | 1.9e21 | **1,780 h** (= 2.5 GPU-years on one A100; 9 days on 8×A100) | \$4,450 |
+| Notebook demo (4 chunks × 5 epochs) | 1.5 K | 1.1 B | 5.0e12 | **0.00001 h** (≈ 0.05 s) | < \$0.01 |
+| T2, 8B model | 8 M | 8 B | 1.9e17 | **0.49 h** | \$1.22 |
+| **T3, 8B model** | **80 M** | **8 B** | **1.9e18** | **4.9 h** | **\$12.24** |
+| T3, 1.1B model | 11 M | 1.1 B | 3.6e16 | **0.09 h** | \$0.23 |
+| T4, 8B model | 800 M | 8 B | 1.9e19 | **48.9 h** | \$122 |
+| T5, 8B model, 8B tokens | 8 B | 8 B | 1.9e20 | **489 h** | \$1,223 |
+| T5, 8B model, 80B tokens | 80 B | 8 B | 1.9e21 | **4,893 h** (= 6.8 GPU-years on one A100; 25 days on 8×A100) | \$12,233 |
+
+> **If you are running full fine-tuning instead of LoRA, double every FLOPs figure** — $6PT$, so T3/8B is 3.8e18 FLOPs, 9.8 h, **\$24.49**. That is still, as the box below says, less than the coffee budget for the meeting where you decided to do it.
+
+> **The 35%-MFU assumption is the single largest lever on this table, and it is an assumption.** `hours_for_flops` in `code/common/memory.py` takes `mfu` as a parameter and prints the 15%-MFU counterfactual for exactly this reason: at 15% MFU every figure above roughly doubles, and at 45% it shrinks by a third. On a rented A100 with a well-tuned Unsloth or Axolotl CPT config, 30–40% is realistic; on a naive `Trainer` loop, 10–20% is. **Re-run the arithmetic at your own measured MFU before you quote any of these numbers in a budget.**
 
 > **Beyond the video:** the honest read of this table is that **CPT is cheap until it is not.** T3 — the tier that most enterprise projects should target — costs **under five dollars** of A100 time for an 8B model. That is less than the coffee budget for the meeting where you decided to do it. What costs money is *everything else*: the extraction pipeline, the dedup, the evaluation harness, the replay corpus, the human review of 200 generated samples, and the two re-runs after the first attempt fails. Budget **10–20× the GPU cost** for engineering, and expect the GPU cost to be the rounding error in the project plan. Teams that budget for the GPU and not the pipeline consistently underestimate by an order of magnitude.
 

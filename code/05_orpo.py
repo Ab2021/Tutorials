@@ -46,7 +46,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from common import data_utils as du                    # noqa: E402
-from common.memory import TrainPlan, _print_plan       # noqa: E402
+from common.memory import TrainPlan, _print_plan, sniff_size   # noqa: E402
 
 DEFAULTS = dict(
     # NOTE: ORPO is designed to run on a BASE model. Using an -Instruct model wastes
@@ -117,7 +117,7 @@ def main() -> None:
         ("PPO   (RLHF)", "qlora", "4 models — policy + ref + reward + value"),
     ]:
         plan = TrainPlan(
-            model=next((m for m in ["1.5B", "1B", "3B", "7B", "8B"] if m.lower() in a.model.lower()), "7B"),
+            model=sniff_size(a.model, "7B"),
             method=method, seq_len=a.max_len, batch=a.batch, grad_accum=a.grad_accum, lora_r=a.lora_r,
         )
         print(f"    {label:<22} {plan.total_gb():>6.1f} GB   {extra}")

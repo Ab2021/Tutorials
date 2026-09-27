@@ -22,8 +22,12 @@ custom autograd graph that removes the work a generic trainer does and does not 
 The honest framing of the marketing numbers
 -------------------------------------------
 "2x faster, 60% less VRAM" is measured against a *naive* HuggingFace baseline. Against a
-well-configured `transformers + peft + flash-attn-2` run the gap is much smaller — often
-1.2-1.6x, and sometimes inside run-to-run noise. Unsloth's real, durable advantages are:
+well-configured `transformers + peft + flash-attn-2` run the gap is much smaller — **1.2-1.4x**
+on the architectures and sequence lengths Unsloth supports well, dropping to 1.0-1.2x (inside
+run-to-run noise) on long sequences and on architectures where its kernels do not apply. The
+1.6x figure this line used to carry is the favourable tail of the range, not the centre, and it
+disagreed with CS-16 §4.7.2 and CH-16 §1 row 2 — which say 1.2-1.4x. Those are right. Unsloth's
+real, durable advantages are:
   * it works on a single consumer GPU with a small max_seq_length where nothing else fits,
   * the setup is 10 lines instead of 100, so you make fewer mistakes,
   * it is genuinely excellent for single-GPU LoRA/QLoRA on the architectures it supports.
@@ -47,7 +51,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from common import data_utils as du                       # noqa: E402
-from common.memory import TrainPlan, _print_plan          # noqa: E402
+from common.memory import TrainPlan, _print_plan, sniff_size   # noqa: E402
 
 DEFAULTS = {
     "model": "unsloth/Qwen2.5-7B-Instruct-bnb-4bit",
@@ -153,12 +157,24 @@ def main() -> None:
     model_id = resolve_model(a.model)
 
     print("\n  ── plan ──")
-    size = next((m for m in ["1.5B", "1B", "3B", "7B", "8B", "13B", "14B", "32B", "70B"]
-                 if m.lower() in model_id.lower()), "7B")
-    plan = TrainPlan(size=size, batch_size=a.batch_size, seq_len=a.max_seq_len,
-                     grad_accum=a.grad_accum, lora_r=(0 if a.full_finetune else a.r))
-    plan.quant_bits = 2.0 if a.no_4bit else 0.5
-    _print_plan(plan, full_finetune=a.full_finetune, lora=not a.full_finetune)
+    size = sniff_size(model_id, "7B")
+    # TrainPlan takes `model` and `batch`, not `size`/`batch_size`, and `method` is a
+    # required field — this call used to raise TypeError before printing anything,
+    # which broke the `--dry-run` command CH-13 §6 tells readers to run first.
+    # Unsloth loads the base in 4-bit by default, so the memory model needs to be told
+    # which of the three regimes this run is actually in.
+    method = ("full" if a.full_finetune else ("lora" if a.no_4bit else "qlora"))
+    plan = TrainPlan(
+        model=size,
+        method=method,
+        seq_len=a.max_seq_len,
+        batch=a.batch_size,
+        grad_accum=a.grad_accum,
+        lora_r=(0 if a.full_finetune else a.r),
+    )
+    _print_plan(plan)
+    print(f"  method             {method}"
+          f"{'  (4-bit base)' if method == 'qlora' else ''}")
     print(f"  epochs             {a.epochs}")
     print(f"  lr                 {a.lr:g}   (LoRA wants ~1e-4..3e-4; full FT wants ~1e-5..2e-5)")
     print(f"  packing            {a.packing}")
@@ -167,6 +183,17 @@ def main() -> None:
     if a.full_finetune and a.lr > 1e-4:
         print("\n  ⚠  Full fine-tuning at lr={:g} will very likely diverge. Full FT needs a".format(a.lr))
         print("     learning rate roughly 10-20x SMALLER than LoRA. Use --lr 2e-5.")
+
+    if a.lora_dropout and not a.full_finetune:
+        # Warn HERE, in the plan block, not only at model-construction time. The whole
+        # point of --dry-run is to surface problems before you rent the GPU, and a warning
+        # that only fires on the training path is invisible to the one command every reader
+        # runs first. CH-16 §1 row 4 / §4.2, CS-16 §6.4.
+        print(f"\n  ⚠  --lora-dropout {a.lora_dropout} is non-zero. Unsloth's fused kernels")
+        print("     only apply at dropout 0, so peft will silently use the generic autograd")
+        print("     path and you will lose roughly 15-35% of the speedup you installed")
+        print("     Unsloth for — no error, no warning from the library. Pass")
+        print("     --lora-dropout 0 unless you have measured that dropout helps here.")
     if a.max_seq_len > 4096 and not a.no_4bit:
         print(f"\n  ⚠  max_seq_len={a.max_seq_len} with 4-bit: activation memory grows with")
         print("     sequence length. If you OOM, halve max_seq_len before touching batch size —")
@@ -206,7 +233,15 @@ def main() -> None:
 
 
 def _load_tokenizer(model_id: str):
-    from transformers import AutoTokenizer
+    # The tokenizer is genuinely required even for --dry-run: the chat-template check is
+    # this script's whole reason to exist, and it cannot be done without the real
+    # tokenizer. So report a missing install as an instruction, not a traceback.
+    try:
+        from transformers import AutoTokenizer
+    except ImportError as e:
+        print(f"\n  ⚠  transformers is not installed, so the chat-template check "
+              f"(this script's main job) cannot run.\n     pip install transformers  ({e})")
+        return None
     try:
         return AutoTokenizer.from_pretrained(model_id)
     except Exception as e:                                    # noqa: BLE001
@@ -327,6 +362,8 @@ def _train(a, model_id: str) -> None:
     model, tokenizer = FastLanguageModel.from_pretrained(**kwargs)
 
     if not a.full_finetune:
+        # `--lora-dropout` is warned about in the plan block in main(), which --dry-run
+        # also reaches. Repeating the warning here would print it twice on a real run.
         model = FastLanguageModel.get_peft_model(
             model,
             r=a.r,

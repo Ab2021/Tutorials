@@ -114,7 +114,7 @@ Is your JSONL schema validated?
 
 | Param | Script default | Typical | Effect |
 |---|---|---|---|
-| `source_model` | `gemini-1.5-flash-002` | the base model id | **Verify current tuned-model support** — not every Gemini model can be tuned |
+| `source_model` | `gemini-2.5-flash` | the base model id | **Verify current tuned-model support** — not every Gemini model can be tuned, and the 1.5 generation is superseded. Pro-tier models are usually *not* tunable |
 | `epochs` | 3 | 1–5 | More epochs = more overfit; Vertex's default is often 3 |
 | `learning_rate_multiplier` | 1.0 | 0.5–2.0 | Vertex tunes at a fixed base LR; this scales it. 1.0 = their default |
 | `adapter_size` | 4 | 1, 4, 8, 16, 32 | **The LoRA rank.** Bigger = more capacity, more artifact, more cost |
@@ -273,7 +273,7 @@ from vertexai.tuning import sft
 vertexai.init(project="my-proj", location="us-central1")
 
 job = sft.train(
-    source_model="gemini-1.5-flash-002",
+    source_model="gemini-2.5-flash",
     train_dataset="gs://my-bucket/vertex/train.jsonl",
     tuned_model_display_name="handbook-sft",
     epochs=3,
@@ -283,6 +283,15 @@ job = sft.train(
 print(job.resource_name)
 # job.state  -> JOB_STATE_RUNNING / SUCCEEDED / FAILED
 ```
+
+> **Two SDK surfaces, and mixing them is a common 404.** The snippet above is the
+> **Vertex AI SDK** (`vertexai.tuning.sft.train`, snake_case args, `job.resource_name`).
+> The video and CS-19 §6.7 use the **GenAI SDK** (`client.tunings.tune(base_model=...,
+> training_dataset=TuningDataset(gcs_uri=...), config=CreateTuningJobConfig(...))`,
+> `tuned_model.endpoint`). They create the same kind of `TuningJob` but expose different
+> fields — in particular teardown, which the GenAI SDK's `tunings` module has not
+> historically exposed at all (CS-19 §10.3 Correction 1). Pick one and use it for the whole
+> lifecycle, including the undeploy.
 
 ```python
 # Deploy the tuned model to an endpoint — THIS is what starts the hourly billing
@@ -351,34 +360,59 @@ pip install "google-cloud-aiplatform[tensorboard]"   # if you want the metrics
 ### 7.1 The verified worked example
 
 Using `code/14_vertex_gemini_finetune.py --estimate` on the 60-row sample SFT fixture, with
-`gemini-1.5-flash` prices as recorded in the script ($3.00/1M train tokens, $0.075/1M input,
-$0.30/1M output, **$3.00/hour** endpoint) at 100,000 calls/month:
+`gemini-2.5-flash` prices as recorded in the script ($5.00/1M train tokens, $0.30/1M input,
+$2.50/1M output, **$2.00/hour** endpoint — CS-19 §4.6's rate) at 100,000 calls/month:
 
 | Line item | Amount |
 |---|---|
-| Tuning (9,447 tokens × 3 epochs) | **$0.03** |
-| Endpoint, 1 month ($3.00 × 730 h) | **$2,190.00** |
-| Per-token usage, 100k calls | **$7.63** |
-| **Month 1 total** | **$2,197.66** |
-| **Year 1 total** | **$26,371.64** |
-| Fixed endpoint share of recurring bill | **100%** |
-| Fixed ÷ usage ratio | **287×** |
-| Calls/month for usage to catch up | **~28,686,000** |
+| Tuning (9,447 tokens × 3 epochs) | **$0.05** |
+| Endpoint, 1 month ($2.00 × 730 h) | **$1,460.00** |
+| Per-token usage, 100k calls | **$63.04** |
+| **Month 1 total** | **$1,523.08** |
+| **Year 1 total** | **$18,276.50** |
+| Fixed endpoint share of recurring bill | **96%** |
+| Fixed ÷ usage ratio | **23×** |
+| Calls/month for usage to catch up | **~2,316,000** |
 
-> **Read that table again.** Training is **three cents**. The idle endpoint is **$26,372 in
+> **Read that table again.** Training is **five cents**. The idle endpoint is **$18,277 in
 > year one**. The thing people agonise over — the tuning — is a rounding error; the thing
 > people forget — the deployment — is the entire bill.
 >
-> The 28.7M-calls/month crossover is what high-volume users need. For everyone else, the
-> endpoint is a fixed cost you must actively manage.
+> The ~2.3M-calls/month crossover is a *usage* figure, not a business-plan figure: it is
+> where per-token spend equals one always-on endpoint, so an app serving 2.3M calls/month
+> **and no more** is still better off undeploying between sessions. For everyone below it,
+> the endpoint is a fixed cost you must actively manage.
+>
+> **Do not compare this table to CS-19 §11.1 or §4.6 without checking which generation each
+> one prices.** CS-19 §11.2 uses the video's 2.5-generation rates; this table does too, so
+> they now agree — CS-19's $1,459/month is $2.00/hour × 729.6 h, this table's $1,460 is the
+> same thing at 730 h. Earlier revisions of this sheet printed the 1.5-generation rates
+> alongside CS-19's 2.5-generation rates, which made the training rate disagree by 1.7×
+> ($3.00 vs $5.00 for a Flash-tier model) with no note saying which was current.
 
 ### 7.2 Prices on file in the script (VERIFY BEFORE BUDGETING)
 
 | Model | Train /1M | Input /1M | Output /1M | Endpoint /hour |
 |---|---|---|---|---|
+| `gemini-2.5-flash` | $5.00 | $0.30 | $2.50 | $2.00 |
+| `gemini-2.5-flash-lite` | $1.50 | $0.10 | $0.40 | $2.00 |
+| `gemini-2.5-pro` | **not on file** — see below | $1.25 | $10.00 | $2.00 |
+| `gemini-2.0-flash` | $3.00 | $0.10 | $0.40 | $3.00 |
 | `gemini-1.5-flash` | $3.00 | $0.075 | $0.30 | $3.00 |
 | `gemini-1.5-pro` | $8.00 | $1.25 | $5.00 | $5.00 |
-| `gemini-2.0-flash` | $3.00 | $0.10 | $0.40 | $3.00 |
+
+> **Why `gemini-2.5-pro` has no training rate.** The video quotes $25/1M for it [22:29], but
+> the Pro tier of the 2.5 and 2.0 generations has generally **not** been offered as a
+> supervised-tuning base model — tuning has concentrated on Flash and Flash-Lite (CS-19 §4.1
+> Correction 2). The script therefore omits the key and `--estimate` prints `≥ $X` for its
+> totals rather than folding an invented number into a total and presenting it as fact. A
+> 5×-wrong training rate is worse than a visible gap.
+>
+> The 1.5-generation rows are retained only because an existing job may still reference them
+> by id; 1.5 Flash was deprecated as a tunable base in **May 2025**. `DEFAULT_MODEL` is
+> `gemini-2.5-flash`, and `_resolve_price_key` matches the **longest** model id on a token
+> boundary, so `gemini-2.5-flash-lite-001` resolves to the Flash-Lite rate rather than
+> silently taking Flash's (3.3× more expensive) training rate.
 
 > ⚠️ **These are the values the script ships with, not a live price list.** Google changes
 > prices, model availability and tuned-model support regularly, and the 1.5-generation models
@@ -534,7 +568,7 @@ python code/14_vertex_gemini_finetune.py --data data/sft.jsonl --upload \
 # 4. Tune
 python code/14_vertex_gemini_finetune.py --train \
     --project $PROJECT --bucket $BUCKET \
-    --model gemini-1.5-flash-002 --epochs 3 --lr-multiplier 1.0 --adapter-size 4
+    --model gemini-2.5-flash --epochs 3 --lr-multiplier 1.0 --adapter-size 4
 
 # 5. Deploy (starts the meter) → use → 6. UNDEPLOY (stops it)
 python code/14_vertex_gemini_finetune.py --list --project $PROJECT
