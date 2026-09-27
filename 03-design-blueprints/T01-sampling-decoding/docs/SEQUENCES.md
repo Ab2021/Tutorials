@@ -1,6 +1,7 @@
 # Sequences: Sampling & Decoding
 
 > `T01` · [HLD](../HLD.md) · [LLD](../LLD.md) · [Case study](../../../01-case-studies/T01-sampling-decoding.md)
+> **Transcript coverage:** primary · [Cheat sheet](../../../00-cheat-sheets/T01-sampling-decoding.md) · [Interview bank](../../../02-interview-questions/T01-sampling-decoding.md) · [Runnable core](../run.py)
 
 End-to-end flows for the sampling policy plane. Each step names where it can fail; the failure
 taxonomy is in [LLD §7](../LLD.md#7-error-handling).
@@ -254,3 +255,13 @@ sequenceDiagram
 **Failure point.** Draining must respect `max_tokens`. A sequence with an unbounded generation budget
 would hold a node indefinitely, which is why the case study's tunable order puts `max_tokens` first:
 it is the only parameter that bounds worst-case occupancy.
+
+## Sources
+
+- `refs/CMU_Inference_Algorithms_for_Language_Modeling_Fall_2025_transcripts_2/CMU_LLM_Inference_3_Common_Sampling_Methods.txt` — temperature, top-k, top-p, epsilon, locally-typical, Mirostat; the 128k vocabulary and its long tail; HuggingFace and Llama defaults
+- `refs/CMU_Inference_Algorithms_for_Language_Modeling_Fall_2025_transcripts_2/CMU_LLM_Inference_2_Probability_Review_and_Code_Examples.txt` — the temperature formula's limits; GPU non-determinism from reduction order, MoE routing and quantization
+- `refs/CMU_Inference_Algorithms_for_Language_Modeling_Fall_2025_transcripts/CMU_LLM_Inference_6_Other_Controlled_Generation_Methods.txt` — the logit-mask mechanism behind the processor ordering
+- `refs/LLMOps_Agentic_AIOps_The_Hands-On_Playlist_2026_transcripts/Cut_LLM_Cost_Latency_KV_Cache_Batching_Quantization_vLLM.txt` — the cost ladder rungs
+
+**All sequence structure is `[D]`.** Corpus facts (`[T]`) are attributed inline; the failure taxonomy
+is in [LLD §7](../LLD.md#7-error-handling).

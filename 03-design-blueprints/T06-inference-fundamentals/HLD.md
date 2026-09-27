@@ -418,4 +418,4 @@ data collection.
 - `refs/vLLM_Inference_Meetup_Bengaluru_2026_transcripts/Scaling_AI_Inference_at_NxtGen_Indias_Best_Sovereign_Cloud_AI_Powerhouse.txt` — "decode is solved; the hard part is the first token"; SLA examples
 - `refs/vLLM_Inference_Meetup_Bengaluru_2026_transcripts/Scaling_Agentic_AI_Distributed_Inference_with_llm-d.txt` — request latency and program completion time as the agentic units; ~98% prefill
 - `refs/LLMOps_Agentic_AIOps_The_Hands-On_Playlist_2026_transcripts/LLM_Observability_Traces_Spans_OpenTelemetry_for_AI_Apps.txt` — the 1.2 s traced request
-- `refs/ai-system-design-guide-main/04-inference-optimization/` `[R]` — supporting reference for the roofline treatment
+- `refs/ai-system-design-guide-main/ai-system-design-guide-main/04-inference-optimization/01-inference-fundamentals.md` `[R]` — supporting reference for the roofline treatment

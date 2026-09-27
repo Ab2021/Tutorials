@@ -15,6 +15,22 @@ Four interlocking artifact families, all keyed to one topic taxonomy:
 Start at [`TOPICS.md`](TOPICS.md) for the taxonomy and the topic → source-transcript map.
 Build state is in [`PROGRESS.md`](PROGRESS.md).
 
+**Complete: 19 topics × 4 families = 76 primary artefacts, plus the indexes and cores — ~819,000 words.**
+
+| Family | Files | Words | Notes |
+|---|---|---|---|
+| Cheat sheets | 20 | 27.6k | one page per topic, plus a master index of every number in the corpus |
+| Case studies | 19 | 148.8k | decision tables, worked arithmetic, failure modes, runbooks |
+| Interview banks | 20 | 266.4k | `Tnn-Qk` numbering, shared across all four families |
+| Design blueprints | 19 × 5 | 227.2k design | HLD + LLD + sequence diagrams + `production/`, plus 131.8k words of `sim/` and configs |
+
+Every `run.py` executes **offline, with no GPU and no network**, and all 19 were re-run as the final
+check — **19/19 exit 0**. They exist to *verify the designs' arithmetic*, not as the deliverable: each
+one recomputes its topic's headline findings from stated inputs, which is how the numbers quoted in
+the HLDs are checked rather than asserted. Roughly **25 defects** were found this way across the
+build, most of them the silent kind — a plausible number that no crash or dashboard would have
+caught. They are listed per topic in [`PROGRESS.md`](PROGRESS.md).
+
 ---
 
 ## The 19 topics

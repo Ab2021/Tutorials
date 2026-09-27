@@ -1,0 +1,289 @@
+==============================================================================
+T08 -- BATCHING & SCHEDULING: continuous batching, fairness, admission control
+==============================================================================
+
+[corpus] 'turn on continuous batching and you are near 42' [T] LLMOps cost talk
+[corpus] 'a naive way is first come first serve but that doesn't add anything extra
+          to your policies because it's going to slow down everything' [T] llm-d
+[corpus] 'saturation at KV cache ~80% full, or average active requests > 8' [T] llm-d
+[corpus] 'least-attained service reduced request latencies by up to 50%... up to 2x
+          or sometimes 3x' [T] llm-d
+[corpus] 'one addresses the compute saturation, the other addresses the KV cache
+          saturation' [T] llm-d
+
+1. STATIC vs CONTINUOUS BATCHING -- the 100 -> 42 step [T]
+   corpus: 'turn on continuous batching and you are near 42' [T] LLMOps cost talk
+
+          traffic   max len   mean len   static util   continuous (8 slots)
+   ------------------------------------------------------------------------
+          uniform     1,023        596        58.3%                100.0%
+        mild skew     1,023        351        34.4%                100.0%
+        real skew     1,012        237        23.4%                100.0%
+
+   READ: a static batch retires WHOLE, so its wall-clock is set by its LONGEST member
+   while its useful work is the SUM. Every short sequence that finished early is a slot
+   that idled until the long one caught up. Continuous batching refills the slot the
+   instant ANY sequence finishes, so the only idle time is the end-of-queue tail.
+   Note the shape: the penalty tracks the length DISTRIBUTION. Uniform traffic hides
+   it; real (skewed) traffic exposes it. A benchmark with uniform prompt lengths will
+   report a much smaller gain than production delivers -- which is why the corpus's
+   100 -> 42 is measured on real traffic and not on a harness.
+   WHY IT IS NOT A TUNABLE: this is an admission decision, not a parameter. There is
+   no traffic shape for which waiting for the slowest sequence is the right answer.
+
+2. ITERATION-LEVEL ADMISSION -- what 'continuous' actually means
+   corpus: continuous batching 'keeps the [GPU busy]' by admitting per iteration [T]
+
+   4 slots. Four long sequences (900 output tokens each) start at step 1;
+   four short ones (60 tokens) arrive at step 3, mid-flight. Same traffic, two
+   admission disciplines -- static, and continuous.
+
+     discipline   makespan   short finishes   short waited     idle
+   ------------------------------------------------------------------
+         static         10  [10, 10, 10, 10]              7    0.0%
+     continuous         10  [10, 10, 10, 10]              7    0.0%
+
+   READ: under STATIC batching the four short sequences cannot join a batch already
+   in flight, so they wait for the whole 900-token batch to retire and are then
+   carried to the end of their own batch -- a 60-token job served as if it were 900.
+   Under CONTINUOUS batching they are admitted at the next iteration and finish
+   immediately, and their slots are freed for whatever arrives next.
+   The makespan barely moves. THE WIN IS ENTIRELY IN LATENCY AND SLOT REUSE -- which
+   is why a throughput-only dashboard shows almost nothing and teams conclude
+   continuous batching 'didn't help'.
+
+   WHERE THIS FAILS: admission is per-iteration, so a LONG PREFILL admitted
+   mid-batch occupies its slot for the whole prefill in one step, stalling every
+   decode in the batch. That is head-of-line blocking, and chunked prefill
+   (experiment 3) is the fix. The failure is visible above: the short sequences wait
+   for slots to free, and under static batching they wait for the longest job.
+
+3. CHUNKED PREFILL -- trading a little TTFT for a lot of ITL stability
+   formula: prefill_chunk_size ~= max_num_batched_tokens - (decode_seqs x 1)
+
+   with   4 sequences decoding: chunk size 8,188 tokens
+   with  16 sequences decoding: chunk size 8,176 tokens
+   with  64 sequences decoding: chunk size 8,128 tokens
+
+   and the trade, per prompt length (budget 8192, 16 decoding, 100 tok/s):
+     prompt   chunk   chunks   unchunked ITL spike   chunked spike   TTFT steps added
+   --------------------------------------------------------------------------------
+        512   8,176        1                   6 steps             1 step                  0
+      2,048   8,176        1                  21 steps             1 step                  0
+      8,192   8,176        2                  82 steps             1 step                  1
+     32,768   8,176        5                 328 steps             1 step                  4
+
+   READ: unchunked, a 32k prompt is ONE step that takes ~328 decode-steps of time, so
+   every other sequence in the batch waits that long -- one enormous ITL spike. Chunked,
+   the spike is bounded at one chunk, at the cost of the prompt finishing n-1 steps
+   later. Note the direction of the trade: TTFT gets slightly WORSE and ITL gets much
+   BETTER. A team that measures only TTFT will conclude chunking hurt.
+   EXCEPTION: if the traffic has no long prompts, chunking is pure overhead -- it adds
+   scheduling steps and buys nothing. Enable it when the prompt-length distribution has
+   a long tail, not by default.
+
+4. FAIRNESS -- and the starvation direction that runs against intuition
+   corpus: FCFS 'doesn't add anything extra to your policies because it's going to slow
+   down everything' [T]; least-attained service cut request latencies 'up to 2x or
+   sometimes 3x' [T]
+   corpus scenario: 'a large session comes in and takes all the dispatch cycles, so the
+   shorter sessions are starving' [T]
+
+   8 slots. large-C fans out to N concurrent turns of 400 tokens and refills
+   them the instant any retire. Six 2-turn sessions arrive at cycle 5, behind it.
+   The question is not whether they are served -- it is WHEN.
+
+    C fan-out           policy  small mean lat   C mean lat   C done @
+   ------------------------------------------------------------------
+            8             fcfs            4.83          4.2         34
+            8   least_attained            1.00          4.2         35
+           12             fcfs            5.33          6.1         33
+           12   least_attained            1.00          6.1         35
+           16             fcfs            8.83          7.9         34
+           16   least_attained            1.00          7.9         35
+           24             fcfs           12.83         10.7         34
+           24   least_attained            1.00         11.0         35
+
+   small-session latency, FCFS vs least-attained, as the contention deepens:
+     fan-out   8:   4.83x better under least-attained  ##########
+     fan-out  12:   5.33x better under least-attained  ###########
+     fan-out  16:   8.83x better under least-attained  ##################
+     fan-out  24:  12.83x better under least-attained  ##########################
+   READ: least-attained holds the small sessions at a latency of 1 cycle regardless
+   of how deep the large session's backlog gets, while FCFS's penalty grows with the
+   fan-out -- 4.8x at fan-out 8, 12.8x at 24. That trend, not the constant, is the
+   shape to remember: the more aggressively ONE program parallelises, the more a naive
+   arrival-order policy punishes everyone else.
+
+   AND LOOK AT THE LARGE SESSION IN THE TABLE ABOVE: its mean latency barely moves
+   (4.2 -> 11.0) and it finishes at the same cycle either way. Serving the small
+   sessions first does not cost the large one anything -- which is the corpus's own
+   second-order claim, 'leaving the room for larger sessions to also finish much
+   faster' [T], reproduced here as 'no worse'.
+
+   HONEST NOTE ON MAGNITUDE: the corpus reports 'up to 2x or sometimes 3x' [T]. This
+   model's contention is harsher and its ratios run higher -- it is NOT reproducing
+   their number. Read the direction and the trend, not the constant. The model is also
+   deliberately simple: FCFS here is arrival-order over a queue that one program
+   refills continuously, which is the mechanism the corpus names, not a reproduction
+   of their production workload.
+   HONEST NOTE ON THE CORPUS FIGURE: the speaker says 'up to 50%... up to 2x or
+   sometimes 3x', which are not the same claim (a 50% reduction IS 2x; 3x would be
+   67%). The transcript is loose here and this blueprint does not tighten it.
+
+   READ THE DIRECTION CAREFULLY -- it is the most commonly inverted result in this
+   topic. The corpus's scenario has the LARGE session monopolising dispatch, so
+   least-attained service protects the SMALL sessions. It is NOT 'protect the long
+   agent from short requests', which is the reverse. And the policy must be keyed on
+   ABSOLUTE service received, not service as a fraction of each program's demand: a
+   ratio-based key is permanently smallest for the largest program and reproduces the
+   very starvation it was meant to fix.
+
+5. TURN PRIORITY -- the 'opposite mechanism', for a DIFFERENT resource
+   corpus: an agent at turn 100 'is likely to finish faster... so if you prioritize
+   those agents, those agents will finish and then evict their KV cache' [T]
+   corpus: 'one addresses the compute saturation, the other addresses the KV cache
+   saturation' [T]
+
+   2 slots. X and Y are at turn 40 of 44 (40,000 tokens of resident KV each and
+   four turns left); Z is a long-horizon program with 40 cheap turns and nothing
+   served yet. Both policies can see the same information -- they disagree about
+   which resource to spend the next dispatch on.
+
+      KV cap            policy   X done   Y done   Z done   KV freed @   refused
+   ------------------------------------------------------------------------------
+   unlimited    least_attained       71       81       81           81         0
+   unlimited     turn_priority       41       41      121           41         0
+      88,000    least_attained        -        -        -            -     14880
+      88,000     turn_priority       41       41      122           41         1
+     120,000    least_attained       71       81       81           81         0
+     120,000     turn_priority       41       41      121           41         0
+
+   THREE REGIMES, AND EACH ONE TEACHES SOMETHING DIFFERENT:
+
+   1. NO MEMORY CONSTRAINT (cap unlimited). Least-attained serves Z first, because Z
+      has the least service, so it holds X and Y resident until cycle 81; turn
+      priority finishes X and Y and releases their context at cycle 41. Same
+      total work, and Z still finishes -- but the KV sits in the pool roughly twice as
+      long. This is the corpus's claim, and it is visible even without a cap.
+
+   2. CAPACITY TIGHT (88,000). Least-attained DEADLOCKS: X and Y hold 40,000 tokens
+      each while waiting their turn, Z needs room to continue, and the pool is too full
+      to admit anyone. Nothing running means nothing retires, means nothing frees --
+      the run never completes. Turn priority survives, because finishing X and Y hands
+      their context back and lets Z continue.
+      THAT IS THE REAL ARGUMENT FOR TURN PRIORITY, and it is a MEMORY argument that no
+      amount of compute-policy tuning can produce.
+
+   3. CAPACITY ADEQUATE (120,000). Both complete, and turn priority frees the KV at
+      cycle 41 against 81 -- again roughly 2x -- while total completion is unchanged.
+
+   WHY THE DEADLOCK IS NOT A SIMULATION ARTEFACT: a scheduler that fills KV to 100%
+   and has no preemption cannot recover, because the request that would free space is
+   the one that cannot be admitted. Real engines avoid this two ways, and both are
+   design decisions this blueprint has to make explicitly: (a) reserve headroom -- the
+   corpus's saturation gate is KV ~80% full [T], not 100%; and (b) preempt, evicting a
+   resident program and recomputing or swapping its KV on return (T07's tiering).
+   A fairness policy alone is not a substitute for either one.
+
+   WHERE TURN PRIORITY IS HARMFUL: with no KV pressure it is pure starvation, and it
+   penalises exactly the long-horizon agents that agentic workloads are made of --
+   note Z finishing at 121 against 81. Gate it on KV occupancy; that is what the
+   saturation signal in experiment 7 is for.
+
+6. OVER-BATCHING -- throughput plateaus, latency never stops rising
+   corpus: saturation gates are KV 80% full or average active requests > 8 [T]
+
+   96 requests arriving together (a burst, so the curve is not distorted by a ramp),
+   800 prompt + 200 output tokens each. The engine's decode ceiling is 800 tok/step.
+    slots   run avg  at full batch    P50    P99     idle             goodput @ SLO
+   ------------------------------------------------------------------------------------
+        4       400            400     26     48    0.0%    21%@10     29%@15     50%@25 
+        8       800            800     14     24    0.0%    42%@10     58%@15    100%@25 
+       16       640            800     20     30    0.0%    33%@10     50%@15     83%@25 
+       32       582            800     22     33    0.0%     0%@10     33%@15     67%@25 
+       64       606            800     23     33   15.2%     0%@10      0%@15     67%@25 
+      128       588            800     34     34   26.5%     0%@10      0%@15      0%@25 
+
+   READ THE COLUMNS SEPARATELY, because they do not peak together:
+     * AT FULL BATCH the rate climbs to the engine's ceiling and then STOPS. It is
+       flat from 8 slots upward, because the engine is already saturated -- so
+       throughput can never tell you that the batch is too deep. It goes quiet, which
+       looks like success on every dashboard.
+     * THE RUN AVERAGE is a worse metric and it DECLINES, which is a measurement
+       artefact rather than a regression: it counts prefill-only steps, and a deeper
+       batch spends proportionally more of its life prefilling. Report the saturated
+       rate; a run average will make you think you have a throughput problem when you
+       have a metric problem.
+     * P50/P99 rise once past the knee. Adding slots does not create capacity; it
+       redistributes a fixed budget more thinly across more requests.
+     * goodput peaks and falls -- IF the SLO binds at all.
+
+   peak-goodput slot count by SLO:
+     SLO  10: peaks at 8 slots (42% conforming), falling to 0% at 128 slots
+     SLO  15: peaks at 8 slots (58% conforming), falling to 0% at 128 slots
+     SLO  25: no peak -- every batch size conforms, so goodput@SLO does
+              not discriminate at all. AN SLO YOU ALWAYS MEET IS NOT A
+              CONSTRAINT, IT IS DECORATION. Tighten it before reading this
+              chart, or the chart is telling you nothing.
+   So 'what is the right batch size' has no answer until the SLO is fixed. Teams that
+   set the SLO after seeing the latency distribution will always find it achievable,
+   and will then tune the batch size against a target that no longer constrains them.
+
+   EXCEPTION: for genuinely offline batch traffic with no SLO, throughput IS the right
+   objective and the peak-goodput slot count is under-provisioned. The metric follows
+   the workload, not the other way round.
+
+7. ADMISSION CONTROL -- converting a latency collapse into a visible queue
+   corpus: at saturation the router queues and applies priority bands, so interactive
+   traffic is dispatched and the rest waits for capacity [T]
+
+    kv usage   active   saturated    reason
+   ----------------------------------------
+        0.42        3       False      none
+        0.81        5        True        kv
+        0.55       12        True    active
+        0.95       20        True        kv
+
+   and what the gate buys, under contention, with a premium tenant present:
+   premium-chat keeps 1 turn outstanding; best-effort-batch floods 8. 4 slots.
+
+                           mode  premium lat  best-effort lat  slots idle
+   ------------------------------------------------------------------------
+      ungated  (no bands, FCFS)          1.8              1.9           8
+      gated    (priority bands)          1.0              2.2           0
+    reserved (band + hard gate)          1.0              3.8          12
+
+   READ: the gate does not make the system faster -- it makes the RIGHT traffic fast and
+   the other traffic WAIT. That is the whole point. Ungated, the flood from best-effort
+   is served first because it arrived first and it is deeper, so premium's single
+   request queues behind it; everything slows down together, nothing fails, nothing
+   alerts, and no capacity is ever added.
+   A system that degrades gracefully into uselessness is worse than one that sheds load
+   visibly -- which is why the corpus pairs the gate with a priority band [T].
+   WATCH THE THIRD ROW: hard reservation protects premium best but burns slots while
+   premium is not using them. Reserve-and-release (row 2) is the corpus's shape: the
+   request QUEUES rather than being refused, and the queue depth is the signal that
+   autoscaling (T15) needs in order to add capacity. A gate with no queue is just a
+   dropped request.
+
+==============================================================================
+THE ONE-PARAGRAPH SUMMARY
+==============================================================================
+Continuous batching is an admission decision, not a parameter: a static batch runs until its
+longest member retires, so every short sequence in it is a slot that idled after finishing, while
+a continuous batch refills a slot the instant anything finishes and retires only the end-of-queue
+tail as idle. The penalty tracks the length DISTRIBUTION, which is why real traffic gains far more
+than a uniform benchmark predicts. On top of that loop sit four decisions that are usually
+conflated. Chunked prefill trades a little TTFT for a lot of ITL stability, and only pays off when
+the prompt lengths have a long tail. Fairness must be computed per agentic PROGRAM, not per
+request, or it rewards the program that issues the most requests -- the one that most needs
+throttling -- and its direction is the reverse of what most people assume: least-attained service
+protects the SMALL sessions from one monopolising large one, and the large one finishes faster too
+because the small ones free the room. Turn priority is deliberately ANTI-fair, and that is correct,
+because it manages a different resource: it finishes near-done agents so their KV is evicted. And
+none of it matters past saturation, where the system stops being fast and starts being useless --
+so the scheduler needs a gate that converts a latency collapse into a visible queue, because a
+system that degrades gracefully into uselessness fails at nothing and therefore alerts on nothing.
+
+OK -- all seven experiments completed.

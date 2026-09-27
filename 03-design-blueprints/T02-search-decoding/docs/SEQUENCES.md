@@ -1,6 +1,7 @@
 # Sequences: Beam, A* and Best-First Search
 
 > `T02` · [HLD](../HLD.md) · [LLD](../LLD.md) · [Case study](../../../01-case-studies/T02-search-decoding.md)
+> **Transcript coverage:** primary · [Cheat sheet](../../../00-cheat-sheets/T02-search-decoding.md) · [Interview bank](../../../02-interview-questions/T02-search-decoding.md) · [Runnable core](../run.py)
 
 End-to-end flows for the search-decoding plane. Each step names where it can fail; the failure
 taxonomy is in [LLD §7](../LLD.md#7-error-handling).
@@ -226,3 +227,13 @@ sequenceDiagram
         Note over SUP: Cross-version replay is not promised.<br/>Same reason as T01: GPU reduction order,<br/>MoE routing and quantization change the bytes.
     end
 ```
+
+## Sources
+
+- `refs/CMU_Inference_Algorithms_for_Language_Modeling_Fall_2025_transcripts/CMU_LLM_Inference_5_A_and_Best_First_Search.txt` — weighted finite-state automata; `f = g + h`; the greedy/beam/uniform-cost/A\* step counts; admissibility as sufficient but not necessary; row-minimum heuristics; hypothesis recombination; the 16x16 KL matrix
+- `refs/CMU_Inference_Algorithms_for_Language_Modeling_Fall_2025_transcripts_2/CMU_LLM_Inference_4_Beam_Search_and_Variants.txt` — beam mechanics; log-probs for numerical stability; EOS unfairness and the HuggingFace length penalty; diverse beam search; stochastic beam search and the Gumbel-max trick
+- `refs/CMU_Inference_Algorithms_for_Language_Modeling_Fall_2025_transcripts/CMU_LLM_Inference_12_Reward_Models_and_Best-of-N.txt` — the reranker route taken when the objective rather than the search is wrong
+- `refs/LLMOps_Agentic_AIOps_The_Hands-On_Playlist_2026_transcripts/Cut_LLM_Cost_Latency_KV_Cache_Batching_Quantization_vLLM.txt` — decode is memory-bandwidth-bound; the occupancy argument
+
+**All sequence structure is `[D]`.** Corpus facts (`[T]`) are attributed inline; the failure taxonomy
+is in [LLD §7](../LLD.md#7-error-handling).

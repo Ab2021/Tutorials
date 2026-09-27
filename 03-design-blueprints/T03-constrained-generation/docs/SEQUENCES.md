@@ -1,6 +1,7 @@
 # Sequences: Constrained Generation
 
 > `T03` · [HLD](../HLD.md) · [LLD](../LLD.md) · [Case study](../../../01-case-studies/T03-constrained-generation.md)
+> **Transcript coverage:** primary · [Cheat sheet](../../../00-cheat-sheets/T03-constrained-generation.md) · [Interview bank](../../../02-interview-questions/T03-constrained-generation.md) · [Runnable core](../run.py)
 
 End-to-end flows for the constraint plane. Each step names where it can fail; the failure taxonomy
 is in [LLD §7](../LLD.md#7-error-handling), and the degradation ladder is in
@@ -291,3 +292,13 @@ at the cap is the metric that names this, and the fix is a schema or template ch
 0.5% residual is not a masking failure — it is the class the mask cannot see at all: semantic errors,
 stale schemas, upstream document problems. The correct response to a rising DLQ is to look at
 `validator_decisions_total{reason}` before looking at the model.
+
+## Sources
+
+- `refs/CMU_Inference_Algorithms_for_Language_Modeling_Fall_2025_transcripts/CMU_LLM_Inference_6_Other_Controlled_Generation_Methods.txt` — the syntactic/semantic split; the JSON schema-to-state-machine construction; "add minus infinity before softmax"; the ~10-of-100,000 sparsity; the regular/context-free/Turing hierarchy; token healing; FUDGE and the top-200 truncation; the three failure modes of hard masking
+- `refs/CMU_Inference_Algorithms_for_Language_Modeling_Fall_2025_transcripts_2/CMU_LLM_Inference_3_Common_Sampling_Methods.txt` — the 128k vocabulary and its long tail, which make the legal set sparse
+- `refs/CMU_Inference_Algorithms_for_Language_Modeling_Fall_2025_transcripts/CMU_LLM_Inference_5_A_and_Best_First_Search.txt` — the search alternative for end-verifiable constraints
+- `refs/LLMOps_Agentic_AIOps_The_Hands-On_Playlist_2026_transcripts/Cut_LLM_Cost_Latency_KV_Cache_Batching_Quantization_vLLM.txt` — per-step logit-processor cost against a decode step's weight reads
+
+**All sequence structure is `[D]`.** Corpus facts (`[T]`) are attributed inline; the degradation
+ladder and the failure taxonomy are in [LLD](../LLD.md).

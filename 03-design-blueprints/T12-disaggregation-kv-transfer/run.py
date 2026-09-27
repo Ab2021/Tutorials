@@ -87,7 +87,7 @@ def main() -> int:
     print()
     print("  That is the argument for larger blocks -- and against them: fewer, larger")
     print("  blocks amortise latency but reuse at coarser granularity, so a partially")
-    print("  shared prefix cannot be reused. block_tokens is a real tuning knob (LLD §9).")
+    print("  shared prefix cannot be reused. block_tokens is a real tuning knob (LLD, section 9).")
     print()
     print("  The pooled-memory tier's provenance is a VENDOR REPORT that sharing beat RDMA")
     print("  [T]. It is ordered here on that basis. It was not measured in this program.")
