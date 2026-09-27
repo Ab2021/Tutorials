@@ -167,7 +167,7 @@ Is the prompt distribution at inference the same as the one you distilled on?
 
 | Source | Formula | What `α = 0.7` gives you |
 |---|---|---|
-| Hinton 2015 / CH-08 §2 | `α·T²·KL + (1−α)·CE` | 70 % **soft** / 30 % hard |
+| Hinton 2015 (his *direction*; the paper defines no `α`) / CH-08 §2 | `α·T²·KL + (1−α)·CE` | 70 % **soft** / 30 % hard |
 | CS-09 §6.3 notebook cell | `alpha_soft * loss_soft + (1 - alpha_soft) * loss_hard` | 70 % **soft** / 30 % hard (named `alpha_soft`, so it is readable) |
 | `code/07_distillation.py` | `a.alpha * hard + (1 - a.alpha) * kd` | 70 % **hard** / 30 % soft |
 
@@ -286,8 +286,10 @@ import torch, torch.nn.functional as F
 def kd_loss(student_logits, teacher_logits, ids, T=2.0, alpha=0.5, top_k=100):
     """Top-k KD, matching code/07_distillation.py's convention.
 
-    alpha weights the HARD term. Hinton's alpha weights the SOFT term. This is inverted
-    relative to CH-08 §2 — check which convention your code uses before passing a value.
+    alpha weights the SOFT (KD) term; (1 - alpha) goes to the hard-label CE. This is
+    Hinton's direction and CH-08 §2's, and it is what code/07_distillation.py does — but
+    a large family of reimplementations names the hard term with the same letter, so read
+    the expression at every call site before passing a value. See CS-08 §7.1.
 
     student_logits, teacher_logits : (seq, V)   [the script works on one sequence]
     ids                            : (seq,)    the corpus itself; no prompt masking needed
@@ -595,7 +597,7 @@ engineering time never amortises — do not distil** (CS-09 §16.4).
 | Softmax buffers, B=8/L=2048/V=128k | **8.41 GB/tensor**, ~25 GB for 3 | the real reason logit KD does not scale | documented (CS-09 §4.4) |
 | Teacher VRAM, per param | **2 / 1 / 0.5 B** | fp16 / int8 / int4 — never quantise for logit KD | documented |
 | KD temperature `T` (LLM) | **2 is the floor**, 2–4 typical | CH-08's 4–20 is the encoder-era range | RoT |
-| `alpha` in the repo script | **weight on the HARD term** | inverted vs Hinton; default 0.5 | documented (L74) |
+| `alpha` in the repo script | **weight on the SOFT term** | default **0.7**; matches Hinton's direction and CH-08 §4. It was 0.5 on the hard term in an earlier version — see the Settled note in §11 | documented (`--alpha` help) |
 | `--top-k` default in the script | **100** | 20–100 is the useful range | documented |
 | `--seq-len` default | **512** | one forward pass, prints the loss terms, does not train | documented (L237) |
 | `--teacher-temp` default | **0.8** | SAMPLING temperature, unrelated to `-T` | documented |

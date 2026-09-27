@@ -140,18 +140,30 @@ def _verify(base_id: str, adapter_id: str, merged_path: str) -> None:
     if tok.pad_token is None:
         tok.pad_token = tok.eos_token
 
+    # bf16, not fp16 — and that choice is load-bearing for this comparison.
+    # CH-06 §5.5: merging in fp16 loses precision in the W + BA sum, so an fp16
+    # round-trip can make the merged model measurably worse than the adapter it came
+    # from. Verifying in fp16 would therefore compare two models that have BOTH been
+    # degraded by the dtype, and would hide exactly the defect this function exists to
+    # catch. bf16 matches how the artifact is served.
+    dtype = torch.bfloat16
     print("  loading merged model...")
-    m1 = AutoModelForCausalLM.from_pretrained(merged_path, torch_dtype=torch.float16,
+    m1 = AutoModelForCausalLM.from_pretrained(merged_path, torch_dtype=dtype,
                                               device_map="cpu")
     print("  loading base+adapter...")
     m2 = PeftModel.from_pretrained(
-        AutoModelForCausalLM.from_pretrained(base_id, torch_dtype=torch.float16,
+        AutoModelForCausalLM.from_pretrained(base_id, torch_dtype=dtype,
                                              device_map="cpu"), adapter_id)
 
     def gen(model, prompt):
         msgs = [{"role": "user", "content": prompt}]
         text = tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
-        ids = tok(text, return_tensors="pt").to(model.device)
+        # add_special_tokens=False: apply_chat_template already inserted them. Without
+        # this the prompt gets a second BOS (CH-06 §1.3 row 4, §13 error table), and
+        # since both models see the same malformed prompt the comparison still "passes"
+        # while neither side is being asked what you think it is.
+        ids = tok(text, return_tensors="pt",
+                  add_special_tokens=False).to(model.device)
         with torch.no_grad():
             out = model.generate(**ids, max_new_tokens=64, do_sample=False,
                                  pad_token_id=tok.pad_token_id)

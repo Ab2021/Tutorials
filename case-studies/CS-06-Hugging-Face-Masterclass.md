@@ -12,6 +12,8 @@
 | **Estimated study time** | 10–14 h (read + type every snippet + break two things on purpose) |
 
 > **Why this module is load-bearing:** every other case study in this handbook — CS-07 (BERT fine-tuning), CS-09 (distillation), CS-13 (SFT), CS-15 (LLaMA-Factory), CS-16 (Unsloth), CS-22 (embeddings), CS-23 (LoRA/QLoRA), CS-24 (RLHF), CS-28 (capstone) — assumes you can fluently drive `AutoTokenizer`, `AutoModel*`, `datasets`, `Trainer`, and `generate`. If you cannot, those modules read as magic. Read this one twice.
+>
+> **Note on the CS-22/23/24/28 references above and in §20:** all four are **planned and not yet written**. Only CS-01…CS-19 and CH-01…CH-19 exist today. Do not go looking for the files; the reading order in §20 says what to read instead.
 
 ---
 
@@ -426,36 +428,54 @@ labels[attention_mask == 0] = -100  # never train on padding
 
 ### 4.4 Memory and compute accounting — the arithmetic, worked
 
-**Full fine-tuning, mixed precision, Adam.** Per trainable parameter:
+**Full fine-tuning, mixed precision, Adam.** Per trainable parameter, with the components named the way `code/common/memory.py` names them:
 
 | Component | Bytes/param | Note |
 |---|---|---|
-| fp16/bf16 weights | 2 | the working copy used in the forward pass |
-| fp32 master weights | 4 | needed because fp16 cannot represent small updates (`1e-5` LR vanishes) |
-| fp32 gradients | 4 | accumulated in fp32 |
-| Adam `m` (fp32) | 4 | |
-| Adam `v` (fp32) | 4 | |
-| **Total (static)** | **18** | before activations, before fragmentation |
+| weights — bf16 working copy | 2 | the copy the forward pass reads |
+| weights — fp32 master (partial) | +2 | needed because bf16 cannot represent a small update (`1e-5` LR vanishes at bf16's ~3 decimal digits) — but the master is a *partial* copy, which is why the pair costs 4 and not 6 |
+| gradients — bf16 | 2 | the buffer `backward()` writes |
+| optimizer state — Adam `m` (fp32) | 4 | |
+| optimizer state — Adam `v` (fp32) | 4 | |
+| **Total (static)** | **14** | = **4 weights + 2 gradients + 8 optimizer state**, before activations and before fragmentation |
 
-Round to **~20 bytes/param** to absorb allocator fragmentation, and add activations.
+> **Correction:** this section previously gave **18** bytes/param from a `2 + 4 + 4 + 4 + 4` table (bf16 weights, a *full* fp32 master, **fp32** gradients, Adam `m`, Adam `v`) and then told you to round to "**~20**". Each component was individually defensible; the *total* was not the canonical one, and the table below compounded it with a second, independent error — it divided by `1e9` (decimal GB) while `code/common/memory.py` divides by `1024**3` (GiB). The two errors multiplied: `8.03e9 × 18 ÷ 1e9 = 144.5`, against the canonical `8.03e9 × 14 ÷ 1024**3 = **104.7 GiB**`. That is **38% high** — `18/14 × 1024³/1e9 = 1.381` — and it is a real over-provision, not a rounding difference. GiB-vs-GB alone is only ~7%.
 
-| Model | Params | Static optimizer+weights | Activations @ B=8, S=512 | Realistic floor |
+**The decompositions you will actually hear quoted.** Always give the decomposition; never give the bare total — a reader who memorizes "14" without the split cannot tell which of these they are looking at:
+
+| B/param | Decomposition | When it is right |
+|---|---|---|
+| **12** | 2 bf16 weights + 2 bf16 grads + 8 Adam `m,v` | a plain bf16 loop that keeps **no** fp32 master copy — the cheapest honest case |
+| **14** | 4 weights (bf16 copy + partial fp32 master) + 2 bf16 grads + 8 Adam | the canonical figure this handbook uses; `code/common/memory.py` charges exactly this for `method=full, optimizer=adamw` |
+| **16** | 2 bf16 weights + 2 grads + 8 Adam + 4 **full** fp32 master | what DeepSpeed and FSDP do by default, because they keep a real per-rank master copy |
+| **18** | 6 weights (bf16 copy **and** full fp32 master, counted separately) + **4 fp32 grads** + 8 Adam | *only* if you genuinely hold fp32 gradients as well as the bf16 ones — some frameworks keep an fp32 gradient partition for the optimizer step alongside bf16 grads for the all-reduce. A legitimate safe upper bound, and **not** the default: quoting it as *the* cost over-provisions by ~29% against 14 |
+| **20** | 18 + 2 | 18 **and** a retained bf16 gradient copy beside the fp32 one. A worst case, not a planning figure |
+
+So `18` is not nonsense — it is `16 + 2`, and the `+2` is a second gradient copy. What *was* nonsense was presenting it as the default and then inflating it again to `20` "to absorb allocator fragmentation". Do the headroom separately: add activations, then **10–20% of the total** for allocator and framework overhead (`memory.py`'s own note says the same). Folding that headroom into the bytes/param is how `18` silently became `20` here.
+
+| Model | Params | Static (14 B/param, GiB) | Activations @ B=8, S=512, grad-ckpt | Realistic floor (static + activations + ~15%) |
 |---|---|---|---|---|
-| `distilbert-base-uncased` | 66 M | 66e6 × 18 B = **1.19 GB** | ~0.4 GB | **~2 GB** (fits a T4/Kaggle) |
-| `bert-base-uncased` | 110 M | 1.98 GB | ~0.8 GB | ~3 GB |
-| `roberta-base` | 125 M | 2.25 GB | ~0.9 GB | ~3.3 GB |
-| `gpt2` (124 M) | 124 M | 2.23 GB | ~1.0 GB | ~3.5 GB |
-| `Llama-3.1-8B` | 8.03 B | **144.5 GB** | ~3 GB | **not feasible on 1 GPU** |
+| `distilbert-base-uncased` | 66 M | 66e6 × 14 B = **0.86 GiB** | ~0.4 GiB | **~1.5 GiB** (fits a T4/Kaggle) |
+| `bert-base-uncased` | 110 M | **1.43 GiB** | ~0.8 GiB | ~2.6 GiB |
+| `roberta-base` | 125 M | **1.63 GiB** | ~0.9 GiB | ~2.9 GiB |
+| `gpt2` (124 M) | 124 M | **1.62 GiB** | ~1.0 GiB | ~3.0 GiB |
+| `Llama-3.1-8B` | 8.03 B | **104.7 GiB** | ~0.7 GiB | **not feasible on 1 GPU** |
+
+The `Llama-3.1-8B` row is the one that matters, and it now agrees with `python code/common/memory.py --model 8B --method full`, which splits it as **weights 29.8 GiB (4 B/param) + gradients 14.9 GiB (2 B/param) + optimizer state 59.6 GiB (8 B/param) + activations 0.7 GiB = 104.7 GiB**. Note what that split does to the intuition: **optimizer state is 57% of the static cost, not 100% of it.** A reader who takes "144 GB of optimizer state" literally under-provisions by 75% (`14/8 = 1.75`). On a 16-bit variant the same model is 89.7 GiB (12 B/param) or 119.7 GiB (16 B/param) — quote the decomposition, and the card you need follows.
 
 That last row is the whole reason PEFT, quantization, FSDP, and DeepSpeed exist, and it is why the module's later sessions are about LoRA rather than about buying eight H100s. With QLoRA the same 8 B model costs:
 
 ```
-4-bit base weights : 8.03e9 × 0.5 B  = 4.0 GB   (NF4 + double quant, ~0.5 B/param)
-LoRA adapters      : ~40 M params × 20 B = 0.8 GB
-activations @ B=1,S=1024 with grad checkpointing = ~1.5 GB
+4-bit base weights : 8.03e9 × 0.5 B  = 3.7 GiB  (NF4 + double quant, ~0.5 B/param)
+LoRA adapters      : ~40 M params × 10 B = 0.4 GiB  (2 bf16 grads + 8 Adam m,v;
+                                                     the adapter's own bf16 weights
+                                                     are <0.1 GiB and are folded in)
+activations @ B=1,S=1024 with grad checkpointing = ~1.5 GiB
 --------------------------------------------------------------
-realistic total    ≈ 6–7 GB  -> fits a free Colab T4 (16 GB) with room to spare
+realistic total    ≈ 5.6 GiB  -> fits a free Colab T4 (16 GB) with room to spare
 ```
+
+(Adapters are trained with Adam like any other parameter, so they carry optimizer state — just on 0.5% of the parameters, not 100%. That is the whole trick. `python code/common/memory.py --model 8B --method qlora` returns **5.6 GiB** for this configuration.)
 
 **Activation memory.** The dominant term is not the weights, it is `batch × seq_len × hidden × layers × (constant)`. The transformer stores ~10–16 intermediate tensors of size `B·S·d` per layer. For `bert-base` at `B=16, S=512`:
 
@@ -1527,8 +1547,8 @@ For the demo: `8 × 1 × 1 = 8`. For a realistic 8 B QLoRA SFT: `2 × 8 × 4 = 6
 | Inference on a box with no GPU | `InferenceClient` | self-hosting | zero VRAM, per-token cost |
 | Production serving with an SLO | vLLM / TGI / `Inference Endpoints` | `pipeline` | continuous batching, paged attention, 5–20× the throughput |
 | Full fine-tune of a ≤350 M model | `Trainer` | — | fits one GPU, no PEFT complexity, best quality |
-| Full fine-tune of a 7 B+ model | FSDP / DeepSpeed ZeRO-3 | single-GPU full FT | 8 B needs **~144 GB** of optimizer state |
-| Fine-tune a 7 B on one 24 GB GPU | QLoRA (`peft` + `bitsandbytes` + `Trainer`) | `Unsloth` / `axolotl` for 1.5–2× speed | 4-bit base + adapters ≈ 6–7 GB |
+| Full fine-tune of a 7 B+ model | FSDP / DeepSpeed ZeRO-3 | single-GPU full FT | 8 B needs **~105 GiB** static: weights 29.8 + gradients 14.9 + **optimizer state 59.6** + activations 0.7 GiB (§4.4) |
+| Fine-tune a 7 B on one 24 GB GPU | QLoRA (`peft` + `bitsandbytes` + `Trainer`) | `Unsloth` / `axolotl` for 1.5–2× speed | 4-bit base + adapters ≈ 5.6 GiB (§11.2) |
 | Instruction tuning on a chat dataset | TRL `SFTTrainer` | plain `Trainer` | chat template application, packing, `assistant_only_loss` |
 | Preference alignment | TRL `DPOTrainer` | `PPOTrainer` | DPO needs no reward model and no sampling loop |
 | Train a tokenizer for a new domain/language | `tokenizers` + `train_from_iterator` | — | 100× less corpus needed than for the model |
@@ -1641,15 +1661,18 @@ For the demo: `8 × 1 × 1 = 8`. For a realistic 8 B QLoRA SFT: `2 × 8 × 4 = 6
 ### 11.1 The formulas
 
 ```
-Full fine-tune VRAM ≈  params × 18 bytes           (mixed precision + Adam, static)
-                     + activations
-                     + fragmentation  (~10-15%)
+Full fine-tune VRAM ≈  params × 14 bytes           (mixed precision + Adam, static)
+                     + activations                   = 4 weights (bf16 2 + partial fp32 master 2)
+                     + fragmentation  (~10-15%)        + 2 bf16 grads + 8 Adam m,v
+                    (16 bytes if you keep a full fp32 master copy — DeepSpeed/FSDP;
+                     12 if you keep no master copy; 18 if you also hold fp32 grads)
 
 Activations ≈ batch × seq_len × hidden × layers × k   with k ≈ 8-16 for a transformer block
             (÷ 3-5 with gradient checkpointing)
 
 LoRA/QLoRA VRAM ≈ (params × 0.5 bytes)   base, 4-bit, frozen
-                + (adapter_params × 18 bytes)
+                + (adapter_params × 10 bytes)  adapters carry grads (2) + Adam m,v (8);
+                                               they do NOT carry the base's weights
                 + activations
 
 Inference VRAM ≈ params × bytes_per_elem (fp16=2, int8=1, int4=0.5)
@@ -1663,10 +1686,10 @@ KV cache = 2 × layers × kv_heads × head_dim × seq_len × batch × bytes_per_
 
 | Configuration | VRAM | Verdict |
 |---|---|---|
-| Full fine-tune, fp32 | `7e9 × (4+4+8) = 112 GB` | impossible |
-| Full fine-tune, bf16 + Adam | `7e9 × 18 = 126 GB` | impossible on any single consumer GPU |
-| LoRA (r=16) on bf16 base | `14 GB` base + `~0.6 GB` adapters + activations | OOM at batch 4; barely fits at batch 1 |
-| **QLoRA (NF4, r=16, `paged_adamw_8bit`)** | `~3.5 GB` base + `~0.6 GB` adapters + `~1.5 GB` activations ≈ **5.6 GB** | **fits, batch 1 + grad-accum 16, ~4.5 h for 20 k examples × 2 epochs** |
+| Full fine-tune, fp32 | `7e9 × (4+4+8) = 16 B/param = 104.3 GiB` | impossible |
+| Full fine-tune, bf16 + Adam | `7e9 × 14 B = 91.3 GiB` (`×16` with a full fp32 master = 104.3 GiB) | impossible on any single consumer GPU |
+| LoRA (r=16) on bf16 base | `13.0 GiB` base + `~0.4 GiB` adapters + activations | OOM at batch 4; barely fits at batch 1 |
+| **QLoRA (NF4, r=16, `paged_adamw_8bit`)** | `~3.7 GiB` base + `~0.4 GiB` adapters + `~1.5 GiB` activations ≈ **5.6 GiB** | **fits, batch 1 + grad-accum 16, ~4.5 h for 20 k examples × 2 epochs** |
 
 The QLoRA run's arithmetic: 20,000 examples, mean 384 tokens, ×2 epochs = 15.4 M tokens. On a T4 at ~1,200 tokens/s effective (batch 1, grad-accum 16, 4-bit) that is `15.4e6 / 1200 ≈ 3.6 h`, call it **4–5 h**. Colab free-tier sessions cap at ~4–12 h with idle disconnects, so this run needs `resume_from_checkpoint=True` and a checkpoint every 250 steps.
 
@@ -2206,7 +2229,7 @@ def test_determinism(model):
 7. **Dynamic padding in the collator; `padding="max_length"` only for fixed-shape export.** This is a 2–5× throughput difference on typical text.
 8. **`DataCollatorWithPadding` corrupts labeled datasets.** It pads `labels` with a real token id. Use `DataCollatorForLanguageModeling(mlm=False)`, `DataCollatorForSeq2Seq`, or TRL's completion-only path.
 9. **Full fine-tune LR ≈ 2e-5; LoRA LR ≈ 2e-4.** They differ by 10×, and using the wrong regime either destroys pretrained features or never moves the adapters.
-10. **Memory is `~18–20 bytes per parameter` for a mixed-precision Adam full fine-tune.** A 7 B model needs ~144 GB for optimizer state alone. That single number is the reason LoRA, QLoRA, FSDP, and DeepSpeed exist.
+10. **Memory is `4 weights + 2 gradients + 8 optimizer state = 14 bytes per parameter` for a mixed-precision Adam full fine-tune** — 12 with no fp32 master copy, 16 with a full one, 18 only if you also hold fp32 gradients. *State the decomposition, never the bare total.* A 7 B model is **91.3 GiB** static, and only **52.2 GiB of that is optimizer state** (57%); the weights are 26.1 GiB and the gradients 13.0 GiB. The 8 B of Adam `m,v` per parameter is the reason LoRA, QLoRA, FSDP, and DeepSpeed exist — but a reader who thinks optimizer state is the *whole* static cost under-provisions by 75%, because it is one component of four.
 11. **QLoRA moves a 7 B fine-tune from ~$200 to ~$2–5** by dropping the base to 4 bits (~0.5 bytes/param) and training adapters at ~0.1% of the parameters on a 16 GB card.
 12. **`metric_for_best_model` defaults to `loss`.** If you log accuracy and leave the default, `load_best_model_at_end` picks the wrong checkpoint.
 13. **A single zero n-gram precision collapses BLEU to exactly 0.0.** Read `precisions` before reading `bleu`. And BLEU/ROUGE measure overlap with *one* reference, not correctness.
@@ -2249,7 +2272,7 @@ def test_determinism(model):
 
 **8.** `repetition_penalty` is a divisor applied to the logits of tokens already present in the context. At `1.0` it is the multiplicative identity — it divides by one — so it is **off**, not mild. Values below 1.0 *encourage* repetition. Use **1.05–1.15** for most generation; above roughly **1.3** the constraint starts distorting ordinary function words ("the", "of") and output degrades into incoherence — the model is forced off tokens it needs. Pair it with `no_repeat_ngram_size=3` when you want a hard guarantee against short loops.
 
-**9.** A 7 B full fine-tune with mixed precision and Adam costs `7e9 × 18 B = 126 GB` **static**, before activations: 2 B/param for the bf16 weights, 4 B for the fp32 master weights, 4 B for the fp32 gradients, and 8 B for the two Adam moments. 126 GB > 80 GB, so it cannot fit regardless of batch size. Two independent fixes: **(a)** switch to QLoRA — the base drops to 4-bit NF4 (~0.5 B/param = 3.5 GB) and only the adapters get optimizer state, total ~6 GB; **(b)** keep the full fine-tune but shard the optimizer state and gradients across ranks with DeepSpeed ZeRO-3 or FSDP, which splits the 126 GB across N GPUs (≈16 GB/GPU at N=8). A third, cheaper-in-effort option is `optim="adafactor"`, which replaces the two Adam moments with factored statistics and cuts the static cost to ~`2 + 4 + 4 = 10 B/param` ≈ 70 GB — closer, but still not a single 80 GB card once activations are counted.
+**9.** A 7 B full fine-tune with mixed precision and Adam costs `7e9 × 14 B = 91.3 GiB` **static**, before activations — and it is the *split*, not the total, that explains the OOM: **4 B/param weights = 26.1 GiB** (bf16 copy 2 + partial fp32 master 2), **2 B/param bf16 gradients = 13.0 GiB**, **8 B/param Adam `m,v` = 52.2 GiB**. That last term is 57% of the static cost and two-thirds of an 80 GB card. 91.3 GiB > 80 GiB, so it cannot fit regardless of batch size. (Variants you will hear quoted: **12** B/param with no fp32 master copy = 78.2 GiB — just *under* an 80 GiB card, which is exactly why "a 7 B fits an A100" and "a 7 B does not fit an A100" are both said out loud; **16** B/param with a full master copy = 104.3 GiB.) Two independent fixes: **(a)** switch to QLoRA — the base drops to 4-bit NF4 (~0.5 B/param = 3.7 GiB) and only the adapters get optimizer state, total **5.6 GiB**; **(b)** keep the full fine-tune but shard weights, gradients and optimizer state across ranks with DeepSpeed ZeRO-3 or FSDP, which splits the 91.3 GiB across N GPUs (≈11.4 GiB/GPU at N=8). A third, cheaper-in-effort option attacks the optimizer state instead of sharding it: `optim="adafactor"` factorizes the second moment and takes the static cost to **29.7 GiB** (weights 13.0 + grads 13.0 + optimizer state 3.3), and `optim="adamw_8bit"` quantizes the moments to 1 byte each for **39.5 GiB**. Neither is a single 80 GB card once activations are counted — but both are one word in `TrainingArguments`.
 
 **10.** `model.push_to_hub()` pushes **only the model** — weights and config. It does not push the tokenizer, and if your teammate loads a tokenizer from a *different* repo they get a working pipeline with a mismatched vocabulary and garbage output. The one-line fix is `tokenizer.push_to_hub("you/m")` (or, better, `trainer.push_to_hub("you/m")`, which saves and uploads the tokenizer and processor alongside the model). Verify by loading from a clean cache and asserting `model.config.vocab_size == len(tokenizer)`.
 
@@ -2265,22 +2288,26 @@ def test_determinism(model):
 
 | Relationship | Module | Why |
 |---|---|---|
-| Builds on | **CS-01** (Foundations / the transformer) | `last_hidden_state`, attention masks, and encoder-vs-decoder are assumed throughout §4.3 |
-| Builds on | **CS-02** (Transfer learning & pretraining) | `from_pretrained` as a transfer mechanism; masked LM vs causal LM |
-| Builds on | **CS-05** (RNN/LSTM → attention) | Why attention replaced recurrence, and why `O(S²)` memory is the price |
-| Needed by | **CS-07** (BERT fine-tuning) | The `AutoModelForSequenceClassification` + `Trainer` + `compute_metrics` triple is the template |
-| Needed by | **CS-09** (Dataset engineering) | `load_dataset`, `map`/`filter`, `class_encode_column`, and the custom-dataset push pattern |
-| Needed by | **CS-10** (Quantization I) | `BitsAndBytesConfig`, NF4, 4-bit vs 8-bit, and the 18-bytes/param accounting |
-| Needed by | **CS-13** (LoRA / QLoRA) | `peft`, adapter LR, `prepare_model_for_kbit_training`, and the memory arithmetic |
-| Needed by | **CS-15** (LLaMA-Factory) | The YAML config surface is a wrapper over exactly these `TrainingArguments` |
-| Needed by | **CS-16** (TRL / SFT) | `SFTTrainer` = `Trainer` + chat templates + packing + `assistant_only_loss` |
-| Needed by | **CS-22** (Serving & inference) | `pipeline` vs vLLM/TGI, KV cache sizing, quantization at serve time |
-| Needed by | **CS-23** (Evaluation) | Expands §12 into benchmark design, LLM-as-judge, and contamination |
-| Needed by | **CS-24** (RAG & embeddings) | `sentence-transformers`, mean pooling, cosine similarity, and the anisotropy correction |
-| Needed by | **CS-28** (Production MLOps) | Versioning, drift, regression tests, and rollback for HF artefacts |
-| Contrasts with | **CS-03** (Frameworks) | `Trainer` vs Unsloth vs axolotl vs LLaMA-Factory — §13.1 is the short version |
-| Cheat sheets | **CH-12** (Hub & CLI commands) | The exact commands: `hf auth login`, `hf repo create`, `snapshot_download` |
-| Interview prep | **IQ-03** (Auto-classes & Trainer) | The 30 questions this module answers |
+| Builds on | **CS-01** (Foundations: Pretraining, Training & the LLM Lifecycle) | `last_hidden_state`, attention masks, and encoder-vs-decoder are assumed throughout §4.3 |
+| Builds on | **CS-02** (Transfer Learning & Model Fine-Tuning) | `from_pretrained` as a transfer mechanism; masked LM vs causal LM |
+| Builds on | **CS-05** (RNN/LSTM → Attention) | Why attention replaced recurrence, and why `O(S²)` memory is the price |
+| Needed by | **CS-07** (BERT Fine-Tuning: NER, Sentiment, QA) | The `AutoModelForSequenceClassification` + `Trainer` + `compute_metrics` triple is the template |
+| Needed by | **CS-08** (Knowledge Distillation I: Foundations & DistilBERT) | `AutoModelForSequenceClassification`, `from_pretrained`, and the "newly initialized head" warning the KD loss is bolted onto |
+| Needed by | **CS-09** (Knowledge Distillation II: LLM → SLM) | The teacher/student LLM path is an HF `generate` + `Trainer` setup. **Not** "dataset engineering" — that was this table's old label for CS-09 and it is wrong; CS-09 is distillation |
+| Needed by | **CS-10** (Quantization I: PTQ, QAT, GPTQ, AWQ, GGUF, GGML) | `BitsAndBytesConfig`, NF4, 4-bit vs 8-bit, and the bytes/param accounting of §4.4 |
+| Needed by | **CS-12** (Domain-Adaptive Continued Pretraining on Your Own PDFs) | `load_dataset`, `map`/`filter`, `class_encode_column`, and the custom-dataset push pattern (§6.3) — CS-12 turns a PDF pile into exactly those files |
+| Needed by | **CS-13** (Instruction Fine-Tuning (SFT)) | TRL's `SFTTrainer` is `Trainer` + chat templates + packing; the `apply_chat_template` discipline in §6.4 is the prerequisite. **Not** "LoRA / QLoRA" — that was this table's old label for CS-13 and it is wrong |
+| Needed by | **CS-15** (LLaMA-Factory: No-Code / Low-Code Fine-Tuning) | The YAML config surface is a wrapper over exactly these `TrainingArguments` |
+| Needed by | **CS-16** (Unsloth: 2–4× Faster, Low-VRAM Fine-Tuning) | The same `Trainer` loop with kernel surgery underneath. **Not** "TRL / SFT" — that was the old label for CS-16; TRL/SFT is CS-13 |
+| Needed by | **CS-17** (Axolotl: YAML-Driven Training at Scale) | Its YAML is a superset of these `TrainingArguments`, and it consumes the dataset formats built in §6.3 |
+| Contrasts with | **CS-03** (The Fine-Tuning Framework Landscape) | `Trainer` vs Unsloth vs axolotl vs LLaMA-Factory — §13.1 is the short version |
+| Cheat sheets | **CH-06** (The Hugging Face Masterclass Cheat Sheet) | The same surface condensed — `hf auth login`, `hf repo create`, `snapshot_download`. (**`CH-12` was the old pointer here and is wrong**: CH-12 is *Domain-Adaptive Continued Pretraining*) |
+| Interview prep | **IQ-06** (Interview Questions: Hugging Face Masterclass) | The questions this module answers. (**`IQ-03` was the old pointer here and is wrong**: IQ-03 is the *Framework Landscape* bank) |
+| Planned — not yet written | **CS-23** (LoRA & QLoRA: the PEFT deep dive) | The natural successor for §13.1's PEFT section and the memory arithmetic. A planned CS-23 was **never written**; until it is, read CS-11 §4.11 (NF4 / double-quantization / paged-optimizer math) and CS-13 §6.8 (`r`/`α`/target-module choices) |
+| Planned — not yet written | **CS-22** (Embedding Models and Embedding FT) | §15.4's "retrieval instead of classification", `sentence-transformers`, mean pooling, cosine similarity. **Never written**; until then CS-04 §8 (Decision Framework) covers the decision layer |
+| Planned — not yet written | **CS-24** (RL Fundamentals & RLHF with PPO) | §6.4's chat-template discipline and §6.11's `Trainer` loop are what a PPO run is built on. **Never written** — see CS-14 §20 for the alignment track's map (CS-24/25/26/27 were all planned and none were written) |
+| Planned — not yet written | **CS-28** (Capstone: the end-to-end pipeline) | §16.2–16.4 — versioning, regression tests, rollback for HF artefacts — is the production discipline the capstone assumes. **Never written** |
+| No module yet | **Serving & inference, and evaluation** | There is no dedicated case study for either, and **no CS-22 "Serving" or CS-23 "Evaluation" module exists** (those numbers are Embedding Models and LoRA & QLoRA respectively). Serving lives in §13.2 and §16.1 of this module, plus CS-11 for serve-time quantization; benchmark design and LLM-as-judge live in §12 here and in CS-13 §12 / CS-14 §12 |
 
 ---
 

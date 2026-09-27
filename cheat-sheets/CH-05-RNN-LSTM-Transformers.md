@@ -479,7 +479,7 @@ lora_target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_p
 | `\|g\|` | >10 % of steps at the clip threshold → threshold too low or LR too high |
 | val metric vs majority | At or below majority-class = no signal |
 
-**Tuning order:** `LR` (1e-3 → 3e-4 if the loss oscillates) → `BATCH` (32 if VRAM-bound) → `EPOCHS` (→10 before concluding underfit) → `D_MODEL` (only after the pipeline is proven). Save the tokenizer beside the weights; for adapters see **CS-23**.
+**Tuning order:** `LR` (1e-3 → 3e-4 if the loss oscillates) → `BATCH` (32 if VRAM-bound) → `EPOCHS` (→10 before concluding underfit) → `D_MODEL` (only after the pipeline is proven). Save the tokenizer beside the weights; for adapters see **CS-13 §6.8** / **CS-11 §4.11**.
 
 ---
 
@@ -493,7 +493,7 @@ lora_target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_p
 | Transfer learning fundamentals | **CS-02** |
 | Whether to fine-tune at all | **CS-04 / CH-04** |
 | The first post-attention fine-tuning win (BERT) | **CS-07 / CH-07** |
-| Where adapters go and why (LoRA/QLoRA) | **CS-23** |
+| Where adapters go and why (LoRA/QLoRA) | **CS-13 §6.8** / **CS-11 §4.11** |
 | Long-context continued pretraining | **CS-12** |
 | Weight and KV-cache quantisation | **CS-10 / CS-11** |
 

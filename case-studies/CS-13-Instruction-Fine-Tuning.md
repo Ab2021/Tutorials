@@ -7,7 +7,7 @@
 | **Transcript file(s)** | `LLM_Fine-Tuning_15_Instruction_Fine-Tuning_Explained_Domain-Specific_FineTuning.txt` |
 | **Companion code** | `LLM Fine-Tuning-15-Instruction Fine-Tuning Explained -Domain-Specific Fine-Tuning with Hugging Face/Instruction_finetuning_on_domain_specific_dataset.ipynb`, `pharma_instruction_data.jsonl`, `pharma_instruction_data.csv`, `tinyllama-instruction.zip` (2.7 MB → LoRA adapter, not a full model) |
 | **Prerequisites** | CS-01 (the three-stage lifecycle), CS-02 (transfer learning), CS-06 (HF `Trainer`/`datasets`), CS-12 (domain-adaptive continued pretraining — the stage that runs *before* this one) |
-| **Neighbours** | CS-14 (preference alignment: RLHF/PPO/DPO/ORPO), CS-15 (LLaMA-Factory), CS-16 (Unsloth), CS-17 (Axolotl), CS-18 (OpenAI SFT), CS-23 (LoRA/QLoRA deep dive) |
+| **Neighbours** | CS-14 (preference alignment: RLHF/PPO/DPO/ORPO), CS-15 (LLaMA-Factory), CS-16 (Unsloth), CS-17 (Axolotl), CS-18 (OpenAI SFT), CS-13 §6.8 + CS-11 §4.11 (LoRA/QLoRA) |
 | **Difficulty** | Beginner to run, Expert to run *well*. The code is 20 lines; the data is 20 weeks. |
 | **Hands-on required** | Yes — the notebook runs end to end on a free Colab T4 in under 5 minutes because the dataset is 5 rows |
 | **Estimated study time** | 8h theory + 8h practical (build a 1k-row dataset yourself; that is the real exercise) |
@@ -1205,7 +1205,7 @@ Run at least one general benchmark (MMLU 500-question subset, or a 200-prompt IF
 | Mitigation | Effect on forgetting | Effect on domain fit | Cost | When |
 |---|---|---|---|---|
 | **Fewer epochs** (3 → 1) | Large win | Small loss (if data is good) | Free | Always try first |
-| **LoRA instead of full FT** | Large win (base frozen) | Small loss | Free (CS-23) | Almost always for <50k rows |
+| **LoRA instead of full FT** | Large win (base frozen) | Small loss | Free (CS-13 §6.8) | Almost always for <50k rows |
 | **Replay 5–20% general instruction data** | Large win | Neutral to small win | +5–20% compute | Whenever you have a general SFT set |
 | **Replay 5–10% raw pretraining text** | Large win | Neutral | +5–10% compute | Full FT on a narrow domain; **must not be masked** (§4.4.4) |
 | **Lower LR** (2e-4 → 5e-5 for LoRA) | Moderate win | Small loss | Free | When loss is still falling but the model is drifting |
@@ -1251,7 +1251,7 @@ Why SFT alone is often 90% of the value:
 2. **DPO's gains require a competent SFT base.** Published practice (InstructGPT, Zephyr, Tulu 2/3, and every open replication) uses an SFT checkpoint as the DPO/ORPO starting point. Preference-tuning a raw base model is possible but consistently underperforms SFT-first, because the preference signal is sparse (one bit per pair, and only implicit) relative to the dense token-level signal of SFT.
 3. **DPO is a refinement, and refinements have small effect sizes.** Typical reported DPO gains over SFT on MT-Bench are ~0.2–0.5 points out of 10, and on AlpacaEval ~5–15 win-rate points. Real, but an order of magnitude less than the base→SFT jump.
 4. **DPO can *undo* SFT knowledge.** Preference pairs are usually stylistic; the DPO gradient can pull the model away from the SFT-distribution facts. This is the standard "our model got chattier and slightly less accurate after DPO" report.
-5. **RL needs verifiable rewards.** GRPO (CS-26) on math/code works because the reward is a program. For open-ended domain text there is usually no verifiable reward, so RLHF needs a reward model, which is another project.
+5. **RL needs verifiable rewards.** GRPO (CS-14 §4.6.10) on math/code works because the reward is a program. For open-ended domain text there is usually no verifiable reward, so RLHF needs a reward model, which is another project.
 
 The decision table:
 
@@ -1264,7 +1264,7 @@ The decision table:
 | Latency/cost reduction (small model) | Distillation (CS-08/09) then SFT | No | No |
 | Safety/refusal behaviour | Yes (mixed with task data, 2–5% boundary rows) | Yes (safety pairs) | Sometimes (RLHF) |
 
-> **Beyond the video:** ORPO (CS-27) folds the SFT and preference objectives into one loss, removing the need for a separate SFT checkpoint. It is attractive when you only have pairs and no clean SFT set, and it is *not* a replacement for SFT when you have a real SFT dataset — published comparisons show ORPO matching SFT+DPO while being simpler, not beating it by much. If you already have 5,000 good SFT rows, running SFT first and ORPO second is the low-risk path.
+> **Beyond the video:** ORPO (CS-14 §4.6.9) folds the SFT and preference objectives into one loss, removing the need for a separate SFT checkpoint. It is attractive when you only have pairs and no clean SFT set, and it is *not* a replacement for SFT when you have a real SFT dataset — published comparisons show ORPO matching SFT+DPO while being simpler, not beating it by much. If you already have 5,000 good SFT rows, running SFT first and ORPO second is the low-risk path.
 
 ---
 
@@ -1974,7 +1974,7 @@ Reported effect (Jain et al., 2023): +29.8% on AlpacaEval for LLaMA-2-7B, +8.7% 
 | Model must adopt a house tone/register | **Yes** | — | Style is a distribution over formats |
 | Model must know facts that change weekly | No | **RAG** (CS-04) | Retraining per fact change is a pipeline anti-pattern |
 | Model must know *terminology* for a fixed domain | Sort of | **Continued pretraining** (CS-12) then SFT | SFT alone cannot teach vocabulary efficiently (§4.1.2) |
-| Model must improve at verifiable reasoning | Partially | **RL/GRPO** (CS-26) with SFT cold-start | SFT memorises; RL generalises |
+| Model must improve at verifiable reasoning | Partially | **RL/GRPO** (CS-14 §4.6.10) with SFT cold-start | SFT memorises; RL generalises |
 | Model must be smaller/cheaper | No | **Distillation** (CS-08/09) + quantisation (CS-10) | SFT does not reduce size |
 | Model must respect a content policy | **Yes** (2–5% boundary rows) | + DPO for the fine judgements (CS-14) | Refusal boundaries are behaviour, and behaviour is SFT-shaped |
 | You have <100 good examples and no way to make more | Not yet | Prompt engineering + few-shot | SFT on 80 rows is a coin flip on format rigidity |
@@ -2413,7 +2413,7 @@ Run this **three** times: on the SFT start checkpoint, on the candidate, and on 
 
 ### 13.1 SFT vs the other stages
 
-| Dimension | Continued pretraining (CS-12) | **SFT (this module)** | DPO (CS-25) | ORPO (CS-27) | PPO/RLHF (CS-24) | GRPO (CS-26) |
+| Dimension | Continued pretraining (CS-12) | **SFT (this module)** | DPO (CS-14 §4.6.3) | ORPO (§4.6.9) | PPO/RLHF (§4.6.1) | GRPO (§4.6.10) |
 |---|---|---|---|---|---|---|
 | Data shape | raw text | (prompt, response) | (prompt, chosen, rejected) | same as DPO | prompts + reward model | prompts + verifier |
 | Data volume | 10M–1B tokens | 1k–500k rows | 1k–50k pairs | 1k–50k pairs | 10k–1M prompts | 10k+ verifiable tasks |
@@ -2850,13 +2850,13 @@ Method: LoRA (not QLoRA unless you are memory-bound) r=16, `target_modules="all-
 | **CS-17** Axolotl | YAML-driven SFT; `train_on_inputs: false`, `roles_to_train`, `neat_packing` |
 | **CS-18** OpenAI GPT Fine-Tuning | Managed SFT; the `messages` format; token pricing; when not to self-host |
 | **CS-19** Vertex AI / Gemini Fine-Tuning | The same, on Gemini |
-| **CS-20** Small Language Models | SFT a 0.5–3B model; the data-efficiency argument is strongest here |
-| **CS-23** LoRA & QLoRA — the PEFT Deep Dive | The adapter mechanics this module uses; rank/α/target-module theory |
-| **CS-24** RL Fundamentals & RLHF with PPO | What SFT feeds into; why a reward model needs a good SFT policy |
-| **CS-25** DPO | The stage after SFT; DPO pairs (`prompt`/`chosen`/`rejected`) are built from SFT data |
-| **CS-26** GRPO | Verifiable-reward training; needs an SFT'd model with the right output format first |
-| **CS-27** ORPO | SFT + preference in one stage; the alternative to "SFT then DPO" |
-| **CS-28** Capstone: The Complete End-to-End Pipeline | SFT as the middle stage of the full pipeline |
+| **CS-13** (this module) — small-model SFT | SFT a 0.5–3B model; the data-efficiency argument is strongest here. (*"CS-20 — Small Language Models" is planned, not yet written; CS-03 has the framework side*) |
+| **§6.8 (this module) + CS-11 §4.11** — the LoRA configuration and QLoRA | The adapter mechanics this module uses; rank/α/target-module theory. (*A "CS-23 — PEFT Deep Dive" module is planned but was never written*) |
+| **CS-14 §4.6.1** — RLHF with PPO (the 4-model problem) | What SFT feeds into; why a reward model needs a good SFT policy. (*"CS-24" is planned, unwritten*) |
+| **CS-14 §4.6.3** — DPO | The stage after SFT; DPO pairs (`prompt`/`chosen`/`rejected`) are built from SFT data. (*"CS-25" is planned, unwritten*) |
+| **CS-14 §4.6.10** — GRPO | Verifiable-reward training; needs an SFT'd model with the right output format first. (*"CS-26" is planned, unwritten*) |
+| **CS-14 §4.6.9** — ORPO | SFT + preference in one stage; the alternative to "SFT then DPO". (*"CS-27" is planned, unwritten*) |
+| *Capstone — planned, not yet written* | SFT as the middle stage of the full pipeline. Until then, §6 + §15 of this module are the assembled pipeline |
 | **CS-09** Knowledge Distillation II | Where synthetic instruction data comes from; teacher→student SFT |
 | **CH-13** Instruction Fine-Tuning Cheat Sheet | The compressed version of this module |
 | **IQ-13** Instruction Fine-Tuning Interview Questions | 113 questions from this material |
@@ -2912,7 +2912,7 @@ Method: LoRA (not QLoRA unless you are memory-bound) r=16, `target_modules="all-
 | **LIMA-adjacent: Exploring the Impact of Instruction Data Scale** (Zhou et al., 2023) | 2312.02465 | Scaling instruction data: the marginal value of row 10,000 is near zero |
 | **How Far Can Camels Go? (Tulu)** (Wang et al., 2023) | 2306.04751 | Open instruction mixtures; the value of mixture diversity |
 | **Tulu 3: Pushing Frontiers in Open Language Model Post-Training** (Lambert et al., 2024) | 2411.15124 | A modern, fully-documented open SFT+DPO recipe |
-| **LoRA: Low-Rank Adaptation of Large Language Models** (Hu et al., 2021) | 2106.09685 | The adapter math this module's configs use (see CS-23) |
+| **LoRA: Low-Rank Adaptation of Large Language Models** (Hu et al., 2021) | 2106.09685 | The adapter math this module's configs use (see CS-13 §6.8, CS-11 §4.11) |
 | **QLoRA: Efficient Finetuning of Quantized LLMs** (Dettmers et al., 2023) | 2305.14314 | 4-bit NF4 + paged optimizers; the 7B-on-one-GPU result |
 | **NEFTune: Noisy Embeddings Improve Instruction Finetuning** (Jain et al., 2023) | 2310.05914 | +5–15 pts on judged quality from embedding noise; 5–10 lines of code |
 | **Judging LLM-as-a-Judge (MT-Bench)** (Zheng et al., 2023) | 2306.05685 | Position/verbosity/self-enhancement bias; the swap protocol |
@@ -2942,7 +2942,7 @@ Method: LoRA (not QLoRA unless you are memory-bound) r=16, `target_modules="all-
 | `TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T` | 1.1B | **The video's base model.** Non-instruct |
 | `TinyLlama/TinyLlama-1.1B-Chat-v1.0` | 1.1B | Where the notebook's tokenizer came from (a mismatch, §6.6) |
 | `meta-llama/Llama-3.1-8B` / `-Instruct` | 8B | The practical default for domain SFT in 2025 |
-| `meta-llama/Llama-3.2-1B/3B` | 1B/3B | Small-model SFT (CS-20) |
+| `meta-llama/Llama-3.2-1B/3B` | 1B/3B | Small-model SFT (CS-13; "CS-20" is planned, unwritten) |
 | `Qwen/Qwen2.5-7B-Instruct` | 7B | Strong instruct base; excellent template hygiene |
 | `mistralai/Mistral-7B-Instruct-v0.3` | 7B | `[INST]` template; tool-calling workhorse |
 | `google/gemma-2-9b-it` | 9B | `<start_of_turn>` template |

@@ -74,6 +74,12 @@ def parse_args():
     p.add_argument("--epochs", type=float, default=DEFAULTS["epochs"])
     p.add_argument("--batch-size", type=int, default=DEFAULTS["batch_size"])
     p.add_argument("--lr", type=float, default=DEFAULTS["lr"])
+    p.add_argument("--warmup-ratio", type=float, default=DEFAULTS["warmup_ratio"],
+                   help="Fraction of total steps spent linearly ramping the LR from 0. "
+                        "The default 0.1 is the usual 10%%. On a small contrastive set "
+                        "warmup is proportionally expensive — 10%% of 200 steps is 20 steps "
+                        "of deliberately reduced learning — so it is worth trying 0.0 to "
+                        "see whether the first epoch converges faster without it.")
     p.add_argument("--max-len", type=int, default=DEFAULTS["max_len"])
     p.add_argument("--anchor-col", default="anchor")
     p.add_argument("--positive-col", default="positive")
@@ -292,7 +298,7 @@ def _train(a, rows: list[dict]) -> None:
     model.fit(
         train_objectives=[(loader, train_loss)],
         epochs=int(a.epochs),
-        warmup_steps=math.ceil(len(loader) * a.epochs * DEFAULTS["warmup_ratio"]),
+        warmup_steps=math.ceil(len(loader) * a.epochs * a.warmup_ratio),
         optimizer_params={"lr": a.lr},
         output_path=a.out,
         show_progress_bar=True,

@@ -610,7 +610,7 @@ print('p50',st.median(L),'p95',sorted(L)[int(len(L)*.95)],'max',max(L))
 | Understand *why* SFT works, from first principles | **CS-13 — Instruction Fine-Tuning** (the full treatment) |
 | Know when SFT is the wrong tool at all | **CH-04 / CS-04 — Fine-Tuning vs RAG vs Agents** |
 | Train on preferences instead of demonstrations | **CH-14 / CS-14 — The Alignment Map** |
-| Understand what LoRA is doing mathematically | **CS-23 — LoRA & QLoRA** |
+| Understand what LoRA is doing mathematically | **CS-13 §6.8**; **CS-11 §4.11** (CS-23 planned, not yet written) |
 | Train without a GPU budget | **CS-16 — Unsloth**, **CS-15 — LLaMA-Factory** |
 | Install facts rather than behaviour | **CH-12 / CS-12 — Domain-Adaptive Continued Pretraining** |
 | Make a smaller model that behaves like a bigger one | **CH-09 / CS-09 — Distillation: LLM → SLM** |

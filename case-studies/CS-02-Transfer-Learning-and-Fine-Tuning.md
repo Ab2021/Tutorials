@@ -138,7 +138,7 @@ Worked mapping to real projects:
 | **Feature extraction** | Using the frozen backbone purely as a fixed featurizer; only a new head is trained. | Cheapest, most forgetting-proof, strongest regularizer, weakest ceiling. | Confused with "linear probing." Feature extraction with a frozen backbone and an MLP head is still feature extraction; a *linear* probe is the special case with a single linear layer. |
 | **Linear probing (LP)** | Freeze 100% of the backbone; train one linear layer on top with a high LR. | The correct baseline everyone skips. If LP ≈ full FT, you have a data/eval problem, not a fine-tuning problem. | "Linear probe" ≠ "last-layer fine-tune." The latter lets gradients flow into the last block. |
 | **Full fine-tuning (full FT)** | Update every parameter with a small learning rate. | Highest ceiling on in-distribution data; highest forgetting risk; highest memory. | People assume it is always better. On OOD data it is often *worse* than LP (see §4.6). |
-| **PEFT** | Parameter-Efficient Fine-Tuning — a family (LoRA, QLoRA, DoRA, adapters, prefix/prompt tuning, IA³, BitFit) that trains ≤1–5% of the parameters while freezing the rest. | The only economically sane option above ~3B parameters. Forward-reference: CS-23. | "PEFT is a worse full FT." It is a *different regularizer*; on small data it frequently wins. |
+| **PEFT** | Parameter-Efficient Fine-Tuning — a family (LoRA, QLoRA, DoRA, adapters, prefix/prompt tuning, IA³, BitFit) that trains ≤1–5% of the parameters while freezing the rest. | The only economically sane option above ~3B parameters. Forward-reference: CS-13 §6.8, CS-11 §4.11. | "PEFT is a worse full FT." It is a *different regularizer*; on small data it frequently wins. |
 | **LoRA** | Low-Rank Adaptation: freeze `W`, learn `ΔW = BA` with `B ∈ R^{d×r}`, `A ∈ R^{r×k}`, `r ≪ min(d,k)`. | Trains 0.1–1% of parameters, stores 10–100 MB adapters per task, and is composable at inference. | "LoRA can't learn new knowledge." It can learn new *behavior*; new *facts* need continued pretraining or RAG (CS-04, CS-12). |
 | **Catastrophic forgetting** | Degradation of previously acquired capabilities caused by gradient updates for a new task. | The dominant silent failure of fine-tuning. Your target metric hides it. | Confused with overfitting. Overfitting is worse *on the target*; forgetting is worse *everywhere else*. |
 | **Domain shift** | `P_S(X) ≠ P_T(X)`. | Fix with unlabeled target data (continued pretraining). | Called "distribution shift," "dataset shift," "covariate shift" interchangeably — they differ. |
@@ -1252,7 +1252,7 @@ lm_eval --model hf --model_args pretrained=./my-ft-8b --tasks wikitext \
 | + gradual unfreezing over epochs | per-epoch unfreeze callback | 25 | +0.3–1.0 pt, less forgetting | small/medium data, encoder |
 | Full FT, all of the above | — | 30 | +0.5–1.5 pt | you have the GPU and ≥10k labels |
 
-### 13.3 Full FT vs PEFT (forward reference: CS-23)
+### 13.3 Full FT vs PEFT (forward reference: CS-13 §6.8, CS-11 §4.11)
 
 | Aspect | Full FT | LoRA | QLoRA |
 |---|---|---|---|
@@ -1302,12 +1302,12 @@ Metric
 | **Fine-grained classification** (100+ classes, subtle differences) | 50–100 per class | 10k–50k | Needs the last few blocks unfrozen |
 | **NER / sequence labelling** | 500–2,000 sentences | 10k–20k | Labels are dense per token, so fewer sentences suffice |
 | **Extractive QA** | 1,000–5,000 (question, context, span) triplets | 20k–50k | SQuAD-trained models transfer well; new domains need 2k–10k |
-| **Semantic similarity / reranking** (CS-22) | 1,000–10,000 pairs | 50k+ | Hard-negative mining matters more than volume |
+| **Semantic similarity / reranking** (`code/10_embedding_finetune.py`) | 1,000–10,000 pairs | 50k+ | Hard-negative mining matters more than volume |
 | **Instruction SFT — style / format / schema** | **500–2,000** | 5k–10k | LIMA (1,000 examples) and Alpaca (52k) bracket this; format is cheap to teach |
 | **Instruction SFT — new domain behavior** | 5,000–50,000 | 100k+ | The behavior must be learnable from demonstrations |
 | **New factual knowledge** | — | — | **Not achievable by SFT.** Use 1B+ tokens of continued pretraining (CS-12) or RAG (CS-04) |
 | **Continued pretraining (new domain language)** | 0 labels needed | — | 1e8–1e10 unlabeled tokens; measured in tokens, not examples |
-| **Preference alignment** (CS-24/25/27) | 5,000–100,000 pairs | 200k+ | Pairs, not examples; quality of the preference signal dominates volume |
+| **Preference alignment** (CS-14 §4.6.1, §4.6.3, §4.6.9) | 5,000–100,000 pairs | 200k+ | Pairs, not examples; quality of the preference signal dominates volume |
 
 Rules of thumb to memorize:
 
@@ -1570,9 +1570,9 @@ def test_determinism():
 | Needed by | CS-07 — BERT fine-tuning for NER, sentiment, and QA |
 | Needed by | CS-12 — domain-adaptive continued pretraining on your own PDFs |
 | Needed by | CS-13 — instruction fine-tuning (SFT) |
-| Needed by | CS-22 — embedding fine-tuning (the same transfer logic in a bi-encoder) |
+| Needed by | `code/10_embedding_finetune.py` — embedding fine-tuning (the same transfer logic in a bi-encoder). A "CS-22" module is planned but unwritten |
 | Contrasts with | CS-04 — fine-tuning vs RAG vs agents: which architecture to choose |
-| Deepens into | CS-23 — LoRA & QLoRA, the PEFT deep dive (full FT vs PEFT) |
+| Deepens into | CS-13 §6.8 + CS-11 §4.11 — the LoRA configuration and QLoRA (the PEFT deep dive; CS-23 is planned but unwritten) |
 | Cost/quality trade-off | CS-10, CS-11 — quantization, which changes the serving economics of everything here |
 | Distillation as an alternative | CS-08, CS-09 — knowledge distillation instead of (or after) fine-tuning |
 | Cheat sheet | CH-02 — Transfer Learning cheat sheet |
@@ -1597,7 +1597,7 @@ def test_determinism():
 | [23:37] | "This fine-tuning, this transfer learning, and this fine-tuning are the two aspects of a single task." | The relationship claim, restated at [25:29] as "two sides of a single point." |
 | [27:54] | "First was the small variant where we were having 12… and if you're talking about the large, inside that we are making 24." | BERT-base 12 layers, BERT-large 24 layers. Correct. |
 | [28:45] | "The advanced model of the GPT still is not open source… through the API itself we can fine-tune this model." | Correct for GPT-3.5/4 at the time of recording. |
-| [29:00] | "This model basically it's a very huge model so to fine-tune this particular model we'll have to take a different technique. The technique is called the PEFT technique." | Forward reference to CS-23. Correct in substance. |
+| [29:00] | "This model basically it's a very huge model so to fine-tune this particular model we'll have to take a different technique. The technique is called the PEFT technique." | Forward reference to LoRA — CS-13 §6.8 and CS-11 §4.11. Correct in substance. |
 | [32:09] | "This model is pretty huge, it is having billions and trillions of parameters. In that case we cannot increase couple of last layer of this particular model." | **"Trillions" is wrong** for any open Llama/Mistral/DeepSeek generation model of that era (largest open dense: Llama-3.1-405B; GPT-4 is rumored MoE in the same order, not trillions). |
 | [32:23] | "Inside the PEFT technique actually we consider some subset of the weight… to fine-tune the model." | Loose description of LoRA. LoRA *adds* low-rank matrices; it does not select a subset of weights. |
 | [33:21] | "It saves the training time and the resources [if] you're going to retrain any model from very very scratch." | Reason 1 for transfer learning. |
@@ -1648,7 +1648,7 @@ def test_determinism():
 
 | Reference | Why it matters |
 |---|---|
-| Hu et al., *LoRA: Low-Rank Adaptation of Large Language Models*, ICLR 2022 | The mechanism behind CS-23 and every memory number in §11 |
+| Hu et al., *LoRA: Low-Rank Adaptation of Large Language Models*, ICLR 2022 | The mechanism behind CS-13 §6.8 / CS-11 §4.11 and every memory number in §11 |
 | Dettmers et al., *QLoRA*, NeurIPS 2023 | 4-bit NF4 + paged optimizers; the reason a 70B fine-tune fits on 48 GB |
 | Aghajanyan et al., *Intrinsic Dimensionality Explains the Effectiveness of Language Model Fine-Tuning*, ACL 2021 | Why a low-rank update suffices at all |
 | Ben Zaken et al., *BitFit: Simple Parameter-efficient Fine-tuning*, ACL 2022 | The "subset of weights" family (bias terms only, ~0.08%) |

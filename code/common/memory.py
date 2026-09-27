@@ -373,7 +373,7 @@ def _print_plan(p: TrainPlan) -> None:
 
 
 def _table() -> None:
-    print("\nTraining VRAM (GB), single GPU, gradient checkpointing ON, AdamW\n")
+    print("\nTraining VRAM (GiB), single GPU, gradient checkpointing ON, AdamW\n")
     hdr = f"{'Model':<8}{'Full FT':>10}{'LoRA r16':>11}{'QLoRA r16':>12}{'Infer bf16':>12}{'Infer 4bit':>12}"
     print(hdr)
     print("-" * len(hdr))
@@ -384,7 +384,17 @@ def _table() -> None:
         i16 = inference_gb(m, 4096, 1, 2.0)
         i4 = inference_gb(m, 4096, 1, 0.5)
         print(f"{m:<8}{f:>10.1f}{l:>11.1f}{q:>12.1f}{i16:>12.1f}{i4:>12.1f}")
-    print("\nNote: 'full' assumes bf16 weights + fp32 Adam states for all params.")
+    print("Note: units are GiB (divided by 1024^3), not decimal GB. A 128 GiB card holds")
+    print("      128 GiB; vendors quote 128 GB, which is 119 GiB. Compare like with like.")
+    print()
+    print("Note: 'full' charges 14 bytes/param = 4 (weights) + 2 (bf16 grad) + 8 (fp32 Adam")
+    print("      m,v). The 4 for weights assumes a bf16 copy plus a partial fp32 master.")
+    print("      The two figures you will hear quoted most often are:")
+    print("        12 B/param  = 2 weights + 2 grad + 8 Adam        [no fp32 master copy]")
+    print("        16 B/param  = 2 weights + 2 grad + 8 Adam + 4    [with fp32 master copy]")
+    print("      14 sits between them. Which is right depends on the trainer: DeepSpeed and")
+    print("      FSDP keep a master copy (16); a plain bf16 loop with no master is 12.")
+    print("      ALWAYS quote the decomposition, never the bare total.")
     print("      Real usage adds 10-20% for allocator/framework overhead. Leave headroom.\n")
 
 

@@ -925,9 +925,9 @@ print("checks passed")
 | **CS-08 — Knowledge Distillation I: DistilBERT** | How BERT-base → DistilBERT actually works (KL T=2 + MLM + cosine), and how to distil your own fine-tune into a 3× faster student. **The highest-leverage follow-up to this sheet.** |
 | **CS-12 — Domain-Adaptive Continued Pretraining** | MLM on your own unlabelled corpus *before* fine-tuning: the +3–5 F1 that costs almost nothing. |
 | **CS-10 / CS-11 — Quantization I & II** | PTQ vs QAT vs GPTQ/AWQ — the full story behind the int8 line in §6. |
-| **CS-22 — Embedding Models** | The `[CLS]` vs mean-pooling debate, bi-encoders, and fine-tuning a retriever. |
+| **Embeddings — `code/10_embedding_finetune.py`** | The `[CLS]` vs mean-pooling debate, bi-encoders, and fine-tuning a retriever. (**CS-22** planned, not yet written) |
 | **CS-13 / CH-04 / CH-12** | The decoder-side counterpart, and when fine-tuning is the wrong tool at all (vs RAG, vs prompting). |
-| **CS-05 / CS-06 / CS-23** | Attention math and why the bidirectional encoder exists; the HF API surface this sheet assumes; LoRA in full (IQ-07 Q91's multi-tenant design). |
+| **CS-05 / CS-06 / CS-13 §6.8** | Attention math and why the bidirectional encoder exists; the HF API surface this sheet assumes; the LoRA config in full (IQ-07 Q91's multi-tenant design). (**CS-23** planned, not yet written) |
 
 ---
 

@@ -21,7 +21,7 @@
 - **The 6ND rule is the most useful formula in this entire handbook.** Training compute FLOPs ≈ `6 × params × tokens`. Inference is `2 × params` FLOPs per token.
 - **The Chinchilla rule is the second:** compute-optimal training wants **~20 tokens per parameter**. A 7B model wants ~140B tokens. Almost nobody does this anymore for production models — modern models are deliberately *overtrained* (Llama-3 8B: ~1,875 tokens/param) because **inference cost dominates training cost over the model's life**.
 - **Memory beats FLOPs in most real workloads.** Decode is memory-bandwidth bound: a 7B model in bf16 on a 3.35 TB/s H100 has a hard ceiling of ~240 tokens/s for a batch of 1, no matter how many FLOPs the chip has.
-- **Full fine-tuning of 7B needs ~112 GB just for weights, gradients and Adam state** — before activations. That number is why LoRA/QLoRA (CS-23) exist, and why "fine-tune a 7B on a free Colab T4" is a QLoRA claim, never a full-FT claim.
+- **Full fine-tuning of 7B needs ~112 GB just for weights, gradients and Adam state** — before activations. That number is why LoRA/QLoRA (CS-13 §6.8, CS-11 §4.11) exist, and why "fine-tune a 7B on a free Colab T4" is a QLoRA claim, never a full-FT claim.
 - **The base-vs-instruct distinction is the most consequential and most misunderstood thing in the field.** A base model is a text continuer that has never been taught to answer. Evaluating a base model on a multiple-choice benchmark and concluding "it is stupid" is the field's most common self-inflicted error.
 - **Tokenizers are the #1 source of silent, catastrophic bugs** in fine-tuning: wrong chat template, missing pad token, resized embeddings, truncation that eats the label. Four of the twelve debug entries in §14 are tokenizer bugs.
 - **The most important thing fine-tuning cannot do: install new facts.** Fine-tuning teaches *form* (style, format, schema, refusal behaviour, domain vocabulary, tone). RAG supplies *substance* (current, verifiable, citable facts). Choosing wrong between them is CS-04.
@@ -106,7 +106,7 @@ The reason it works at all is that next-token prediction is a *surprisingly hard
 
 ## 3. Core Concepts — Exhaustive Glossary
 
-Later modules (CS-02 through CS-28) assume every term below. This is the reference table for the whole handbook.
+Later modules (CS-02 through CS-19) assume every term below. This is the reference table for the whole handbook. (CS-20–CS-28 are planned but were never written; where a row names one, the nearest *written* material is given inline instead.)
 
 | Term | Definition | Why it matters | Common confusion |
 |---|---|---|---|
@@ -126,7 +126,7 @@ Later modules (CS-02 through CS-28) assume every term below. This is the referen
 | **Unsupervised pretraining** | Legacy label for pretraining because there is no human-provided `y` | Historical name only | The instructor's correction: the right name is self-supervised [55:23] |
 | **Self-supervised learning** | Labels are derived *from the data itself* (token *t+1* is the label for tokens *1..t*) | The reason internet-scale text is usable as training data at all | Believing it means "no labels" |
 | **Causal LM (CLM)** | Autoregressive objective: predict token *t+1* from tokens *≤t*. Decoder-only. GPT, Llama, Mistral, Qwen, Gemma | The objective of every modern generative LLM | Called "regressive modelling" in the transcript [31:03] — the term is **autoregressive** |
-| **Masked LM (MLM)** | Mask ~15% of tokens, predict them from both sides. Encoder-only. BERT | Produces strong bidirectional *understanding* representations | "MLM is obsolete" — false for classification/NER/embedding (CS-07, CS-22) |
+| **Masked LM (MLM)** | Mask ~15% of tokens, predict them from both sides. Encoder-only. BERT | Produces strong bidirectional *understanding* representations | "MLM is obsolete" — false for classification/NER/embedding (CS-07; embedding FT is `code/10_embedding_finetune.py`) |
 | **Span corruption / span masking** | Mask contiguous spans, decoder reconstructs them with sentinel tokens. T5, UL2 | Encoder-decoder objective; efficient and strong for seq2seq | Confused with MLM (which masks individual tokens) |
 | **Seq2seq** | Sequence in → sequence out, via encoder + decoder. T5, BART, original translation models | The right shape for translation, summarisation, structured extraction | Assumed dead — T5-family and encoder-decoder models still ship |
 | **Autoregressive** | Generating one token at a time, feeding output back as input | The inference-time behaviour of every decoder-only LLM | Confused with "recursive"; also confused with the *training* objective (they match in CLM, which is the point) |
@@ -136,7 +136,7 @@ Later modules (CS-02 through CS-28) assume every term below. This is the referen
 | **Vocabulary size** | Number of distinct token ids. BERT 30,522 · GPT-2 50,257 · Llama-2 32,000 · Llama-3 128,256 · Qwen2 151,646 · Gemma 256,000 | Trades sequence length against embedding params and rare-token coverage | Bigger assumed strictly better — it costs params and softmax compute |
 | **Special tokens** | Reserved ids: `[CLS] [SEP] [MASK] <s> </s> <|endoftext|> <|im_start|>` | Control structure; wrong ones silently break training | Treating them as literal text that will be tokenized normally |
 | **Chat template** | The exact string format wrapping system/user/assistant turns for a given model | Wrong template = the #1 silent SFT failure | Assuming all models use ChatML |
-| **Embedding** | Dense vector for a token, or for a whole text. `Embedding = a set of numbers = a vector` [17:33–17:42] | Input layer of the model; also the retrieval primitive in RAG (CS-22) | Confusing token embeddings (inside the model) with sentence embeddings (retrieval) |
+| **Embedding** | Dense vector for a token, or for a whole text. `Embedding = a set of numbers = a vector` [17:33–17:42] | Input layer of the model; also the retrieval primitive in RAG (embedding FT: `code/10_embedding_finetune.py`) | Confusing token embeddings (inside the model) with sentence embeddings (retrieval) |
 | **Logits** | Raw unnormalised scores over the vocabulary before softmax | Where temperature, top-k, top-p act | Confused with probabilities |
 | **Softmax** | `exp(z_i)/Σ exp(z_j)` — turns logits into a distribution | The final layer of the LM head; the instructor's BERT demo does *"softmax over vocabulary, take top prediction"* [1:03:02] | Numerically unstable without max-subtraction |
 | **Loss (cross-entropy)** | `-log p(correct token)` averaged over tokens; the training objective | The only number you actually steer training by | Confused with accuracy — a model can have low loss and be useless |
@@ -172,7 +172,7 @@ Later modules (CS-02 through CS-28) assume every term below. This is the referen
 | **Emergent ability** | A capability that appears only above some scale (Wei et al. 2022) | Used to justify scale | Contested as a metric artefact (Schaeffer et al. 2023) — see §4.6 |
 | **SFT** | Supervised fine-tuning on (instruction, response) pairs | The stage that turns a base model into an assistant (CS-13) | Called "instruction tuning" and "fine-tuning" interchangeably |
 | **Instruction tuning** | Synonym for SFT with instruction-formatted data | Same | Same |
-| **PEFT** | Parameter-efficient fine-tuning: train <1% of params. LoRA, QLoRA, DoRA, adapters, prefix tuning | Makes fine-tuning affordable (CS-23) | Believed to always match full FT — it does not, at high data volumes |
+| **PEFT** | Parameter-efficient fine-tuning: train <1% of params. LoRA, QLoRA, DoRA, adapters, prefix tuning | Makes fine-tuning affordable (CS-13 §6.8, CS-11 §4.11) | Believed to always match full FT — it does not, at high data volumes |
 | **LoRA** | Freeze base; learn low-rank `BA` updates, `ΔW = BA` with rank `r` | 100x fewer trainable params, ~3x less VRAM | Believed to reduce compute. It reduces *memory* |
 | **QLoRA** | LoRA on top of a 4-bit NF4 quantized frozen base | 7B on 12 GB, 70B on 48 GB | Believed to be ~2x slower than expected — it is ~20–40% slower than bf16 LoRA |
 | **Full fine-tuning** | Update every parameter | Max quality/plasticity; needs ~16 bytes/param plus activations | Tried first by beginners on hardware that cannot hold it |
@@ -182,10 +182,10 @@ Later modules (CS-02 through CS-28) assume every term below. This is the referen
 | **Feature extraction** | Freeze everything, train a new head. Instructor's "way 1": change only the last layer [40:28–40:33] | Cheapest, least plastic | Believed to be a form of fine-tuning; it is a degenerate case |
 | **Partial fine-tuning** | Freeze early layers, train late layers. Instructor's "way 2" [40:38–40:52] | Middle ground: less compute, more plasticity than a head swap | Assumed always worse than full FT — often it is better on small data |
 | **RAG** | Retrieval-augmented generation: fetch documents, put them in context | Injects facts without touching weights (CS-04) | Believed to be a fine-tuning alternative rather than a complement |
-| **RLHF** | Reinforcement learning from human feedback: reward model + PPO | ChatGPT's alignment recipe (CS-24) | Confused with SFT; also believed to add knowledge |
-| **DPO** | Direct Preference Optimization — closed-form preference objective, no reward model, no RL loop (CS-25) | Now the default preference method | Called "direct reference optimization" in the transcript [37:01] — it is **Direct Preference Optimization** |
+| **RLHF** | Reinforcement learning from human feedback: reward model + PPO | ChatGPT's alignment recipe (CS-14 §4.6.1) | Confused with SFT; also believed to add knowledge |
+| **DPO** | Direct Preference Optimization — closed-form preference objective, no reward model, no RL loop (CS-14 §4.6.3) | Now the default preference method | Called "direct reference optimization" in the transcript [37:01] — it is **Direct Preference Optimization** |
 | **PPO** | Proximal Policy Optimization — the RL algorithm used inside RLHF | Requires 4 models in memory (policy, ref, reward, value) | Confused with DPO as "the same thing" |
-| **RLHF vs DPO** | RLHF = online RL with a reward model; DPO = offline, direct on preference pairs | DPO is simpler, cheaper, and now usually preferred | Believed to be strictly better — DPO can overfit preferences; see CS-25 |
+| **RLHF vs DPO** | RLHF = online RL with a reward model; DPO = offline, direct on preference pairs | DPO is simpler, cheaper, and now usually preferred | Believed to be strictly better — DPO can overfit preferences; see CS-14 §4.6.3 |
 | **Hallucination** | Fluent, confident, wrong output | The failure mode everything else is defending against | Believed fixable by fine-tuning |
 | **Contamination** | Test-set leakage into training data | Invalidates benchmark numbers | Checked rarely; assume it is present |
 | **Dedup** | Removing near-duplicate training documents | Improves loss at fixed compute, reduces memorisation | Believed cosmetic — it is one of the highest-ROI data operations |
@@ -823,7 +823,7 @@ Here is his spoken syllabus, verbatim in intent, mapped to the module that deliv
 |---|---|---|---|---|
 | 1 | Introduction to fine-tuning: model training, pre-training, transfer learning, fine-tuning, why it matters | [6:22–6:45] | Establishes the vocabulary — you cannot reason about fine-tuning without the pretraining/transfer distinction | **CS-01** |
 | 2 | Fine-tuning frameworks: HF Trainer/TRL, Unsloth, LLaMA-Factory, Axolotl | [6:45–6:54] | You should not hand-roll a training loop; each framework optimises a different constraint (speed, VRAM, no-code, reproducibility) | CS-03, CS-15, CS-16, CS-17 |
-| 3 | Important research papers on fine-tuning | [6:54–7:01] | Primary sources beat blog posts; interviewers ask "which paper?" | CS-01 App. B, CS-14, CS-23, CS-25 |
+| 3 | Important research papers on fine-tuning | [6:54–7:01] | Primary sources beat blog posts; interviewers ask "which paper?" | CS-01 App. B, CS-14; LoRA/QLoRA in CS-13 §6.8 + CS-11 §4.11 |
 | 4 | Fine-tuning vs RAG vs AI agents — which to choose; how to build RAG/agents **on top of** a fine-tuned model | [7:01–7:34] | The architecture decision that precedes every technical decision. Wrong answer = wasted quarter | **CS-04** |
 | 5 | Fine-tuning and deep learning: what training is, CNN training in PyTorch and Keras, layers/parameters | [7:39–8:19] | Builds the tensor-level intuition that makes every later module legible | CS-01, CS-05 |
 | 6 | Why fine-tuning was not possible in RNN/LSTM; LSTM vs RNN vs Transformer | [8:19–9:30] | Explains *why the Transformer unlocked the field* rather than just asserting it | CS-05 |
@@ -832,16 +832,18 @@ Here is his spoken syllabus, verbatim in intent, mapped to the module that deliv
 | 9 | Knowledge distillation: DistilBERT, then LLM → SLM (LLaMA, Phi) | [11:39–11:55] | Turns an expensive teacher into a cheap student; the main lever on serving cost | CS-08, CS-09 |
 | 10 | The LLM era begins; unsupervised pretraining (he promises a separate from-scratch video) | [11:55–12:39] | Where the capability actually comes from | CS-01 |
 | 11 | Quantization: GGUF, GGML, GPTQ, AWQ, int4, int8 | [12:41–13:22] | Makes a model that does not fit, fit. The enabler of local and cheap serving | CS-10, CS-11 |
-| 12 | Fine-tuning Llama, Mistral, Gemma, Phi-3 and other open LLMs — "one code, any model" | [13:23–13:34] | The generic pipeline that generalises across bases | CS-20 |
-| 13 | LoRA, QLoRA (LoRA + quantization), DoRA, RAFT | [13:34–13:50] | The memory revolution: fine-tune on one GPU | **CS-23** |
-| 14 | Data preparation; full fine-tuning vs parameter-efficient fine-tuning | [13:52–14:00] | The data is the model. Full FT vs PEFT is the first branching decision | CS-13, CS-23 |
+| 12 | Fine-tuning Llama, Mistral, Gemma, Phi-3 and other open LLMs — "one code, any model" | [13:23–13:34] | The generic pipeline that generalises across bases | CS-13 (*"CS-20" is planned, unwritten*) |
+| 13 | LoRA, QLoRA (LoRA + quantization), DoRA, RAFT | [13:34–13:50] | The memory revolution: fine-tune on one GPU | **CS-13 §6.8, CS-11 §4.11** |
+| 14 | Data preparation; full fine-tuning vs parameter-efficient fine-tuning | [13:52–14:00] | The data is the model. Full FT vs PEFT is the first branching decision | CS-13, CS-13 §6.8 |
 | 15 | Ready-made tools: Axolotl, MLX, Unsloth, and the rest | [14:00–14:09] | Removes the training-loop boilerplate entirely | CS-15, CS-16, CS-17 |
-| 16 | Deployment: Ollama, RAG on top of the model, HF Hub, cloud | [14:09–14:27] | A model in a notebook is not a product | CS-28 |
+| 16 | Deployment: Ollama, RAG on top of the model, HF Hub, cloud | [14:09–14:27] | A model in a notebook is not a product | *planned (CS-28)* — CS-13 §15 is nearest |
 | 17 | API-based fine-tuning: OpenAI, Gemini, instruction-based FT | [14:27–14:44] | Rent capability instead of building it; the right answer when your data cannot leave your control *less* than your need for control | CS-18, CS-19 |
-| 18 | Vision-language models: ViT, Qwen-VL, LLaMA-V; multimodal data (image, audio, video) | [15:10–15:56] | The fastest-growing slice of applied fine-tuning | CS-21 |
-| 19 | RLHF — "introduced by ChatGPT, now the backbone of fine-tuning"; PPO vs DPO; preference alignment | [15:59–17:12] | Turns a model that *can* answer into one that answers *the way you want* | CS-14, CS-24, CS-25, CS-26, CS-27 |
-| 20 | Embedding fine-tuning — "embedding is just a set of numbers, a vector" | [17:12–17:44] | Retrieval quality is the ceiling on RAG quality | CS-22 |
-| 21 | Bonus: adapters; evaluation metrics | [17:47–18:04] | Adapters make one base serve many tasks; metrics are how you prove any of it worked | CS-23, CS-28 |
+| 18 | Vision-language models: ViT, Qwen-VL, LLaMA-V; multimodal data (image, audio, video) | [15:10–15:56] | The fastest-growing slice of applied fine-tuning | *planned (CS-21), not yet written*; `code/12_multimodal_vlm.py` |
+| 19 | RLHF — "introduced by ChatGPT, now the backbone of fine-tuning"; PPO vs DPO; preference alignment | [15:59–17:12] | Turns a model that *can* answer into one that answers *the way you want* | CS-14 §4.6.1, §4.6.3, §4.6.9, §4.6.10 |
+| 20 | Embedding fine-tuning — "embedding is just a set of numbers, a vector" | [17:12–17:44] | Retrieval quality is the ceiling on RAG quality | `code/10_embedding_finetune.py` (*"CS-22" planned, unwritten*) |
+| 21 | Bonus: adapters; evaluation metrics | [17:47–18:04] | Adapters make one base serve many tasks; metrics are how you prove any of it worked | CS-13 §6.8; metrics in CS-13 §12 (*capstone CS-28 planned*) |
+
+> **On the "Module" column:** CS-20–CS-28 were planned but never written. Each cell above points at the nearest *written* material; *planned* marks a syllabus item with no written home yet.
 
 **The instructor's own summary of why the topic matters** — worth reading twice, because it is the pitch for the entire handbook:
 
@@ -1504,7 +1506,7 @@ for ref, pred in worst[:5]:
 | Weights changed | All | All | All or adapters | All or adapters |
 | Typical epochs | < 1 | 1–3 | 1–3 | 1–2 |
 | Failure mode | Undertrained / contaminated | Catastrophic forgetting of general ability | Wrong template; overfitting | Reward hacking; sycophancy; hedginess |
-| Module | CS-01 | CS-12 | CS-13 | CS-14, CS-24–27 |
+| Module | CS-01 | CS-12 | CS-13 | CS-14 §4.6.1–§4.6.10 |
 
 ### 13.2 Full fine-tuning vs LoRA vs QLoRA (the decision that recurs in every module)
 
@@ -1539,7 +1541,7 @@ for ref, pred in worst[:5]:
 | Auditability | Prompt is readable | **Citations** | Opaque weights | Traceable |
 | Failure mode | Fragile, prompt-injectable | Retrieval misses; distractor context | Forgetting, template bugs | Compounding errors, cost blowup |
 | Right first move | **Always** | When facts matter | When behaviour matters | When actions matter |
-| Module | — | CS-04 | CS-01…CS-23 | CS-04 |
+| Module | — | CS-04 | CS-01…CS-19 | CS-04 |
 
 ### 13.4 Base vs instruct — head to head
 
@@ -1649,7 +1651,7 @@ Pairwise win vs incumbent : 54% (a modest but real improvement in tone consisten
 **Plan.**
 - Continued pretraining (CS-12) on 2.4B tokens of de-identified internal notes + public medical text, from `Llama-3.2-3B` **base** (not instruct — the alignment would have to be relearned anyway).
 - Then SFT on 8,400 (note, summary) pairs written by clinicians, LoRA r=32.
-- Then DPO (CS-25) on 3,100 clinician preference pairs.
+- Then DPO (CS-14 §4.6.3) on 3,100 clinician preference pairs.
 - Deploy 4-bit AWQ on 1 × L40S (48 GB), on-premises.
 
 **Result.**
@@ -1814,11 +1816,11 @@ Answer these before moving to CS-02. Answers are in the collapsed block at the e
 | Relationship | Module |
 |---|---|
 | **Builds on** | — (this is the entry module) |
-| **Needed by** | CS-02 (transfer learning), CS-05 (RNN→Transformer), CS-06 (Hugging Face), CS-07 (BERT), CS-10/11 (quantization), CS-12 (continued pretraining), CS-13 (SFT), CS-14 (alignment), CS-20 (SLMs), CS-22 (embeddings), CS-23 (LoRA/QLoRA) |
+| **Needed by** | CS-02 (transfer learning), CS-05 (RNN→Transformer), CS-06 (Hugging Face), CS-07 (BERT), CS-10/11 (quantization), CS-12 (continued pretraining), CS-13 (SFT), CS-14 (alignment), CS-13 §6.8 + CS-11 §4.11 (LoRA/QLoRA), `code/10_embedding_finetune.py` (embedding FT). (CS-20/SLMs is planned, unwritten) |
 | **Contrasts with** | CS-04 (fine-tuning vs RAG vs agents — the decision this module's vocabulary enables) |
 | **Deepened by** | CS-05 (why the Transformer unlocked fine-tuning), CS-11 (quantization internals), CH-01 (the formulas, as a lookup card) |
 | **Interview prep** | IQ-01 (100 questions across 5 levels on exactly this material) |
-| **Capstone** | CS-28 (the whole lifecycle, end to end) |
+| **Capstone** | CS-28 — *planned, not yet written*. CS-13 §15 and CS-09 §6 are the nearest assembled pipelines |
 
 ---
 
@@ -2022,7 +2024,7 @@ realistic                         220-230 GB  ->  4 x A100-80GB minimum
 (1) **Overfitting / memorisation** — too many epochs on too little data, or duplicates. Diagnostic: does eval loss rise monotonically after a minimum? Fix: fewer epochs, dedup, more data. (2) **Train/eval split leakage** — near-duplicate rows in both. Diagnostic: run MinHash across splits. (3) **Eval data formatted differently from training data** — a template or truncation mismatch. Diagnostic: decode 5 eval examples and 5 train examples and diff the raw strings. If eval loss is high *from step 0* and never improves, it is (3); if it dips then rises, it is (1).
 
 **4. Causal LM vs MLM supervision.**
-CLM predicts a token at *every* position, so a T-token sequence yields T supervised predictions — 100% supervision. MLM masks ~15% of positions and predicts only those, so a T-token sequence yields ~0.15T supervised predictions — 15% supervision. Additionally, CLM's objective at inference time *is* the generation procedure, and it enables ICL/few-shot prompting. MLM is still better when you need a **bidirectional contextual representation for a discriminative task**: classification (CS-07), NER, extractive QA, and sentence embeddings (CS-22) — a token's meaning depends on what follows it as well as what precedes it, and a causal mask throws that away.
+CLM predicts a token at *every* position, so a T-token sequence yields T supervised predictions — 100% supervision. MLM masks ~15% of positions and predicts only those, so a T-token sequence yields ~0.15T supervised predictions — 15% supervision. Additionally, CLM's objective at inference time *is* the generation procedure, and it enables ICL/few-shot prompting. MLM is still better when you need a **bidirectional contextual representation for a discriminative task**: classification (CS-07), NER, extractive QA, and sentence embeddings (`code/10_embedding_finetune.py`) — a token's meaning depends on what follows it as well as what precedes it, and a causal mask throws that away.
 
 **5. 7B on 2B tokens — A100-hours and cost.**
 ```

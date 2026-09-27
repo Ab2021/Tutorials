@@ -602,9 +602,9 @@ if __name__ == "__main__":
 | BERT fine-tuning for NER, sentiment, QA | CS-07 |
 | Domain-adaptive continued pretraining on your own PDFs | CS-12 |
 | Instruction fine-tuning (SFT) | CS-13 |
-| Embedding fine-tuning — the same transfer logic in a bi-encoder | CS-22 |
+| Embedding fine-tuning — the same transfer logic in a bi-encoder | code/10_embedding_finetune.py (CS-22 planned, not yet written) |
 | Fine-tuning vs RAG vs agents | CS-04 |
-| LoRA & QLoRA, the PEFT deep dive | CS-23 |
+| LoRA & QLoRA, the PEFT deep dive | CS-13 §6.8, CS-11 §4.11 (CS-23 planned, not yet written) |
 | Quantization, and the serving economics of everything above | CS-10, CS-11 |
 | Distillation as an alternative to fine-tuning | CS-08, CS-09 |
 | The interview bank for this module | IQ-02 |

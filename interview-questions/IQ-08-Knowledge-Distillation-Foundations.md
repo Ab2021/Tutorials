@@ -172,7 +172,28 @@
 
 **Q24. Give the `α` convention trap in one answer.**
 
-- **Answer:** Three sources, three meanings, and one of them has since been fixed. `case-studies/CS-08-…md §4.2.4`'s own table labels the notebook's `α` as *"weights soft"* (`α·L_soft + (1−α)·L_hard` → **0.2766** for the worked example) and Hinton's as *"weights hard"* (`α·L_hard + (1−α)·L_soft` → **0.1576**) — **76 % apart for the same physical situation**. `cheat-sheets/CH-08-…md:119` states α as *"weight on the soft (KD) loss"* with default 0.7. And `code/07_distillation.py` **now agrees with Hinton**: `--help` reports *"Weight on the SOFT (KD) term… 0.7 means 70 % distillation / 30 % ground truth"*, the loss line is `alpha * kd + (1 - alpha) * hard`, and the docstring explicitly records that the first version had it backwards — so `--alpha 0.7`, the exact command CH-08 §6 tells you to run, once meant 70 % hard / 30 % KD and now means the opposite. The trap is therefore not "which source is right today" but **"the convention can change under you, and the flag name will not tell you."** A run with the convention backwards trains, its loss falls, and the student has quietly learned mostly from the hard labels — you paid for a teacher and ran plain SFT.
+- **Answer:** There are two separate questions here and most candidates conflate them.
+  **First, what does the *paper* say?** Nothing about `α` — the symbol does not appear in
+  arXiv:1503.02531. Hinton calls it "a weighted average of two different objective functions",
+  names the **soft**-target cross-entropy *first* and the **hard**-label cross-entropy
+  *second*, and reports "a considerably lower weight on the second objective function" (0.5
+  relative on the hard targets in the ASR runs, §4.1). **The soft term carries the larger
+  weight.** So the popular interview line "Hinton's `α` weights the hard term" is a
+  misattribution, and a candidate who says it has repeated folklore rather than read the paper.
+  **Second, where does the confusion come from?** From reimplementers assigning the invented
+  symbol `α` to opposite terms. This notebook (cells 20, 39), CH-08 §4 and
+  `code/07_distillation.py` all put `α` on the **soft** term — `alpha * kd + (1 - alpha) * hard`,
+  default 0.7, matching Hinton's direction. A large family of textbook and blog
+  reimplementations puts `α` on the **hard** term; that reading is a faithful transcription of
+  Hinton's *sentence* ("lower weight on the second objective") and an unfaithful reading of his
+  *physics*. The two give **0.2766 vs 0.1576** on CS-08 §4.2.4's example — 76 % apart for
+  identical teacher, student, `T` and data, with nothing changed but the name.
+  **The transferable answer:** *the loss is unambiguous, the letter is not; read the mixture
+  expression at every call site, and never cite a paper for a symbol it does not contain.*
+  (The repo's own script is the cautionary tale — its first version really did weight the hard
+  term, so `--alpha 0.7`, the command CH-08 §6 told you to run, once meant 70 % hard / 30 % KD
+  and now means the opposite. That run trains either way, its loss falls either way, and in the
+  wrong convention you have paid for a teacher and run plain SFT.)
 - **Why asked:** It is the highest-value trap in the module, and the *reason* it is a trap is that a copy-pasteable command line plus a plausible flag name is not a specification.
 - **Trap:** Reading the flag name instead of the arithmetic on the loss line. `code/07_distillation.py` prints `hard CE`, `KD (x T^2)` and `mixture` on every run precisely so the convention is observable from one forward pass — and it warns when the KD term is under 10 % of the CE term despite carrying most of the weight.
 
@@ -431,7 +452,7 @@ python code/common/memory.py --table
 | Gradient with / without `T²` at T=2 | **−0.21484 / −0.05371** | Within 7 % of T=1 vs 3.7× smaller |
 | Two α conventions, same example | **0.2766 vs 0.1576** | 76 % apart — read the code |
 | `T` default / useful range | **4 / 2–20** | ≥20 is usually noise |
-| `α` weight on the **soft** term / default | **0.7 / 0.7** | CH-08 §4 and the script now agree; Hinton's α weights the *hard* term — CH-09 §2's table is stale |
+| `α` weight on the **soft** term / default | **0.7 / 0.7** | CH-08 §4, CS-08 §7.1 and `code/07_distillation.py` all agree, and all match Hinton's *direction* — the paper itself defines no `α` |
 | Capacity-gap sweet spot / danger | **2–10× / >50×** | Non-monotone; >200× is waste |
 | Epochs | **1–3** | KD overfits too |
 | Top-k storage, 8 B/entry | **6.8 GB** per 42.5M tokens at k=20 | The script's arithmetic |
@@ -448,7 +469,7 @@ python code/common/memory.py --table
 
 ## Answers To The Self-Check Questions From CS-08
 
-**1.** `L = α·T²·KL(q_teacher^T ‖ p_student^T) + (1−α)·CE(y, p_student)` with `q` the teacher's temperature-softened distribution, `p` the student's, `T` the softening temperature, `y` the one-hot label, `α` the mixing weight. **Hinton's `α` weights the hard term** (`α·L_hard + (1−α)·L_soft`, giving 0.1576 in CS-08 §4.2.4); the notebook's `alpha_soft` weights the **soft** term (`α·L_soft + (1−α)·L_hard`, giving 0.2766); `code/07_distillation.py` follows the Hinton convention and documents `--alpha` as *"Weight on the HARD-label CE term"*. Name your convention in the code.
+**1.** `L = α·T²·KL(q_teacher^T ‖ p_student^T) + (1−α)·CE(y, p_student)` with `q` the teacher's temperature-softened distribution, `p` the student's, `T` the softening temperature, `y` the one-hot label, `α` the mixing weight. Here `α` names the **soft** term, giving 0.2766 on CS-08 §4.2.4's example; naming the hard term with the same letter gives 0.1576 — 76 % apart for identical physics. **Hinton's paper defines no `α` at all**: it calls the loss "a weighted average of two different objective functions", names the soft-target term first, and puts the *lower* weight on the hard targets (0.5 relative in the ASR runs). The notebook's `alpha_soft`, CH-08 §4 and `code/07_distillation.py` (default 0.7, documented as *"Weight on the SOFT (KD) term"*) all follow that direction. Name the term your symbol weights in the code — and never cite a paper for a symbol it does not contain.
 
 **2.** `∂L_soft/∂z_k = (1/T)(p_k − q_k)` for the temperature-scaled logits, hence `∝ 1/T²` once the `z/T` chain rule is included. The `T²` multiplier exists to restore the `(p_k − q_k)` gradient magnitude you had at `T = 1`, so that temperature controls the *shape* of the target rather than its weight. As `T → ∞`, `p^T` and `q^T` both tend to uniform, `KL → 0`, and the objective degenerates to the hard term plus a constant — which is why the useful range stops around 20.
 
@@ -470,9 +491,37 @@ python code/common/memory.py --table
 
 ### Corrections to CH-08 discovered while writing this bank
 
-> **Correction:** `cheat-sheets/CH-08-Knowledge-Distillation.md` contradicts itself on top-k storage, and the card never flags it. §2's formula table (line 45) prescribes `k × (4 + 4) × tokens` — **8 bytes per entry** — and its worked example is `20 × 8 × 1M = 160 MB`. But §7.1 (lines 406–408) gives top-20 fp16 = **120 B/token**, top-50 = **300 B**, top-100 = **600 B**, i.e. **6 bytes per entry** (fp16 value + int32 index), and §10 (line 527) repeats "Top-20 fp16 | **120 B/token**". The two differ by **33 %**: at 8 B/entry, k = 20/50/100 gives 160/400/800 B per token; at 6 B/entry, 120/300/600 B. `code/07_distillation.py` charges 8 B/entry and says so twice — *"top-k fp32 logit + int32 index = 8 bytes per entry"* with the arithmetic `a.top_k * 8` — and `CH-09 §7.3` (lines 459–462) documents the 8-vs-6 split *across* cards but not this internal disagreement. **Quote 8 B/entry when citing the script, 6 B/entry when citing CH-08 §7.1, and always state which** — the difference is the one CH-09 already warns costs you 33 %.
+> **Settled:** `cheat-sheets/CH-08-Knowledge-Distillation.md` used to contradict itself on top-k
+> storage — §2's formula table prescribed `k × (4 + 4) × tokens` (**8 bytes per entry**, worked as
+> `20 × 8 × 1M = 160 MB`) while §7.1's table gave top-20 **fp16** = **120 B/token**, top-50 = 300 B,
+> top-100 = 600 B, i.e. **6 bytes per entry** (fp16 value + int32 index). A 33 % spread inside one
+> card. The row is now precision-explicit — `k × (4 B index + value bytes) × tokens`, with both
+> `k=20 fp16 → 120 MB` and `k=20 fp32 → 160 MB` shown — so the two tables agree by construction.
+>
+> **The reusable point is the one that survives the fix:** the entry size is not a property of
+> *top-k storage*, it is a property of *the precision you cached the values in*. `code/07_distillation.py`
+> charges 8 B/entry (*"top-k fp32 logit + int32 index"*, arithmetic `a.top_k * 8`); CH-08 §7.1's
+> table is fp16 and charges 6. Both are right about their own tensor. **Whenever you quote a
+> bytes-per-entry figure, name the value precision in the same breath** — otherwise the number is
+> 33 % wrong for half your readers, and silently so.
 
-> **Correction:** `cheat-sheets/CH-08-Knowledge-Distillation.md:328` shows the run-it command `python code/07_distillation.py --token-kd --dry-run --text data/corpus.txt --size-hint 32B -T 4 --alpha 0.7 --top-k 20`, while the same file's §4 table (line 119) defines α as *"Weight on the soft (KD) loss vs hard-label CE"* with default **0.7**. These now **agree**: `code/07_distillation.py --help` reports `--alpha` as *"Weight on the SOFT (KD) term… 0.7 means 70 % distillation / 30 % ground truth"*, the loss line is `alpha * kd + (1 - alpha) * hard`, and the script's own docstring records that an earlier revision had the convention inverted, so that `--alpha 0.7` once produced 70 % hard / 30 % KD. **CH-08 §6's command is now correct** — but `cheat-sheets/CH-09-Distillation-LLM-to-SLM.md:756–764` still carries a Correction asserting the script weights the **hard** term and citing "line 317", which describes the pre-fix revision. That block is stale. **Read `--help` and the loss line of the file in front of you; do not trust a quoted line number.**
+> **Settled:** `cheat-sheets/CH-08-Knowledge-Distillation.md:328` shows the run-it command
+> `python code/07_distillation.py --token-kd --dry-run --text data/corpus.txt --size-hint 32B -T 4
+> --alpha 0.7 --top-k 20`, and the same file's §4 table (line 119) defines α as *"Weight on the
+> soft (KD) loss vs hard-label CE"* with default **0.7**. These once disagreed — the script used to
+> weight the **hard** term, so `--alpha 0.7` produced 70 % hard / 30 % KD — and every card that
+> reported the disagreement (`CH-09` §2, §4.1 and its Correction block; the IQ-08 and IQ-09
+> corrections that quoted them) has since been reconciled. `code/07_distillation.py --help` now
+> reads *"Weight on the SOFT (KD) term… 0.7 means 70 % distillation / 30 % ground truth"*, its loss
+> line is `a.alpha * kd + (1 - a.alpha) * hard`, and its docstring records the fix.
+>
+> **Two lessons outlive the fix.** (1) **Read `--help` and the loss line of the file in front of
+> you; never trust a quoted flag default or line number in a card — including this one.** A
+> correction block is a snapshot of a defect, and it expires the moment someone fixes the defect;
+> several blocks in this bank had to be rewritten for exactly that reason during the same pass that
+> fixed the code. (2) **A defect that lives in prose has to be fixed wherever the prose is
+> duplicated.** The α convention was wrong in one script and correctly *reported* as wrong in four
+> markdown files; fixing the script silently invalidated all four reports.
 
 > **Correction (the reduction, which is shape-dependent):** `cheat-sheets/CH-08-Knowledge-Distillation.md:180` uses `F.kl_div(s_log, t_soft, reduction="batchmean") * (T * T)` on a **full-vocabulary** tensor, where `batchmean` divides by the batch dimension and is right. `code/07_distillation.py` operates on a **top-k truncated** tensor and therefore uses `reduction="sum"` divided by the position count instead — its comment states that `batchmean` there *"would divide by `top_k`, not by the position count."* Both are correct for their own tensor; neither is correct for the other's. When you quote a reduction, **say which tensor it is applied to**.
 

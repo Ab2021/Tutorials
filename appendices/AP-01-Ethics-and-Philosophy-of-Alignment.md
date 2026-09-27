@@ -13,7 +13,7 @@
 
 > **Why this file exists.** `_MANIFEST.md` says it plainly: the Justice transcript *"is **not** a fine-tuning topic — it was bundled by accident. It is used only for AP-01, which bridges moral philosophy → 'what is a preference, and who gets to encode it' → RLHF. **It must not leak into the technical modules.**"* That sentence is the contract for this appendix, and this appendix is the entire budget for it.
 
-> **What this appendix is.** A **bridge**, not a second alignment tutorial. RLHF, DPO, ORPO and GRPO are owned by CS-14 and by CS-24–CS-27. This file does not re-derive them and does not re-explain them; it assumes you have read CS-14 §4 and it points at the exact section for every mechanical claim. What it does instead is take the one question the engineering modules deliberately bracket — *whose ranking is `chosen`, and by what right* — and answer it far enough that you can name the hyperparameter, dataset decision, or metric that changes as a result.
+> **What this appendix is.** A **bridge**, not a second alignment tutorial. RLHF, DPO, ORPO and GRPO are owned by CS-14 and by CS-24–CS-27 (**CS-24–CS-27** are planned, not yet written; CS-14 §4.6 is the written treatment of all four). This file does not re-derive them and does not re-explain them; it assumes you have read CS-14 §4 and it points at the exact section for every mechanical claim. What it does instead is take the one question the engineering modules deliberately bracket — *whose ranking is `chosen`, and by what right* — and answer it far enough that you can name the hyperparameter, dataset decision, or metric that changes as a result.
 
 > **What this appendix is not.** It is not an ethics review process, not a compliance manual, and not a substitute for the legal material in CS-12 §4.12 (the four regimes governing training data) and CS-01 §16.5 (the compliance angle). It does not adjudicate any moral dispute, and it will not tell you what your model should value. It tells you *where in your pipeline the question is already being answered without your noticing*, which is a different and more useful thing.
 
@@ -74,7 +74,7 @@ Written down so the file can be audited against it:
 - A concept in §3 that does not name a **data, metric, hyperparameter, or gate** in its "maps onto" line. (There is one exception, §3.15, and it is flagged as the weakest mapping in the file rather than quietly padded.)
 - A claim attributed to the lecture without a timestamp, or with a timestamp that does not exist. Every `[MM:SS]` in this file is in the Episode 01 transcript.
 - A cross-reference to a section that does not exist. Every `CS-NN §M` was verified by grep against the file; §13 lists them.
-- Re-teaching RLHF or DPO. If you want the DPO loss, it is CS-14 §4.6.3 and CS-25.
+- Re-teaching RLHF or DPO. If you want the DPO loss, it is CS-14 §4.6.3 (CS-25 is planned, not yet written).
 - A §10 scenario that ends in "the team discussed it and felt better". Every scenario ends in a diff.
 
 ### 1.4 The scope contract
@@ -806,7 +806,7 @@ The boundary. Every question below is one this file has deliberately not answere
 | Question this appendix does NOT answer | Why it is out of scope here | Owning module and section |
 |---|---|---|
 | How does RLHF/PPO actually work, mechanically? | Re-teaching it would violate the manifest's scope note | CS-14 §4.6.1–§4.6.2 |
-| How is the DPO loss derived? | This is a bridge, not a derivation | CS-14 §4.6.3; CS-25 (not yet written) |
+| How is the DPO loss derived? | This is a bridge, not a derivation | CS-14 §4.6.3 (CS-25 planned, not yet written) |
 | What are the memory costs of each method? | Pure engineering | CS-14 §4.7; CS-14 §11.1 |
 | How do I write a preference annotation guideline? | The eight required fields are already specified | CS-14 §4.3.4 |
 | How do I measure inter-annotator agreement? | κ, α, Spearman, and the calibration recipe are already specified | CS-14 §4.3.5 |

@@ -990,7 +990,7 @@ Four independent errors in this cell, all of which must be fixed before it means
 | Any sequence longer than ~100 tokens | Reduce `max_len`, or switch to TBPTT with `stateful=True` and `k=35–100` | Full BPTT over 200 steps is where the vanishing gradient bites hardest |
 | Any seq2seq task | Add attention over `encoder_outputs`; implement real teacher forcing; use one shared tokenizer | The `(h,C)` bottleneck is the single largest source of quality loss |
 | Deployment | Save `model.keras` (not `.h5`) **plus** the tokenizer config, the vocab, the label map, and metrics | HDF5 is legacy and carries no preprocessing provenance |
-| Anything at all in 2026 | Do not do this. Use a pretrained transformer + LoRA (CS-23) | The whole point of this module |
+| Anything at all in 2026 | Do not do this. Use a pretrained transformer + LoRA (CS-13 §6.8, CS-11 §4.11) | The whole point of this module |
 
 ---
 
@@ -1798,7 +1798,7 @@ Covered numerically in §4.6.3. The serving consequences:
 | Relationship | Module |
 |---|---|
 | Builds on | **CS-01** (pretraining/training lifecycle — the "why does a base model exist" framing), **CS-02** (transfer learning — the concept this module explains the pre-history of) |
-| Needed by | **CS-06** (Hugging Face — the tooling that did not exist here), **CS-07** (fine-tuning BERT — the first architecture that made this module's problems go away), **CS-23** (LoRA/QLoRA — the parameter-efficiency argument that §4.6.2's 2/3-FFN split motivates) |
+| Needed by | **CS-06** (Hugging Face — the tooling that did not exist here), **CS-07** (fine-tuning BERT — the first architecture that made this module's problems go away), **CS-13 §6.8 + CS-11 §4.11** (LoRA/QLoRA — the parameter-efficiency argument that §4.6.2's 2/3-FFN split motivates; a dedicated "CS-23" module is planned but unwritten) |
 | Contrasts with | **CS-04** (FT vs RAG vs agents — a different axis of "when to use which") |
 | Reuses | **CH-05** (the equations reference), **IQ-05** (the interview bank) |
 

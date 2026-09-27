@@ -894,7 +894,7 @@ ACTIVE = os.environ.get("ACTIVE_MODEL", "support-v1")     # env-var rollback, no
 | To train the same data yourself, on your own GPU, with the weights | **CH-13 / CS-13 — Instruction Fine-Tuning** |
 | To know when fine-tuning is the wrong tool at all | **CH-04 / CS-04 — Fine-Tuning vs RAG vs Agents** |
 | To recover an artefact from an endpoint-only model | **CH-09 / CS-09 — Distillation: LLM → SLM** |
-| To train on preferences instead of demonstrations | **CH-14 — The Alignment Map**; CS-25 for the DPO loss |
-| To make the open-weight path cheap enough to be the migration target | **CH-10 — Quantization**; CS-23 — LoRA & QLoRA |
+| To train on preferences instead of demonstrations | **CH-14 — The Alignment Map**; **CS-14 §4.6.3** for the DPO loss |
+| To make the open-weight path cheap enough to be the migration target | **CH-10 — Quantization**; **CS-13 §6.8** / **CS-11 §4.11** (CS-23 planned, not yet written) |
 | To run the numbers on the handbook's fixture | `code/13_openai_finetune.py` (`--validate`, `--estimate`) |
 | To practise being interviewed on this | **IQ-18 — Interview Questions: OpenAI GPT Fine-Tuning** |

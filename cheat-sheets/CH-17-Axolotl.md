@@ -887,8 +887,8 @@ hyperparameter.
 | The fast single-GPU path for one-off runs | **CS-16 — Unsloth** |
 | What SFT is actually doing — masking, templates, epochs | **CH-13 / CS-13 — Instruction Fine-Tuning** (§4.2 masking, §8 symptom table) |
 | Preference tuning from a YAML — DPO/ORPO/KTO/GRPO and what β means | **CH-14 / CS-14 — The Alignment Map** |
-| LoRA/QLoRA maths — `r`, `alpha/r`, NF4, double quantisation | **CS-23 — LoRA & QLoRA** |
-| Attention backends (FA2/FA3/sdpa/flex) and why packing needs varlen; ZeRO vs FSDP2 | **AP-03 — Attention Backends**; **AP-05 — Distributed Training**; CS-17 §4.3.4, §4.8.4 |
+| LoRA/QLoRA maths — `r`, `alpha/r`, NF4, double quantisation | **CS-13 §6.8**, **CS-11 §4.11** (CS-23 planned, not yet written) |
+| Attention backends (FA2/FA3/sdpa/flex) and why packing needs varlen; ZeRO vs FSDP2 | CS-17 §4.3.4, §4.8.4 (AP-03 and AP-05 are planned, not yet written) |
 | Quantising and deploying the merged model; versioning and rolling back the adapter | **CH-10 / CH-11 — Quantization**; CS-17 §16; `code/15_serve_vllm.py` |
 | The Python equivalent of every snippet above, with the traps pre-checked | `code/01_sft_lora.py`, `code/04_dpo.py`, `code/09_merge_and_export.py` |
 | Practice being interviewed on this | **IQ-17 — Interview Questions: Axolotl** |

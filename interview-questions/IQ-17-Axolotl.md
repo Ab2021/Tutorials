@@ -520,4 +520,8 @@ Write the assertions a training script should run before it spends a GPU-hour, g
 | **Serving — `code/09_merge_and_export.py`, `code/15_serve_vllm.py`** | What happens to the adapter after training: `merge-lora`, vLLM serving, rollback. There is no production/serving case study yet — **CS-24 is *RL Fundamentals & RLHF with PPO*** (README Part VI, not yet written) |
 | **CS-04** Fine-Tuning vs RAG vs Agents | Read before any of this; every `type:` question presupposes the answer to "should you be fine-tuning at all" |
 | **CS-18 / CS-19** Managed fine-tuning | The opposite trade: no weights, no YAML, and a recurring bill instead of a GPU-hour |
-| **`code/common/memory.py --table`** | The measured VRAM floor quoted throughout — run it, do not trust
+| **`code/common/memory.py --table`** | The measured VRAM floor quoted throughout — run it, do not trust a table, including this one |
+
+---
+
+*End of IQ-17. Companion artifacts: `CS-17-Axolotl.md` (case study), `CH-17-Axolotl.md` (cheat sheet). Ground truth: `code/common/memory.py --table`, CS-17 §1.4's step identity, and Axolotl issues #3453 / #3608 (CS-17 §4.6.4, Appendix B.2).*

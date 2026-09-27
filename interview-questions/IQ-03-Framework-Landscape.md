@@ -992,11 +992,11 @@ Predibase      → PEFT adapter or merged weights                   ── expor
 
 | Relationship | Module |
 |---|---|
-| Builds on | **CS-01** (LLM lifecycle), **CS-02** (transfer learning), **CS-23** (LoRA/QLoRA mechanics) |
+| Builds on | **CS-01** (LLM lifecycle), **CS-02** (transfer learning), **CS-13 §6.8** (LoRA/QLoRA mechanics; CS-23 planned, not yet written) |
 | This file's source | **CS-03** (framework landscape — all sections) |
 | Companion card | **CH-03** (per-framework quick reference, decision tree, CLI surface, interop notes) |
-| Needed by | **CS-05** (data prep per framework), **CS-17/18/19** (LLaMA-Factory, Unsloth, Axolotl hands-on), **CS-30/31** (serving the fine-tune), **CS-34** (evaluation) |
+| Needed by | **CS-05** (data prep per framework), **CS-15/16/17** (LLaMA-Factory, Unsloth, Axolotl hands-on), **CS-13 §12** (evaluation); serving (**CS-30/31**) planned, not yet written |
 | Contrasts with | **CS-04** (fine-tune vs RAG vs prompting — decide *whether* before *how*), **CS-10/11** (inference quantization: GPTQ/AWQ/GGUF vs training-time 4-bit) |
-| Pairs with | **CS-25** (DPO), **CS-26** (GRPO/RLVR), **CS-27** (ORPO) for which framework exposes which method; **CS-12** (continued pretraining) for the CPT rows |
+| Pairs with | **CS-14 §4.6.3–4.6.10** (DPO/GRPO/ORPO) for which framework exposes which method; **CS-12** (continued pretraining) for the CPT rows |
 | Sibling interview banks | **IQ-01** (foundations), **IQ-02** (transfer learning), **IQ-04+** |
 

@@ -38,7 +38,7 @@ Run it
 ------
     python 02_sft_unsloth.py --dry-run --data data/sample_sft.jsonl
     python 02_sft_unsloth.py --data data/sample_sft.jsonl --out out/unsloth-lora
-    python 02_sft_unsloth.py --data data/sft.jsonl --model Qwen/Qwen2.5-7B-Instruct \
+    python 02_sft_unsloth.py --data data/sft.jsonl --model Qwen/Qwen2.5-7B-Instruct \\
         --max-seq-len 4096 --r 32 --out out/unsloth-lora
 """
 
@@ -115,6 +115,13 @@ def parse_args():
     p = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--data", required=True, help="SFT jsonl (alpaca/sharegpt/openai/completion)")
+    p.add_argument("--format", default="alpaca", choices=sorted(du.FORMAT_LOADERS),
+                   help="Which row schema --data uses. There is no auto-detection, so this "
+                        "must match the file: loading sharegpt rows as alpaca raises "
+                        "KeyError('instruction'). That error is loud, which is the good "
+                        "case — but before this flag existed there was no way to load a "
+                        "non-alpaca file at all, because the loader was called with its "
+                        "default. Set this to match your file.")
     p.add_argument("--out", default="out/unsloth-lora")
     p.add_argument("--model", default=None, help="HF id, an Unsloth 4-bit id, or a key from MODEL_MAP")
     p.add_argument("--max-seq-len", type=int, default=DEFAULTS["max_seq_len"])
@@ -208,7 +215,7 @@ def main() -> None:
     # by 20-40% across tokenizers, which is exactly the margin that decides whether your
     # responses survive truncation.
     # ----------------------------------------------------------------------------------
-    convs = du.load_jsonl(a.data)
+    convs = du.load_jsonl(a.data, fmt=a.format)
     print(f"\n  ── data ──")
     print(f"  rows               {len(convs)}")
 
@@ -380,7 +387,7 @@ def _train(a, model_id: str) -> None:
         )
 
     # ---- dataset --------------------------------------------------------------------
-    convs = du.load_jsonl(a.data)
+    convs = du.load_jsonl(a.data, fmt=a.format)
     eos = tokenizer.eos_token or ""
 
     def to_text(messages: list[dict]) -> dict:

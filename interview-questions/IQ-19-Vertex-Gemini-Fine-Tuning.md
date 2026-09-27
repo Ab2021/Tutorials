@@ -171,7 +171,7 @@
 
   - **Changing *how* the model says things** → PEFT at rank 4–8. Cheaper and sufficient.
   - **Changing *what* it says, broadly** → full tuning, but **re-read CS-13 §4.1 first: "SFT injects facts weakly and expensively."** RAG or continued pretraining is usually the right answer.
-  - **Getting a portable artefact** → **neither.** "Vertex cannot give you one. Go to CS-16 / CS-17 / CS-23."
+  - **Getting a portable artefact** → **neither.** "Vertex cannot give you one. Go to CS-16 / CS-17 / CS-23." *(CS-23 is planned, not yet written — **CS-13 §6.8** / **CS-11 §4.11** carry that material.)*
 
 - **Why asked:** The third branch is the one that matters. A candidate who only knows the first two will recommend Vertex for a project whose actual requirement is ownership.
 - **Trap:** "Full tuning is the way to inject domain facts." §17 #3: the fine-tuned model "will know my private business data" only weakly, and only if the behaviour is formatting rather than facts. The demo question ("why do phones have a one-year warranty?") is **a fact Gemini already knew** — "nothing in the video's demo distinguishes a tuned model from a prompted one."
@@ -578,15 +578,15 @@ Write the checks a CI job should run before a Vertex tuning job is created.
 | **CS-18 / CH-18** OpenAI Fine-Tuning | The other managed platform in full, including the break-even algebra that does *not* port to Vertex |
 | **IQ-17** Axolotl | The open-weight answer to §7.5's third branch — "Is your goal to get a portable artefact?" |
 | **CS-17 / CH-17** Axolotl | The config-driven trainer the migration target is built with |
-| **CS-13** Instruction Fine-Tuning | §4.1's argument that "SFT injects facts weakly and expensively," cited three times in CS-19 |
+| **CS-13** Instruction Fine-Tuning | §4.1 — "What SFT actually does to a base model: the two theses" — Thesis A (SFT teaches the model to *respond*) vs Thesis B (SFT injects knowledge). CS-19 invokes it twice, once as the decision-rule annotation *"SFT injects facts weakly and expensively"* (§7.5) and once as "SFT injects facts weakly (CS-13 §4.1)" in the §8.2 decision table — **and note the phrase is CS-19's own wording, not a CS-13 quotation** |
 | **CS-04** Fine-Tuning vs RAG vs Agents | CS-19 §7.5's prescribed alternative when the requirement is facts rather than form; Case C (§15.3) is the team that should have used it. (**CS-05 is *RNN-LSTM to Attention***, unrelated to retrieval) |
 | **CS-12** Domain-Adaptive Continued Pretraining on Your Own PDFs | The other prescribed alternative for injecting domain knowledge |
 | **CS-23** LoRA & QLoRA: the PEFT deep dive | Why `adapterSize` is a rank, and what ranks 4/8/16/32 actually buy on the open-weight side — CS-19 §7.5 and §4.3 cite it by name. **Planned, not yet written** (README Part V); until then CS-11 §4.11 is the written QLoRA treatment |
 | **CS-10 / CS-11** Quantisation | What §11.4 means by "with open weights you control quantisation… which is where the 3–10× cost wins live" |
 | **CS-22** Embedding Models and Embedding FT | Note the title: **embeddings, not evaluation.** CS-19's only citations of it are the `§16.4` monitoring row *"Data-drift proxy: input embedding centroid shift"* and the standing cross-reference table that points back at that row — a drift detector, not an eval framework. **Planned, not yet written** (README Part V); `code/10_embedding_finetune.py` is the written material. The evaluation stack behind §12 has **no home case study** — CS-19 §12.3's `eval_ab.py` fixture and `code/common/eval_utils.py` are what exists |
 | **`code/common/eval_utils.py`** | The written evaluation primitives this bank's §12 questions assume: `exact_match`, `format_compliance`, `refusal_rate`, `win_rate`, `bootstrap_ci`, `decontaminate` |
-| **CS-16 / CS-17 / CS-23** | CS-19 §7.5's explicit routing for the portable-artefact branch |
-| **AP-01** Ethics & Compliance | Provenance, erasure, CMEK, VPC-SC and endpoint access control — §16.7's checklist. **Planned, not yet written** — README lists appendices as 0 / 1 |
+| **CS-16 / CS-17** (plus **CS-13 §6.8** / **CS-11 §4.11** for the CS-23 material) | CS-19 §7.5's explicit routing for the portable-artefact branch (CS-23 planned, not yet written) |
+| **AP-01** Ethics & Compliance (`appendices/AP-01-Ethics-and-Philosophy-of-Alignment.md`) | Provenance, erasure, CMEK, VPC-SC and endpoint access control — §16.7's checklist — plus the preference-elicitation and annotator-consent material behind §16.3's data-governance rows |
 
 ---
 

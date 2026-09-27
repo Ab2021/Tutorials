@@ -382,14 +382,14 @@ and is told the model is `unsloth/Qwen2.5-7B-Instruct-bnb-4bit`, and asked to de
 | Relationship | Module | Why |
 |---|---|---|
 | **Builds on** | **CS-13 / CH-13** — Instruction Fine-Tuning | The dataset schema, chat template, assistant-only masking concept and eval protocol are defined there; Unsloth changes how fast that pipeline runs, not what it does (CS-16 §20). |
-| **Builds on** | **CS-06 / CH-06** — Hugging Face Ecosystem | Unsloth is an extension of `transformers` + `peft` + `trl`; nothing here makes sense without the `AutoModel`/`Trainer`/`datasets` model. |
-| **Builds on** | **CS-05 / CH-05** — Datasets & Data Preparation | Packing, the p99.5 sequence-length decision, and dataset fingerprinting for lineage (CS-16 §16.2) are data-engineering concerns. |
+| **Builds on** | **CS-06 / CH-06** — Hugging Face Masterclass | Unsloth is an extension of `transformers` + `peft` + `trl`; nothing here makes sense without the `AutoModel`/`Trainer`/`datasets` model. |
+| **Builds on** | **CS-01 §4.9** — Data quality (dedup, filtering, contamination, licensing) | Packing, the p99.5 sequence-length decision, and dataset fingerprinting for lineage (CS-16 §16.2) are data-engineering concerns. (**CS-05 / CH-05** are *RNN/LSTM → Attention*, not data preparation) |
 | **Builds on** | **CS-10 / CH-10 and CS-11 / CH-11** — Quantization I and II | NF4, double quantization, blockwise absmax, the dequantize → compute → requantize round trip, and GPTQ/AWQ/GGUF export are defined there; this module's §4.6 and §6.9 are their consequences. |
-| **Parallel to** | **CS-14** — Parameter-Efficient Fine-Tuning | The adapter mathematics. Unsloth optimises the LoRA graph; that module derives it — read it first if `dA`/`dB` in §4.3 look unfamiliar. |
+| **Parallel to** | **CS-13 §6.8** / **CS-11 §4.11** — LoRA & QLoRA | The adapter mathematics. Unsloth optimises the LoRA graph; those sections derive it — read them first if `dA`/`dB` in §4.3 look unfamiliar. (**CS-14** is *The Alignment Map*, not PEFT; the **CS-23** PEFT deep dive is planned, not yet written) |
 | **Contrasts with** | **CS-17** — Axolotl | The nearest alternative and the natural next step once the single-GPU ceiling binds: FSDP, YAML configs, a broader method menu. CS-16 §8.1, §15.2 and §19 answer 10 pick between them. |
 | **Contrasts with** | **CS-15** — LLaMA-Factory | Both wrap a training stack; LLaMA-Factory is config-driven and multi-method/multi-GPU, Unsloth is code-driven, single-GPU and kernel-level. |
 | **Contrasts with** | **CS-18 / CS-19** — OpenAI / Vertex fine-tuning | Hosted APIs: zero ops, no kernel access, no adapter artefact, no data residency control. CS-16 §16.6 is the compliance comparison. |
-| **Needed by** | **CS-04** — Evaluation & Experiment Tracking | The benchmarking discipline in CS-16 §12 (warmup, matched step counts, tokens/sec not steps/sec, config diffing) is the general version of what §4.7.2 demands. |
+| **Needed by** | **CS-13 §12** / **CS-14 §12** — Evaluation (*How To Know It Worked*) | The benchmarking discipline in CS-16 §12 (warmup, matched step counts, tokens/sec not steps/sec, config diffing) is the general version of what §4.7.2 demands. (**CS-04** is *Fine-Tuning vs RAG vs Agents*, not evaluation) |
 | **Sibling banks** | **IQ-10, IQ-11, IQ-13** | IQ-10/IQ-11 own quantization; IQ-13 owns SFT practice. This bank owns the Unsloth-specific layer over both. |
 
 *End of IQ-16. Companion artifacts: `case-studies/CS-16-Unsloth.md`, `cheat-sheets/CH-16-Unsloth.md`, `code/02_sft_unsloth.py`.*

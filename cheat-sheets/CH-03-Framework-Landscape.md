@@ -4,7 +4,7 @@
 **Use when:** Choosing a framework, moving a config or adapter between frameworks, sizing a multi-GPU run, or answering "which one would you use for X?" under interview pressure.
 **Do NOT use when:** You need the reasoning behind a recommendation — that is CS-03. This card gives the answer, not the argument.
 
-> Pairs with **CS-03** (case study) and **IQ-03** (interview bank). Deep dives: **CS-23** (LoRA/QLoRA), **CS-25/26/27** (DPO/GRPO/ORPO), **CS-30/31** (serving), **CS-34** (evaluation).
+> Pairs with **CS-03** (case study) and **IQ-03** (interview bank). Deep dives: **CS-13 §6.8 / CS-11 §4.11** (LoRA/QLoRA), **CS-14 §4.6.3–4.6.10** (DPO/GRPO/ORPO), serving (`code/15_serve_vllm.py`, `code/09_merge_and_export.py`; CS-30/31 planned, not yet written), **CS-13 §12 / CS-14 §12** (evaluation).
 
 ---
 
@@ -679,12 +679,12 @@ cost is the constraint    -> any trainer + SkyPilot spot + save_steps: 250
 |---|---|
 | The reasoning, evidence and instructor quotes behind every row here | **CS-03** |
 | 102 interview questions with traps, rapid-fire, and 5 whiteboard tasks | **IQ-03** |
-| LoRA/QLoRA mechanics, `target_modules`, rank selection, merging | **CS-23** |
+| LoRA/QLoRA mechanics, `target_modules`, rank selection, merging | **CS-13 §6.8**, **CS-11 §4.11** |
 | Whether to fine-tune at all, versus RAG or prompting | **CS-04** |
 | Hands-on per framework: LLaMA-Factory, Unsloth, Axolotl | **CS-17, CS-18, CS-19** |
-| Which framework exposes DPO / GRPO / ORPO, and when to use each | **CS-25, CS-26, CS-27** |
+| Which framework exposes DPO / GRPO / ORPO, and when to use each | **CS-14 §4.6.3–4.6.10** |
 | Continued pretraining (the CPT rows in the matrix) | **CS-12** |
 | Inference quantization (GPTQ/AWQ/GGUF) vs training-time 4-bit | **CS-10, CS-11** |
-| Serving the merged model or the adapter (vLLM, multi-LoRA) | **CS-30, CS-31** |
-| Evaluation harnesses and LLM-as-judge (FastChat's real value) | **CS-34** |
-| Multi-tenant adapter serving | CS-30/31; OpenLLM/Predibase LoRAX in **CS-03 §4.9, §4.18** |
+| Serving the merged model or the adapter (vLLM, multi-LoRA) | `code/15_serve_vllm.py`, `code/09_merge_and_export.py` (CS-30/31 planned, not yet written) |
+| Evaluation harnesses and LLM-as-judge (FastChat's real value) | **CS-13 §12.4**, `code/common/eval_utils.py` (CS-34 planned, not yet written) |
+| Multi-tenant adapter serving | CS-30/31 planned, not yet written; OpenLLM/Predibase LoRAX in **CS-03 §4.9, §4.18** |

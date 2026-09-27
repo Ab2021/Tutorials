@@ -6,7 +6,7 @@
 | **Source video(s)** | `LLM Fine-Tuning 04: Top 10 LLM Fine-Tuning Frameworks for 2025 \| Best Tools for Finetuning AI Agents` |
 | **Transcript file(s)** | `LLM_Fine-Tuning_04_Top_10_LLM_Fine-Tuning_Frameworks_for_2025_Best_Tools_for_Fin.txt` |
 | **Companion code** | `LLM Fine-Tuning-04\` contains only a PDF deck (no notebook). Config artefacts borrowed from `LLM Fine-Tuning-17-Llama-Factory\train_gemma_qlora.yaml`, `LLM Fine-Tuning-19-Axolotl\axolotal-config\*.yaml`, `LLM Fine-Tuning-18-unsloth\unsloth_practical.ipynb` |
-| **Prerequisites** | CS-01 (LLM lifecycle), CS-02 (transfer learning), CS-23 (LoRA/QLoRA) |
+| **Prerequisites** | CS-01 (LLM lifecycle), CS-02 (transfer learning), CS-13 §6.8 + CS-11 §4.11 (LoRA/QLoRA) |
 | **Difficulty** | Beginner → Intermediate (the material is introductory; the added production sections are Intermediate/Advanced) |
 | **Hands-on required** | No for the video itself; **Yes** if you want the decision tree to be trustworthy — install two frameworks and run the same 5k-example SFT job twice |
 | **Estimated study time** | 3h theory + 6h practical (2 frameworks × SFT + DPO) |
@@ -153,13 +153,13 @@ The framework's job is to make the regime in the last two rows *one config key*.
 | **SFT** | Supervised fine-tuning on (prompt, response) pairs | The default first stage; CS-13 | Confused with "instruction tuning" as if it were a different mechanism — it is the same loss |
 | **CPT** | Continued pretraining — next-token loss on raw unlabelled domain text | Domain adaptation (CS-12); changes the base, not the behaviour | Confused with SFT; CPT does not teach instruction-following |
 | **PEFT** | Parameter-efficient fine-tuning: adapters, LoRA, prefix, prompt, IA³ | The `peft` library; makes 7B fit on consumer GPUs | "PEFT = LoRA" — LoRA is one of ~10 PEFT methods |
-| **LoRA** | Low-rank update `ΔW = BA`, `B∈R^{d×r}`, `A∈R^{r×k}` | CS-23; the default adapter | People think `r` is a quality dial; it is a capacity dial with sharp diminishing returns |
+| **LoRA** | Low-rank update `ΔW = BA`, `B∈R^{d×r}`, `A∈R^{r×k}` | CS-13 §6.8; the default adapter | People think `r` is a quality dial; it is a capacity dial with sharp diminishing returns |
 | **QLoRA** | LoRA on top of a 4-bit NF4 base model | The reason a 7B fine-tune fits in 24 GB | "QLoRA loses quality" — the base is 4-bit, the *adapter* trains in bf16 |
 | **DoRA** | Weight-decomposed low-rank adaptation: magnitude + direction | +1–4 pts over LoRA at ~2× step cost | Assuming it is always better — it is not, for large `r` |
-| **DPO** | Direct Preference Optimisation — closed-form preference loss, no reward model | CS-25; the workhorse of alignment | "DPO = RLHF without PPO" is roughly right but DPO still needs an SFT reference model |
-| **ORPO** | Odds-Ratio Preference Optimisation — SFT + preference in one loss | CS-27; one-stage alignment | Believing you can skip SFT entirely; you generally cannot at small data |
-| **GRPO** | Group Relative Policy Optimisation — PPO without a critic, group-normalised advantages | CS-26; the default for reasoning RLVR in 2026 | Thinking it needs a reward model; verifiable rewards are enough |
-| **PPO** | Proximal Policy Optimisation — the classic RLHF algorithm | CS-24; still used when you need a learned RM | "PPO is dead" — it is *expensive*, not dead |
+| **DPO** | Direct Preference Optimisation — closed-form preference loss, no reward model | CS-14 §4.6.3; the workhorse of alignment | "DPO = RLHF without PPO" is roughly right but DPO still needs an SFT reference model |
+| **ORPO** | Odds-Ratio Preference Optimisation — SFT + preference in one loss | CS-14 §4.6.9; one-stage alignment | Believing you can skip SFT entirely; you generally cannot at small data |
+| **GRPO** | Group Relative Policy Optimisation — PPO without a critic, group-normalised advantages | CS-14 §4.6.10; the default for reasoning RLVR in 2026 | Thinking it needs a reward model; verifiable rewards are enough |
+| **PPO** | Proximal Policy Optimisation — the classic RLHF algorithm | CS-14 §4.6.1; still used when you need a learned RM | "PPO is dead" — it is *expensive*, not dead |
 | **RM** | Reward model / outcome reward model | Needed for PPO and some GRPO variants | Confusing RM training with RM *inference* cost (it doubles rollout cost) |
 | **DeepSpeed ZeRO** | Memory-partitioning of optimizer (1), gradients (2), parameters (3) | The reason 70B trains at all | "ZeRO = FSDP" — functionally close, different implementations and config surface |
 | **FSDP** | Fully Sharded Data Parallel — PyTorch-native param/grad/optim sharding | FSDP1 = `FullyShardedDataParallel`; **FSDP2 = `fully_shard`, DTensor-based** | Using FSDP1 in 2026 for new code; FSDP2 is per-parameter and much better with QLoRA |
@@ -847,7 +847,7 @@ He does at least **self-correct in the same breath** — at `[19:39]`–`[19:42]
 
 > *"this other framework like fast chat sky plot and this open LLM from the bentoml it could be the optional one. You can visit it out or you can skip this. It is up to you"* `[20:13]`–`[20:20]`
 
-> **Beyond the video:** OpenLLM is a reasonable answer to the *"how do I serve this?"* half of the pipeline, but in 2026 it competes with **vLLM's own OpenAI server** (`vllm serve`), **SGLang**, and **TGI**, all of which have larger communities. Its genuine differentiator is **multi-LoRA serving** — one base model, N adapters loaded simultaneously, routed by request — which is exactly what you want when you have ten customers each with their own LoRA. See CS-30/CS-31.
+> **Beyond the video:** OpenLLM is a reasonable answer to the *"how do I serve this?"* half of the pipeline, but in 2026 it competes with **vLLM's own OpenAI server** (`vllm serve`), **SGLang**, and **TGI**, all of which have larger communities. Its genuine differentiator is **multi-LoRA serving** — one base model, N adapters loaded simultaneously, routed by request — which is exactly what you want when you have ten customers each with their own LoRA. See `code/15_serve_vllm.py` (a serving module — "CS-30/CS-31" — is planned but unwritten).
 
 ---
 
@@ -868,7 +868,7 @@ He does at least **self-correct in the same breath** — at `[19:39]`–`[19:42]
 
 **What the video says.** He lists it with OpenLLM/SkyPilot as *"optional"* `[5:40]`–`[5:48]` and *"optional one. You can visit it out or you can skip this"* `[20:13]`–`[20:20]`.
 
-> **Correction:** FastChat is not a fine-tuning framework in 2026 and should not be presented as one. Its `train_lora.py` has not tracked modern `peft`/`trl` APIs, its dependency set is pinned to older `transformers`, and the project's active surface is **serving and arena evaluation**. Where it *is* still load-bearing: **MT-Bench and the LLM-as-judge harness** are the reference implementations most teams copy when building an eval suite (CS-34). If your interviewer asks "where does FastChat fit?", the answer is "the evaluation and multi-model-serving layer, not the trainer".
+> **Correction:** FastChat is not a fine-tuning framework in 2026 and should not be presented as one. Its `train_lora.py` has not tracked modern `peft`/`trl` APIs, its dependency set is pinned to older `transformers`, and the project's active surface is **serving and arena evaluation**. Where it *is* still load-bearing: **MT-Bench and the LLM-as-judge harness** are the reference implementations most teams copy when building an eval suite (CS-13 §12; `code/common/eval_utils.py`. An evaluation module — "CS-34" — is planned but unwritten). If your interviewer asks "where does FastChat fit?", the answer is "the evaluation and multi-model-serving layer, not the trainer".
 
 ---
 
@@ -1136,7 +1136,7 @@ flowchart LR
 | 5 | Data prep | Raw examples | Convert to the framework's dataset schema + **the model's exact chat template** | `dataset_info.json` / `datasets:` block / HF `Dataset` | **The #1 silent failure**: wrong `template:` → healthy loss, broken model (§9.4) |
 | 6 | **Framework selection** | Stages 1–5 | The decision tree in §8.2 | A framework + a config file | Choosing on popularity rather than on the parallelism gate |
 | 7 | Training run | Config + data + GPU | SFT → (DPO/ORPO) → (GRPO/RLVR) | Checkpoints + a log | OOM at step 0; loss NaN; a run that "works" at 1 GPU and silently changes semantics at 8 |
-| 8 | Evaluation | Checkpoints + held-out set | Loss/perplexity **plus** task metrics, LLM-judge, human spot-check (CS-34) | A go/no-go with numbers | Judging on training loss; no baseline; no regression set |
+| 8 | Evaluation | Checkpoints + held-out set | Loss/perplexity **plus** task metrics, LLM-judge, human spot-check (CS-13 §12) | A go/no-go with numbers | Judging on training loss; no baseline; no regression set |
 | 9 | Export / merge | Adapter directory | `merge_and_unload`, or keep the PEFT adapter | `safetensors` checkpoint or an adapter dir | Merging in fp16 a bf16-trained adapter; ignoring `base_model_name_or_path` mismatch |
 | 10 | Serve + monitor | Merged model or base+adapter | vLLM/SGLang/TGI or a hosted endpoint; log drift | Latency, cost, quality dashboards | Serving the adapter on a *different* base revision than it was trained on |
 
@@ -1673,7 +1673,7 @@ print(f"delta = {tuned - base:+.1%}")       # if this is <= 0, do not ship
 | 19 | Reward rises, quality falls | Exploitable reward (string match, length proxy) | Log completion length and a held-out judge score alongside reward | Redesign the reward; add a length/KL penalty; use a held-out judge as a gate |
 | 20 | Every sample in a batch identical | Packing with wrong packing logic / deduplicated data | Print 3 decoded training rows | `packing: false` for chat data; check the dataset |
 | 21 | Run is not reproducible | Seed unset; non-deterministic kernels; different GPU count | Re-run with the same seed and compare step-1 loss | Fix `seed`, `data_seed`, `full_determinism`; record the GPU count |
-| 22 | Loss fine, but the model can't follow new *facts* | LoRA cannot inject knowledge, only style/format | Compare on a knowledge-QA set | Use CPT or full FT for knowledge; see CS-12/CS-23 |
+| 22 | Loss fine, but the model can't follow new *facts* | LoRA cannot inject knowledge, only style/format | Compare on a knowledge-QA set | Use CPT or full FT for knowledge; see CS-12, CS-13 §6.8 |
 
 ---
 
@@ -1779,10 +1779,10 @@ print(f"delta = {tuned - base:+.1%}")       # if this is <= 0, do not ship
 
 | Relationship | Module |
 |---|---|
-| Builds on | CS-01 (LLM lifecycle), CS-02 (transfer learning), CS-23 (LoRA/QLoRA mechanics) |
-| Needed by | CS-05 (data preparation per framework), CS-17/18/19 (LLaMA-Factory, Unsloth, Axolotl hands-on), CS-30/31 (serving the fine-tune), CS-34 (evaluation) |
+| Builds on | CS-01 (LLM lifecycle), CS-02 (transfer learning), CS-13 §6.8 + CS-11 §4.11 (LoRA/QLoRA mechanics) |
+| Needed by | CS-01 §4.9 (data preparation — **CS-05 is *RNN/LSTM → Attention***, not data prep), CS-15/16/17 (LLaMA-Factory, Unsloth, Axolotl hands-on), CS-13 §12 (evaluation). Serving ("CS-30/31") is planned, unwritten — `code/15_serve_vllm.py` is nearest |
 | Contrasts with | CS-04 (fine-tuning vs RAG vs prompting — decide *whether* to fine-tune before *how*), CS-10/11 (quantisation for inference: GPTQ/AWQ/GGUF vs the training-time 4-bit of QLoRA) |
-| Pairs with | CS-25 (DPO), CS-26 (GRPO/RLVR), CS-27 (ORPO) for which framework exposes which method; CS-12 (continued pretraining) for the CPT rows |
+| Pairs with | CS-14 §4.6.1/§4.6.3/§4.6.9/§4.6.10 (RLHF, DPO, ORPO, GRPO) for which framework exposes which method — CS-24–CS-27 are planned, unwritten; CS-12 (continued pretraining) for the CPT rows |
 | Cheat sheet | CH-03 (framework selection card + copy-paste YAML for four frameworks) |
 | Interview bank | IQ-03 (framework-landscape questions with traps) |
 

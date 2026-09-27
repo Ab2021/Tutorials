@@ -377,10 +377,15 @@ Decision rule (walk it top to bottom; first match wins):
    domain text?
       → Neither. That is SFT (CS-13), on top of CPT if #3 also applies.
 
-6. Is your corpus under ~5M tokens?
-      → Do not do CPT. You are below the threshold where gradient updates
-        generalise; see §4.10. Use RAG + prompt engineering, and revisit when
-        the corpus grows.
+6. Is your corpus below the §4.10.3 floor — 10⁻³ tokens per parameter
+   (1.1 M tokens for a 1.1 B model, 8 M for an 8 B model)?
+      → Do not do CPT. Below this the model memorises the exact chunks rather
+        than learning the domain's distribution; see §4.10.3. Use RAG + prompt
+        engineering, and revisit when the corpus grows.
+      → NB the threshold is *relative*, not absolute. A flat "5 M tokens" is
+        ample for a 1.1 B model (τ = 4.5e-3, comfortably past T2) and *below*
+        the floor for an 8 B one (τ = 6.3e-4, under T2). Never quote a token
+        count without the parameter count beside it.
 
 7. Do you have ≥50M domain tokens AND ≥10% replay data AND a held-out domain split?
       → CPT is viable. Proceed to §5.
@@ -589,7 +594,7 @@ The output is a *garbled near-copy of the prompt*, with the domain terms `Atorva
 
 | Fix | Change | Why |
 |---|---|---|
-| 1. Real data volume | 4 chunks → ≥200,000 chunks (≥15M tokens) | §4.10. Below ~5M tokens the gradient never generalises. |
+| 1. Real data volume | 4 chunks → ≥200,000 chunks (≥15M tokens) | §4.10. Below the §4.10.3 floor of 10⁻³ tokens/param — **1.1 M at 1.1 B, 8 M at 8 B** — the gradient never generalises. 15 M tokens on an 8 B model is τ ≈ 1.9e-3, i.e. just past T2. |
 | 2. Mask the padding | `padding=False` + collator, or `-100` on pads | §4.3.4. Recovers 85% of the wasted compute. |
 | 3. Wider target modules | add `k_proj, o_proj, gate_proj, up_proj, down_proj` | §4.3.3. Without MLP adapters the model cannot write facts. |
 | 4. A held-out split and a perplexity metric | 5% of documents held out, evaluate every N steps | §12. Without it you cannot tell #1–#3 worked. |
@@ -1456,7 +1461,9 @@ BEFORE stage 1 of the pipeline:
       what does the contract say about training?
   [ ] Build the provenance ledger. Fail closed on unknown.
   [ ] Identify the documents you must EXCLUDE and measure their share of tokens.
-      If exclusion drops you below ~1M tokens, the project may not be viable.
+      If exclusion drops you below the §4.10.3 floor of 10⁻³ tokens per
+      parameter (1.1 M for a 1.1 B model, 8 M for an 8 B one), the project
+      may not be viable.
   [ ] Check for machine-readable TDM reservations and honour them.
   [ ] Confirm confidentiality and privacy duties do not override the licence.
   [ ] Get a named human to sign the ledger. "The team decided" is not a sign-off.
@@ -2395,7 +2402,7 @@ The degenerate case: the notebook's run is ~20 optimizer steps. `warmup_ratio=0.
 
 1. **You cannot measure domain perplexity on held-out documents.** No metric means no way to know whether you helped or hurt. This is the single hardest stop. §12.
 2. **You cannot produce a replay corpus** of at least ~1% general-domain text. Without replay you are choosing to forget.
-3. **Your total corpus is under ~1M tokens.** Below this the model memorises rather than generalises, and a well-prompted RAG will beat you on cost, latency, and updateability.
+3. **Your total corpus is below the §4.10.3 floor of 10⁻³ tokens per parameter** — 1.1 M tokens for a 1.1 B model, 8 M for an 8 B one. Below this the model memorises the exact chunks rather than learning the domain's distribution, and a well-prompted RAG will beat you on cost, latency, and updateability.
 4. **You have no baseline to compare against.** Fine-tuning without a baseline is not an experiment; it is a vibe.
 5. **You have not tried prompting + RAG with the base model first.** CPT costs GPU-hours; a prompting change costs an afternoon. Always exhaust the cheap option.
 6. **Your evaluation is a handful of hand-picked prompts.** You will ship a model that got better at those five prompts and worse everywhere else.
@@ -3524,7 +3531,7 @@ Fluent and wrong is the characteristic failure of a domain-adapted model, and it
 
 7. **Run LoRA before full FT. Always.** Full FT at 1.1B needs 19.9 GB of model + optimizer state — which is exactly the arithmetic behind the notebook's OOM (§4.11.1). LoRA at 4-bit needs ~1 GB. Full FT buys lower domain PPL and pays in memory and forgetting; it is the *second* run, not the first (§13.3).
 
-8. **The volume numbers: τ_cpt = 10⁻³ to 10⁻¹ tokens per parameter; T3 ≈ 10⁻² is the sweet spot.** 8M tokens for a 1.1B model, 80M for an 8B model. Chinchilla's ~20 tokens/param is a *pretraining* ratio and does not apply (§4.10).
+8. **The volume numbers: τ_cpt = 10⁻³ to 10⁻¹ tokens per parameter; T3 ≈ 10⁻² is the sweet spot.** At T3 that is **11 M tokens for a 1.1 B model and 80 M for an 8 B model** (§4.10.3); the T2 floor is an order of magnitude lower at 1.1 M / 8 M. Chinchilla's ~20 tokens/param is a *pretraining* ratio and does not apply (§4.10).
 
 9. **`target_modules` is the CPT-specific correction that most people miss.** `q_proj`/`v_proj` changes routing; knowledge lives in the MLP projections. Use all seven for CPT (§4.3.3, §7.5).
 

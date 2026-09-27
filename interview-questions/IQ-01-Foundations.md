@@ -106,7 +106,7 @@
 
 - **Answer:** Mask ~15% of tokens and predict them from **both** directions — bidirectional context. Used by BERT and the encoder-only family (RoBERTa, DistilBERT, ELECTRA, DeBERTa). It supervises only ~15% of positions per sequence and cannot generate, but it produces stronger bidirectional representations for classification, NER, extractive QA and sentence embeddings.
 - **Why asked:** Tests whether the candidate dismisses encoders as obsolete.
-- **Trap:** "MLM is dead." It is the right tool for discriminative tasks and for embeddings (CS-22) — you cannot train a good sentence encoder with a causal mask and mean pooling alone.
+- **Trap:** "MLM is dead." It is the right tool for discriminative tasks and for embeddings (`code/10_embedding_finetune.py`; CS-22 planned, not yet written) — you cannot train a good sentence encoder with a causal mask and mean pooling alone.
 
 **Q15. There is a third objective — what is it, and who uses it?**
 
@@ -455,7 +455,7 @@
 **Q71. DPO vs RLHF (PPO) — what is the mechanical difference?**
 
 - **Answer:** PPO is a three-model, online RL loop: a policy generates completions, a separately-trained reward model scores them, a value/critic model estimates the baseline, and the policy is updated with a clipped surrogate objective plus a KL penalty to a reference model. Four models in memory, unstable, sensitive to reward hacking. **DPO** observes that the RLHF objective has a closed-form optimal policy, which lets you substitute it into the preference likelihood and obtain a loss purely over the policy and a frozen reference: `L_DPO = −log σ(β·[log(π_θ(y_w|x)/π_ref(y_w|x)) − log(π_θ(y_l|x)/π_ref(y_l|x))])`. No reward model, no critic, no sampling loop — it is a supervised classification problem over preference pairs. Consequence: DPO is far simpler and cheaper; PPO can exceed it when you have a good reward model and a lot of compute, and online methods (GRPO) are now preferred for reasoning tasks where the reward is verifiable.
-- **Why asked:** The alignment section of every senior interview (CS-14, CS-24–27).
+- **Why asked:** The alignment section of every senior interview (CS-14 §4.6.1–4.6.10).
 - **Trap:** "DPO is just RLHF without the RL." The KL constraint is still there — it is baked into the `π_ref` term, and `β` is its strength. Setting `β` badly is the main DPO failure mode.
 
 **Q72. Why does fine-tuning teach form rather than facts?**
@@ -660,7 +660,7 @@ Answer in under five seconds each. The explanation is one line; if you need more
 | 8 | Gradient checkpointing speeds up training. | **False** | It costs ~+33% FLOPs to save 5–10x activation memory. |
 | 9 | Full fine-tuning a 7B needs roughly 112 GB before activations. | **True** | 16 bytes/param × 7e9 = 112 GB. |
 | 10 | Perplexity is comparable across models with different tokenizers. | **False** | Different vocabularies mean different normalisation. |
-| 11 | MLM is obsolete now that causal models dominate. | **False** | It is still better for classification, NER and embeddings (CS-07, CS-22). |
+| 11 | MLM is obsolete now that causal models dominate. | **False** | It is still better for classification, NER and embeddings (CS-07; `code/10_embedding_finetune.py`). |
 | 12 | Decode is usually bandwidth-bound, not compute-bound. | **True** | Arithmetic intensity ~1 FLOP/byte vs a ridge point of 156–295. |
 | 13 | LoRA with `r=8` can match full fine-tuning on a small dataset. | **True** | The frozen base regularises; the gap only opens at large data volumes. |
 | 14 | Setting `alpha = r` keeps the LoRA scaling at 1. | **True** | Effective scaling is `alpha/r`. |
@@ -946,7 +946,7 @@ These mirror the ten questions at the end of CS-01 §19. Answer them before read
 | **Deepens the architecture decision** | CS-04 (Fine-Tuning vs RAG vs Agents) |
 | **Deepens the training math** | CS-05 (RNN/LSTM → Attention), CS-06 (Hugging Face) |
 | **Deepens encoder fine-tuning** | CS-07 (BERT: NER, Sentiment, QA) |
-| **Deepens memory and cost** | CS-10/CS-11 (Quantization), CS-16 (Unsloth), CS-23 (LoRA/QLoRA deep dive) |
+| **Deepens memory and cost** | CS-10/CS-11 (Quantization), CS-16 (Unsloth), CS-13 §6.8 / CS-11 §4.11 (LoRA/QLoRA) |
 | **Deepens data work** | CS-12 (continued pretraining), CS-13 (SFT) |
-| **Deepens alignment questions (Q71)** | CS-14 (Alignment Map), CS-24–CS-27 (RLHF/DPO/GRPO/ORPO) |
-| **Capstone** | CS-28 (Complete End-to-End Pipeline) |
+| **Deepens alignment questions (Q71)** | CS-14 §4.6.1–4.6.10 (Alignment Map: RLHF/DPO/GRPO/ORPO) |
+| **Capstone** | CS-13 + CS-16/CS-17 (CS-28 planned, not yet written) |

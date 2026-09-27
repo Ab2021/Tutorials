@@ -7,11 +7,11 @@
 | **Transcript file(s)** | `LLM_Fine-Tuning_16_Preference_Alignment_Preference_Training_in_LLMs_with_RLHF_RL.txt` |
 | **Companion code** | `LLM Fine-Tuning-16-Preference-based-training\Preference_Aligned_Training_DPO_final.ipynb`, `pharma_preference_data.jsonl`, `pharma_preference_data.csv` |
 | **Prerequisites** | CS-01 (lifecycle), CS-13 (SFT), CS-23 (LoRA/QLoRA — you must know what a delta patch is before §6) |
-| **Difficulty** | Intermediate conceptually, Advanced practically (this is a *map*; CS-24/25/26/27 are the territory) |
+| **Difficulty** | Intermediate conceptually, Advanced practically (this is a *map*; §4.6 is the territory — the planned CS-24–CS-27 modules were never written) |
 | **Hands-on required** | Yes — the LoRA-merge bug in §6.5 is the single most common production error in this track |
 | **Estimated study time** | 6h theory + 5h practical |
 
-> **What this module is.** This is the **orientation module** for the alignment track. CS-24 goes deep on RL fundamentals + PPO, CS-25 on DPO, CS-26 on GRPO, CS-27 on ORPO. This module gives you the map: why alignment exists, what the canonical pipeline is, what every method in the landscape actually does, the memory arithmetic that decides between them, and the decision tree. Read this first; then go to the deep module for whichever method the decision tree selects.
+> **What this module is.** This is the **orientation module** for the alignment track. §4.6 is also the deep dive: the planned follow-up modules — CS-24 on RL fundamentals + PPO, CS-25 on DPO, CS-26 on GRPO, CS-27 on ORPO — were never written, so their material lives in the §4.6 profiles here. This module gives you the map: why alignment exists, what the canonical pipeline is, what every method in the landscape actually does, the memory arithmetic that decides between them, and the decision tree. Read this first; then go to the §4.6 profile for whichever method the decision tree selects.
 >
 > **What this module is not.** It is not a derivation course. The instructor explicitly says he will not do the full derivation here — *"I'm not going to show you the complete mathematical intuition along with the derivation and all. I will just focus on the formula and we'll discuss about that formula"* [3:05]. We honour that scope, and mark derivations as belonging to CS-24/25.
 
@@ -436,7 +436,7 @@ Each profile answers the same eight questions: mechanism, objective, data, compu
 ---
 
 #### 4.6.1 RLHF with PPO — the 4-model problem
-*Deep dive: CS-24*
+*Deep dive: this profile. The planned "CS-24" module was never written.*
 
 **Mechanism.** Four models are resident. (1) The **policy** π_θ, initialised from π^SFT, is the only model being trained. (2) The **reference** π_ref is a frozen copy of π^SFT. (3) The **reward model** r_φ is frozen and scores a completed response. (4) The **value model** V_ψ predicts the expected return from a prefix, used to compute advantages. The loop: sample a prompt from the preference prompt distribution → generate a response with π_θ → score it with r_φ → compute per-token rewards, subtracting `β·KL_t` against π_ref at each token → compute advantages with GAE using V_ψ → take a PPO-clipped policy-gradient step and a value-regression step. Repeat for many prompts.
 
@@ -461,7 +461,7 @@ where `ρ_t = π_θ(a_t|s_t) / π_θ_old(a_t|s_t)` is the importance ratio, `Â_
 ---
 
 #### 4.6.2 Reward modelling (Bradley–Terry) as a standalone artifact
-*Deep dive: CS-24*
+*Deep dive: this profile. The planned "CS-24" module was never written.*
 
 **Mechanism.** Take π^SFT, replace the LM head with a scalar head, train on pairs with the BT loss (§4.4). The output is a *reusable* scorer: one RM can drive many policies, many experiments, and can be used for best-of-n selection, for data curation, and for evaluation.
 
@@ -480,7 +480,7 @@ where `ρ_t = π_θ(a_t|s_t) / π_θ_old(a_t|s_t)` is the importance ratio, `Â_
 ---
 
 #### 4.6.3 DPO — Direct Preference Optimization
-*Deep dive: CS-25*
+*Deep dive: this profile. The planned "CS-25" module was never written.*
 
 **Mechanism.** No reward model, no sampling, no value model. DPO observes that the RLHF optimum has a closed form: the optimal policy under the KL-constrained reward objective is
 
@@ -513,7 +513,7 @@ Define `h_θ(x,y) = log π_θ(y|x) − log π_ref(y|x)` — the **log-ratio** be
 ---
 
 #### 4.6.4 IPO — Identity Preference Optimization
-*Deep dive: CS-25*
+*Deep dive: this profile. The planned "CS-25" module was never written.*
 
 **Mechanism.** Replaces the log-sigmoid of DPO with a squared loss on the log-ratio margin, and — crucially — places the regularisation *inside the objective* rather than relying on the sigmoid's implicit saturation.
 
@@ -530,7 +530,7 @@ Define `h_θ(x,y) = log π_θ(y|x) − log π_ref(y|x)` — the **log-ratio** be
 ---
 
 #### 4.6.5 cDPO — Conservative DPO
-*Deep dive: CS-25*
+*Deep dive: this profile. The planned "CS-25" module was never written.*
 
 **Mechanism.** DPO with **label smoothing**: the target probability for `chosen` is set to `1 − ε` (typically ε = 0.1) rather than 1.0. Concretely, TRL implements it as `losses = (1−ε)·losses_chosen + ε·losses_rejected` — i.e. it admits that ε of your labels are wrong.
 
@@ -547,7 +547,7 @@ Define `h_θ(x,y) = log π_θ(y|x) − log π_ref(y|x)` — the **log-ratio** be
 ---
 
 #### 4.6.6 KTO — Kahneman–Tversky Optimization
-*Deep dive: CS-25*
+*Deep dive: this profile. The planned "CS-25" module was never written.*
 
 **Mechanism.** Drops the pair requirement entirely. KTO takes a **pointwise** dataset of `{prompt, completion, label: desirable|undesirable}` and uses a prospect-theory-inspired utility: losses are weighted asymmetrically for desirable and undesirable examples, reflecting the empirical finding that humans weight losses more heavily than gains. Formally, it uses a logistic utility with separate `λ_D` and `λ_U` weights and a reference-point term computed from a running estimate of the KL to the reference.
 
@@ -564,7 +564,7 @@ Define `h_θ(x,y) = log π_θ(y|x) − log π_ref(y|x)` — the **log-ratio** be
 ---
 
 #### 4.6.7 SLiC-HF — Sequence Likelihood Calibration
-*Deep dive: CS-25*
+*Deep dive: this profile. The planned "CS-25" module was never written.*
 
 **Mechanism.** A hinge (margin) loss on sequence log-probabilities, plus an optional cross-entropy regulariser on the chosen response. Notably, it was published *before* DPO and motivated DPO's authors to derive the closed form.
 
@@ -581,7 +581,7 @@ Define `h_θ(x,y) = log π_θ(y|x) − log π_ref(y|x)` — the **log-ratio** be
 ---
 
 #### 4.6.8 SimPO — Simple Preference Optimization
-*Deep dive: CS-25*
+*Deep dive: this profile. The planned "CS-25" module was never written.*
 
 **Mechanism.** DPO **without a reference model**. The implicit reward becomes the **length-normalised average log-probability** of the sequence, plus a target margin γ. No π_ref, no β (the margin γ is the strength dial).
 
@@ -598,7 +598,7 @@ Define `h_θ(x,y) = log π_θ(y|x) − log π_ref(y|x)` — the **log-ratio** be
 ---
 
 #### 4.6.9 ORPO — Odds Ratio Preference Optimization
-*Deep dive: CS-27*
+*Deep dive: this profile. The planned "CS-27" module was never written.*
 
 **Mechanism.** One stage, one model, no reference. ORPO adds a preference term to the ordinary SFT loss, where the preference term is an **odds ratio** rather than a probability: the odds of generating `chosen` divided by the odds of generating `rejected`, given the same prompt. The odds formulation is what makes it work without a reference — the SFT loss *is* the anchor, because you are still training on the chosen responses with cross-entropy.
 
@@ -624,7 +624,7 @@ odds_θ(y|x) = π_θ(y|x) / (1 − π_θ(y|x))
 ---
 
 #### 4.6.10 GRPO — Group Relative Policy Optimization
-*Deep dive: CS-26*
+*Deep dive: this profile. The planned "CS-26" module was never written.*
 
 **Mechanism.** PPO **without the value model**. For each prompt, sample a **group** of G responses (G = 4–64) from the current policy, score each with the reward function, and use the **group's mean reward as the baseline**. The advantage of response i is `(r_i − mean(r)) / std(r)` — a z-score within the group. No critic, no GAE, no value loss.
 
@@ -649,7 +649,7 @@ where `Â_i` is the group-normalised advantage (a single scalar per *response*, 
 ---
 
 #### 4.6.11 RLAIF and Constitutional AI
-*Deep dive: CS-24 (RLAIF), AP-01 (the values question)*
+*Deep dive: this profile (RLAIF); the planned "CS-24" module was never written. AP-01 (the values question)*
 
 **Mechanism (RLAIF).** Identical to RLHF except the preference labels come from an LLM judge rather than a human. The instructor: *"it was inspired from the RLHF only the difference is human is not going to be annotate anything now like only AI will do that"* [21:29]–[21:37]. He attributes it to Anthropic, published 2024, and names contributors *"Abhinav Rastogi and Susant Pragas"* [21:55]–[22:01].
 
@@ -668,7 +668,7 @@ where `Â_i` is the group-normalised advantage (a single scalar per *response*, 
 ---
 
 #### 4.6.12 Rejection sampling, best-of-n, and RAFT
-*Deep dive: CS-25*
+*Deep dive: this profile. The planned "CS-25" module was never written.*
 
 **Mechanism.** The cheapest thing that works. Sample **n** responses per prompt from the current model (or from a stronger model); score them with *anything* — a reward model, a verifier, a heuristic, a judge; keep the best; run **SFT on the kept responses**. In the pairwise variant, the kept response becomes `chosen` and a lower-ranked sample becomes `rejected` (this is often called RS-DPO). **RAFT** (Retrieval-Augmented Fine-Tuning) is a related but distinct recipe that trains on documents-with-distractors; check which one an interviewer means.
 
@@ -685,7 +685,7 @@ where `Â_i` is the group-normalised advantage (a single scalar per *response*, 
 ---
 
 #### 4.6.13 SPIN — Self-Play Fine-tunINg
-*Deep dive: CS-25*
+*Deep dive: this profile. The planned "CS-25" module was never written.*
 
 **Mechanism.** Iterative self-play with no new labels. At iteration t, the **human-annotated SFT data is `chosen`** and the **previous iteration's model outputs are `rejected`**. Train with a DPO-style loss. Then regenerate the rejected set from the newly-trained model and repeat. The theoretical story: the model learns to distinguish its own outputs from human data, and when it can no longer do so, it has matched the human distribution — so the fixed point is a model whose output distribution is indistinguishable from the SFT data's.
 
@@ -1342,26 +1342,26 @@ START: Do you have a behaviour problem (tone, format, refusal, verbosity, safety
    │
    ├─ Q2: Can the reward be COMPUTED by a program? (unit tests pass, math answer matches,
    │       JSON validates, compiler accepts, regex matches, tool call succeeds)
-   │  ├─ YES ──► **GRPO / RLVR** (CS-26)
+   │  ├─ YES ──► **GRPO / RLVR** (§4.6.10)
    │  │           No reward model. No preference data. No human labels.
    │  │           Cost: G× generation. Memory: 2 models.
    │  │           This is the reasoning-model recipe. Start here if it applies.
    │  └─ NO ──► continue
    │
    ├─ Q3: Do you have PAIRS {prompt, chosen, rejected}?
-   │  ├─ NO, you have unpaired thumbs up/down ──► **KTO** (CS-25)
+   │  ├─ NO, you have unpaired thumbs up/down ──► **KTO** (§4.6.6)
    │  │                                            Pointwise, prospect-theory-weighted.
    │  │
    │  └─ YES ─► continue
    │
    ├─ Q4: What is your memory budget for the largest model you must train?
    │  │
-   │  ├─ Fits ~1 model only (single consumer GPU, or 7B on 24 GB) ──► **ORPO** (CS-27)
+   │  ├─ Fits ~1 model only (single consumer GPU, or 7B on 24 GB) ──► **ORPO** (§4.6.9)
    │  │     No reference model. SFT + preference in ONE stage.
    │  │     You can even skip the separate SFT run.
    │  │     λ = 0.1–0.5. LoRA r=16–32 on all linear layers.
    │  │
-   │  ├─ Fits 2 models (7B LoRA on 40–80 GB) ──► **DPO** (CS-25) — the default.
+   │  ├─ Fits 2 models (7B LoRA on 40–80 GB) ──► **DPO** (§4.6.3) — the default.
    │  │     β = 0.1, LR 2e-5 (LoRA), 1–3 epochs.
    │  │     If your DPO model gets verbose → **SimPO** (no reference, length-normalised).
    │  │     If your pairs are near-deterministic and DPO overfits → **IPO**.
@@ -1371,7 +1371,7 @@ START: Do you have a behaviour problem (tone, format, refusal, verbosity, safety
    │
    ├─ Q5: Is the reward a BLACK BOX that is not a pairwise preference, and do you need
    │       the policy to EXPLORE beyond a fixed dataset?
-   │  ├─ YES ──► **PPO / RLHF** (CS-24)
+   │  ├─ YES ──► **PPO / RLHF** (§4.6.1)
    │  │           4 models. Expect 3–8× the wall-clock and 10× the debugging of DPO.
    │  │           Only worth it for exploration or a non-differentiable custom reward.
    │  └─ NO ──► You have no reason to use PPO. Go back to Q4 and pick DPO or ORPO.
@@ -1864,7 +1864,7 @@ def reward_func(completions, tests, **kwargs):
 
 **Situation.** A team wants "a model that knows our internal documentation." They plan a three-week effort: SFT on 12,000 doc chunks, then DPO on 3,000 preference pairs generated by GPT-4.
 
-**The intervention.** This is a knowledge problem, not a behaviour problem. Fine-tuning to inject facts into a 7B model is the failure mode named in CS-04. The correct architecture is RAG over the docs (CS-04, CS-22 for retrieval quality).
+**The intervention.** This is a knowledge problem, not a behaviour problem. Fine-tuning to inject facts into a 7B model is the failure mode named in CS-04. The correct architecture is RAG over the docs (CS-04, and `code/10_embedding_finetune.py` for retrieval quality).
 
 **What they actually did instead.** Ran a 3-day RAG prototype first, measured answer accuracy on 200 questions: **84%**. Then ran the fine-tuning path anyway as a "behaviour overlay" — but *only* on the pairs that RAG could not fix (tone, citation formatting, refusal when the docs do not contain the answer). Pairs used: **600**, not 3,000. Run: DPO LoRA, 1 epoch, 2 hours, $4.
 
@@ -2027,8 +2027,8 @@ def test_no_regression(candidate):
 
 | Relationship | Module |
 |---|---|
-| **Builds on** | CS-01 (LLM lifecycle — the three stages), CS-13 (SFT — you cannot align what you have not instruction-tuned), CS-23 (LoRA/QLoRA — the delta patch and merge discipline in §6.5) |
-| **Needed by** | CS-24 (RL Fundamentals & RLHF with PPO — the deep dive on §4.6.1–4.6.2), CS-25 (DPO — the deep dive on §4.6.3–4.6.8, 4.6.13), CS-26 (GRPO — §4.6.10, RLVR), CS-27 (ORPO — §4.6.9), CS-28 (Capstone — this stage in a full pipeline) |
+| **Builds on** | CS-01 (LLM lifecycle — the three stages), CS-13 (SFT — you cannot align what you have not instruction-tuned), CS-13 §6.8 + CS-11 §4.11 (LoRA/QLoRA — the delta patch and merge discipline in §6.5; the planned "CS-23" module was never written) |
+| **Needed by** | *nothing written yet.* The intended deep dives — CS-24 (RLHF with PPO, §4.6.1–4.6.2), CS-25 (DPO, §4.6.3–4.6.8, 4.6.13), CS-26 (GRPO, §4.6.10), CS-27 (ORPO, §4.6.9) — and the CS-28 capstone were planned but never written; their material is in the §4.6 profiles here |
 | **Contrasts with** | CS-04 (Fine-Tuning vs RAG vs Agents — the diagnose-first rule this module's §8.3 enforces), CS-12 (domain-adaptive continued pretraining — stage 1 of the pipeline), CS-16/CS-17 (Unsloth/Axolotl — frameworks that implement these trainers) |
 | **Implements with** | CS-15 (LLaMA-Factory — no-code DPO/ORPO), CS-16 (Unsloth — DPO/ORPO with 2× memory savings), CS-17 (Axolotl — YAML DPO/ORPO/GRPO configs) |
 | **Bridges to** | AP-01 (The Ethics & Philosophy of Alignment — *what is a preference, and who gets to encode it*) |

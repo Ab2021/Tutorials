@@ -35,9 +35,9 @@ abstraction is now in your way.
 
 | Concept | Formula | Symbols | Worked example |
 |---|---|---|---|
-| **Model VRAM (bf16)** | `params × 2` bytes | — | 7B → 14 GB |
-| **Full FT VRAM** | `params × (2 + 2 + 8)` ≈ `12 × params` | weights + grads + AdamW | 7B → ~84 GB (+activation) |
-| **Shard count** | `ceil(size / max_shard_size)` | default 5 GB | 14 GB → 3 shards |
+| **Model VRAM (bf16)** | `params × 2` bytes | weights only, no KV cache — decimal GB | 7B → 14 GB = **13.0 GiB** |
+| **Full FT VRAM** | `params × (2 + 2 + 8)` ≈ `12 × params` | bf16 weights + bf16 grads + fp32 AdamW `m`,`v`; **no fp32 master copy** | 7B → 84 GB = **78.2 GiB** (+activation) |
+| **Shard count** | `ceil(size / max_shard_size)` | default 5 GB (decimal) | 14 GB → 3 shards |
 | **Tokens per word** | `× 1.33` | English | |
 | **Dataset memory** | `rows × avg_bytes` | arrow-backed, on disk | 1M rows × 2 KB = 2 GB |
 | **Batch tokens** | `batch × seq_len` | — | 8 × 2048 = 16,384 |
@@ -300,7 +300,7 @@ merged.save_pretrained("out/merged", safe_serialization=True)
 ```python
 from huggingface_hub import login, HfApi, create_repo
 
-login()                                     # or: huggingface-cli login
+login()                                     # or: hf auth login
 model.push_to_hub("my-user/my-model", private=True)
 tok.push_to_hub("my-user/my-model", private=True)   # DON'T forget the tokenizer
 
@@ -310,13 +310,26 @@ api.upload_folder(folder_path="out/merged", repo_id="my-user/my-model",
 ```
 
 ```bash
-huggingface-cli login
-huggingface-cli download meta-llama/Llama-3.2-1B-Instruct \
-  --local-dir ./models/llama-3.2-1b --local-dir-use-symlinks False
-huggingface-cli upload my-user/my-model out/merged .
+hf auth login
+hf download meta-llama/Llama-3.2-1B-Instruct --local-dir ./models/llama-3.2-1b
+hf upload my-user/my-model out/merged .
 export HF_HOME=/big-disk/hf        # move the cache off your boot drive
 export HF_HUB_ENABLE_HF_TRANSFER=1 # much faster downloads (pip install hf_transfer)
 ```
+
+> **The CLI was renamed, and the old name is gone — this is a v1.0 breaking change.**
+> `huggingface-cli` was deprecated in `huggingface_hub` **0.34** (Jul 2025) and
+> **removed in 1.0** (Oct 2025). Every command in this sheet is now `hf …`. The rename is
+> **not** mechanical: authentication moved into a subcommand —
+> `login` → `hf auth login`, `whoami` → `hf auth whoami`, `logout` → `hf auth logout`,
+> `scan-cache` → `hf cache scan`, `delete-cache` → `hf cache delete`,
+> `repo create` → `hf repo create`. Only `download` and `upload` keep their names at the
+> root. Two other things in this block changed with it: **`--local-dir-use-symlinks` is
+> removed** (it was first ignored with a `FutureWarning`, then deleted in 1.0 — passing it
+> now fails as an unrecognised argument, because a `local_dir` download never uses symlinks
+> any more), and the **`[cli]` extra no longer exists**, so install plain
+> `pip install -U huggingface_hub`. If `hf` is "command not found" after upgrading, reload
+> the shell — the entry point is only re-registered on a fresh session.
 
 ---
 
@@ -384,10 +397,10 @@ print('side ', t.padding_side, '| fast:', t.is_fast, '| vocab:', t.vocab_size)
 
 | Object | Memory | Note |
 |---|---|---|
-| Model weights (bf16) | `2 × params` | 7B → 14 GB |
-| Model weights (fp32) | `4 × params` | 7B → 28 GB |
-| Gradients (full FT, bf16) | `2 × params` | |
-| AdamW optimiser state | `8 × params` | 2 × fp32 moments — **the dominant term** |
+| Model weights (bf16) | `2 × params` | 7B → 14 GB = **13.0 GiB** |
+| Model weights (fp32) | `4 × params` | 7B → 28 GB = **26.1 GiB** |
+| Gradients (full FT, bf16) | `2 × params` | 7B → 14 GB = **13.0 GiB** |
+| AdamW optimiser state | `8 × params` | 2 × fp32 moments — **the dominant term** (7B → 56 GB = **52.2 GiB**) |
 | LoRA adapter | `~0.5–2% × params × 2` | 7B r16 → ~40 MB |
 | Activations | `batch × seq × layers × hidden × bytes` | The term gradient checkpointing attacks |
 | KV cache (inference) | `2 × layers × heads × head_dim × seq × batch × bytes` | Grows linearly with context |
@@ -395,23 +408,43 @@ print('side ', t.padding_side, '| fast:', t.is_fast, '| vocab:', t.vocab_size)
 
 ### 7.2 Full FT vs LoRA vs QLoRA, by model
 
-From `code/common/memory.py --table`, gradient checkpointing on, single GPU:
+From `code/common/memory.py --table`, gradient checkpointing on, single GPU, AdamW, bf16
+weights, fp32 optimiser states. **Units are GiB** (1024³) — that is what the tool divides
+by, and it prints "GB" only in its column labels:
 
 | Model | Full FT | LoRA r16 | QLoRA r16 | Infer bf16 | Infer 4-bit |
 |---|---|---|---|---|---|
-| 1B | 14.5 GB | 2.4 GB | 0.9 GB | 3.1 GB | 1.5 GB |
-| 3B | 39.4 GB | 6.4 GB | 2.2 GB | 7.0 GB | 2.5 GB |
-| 7B | 91.6 GB | 14.7 GB | 4.9 GB | 16.0 GB | 4.8 GB |
-| 13B | 170.0 GB | 27.1 GB | 9.0 GB | 28.3 GB | 7.8 GB |
-| 70B | 913.8 GB | 144.5 GB | 46.8 GB | 132.6 GB | 33.9 GB |
+| 1B | 14.5 GiB | 2.4 GiB | 0.9 GiB | 3.1 GiB | 1.5 GiB |
+| 3B | 39.4 GiB | 6.4 GiB | 2.2 GiB | 7.0 GiB | 2.5 GiB |
+| 7B | 91.6 GiB | 14.7 GiB | 4.9 GiB | 16.0 GiB | 4.8 GiB |
+| 13B | 170.0 GiB | 27.1 GiB | 9.0 GiB | 28.3 GiB | 7.8 GiB |
+| 70B | 913.8 GiB | 144.5 GiB | 46.8 GiB | 132.6 GiB | 33.9 GiB |
 
 **Add 10–20% for allocator and framework overhead.**
+
+> **Why you will see *different* numbers elsewhere — and both are right.** This table is one
+> trainer's arithmetic, not a law of nature. Two independent bookkeeping choices move the
+> full-FT column, and neither is a mistake. Check them before you assume a number is wrong.
+>
+> 1. **Bytes per parameter.** Full FT here is `4 weights + 2 bf16 grad + 8 fp32 AdamW
+>    (m,v) = 14 B/param` → 7B × 14 = **91.6 GiB** (§2 and §10 quote the plain-loop
+>    **12 B/param** = `2 + 2 + 8`, no fp32 master copy → 78.2 GiB; the back-of-envelope
+>    **16 B/param** adds the master on top of that → 104.3 GiB). *Always quote the
+>    decomposition, never the bare total* — `python code/common/memory.py --table` states
+>    it in exactly these terms and is the authority for every figure on this card.
+> 2. **GiB vs GB.** This table is binary (1024³). Vendor slides and most blog posts are
+>    decimal (1000³) — a further **+7.4%** on every row, so 91.6 GiB is 98.4 GB. The
+>    `params × 2` row in §2 is decimal, which is why it reads 14 GB and not 13.0 GiB.
+>
+> **How to use this:** treat the table as the floor you must beat, add 10–20% for a plan,
+> and trust a real measurement over any table — including this one. When two numbers
+> disagree by ~20–30%, check bytes-per-param and GiB-vs-GB first.
 
 ### 7.3 Hub storage and transfer
 
 | Item | Typical size | Note |
 |---|---|---|
-| 7B bf16 | ~14 GB | 3 shards at the 5 GB default |
+| 7B bf16 | ~14 GB = **13.0 GiB** | 3 shards at the 5 GB default |
 | 7B 4-bit | ~4 GB | one shard |
 | LoRA adapter r16 | ~40–160 MB | trivially small — this is the point of adapters |
 | Tokenizer | ~2–11 MB | **Always upload it with the model** |
@@ -502,9 +535,11 @@ From `code/common/memory.py --table`, gradient checkpointing on, single GPU:
 | Bytes/param, bf16 | **2** | weights |
 | Bytes/param, fp32 | **4** | weights |
 | Bytes/param, AdamW states | **8** | 2 × fp32 moments |
-| Full FT total | **~12 bytes/param** + activations | Why full FT ≈ 20× QLoRA |
+| Full FT total, **no** fp32 master | **`2 + 2 + 8 = 12`** bytes/param + activations | Plain bf16 loop. 7B → 78.2 GiB |
+| Full FT total, **with** fp32 master | **`2 + 2 + 8 + 4 = 16`** bytes/param | DeepSpeed/FSDP. 7B → 104.3 GiB |
+| Full FT total, this repo's floor | **`4 + 2 + 8 = 14`** bytes/param | `memory.py --table`; QLoRA ≈ 0.7 B/param → static ratio **20×** (measured 18.7×) |
 | Bytes/param, NF4 | **~0.5** | 4-bit + double quant |
-| 7B bf16 weights | **~14 GB** | Inference floor |
+| 7B bf16 weights | **~14 GB = 13.0 GiB** | Inference floor |
 | 7B 4-bit weights | **~4 GB** | |
 | Default `max_shard_size` | **5 GB** | |
 | Tokens per word | **≈1.33** | English |

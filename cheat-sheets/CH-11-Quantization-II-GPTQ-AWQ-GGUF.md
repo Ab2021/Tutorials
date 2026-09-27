@@ -776,7 +776,7 @@ print(f'{2*L*h*d*seq*b*2/2**30:.1f} GiB fp16  |  {2*L*h*d*seq*b*1/2**30:.1f} GiB
 | The full derivations and the notebook reproductions | **CS-10 — Quantization I: Fundamentals** |
 | GPTQ's Hessian arithmetic, AWQ's correction, KV-cache quantization, the precision lattice (W8A8…W4A4), QLoRA's memory algebra, serving flags, the honest evaluation protocol | **CS-11 §4 and §12** — the source of truth for this card |
 | Train the model you are about to quantise, and the correct masking | **CH-13 / CS-13 — Instruction Fine-Tuning** |
-| Understand what QLoRA is doing to the base you are about to merge | **CS-23 — LoRA, QLoRA & Adapter Methods**; **CH-13 §4.2** |
+| Understand what QLoRA is doing to the base you are about to merge | **CS-11 §4.11**; **CH-13 §4.2** (CS-23 planned, not yet written) |
 | The other compression axis — a smaller function rather than a smaller encoding | **CH-08 / CS-08 / CS-09 — Knowledge Distillation** |
 | Cost the deployment, or use a managed endpoint where the per-token price is fixed | **CH-19 §7 / CS-19 — Vertex AI & Gemini** |
 | Serve the artifact and tune the flags that matter | `code/15_serve_vllm.py` |

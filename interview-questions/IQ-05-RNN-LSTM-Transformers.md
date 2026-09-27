@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Module** | CS-05 — Why Fine-Tuning Was Hard Pre-Transformer: RNN/LSTM → Attention |
-| **Pairs with** | CS-05 (case study), CH-05 (cheat sheet), CS-01 (foundations), CS-23 (LoRA) |
+| **Pairs with** | CS-05 (case study), CH-05 (cheat sheet), CS-01 (foundations), CS-13 §6.8 (LoRA) |
 | **Total questions** | 98 (30 L1 + 28 L2 + 22 L3 + 8 L4 + 10 L5) |
 | **Levels covered** | Screen / Intermediate / Advanced / System Design / Debug |
 | **Source videos** | 06 (`Why Finetuning Was Difficult in RNN or LSTM`), 07 (`LSTM vs Transformer`) |
@@ -1090,7 +1090,7 @@ RoPE rotates dimension pairs of `q` and `k` by angles proportional to their abso
 | Transfer learning & fine-tuning fundamentals | **CS-02** |
 | When to fine-tune at all | **CS-04 / IQ-04 / CH-04** |
 | BERT fine-tuning (the first post-attention win) | **CS-07 / IQ-07 / CH-07** |
-| LoRA/QLoRA (where the adapters go, and why attention projections) | **CS-23** |
+| LoRA/QLoRA (where the adapters go, and why attention projections) | **CS-13 §6.8** / **CS-11 §4.11** (CS-23 planned, not yet written) |
 | Continued pretraining for long context | **CS-12** |
 | Quantisation of weights and the KV cache | **CS-10 / CS-11** |
 

@@ -1068,9 +1068,9 @@ The bracket is the **implicit margin**: `β·(h(x,y+) − h(x,y−))` where `h(x
 |---|---|
 | `CS-14-The-Alignment-Map.md` | The orientation module — the map this bank is built from. |
 | `CH-14-Alignment-Map.md` | The one-page reference: matrix, decision tree, VRAM calculator, starter config. |
-| `CS-24` (RLHF/PPO) | Deep dive on §4.6.1–4.6.2, the PPO algorithm and RL fundamentals. |
-| `CS-25` (DPO) | Deep dive on §4.6.3–4.6.8 — DPO, IPO, cDPO, KTO, SLiC, SimPO. |
-| `CS-26` (GRPO) | Deep dive on §4.6.10, RLVR, and the reasoning-model era. |
-| `CS-27` (ORPO) | Deep dive on §4.6.9. |
+| `CS-14 §4.6.1–4.6.2` (this module's own deep dive) | RLHF with PPO and the RL fundamentals. (`CS-24` as a separate module was never written) |
+| `CS-14 §4.6.3–4.6.8` (this module's own deep dive) | DPO, IPO, cDPO, KTO, SLiC, SimPO — the method-family deep dive is **inside CS-14**, not in a separate document. (`CS-25` is cited elsewhere in this repo as "DPO" but was never written) |
+| `CS-14 §4.6.10` (this module's own deep dive) | GRPO, RLVR, and the reasoning-model era. (`CS-26` as a separate GRPO module does not exist) |
+| `CS-14 §4.6.9` (this module's own deep dive) | ORPO. (`CS-27` as a separate ORPO module does not exist) |
 | `CS-13` (SFT) | The stage immediately upstream — you cannot align what you have not instruction-tuned. |
-| `CS-23` (LoRA/QLoRA) | The adapter mechanics and merge discipline that make DPO affordable. |
+| `CS-13 §6.8` / `CS-11 §4.11` (LoRA/QLoRA) | The adapter mechanics and merge discipline that make DPO affordable. (`CS-23` is cited elsewhere as the LoRA deep dive but was never written) |

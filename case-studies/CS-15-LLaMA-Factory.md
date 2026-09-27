@@ -6,7 +6,7 @@
 | **Source video(s)** | LLM Fine-Tuning 17: Fine-Tune ANY LLM with LLaMA Factory \| Full Guide (WebUI + CLI \| LoRA + QLoRA) |
 | **Transcript file(s)** | `LLM_Fine-Tuning_17_Fine-Tune_ANY_LLM_with_LLaMA_Factory_Full_Guide_WebUI_CLI_LoR.txt` |
 | **Companion code** | `LLM Fine-Tuning-17-Llama-Factory\llamafactory.ipynb`, `train_gemma_qlora.yaml`, `my_custom_data.json`, `my_custom_data2.json`, `my_custom_data3.json`, `how-to-save-in-dataset_info.txt`, `Finetune-LLAMA-FACTORY-Params.pdf`, `llama-factory-notes.pdf` |
-| **Prerequisites** | CS-03 (framework landscape), CS-06 (HF Hub + Trainer), CS-13 (SFT data shapes), CS-23 (LoRA/QLoRA mechanics), CS-10/CS-11 (quantization) |
+| **Prerequisites** | CS-03 (framework landscape), CS-06 (HF Hub + Trainer), CS-13 (SFT data shapes), CS-13 §6.8 + CS-11 §4.11 (LoRA/QLoRA mechanics), CS-10/CS-11 (quantization) |
 | **Difficulty** | Beginner to operate, Intermediate to operate *correctly*, Advanced to debug silently |
 | **Hands-on required** | Yes — the `dataset_info.json` and `template` sections cannot be learned by reading |
 | **Estimated study time** | 5h theory + 4h practical |
@@ -729,7 +729,7 @@ The video notes multimodal configuration exists in the WebUI [35:40] and lists `
 | Pixels | `image_max_pixels` / `image_min_pixels` bound the visual token budget; this is the dominant VRAM lever for VLMs |
 | Model choice | `template: qwen2_vl` / `qwen3_vl` / `llava` / `mllama` / `paligemma` / `intern_vl` etc. — the template *is* the multimodal plugin selector |
 
-Cross-reference CS-21 for the vision-language fine-tuning deep dive.
+Cross-reference `code/12_multimodal_vlm.py` for the vision-language fine-tuning deep dive. (A dedicated multimodal module — "CS-21" — is planned but was never written.)
 
 #### 4.3.8 Tool-calling dataset formats
 
@@ -1428,7 +1428,7 @@ Only the product matters for optimisation (`effective_batch = bs × accum × wor
 | Reproducibility and auditability are contractual | ✅ **Yes** | — | YAML + registry are diffable artifacts |
 | You need maximum single-GPU throughput on a supported model | ⚠️ Maybe | **Unsloth** (CS-16) | Unsloth's kernels beat stock HF by 2–4×; LLaMA-Factory's `use_unsloth: true` is the bridge |
 | You need a research-grade custom loss | ⚠️ Maybe | **Axolotl** (CS-17) or raw TRL | You can register a loss, but you are fighting the framework |
-| You are fine-tuning an embedding/reranker model | ❌ **No** | CS-22 tooling | `stage` covers generative LM stages only |
+| You are fine-tuning an embedding/reranker model | ❌ **No** | `code/10_embedding_finetune.py` | `stage` covers generative LM stages only |
 | You need sub-1-minute iteration on a small model | ⚠️ Maybe | Unsloth / raw TRL | Framework startup + registry + template resolution is ~20–40 s of overhead per run |
 | You need an exotic model with no registry template | ⚠️ Maybe | raw TRL | You can register a template, but you must also fix special tokens and get serving consistent |
 | You need to train on a private cluster with no internet | ✅ Yes, with work | — | Pre-download models and data; set `HF_HUB_OFFLINE=1` |
@@ -2260,15 +2260,15 @@ The `tags` block is mandatory here: the defaults expect `from`/`value` with role
 |---|---|
 | Builds on | **CS-03** (framework landscape — LLaMA-Factory's place in it), **CS-06** (Hugging Face: Hub, `Trainer`, tokenizers — the layers this wraps) |
 | Builds on | **CS-13** (Instruction Fine-Tuning — the alpaca/sharegpt shapes and prompt masking this module assumes) |
-| Builds on | **CS-23** (LoRA & QLoRA — `lora_rank`, `lora_alpha`, `lora_target`, and why QLoRA = 4-bit + LoRA) |
+| Builds on | **CS-13 §6.8 + CS-11 §4.11** (LoRA & QLoRA — `lora_rank`, `lora_alpha`, `lora_target`, and why QLoRA = 4-bit + LoRA; the planned "CS-23" module was never written) |
 | Needed by | **CS-16** (Unsloth — the same task, speed-focused; `use_unsloth: true` is the bridge) |
 | Needed by | **CS-17** (Axolotl — the same task, YAML at scale; compare config key-by-key) |
-| Needed by | **CS-28** (Capstone — the end-to-end pipeline, where one of these frameworks is the trainer) |
+| Needed by | **CS-28** — *planned, not yet written* (the end-to-end pipeline, where one of these frameworks is the trainer). §17's end-to-end walkthrough is the assembled version |
 | Contrasts with | **CS-03**, **CS-16**, **CS-17** — see the head-to-head in §13.1 |
 | Uses | **CS-10** / **CS-11** (quantization — what `quantization_bit` and `quantization_method` actually do) |
-| Uses | **CS-14** / **CS-25** (DPO — `stage: dpo`, `pref_beta`, `pref_loss`) and **CS-27** (ORPO — `pref_loss: orpo`) |
+| Uses | **CS-14 §4.6.3** (DPO — `stage: dpo`, `pref_beta`, `pref_loss`) and **CS-14 §4.6.9** (ORPO — `pref_loss: orpo`). The planned CS-25/CS-27 modules were never written |
 | Uses | **CS-12** (DAPT — the `prompt → text` mapping for `my_custom_data3.json`) |
-| Extended by | **CS-21** (multimodal — the `images` column and `freeze_vision_tower`) |
+| Extended by | *"CS-21" — multimodal (`images` column, `freeze_vision_tower`) — is planned, not yet written; `code/12_multimodal_vlm.py` is the nearest material* |
 | Interview prep | **IQ-15** |
 | Quick reference | **CH-15** |
 
@@ -2325,7 +2325,7 @@ The `tags` block is mandatory here: the defaults expect `from`/`value` with role
 | BAdam: Luo et al., arXiv:2404.02827 | `use_badam` |
 | Gemma: Gemma Team, arXiv:2403.08295 | The demonstrated base model |
 
-**Sibling modules:** CS-03 (frameworks) · CS-06 (HF) · CS-13 (SFT) · CS-14/CS-25/CS-27 (alignment) · CS-16 (Unsloth) · CS-17 (Axolotl) · CS-21 (multimodal) · CS-23 (LoRA/QLoRA) · CH-15 · IQ-15.
+**Sibling modules:** CS-03 (frameworks) · CS-06 (HF) · CS-13 (SFT) · CS-14 §4.6 (alignment) · CS-16 (Unsloth) · CS-17 (Axolotl) · CS-13 §6.8 + CS-11 §4.11 (LoRA/QLoRA) · CH-15 · IQ-15. (The planned CS-21, CS-23, CS-25 and CS-27 modules were never written.)
 
 
 

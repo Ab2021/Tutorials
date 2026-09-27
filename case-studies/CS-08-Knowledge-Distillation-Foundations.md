@@ -243,13 +243,20 @@ q_i = exp(v_i / T) / Σ_j exp(v_j / T)
 
 #### 4.2.2 The loss
 
-**Hinton's original form** (Hinton, Vinyals & Dean, 2015, arXiv:1503.02531, submitted 9 March 2015 — the date the instructor gives [7:04]):
+**Hinton's original objective** (Hinton, Vinyals & Dean, 2015, arXiv:1503.02531, submitted
+9 March 2015 — the date the instructor gives [7:04]) is a "weighted average of two different
+objective functions", written in prose: the **soft-target** cross-entropy at the distillation
+temperature, plus the **hard-label** cross-entropy at `T=1`, with the *lower* weight on the
+hard term. The paper introduces no `α` (§7.1). The form you will actually meet in code is:
 
 ```
-L_KD = α · CE(y, p_{T=1})  +  (1 − α) · T² · KL(q ‖ p)
+L_KD = α · T² · KL(q ‖ p)  +  (1 − α) · CE(y, p_{T=1})
 ```
 
-where `p_{T=1} = softmax(z)` is the student's **unscaled** softmax — note that the hard-label term uses `T=1`, because you are comparing against a one-hot target and temperature would make it uninterpretable.
+where `p_{T=1} = softmax(z)` is the student's **unscaled** softmax — the hard-label term uses
+`T=1`, because you are comparing against a one-hot target and temperature would make it
+uninterpretable. `α` here names the **soft** term, matching the paper's direction; §7.1 covers
+the reimplementations that name the hard term instead.
 
 **The notebook's form** [cell 21]:
 
@@ -456,7 +463,7 @@ FLOPs_training_step ≈ 6 · P · B · L        (fwd + bwd, ≈3× forward)
 | Activations (B=16, L=128, 12 layers, ≈10 tensors/layer) | ≈`16 × 128 × 768 × 2 B × 10 × 12` | ≈0.38 GB |
 | **Total** | | **≈ 3.0 GB** |
 
-Fits comfortably on a 16 GB T4, with room to raise the batch size. **Add QLoRA-style 8-bit loading for the teacher (CS-23) and a 7B teacher costs `7e9 × 1 B = 7 GB` instead of 14 GB** — that is the single most useful memory trick in KD.
+Fits comfortably on a 16 GB T4, with room to raise the batch size. **Add QLoRA-style 8-bit loading for the teacher (CS-11 §4.11) and a 7B teacher costs `7e9 × 1 B = 7 GB` instead of 14 GB** — that is the single most useful memory trick in KD.
 
 **The MNIST demo, for contrast:**
 
@@ -1197,6 +1204,14 @@ Rules that prevent the bug:
 > The interview advice in rule 4 above is therefore the *inverse* of the advice this card used
 > to give. Verify against the primary source before repeating a claim of the form "paper X
 > defines `α` as…", especially for a paper old enough to have accumulated a folklore layer.
+>
+> **How strong is the evidence that this misreading is widespread?** It is in this repo. Three
+> files — this card, `CS-09` §6.3 and `CH-09` §2/§4.1 — arrived at "Hinton's `α` weights the
+> hard term" *independently*, from different source videos, and all three have since been
+> corrected against the same primary source. Three independent derivations of the same wrong
+> claim from three different starting points is what a folklore layer looks like from the
+> inside. It is also why the fix had to be made in all three rather than in the one file an
+> interviewer would ask about.
 
 ### 7.2 Temperature — how to actually pick one
 
@@ -1455,7 +1470,7 @@ The economics only start to matter at LLM scale: generating 50,000 examples with
 | CUDA context + cuDNN workspaces | ~0.8 |
 | **Total** | **≈ 5.0 GB** |
 
-Fits with room to double `B`. Now the same question for a 7B teacher → 1.5B student, `B=4`, `L=1024`, with the teacher int8 and the student LoRA-tuned (CS-23):
+Fits with room to double `B`. Now the same question for a 7B teacher → 1.5B student, `B=4`, `L=1024`, with the teacher int8 and the student LoRA-tuned (CS-11 §4.11):
 
 | Item | GB |
 |---|---|
@@ -2006,7 +2021,7 @@ Distillation from a **third-party model's outputs** is a different question, and
 3. **"A bigger teacher always gives a better student."** False, and measurably so. The capacity gap is real, and student accuracy is non-monotone in teacher training length (§4.6).
 4. **"Soft labels are just label smoothing."** They are, when the teacher's distribution is near-uniform. They are not when the teacher has structure to transfer — the 3-ablated MNIST experiment is the proof (§13.1).
 5. **"`T²` is a detail."** It is the difference between a soft term that contributes and one that vanishes as `T` rises. Every KD implementation without it is silently training closer to cross-entropy than intended (§4.2.3).
-6. **"`α` is `α`."** Two opposite conventions share the symbol, and the numeric difference is 76% on the same example (§7.1).
+6. **"`α` is `α`."** Reimplementations assign the symbol to opposite terms, the numeric difference is 76% on the same example, and the paper everyone cites never defines it (§7.1).
 7. **"Distillation is cheaper than fine-tuning."** It is ~1.5–2× the cost of training the student directly, plus a teacher fine-tune, plus a generation pass (§11.2).
 8. **"The student's accuracy is the metric."** Worst-class recall, calibration, agreement and the four quadrants are where the failures live (§12).
 9. **"Distillation always beats training from scratch."** It reliably beats it *at the same data*. Better data or a longer schedule can beat distillation outright (§13.2).
@@ -2041,7 +2056,7 @@ Distillation from a **third-party model's outputs** is a different question, and
 
 ## 19. Self-Check Questions
 
-1. Write the full KD loss with every symbol defined, then state which term Hinton's `α` weights and which term this module's notebook weights.
+1. Write the full KD loss with every symbol defined, then state which term your `α` weights. (Careful: Hinton's paper defines no `α` — if an interviewer asks you to state "which term Hinton's `α` weights", the correct move is to say the paper uses a prose weighted average with the *lower* weight on the hard targets, and that the symbol comes from reimplementations. §7.1.)
 2. Derive `∂L_soft/∂z_k` for `L_soft = KL(q‖p)` with `p = softmax(z/T)`, and explain in one sentence why the `T²` multiplier exists. What happens to the objective as `T → ∞`?
 3. A teacher emits `q = [0.7, 0.2, 0.1]` and a student `p = [0.5, 0.3, 0.2]` on a cat image. Compute the hard loss, the KL at `T=1`, the KL at `T=2`, and the per-class logit gradient with and without `T²` at `T=2`.
 4. Name the four axes of the distillation taxonomy, and for each of RKD, attention transfer and FitNets state what tensor is supervised and what alignment problem it faces.
@@ -2071,8 +2086,8 @@ Distillation from a **third-party model's outputs** is a different question, and
 | **CS-12 — Evaluation & Benchmarks** | General evaluation discipline; §12 here is the distillation-specific view |
 | **CS-13 — Instruction Fine-Tuning & SFT** | The training half of sequence-level distillation is exactly SFT |
 | **CS-18 / CS-19 — Reasoning Models** | Chain-of-thought and rationale distillation, `Distilling Step-by-Step`, and the R1-Distill cascade |
-| **CS-23 — LoRA & QLoRA** | What makes a large student trainable on one GPU, and the reason §11.4's second table fits |
-| **CS-28 — Capstone** | The end-to-end project that assembles teacher fine-tune → target generation → student training → evaluation |
+| **CS-11 §4.11 & CS-13 §6.8 — QLoRA and the LoRA configuration** | What makes a large student trainable on one GPU, and the reason §11.4's second table fits. §4.11 has the NF4 / double-quantization / paged-optimizer math; §6.8 has the `r`/`α`/target-module choices. (A separate LoRA module — "CS-23" — is referenced elsewhere in this file but was never written) |
+| **Capstone — not yet written** | The end-to-end project that would assemble teacher fine-tune → target generation → student training → evaluation. Until then, CS-09 §6's notebook and CS-13's SFT pipeline are the closest thing |
 | **IQ-08 / CH-08** | Interview drills and the one-page cheat sheet for this module |
 
 ---

@@ -6,7 +6,7 @@
 | **Source video(s)** | LLM Fine-Tuning 11: LLM Knowledge Distillation \| How to Distill LLMs (LLaMA, Phi & Beyond) — Part 2 |
 | **Transcript file(s)** | `LLM_Fine-Tuning_11_LLM_Knowledge_Distillation_How_to_Distill_LLMs_LLAMA_Phi_Beyo.txt` |
 | **Companion code** | `LLM Fine-Tuning-10-11-knowledge-distillation/Knowledge_DIstillation_in_Deep_Learning.ipynb` (shared with CS-08 — this module owns the BERT section, cells 33–73, and the **LLM section, cells 74–89**) |
-| **Prerequisites** | CS-08 (soft labels, temperature, T², capacity gap — this file assumes all of it), CS-06 (HF), CS-07 (BERT fine-tuning), CS-13 (SFT), CS-23 (LoRA/QLoRA) |
+| **Prerequisites** | CS-08 (soft labels, temperature, T², capacity gap — this file assumes all of it), CS-06 (HF), CS-07 (BERT fine-tuning), CS-13 (SFT), CS-11 (QLoRA) |
 | **Difficulty** | Advanced. The loss is six lines. The **tokenizer-compatibility condition** and the **cost arithmetic** are what interviews probe |
 | **Hands-on required** | Yes. The instructor's own LLM demo (phi-2 → phi-1.5) needs ≥16 GB VRAM in fp32 and fits in ≤10 GB in fp16 |
 | **Estimated study time** | 7h theory + 6h practical |
@@ -587,7 +587,7 @@ val_dl   = DataLoader(tokenized['validation'], batch_size=batch_size, shuffle=Fa
 
 **Why each line exists, and what to change for your own data:**
 
-- `alpha_soft = 0.5` — this notebook's α weights the **soft** term and `(1−α)` the hard term; Hinton's α does the opposite. CS-08 §7.1 covers the trap. At `α = 0.5` you cannot tell which convention is in use, which is exactly why the notebook's value masks the bug.
+- `alpha_soft = 0.5` — this notebook's α weights the **soft** term and `(1−α)` the hard term, which is also Hinton's direction (his paper keeps the *lower* weight on the hard targets and defines no `α` at all). CS-08 §7.1 covers the trap: reimplementations assign the same letter to opposite terms, so the *name* tells you nothing. At `α = 0.5` you cannot tell which term is which even by inspection, which is exactly why the notebook's value masks the bug.
 - `epochs = 1` — the instructor says "one epoch only, it is just a testing… if you are running it in a real time then you can run it for as many as you want" [28:55]. For a real distillation, **2–3 epochs** on a filtered set; more than 3 on synthetic data starts memorising the teacher's phrasings.
 - `lr = 5e-5` is the BERT fine-tuning default. For an LLM student the working range is **1e-5 to 2e-5**, and the notebook's LLM cell does use `2e-5` (cell 87). Using `5e-5` on a 1.5B LLM will destabilise it.
 - `train = ...select(range(2500))` — the instructor's reasoning [30:23] is that training cost is high and validation cost is low, so you shrink train and keep validation full so the metric is not noisy (cell 44). That reasoning is correct and it is exactly what you should do in a smoke test. It is *not* what you should do for a real run: 2.5k examples cannot teach a student much.
@@ -1534,7 +1534,7 @@ The video's comparison [1:01:20]–[1:06:30], plus the columns it omits.
 | **Quantization (PTQ)** | No | Partially (memory-bound ops) | Yes (4× at int8) | No | No | Deployment-size reduction, minimal effort (CS-10) |
 | **Quantization (QAT)** | No | Partially | Yes | Yes (short) | No | Aggressive bit-widths where PTQ degrades |
 | **Pruning (structured)** | Yes | Yes | Yes | Yes (recovery) | No | Depth/width reduction; how Llama-3.2-1B/3B started |
-| **LoRA / QLoRA** | No | No | No (at merge time) | Yes (small) | No | Adapting a large model cheaply — a complement to distillation, not a competitor (CS-23) |
+| **LoRA / QLoRA** | No | No | No (at merge time) | Yes (small) | No | Adapting a large model cheaply — a complement to distillation, not a competitor (CS-11 §4.11) |
 | **Speculative decoding** | No | Yes (effective) | No | No | No | Latency with the big model kept — often better than distillation if latency is the *only* problem |
 
 **Decision: distillation for fewer FLOPs, quantization for fewer bytes, LoRA for cheaper adaptation, speculative decoding for latency without quality loss.** (CS-08 §13.4 makes the same point; this table adds the LLM-era rows.)
@@ -1548,7 +1548,7 @@ The video's comparison [1:01:20]–[1:06:30], plus the columns it omits.
 | Enforce a strict output format | Maybe | Constrained decoding / grammar | A grammar costs nothing and never hallucinates a brace |
 | Reduce latency, quality must be identical | No | Speculative decoding, caching | Distillation always loses *some* quality |
 | Run offline on a device | **Yes** | Quantise an already-small model | Distillation + 4-bit is the only way to a 1 GB artefact |
-| Improve reasoning on verifiable problems | **Yes**, from a reasoning teacher | RL (GRPO, CS-26) | Distilling beats direct RL on the small model: 72.6 vs 47.0 AIME |
+| Improve reasoning on verifiable problems | **Yes**, from a reasoning teacher | RL (GRPO, CS-14 §4.6.10) | Distilling beats direct RL on the small model: 72.6 vs 47.0 AIME |
 | Handle an open-ended, shifting prompt distribution | No | Keep the teacher, prompt-cache it | The student is valid only on the distilled distribution |
 | Meet a data-residency requirement | **Yes** | Self-host the teacher (if it fits) | Distillation removes the vendor from the serving path |
 
@@ -1922,14 +1922,14 @@ The clearest evidence that logit/two-stage distillation is production-grade is t
 | **CS-08 — Knowledge Distillation I: Foundations** | **Prerequisite.** Soft labels, temperature, the `T²` factor, `α` convention, the capacity gap, TAKD, DistilBERT, the MNIST logit-KD demo. CS-09 assumes every one of those and does not re-derive them |
 | **CS-07 — BERT Fine-Tuning & Task Heads** | The `bert-large` → `bert-base` demo is a BERT fine-tuning setup with a KD loss bolted on. The classification head, `num_labels`, and `DataCollatorWithPadding` are all explained there |
 | **CS-10 / CS-11 — Quantization I & II** | The complementary compression axis: distillation reduces FLOPs, quantisation reduces bytes. The two compose (distil then quantise), and 4-bit QLoRA is what makes the student training fit |
-| **CS-12 — Evaluation & Benchmarks** | MT-Bench, AlpacaEval, Arena-Hard, judge bias, contamination. §12 here is the distillation-specific view of that material |
+| **CS-13 §12 / CS-14 §12 — Evaluation** | MT-Bench, AlpacaEval, Arena-Hard, judge bias, contamination. §12 here is the distillation-specific view of that material. (**Not** CS-12 — that module is *Domain-Adaptive Continued Pretraining*, and has nothing to do with benchmarks) |
 | **CS-13 — Instruction Fine-Tuning & SFT** | The training half of response distillation is exactly SFT. Chat templates, `completion_only_loss`, packing, and masking are covered there in full |
 | **CS-14 — RLHF, PPO, DPO, ORPO** | dDPO (Zephyr's second stage) is DPO with a judge instead of human pairs. The `β` KL anchor and the reference model are explained there |
 | **CS-15 / CS-16 / CS-17 — LLaMA-Factory / Unsloth / Axolotl** | All three consume a `(instruction, response)` JSONL without modification. Use them instead of writing a training loop |
-| **CS-23 — LoRA & QLoRA** | The adapters that make a 1.5B–8B student trainable on one consumer GPU — the practical enabler for everything in §6 |
-| **CS-18 / CS-19 — Reasoning Models** | Where the R1-Distill family and trace distillation are treated in depth |
+| **CS-11 §4.11 & CS-13 §6.8 — QLoRA and the LoRA configuration** | The adapters that make a 1.5B–8B student trainable on one consumer GPU — the practical enabler for everything in §6. §4.11 has the NF4 / double-quantization / paged-optimizer math; §6.8 has the `r`/`α`/target-module choices. (There is no separate LoRA module — a planned CS-23 was never written) |
+| **CS-09 §15.4 (this module)** | Where the R1-Distill family and trace distillation are treated in depth. Do **not** look for a "Reasoning Models" case study: CS-18 is *OpenAI GPT Fine-Tuning* and CS-19 is *Gemini on Vertex AI*, neither of which covers reasoning distillation |
 | **CS-04 — Fine-Tuning vs RAG vs Agents** | The decision layer above this module: whether you need a small model at all, or retrieval/prompting solves it more cheaply |
-| **CS-28 — Capstone** | The end-to-end project that assembles prompt set → generation → filtering → SFT → evaluation into one deliverable |
+| **Capstone — not yet written** | The end-to-end project that would assemble prompt set → generation → filtering → SFT → evaluation into one deliverable. Until then, §6's notebook and CS-13's SFT pipeline are the closest thing |
 
 ---
 

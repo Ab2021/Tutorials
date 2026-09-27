@@ -508,7 +508,7 @@ describe.** That single ratio is the reason sequence-level KD and top-k caching 
 | Smaller *model*, similar behaviour | **Distillation** (this card) |
 | Same model, faster on your hardware | Quantisation + better serving |
 | Teach a small model a *task* | **SFT on the small model** — often beats distillation |
-| Teach a small model a *reasoning style* | Distillation from a reasoning teacher, or RL (CS-26) |
+| Teach a small model a *reasoning style* | Distillation from a reasoning teacher, or RL (CS-14 §4.6.10) |
 
 > **The most important row:** if you have labelled task data, plain SFT on the small model is
 > frequently better *and* simpler than distilling from a large one. Distillation earns its
@@ -603,7 +603,7 @@ print(f'kept {len(keep)}')
 "
 
 # 5. Train the student with ORDINARY SFT — no special loss needed
-python code/01_sft_lora.py --data data/distil_sft.clean.jsonl --out out/student
+python code/01_sft_lora.py --data data/distil_sft.clean.jsonl --output out/student
 
 # 6. Evaluate: student vs teacher vs a small model trained on the SAME prompts
 #    from your own labels. If supervised SFT wins, use that instead.
@@ -634,7 +634,7 @@ python code/01_sft_lora.py --data data/distil_sft.clean.jsonl --out out/student
 | The applied LLM → SLM module | **CH-09 / CS-09 — Distillation: LLM → SLM** |
 | To compress without training | **CH-10 / CH-11 — Quantization** |
 | To train the student once you have data | **CH-13 / CS-13 — Instruction Fine-Tuning** |
-| To go beyond the teacher's ceiling | **CH-14 / CS-14 — The Alignment Map**, **CS-26 — GRPO** |
+| To go beyond the teacher's ceiling | **CH-14 / CS-14 — The Alignment Map** (§4.6.10 for GRPO) |
 | The repo's implementation | `code/07_distillation.py` |
 | Practice being interviewed on this | **IQ-08 — Interview Questions: Knowledge Distillation** |
 

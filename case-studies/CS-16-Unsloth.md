@@ -208,7 +208,7 @@ Take one RMSNorm on a `[2, 4096, 2048]` FP16 tensor on an A100:
 | **NF4 / bitsandbytes** | The 4-bit NormalFloat quantization type and the library that implements it (`bnb`). | What Unsloth's pre-quantized `-bnb-4bit` checkpoints are stored in. | "4-bit" is not a single format. NF4 with double-quant differs measurably from FP4; `bnb_4bit_quant_type` and `bnb_4bit_use_double_quant` are real knobs (CS-11). |
 | **Pre-quantized checkpoint** | *"If you are going to load the model from the Unsloth repository, that is a pre-quantized model"* [13:12]–[13:18]. The `unsloth/*-bnb-4bit` repos on the Hub. | Saves the one-time on-load quantization cost (minutes for a 7B) and guarantees a reproducible quantization recipe across users. | The pre-quantized repo is *the same weights* in a different container — *"both are different models… Unsloth has done some sort of optimization"* [12:02]–[12:27]. Same base, different execution. |
 | **4-bit dequantize round trip** | The naive QLoRA path: read NF4 weight tile from HBM → dequantize to FP16 in registers → write FP16 tile (or keep in registers) → MMA → repeat next step. | The dominant cost in naive QLoRA. Unsloth folds the dequant into the MMA pipeline so the FP16 tile is never a memory object. | It is not that bitsandbytes is bad — it is that *any* general-purpose dequant kernel has to round-trip through a general memory layout, and a fused one does not. |
-| **Gradient checkpointing** | Storing only layer boundaries during forward and recomputing the interior during backward. Trades ~25–35% time for ~60–75% activation memory. | The other half of the VRAM story. `use_gradient_checkpointing="unsloth"` is Unsloth's smarter variant — it keeps the parts that are cheap to keep and recomputes only the expensive ones. | "Smart" checkpointing in the video [23:43]–[24:05] is described so vaguely it is not actionable; the actionable statement is `use_gradient_checkpointing="unsloth"` in `get_peft_model` — a string, not a bool. |
+| **Gradient checkpointing** | Storing only layer boundaries during forward and recomputing the interior during backward. **Plain** GC trades ~25–35% time for ~60–75% activation memory; Unsloth's `"unsloth"` variant is a *different configuration* trading ~5–15% time for 40–60% (§5.2). Quote the variant with the number. | The other half of the VRAM story. `use_gradient_checkpointing="unsloth"` is Unsloth's smarter variant — it keeps the parts that are cheap to keep and recomputes only the expensive ones. | "Smart" checkpointing in the video [23:43]–[24:05] is described so vaguely it is not actionable; the actionable statement is `use_gradient_checkpointing="unsloth"` in `get_peft_model` — a string, not a bool. |
 | **`FastLanguageModel`** | Unsloth's entry-point class with two static methods: `from_pretrained(...)` and `get_peft_model(...)`. | These two calls *are* the Unsloth API for SFT. Everything else is TRL's. | It is not a `transformers` class. `from unsloth import FastLanguageModel` must come **early** (before `transformers` is imported in some versions) so the patches apply to the right modules. |
 | **`from_pretrained`** | Loads base model + tokenizer, applies pre-quantization, patches attention/RoPE/MLP, sets up RoPE scaling. | *"Both things I can load using the same method… FastLanguageModel.from_pretrained"* [38:00]–[38:08]. | Returns `(model, tokenizer)` — a tuple, not a model. Forgetting the tuple unpack is the #1 first-run error. |
 | **`get_peft_model`** | Attaches LoRA adapters and returns the PEFT-wrapped model. | *"I'm going to use this FastLanguageModel the same object and then I'm calling this get_peft_model"* [39:49]–[39:53]. | It is a *classmethod on `FastLanguageModel`*, not `peft.get_peft_model`. It accepts a superset of `LoraConfig` including `use_gradient_checkpointing="unsloth"`, `max_seq_length`, `use_rslora`, `loftq_config`. |
@@ -1617,8 +1617,16 @@ model.save_pretrained_merged("merged_16bit", tokenizer, save_method="merged_16bi
 #           with vLLM/TGI/sglang/llama.cpp conversion pipelines.
 
 # ---- PATH C: merged, 4-bit -----------------------------------------------
-model.save_pretrained_merged("merged_4bit", tokenizer, save_method="merged_4bit")
+model.save_pretrained_merged("merged_4bit", tokenizer, save_method="merged_4bit_forced")
 # Artefact: full model requantized to 4-bit.
+# NOTE: the plain `save_method="merged_4bit"` RAISES a RuntimeError. That gate is
+#       deliberate — Unsloth refuses the bare spelling and tells you to opt in
+#       explicitly ("If you are certain, change `save_method` to
+#       `merged_4bit_forced`"), then internally remaps `merged_4bit_forced` back to
+#       `merged_4bit` (unsloth/save.py, unsloth_save_model). So `_forced` is not a
+#       different artefact — it is the only spelling that runs. Code that passes
+#       the bare `merged_4bit` does not produce a lossy model; it produces a
+#       traceback, which is at least honest about the trade.
 # USE WHEN: you need a small artefact and accept a SECOND quantization error on
 #           top of the base's. This is lossy twice and usually the wrong choice.
 
@@ -1911,7 +1919,7 @@ STEP 6  packing + optim       Throughput knobs. Change last; they do not affect
 | `packing` × `num_train_epochs` | With packing, "1 epoch" is a fixed token budget that packs into fewer sequences than you have rows | Think in optimizer steps, not epochs, whenever packing is on. |
 | `packing` × response-only masking | The label mask must be applied per row *before* packing (§4.9.4) | With Unsloth's helper, verify on a packed batch, not a raw row. |
 | `max_seq_length` × `per_device_train_batch_size` | Peak activation memory scales ~linearly in both | Halving `max_seq_length` lets you double the batch — usually the better trade for throughput, and identical in quality *if* you are not truncating. |
-| `use_gradient_checkpointing` × step time | GC costs 25–35% step time and saves 60–75% activations | Turn it on only when you must, then recover the loss by raising `per_device_train_batch_size`. |
+| `use_gradient_checkpointing` × step time | **Plain** GC costs 25–35% step time and saves 60–75% activations; the `"unsloth"` string costs ~5–15% and saves 40–60% (§5.2) | Turn it on only when you must, then recover the loss by raising `per_device_train_batch_size`. **Say which variant** — the two figures differ by 3× and a reader who sees both without their configuration will conclude one is wrong. |
 | `optim="adamw_8bit"` × model size | Saves `12 × params` bytes of optimizer state | At LoRA rank ≤ 64 this is ~50 MB — irrelevant. At full FT of 8B it is 64 GB → 16 GB. Do not claim a VRAM win from it on a LoRA run. |
 | `load_in_4bit` × merge path | 4-bit base makes `merge_and_unload()` unsafe (§6.10) | Merges go through `save_pretrained_merged`. |
 | `dtype=None` × `bf16=...` in SFTConfig | The loader auto-detects; the trainer does not inherit | Set both explicitly on any multi-GPU-class script. |
@@ -2121,7 +2129,7 @@ Each entry: **the exception**, **why it happens**, **what to do**.
 
 18. **`merge_and_unload()` on a 4-bit-loaded model is unsafe.** *Why:* the base is NF4 with per-block and possibly second-level scales; peft's generic merge does not reproduce Unsloth's dequant recipe. *What to do:* always `save_pretrained_merged(...)`, and run the logit-agreement test in §6.10.
 
-19. **`merged_4bit` is lossy twice.** *Why:* you dequantize the NF4 base, add the adapter, then requantize. *What to do:* ship `merged_16bit` unless the size difference is binding; if it is, ship a GGUF via llama.cpp instead, which has better-tested 4-bit recipes (CS-10).
+19. **`merged_4bit` is lossy twice.** *Why:* you dequantize the NF4 base, add the adapter, then requantize. *What to do:* ship `merged_16bit` unless the size difference is binding; if it is, ship a GGUF via llama.cpp instead, which has better-tested 4-bit recipes (CS-10). *API note:* the argument you pass is `save_method="merged_4bit_forced"` — the bare `"merged_4bit"` raises a RuntimeError by design (§6.9).
 
 20. **A merged model loses the Unsloth fast *forward* unless the merge preserves it.** *Why:* the merge can replace patched modules. *What to do:* for inference speed, either serve the adapter on an Unsloth-loaded base, or accept stock speeds on the merged artefact — do not assume the merge keeps `for_inference` behaviour.
 
@@ -3019,7 +3027,7 @@ For merged-model deployments, rollback is a full model reload: 30–120 s of dow
 ### 17.10 "Unsloth works with any model on the Hub."
 
 **Believe:** it is a universal accelerator.
-**Actually:** Unsloth is **architecture-specific**. It patches named modules (`q_proj`, `k_proj`, `v_proj`, `o_proj`, `gate_proj`, `up_proj`, `down_proj`, `embed_tokens`, `lm_head`, `mlp`, `self_attn`) that exist under those *exact names*. A model outside the supported list falls back to unstloth-accelerated (or refuses to load) and you lose the point of using it.
+**Actually:** Unsloth is **architecture-specific**. It patches named modules (`q_proj`, `k_proj`, `v_proj`, `o_proj`, `gate_proj`, `up_proj`, `down_proj`, `embed_tokens`, `lm_head`, `mlp`, `self_attn`) that exist under those *exact names*. A model outside the supported list falls back to un-accelerated PyTorch (or refuses to load) and you lose the point of using it.
 **Because:** a fused kernel is written against a specific computation graph. Support coverage is broad for Llama/Mistral/Qwen/Gemma/Phi family models, and thinner outside them. Check the supported-models table *before* committing to a base model (§10.2). The video's "1,150 models under the Hugging Face Unsloth org" [11:40] is a count of pre-quantized *re-uploads*, not a count of supported architectures.
 
 ### 17.11 "The pre-quantized `-bnb-4bit` uploads are just a convenience."
@@ -3159,9 +3167,9 @@ VRAM budget: weights 3.9 GB + LoRA params/grads/optimizer states ~0.3 GB (`r=16`
 |---|---|---|
 | **Builds on** | **CS-06** — Hugging Face Ecosystem | Unsloth is an extension of `transformers` + `peft` + `trl`; nothing here makes sense without the `AutoModel`/`Trainer`/`datasets` mental model. |
 | **Builds on** | **CS-13** — Instruction Fine-Tuning (SFT) | The dataset format, the chat template, the assistant-only loss masking, and the eval protocol all come from CS-13. Unsloth changes *how fast* that pipeline runs, not what it does. |
-| **Builds on** | **CS-05** — Datasets & Data Preparation | Packing, sequence-length distributions, and the fingerprinting practice in §16.2 are data-engineering concerns. |
+| **Builds on** | **CS-01 §4.9** — Data quality (dedup, filtering, contamination, licensing) | Packing, sequence-length distributions, and the fingerprinting practice in §16.2 are data-engineering concerns. (**CS-05 is *RNN/LSTM → Attention***, which is unrelated — there is no "Datasets & Data Preparation" case study) |
 | **Builds on** | **CS-10 / CS-11** — Quantization | NF4, double quantization, blockwise absmax, and the dequantize→compute→requantize round trip are defined there; §4.5 here is their consequence in the training loop. |
-| **Parallel to** | **CS-23** — LoRA / QLoRA | The adapter mathematics. Unsloth optimises the LoRA graph; CS-23 derives it. Read CS-23 first if `dA`/`dB` in §4.3 look unfamiliar. |
+| **Parallel to** | **CS-13 §6.8 & CS-11 §4.11** — the LoRA configuration and QLoRA | The adapter mechanics. Unsloth optimises the LoRA graph; those sections choose the knobs. Read them first if `dA`/`dB` in §4.3 look unfamiliar. (A dedicated "CS-23 LoRA/QLoRA" module is referenced elsewhere in this repo but was never written) |
 | **Contrasts with** | **CS-15** — LLaMA-Factory | Both are "wrap a training stack and make it easy". LLaMA-Factory is config-file-driven and multi-method/multi-GPU; Unsloth is code-driven, single-GPU, and kernel-level. Different axes of the same problem. |
 | **Contrasts with** | **CS-17** — Axolotl | The nearest alternative and the natural next step when Unsloth's single-GPU ceiling binds. Axolotl gives FSDP, YAML configs, and a broader method menu; Unsloth gives the kernels. §8.1 and §15.2 pick between them. |
 | **Contrasts with** | **CS-18 / CS-19** — OpenAI / Vertex fine-tuning | Hosted APIs: zero ops, no kernel access, no data residency control, no adapter artefact. Unsloth: maximum control, all the ops. §16.6 is the compliance comparison. |

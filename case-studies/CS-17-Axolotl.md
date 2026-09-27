@@ -6,8 +6,8 @@
 | **Source video(s)** | LLM Fine-Tuning 19: Fine-Tune Any LLM with Axolotl 🔥 Low-Code YAML Based Training (No Heavy Coding) |
 | **Transcript file(s)** | `LLM_Fine-Tuning_19_Fine-Tune_Any_LLM_with_Axolotl_Low-Code_YAML_Based_Training_N.txt` |
 | **Companion code** | `LLM Fine-Tuning-19-Axolotl/axolotl_final_code.ipynb`, `colab_axolotl_example.py`, `axolotal-config/custom-config.yaml`, `axolotal-config/qlora.yaml`, `axolotal-config/base_sft_lora.yaml`, `axolotal-config/dpo(SFT → DPO).yaml`, `axolotal-config/fsdp(Single GPU → Multi-GPU).yaml`, `axolotl-docker-setup-steps.md` |
-| **Prerequisites** | CS-13 (SFT — the objective and the mask), CS-15 (LLaMA-Factory — the same idea with a UI), CS-16 (Unsloth — the same idea with kernel surgery), CS-23 (LoRA/QLoRA mechanics) |
-| **Neighbours** | CS-14 (DPO/ORPO — the `rl:` block), CS-18 (OpenAI SFT), CS-24 (multi-GPU training) |
+| **Prerequisites** | CS-13 (SFT — the objective and the mask), CS-15 (LLaMA-Factory — the same idea with a UI), CS-16 (Unsloth — the same idea with kernel surgery), CS-13 §6.8 + CS-11 §4.11 (LoRA/QLoRA mechanics) |
+| **Neighbours** | CS-14 §4.6 (DPO/ORPO — the `rl:` block), CS-18 (OpenAI SFT), §4.8.4 here (multi-GPU training) |
 | **Difficulty** | Beginner to run. Advanced to configure correctly. Expert to debug when it silently trains garbage. |
 | **Hands-on required** | Yes — the video's Colab runs 25 steps of QLoRA on a free T4 in ~5–7 minutes |
 | **Estimated study time** | 6h theory + 6h practical (convert one of your own CS-13 datasets to a `chat_template` config and run it twice with different `type:` values — the second run is the lesson) |
@@ -819,7 +819,7 @@ That fits comfortably in 14.5 GiB. **The run that "needed 24 GB minimum" needed 
 
 **Now the same model with LoRA (bf16 base) instead of QLoRA:** the base term becomes `3.09e9 × 2 = 6.2 GB`, so the total is **~9–11.5 GB** — still fits on a T4, but with little headroom and no room for `micro_batch_size: 2`.
 
-**And full fine-tuning:** `W_base 6.2 + G 6.2 + O_state (Adam fp32 = 8 bytes/param) 24.7 + activations ~2 ≈ 39 GB`. That is 3×A100-40GB or 1×A100-80GB for a **3B** model. This is the arithmetic behind "do not full-fine-tune without a plan" (CS-23).
+**And full fine-tuning:** `W_base 6.2 + G 6.2 + O_state (Adam fp32 = 8 bytes/param) 24.7 + activations ~2 ≈ 39 GB`. That is 3×A100-40GB or 1×A100-80GB for a **3B** model. This is the arithmetic behind "do not full-fine-tune without a plan" (CS-13 §6.8, CS-11 §4.11).
 
 #### 4.4.3 The throughput side
 
@@ -3275,21 +3275,21 @@ Answer these before reading §19.11. If you can answer nine of ten, you can run 
 
 | Relationship | Module | Where the link matters |
 |---|---|---|
-| **Builds on** | CS-05 — PEFT and LoRA | `lora_r`/`alpha`/`target_modules` semantics; the adapter-only gradient argument in §17.6 |
-| **Builds on** | CS-06 — QLoRA and quantisation | NF4, double quantisation, paged optimisers; `load_in_4bit` and `adapter: qlora` in §4.3.2 |
+| **Builds on** | CS-13 §6.8 + CS-11 §4.11 — the LoRA configuration and QLoRA | `lora_r`/`alpha`/`target_modules` semantics; the adapter-only gradient argument in §17.6. (**CS-05 is *RNN/LSTM → Attention*** — there is no "PEFT and LoRA" module. A "CS-23" deep dive is planned but unwritten) |
+| **Builds on** | CS-11 §4.11 + CS-10 — quantisation | NF4, double quantisation, paged optimisers; `load_in_4bit` and `adapter: qlora` in §4.3.2. (**CS-06 is *Hugging Face Masterclass***) |
 | **Builds on** | CS-13 — Instruction fine-tuning | Chat templates, loss masking, dataset formats; §4.5 and §4.7 extend it into Axolotl's `type:` zoo |
-| **Builds on** | CS-04 — Dataset preparation and tokenisation | The `datasets` library, `sequence_len`, token counting; §4.6 builds packing on top |
+| **Builds on** | CS-06 (HF `datasets`/tokenizers) + CS-01 §4.9 (data quality) | The `datasets` library, `sequence_len`, token counting; §4.6 builds packing on top. (**CS-04 is *Fine-Tuning vs RAG vs Agents*** — there is no "Datasets & Data Preparation" module) |
 | **Contrasts with** | CS-15 — LLaMA-Factory | The other YAML-first framework; §13.1 and §13.2 are the head-to-head |
-| **Contrasts with** | CS-14 — Unsloth | Speed-first single-GPU path; the `use_gradient_checkpointing="unsloth"` divergence in §13.2 |
-| **Contrasts with** | CS-16 — torchtune | Recipe-as-Python; the readability-versus-configurability trade in §13.1 |
-| **Needed by** | CS-20 — RLHF and preference optimisation | §4.8.2's `rl:` block; the DPO/ORPO/KTO/GRPO configs |
-| **Needed by** | CS-22 — Evaluation and benchmarks | §12's four layers feed the eval-gate workflow |
-| **Needed by** | CS-24 — Production deployment and serving | §16's versioning, canary, and rollback |
-| **Needed by** | CS-25 — Cost and capacity planning | §4.4 and §11's VRAM and GPU-hour arithmetic |
+| **Contrasts with** | CS-16 — Unsloth | Speed-first single-GPU path; the `use_gradient_checkpointing="unsloth"` divergence in §13.2. (**CS-14 is *The Alignment Map***) |
+| **Contrasts with** | CS-15 §13 / §13.1 here — the framework comparison | torchtune (recipe-as-Python) is compared there; it has no module of its own. (**CS-16 is *Unsloth***) |
+| **Needed by** | CS-14 §4.6.1/§4.6.3/§4.6.9/§4.6.10 — RLHF, DPO, ORPO, GRPO | §4.8.2's `rl:` block; the DPO/ORPO/KTO/GRPO configs. (**"CS-20"** is planned, unwritten — it is a fine-tuning-LLMs module, not RLHF) |
+| **Needed by** | CS-13 §12 + CS-14 §12 — evaluation | §12's four layers feed the eval-gate workflow. (**"CS-22"** is planned, unwritten — it is an *embedding* module, not evaluation) |
+| **Needed by** | §16 (this module) — serving and deployment | §16's versioning, canary, and rollback. No deployment module exists (**"CS-24"** is planned, unwritten — it is an RL module) |
+| **Needed by** | CS-01 §5/§13 + CS-11 §15–§16 — cost and capacity arithmetic | §4.4 and §11's VRAM and GPU-hour arithmetic. (**"CS-25"** is planned, unwritten — it is the DPO module) |
 | **Interview prep** | IQ-17 | The question bank for this module |
 | **Cheat sheet** | CH-17 | One-page config reference and the debugging table |
-| **Appendix** | AP-03 — Attention backends | The FA2/FA3/FA4/sdpa/flex/xformers matrix from §4.3.4 |
-| **Appendix** | AP-05 — Distributed training | ZeRO stages versus FSDP2, expanded from §4.8.4 |
+| **Appendix** | §4.3.4 (this module) | The FA2/FA3/FA4/sdpa/flex/xformers matrix. **No AP-03 exists** — AP-01 is the only appendix in this handbook |
+| **Appendix** | §4.8.4 (this module) | ZeRO stages versus FSDP2. **No AP-05 exists** — AP-01 is the only appendix |
 
 ---
 

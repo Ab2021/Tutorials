@@ -6,7 +6,7 @@ you actually want" — using *comparisons* rather than demonstrations.
 way you want. Tone, helpfulness, refusal behaviour, conciseness, safety.
 **Do NOT use when:** the model cannot do the task at all (that is SFT — CH-13), or the
 problem is missing knowledge (that is RAG or continued pretraining — CH-04/CH-12), or you
-have a verifiable reward and no preference data (that is GRPO — CS-26).
+have a verifiable reward and no preference data (that is GRPO — CS-14 §4.6.10).
 
 > **The one sentence that matters.** SFT says *"do this"*. Preference optimisation says
 > *"between these two, this one"*. If you cannot point at a concrete pair where one answer is
@@ -81,7 +81,7 @@ Can the model already produce a CORRECT answer, just not reliably?
 └─ Yes ↓
 
 Is the reward VERIFIABLE by a program (unit tests, a math checker, a regex)?
-├─ Yes → GRPO (CS-26). No reward model, no pairs, no reference model needed.
+├─ Yes → GRPO (CS-14 §4.6.10). No reward model, no pairs, no reference model needed.
 └─ No ↓
 
 Do you have PAIRS (this answer is better than that one)?
@@ -601,10 +601,10 @@ report_to: none
 | If you want to… | Read |
 |---|---|
 | The full treatment with maths and failure modes | **CS-14 — The Alignment Map** |
-| RL fundamentals and PPO specifically | **CS-24 — RL Fundamentals & RLHF with PPO** |
-| DPO in depth | **CS-25 — Direct Preference Optimization** |
-| The verifiable-reward path | **CS-26 — GRPO** |
-| The single-stage path | **CS-27 — ORPO** |
+| RL fundamentals and PPO specifically | **CS-14 §4.6.1** (RLHF with PPO — the 4-model problem) |
+| DPO in depth | **CS-14 §4.6.3** (and §4.6.5 for cDPO) |
+| The verifiable-reward path | **CS-14 §4.6.10** (GRPO) |
+| The single-stage path | **CS-14 §4.6.9** (ORPO) |
 | How to build the pairs | `code/data/make_preference_data.py` (it enforces the length control) |
 | How to evaluate without fooling yourself | `code/common/eval_utils.py` (position bias, reward hacking, bootstrap CIs) |
 | What SFT has to do first | **CH-13 / CS-13 — Instruction Fine-Tuning** |

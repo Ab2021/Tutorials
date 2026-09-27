@@ -4,7 +4,7 @@
 **Use when:** Sizing a run, budgeting GPU-hours, choosing full-FT vs LoRA vs QLoRA, debugging a loss curve, revising the night before an interview.
 **Do NOT use when:** You need the *reasoning* — that is CS-01. This card gives the answer, not the derivation.
 
-> Pairs with **CS-01** (case study) and **IQ-01** (100 interview questions). Deep dives: **CS-05** (why the Transformer), **CS-10/11** (quantization), **CS-12** (continued pretraining), **CS-13** (SFT), **CS-23** (LoRA/QLoRA), **CS-04** (FT vs RAG vs agents).
+> Pairs with **CS-01** (case study) and **IQ-01** (100 interview questions). Deep dives: **CS-05** (why the Transformer), **CS-10/11** (quantization), **CS-12** (continued pretraining), **CS-13** (SFT), **CS-13 §6.8** / **CS-11 §4.11** (LoRA/QLoRA), **CS-04** (FT vs RAG vs agents).
 
 ---
 
@@ -75,10 +75,10 @@ METHOD
 └─ New language / new tokenizer needed    → continued pretraining FIRST (CS-12)
 
 BASE MODEL
-├─ Classification / NER / embeddings  → encoder (BERT-base/large) — CS-07, CS-22
+├─ Classification / NER / embeddings  → encoder (BERT-base/large) — CS-07; embeddings: code/10_embedding_finetune.py
 ├─ Generative, English, 1 GPU         → Llama-3.1-8B-Instruct / Qwen2.5-7B-Instruct
 ├─ Non-English                        → check tokens/word FIRST; prefer Llama-3/Qwen2.5
-└─ On-prem, tiny GPU                  → 0.5B–3B (Qwen2.5-3B, Phi-3.5-mini) — CS-20
+└─ On-prem, tiny GPU                  → 0.5B–3B (Qwen2.5-3B, Phi-3.5-mini) — CS-20 (planned, not yet written)
 
 CHECKPOINT: assistant/chat behaviour → INSTRUCT. Raw domain completion → BASE.
 Unsure → instruct: fine-tuning a base by mistake wastes the run.
@@ -595,9 +595,11 @@ print(f"delta   strict={s1-s0:+.3f} tokenF1={f1-f0:+.3f}")
 | Quantization internals (PTQ, QAT, GPTQ, AWQ, GGUF) | **CS-10 / CS-11** |
 | Domain-adaptive continued pretraining | **CS-12** |
 | Instruction tuning (SFT) in depth | **CS-13** |
-| RLHF, PPO, DPO, ORPO, GRPO | **CS-14**, **CS-24**–**CS-27** |
+| RLHF, PPO, DPO, ORPO, GRPO | **CS-14 §4.6.1–4.6.10** |
 | Faster / lower-VRAM training in practice | **CS-16** (Unsloth), **CS-17** (Axolotl), **CS-15** (LLaMA-Factory) |
-| Small language models | **CS-20** |
-| Embedding models and retrieval quality | **CS-22** |
-| LoRA and QLoRA from first principles | **CS-23** |
-| The whole pipeline end to end | **CS-28** — Capstone |
+| Small language models | **CS-09** (LLM → SLM); **CS-20** planned, not yet written |
+| Embedding models and retrieval quality | `code/10_embedding_finetune.py`; **CS-22** planned, not yet written |
+| LoRA and QLoRA from first principles | **CS-13 §6.8** / **CS-11 §4.11** |
+| The whole pipeline end to end | **CS-28** — Capstone, planned, not yet written; **CS-13** + **CS-16/CS-17** are the written run-throughs |
+
+**CS-20–CS-28 are planned, not yet written** (README status table). Where a row above names an unwritten module, the written nearest-equivalent is named beside it: **CS-20** → **CS-09**; **CS-21** (multimodal) → `code/12_multimodal_vlm.py`; **CS-22** → `code/10_embedding_finetune.py`; **CS-23** → **CS-13 §6.8** + **CS-11 §4.11**; **CS-24–CS-27** → **CS-14 §4.6.1–4.6.10**; **CS-28** → **CS-13** + **CS-16/CS-17**.

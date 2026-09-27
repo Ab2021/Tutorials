@@ -1829,7 +1829,7 @@ print(f"accuracy 95% CI: +/- {hw:.4f}")
 | Typical params | 66M–400M | 1B–1T | 60M–11B |
 | Inference cost / 1M calls | **$0.04–0.20** | $24–$750 (API) or GPU-hours for self-host | $5–$50 self-hosted |
 | Latency p50 | 10–30 ms GPU, 15–60 ms CPU int8 | 300–2,000 ms (API, short output) | 100–800 ms self-hosted |
-| Fine-tune cost | Minutes on one GPU | GPU-days; needs LoRA/QLoRA (CS-23) | Hours to days |
+| Fine-tune cost | Minutes on one GPU | GPU-days; needs LoRA/QLoRA (CS-13 §6.8, CS-11 §4.11) | Hours to days |
 | Data needed to beat prompting | ~50–200 labelled examples/class | 0 (prompt) to 1k–100k (SFT) | ~1k pairs |
 | 2026 relevance | Still the correct engineering choice for closed-label NLP at volume | Default for anything generative | Best for translation/summarisation at scale |
 
@@ -1993,7 +1993,7 @@ The instructor lists essentially this menu at [28:43–29:02] — *"board, disti
 > full fine-tuning (1e-4 to 3e-4, not 2e-5) because you are training a small,
 > randomly-initialised low-rank update; (d) merge the adapter before ONNX export
 > (`model.merge_and_unload()`), because exporters handle merged weights far more
-> reliably. → CS-23 is the deep dive.
+> reliably. → CS-13 §6.8 is the LoRA deep dive; CS-11 §4.11 covers QLoRA. (A dedicated "CS-23" module is planned but unwritten.)
 
 > **Beyond the video — distil down to a smaller encoder (→ CS-08).** If your
 > latency or RAM budget rules out even BERT-base, distillation is the mature path:
@@ -2513,8 +2513,8 @@ Length-sorted batching plus dynamic padding is typically a **3–6× throughput 
 | Relationship | Module |
 |---|---|
 | Builds on | CS-01 (pretraining & the LLM lifecycle), CS-02 (transfer learning & fine-tuning), CS-05 (RNN/LSTM → attention), CS-06 (Hugging Face masterclass: `AutoModel`, tokenizers, `Trainer`, `pipeline`) |
-| Needed by | CS-08 (knowledge distillation — DistilBERT *is* a distilled BERT), CS-10/CS-11 (quantization — BERT int8 ONNX is the canonical CPU target), CS-12 (domain-adaptive continued pretraining on your own PDFs — the MLM objective reappears there), CS-22 (embedding models: BERT/MiniLM as the retriever in RAG) |
-| Contrasts with | CS-13 (instruction fine-tuning with decoder LLMs — the *generation* counterpart), CS-14 (alignment: encoders have no preference signal), CS-20 (fine-tuning SLMs), CS-23 (LoRA/QLoRA — the PEFT route when full fine-tuning is the wrong shape, and how to apply it to BERT) |
+| Needed by | CS-08 (knowledge distillation — DistilBERT *is* a distilled BERT), CS-10/CS-11 (quantization — BERT int8 ONNX is the canonical CPU target), CS-12 (domain-adaptive continued pretraining on your own PDFs — the MLM objective reappears there), `code/10_embedding_finetune.py` (embedding models: BERT/MiniLM as the retriever in RAG — "CS-22" is planned, unwritten) |
+| Contrasts with | CS-13 (instruction fine-tuning with decoder LLMs — the *generation* counterpart), CS-14 (alignment: encoders have no preference signal), CS-13 §6.8 + CS-11 §4.11 (LoRA/QLoRA — the PEFT route when full fine-tuning is the wrong shape, and how to apply it to BERT). CS-20 (fine-tuning LLMs/SLMs) is planned, unwritten; CS-13 is nearest |
 | Pairs with | CS-03/CS-04 (framework and architecture selection — where the encoder-vs-LLM decision is actually made) |
 | Cheat sheet | **CH-07** — three complete task templates, the alignment snippet, and the cost calculator |
 | Interview bank | **IQ-07** — 104 questions across five levels |

@@ -161,7 +161,7 @@ Three consequences that only show up in production and that drive most of §11:
 | **External data source / knowledge base** | The database, API, web page or document collection you connect to the LLM [10:08]–[10:21], [19:14] | The instructor's umbrella term for everything retrievable | Assuming it must be a vector DB — it can be SQL, a graph, or an API |
 | **Vector database** | A store of embedding vectors supporting similarity search; "we vectorize the information so that we can perform retrieval on top of it" [10:33] | The default retriever backend | Believing a vector DB is required for RAG — BM25-only RAG is common and strong |
 | **Chunking** | Splitting documents into retrievable units before embedding [11:23] | Chunk boundaries are the #1 silent cause of retrieval failure | Chunking to a fixed token count with no overlap or structure |
-| **Embedding** | A dense vector representation of text such that semantic similarity ≈ cosine similarity | Determines whether your query can find your chunk at all | Assuming general embeddings work on domain jargon (see CS-22) |
+| **Embedding** | A dense vector representation of text such that semantic similarity ≈ cosine similarity | Determines whether your query can find your chunk at all | Assuming general embeddings work on domain jargon (see `code/10_embedding_finetune.py`) |
 | **Retrieval pipeline** | Query → vector DB → relevant documents → context window → answer [10:44]–[11:40] | The three things that can break independently: retrieve, rank, generate | Blaming the LLM for a retrieval miss |
 | **Top-k** | How many chunks are injected into the context | Directly multiplies per-query cost and prefill latency | Raising k to fix a retrieval problem rather than fixing chunking |
 | **Reranker** | A cross-encoder that re-scores retrieved candidates by joint query–document attention | Typically largest single quality win in a RAG stack, at +50–300 ms | Confusing it with the embedding model |
@@ -316,13 +316,13 @@ The four quadrants have *four different costs* and *four different time-to-first
 | 8 | "Convert this messy address into our 9-field canonical form" | n/a | Partially | II | Fine-tune (extraction skill + format) |
 | 9 | "Diagnose this radiology report in our hospital's terminology" | No | No | III | Hybrid: FT on terminology + RAG on guidelines |
 | 10 | "Answer customer questions about our product, in our tone, citing the current price list" | No | No | III | Hybrid: FT generator + RAG |
-| 11 | "Retrieve the right clause from 400k contracts, then summarise in legal register" | No | No | III | Hybrid: FT embedder (CS-22) + FT generator |
+| 11 | "Retrieve the right clause from 400k contracts, then summarise in legal register" | No | No | III | Hybrid: FT embedder (`code/10_embedding_finetune.py`) + FT generator |
 | 12 | "Route each request to the cheapest model that can handle it" | n/a | No (base model cannot classify well) | II | Fine-tune a small router |
 | 13 | "Book the meeting, then email the attendees." | n/a | n/a — no action capability | Action failure (agent) | Agent + calendar/mail tools |
 | 14 | "Find the bug: read the repo, run the tests, patch, re-run" | No | n/a | Agentic RAG + agent | Agent with a code-search tool + execution |
 | 15 | "Translate this to French." | Yes | Yes | IV | Prompt. Do not fine-tune. Do not retrieve. |
 | 16 | "Given a claim, decide if it is covered, then file the claim" | No | No | Hybrid + agent | FT on policy language + RAG on the policy text + agent to file |
-| 17 | "Extract line items from scanned invoices into our ERP" | n/a | No (format + layout skill) | II | FT a VLM (CS-21) + format tuning |
+| 17 | "Extract line items from scanned invoices into our ERP" | n/a | No (format + layout skill) | II | FT a VLM (*planned — "CS-21"*; `code/12_multimodal_vlm.py`) + format tuning |
 | 18 | "Answer employee HR questions with per-employee access control" | No | Yes | I | RAG — you *cannot* do this with weights |
 
 Two rows are worth pulling out because they are the ones teams get wrong:
@@ -431,7 +431,7 @@ total                16 bytes / parameter  + activations + optimizer temp
 | 13B | ~208 GB | ~30 GB | ~16 GB |
 | 70B | ~1.1 TB | ~160 GB | ~40–48 GB |
 
-QLoRA's 4-bit NF4 base weights plus paged optimizers are what put a 7B fine-tune on a 16 GB consumer card and a 70B fine-tune on a single 80 GB A100/H100. (Full derivation and the LoRA rank trade-off space: CS-23.)
+QLoRA's 4-bit NF4 base weights plus paged optimizers are what put a 7B fine-tune on a 16 GB consumer card and a 70B fine-tune on a single 80 GB A100/H100. (Full derivation and the LoRA rank trade-off space: CS-13 §6.8, CS-11 §4.11.)
 
 **RAG memory.** Vectors are cheap; the *context* is not.
 
@@ -645,7 +645,7 @@ query ──▶ [ FT generator: domain tone,     LLM_θ' ──▶ answer + cita
    query  ──▶ [ FT embedder E_θ' ] ──▶ search ┘ ──▶ chunks ──▶ frozen generator
 ```
 
-*Rule:* choose this when your queries and documents use **domain vocabulary the general embedder does not share** (clinical codes, ticker symbols, part numbers, internal product names). This is CS-22's entire subject. It is usually the **highest-ROI fine-tune in a RAG stack**: a 0.1B embedder trained on 5k query–document pairs can beat a 0.3B general embedder by 10–25 nDCG points, and it costs ~$5–50 to train.
+*Rule:* choose this when your queries and documents use **domain vocabulary the general embedder does not share** (clinical codes, ticker symbols, part numbers, internal product names). This is the entire subject of `code/10_embedding_finetune.py` (a "CS-22" module is planned but unwritten). It is usually the **highest-ROI fine-tune in a RAG stack**: a 0.1B embedder trained on 5k query–document pairs can beat a 0.3B general embedder by 10–25 nDCG points, and it costs ~$5–50 to train.
 
 **Hybrid 3 — Fine-tuned router in front of the big model**
 
@@ -917,7 +917,7 @@ def recall_at_k(gold: list[tuple[str,str]], chunks, bm25, k=5) -> float:
     return hits / len(gold)
 ```
 
-**What to change for your own data:** the chunker (structure-aware for Markdown/HTML/PDF-with-headings), the embedder (domain-specific — see CS-22), and `k_final`. Measure `recall@k` at k = 1, 5, 10, 20 before touching the generator. If recall@20 is 0.71, the generator is not your problem.
+**What to change for your own data:** the chunker (structure-aware for Markdown/HTML/PDF-with-headings), the embedder (domain-specific — see `code/10_embedding_finetune.py`), and `k_final`. Measure `recall@k` at k = 1, 5, 10, 20 before touching the generator. If recall@20 is 0.71, the generator is not your problem.
 
 ### 6.3 Agent: the smallest honest ReAct loop, with the two things the video omits
 
@@ -1139,7 +1139,7 @@ Stop, and do not build, when any of these is true:
 | S7 | You have never measured the prompt-only baseline | You cannot prove improvement | 200-item golden set, prompt-only run, numbers on a wall |
 | S8 | The task's value per query is below the FT build cost amortised over 12 months | Negative ROI | Cheaper rung |
 | S9 | The action is irreversible and unattended | Agents fail at rates that make this dangerous | Human-in-the-loop; add the confirmation gate *before* the first incident |
-| S10 | Retrieval recall@20 < 0.75 | The generator cannot fix a retrieval miss | Fix chunking, add hybrid search, add contextual retrieval, fine-tune the embedder (CS-22) |
+| S10 | Retrieval recall@20 < 0.75 | The generator cannot fix a retrieval miss | Fix chunking, add hybrid search, add contextual retrieval, fine-tune the embedder (`code/10_embedding_finetune.py`) |
 | S11 | The agent needs >15 steps for the median task | `p^n` kills you | Decompose into sub-agents, or reduce scope, or make it a fixed pipeline |
 | S12 | Nobody has agreed on the metric that decides success | Every subsequent review becomes a vibe argument | Write the metric and the threshold into the design doc before the first training run |
 
@@ -1447,7 +1447,7 @@ def ragas_eval(golden):
                                  context_entity_recall])
 
 # Read the four numbers as a diagnostic, not a score:
-#   LOW  context_recall   → retrieval miss. Fix chunking / hybrid / embedder. (CS-22)
+#   LOW  context_recall   → retrieval miss. Fix chunking / hybrid / embedder. (`code/10_embedding_finetune.py`)
 #   HIGH context_recall, LOW faithfulness → generator hallucinating past its evidence.
 #                                            Fix the prompt (cite-or-refuse) before changing models.
 #   HIGH faithfulness,   LOW answer_relevancy → retrieved the wrong thing faithfully.
@@ -1654,7 +1654,7 @@ This layering is the practical payoff of §5.4: because each layer has its own m
 | Symptom | Likely cause | Diagnostic | Fix |
 |---|---|---|---|
 | Answers ignore the retrieved context | Prompt places context after the question, or the model was fine-tuned without context | Reorder the prompt; log whether the answer's claims appear in the chunks | Put context first; retrain with context in the format you will use |
-| The right document exists but is never retrieved | Embedding domain mismatch or chunk boundary | Search for the gold chunk by ID; check its rank position | Hybrid BM25 + contextual retrieval + domain embedder (CS-22) |
+| The right document exists but is never retrieved | Embedding domain mismatch or chunk boundary | Search for the gold chunk by ID; check its rank position | Hybrid BM25 + contextual retrieval + domain embedder (`code/10_embedding_finetune.py`) |
 | Retrieval works, answers are confidently wrong | Faithfulness failure | RAGAS faithfulness < 0.9 with high context recall | Cite-or-refuse instruction; lower temperature to 0; consider a stronger generator |
 | Answers are right but uselessly generic | Retrieved chunks are topically similar but not answer-bearing | Read the top-5 chunks by hand for 20 queries | Add a reranker; reduce chunk size; add query rewriting |
 | Freshness complaints despite re-indexing | The document pipeline silently failed, or deletes are not propagating | Compare index count vs source count nightly; assert a canary doc's content | Add a nightly freshness probe with an alert |
@@ -1799,7 +1799,7 @@ The fine-tune was correct because all six rubric dimensions lined up: low volati
 | Build | 5 weeks (3 of which were PDF/OCR quality — the real work) |
 | Outcome | 96% clause-level accuracy, 100% of answers cited, zero model training |
 
-The fine-tune that *was* eventually added: a 0.1B embedder fine-tuned on 4,000 associate-labelled query–clause pairs, which lifted two-hop recall from 0.89 to 0.94 (§5.4 Hybrid 2, and CS-22). Cost: $12 and an afternoon.
+The fine-tune that *was* eventually added: a 0.1B embedder fine-tuned on 4,000 associate-labelled query–clause pairs, which lifted two-hop recall from 0.89 to 0.94 (§5.4 Hybrid 2, and `code/10_embedding_finetune.py`). Cost: $12 and an afternoon.
 
 ### 15.4 When the agent was the only answer
 
@@ -1932,7 +1932,7 @@ The most important production property of this table is that **the three layers 
 9. **"Fine-tuning is how you reduce hallucination."** The opposite is often true: partial learning of new facts *increases* hallucination on the boundary. Grounding and refusal training reduce it; memorisation attempts often worsen it.
 10. **"Agent success rate is per-step accuracy."** A 95%-per-step agent over 10 steps succeeds 59.9% of the time. Quote the product, always.
 11. **"Prompt caching makes everything cheap."** It makes *static prefixes* cheap. An agent's observations change every step, so the volatile portion is not cacheable — and if you cache the wrong prefix you pay a write premium for nothing.
-12. **"We need fine-tuning because our domain is specialised."** Domain vocabulary is a *retrieval* problem (fine-tune the embedder, CS-22). Domain *behaviour* is a fine-tuning problem. Diagnose which one you have before spending.
+12. **"We need fine-tuning because our domain is specialised."** Domain vocabulary is a *retrieval* problem (fine-tune the embedder — `code/10_embedding_finetune.py`). Domain *behaviour* is a fine-tuning problem. Diagnose which one you have before spending.
 13. **"Once it works in the demo, the hard part is over."** The hard part starts at the demo: evaluation harness, cost model, freshness pipeline, kill switches, and the drift owner.
 14. **"We can always add citations later."** Citations are an architectural property of the retrieval path. If the knowledge is in the weights, there is nothing to cite.
 15. **"Small models can't do our task."** A 1.5B fine-tune at 99.94% format compliance beat a frontier model at 91.3% on a narrow schema — at 1/1,700th the unit cost. Narrowness, not size, determines feasibility.
@@ -1997,10 +1997,10 @@ The most important production property of this table is that **the three layers 
 | Relationship | Module |
 |---|---|
 | Builds on | CS-01 (LLM lifecycle), CS-02 (transfer learning), CS-03 (framework landscape) |
-| Needed by | CS-13 (instruction fine-tuning), CS-15/16/17 (training frameworks), CS-18/19 (hosted FT APIs), CS-28 (capstone pipeline) |
-| Contrasts with | CS-22 (embedding fine-tuning — the FT-in-service-of-RAG case), CS-12 (continued pretraining — the "domain knowledge into weights" case) |
-| Deepens into | CS-23 (LoRA/QLoRA mechanics, for the cost model in §11.1), CS-11 (quantization, for the SLM serving costs in §11.4) |
-| Alignment angle | CS-14 (RLHF/DPO — how behaviour is shaped when SFT plateaus), CS-26 (GRPO for tool-calling agents) |
+| Needed by | CS-13 (instruction fine-tuning), CS-15/16/17 (training frameworks), CS-18/19 (hosted FT APIs), CS-28 (*planned, not yet written* — CS-13 §15 is nearest) |
+| Contrasts with | `code/10_embedding_finetune.py` (embedding fine-tuning — the FT-in-service-of-RAG case; "CS-22" planned, unwritten), CS-12 (continued pretraining — the "domain knowledge into weights" case) |
+| Deepens into | CS-13 §6.8 + CS-11 §4.11 (LoRA/QLoRA mechanics, for the cost model in §11.1), CS-11 (quantization, for the SLM serving costs in §11.4) |
+| Alignment angle | CS-14 §4.6.1/§4.6.3 (RLHF/DPO — how behaviour is shaped when SFT plateaus), CS-14 §4.6.10 (GRPO for tool-calling agents) |
 | Companion files | `IQ-04-FT-vs-RAG-vs-Agents.md`, `CH-04-FT-vs-RAG-vs-Agents.md` |
 
 ---
@@ -2048,11 +2048,11 @@ The most important production property of this table is that **the three layers 
 | Lost in the middle | Liu et al., *Lost in the Middle: How Language Models Use Long Contexts*, TACL 2024 |
 | Long-context degradation | The "needle-in-a-haystack" and subsequent multi-needle/RULER benchmarks, 2024–2025 |
 | Prompt caching economics | Anthropic prompt-caching docs (0.1× read, 1.25× 5-minute write); OpenAI prompt-caching docs (50–90% cached-input discount) |
-| LoRA / QLoRA mechanics for the cost model | Hu et al., *LoRA: Low-Rank Adaptation of Large Language Models*, ICLR 2022; Dettmers et al., *QLoRA*, NeurIPS 2023 — see CS-23 |
+| LoRA / QLoRA mechanics for the cost model | Hu et al., *LoRA: Low-Rank Adaptation of Large Language Models*, ICLR 2022; Dettmers et al., *QLoRA*, NeurIPS 2023 — see CS-13 §6.8 and CS-11 §4.11 |
 | Agent error compounding and reliability | The `p^n` reliability argument is standard in the agent-evaluation literature from 2024 onward; see also τ-bench (Yao et al., 2024) for pass^k reliability metrics |
 | ReAct — the loop pattern | Yao et al., *ReAct: Synergizing Reasoning and Acting in Language Models*, ICLR 2023 |
 | Tool-calling fine-tunes | Gorilla (Patil et al., 2023) and the Berkeley Function-Calling Leaderboard for evaluation practice |
-| Embedding fine-tuning for retrieval | See CS-22 and the `LLM_Fine-Tuning_24/25` transcripts |
+| Embedding fine-tuning for retrieval | See `code/10_embedding_finetune.py` and the `LLM_Fine-Tuning_24/25` transcripts |
 
 
 

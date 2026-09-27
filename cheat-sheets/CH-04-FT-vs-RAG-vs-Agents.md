@@ -675,13 +675,13 @@ python agent_min.py --task "issue refund for order 1234"          # agent path
 | Interview practice at all five levels | **IQ-04** |
 | Fine-tuning BERT-style encoders for classification/NER | CS-07 |
 | Instruction fine-tuning (SFT) in depth | CS-13 |
-| LoRA/QLoRA mechanics, rank selection, merging | CS-23 |
-| Embedding models and fine-tuning the retriever | CS-22 |
+| LoRA/QLoRA mechanics, rank selection, merging | CS-13 §6.8, CS-11 §4.11 |
+| Embedding models and fine-tuning the retriever | code/10_embedding_finetune.py (CS-22 planned, not yet written) |
 | Domain-adaptive continued pretraining on your own PDFs | CS-12 |
-| Preference training when SFT plateaus (DPO/ORPO/RLHF) | CS-14, CS-25, CS-27 |
-| GRPO for tool-calling and verifiable agent tasks | CS-26 |
+| Preference training when SFT plateaus (DPO/ORPO/RLHF) | CS-14 §4.6.1–4.6.9 |
+| GRPO for tool-calling and verifiable agent tasks | CS-14 §4.6.10 |
 | Quantization for cheap SLM serving | CS-10, CS-11 |
 | No-code / YAML training frameworks | CS-15, CS-16, CS-17 |
-| The end-to-end capstone pipeline | CS-28 |
+| The end-to-end capstone pipeline | CS-13 + CS-16/CS-17 (CS-28 planned, not yet written) |
 
 **The three sentences to remember:** *Fine-tuning changes behaviour. RAG changes knowledge. Agents change what the system can do.* Climb the ladder — prompt, RAG, fine-tune, agent — and do not skip a rung, because the rung you skip is the baseline that would have told you not to build the one above it.

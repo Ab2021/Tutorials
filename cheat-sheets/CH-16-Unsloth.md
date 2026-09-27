@@ -798,8 +798,9 @@ Of these, checks 1–3 and the eval config are worth more than every kernel in t
 > **Beyond the video:** the task CS-16 sets for `FastLanguageModel` vs `FastModel` is not
 > covered there at all. In current Unsloth, `FastModel` is the unified entry point and
 > `FastLanguageModel` remains the text-only path; the vision/multimodal recipes use `FastModel`
-> with `UnslothVisionDataCollator` (CS-21). **Do not assume the two accept identical keyword
-> arguments, and do not assume a `FastModel` checkpoint behaves like a `FastLanguageModel` one
+> with `UnslothVisionDataCollator` (`code/12_multimodal_vlm.py`; CS-21 planned, not yet
+> written). **Do not assume the two accept identical keyword arguments, and do not assume a
+> `FastModel` checkpoint behaves like a `FastLanguageModel` one
 > inside `train_on_responses_only`** — check the signature on your pinned version
 > (`help(FastModel.from_pretrained)`) before you port a text SFT recipe to a VLM.
 
@@ -810,13 +811,13 @@ Of these, checks 1–3 and the eval config are worth more than every kernel in t
 | If you want to… | Read |
 |---|---|
 | Understand *why* the manual LoRA backward is correct | **CS-16 §4.3** (`unsloth/kernels/fast_lora.py` is ~300 lines) |
-| Derive LoRA/QLoRA yourself (rank, alpha, which modules) | **CH-13 §4.2**, and the planned **CS-23 — LoRA & QLoRA** |
+| Derive LoRA/QLoRA yourself (rank, alpha, which modules) | **CH-13 §4.2**, **CS-13 §6.8**, **CS-11 §4.11** (CS-23 planned, not yet written) |
 | The baseline Unsloth is measured against | **CS-16 §4.7**, §12.1's A/B harness, §18.2 |
 | The SFT pipeline this accelerates | **CH-13 / CS-13 — Instruction Fine-Tuning** (§5.2 loss masking by hand, §12 pre-flight checks) |
 | Run the same job with no code at all | **CH-15 / CS-15 — LLaMA-Factory** |
 | Multi-GPU / FSDP instead of one card | **CS-17 — Axolotl** |
 | NF4, double quant, GPTQ/AWQ/GGUF, why merging is lossy | **CH-10 / CS-10 / CS-11 — Quantization** |
 | DPO/ORPO/GRPO on top of this SFT — Unsloth's biggest memory win | **CH-14 / CS-14 — The Alignment Map** |
-| Multimodal (`FastModel`, `UnslothVisionDataCollator`) | the planned **CS-21 — Multimodal / Vision-Language** |
-| Be interviewed on this | **IQ-16 — Unsloth Interview Questions** (planned; check the README status table) |
+| Multimodal (`FastModel`, `UnslothVisionDataCollator`) | `code/12_multimodal_vlm.py` (CS-21 planned, not yet written) |
+| Be interviewed on this | **IQ-16 — Unsloth Interview Questions** |
 | The exact trainer code with the traps pre-checked | `code/02_sft_unsloth.py` (see the Correction in §6 before trusting its plan block), `code/01_sft_lora.py`, `code/common/memory.py` |

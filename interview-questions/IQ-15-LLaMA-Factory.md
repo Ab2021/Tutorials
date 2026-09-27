@@ -1256,11 +1256,11 @@ Change `fp16: true` to `bf16: true`. fp16 has a 5-bit exponent, so attention log
 | Builds on | **IQ-03** / **CS-03** (framework landscape) | Where LLaMA-Factory sits between Unsloth, Axolotl, TRL and torchtune. |
 | Builds on | **CS-06** (Hugging Face) | `Trainer`, tokenizers, and the Hub this framework orchestrates. |
 | Builds on | **CS-13** (instruction fine-tuning) | The alpaca/sharegpt shapes and prompt masking assumed throughout L1–L2. |
-| Builds on | **CS-23** (LoRA & QLoRA) | `lora_rank`, `lora_alpha`, `lora_target`, and why QLoRA = 4-bit + LoRA. |
+| Builds on | **CS-13 §6.8** / **CS-11 §4.11** (LoRA & QLoRA) | `lora_rank`, `lora_alpha`, `lora_target`, and why QLoRA = 4-bit + LoRA. (The `CS-23` LoRA deep dive cited elsewhere in this repo was never written) |
 | Contrasts with | **CS-16** (Unsloth) | Single-GPU speed — the `use_unsloth: true` bridge and the honest 1.2–1.4× decomposition. |
 | Contrasts with | **CS-17** (Axolotl) | The other YAML framework; multi-node FSDP2/ZeRO and `preprocess --debug`. |
 | Uses | **CS-10** / **CS-11** / **CH-10** / **CH-11** (quantization) | What `quantization_bit` does, and where to re-quantise a merged artifact for serving. |
-| Uses | **CS-14** / **CS-25** (DPO), **CS-27** (ORPO) | `stage: dpo`, `pref_beta`, `pref_loss` variants. |
+| Uses | **CS-14 §4.6.3–4.6.9** (DPO / ORPO) | `stage: dpo`, `pref_beta`, `pref_loss` variants. The DPO and ORPO deep dives are sections *of* CS-14; the planned `CS-25`/`CS-27` modules were never written |
 | Uses | **CS-18** / **CS-19** (hosted fine-tuning) | The buy-vs-build comparison when a YAML toolchain is more than you need. |
 | Used by | **IQ-14** (alignment questions) | Level 3–5 here assumes the preference-optimisation vocabulary there. |
 | Quick reference | **CH-15** §4 (snippets), §7 (VRAM calculator), §11 (error messages) | The three sections to have open while running this bank as an interview. |

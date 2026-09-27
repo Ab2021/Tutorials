@@ -105,7 +105,20 @@ def load_jsonl(path: str | Path, fmt: str = "alpaca", limit: int | None = None) 
     for i, row in enumerate(data):
         if limit and i >= limit:
             break
-        rows.append(loader(row))
+        try:
+            rows.append(loader(row))
+        except KeyError as e:
+            # A bare KeyError('instruction') at the 40,000th row of a run tells you what
+            # is missing but nothing about why. Name the format requested, the keys the
+            # file actually has, and the fact that the mismatch is a hard error on
+            # purpose: guessing the schema would silently train on the wrong text, and a
+            # wrong-format run looks exactly like a working one in the loss curve.
+            raise ValueError(
+                f"Could not read {p} as format '{fmt}': row {i} has keys "
+                f"{sorted(row)} but the '{fmt}' loader needs {e}. "
+                f"Valid formats: {sorted(FORMAT_LOADERS)}. "
+                f"Pass the format that matches this file."
+            ) from e
     return rows
 
 
