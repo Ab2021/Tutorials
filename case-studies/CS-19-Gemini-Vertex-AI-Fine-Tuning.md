@@ -1625,4 +1625,680 @@ For comparison, and to show why the question is the wrong question:
 
 **The counterfactual:** self-host the same behaviour on a 7B open model with vLLM on one L4, scale-to-zero serverless at night. ~$600–$900/month, plus the ops tax. Or: keep the base Gemini API and solve the style problem with a 20-example few-shot prompt and RAG over the docs, at ~$200/month. **Both are legitimate answers and neither requires a tuned endpoint.** The tuned endpoint is right only if the tuned model measurably beats both, at the same traffic, by more than the delta.
 
+---
+
+## 12. Evaluation — How To Know It Worked
+
+### 12.1 What Vertex gives you out of the box
+
+Read aloud by the instructor from the experiment dashboard [51:36]:
+
+> *"evaluation fraction of correct next step prediction, evaluation number of prediction, evaluation total loss, training loss."*
+
+| Metric (dashboard label) | What it actually measures | What it does NOT measure | API field (verify) |
+|---|---|---|---|
+| **Training loss** | Cross-entropy on the training rows, at the point the series was sampled. | Anything about generalisation. | `metrics` on the job / TensorBoard series |
+| **Evaluation total loss** | Cross-entropy on the held-out slice. | Task success. Lower is better *up to a point*; past that it is overfitting. | likewise |
+| **Fraction of correct next step prediction** | Teacher-forced token accuracy: given the true prefix, how often is the argmax the true next token? | Whether a *generated* full response is correct. Teacher forcing hides error compounding. | likewise |
+| **Evaluation number of prediction(s)** | How many predictions the eval ran over — i.e. **the size of the held-out set**. | — | likewise |
+
+> **Correction — read this before you trust any of those four numbers.** The instructor presents them as *"everything you will be able to get over here"* [51:43], which is true, and leaves the reader with the impression that they constitute an evaluation. They do not. Three specific problems:
+> 1. **`fraction of correct next step prediction` is a teacher-forced metric.** It is computed with the ground-truth prefix available at every step. A model that produces a fluent, confident, *wrong* answer scores highly, because at each individual token the true continuation is usually the most likely one. Format-learned models score ~0.9+ on this while being wrong on content.
+> 2. **The held-out set is a default split you did not choose and cannot see.** For the video's 10-row dataset that is 2 examples [§4.5]. "Evaluation total loss: 0.31" on 2 examples is not a measurement.
+> 3. **No metric here compares against the base model.** A decrease in eval loss tells you the model got better at predicting *your* data. It does not tell you the model got better *at the task*, because the base model was already good at predicting your data — your data is ordinary English about smartphones.
+
+### 12.2 The four ways the automatic metrics lie to you
+
+| Lie | Mechanism | What you see | What is true |
+|---|---|---|---|
+| **"Low eval loss means it learned the task"** | Loss is next-token CE over your distribution. The base model's CE on your data is already low. | Eval loss 0.4 → 0.2 | Most of the drop is *style* (the constant system instruction's phrasing leaking into outputs), not task competence. |
+| **"High fraction-correct means correct answers"** | Teacher forcing removes error compounding. | 0.94 | Generated answers may be 60% correct; the metric never sees the generation. |
+| **"Eval loss fell, so 10 epochs was right"** | With a small dataset, eval loss can fall while the model memorises surface forms that happen to appear in both splits. | Monotonic improvement | Overfitting. Detect by prompt-mutation testing (§12.4). |
+| **"The metrics are reproducible"** | There is no seed; each job is a different run. | Two jobs, two numbers | The delta may be noise. Calibrate the noise floor (§10.10). |
+
+### 12.3 The evaluation you must write yourself
+
+**Step 0 — the only comparison that matters.** Before you evaluate the tuned model, evaluate **the base model** on the same prompts. If the base model already does the thing, your fine-tune is decoration.
+
+```python
+"""
+eval_ab.py — A/B the tuned model against the untuned base model on YOUR prompts.
+
+This is the minimum viable evaluation for a managed fine-tune. It answers the one
+question the Vertex dashboard cannot: did tuning change the behaviour you care about?
+"""
+# Marked as a FIXTURE: run this on any managed fine-tune, Vertex/OpenAI/otherwise.
+import json, os, time
+from statistics import mean, pstdev
+
+import google.genai as genai
+from google.genai.types import HttpOptions
+
+PROJECT_ID  = os.environ["GOOGLE_CLOUD_PROJECT"]
+LOCATION    = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
+BASE_MODEL  = "gemini-2.5-flash"
+TUNED_MODEL = os.environ["TUNED_MODEL_ENDPOINT"]     # .../endpoints/…
+
+PROMPTS_PATH = "eval_prompts.jsonl"     # YOUR held-out set — never trained on
+N_SAMPLES    = 1                        # raise to 3 for stability; costs 3× tokens
+
+client = genai.Client(
+    vertexai=True, project=PROJECT_ID, location=LOCATION,
+    http_options=HttpOptions(api_version="v1"),
+)
+
+def ask(model: str, prompt: str) -> str:
+    """One call, no retries hidden — a failure must be visible in the report."""
+    resp = client.models.generate_content(model=model, contents=prompt)
+    return (resp.text or "").strip()
+
+def load_prompts(path: str) -> list[dict]:
+    with open(path, encoding="utf-8") as fh:
+        return [json.loads(line) for line in fh if line.strip()]
+
+def score(prompt: str, answer: str, expect: dict) -> float:
+    """Return 0.0 / 0.5 / 1.0. Replace with a judge call for open-ended tasks (§12.5)."""
+    a = answer.lower()
+    if expect.get("must_contain_any") and not any(
+        s.lower() in a for s in expect["must_contain_any"]
+    ):
+        return 0.0                                     # required content missing
+    if expect.get("must_not_contain") and any(
+        s.lower() in a for s in expect["must_not_contain"]
+    ):
+        return 0.0                                     # forbidden content present
+    if expect.get("max_words") and len(a.split()) > expect["max_words"]:
+        return 0.5                                     # violated a style constraint
+    return 1.0
+
+def main() -> None:
+    prompts = load_prompts(PROMPTS_PATH)
+    rows = []
+    for item in prompts:
+        p = item["prompt"]
+        base_scores, tuned_scores = [], []
+        for _ in range(N_SAMPLES):
+            base_scores.append(score(p, ask(BASE_MODEL,  p), item.get("expect", {})))
+            tuned_scores.append(score(p, ask(TUNED_MODEL, p), item.get("expect", {})))
+            time.sleep(0.2)                            # be polite to the quota
+        rows.append({
+            "prompt":  p[:120],
+            "base":    round(mean(base_scores), 3),
+            "tuned":   round(mean(tuned_scores), 3),
+            "delta":   round(mean(tuned_scores) - mean(base_scores), 3),
+        })
+
+    base_mean  = mean(r["base"]  for r in rows)
+    tuned_mean = mean(r["tuned"] for r in rows)
+    deltas     = [r["delta"] for r in rows]
+
+    print(f"n_prompts={len(rows)}  base={base_mean:.3f}  tuned={tuned_mean:.3f}  "
+          f"delta={tuned_mean - base_mean:+.3f}  sd(delta)={pstdev(deltas):.3f}")
+    wins   = sum(1 for d in deltas if d > 0)
+    losses = sum(1 for d in deltas if d < 0)
+    print(f"per-prompt: {wins} wins, {losses} losses, {len(rows)-wins-losses} ties")
+
+    # The decision rule. A delta smaller than the run-to-run noise floor is not a win.
+    if tuned_mean - base_mean > 0.05 and wins > 2 * max(losses, 1):
+        print("VERDICT: ship it.")
+    elif tuned_mean - base_mean < 0:
+        print("VERDICT: the tuned model is WORSE. Do not ship. Check §14.")
+    else:
+        print("VERDICT: inconclusive — the base model already does this. "
+              "Consider prompt engineering (CS-04) instead of a tuned endpoint.")
+
+    with open("eval_report.jsonl", "w", encoding="utf-8") as fh:
+        for r in rows:
+            fh.write(json.dumps(r) + "\n")
+
+if __name__ == "__main__":
+    main()
+```
+
+**Why each design choice in that script exists:**
+
+| Choice | Reason |
+|---|---|
+| Evaluates base **and** tuned in the same run | Eliminates any drift in your judge, your prompt file, or the API between two separate runs. |
+| `expect` block per prompt | Forces you to write down what "correct" means per item, which is where most eval projects discover their task is underspecified. |
+| Content checks *and* style checks | Format compliance and refusal rate are the two metrics that move first (CS-13 §12). A model that gets content right and style wrong is not shippable. |
+| `sd(delta)` reported | Without a variance estimate you cannot tell a win from noise, and on managed services you cannot cheaply re-measure (§10.10). |
+| Prints a verdict | An eval that ends in a table nobody reads is not an eval. |
+| Writes `eval_report.jsonl` | The report is the artefact you attach to the model card, not the console screenshot. |
+
+### 12.4 Prompt-mutation testing (the overfitting detector)
+
+The dashboard can show a falling eval loss while the model has learned the *template* rather than the *task*. The test is to mutate the prompt along axes your training data never varied:
+
+| Mutation | What it detects | Passing behaviour |
+|---|---|---|
+| Ask in a different language | Language overfitting | Answers in the asked language, or declines cleanly |
+| Drop the system instruction | Dependence on the exact system prompt | Still answers in house style (the style is in the weights) — or, if it collapses, the style was never in the weights |
+| Add leading/trailing whitespace and newlines | Tokenisation brittleness | No change |
+| Rephrase the question in three ways | Surface-form memorisation | Consistent answers |
+| Ask an out-of-scope question (the laptop question, row 9) | Refusal behaviour | Clean, brief refusal |
+| Ask for a longer answer than any training example | Verbosity ceiling learned from data | Reasonable length, not truncation |
+| Ask two questions in one turn | Multi-turn handling | Handles it or asks for clarification |
+
+**If the model passes 1–4 and fails 5, you have trained a template-follower.** That is a real product defect, and it is invisible in every metric Vertex shows you.
+
+### 12.5 LLM-as-judge, for open-ended outputs
+
+When the correct answer is a paragraph rather than a string, use a judge — and use it correctly.
+
+| Practice | Why | The failure it prevents |
+|---|---|---|
+| **Pairwise, not pointwise** | Absolute scores from a judge drift; comparisons are more stable. | Score inflation over a long run. |
+| **Swap positions and average** | Judges have a measurable position bias. Published audits put it at 10–15 points of win rate. | A "win" that is an artefact of ordering. |
+| **Blind the model identity** | A judge told "this is the fine-tuned model" is a different judge. | Expectation bias. |
+| **Use a *different* family as judge** | Judging your own family's output with its own family is self-preference. | Self-preference bias. |
+| **Hold out the judge's prompts from training** | Otherwise you are measuring memorisation. | Contaminated eval. |
+| **Report effect size + CI, not just a win rate** | 54% with n=50 is noise. | Shipping on a coin flip. |
+
+> **Beyond the video:** Vertex exposes autorater-style evaluation through an evaluation configuration (the commented-out `EvaluationConfig`/`OutputConfig`/`Metric` imports in the notebook's import cell). **The metric names and configuration shape for this feature have churned heavily and must be verified against the current docs.** The strategic point is that whether you use Vertex's autorater or your own judge, the judge is the *same* kind of instrument: a model scoring a model. Budget for it, version its prompt, and store its outputs. A judge prompt is a production artefact and belongs in git next to your training data.
+
+### 12.6 The evaluation protocol, end to end
+
+```
+1. Freeze a held-out set BEFORE you train. 200–1,000 prompts. Never trained on.
+2. Run the BASE model on it. Record scores. This is your null hypothesis.
+3. Train with an explicit validationDatasetUri (§4.5).
+4. Read the Vertex dashboard metrics AS A SMOKE TEST ONLY:
+      training loss should fall; eval loss should fall then flatten.
+      If eval loss rises while train loss falls → overfitting → reduce epochCount.
+5. Run eval_ab.py against the tuned endpoint. Compare to step 2.
+6. Run prompt-mutation testing (§12.4). Any failure disqualifies a promotion.
+7. Run the regression suite: 50 frozen prompts asserting PROPERTIES
+      (parses as JSON / contains no refusal phrase / ≤ N words / language matches).
+8. Run the refusal suite: 200 benign in-domain prompts. Measure refusal rate.
+      A tuned model that refuses 15% of in-domain questions is a product outage.
+9. Only then promote. And then UNDEPLOY the evaluation endpoint.
+```
+
+**The two counter-metrics that catch what accuracy misses:** refusal rate on benign in-domain prompts (goes up with over-training) and format-compliance rate (goes down with under-training). Track both on every candidate. A model with 95% task accuracy and a 20% refusal rate is worse in production than one with 85% and 2%.
+
+---
+
+## 13. Comparison Tables
+
+### 13.1 Three managed / semi-managed routes, head to head
+
+| Dimension | **Vertex AI (Gemini)** | **OpenAI fine-tuning** (CS-18) | **Open-weight self-host** (CS-16/17/23) |
+|---|---|---|---|
+| **Data schema** | `systemInstruction` + `contents[].parts[].text`, `role: "model"` | `messages[].role/content`, `role: "assistant"` | Whatever your framework expects: Alpaca, ShareGPT, ChatML, OpenAI chat (CS-13 §4.2) |
+| **File format** | JSONL, in **GCS**, in a compatible region | JSONL, uploaded via Files API | Any local file; you own the storage |
+| **Split control** | Explicit `validationDatasetUri`, else implicit split | Explicit validation file, else implicit split | Fully yours; you decide every row |
+| **Hyperparameters** | 4 knobs (`epochCount`, `learningRateMultiplier`, `batchSize`, `adapterSize`) | ~3 knobs (epochs, batch size, LR multiplier) | Every knob in the field: `r`, `alpha`, target modules, schedulers, warmup, packing, NEFTune (CS-13 §7) |
+| **Base models** | Gemini Flash / Flash-Lite families | GPT-4o-mini, GPT-4.1-mini/nano, o-series (verify current list) | Any of ~100k Hub models, any size |
+| **Output artefact** | Opaque model + endpoint resources | Opaque model ID | `.safetensors` on your disk — full ownership |
+| **Can you export the weights?** | **No** | **No** | **Yes** |
+| **Training cost** | ~$1.50–$25 / 1M tokens (video) | ~$3–$25 / 1M tokens depending on model (verify) | GPU-hours: ~$0.50–$3/hr |
+| **Serving cost model** | Endpoint **per hour** + per-token premium | Per-token, **plus a hosting charge when idle** in some periods (verify — restructured repeatedly) | GPU-hours, or scale-to-zero serverless |
+| **Idle cost** | **High and certain** | **Verify** | Zero if scale-to-zero |
+| **Time to first endpoint** | Hours | Minutes | Hours to days (infrastructure) |
+| **Determinism** | None | None | Full — you can seed everything |
+| **Eval metrics out of the box** | 4 series (loss, eval loss, next-token accuracy, n predictions) | Similar loss/accuracy series | None — you build it (which you should anyway) |
+| **Multi-turn support** | Yes (`contents` array) | Yes (`messages` array) | Yes, framework-dependent |
+| **Multimodal tuning** | Text; images/audio/video stated as supported [12:36] (verify per model) | Image inputs for vision fine-tuning on some models | Full control (CS-21) |
+| **Compliance story** | Strongest: IAM, VPC-SC, CMEK, audit logs, regional data residency | Vendor DPA; less control | Strongest of all: air-gapped possible |
+| **Lock-in** | Total | Total | None |
+| **Best for** | GCP-standardised enterprises needing Gemini | Teams already on OpenAI, wanting the fastest path | Anyone who needs the weights, the price, or the control |
+
+### 13.2 Schema differences that break a migration in either direction
+
+| Field | Vertex → OpenAI | OpenAI → Vertex |
+|---|---|---|
+| System prompt | Move `systemInstruction.parts[0].text` into `messages[0] = {"role":"system","content":...}` | Hoist `messages[0]` out into a top-level `systemInstruction` |
+| Assistant role | `"model"` → `"assistant"` | `"assistant"` → `"model"` |
+| Text location | `parts[0].text` → `content` (string) | `content` → `parts: [{"text": content}]` |
+| Conversation key | `contents` → `messages` | `messages` → `contents` |
+| Multi-part turns | Flatten or drop | Supported natively via multiple `parts` |
+
+> **Beyond the video:** write a **schema adapter** rather than maintaining two datasets. One canonical internal representation (a list of `(role, text)` tuples), plus a renderer per target platform, is roughly 60 lines of Python and eliminates an entire category of "the dataset was regenerated and someone forgot the Vertex renderer" incident. It also lets you keep your split and your hashes stable across platforms, which is what makes a genuine cross-platform quality comparison possible at all.
+
+### 13.3 Quality comparison — what the honest answer looks like
+
+| Question | Vertex SFT | OpenAI FT | Self-hosted LoRA |
+|---|---|---|---|
+| Will it beat a good prompt on style/format? | Usually yes | Usually yes | Usually yes |
+| Will it beat a good prompt on facts? | **No** (CS-13 §4.1) | **No** | **No** |
+| Can you achieve ~100% format compliance? | Yes, with a few hundred good examples | Yes | Yes |
+| Will it be reproducible? | No | No | Yes |
+| Can you prove *why* it improved? | No | No | Yes (ablations) |
+| Can you run the same recipe on a different base model next quarter? | No — the recipe is not portable | No | Yes |
+
+**The pattern:** the three routes are close to equivalent on *quality* for the tasks fine-tuning is actually good at. They differ almost entirely on **cost structure, control, and exit**. Choose on those, not on quality claims you cannot verify.
+
+### 13.4 Break-even, restated as a single table
+
+| Monthly requests (600 in / 300 out tokens) | Vertex tuned endpoint (est.) | Self-host 7B on L4, always-on | Self-host 7B, scale-to-zero serverless | Base model API + RAG, no tuning |
+|---|---|---|---|---|
+| 10,000 | $1,459 + ~$13 = **$1,472** | $584 + ops ≈ **$700** | ≈ **$60** | ≈ **$10** |
+| 500,000 | $1,459 + ~$650 = **$2,109** | $584 + ops ≈ **$900** | ≈ **$700** | ≈ **$400** |
+| 5,000,000 | $1,459 + ~$6,500 + replicas = **$10,000+** | $1,168 (2×L4) ≈ **$1,700** | ≈ **$5,000** | ≈ **$3,500** |
+| 50,000,000 | **$100,000+** | ~$6,000 (8×L4) | ≈ **$45,000** | ≈ **$30,000** |
+
+*All figures are order-of-magnitude estimates with illustrative per-token rates. Re-derive with your own traffic profile and current prices. The shape is the finding: at every traffic level, the tuned dedicated endpoint is the most expensive option, and it only becomes the right one at very high volume combined with a hard requirement on the specific base model.*
+
+> **Beyond the video — the sentence that should end every one of these discussions:** *A dedicated tuning endpoint is a fixed cost that buys you a capability. If you cannot name the capability in one sentence, and you cannot show a measurement where the tuned model beats the base model by more than the cost delta, you are paying rent on a demo.*
+
+---
+
+## 14. Debugging Playbook
+
+### 14.1 By symptom
+
+| Symptom | Likely cause | Diagnostic | Fix |
+|---|---|---|---|
+| `403 PERMISSION_DENIED` on the very first `generate_content` | Billing not enabled | Console → Billing; check the project is linked and the account is active | Enable billing [28:44]. Free-tier credits do not apply to Vertex model access. |
+| `403` naming a principal you do not recognise | Colab identity ≠ GCP identity | Print the authenticated identity: `!gcloud auth list` / compare avatars | Sign into Colab with the project-owning account [23:38] |
+| `403` from an automated pipeline | Service account lacks `aiplatform.user`, or lacks `serviceAccountUser` on the VM's SA | `gcloud projects get-iam-policy PROJECT --flatten=bindings` | Grant the role at project scope; grant `iam.serviceAccountUser` for two-hop flows |
+| `AttributeError: 'Client' object has no attribute 'tunings'` | Wrong `api_version` (or a pinned SDK older than the feature) | Print `genai.__version__`; check `HttpOptions(api_version=...)` | Pin `v1beta1` for tuning (§10.6), and upgrade the SDK |
+| `NameError: name 'tuning_job' is not defined` | Cells executed out of order in the notebook | Re-run top to bottom in a clean runtime | Restart & run all; persist the job name to a file so a crash is recoverable |
+| `AttributeError: 'NoneType' object has no attribute 'model'` after the poll loop | The job reached `FAILED`/`CANCELLED`; the loop did not test for it | Print `tuning_job.state` and `tuning_job.error` | Use the explicit terminal-state poller (§6.8) |
+| Job stuck in `JOB_STATE_PENDING` for hours | Quota, capacity, or region congestion | Quotas page; check the region's status | Request a quota increase; try a different region; wait — there is no SLA on queue time |
+| `400 INVALID_ARGUMENT` on `tune()` | Schema error in the JSONL | Validate one line against the current sample schema from the console | Fix `role: "assistant"` → `"model"`, hoist `systemInstruction`, wrap text in `parts` (§4.2) |
+| `400` naming the dataset URI | Bucket in a different region, or wrong `gs://` string | `gcloud storage buckets describe gs://BUCKET --format='value(location)'` | Recreate/repoint the bucket in the job's region (§10.5) |
+| `404` on a URL that looks correct | Region omitted from the hostname, or the job belongs to a different location | Check the host is `{location}-aiplatform.googleapis.com` | Pass the same `location` everywhere; a job created in `us-central1` is invisible from `europe-west4` |
+| `tuned_model.endpoint` is `None` after `SUCCEEDED` | Job completed but the deployment step failed or was disabled | `tuning_job.error`; check endpoint quota | Deploy explicitly, or file a support case — do not assume retraining will help |
+| Inference returns base-model behaviour, not tuned | Wrong `model=` string resolving to a base model | Log the resolved model; compare a known training prompt's answer | Pass the correct tuned resource; assert in code that the model string contains `/models/` or `/endpoints/` |
+| `401` mid-poll after hours of running | OAuth token expired (Colab tokens are short-lived) | The traceback will say `RefreshError`/`invalid_grant` | Re-authenticate and re-enter the poll loop; better, use a service account for long jobs |
+| **Training loss flat, no decrease** | LR multiplier too low, or the adapter cannot represent the change (rank too small), or the data has no signal | Compare train loss at step 1 vs final; check `adapterSize` | Raise `adapterSize` first (cheap, structural); then try a higher multiplier |
+| **Training loss goes to ~0 quickly** | Overfitting: too many epochs, too small a dataset, rank too high | Loss curve shape + prompt-mutation tests (§12.4) | Drop `epochCount` to 1; add data; reduce rank |
+| **Loss spikes, then NaN** | LR multiplier too high | Loss curve has a characteristic spike-then-cliff | Halve the multiplier; the job will still report `SUCCEEDED` with a useless model |
+| **Eval loss diverges from train loss (train ↓, eval ↑)** | Textbook overfitting | Two curves on the same axis in the experiment dashboard | Fewer epochs; more data; lower rank; add replay data (CS-13 §4.9.5) |
+| **Eval loss ~= ln(vocab size)** | The model learned nothing — it is emitting a uniform distribution | `ln(100k) ≈ 11.5`; if your eval loss is near that, nothing happened | Check the mask: is the data actually in `model` turns? Is `contents` populated? |
+| **Eval loss lower than train loss** | Not necessarily good: the eval slice may be easier, or it leaked into training | n-gram overlap check between train and validation files | Re-split with the deterministic splitter (§4.5) |
+| Loss curves look fine but the model is bad | Log loss is the wrong metric for the task | Run `eval_ab.py` (§12.3) against the base model | The tuning may have done nothing useful. See §17. |
+| Cost is 100× the estimate | **Endpoint left deployed** | Billing export query (§11.5); `aiplatform.Endpoint.list()` | `undeploy_all()` → `delete()` → `Model.delete()` (§6.10) |
+| Tuning job rejected: "model not supported for tuning" | The base model ID is retired or is not tunable | Check the live tuning-support table and the console dropdown | Move to a currently-tunable base model — this is a plan-level problem, not a code bug |
+| Job succeeds, evaluation output missing | The Vertex service agent lacks write access to the output bucket | Job state is `PARTIALLY_SUCCEEDED`; check the bucket IAM | Grant the correct permission to `service-<PROJECT_NUMBER>@gcp-sa-aiplatform…` (§10.11) |
+| `gcloud storage cp` succeeds but the job cannot read the file | Object-level ACL rather than bucket-level; or a uniform-bucket-level-access mismatch | `gcloud storage objects describe gs://…` | Use uniform bucket-level access and a bucket-scoped `objectViewer` grant (§6.2) |
+
+### 14.2 Distinguishing the four things that look like "the fine-tune didn't work"
+
+This is the diagnostic that matters most, because all four produce the same complaint.
+
+| Root cause | Signature | Test | Fix |
+|---|---|---|---|
+| **The data was bad** | Loss curve is *fine*; outputs are confidently wrong or generic | Read 20 random training rows aloud. Would a human produce these answers? | Re-author the data. No hyperparameter will save you. |
+| **The hyperparameters were wrong** | Loss curve is visibly wrong (flat, spiking, or crashed to 0) | Look at the TensorBoard experiment | `epochCount` / `adapterSize` / `learningRateMultiplier` (§7) |
+| **The schema was wrong** | Loss is near `ln(V)`; the model learned nothing | Print one tokenised row; check `role` and `parts` | Fix the JSONL (§4.2) |
+| **The task was never a fine-tuning task** | Loss curve is *perfect*; the base model does just as well | Run the base model on the same prompts (§12.3) | Prompt engineering (CS-04) or RAG. Cancel the endpoint. |
+
+**The order to test them in is the reverse of the order people test them.** Check the task first (cheapest, and rules out the whole exercise), then the schema, then the data, then the hyperparameters.
+
+> **Beyond the video:** keep a `_debug/` directory in your repo containing (a) one pretty-printed tokenised row, (b) the loss curve PNG from the experiment dashboard, (c) the first 20 lines of the eval report, and (d) the resolved model/endpoint IDs from the run. When someone asks "why is the tuned model bad", that directory answers three of the four questions above in under a minute.
+
+---
+
+## 15. Applied Case Studies
+
+### 15.1 Case A — The 10-row demo that should never have been deployed
+
+**Situation.** A solutions engineer builds exactly the video's notebook for a customer demo: 10 rows of smartphone support Q&A, `gemini-2.5-flash`, one tuning job, ~20 minutes, a live endpoint. The demo lands well. The endpoint stays up for the quarter.
+
+**Why this technique.** It genuinely is the fastest path from "a JSONL" to "a live tuned endpoint on a URL". For a demo, that is the requirement.
+
+**Exact config.**
+
+```python
+tuning_job = client.tunings.tune(
+    base_model="gemini-2.5-flash",
+    training_dataset=TuningDataset(gcs_uri="gs://demo-sft/data.jsonl"),   # 10 rows, 564 tokens
+    config=CreateTuningJobConfig(tuned_model_display_name="demo-sft-job"),
+)
+```
+
+**Result.** Training cost **$0.00282**. Wall clock 15–20 minutes. Wall clock of the deployment's life: one quarter.
+
+**What went wrong first.** Nobody owned the undeploy. The endpoint billed through a quarter at an estimated ~$2/hour — **~$4,400** — to serve perhaps a few dozen demo requests. The engineering cost of the training run was three orders of magnitude smaller than the cost of the deployment it produced.
+
+**The fix, in order of how much it would have saved.** A budget alert at $50 would have caught it in week one. A `expires-at` label plus a scheduled sweeper (§6.10) would have prevented it. A one-line note in the repo README — "undeploy before you close the ticket" — would have prevented it. **None of these is a technical change.**
+
+---
+
+### 15.2 Case B — The enterprise that could not get GPU quota
+
+**Situation.** A 200-person insurance company on GCP wants a claims-triage assistant that writes in the company's regulated style. They have 6,000 curated claims notes with the "correct" triage summary written by senior adjusters. Their GPU quota request for an A100 was denied twice (new account, no ML history), and procurement will not approve a second cloud.
+
+**Why this technique.** Vertex SFT requires no GPU quota. The data already lives in GCS. IAM, CMEK and audit logging are already configured at the org level, which means the security review — the usually fatal step — is a formality.
+
+**Exact config.**
+
+```python
+tuning_job = client.tunings.tune(
+    base_model="gemini-2.5-flash",
+    training_dataset=TuningDataset(gcs_uri="gs://claims-sft/train.jsonl"),        # 5,100 rows
+    config=CreateTuningJobConfig(
+        tuned_model_display_name="claims-triage-sft-v2-2026-09-27",
+        # validation_dataset=TuningDataset(gcs_uri="gs://claims-sft/validation.jsonl"),  # 900 rows
+        # hyper_parameters: epoch_count=3, adapter_size="ADAPTER_SIZE_EIGHT"
+    ),
+)
+```
+
+**Numbers.** 5,100 rows × ~700 tokens × 3 epochs = **10.7M tokens** → at $5/1M ≈ **$54**. Plus ~$30 for the epoch-1 variant. Total training spend **under $100**. Held-out: 900 rows, stratified by claim type.
+
+**Result.** Format compliance on the 900-row held-out set went from 71% (base, with a detailed system prompt and 5 few-shot examples) to 96%. Style-guideline adherence (a rubric scored by a judge) went from 3.1/5 to 4.4/5. **Task accuracy barely moved** — consistent with CS-13's thesis that SFT buys format and style, not knowledge.
+
+**What went wrong first.** Attempt 1 used `epochCount=10` on 6,000 rows because "more epochs is better". The resulting model produced summaries that were *verbatim rearrangements of training claims* — it had memorised the dataset. Detected by prompt-mutation testing: it failed on rephrased questions. Fixed by dropping to `epochCount=3` and reducing `adapterSize` from 16 to 8.
+
+**The economics.** ~$1,400/month endpoint + ~$600/month inference = **~$2,000/month** to serve 400 adjusters, versus an estimated $180,000/year fully loaded for the manual triage of the same volume. **The tuned endpoint is unambiguously the right call here** — but note that the endpoint is 95% of the run rate, and a self-hosted open 8B would have been ~$900/month.
+
+---
+
+### 15.3 Case C — The team that should have used RAG
+
+**Situation.** A legal-tech startup fine-tunes Gemini 2.5 Flash on 12,000 Q&A pairs extracted from their case-law database. Goal: "the model should know our case law."
+
+**Why this technique (as they framed it).** They had the data in a clean JSONL. SFT was the obvious next step.
+
+**Exact config.** `epochCount=3`, `adapterSize=16`, 12,000 rows × 900 tokens ≈ 32M tokens → **~$162**.
+
+**Result.** The tuned model answered questions about cases it had seen in training *beautifully* — in the house citation format, with the right tone. It **failed completely** on cases added to the database after the training cut-off, and hallucinated citations for them with high confidence. Measured: 94% accuracy on training-distribution cases, 31% on post-cut-off cases (worse than the base model's 44%, because it had learned to always produce a citation).
+
+**Why it failed.** Textbook CS-13 §4.1: SFT does not inject retrievable facts reliably; it teaches format and behaviour. They had taught the model to *shape* a legal answer without teaching it *which* facts were true.
+
+**The fix.** Retrieval over the case-law index (CS-04), with the tuned model kept **only for the formatting behaviour** — retrieve passages, then generate in house style. Accuracy on post-cut-off cases recovered to 78%, and they now update by re-indexing documents rather than re-training.
+
+**What went wrong first.** They deployed, measured on in-distribution questions, saw 94%, and shipped. **The eval set was the bug**: it had been sampled from the same corpus as the training data. A post-cut-off set built by date-filtering would have caught it before deployment for the cost of one engineer-hour.
+
+---
+
+### 15.4 Case D — The high-volume serving decision
+
+**Situation.** A consumer app with 25M requests/month wants a domain-tuned assistant. They evaluated Vertex SFT and self-hosted Llama-3.1-8B with LoRA + vLLM.
+
+**Why both were on the table.** Quality was close. The decision was entirely economic.
+
+| | Vertex tuned endpoint | Self-hosted 8B LoRA + vLLM |
+|---|---|---|
+| Training | ~$300 (60M tokens) | ~$60 (2× A100-hours + engineer time) |
+| Serving, 25M req/mo (600 in / 300 out) | ~$100k+/month (multiple replicas, tuned premium) | ~$6k/month (8× L4 reserved, 1-yr commit) |
+| Engineering to build | 1 week | 6 weeks |
+| Ongoing ops | ~0 | ~0.2 FTE |
+| Weights exportable | No | Yes |
+| Time to production | 2 weeks | 8 weeks |
+
+**Result.** They went self-hosted. The 6-week difference in time-to-production was paid back by **month 1** of the serving cost delta. The 0.2 FTE of ops was less than one-twentieth of the monthly saving.
+
+**What went wrong first.** They spent three weeks on the Vertex path before doing this arithmetic, because the prototype had been so fast that nobody questioned the run rate. **The lesson: do the serving arithmetic on day one, before you build anything.**
+
+> **Beyond the video:** the generalisable rule. **Prototype speed and production economics are different questions, and managed services optimise only the first.** Adopt the managed path to *learn whether the task is worth doing*; migrate to the self-hosted path when the traffic justifies it. The mistake is treating the prototype's architecture as the production architecture by default, which is what a fast prototype tempts you into.
+
+---
+
+### 15.5 Case E — The regulated deployment that could not use it
+
+**Situation.** A European healthcare provider wants a patient-communication assistant. Their data is subject to residency requirements and their regulator requires the ability to demonstrate exactly what data trained what model.
+
+**Why they considered Vertex.** Google's certifications and the GCP control plane are strong, and Vertex tuning is served in EU regions.
+
+**Why it failed the review.** Three findings:
+1. **The tuned artefact cannot be inspected.** The team could not produce a description of the model's parameters, size, or training procedure for the technical-file requirements. "A Google-managed resource" was not an acceptable answer to the auditor's question about the trained weights.
+2. **No reproducible reconstruction.** `epochCount` and `adapterSize` were recorded, but there is no seed and no way to demonstrate that a given model corresponds to a given dataset beyond the job record. The regulator wanted stronger provenance.
+3. **Data handling.** The training data traversed Google infrastructure under the standard terms. Whether that satisfied the specific residency requirement depended on a legal reading of the data-processing addendum that the team could not get confirmed in time.
+
+**What they did.** Ran the fine-tune on an open model self-hosted in their own EU region (CS-23), which produced a downloadable adapter, a reproducible training command, a dataset hash, and a signed model card.
+
+**What went wrong first.** They built the Vertex prototype before involving legal, then had to rebuild. **The lesson: in a regulated environment, the artefact-export and provenance questions decide the architecture, and they are not answerable after the fact.**
+
+---
+
+## 16. Production Considerations
+
+### 16.1 The lifecycle, as five explicit states
+
+The most common production failure in this module is treating "trained" and "deployed" as one state. They are five:
+
+```
+  ┌──────────┐  tune()   ┌──────────┐  deploy   ┌────────────┐
+  │  DRAFT   │ ────────► │  TRAINED │ ────────► │  DEPLOYED  │
+  │ (JSONL   │           │ (Model   │           │ (Endpoint  │
+  │  + split)│           │  @N      │           │  billing   │
+  └──────────┘           └──────────┘           │  per hour) │
+                              ▲                 └────────────┘
+                              │                       │
+                              │  promote              │ undeploy_all()
+                              │                       ▼
+                         ┌──────────┐           ┌────────────┐
+                         │  SHADOW  │ ◄──────── │  UNDEPLOYED│
+                         │ (deployed│           │ (Model     │
+                         │  but not │           │  retained) │
+                         │  routed) │           └────────────┘
+                         └──────────┘
+```
+
+| State | Resources alive | Billed | Duration in production | Entry criteria |
+|---|---|---|---|---|
+| **DRAFT** | GCS objects | storage pennies | days–weeks | A frozen, split, validated dataset |
+| **TRAINED** | GCS + `Model@N` | ~nothing | hours–days | `eval_ab.py` shows a positive delta over base |
+| **SHADOW** | + `Endpoint` | **per hour** | 1–14 days | Passing regression + refusal suites |
+| **DEPLOYED** | + `Endpoint` serving traffic | per hour + tokens | as long as the product needs it | Shadow traffic agreement within tolerance |
+| **UNDEPLOYED** | `Model@N` only | ~nothing | indefinitely | Traffic pattern no longer justifies it, or the model is superseded |
+
+**Write these five states into your runbook with an explicit owner for each transition.** The transition nobody owns is DEPLOYED → UNDEPLOYED, and it is the expensive one.
+
+### 16.2 Serving architecture
+
+| Pattern | When | Notes |
+|---|---|---|
+| **Direct endpoint call from the app** | Small apps, low traffic | Simplest. The endpoint URL becomes an app config value. |
+| **Backend proxy** | Almost always | Never let the browser talk to the endpoint. The proxy holds the credentials, applies per-user rate limits, logs the resolved model ID, and is the place you swap endpoints during a rollback. |
+| **Shadow deployment** | Before promotion | Send a *copy* of production traffic to the candidate endpoint, compare outputs offline. Costs the endpoint hours; buys the confidence that a promotion is safe. The instructor does not mention this and it is the single highest-value production practice here. |
+| **A/B with a routing rule** | After shadow | Route 5% → 25% → 50% → 100%. Requires the proxy to key on a stable user ID. |
+| **Multi-endpoint fan-out** | Never, at first | Two endpoints = two hourly bills. Do not run a tuned + base endpoint "just in case" unless you have budgeted for the pair. |
+
+### 16.3 Versioning and rollback
+
+**What is versioned on Vertex:** the model resource carries `@N`. Every retrain creates `@N+1` under the same model ID. That is real and useful — you can see the lineage.
+
+**What is not versioned:** the endpoint's routing. There is no "30% to @1, 70% to @2" primitive in the naive setup; you either deploy `@N` or `@N+1`.
+
+| Practice | Why it matters here |
+|---|---|
+| **Pin the endpoint to an explicit `@N`** | A retrain that silently appends `@2` must not become production by accident. |
+| **Keep the previous `Model@N-1` undeployed but alive** | Rollback is then "deploy the old one", minutes not hours. |
+| **Record the dataset hash with the model version** | The `Model@N` resource does not carry your data lineage. Your sidecar JSON does (§10.12). |
+| **Never delete the previous model until the new one has served a full traffic cycle** | Including a weekend and any batch job that runs monthly. |
+| **Rollback procedure, written down and rehearsed once** | "Deploy `@N-1`, flip the proxy config, verify the eval suite." Four steps; the team should have run them once before they need to. |
+
+### 16.4 Monitoring
+
+| Signal | Source | Alert threshold | Why |
+|---|---|---|---|
+| **Endpoint exists AND 0 requests in 2h** | Cloud Monitoring / your proxy logs | Any occurrence (business hours) | The forgotten-deployment detector (§9.4) |
+| **Endpoint monthly cost** | Billing export (§11.5) | > 120% of forecast | Catches a replica-count change or a second endpoint |
+| **Resolved model ID per request** | Your proxy log | Any change without a deploy event | Catches a silent fallback to the base model |
+| **Refusal rate** | Classifier over responses | > 5% on a 200-prompt benign suite | Over-refusal is the most common product regression |
+| **Format-compliance rate** | Parser over responses | < 99% on a schema-constrained endpoint | Under-training or a prompt change upstream |
+| **Output length distribution** | Histogram | Shift > 2σ from the baseline | Verbosity inflation is the first symptom of drift or of a training-set change |
+| **p95 latency** | Proxy | > 2× baseline | Your endpoint is cold, throttled, or sharing capacity |
+| **4xx/5xx rate** | Proxy + Vertex metrics | > 1% | Quota, auth expiry, or a base-model deprecation |
+| **Data-drift proxy: input embedding centroid shift** | Embeddings of live inputs vs training inputs (CS-22) | Drift beyond a set threshold | The best leading indicator that your model is now off-distribution |
+| **Eval-suite pass rate, run weekly** | `eval_ab.py` on a cron | Any regression | Detects changes in the *served* model you did not make |
+
+> **Beyond the video:** the last row is the one people omit and the one that matters most on a managed service. **Because you do not control the serving stack, the model behind your endpoint can change without your involvement** — a base-model update, a serving-stack change, a capacity reshuffle. The only way to detect that is a **weekly scheduled eval** that runs the same frozen prompts against the same endpoint and diffs the outputs. Ten lines of code, one cron entry, and it is the difference between discovering a regression from a dashboard and discovering it from a customer.
+
+### 16.5 Regression testing
+
+Properties, not exact strings (CS-13 §16.5). A frozen suite of 50–200 prompts asserting:
+
+```python
+# regression_suite.py — asserts PROPERTIES, not golden strings.
+# Golden strings break on every model update and teach the team to ignore failures.
+CHECKS = [
+    ("parses as JSON",              lambda r: is_json(r)),
+    ("no refusal phrase",           lambda r: not any(p in r.lower() for p in REFUSAL_PHRASES)),
+    ("<= 120 words",                lambda r: len(r.split()) <= 120),
+    ("contains a citation",         lambda r: bool(CITATION_RE.search(r))),
+    ("responds in the asked language", lambda r: detect_lang(r) == expected_lang),
+    ("no PII-like patterns",        lambda r: not PII_RE.search(r)),
+    ("does not mention the base model", lambda r: "gemini" not in r.lower()),
+    ("ends with a complete sentence",   lambda r: r.rstrip().endswith((".", "!", "?"))),
+]
+```
+
+Run this against **both** the current production endpoint and the candidate before every promotion, and store the pass/fail matrix. The diff between two matrices is your promotion decision.
+
+### 16.6 Cost governance
+
+| Control | Mechanism | Catches |
+|---|---|---|
+| Budget + alerts | Console → Billing | Everything, eventually |
+| **Hard cap** (where supported) | Budget → automatic disable | The runaway case |
+| Billing export → BigQuery | Daily query (§11.5) | Attribution: which SKU, which project |
+| Label convention | `owner`, `purpose`, `expires-at` on endpoints | Ownership and sweeper automation |
+| Scheduled sweeper | Cloud Function + Cloud Scheduler | Forgotten endpoints, mechanically |
+| A "who owns this endpoint" dashboard | BigQuery + Looker Studio | The human failure |
+| **A monthly 15-minute cost review** | Calendar invite | The organisational failure |
+
+**The reason to write all of that down:** every one of these is cheaper than the first incident. The endpoint is a fixed cost with no natural feedback loop — nobody complains when it is running, because it is working fine.
+
+### 16.7 The compliance angle
+
+| Question | What to establish before you train |
+|---|---|
+| **Where does the data go?** | Your GCS bucket, in your project, in a region you chose. Vertex training reads from there. |
+| **Where does the artefact live?** | In Google's control plane, associated with your project. You cannot export it. |
+| **Is the data used to improve Google's models?** | Read the specific terms for the specific service. Do not assume from the consumer-product terms (which are different). |
+| **What is your retention/erasure story?** | If a data subject asks for erasure, can you remove their influence from a trained model? (Answer: you can delete the dataset and retrain. You cannot un-learn.) |
+| **Can you demonstrate provenance?** | Dataset hash + job ID + hyperparameters + metrics. Build the sidecar (§10.12). |
+| **CMEK?** | Vertex supports customer-managed encryption keys for many resources; verify which apply to tuning artefacts and to the endpoint. |
+| **VPC-SC?** | A perimeter around your project restricts data movement; verify it is compatible with Vertex tuning in your region. |
+| **Audit logging?** | Cloud Audit Logs record the API calls. Enable Data Access logs for Vertex if your review requires request-level evidence. |
+| **Who can call the endpoint?** | `aiplatform.user` at project scope means anyone with that role can call *every* endpoint. Consider a dedicated project or a stricter custom role. |
+
+> **Beyond the video:** the compliance question this service makes *harder* than self-hosting is **provenance of the trained artefact**. With an open-weight fine-tune you can hash the adapter, sign the model card, and produce the exact training command. With a managed tune you have a job record and a metric series. That is a *weaker* evidentiary position, and it is the reason Case E (§15.5) went self-hosted despite the otherwise-attractive GCP fit. Say this out loud in your design review, because it is not obvious until the auditor asks.
+
+---
+
+## 17. Common Misconceptions
+
+**1. "Fine-tuning costs money, so I should be careful about dataset size."**
+It costs *almost nothing*. 564 tokens of Gemini 2.5 Flash training is **$0.00282** [42:25]. The median production fine-tune in this module is under **$100**. What costs money is the deployed endpoint, at an estimated ~$1,400/month. Be generous with data and ruthless about deployments.
+
+**2. "Vertex and AI Studio are the same thing."**
+Different products with different auth, quotas, model IDs, and — critically — **different tuning support**. The whole reason this module exists is that AI Studio lost fine-tuning [7:18]. They share a Python SDK, which is exactly what makes the confusion so easy.
+
+**3. "You need a GPU to fine-tune Gemini."**
+No. The instructor runs the entire practical on a **CPU-only Colab runtime** [18:50]. That is the value proposition. Select the cheapest runtime you can get.
+
+**4. "The fine-tuned model will know my private business data."**
+Only weakly, and only if the behaviour you want is *formatting* rather than *facts*. The companion dataset is 10 rows of smartphone support Q&A; the demo question ("why do phones have a one-year warranty?") is a **fact Gemini already knew**. Nothing in the video's demo distinguishes a tuned model from a prompted one. CS-13 §4.1 has the full argument.
+
+**5. "Once the job succeeds, I'm done."**
+The job succeeding *creates new billable resources*. `JOB_STATE_SUCCEEDED` is the moment your monthly cost starts, not the moment it ends.
+
+**6. "Deleting the model cleans up."**
+The video's cleanup deletes the `Model` [56:39]. The `Endpoint` is a separate resource with a separate lifecycle and a separate bill. §6.10, §10.3.
+
+**7. "Lower evaluation loss means a better model."**
+Eval loss is next-token cross-entropy on a held-out slice of *your own data*. It measures how well the model predicts your distribution, not how well it does your task. A model can have excellent eval loss and be worse in production (Case C, §15.3).
+
+**8. "The validation split is handled for me."**
+It is — and that is the problem. You did not choose the ratio, cannot see which examples were held out, and cannot stratify it. For a 10-row dataset it is two examples. **Pass an explicit validation file.** §4.5.
+
+**9. "More epochs = better."**
+`epochCount` is a linear multiplier on your training bill and the fastest route to memorisation. The useful SFT range is **1–3** (CS-13 §7.3). Case B (§15.2) lost a training cycle to `epochCount=10`.
+
+**10. "Fine-tuning gives me a model I can run anywhere."**
+It gives you a **resource name**. No download, no export, no quantisation, no merge, no on-prem. [3:35]. This is structural, not a limitation that will be lifted.
+
+**11. "Vertex SFT must be expensive because it's enterprise."**
+The training is nearly free; the *deployment* is expensive. The service is priced like a server (per hour), not like a batch job (per token). Misreading that single fact produces every budgeting error in this module.
+
+**12. "I can compare two Vertex runs and conclude which dataset is better."**
+There is no seed and no determinism (§10.10). Two identical jobs produce different models. You must calibrate your noise floor — run the same config twice, once — before attributing a delta to a change.
+
+**13. "The console will tell me if something is wrong."**
+The console tells you the job state. A model that trained perfectly and learned nothing reports `SUCCEEDED` with a falling loss curve. The console has no opinion about whether your model is *good*.
+
+**14. "Preference tuning is just SFT with pairs."**
+They are separate tuning methods on Vertex [11:15] with different schemas, different objectives and different failure modes. See CS-14/CS-24/CS-25/CS-27.
+
+**15. "I'll just use the model string from the tutorial."**
+The transcript renders Gemini as "Jimny" and Vertex as "Vortex" throughout, and the model line-up changes quarterly. Model IDs come from the console and the API reference. §10.1.
+
+**16. "The 15–20 minute training time means the dataset was small."**
+It means the *overhead* is fixed. A 564-token job and a 5,000-row job are both dominated by provisioning at the low end [50:56]. Budget the wall-clock accordingly and do not use it as a proxy for job size.
+
+**17. "Full fine-tuning on Vertex means the weights all moved."**
+You cannot verify that. Treat it as a pricing tier and evaluate the output. §7.5.
+
+**18. "If it works in the notebook, it works in production."**
+The shipped notebook in this repo contains cells that raise `NameError` and an inference cell that may resolve to the wrong resource. A notebook that ran once is not a pipeline.
+
+**19. "The endpoint is cheap because I only pay per token."**
+No. You pay per hour the deployment exists, plus tokens. At hobby traffic the hourly charge is ~100% of the cost (§11.3).
+
+**20. "I should deploy immediately after training so I can test it."**
+Test it, yes — then **undeploy**. The correct default state for a tuned model is TRAINED, not DEPLOYED (§16.1). Deploy for evaluation windows measured in hours, not months.
+
+---
+
+## 18. Key Takeaways
+
+1. **Vertex SFT is a rental: no weights, no export, no exit.** [3:35] Everything else follows from that one design fact.
+2. **Training is free; deployment is expensive.** 564 tokens costs $0.00282; an idle endpoint costs an estimated ~$1,400/month. The ratio is ~500,000:1.
+3. **`tuned_model.model` (the artefact) and `tuned_model.endpoint` (the deployment) are two resources with two bills and two lifecycles.** Confusing them is the module's most expensive mistake.
+4. **Deleting the model does not release the endpoint.** `undeploy_all()` → `endpoint.delete()` → `Model.delete()`, in that order.
+5. **The Vertex JSONL schema is not OpenAI's.** `systemInstruction` + `contents[].parts[].text`, `role: "model"`, JSONL in GCS in the same region. §4.2.
+6. **There are five states, not two: DRAFT → TRAINED → SHADOW → DEPLOYED → UNDEPLOYED.** Name an owner for each transition.
+7. **The automatic metrics are log loss and teacher-forced token accuracy.** Neither measures task success. Build `eval_ab.py` and compare against the *base* model. §12.3.
+8. **Always pass an explicit validation file.** The implicit split is unseen, unstratified and, at 10 rows, two examples. §4.5.
+9. **Four hyperparameters exist; the video names none of them.** `epochCount` (1–3, multiplies the bill), `learningRateMultiplier` (leave at 1.0), `batchSize` (leave at default), `adapterSize` (4 or 8). §7.
+10. **The setup is harder than the code.** Project, billing, region, bucket, IAM, matching Colab identity. The instructor says so himself [19:53].
+11. **`v1beta1` for tuning, `v1` for inference.** Keep both clients, pin the SDK version, and read the `ExperimentalWarning` as a contract term. §10.6–10.7.
+12. **The 15–20 minute fixed overhead makes small experiments nearly free and iteration slow.** Run the sweep locally on an open model; confirm the winner here.
+13. **A 10-row managed fine-tune is a plumbing demo, not a model.** It cannot distinguish a tuned model from a prompted base model.
+14. **The managed path wins on time-to-first-model and organisational fit, and loses on unit economics the moment you deploy.** Break-even is a traffic question. §13.4.
+15. **Undeploy is a control, not a habit.** A budget alert plus a scheduled sweeper is the only teardown that survives a busy week.
+
+---
+
+## 19. Self-Check Questions
+
+1. Why can't you download a fine-tuned Gemini model, and what are the two downstream consequences for your architecture?
+2. Write the Vertex JSONL schema from memory, and name the three fields that differ from OpenAI's.
+3. Your colleague's tuning job reports `JOB_STATE_SUCCEEDED`. What resources now exist, and which one bills?
+4. You ran a job yesterday and forgot to note its name. What does `client.tunings.list()[1]` return, and why is that dangerous?
+5. A tuning job on 10,000 rows × 500 tokens with `epochCount=3` at $5/1M tokens — what is the training cost?
+6. The same job's endpoint runs for 45 days at an estimated $2/hour. What is the endpoint cost, and what is the ratio to question 5?
+7. What is `learningRateMultiplier` a multiplier *of*, and why can't you set an absolute learning rate?
+8. Your eval loss is 11.4 on a model with a 100k vocabulary. What does that tell you?
+9. You must roll back a production tuned model to the previous version. What are the four steps, and which resource do you touch?
+10. Give the two conditions under which a dedicated tuned endpoint beats self-hosting an open-weight model of comparable quality.
+
+<details>
+<summary>Answers</summary>
+
+1. Because the base weights are closed-source and the tuned artefact is only ever exposed as a Vertex resource [3:35]. Consequences: (a) no exit strategy — migrating means re-doing the fine-tune elsewhere; (b) no downstream optimisation — you cannot quantise, merge, batch, or run the model outside a Vertex endpoint, so your serving cost is permanently Google's price.
+
+2. ```json
+{"systemInstruction": {"role":"system","parts":[{"text":"..."}]},
+ "contents":[{"role":"user","parts":[{"text":"..."}]},
+             {"role":"model","parts":[{"text":"..."}]}]}
+```
+Three differences from OpenAI: the system prompt is **hoisted** out of the message list into a top-level `systemInstruction`; the assistant role is `"model"`, not `"assistant"`; the text is nested in a **list** of `parts` objects rather than being a flat `content` string.
+
+3. A tuned `Model` resource (`.../models/<id>@1`) and, by default, a deployed `Endpoint` (`.../endpoints/<id>`). The **Endpoint** bills — per hour, whether or not it receives traffic. The Model itself carries no published hourly charge.
+
+4. The second-most-recent job in the project, which may be a colleague's job, a retried job, or a test job. Dangerous because you would then read *its* `tuned_model.endpoint` and deploy or query the wrong model while believing it is yours. Persist the job name returned by `tune()`.
+
+5. `10,000 × 500 × 3 = 15,000,000` tokens. `15 / 1e6 × $5 = ` **$75.00**.
+
+6. `45 × 24 = 1,080 hours × $2 = ` **$2,160**. Ratio: `2,160 / 75 = ` **28.8×** — the deployment cost nearly thirty times the training cost, and it was entirely avoidable by undeploying.
+
+7. It multiplies **Vertex's internal default learning rate**, which you cannot read. You can only express "more" or "less" relative to whatever Google chose, which means LR values you know from other frameworks (e.g. `2e-4`) are meaningless here, and a recipe from a paper cannot be reproduced exactly.
+
+8. `ln(100,000) ≈ 11.51`. An eval loss of 11.4 is essentially the uniform-distribution entropy, meaning the model has learned **nothing** — it is spreading probability evenly across the vocabulary. Check the schema first (`role: "model"`, populated `parts`), then the data.
+
+9. (1) `undeploy_all()` on the current endpoint, or deploy `@N-1` to a fresh endpoint; (2) deploy the previous `Model@N-1` to an endpoint; (3) flip your proxy's model config to the previous endpoint; (4) verify with the regression suite. The resources you touch are the **Endpoint** (which endpoint the proxy points at) and the **Model** (`@N-1`, which must still exist — so never delete the previous model until the new one has served a full traffic cycle).
+
+10. (a) Traffic is high enough that the fixed hourly endpoint charge is a small fraction of the total, and the per-token comparison favours the self-hosted deployment; (b) the task cannot be served by an open-weight model of comparable quality — i.e. you specifically need Gemini's capabilities, and you have measured that the tuned Gemini beats the best open alternative by more than the cost delta.
+
+</details>
+
 <!-- CONTINUE -->

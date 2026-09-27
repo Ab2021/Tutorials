@@ -2130,7 +2130,472 @@ This is the most important table in the module, because every row here survives 
 | 14 | **Adapter never merged / wrong base at serve time** | The adapter loads onto the wrong revision and quality drops subtly | Assert the base hash at load time | Pin `base_model` by revision in the serving config too |
 | 15 | **`wandb_mode: disabled` left in from a debug run** | No metrics for the run you actually care about | Check the W&B project has the run | Fail the job if `wandb_mode != online` |
 
+---
+
+## 10. Exceptions, Edge Cases & Gotchas
+
+Numbered, each with the exception, the reason, and the action.
+
+1. **`sample_packing: false` is correct for long-row data.** If your rows average 1,800 tokens into a 2,048 window, packing buys ~10% and adds correctness risk. The exception to "packing is a free speedup" is "your data is already dense".
+2. **`train_on_inputs: true` is occasionally right.** When the task is *completion continuation* rather than instruction following — e.g. teaching a model your house style on documents where the input *is* the thing being modelled — including prompt tokens in the loss is intentional. Rare, and you must know you are doing it.
+3. **Full fine-tuning an *Instruct* model is usually a mistake.** If you are trying to change behaviour, an adapter on an Instruct model works better and costs 20× less; if you are trying to add knowledge, continued pretraining (CS-12) is the right stage.
+4. **`num_epochs: 3` on a 200-row dataset is not 3 epochs of learning.** With 200 rows and `micro_batch_size: 1` × `grad_accum: 8`, an epoch is 25 steps. Three epochs is 75 steps. You are not "training longer"; you are barely training.
+5. **`bf16: true` fails on a T4.** Turing has no bf16. The video's `fp16: true, bf16: false` is exactly right for its hardware and exactly wrong for an A100. The current default is `auto`, which usually gets it right — but stating it explicitly is what makes a config portable.
+6. **`flash_attention_2` is not always faster.** Below ~512 tokens, the varlen kernel's setup overhead can make FA2 *slower* than SDPA. Benchmark before assuming.
+7. **`paged_adamw_8bit` can be slower than `adamw_torch_fused` when you are not memory-bound.** Paging is a safety valve; if you have headroom, use the fused 32-bit optimiser and take the speed.
+8. **`val_set_size` and `test_datasets` are mutually exclusive.** The config reference says use one or the other, not both.
+9. **A very small dataset breaks packing.** Axolotl's own debugging guidance is to set `sample_packing: false` and `eval_sample_packing: false` with tiny datasets "to avoid errors". A packing collator with 5 examples can produce degenerate windows.
+10. **`max_steps` overrides the epoch-derived schedule.** Set `max_steps: 25` and your `num_epochs: 1` is meaningless; the LR schedule is compressed into 25 steps. Good for a smoke test, confusing if left in.
+11. **Windows is a second-class citizen.** The repo's own setup notes start with "Windows → WSL". `dataloader_num_workers: 0` is the only legal value in some Windows configurations, which then forbids `dataloader_prefetch_factor` (§4.3.5). Use WSL or Linux.
+12. **`output_dir` with Windows-style backslashes breaks path handling.** Use forward slashes even on Windows.
+13. **The HF token must be granted in Colab.** The instructor's run pauses on *"it is asking me to grant access for the HF token"* [44:39]–[44:45]. In a headless job, `huggingface-cli login` or `HF_TOKEN` is required, and gated models (Llama, Gemma) will 401 without it.
+14. **`base_model: meta-llama/...` is gated.** A config that runs on your machine fails in CI for a permissions reason, not a code reason. Use a mirrored or local copy in CI, or store the token in the runner's secrets.
+15. **A dataset with an `input` field that is sometimes absent and sometimes empty.** `{"input": ""}` and `{}` are different objects; naive `if "input" in row` logic behaves differently from `if row["input"]`. Normalise before training (CS-13 §4.2.1's `None` bug).
+16. **`special_tokens` resizes embeddings.** Adding tokens to a tokenizer changes the model's embedding matrix. On a *fresh* fine-tune this is fine; on a resume-from-checkpoint it is a shape mismatch unless the checkpoint was grown the same way. Axolotl "grows embeddings when the tokenizer has extra tokens, but only shrinks them if `shrink_embeddings: true`" — the asymmetry is the source of most merge-time size mismatches.
+17. **Adapter merge failures are usually vocabulary mismatches**, not bugs in the adapter. The FAQ's guidance is to use `axolotl merge-lora` rather than `PeftModel.from_pretrained` + manual merge.
+18. **A `save_steps` checkpoint from mid-cosine-decay is often better than the last one.** The final checkpoint has an LR near zero and may be slightly over-fit to the last batches seen. Always evaluate several checkpoints (`axolotl evaluate`), not just the last.
+19. **`strict: true` will reject a key that is real but newer than your version.** The exception to "always be strict" is the day you upgrade Axolotl and the schema lags the docs; check the release notes, don't disable strict permanently.
+20. **A config that trains fine on 1 GPU may OOM on 4.** With DDP there is no sharding at all — every GPU holds the full model and full optimizer state. Moving to 4 GPUs without FSDP/DeepSpeed changes nothing about per-GPU memory and adds NCCL buffers.
+
+---
+
+## 11. Cost, Compute & Memory
+
+### 11.1 The estimation recipe
+
+```text
+1. rows_surviving  = steps_per_epoch × micro_batch_size × gradient_accumulation_steps
+                     (from the load_datasets print, or compute directly)
+2. epochs          = num_epochs
+3. total_steps     = steps_per_epoch × num_epochs   (or max_steps if set)
+4. tokens_trained  = total_steps × micro_batch_size × grad_accum × sequence_len
+5. sec_per_step    = MEASURE from a 20-step smoke run  ← the only honest input
+6. gpu_hours       = total_steps × sec_per_step / 3600
+7. dollars         = gpu_hours × price_per_gpu_hour
+```
+
+Steps 1–4 are arithmetic. Step 5 is the one nobody measures and everybody guesses wrong — throughput varies by 3–5× across GPU generations, attention backends, packing efficiency, and dataloader settings.
+
+### 11.2 Worked example A — the video's run, priced
+
+| Quantity | Value | Source |
+|---|---|---|
+| Model | Qwen2.5-3B-Instruct, QLoRA r=32 | notebook |
+| Steps (1 epoch) | 1,105 | [47:43] |
+| Tokens/step | 1 × 8 × 1024 = 8,192 | config |
+| Tokens per epoch | ~9.05 M | computed |
+| Measured throughput | 25 steps in ~300–420 s → **12–17 s/step** | [51:52]–[51:55], [53:37]–[53:40] |
+| Time for 1 full epoch | 1,105 × ~14 s ÷ 3600 ≈ **4.3 GPU-hours** | computed |
+| Cost on a free Colab T4 | **$0** | — |
+| Cost of the same run on rented hardware (T4 ≈ $0.20/hr, spot) | **~$0.86** | estimate |
+| Cost of the same run on an A100-40GB (≈30× faster ≈ $1.20/hr) | **~0.15 GPU-h ≈ $0.18** | estimate |
+| Cost of the same run on an H100 (≈60× faster ≈ $2.50/hr) | **~0.07 GPU-h ≈ $0.18** | estimate |
+
+The lesson in the last three rows: **small models on fast GPUs cost roughly the same in dollars as small models on slow GPUs — you are buying latency, not money.** What changes is wall clock: 4.3 hours vs 8 minutes.
+
+### 11.3 Worked example B — a realistic production run
+
+"Fine-tune a Llama-3.1-8B-Instruct on 10,000 curated pharma SFT rows with QLoRA, 3 epochs, on 1×A100-40GB."
+
+| Step | Calculation | Result |
+|---|---|---|
+| Row length | mean 512 tokens, p99 1,400 | `sequence_len: 1536` |
+| Rows dropped | `excess_length_strategy: drop` at 1536 ≈ 0.5% | 9,950 rows survive |
+| Batch | `micro_batch_size: 4` × `grad_accum: 4` = 16 seq/step | 24,576 tokens/step |
+| Steps/epoch | `9,950 ÷ 16` | 622 steps |
+| Total steps | `622 × 3` | 1,866 steps |
+| Tokens trained | `1,866 × 24,576` | **45.9 M tokens** |
+| Throughput (A100, QLoRA, FA2, packing, 8B) | ≈ 3,500–5,000 tokens/sec (estimate) | 4,200 tok/s |
+| GPU-hours | `45.9e6 ÷ 4,200 ÷ 3600` | **≈ 3.0 GPU-hours** |
+| Cost on A100-40GB at $1.50/hr | `3.0 × 1.50` | **≈ $4.60** |
+| Cost on A100-80GB at $2.00/hr | same hours | ≈ $6.10 |
+| Cost on H100 at $3.00/hr (≈1.8× faster) | 1.7 GPU-h | ≈ $5.10 |
+| Wall clock | 3.0 h on 1×A100 | 3 h |
+| **Full FT instead** | 16 bytes/param × 8.1 B = ~130 GB of state | needs 4×A100-80GB (FSDP2) ≈ $16–24 |
+| **Cost of the data** | 10,000 curated rows at 15 min each of a domain expert's time ≈ £/€/$ 40/row | **$400,000 (estimate)** |
+| **Cost of a data error** | Re-running the fine-tune | $5 |
+
+That last pair is the module's cost thesis in one table: **training is nearly free; data is the cost centre, by four orders of magnitude.** The engineering lesson is not "save GPU money" — it is "spend GPU money freely to *check the data* (more experiments, more eval, more ablations) because it costs nothing relative to the data".
+
+### 11.4 VRAM quick-reference
+
+| Model size | Full FT (Adam, bf16) | LoRA (bf16 base) | QLoRA (4-bit) |
+|---|---|---|---|
+| 1B | ~26 GB | ~6 GB | **~4 GB** |
+| 3B | ~55 GB | ~12 GB | **~6 GB** |
+| 7–8B | ~120 GB | ~26 GB | **~10 GB** |
+| 13B | ~210 GB | ~40 GB | **~16 GB** |
+| 70B | ~1.1 TB | ~180 GB | **~40 GB** |
+
+*Estimates for `micro_batch_size: 1`, `sequence_len: 2048`, gradient checkpointing on, and the six-term model of §4.4.1. Add ~2–4 GB per 1,024 tokens of `sequence_len` for activations at `micro_batch_size` > 1. These are the numbers to sanity-check a plan against, not to design to — measure with `max_steps: 20`.*
+
+Minimum viable hardware, as a rule:
+
+- **QLoRA up to 8B:** 1×16 GB (T4, 4060 Ti, 4080)
+- **QLoRA 13B–34B:** 1×24 GB (3090/4090, L4, A10G)
+- **QLoRA 70B:** 1×48–80 GB (A6000, A100)
+- **LoRA 7–8B:** 1×24–40 GB
+- **Full FT 7–8B:** 2–4×A100-80GB with FSDP2 or ZeRO-3
+- **Full FT 70B:** 8–16×A100-80GB/H100 with ZeRO-3 + offload
+
+### 11.5 Cloud GPU price sheet (2025–2026, order-of-magnitude)
+
+| GPU | VRAM | Typical on-demand $/hr | Approx. QLoRA 8B tok/s | Best for |
+|---|---|---|---|---|
+| T4 | 16 GB | $0.15–0.35 | 500–700 | Free Colab, tiny experiments |
+| RTX 4090 | 24 GB | $0.35–0.70 | 2,000–3,000 | Cheapest per token for QLoRA |
+| L4 / A10G | 24 GB | $0.50–0.90 | 1,200–1,800 | Reliable single-GPU work |
+| A100-40GB | 40 GB | $1.20–1.80 | 3,500–5,000 | The default serious single GPU |
+| A100-80GB | 80 GB | $1.80–2.50 | 3,500–5,000 | LoRA 13B+, 70B QLoRA |
+| H100-80GB | 80 GB | $2.50–4.00 | 6,000–9,000 | Deadline-driven runs |
+| 8×H100 node | 640 GB | $20–32 | — | Full FT 70B, multi-node |
+
+> **Beyond the video:** the video's own hardware advice is to rent — it lists Vast.ai, Prime Intellect, ModelNova, and Novita as GPU providers [7:58]–[8:27], and that is the right answer for anyone without a local card. Two rules when renting: (1) **rent by the hour, checkpoint often** — a preempted 4-hour run with `save_steps: 200` costs you minutes, not hours; (2) **always run the 20-step smoke test on the rented machine before launching the real run**, because a config that OOMs at step 900 has cost you the whole run's time, and a config that produces garbage has cost you the whole run's money.
+
+---
+
+## 12. Evaluation — How To Know It Worked
+
+### 12.1 The four layers, and how each one lies to you
+
+| Layer | What it is | What it tells you | How it lies |
+|---|---|---|---|
+| **1. Training loss** | Cross-entropy on the training set | That the optimizer is working | It always goes down. It says nothing about quality. A model trained on empty targets reaches 0.0 |
+| **2. Eval loss** | Cross-entropy on a held-out split | That the model generalises *to the same distribution* | With `val_set_size: 0.05` on 10k rows, the eval set is 500 rows from the same file — it shares the annotation style, so it cannot detect a data-quality problem |
+| **3. Task metrics** | Format compliance, exact match, F1, schema-valid JSON | Whether the model does *the job* | Proxies. Format compliance of 99% with 40% wrong content is a failing model |
+| **4. Preference / human eval** | Pairwise win rate, LLM-as-judge, expert review | Whether people prefer it | Position bias, verbosity bias, and a judge that shares your model's blind spots (CS-13 §12.4) |
+
+**The honest protocol:** use (2) as a *stop signal*, (3) as your *gate*, and (4) as your *tiebreaker*. Never ship on (1).
+
+### 12.2 What a good run looks like, numerically
+
+| Signal | Healthy | Warning | Action |
+|---|---|---|---|
+| Train loss, chat SFT | falls to **0.5–2.0** and plateaus | < 0.4 (memorisation or empty targets); flat from step 1 (LR too low, or labels wrong) | Check the labels first, LR second |
+| Eval loss vs train loss | tracking within ~0.1–0.3 | gap widening steadily | Overfitting: fewer epochs, more replay data, or more data |
+| Grad norm | **0.1–10** | spikes above **100** | Clip (`max_grad_norm: 1.0`), lower LR, longer warmup |
+| Loss spikes | ≤ 2× and recovering | 2–10× and not recovering | Data sample, LR, or grad-accum mismatch (§14) |
+| Format compliance | ≥ 99% on your schema | 90–99% | The template or the data; not the LR |
+| Refusal rate on benign in-domain prompts | ≤ 2% | rising with epochs | Over-training; reduce epochs, add task data |
+
+The numeric bands come from Axolotl's own training-stability guidance: *"loss (should fall, roughly 0.5–2.0 for chat tuning), eval loss (should track train loss), gradient norm (0.1–10.0; spikes above 100 indicate instability)."*
+
+### 12.3 The evaluation config
+
+```yaml
+# Turn evaluation on. This is the single most-often-missing block.
+val_set_size: 0.05              # 5% holdout — cheap and enough to catch divergence
+eval_steps: 50                  # frequent enough to see the curve turn
+eval_sample_packing: false      # keep eval unpacked so metrics are comparable across runs
+# or, for a frozen external eval set (the right answer for production):
+test_datasets:
+  - path: ./data/pharma_eval_frozen.jsonl
+    ds_type: json
+    type: chat_template
+    split: "train"
+```
+
+```bash
+# Loss on train and eval with the current checkpoint
+axolotl evaluate sft_pharma_v1.yaml --lora-model-dir ./outputs/pharma-v1
+
+# Standard benchmarks via LM Evaluation Harness
+# (set lm_eval_tasks in the config first)
+axolotl lm-eval sft_pharma_v1.yaml --lora-model-dir ./outputs/pharma-v1
+```
+
+```yaml
+# The keys axolotl lm-eval reads
+lm_eval_tasks: [arc_challenge, hellaswag]   # pick 3-5 that track YOUR capability, not just MMLU
+lm_eval_batch_size: 8
+lm_eval_model: ./outputs/pharma-v1/merged
+output_dir: ./eval/step-1200
+```
+
+### 12.4 A minimal task-specific eval that catches the real failures
+
+Benchmarks rarely fail; your product does. This script is 40 lines and catches template drift, format violations, refusals, and regressions — the four things that actually ship bugs.
+
+```python
+"""eval_pharma.py — run against every candidate checkpoint. Exit non-zero on regression."""
+import json, re, sys, torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from peft import PeftModel
+
+BASE = "meta-llama/Llama-3.1-8B-Instruct"
+ADAPTER = sys.argv[1] if len(sys.argv) > 1 else "./outputs/pharma-v1"
+EVAL_SET = "data/pharma_eval_frozen.jsonl"     # FROZEN. Never regenerate between runs.
+REFUSAL = re.compile(r"\b(i can'?t|i cannot|i'm unable|as an ai)\b", re.I)
+
+tok = AutoTokenizer.from_pretrained(BASE)
+model = PeftModel.from_pretrained(
+    AutoModelForCausalLM.from_pretrained(BASE, device_map="auto", torch_dtype=torch.bfloat16),
+    ADAPTER,
+).eval()
+
+rows = [json.loads(l) for l in open(EVAL_SET, encoding="utf-8")]
+stats = {"n": 0, "format_ok": 0, "refusals": 0, "contains_gold": 0, "empty": 0,
+         "mean_len": 0, "prompt_echo": 0}
+
+for r in rows:
+    msgs = [{"role": "user", "content": r["prompt"]}]
+    # The template MUST come from the tokenizer, never a hand-typed string.
+    prompt = tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
+    enc = tok(prompt, return_tensors="pt").to(model.device)
+    with torch.no_grad():
+        out = model.generate(**enc, max_new_tokens=256, do_sample=False,
+                             temperature=None, top_p=None, pad_token_id=tok.eos_token_id)
+    text = tok.decode(out[0][enc["input_ids"].shape[1]:], skip_special_tokens=True).strip()
+
+    stats["n"] += 1
+    stats["mean_len"] += len(text)
+    stats["empty"] += int(len(text) == 0)
+    stats["refusals"] += int(bool(REFUSAL.search(text)))
+    stats["prompt_echo"] += int(r["prompt"][-40:].lower() in text.lower())
+    # Format contract: whatever your product requires. Example: must be a JSON object.
+    try:
+        json.loads(text); stats["format_ok"] += 1
+    except Exception:
+        pass
+    if r.get("gold"):                       # optional: a required substring / key fact
+        stats["contains_gold"] += int(r["gold"].lower() in text.lower())
+
+n = stats.pop("n")
+print(f"{ADAPTER}: n={n} format={stats['format_ok']/n:.1%} refusal={stats['refusals']/n:.1%} "
+      f"gold={stats['contains_gold']/n:.1%} empty={stats['empty']} "
+      f"prompt_echo={stats['prompt_echo']} mean_len={stats['mean_len']/n:.0f}")
+
+# STOP conditions — these are regressions, not preferences.
+fail = (stats["format_ok"] / n < 0.99 or stats["refusals"] / n > 0.02
+        or stats["empty"] > 0 or stats["prompt_echo"] > 0)
+sys.exit(1 if fail else 0)
+```
+
+Why each assertion is there:
+
+| Assertion | The failure it catches | Why it is a hard fail |
+|---|---|---|
+| `format_ok ≥ 99%` | Template drift, under-training | Your parser breaks in production at 91% |
+| `refusals ≤ 2%` | Over-training / safety-data imbalance | A model that refuses benign in-domain prompts is unusable (CS-13 §4.9.3) |
+| `empty == 0` | EOS trained too eagerly, or `max_new_tokens` reached instantly | Silent product failure |
+| `prompt_echo == 0` | **The model is continuing the prompt instead of answering it** — the signature of a wrong `type:` or unmasked prompt | The exact failure §4.5.4 ranks #1 |
+| `mean_len` in a band | Verbosity inflation from over-training | Judge bias, cost, latency |
+
+> **Beyond the video:** freeze the eval set **before** you train, hash it, and never regenerate it from the same pipeline that produced the training data. The most common evaluation failure in practice is not a bad metric — it is an eval set that quietly shares rows with the training set, which turns a memorisation result into a "great" score. `set(train_texts) & set(eval_texts) == set()` is a one-line assertion worth putting in CI.
+
+### 12.5 What to log per run, so that evaluation is possible at all
+
+```yaml
+wandb_project: pharma-sft
+wandb_name: llama31-8b-qlora-r32-lr2e4-seq1536-ep3-v4   # encodes the variables
+wandb_watch: gradients
+wandb_log_model: end
+seed: 42
+```
+
+Minimum viable run record: the config file, its hash, the dataset hash, the resolved config, the library versions, the W&B run ID, and the eval output of §12.4. That bundle is what makes "which checkpoint should we ship?" an answerable question instead of an argument.
+
+---
+
+## 13. Comparison Tables
+
+### 13.1 Head-to-head, five frameworks
+
+The video compares Axolotl against "core Hugging Face, Unsloth, and LLaMA-Factory" [2:46]–[2:53]. Here is that comparison, plus the two frameworks the video omits and that you should also consider.
+
+| Dimension | **Axolotl** | **LLaMA-Factory** | **Unsloth** | **torchtune** | **Plain TRL** |
+|---|---|---|---|---|---|
+| Interface | YAML + Python API | YAML + WebUI + Python | Python (patch API) | YAML recipe + Python | Python only |
+| Model coverage | Very broad (text + VLM + MoE) | **Broadest** — hundreds, incl. VLMs, with a registry | Narrower; the popular open families, added incrementally | Meta-family-first, growing | Whatever `transformers` loads |
+| Quality of the result | Reference quality | Reference quality | Equal or better on single GPU (hand-written kernels) | Reference quality | Depends entirely on you |
+| Speed, single GPU | Good | Good | **Best** (2× class claims on T4/V100) | Good | Baseline |
+| Speed, multi-GPU | **Excellent** (FSDP2, ZeRO 1–3, sequence parallel, multi-node) | Good (DeepSpeed/FSDP supported) | Improving; single-GPU is the design centre | Good (FSDP2, tensor parallel) | Whatever you wire yourself |
+| Memory efficiency | Very good (QLoRA, packing, Liger, cut-CE, offload) | Very good (QLoRA, packing, FlashAttention, Liger) | **Best on one GPU** | Good | Depends on you |
+| Config surface | ~200 keys, fast-moving | Large, WebUI-driven, `dataset_info.json` registry | Minimal — kwargs to `FastLanguageModel` | Small, clean, typed recipes | None (you write it) |
+| Dataset format support | 20+ `type:` strategies | 20+ with a JSON registry of dataset definitions | A few (`messages`, `alpaca`, `sharegpt`) + custom | Chat / instruct datasets, less format magic | Anything, if you write the collator |
+| Post-training methods | SFT, pretrain, DPO, IPO, ORPO, KTO, SimPO, GDPO, GRPO, RM/PRM, EBFT | SFT, pretrain, DPO, ORPO, KTO, PPO, RM | SFT, DPO, GRPO, and growing | SFT, DPO, PPO, GRPO recipes | SFT, DPO, ORPO, KTO, GRPO, PPO, RM |
+| Learning curve | Medium (YAML semantics + schema churn) | **Lowest** (WebUI) | **Lowest** (few lines of Python) | Medium–high (you read recipes) | High (you build the pipeline) |
+| Debuggability | Good (`preprocess --debug`, VSCode guide) | Good (UI shows datasets and previews) | Good (you hold the model object) | **Best** — recipes are readable, plain PyTorch | Best — it is your code |
+| Best for | Teams, multi-GPU, reproducibility, DPO loops | Rapid experimentation, broad model coverage, non-coders | One GPU, speed, Colab, iteration | Understanding + full control; PyTorch-native shops | Research variants, custom losses |
+| Licence / openness | Apache-2.0 | Apache-2.0 | Apache-2.0 (with a commercial tier for some features) | BSD-3 (Meta) | Apache-2.0 |
+
+### 13.2 The same job in five frameworks
+
+"QLoRA fine-tune Llama-3.1-8B on a JSONL of chat messages, 2 epochs, rank 32, LR 2e-4, pack the sequences."
+
+**Axolotl** — one YAML:
+
+```yaml
+base_model: meta-llama/Llama-3.1-8B-Instruct
+adapter: qlora
+load_in_4bit: true
+lora_r: 32
+lora_alpha: 64
+attn_implementation: flash_attention_2
+sample_packing: true
+sequence_len: 2048
+micro_batch_size: 2
+gradient_accumulation_steps: 8
+learning_rate: 2e-4
+num_epochs: 2
+optimizer: paged_adamw_8bit
+lr_scheduler: cosine
+output_dir: ./out
+datasets:
+  - path: ./data/train.jsonl
+    ds_type: json
+    type: chat_template
+    field_messages: messages
+```
+```bash
+axolotl train config.yml
+```
+
+**LLaMA-Factory** — one YAML plus a dataset registry entry:
+
+```yaml
+# train.yaml
+model_name_or_path: meta-llama/Llama-3.1-8B-Instruct
+stage: sft
+finetuning_type: lora
+quantization_bit: 4
+lora_rank: 32
+lora_alpha: 64
+lora_target: all
+cutoff_len: 2048
+per_device_train_batch_size: 2
+gradient_accumulation_steps: 8
+learning_rate: 2.0e-4
+num_train_epochs: 2.0
+lr_scheduler_type: cosine
+optim: paged_adamw_8bit
+flash_attn: fa2
+packing: true
+dataset: my_sft            # ← must exist in dataset_info.json
+output_dir: ./out
+```
+```json
+// data/dataset_info.json — LLaMA-Factory's registry, the key structural difference
+{ "my_sft": { "file_name": "data/train.jsonl", "formatting": "sharegpt",
+              "columns": { "messages": "messages" } } }
+```
+```bash
+llamafactory-cli train train.yaml
+```
+
+**Unsloth** — ~15 lines of Python:
+
+```python
+from unsloth import FastLanguageModel
+from trl import SFTTrainer, SFTConfig
+from datasets import load_dataset
+
+model, tokenizer = FastLanguageModel.from_pretrained(
+    model_name="unsloth/llama-3.1-8b-instruct-bnb-4bit",
+    max_seq_length=2048, load_in_4bit=True,
+)
+model = FastLanguageModel.get_peft_model(
+    model, r=32, lora_alpha=64, lora_dropout=0.0,
+    target_modules=["q_proj","k_proj","v_proj","o_proj","gate_proj","up_proj","down_proj"],
+    use_gradient_checkpointing="unsloth",
+)
+trainer = SFTTrainer(
+    model=model, tokenizer=tokenizer,
+    train_dataset=load_dataset("json", data_files="data/train.jsonl", split="train"),
+    args=SFTConfig(
+        per_device_train_batch_size=2, gradient_accumulation_steps=8,
+        learning_rate=2e-4, num_train_epochs=2, packing=True,
+        max_seq_length=2048, optim="paged_adamw_8bit", output_dir="./out",
+    ),
+)
+trainer.train()
+```
+
+**torchtune** — a typed recipe config; the recipe *is* Python:
+
+```yaml
+# llama3_1_8b_qlora.yaml — consumed by `tune run lora_finetune_single_device`
+model:
+  _component_: torchtune.models.llama3_1.lora_llama3_1_8b
+  lora_attn_modules: ['q_proj','v_proj','k_proj','o_proj']
+  apply_lora_to_mlp: true
+  lora_rank: 32
+  lora_alpha: 64
+tokenizer:
+  _component_: torchtune.models.llama3.llama3_tokenizer
+  path: /models/llama3/tokenizer.model
+dataset:
+  _component_: torchtune.datasets.chat_dataset
+  source: json
+  data_files: data/train.jsonl
+  conversation_column: messages
+  max_seq_len: 2048
+  packed: true
+optimizer:
+  _component_: bitsandbytes.optim.PagedAdamW8bit
+  lr: 2e-4
+epochs: 2
+batch_size: 2
+gradient_accumulation_steps: 8
+```
+```bash
+tune run lora_finetune_single_device --config llama3_1_8b_qlora.yaml
+```
+
+**Plain TRL** — you write the whole script; the `SFTConfig` is a dataclass, not a file:
+
+```python
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+from peft import LoraConfig
+from trl import SFTTrainer, SFTConfig
+from datasets import load_dataset
+
+bnb = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",
+                         bnb_4bit_compute_dtype="bfloat16")
+model = AutoModelForCausalLM.from_pretrained(
+    "meta-llama/Llama-3.1-8B-Instruct", quantization_config=bnb,
+    attn_implementation="flash_attention_2", device_map="auto")
+tok = AutoTokenizer.from_pretrained("meta-llama/Llama-3.1-8B-Instruct")
+tok.pad_token = tok.eos_token
+
+trainer = SFTTrainer(
+    model=model, tokenizer=tok,
+    train_dataset=load_dataset("json", data_files="data/train.jsonl", split="train"),
+    peft_config=LoraConfig(r=32, lora_alpha=64, lora_dropout=0.0, task_type="CAUSAL_LM",
+                           target_modules=["q_proj","k_proj","v_proj","o_proj"]),
+    args=SFTConfig(output_dir="./out", per_device_train_batch_size=2,
+                   gradient_accumulation_steps=8, learning_rate=2e-4,
+                   num_train_epochs=2, packing=True, max_length=2048,
+                   assistant_only_loss=True,      # ← you must remember this yourself
+                   optim="paged_adamw_8bit", bf16=True),
+)
+trainer.train()
+```
+
+**What the comparison actually shows.** The four framework paths are all *describing the same 12 hyperparameters*. The differences are:
+
+1. **Where the dataset contract lives.** Axolotl puts it in the config (`type:`); LLaMA-Factory puts it in a *separate registry file* (`dataset_info.json`); Unsloth/TRL put it in code; torchtune puts it in the recipe.
+2. **What you must remember that the framework will not tell you.** In TRL, `assistant_only_loss=True` is your job; in Axolotl, `roles_to_train` has a default and `train_on_inputs` defaults to `false`.
+3. **What is a file versus a literal.** Only Axolotl, LLaMA-Factory, and torchtune give you an artefact you can diff and hand to a colleague.
+
+### 13.3 Which one should you actually use?
+
+| If your constraint is… | Reach for |
+|---|---|
+| "One GPU, one afternoon, I want the fastest result" | Unsloth |
+| "I need to try 8 model families this week" | LLaMA-Factory |
+| "4–64 GPUs, and it must be reproducible and auditable" | **Axolotl** (or torchtune if your team is PyTorch-native) |
+| "I'm writing a paper about a new loss function" | Plain TRL, or a torchtune recipe |
+| "I want to understand what fine-tuning actually does" | torchtune — the recipes are readable |
+| "My manager wants a UI" | LLaMA-Factory |
+| "We already have Axolotl configs and a Docker pipeline" | Axolotl. Switching costs more than it saves |
+
+> **Beyond the video:** the frameworks are converging and the choice is less consequential than it feels. All five call the same `transformers`, `peft`, `trl`, and `bitsandbytes` underneath; a LoRA adapter trained by any of them loads in all of them. The genuinely durable skills are the ones this module teaches — the chat template, the loss mask, the effective batch, the packing boundary — and they transfer unchanged. **Optimise for the artefact you can hand to a reviewer, not for the framework.**
+
 <!-- CONTINUE -->
+
+
+
 
 
 

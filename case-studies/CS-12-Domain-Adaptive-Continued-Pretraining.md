@@ -1438,7 +1438,7 @@ The legal risk is not uniform across your corpus. It is concentrated in the docu
 | **Long epochs on a small corpus** | Strongly increases | 1 epoch; τ_cpt in the T2–T3 band |
 | **Rare/unique strings** (names, codes, tables) | Increases for those strings | Consider masking identifiers in cleaning |
 | **High LR, many trainable params** | Increases | LoRA over full FT; lower LR |
-| **Short, boilerplate-like documents** | Increases (they are easy to fit) | Template dedup (§10.11) |
+| **Short, boilerplate-like documents** | Increases (they are easy to fit) | Template dedup (§10 item 11) |
 
 Practical consequence: **the dedup and epoch discipline of §4.7 and §4.10.3 are also your legal mitigation.** A model trained for 1 epoch with 0.85-threshold dedup and 5% replay is far less likely to emit a verbatim passage than one trained for 5 epochs on a duplicated corpus — and *that* difference is what a plaintiff's expert will measure.
 
@@ -2375,7 +2375,7 @@ The degenerate case: the notebook's run is ~20 optimizer steps. `warmup_ratio=0.
 | You have 500–50k instruction pairs and no raw corpus | **No** | CS-13 (SFT) | CPT needs unlabelled text; with only pairs you have SFT data |
 | Answers exist in a document store that changes weekly | **No** | RAG | Retrieval updates by re-indexing; CPT needs a retrain (§4.2) |
 | You need the model to *cite* sources | **No** | RAG | A CPT'd model confabulates in-domain-sounding text with no provenance |
-| You need exact recall of a 200-page rulebook | **No** | RAG over the rulebook | CPT gives fluent familiarity, not verbatim lookup (§4.2.4) |
+| You need exact recall of a 200-page rulebook | **No** | RAG over the rulebook | CPT gives fluent familiarity, not verbatim lookup (§4.2.2) |
 | Style/tone/format change only | **No** | SFT (CS-13) or prompt engineering | Cheap to change; CPT is 100× the cost |
 | The model is already good enough but too slow/expensive | **No** | Distillation (CS-20) or quantisation (CS-11) | Quality is not the problem |
 | Model is fluent in the domain but will not follow your output schema | **No** | SFT | Behaviour, not knowledge |
@@ -2430,7 +2430,7 @@ Never start with the model you intend to ship. Run the cheapest informative expe
 | P3 | Your target size | LoRA r=32, best ratio from P2 | hours | Is the target model worth the GPU-hours? |
 | P4 | Target | Full FT vs LoRA at matched τ | days | Is full FT worth 8× the memory? |
 
-Only after P2 do you know your corpus's forgetting rate. §4.9.7.
+Only after P2 do you know your corpus's forgetting rate. §4.9.5.
 
 > **Beyond the video:** the probe ladder is what separates a team that ships a domain model from one that burns a month. The reason it works is statistical: forgetting rate, optimal replay ratio, and the adaptation/overfit knee are all properties of *the corpus relative to the base model*, and they transfer qualitatively from a 0.5B probe to a 7B target even though the absolute numbers shift. Teams that skip to the 7B run typically discover at hour 30 that their corpus was 60% boilerplate and their replay ratio was 0.
 
@@ -2461,7 +2461,7 @@ Only after P2 do you know your corpus's forgetting rate. §4.9.7.
 | C4 | Data pipeline is 70% of the work | Extraction, cleaning, dedup, chunking (§4.4–4.8) | Budget for it explicitly |
 | C5 | No labelled signal to optimise against | Loss going down ≠ task getting better | Held-out domain PPL + a task eval |
 | C6 | Hard to attribute results | If SFT comes after, which stage helped? | Run CPT-only eval before SFT |
-| C7 | Corpus quality is a ceiling | Garbage in → fluent garbage out, confidently | Quality filters (§4.6.9) |
+| C7 | Corpus quality is a ceiling | Garbage in → fluent garbage out, confidently | Quality filters (§4.6.3) |
 | C8 | Reproducibility requires the corpus | The model is not reproducible without the exact data + seed | Version the corpus and hash it (§16.3) |
 | C9 | Cannot be undone cheaply | No "unlearn the bad document" | Keep the base; retrain if the corpus is poisoned |
 | C10 | Legal exposure on scraped corpora | §4.12 | Licence review before, not after |
@@ -2474,7 +2474,7 @@ Only after P2 do you know your corpus's forgetting rate. §4.9.7.
 | L2 | Cannot cite | The loss has no notion of provenance. A CPT'd model that "quotes" a document is reconstructing a plausible string. |
 | L3 | Cannot guarantee recall of a specific fact | It learns a distribution; a fact seen once is a low-probability path. |
 | L4 | Cannot unlearn | Gradient descent has no delete operation. |
-| L5 | Cannot fix a tokenizer | If the domain term is not in the vocabulary, CPT can only approximate it as a sequence of subwords. Adding tokens requires resizing embeddings and a longer run (§10.4). |
+| L5 | Cannot fix a tokenizer | If the domain term is not in the vocabulary, CPT can only approximate it as a sequence of subwords. Adding tokens requires resizing embeddings and a longer run (§10 item 2). |
 | L6 | Cannot make a small model reason like a large one | Knowledge ≠ capability. A 1B model CPT'd on physics papers is fluent, not correct. |
 | L7 | Cannot beat RAG on factuality | Retrieval conditions on the actual document; CPT conditions on a memory of many documents. |
 | L8 | Cannot be evaluated by its training loss | §12.1. |
@@ -2502,7 +2502,7 @@ Only after P2 do you know your corpus's forgetting rate. §4.9.7.
 
 ## 10. Exceptions, Edge Cases & Gotchas
 
-1. **The domain uses a script the tokenizer barely covers.** Hindi, Telugu, Tamil, Arabic, Thai: a Llama-3 tokenizer emits 3–8 tokens per word in these scripts versus ~1.3 for English. Consequences: your 512-token window holds ~80 words instead of ~380, so your effective context is a fifth of what you think; your corpus "token count" is 4× what the same text would be in English, so your τ_cpt is inflated; and CPT has far less signal per token to work with because so many tokens are rare byte-fallbacks. **What to do:** measure `len(tok(text)) / len(text.split())` before anything else. If it exceeds 3, either (a) pick a base model with better script coverage (Aya, Sarvam, Gemma-2's 256k vocab), or (b) add domain tokens and run long enough for the embeddings to converge (§10.4), or (c) accept a much smaller effective context and raise `max_length`.
+1. **The domain uses a script the tokenizer barely covers.** Hindi, Telugu, Tamil, Arabic, Thai: a Llama-3 tokenizer emits 3–8 tokens per word in these scripts versus ~1.3 for English. Consequences: your 512-token window holds ~80 words instead of ~380, so your effective context is a fifth of what you think; your corpus "token count" is 4× what the same text would be in English, so your τ_cpt is inflated; and CPT has far less signal per token to work with because so many tokens are rare byte-fallbacks. **What to do:** measure `len(tok(text)) / len(text.split())` before anything else. If it exceeds 3, either (a) pick a base model with better script coverage (Aya, Sarvam, Gemma-2's 256k vocab), or (b) add domain tokens and run long enough for the embeddings to converge (§10 item 2), or (c) accept a much smaller effective context and raise `max_length`.
 
 2. **You added tokens to the vocabulary.** Resizing embeddings means the new rows are randomly initialised. The embedding matrix now has two very different parts: trained rows (small gradients needed) and random rows (large gradients needed). A single LR is a compromise. **What to do:** either raise the LR for the embedding layer specifically (parameter groups), or do a short warm-up phase with only the embeddings unfrozen, then unfreeze everything. Also: `model.resize_token_embeddings(len(tokenizer))` *after* `prepare_model_for_kbit_training` has been called will break the k-bit hook layout — resize first, then prepare.
 
@@ -2514,7 +2514,7 @@ Only after P2 do you know your corpus's forgetting rate. §4.9.7.
 
 6. **Your PDFs are already text** (born-digital LaTeX, Markdown, HTML). The extraction pipeline of §4.4 collapses to a one-liner and the §4.5 failure modes mostly vanish — but the HTML/LaTeX markup becomes training data. **What to do:** strip markup before chunking, or the model learns to emit `<div class="...">` tokens. This is a real and commonly-shipped failure: models that emit HTML boilerplate mid-sentence.
 
-7. **Your PDFs are scanned.** PyMuPDF returns an empty string or a page of garbage. The pipeline does not error; it silently produces a corpus that is 40% empty strings, which then get filtered by the `len > 30` rule, so you never notice the missing 40% of your data. **What to do:** assert `len(page.get_text()) > 0` per page and route failures to OCR (§4.4.6); log the OCR fraction as a first-class pipeline metric.
+7. **Your PDFs are scanned.** PyMuPDF returns an empty string or a page of garbage. The pipeline does not error; it silently produces a corpus that is 40% empty strings, which then get filtered by the `len > 30` rule, so you never notice the missing 40% of your data. **What to do:** assert `len(page.get_text()) > 0` per page and route failures to OCR (§4.5.1); log the OCR fraction as a first-class pipeline metric.
 
 8. **The corpus contains code.** Python/Markdown/code fences inside a domain corpus teach the model to emit code, which will show up as an unwanted behaviour at inference if it is not your domain. **What to do:** either remove code blocks or accept them as part of the domain. Do not leave this decision implicit.
 
@@ -2522,7 +2522,7 @@ Only after P2 do you know your corpus's forgetting rate. §4.9.7.
 
 10. **You are CPT-ing a chat model.** Instruction-tuned and RLHF'd models have a specific prompt template, and CPT on raw text with the template's special tokens stripped teaches it that `<|im_start|>` is never followed by a role. This degrades the chat behaviour while improving domain PPL. **What to do:** either start from the *base* checkpoint (the instructor's TinyLlama choice is right here — `TinyLlama-1.1B-intermediate-step-1431k-3T` is a base model), or keep the template tokens in the CPT text.
 
-11. **The corpus has a dominant template.** Product manuals, filings, and generated reports share a skeleton: "Introduction… Scope… Definitions…". CPT on 50,000 documents with the same skeleton teaches the skeleton as a high-probability continuation. At inference, the model wants to write "Scope" after "Introduction" regardless of your prompt. **What to do:** deduplicate at the *template* level (§4.7.5) and consider down-sampling documents whose n-gram profile matches the corpus mode.
+11. **The corpus has a dominant template.** Product manuals, filings, and generated reports share a skeleton: "Introduction… Scope… Definitions…". CPT on 50,000 documents with the same skeleton teaches the skeleton as a high-probability continuation. At inference, the model wants to write "Scope" after "Introduction" regardless of your prompt. **What to do:** deduplicate at the *template* level (§4.7.3) and consider down-sampling documents whose n-gram profile matches the corpus mode.
 
 12. **Your domain terms contain characters the cleaner strips.** Aggressive NFKC normalisation turns `µg` into `μg`, superscripts into digits, and Roman numerals `Ⅳ` into `IV`. In a pharma corpus, `µg` vs `mg` is a 1000× dose error. **What to do:** write a domain-specific allowlist of character classes that survive cleaning, and diff the corpus before/after cleaning to see exactly what your normaliser changed.
 
@@ -2932,7 +2932,7 @@ Before spending GPU-hours, price these:
 | Gemma-2-9B | 9B | 256k | 8k | Largest open vocab → least token inflation |
 | Aya-23-8B / Qwen2.5-7B | 7–8B | 256k / 151k | 8k / 128k | **Non-English domains** |
 
-**Choosing rule:** pick the smallest base whose *pretraining corpus* is most distant from your domain (bigger ΔPPL available) but whose *tokenizer* covers your domain's script and terminology (fewer tokens per word). Those two criteria fight each other, and the tiebreak is always tokenizer coverage, because token inflation costs you context, compute, and τ_cpt all at once (§10.1).
+**Choosing rule:** pick the smallest base whose *pretraining corpus* is most distant from your domain (bigger ΔPPL available) but whose *tokenizer* covers your domain's script and terminology (fewer tokens per word). Those two criteria fight each other, and the tiebreak is always tokenizer coverage, because token inflation costs you context, compute, and τ_cpt all at once (§10 item 1).
 
 ### 13.5 Deduplication methods
 
@@ -2943,7 +2943,7 @@ Before spending GPU-hours, price these:
 | Suffix array (exact substring) | Repeated n-grams across documents | O(N log N), memory-heavy | 50-token match | Large corpora with heavy boilerplate |
 | SimHash | Near-duplicates (Hamming) | O(N), cheaper than MinHash | Hamming ≤ 3 | Very large corpora, lower precision |
 | Embedding / semantic | Paraphrase-level duplicates | O(N) forward passes + ANN | cosine ≥ 0.95 | Small corpora where paraphrase matters |
-| Template/n-gram-profile | Same-skeleton documents | O(N) | top-k n-gram overlap | Generated reports, filings (§10.11) |
+| Template/n-gram-profile | Same-skeleton documents | O(N) | top-k n-gram overlap | Generated reports, filings (§10 item 11) |
 
 ### 13.6 Chunking strategies
 
@@ -2976,10 +2976,10 @@ Before spending GPU-hours, price these:
 | 10 | Held-out PPL barely moves after a full run | LR too low, corpus too similar to pretraining, or τ_cpt too small | Compute τ_cpt; check token overlap with the base's pretraining data | Raise LR, increase corpus, or accept that CPT is not needed |
 | 11 | Domain PPL great, model useless on the real task | You optimised fluency, not the task | Task eval (§12.7) | Add SFT; CPT is stage 1 of 3 |
 | 12 | Model repeats the prompt verbatim | LoRA `r` too low, LR too high, or trained on too few unique tokens | Compare the completion to the prompt character by character | More data, lower LR, higher rank; verify the adapter actually loaded |
-| 13 | Model outputs HTML/markdown boilerplate | The corpus contains markup | Grep the corpus for `<div`, ```` ``` ````, `\section{}` | Strip markup in cleaning (§10.6) |
+| 13 | Model outputs HTML/markdown boilerplate | The corpus contains markup | Grep the corpus for `<div`, ```` ``` ````, `\section{}` | Strip markup in cleaning (§10 item 6) |
 | 14 | Model emits long runs of the same token | Degenerate decoding, or a corrupted corpus | Check generation params; grep for repeated lines | `repetition_penalty=1.1`, `no_repeat_ngram_size=3`; fix the corpus |
 | 15 | Output is fluent but wrong about the domain | It learned the distribution, not the facts | Ask for a specific fact and check it | That is what RAG is for; CPT cannot do this (§9.3-L3) |
-| 16 | Non-English output has garbage characters | The tokenizer lacks the script; Unicode normalisation stripped something | `tok.encode(text)` length ratio; diff pre/post cleaning | Different base model with script coverage (§10.1); relax the cleaner |
+| 16 | Non-English output has garbage characters | The tokenizer lacks the script; Unicode normalisation stripped something | `tok.encode(text)` length ratio; diff pre/post cleaning | Different base model with script coverage (§10 item 1); relax the cleaner |
 | 17 | Loss is much lower than your recomputation | Padding + duplicates | Recompute on deduped, mask-correct batches | Expected. Trust the recomputation. |
 | 18 | Inference output is bad but training looked fine | **The adapter was never loaded** (silent failure S3) | `print(type(model))` — must be `PeftModel` | `PeftModel.from_pretrained(base, adapter_dir)` |
 | 19 | Inference output is bad and `type(model)` is `PeftModel` | The adapter loaded but the tokenizer was reloaded from the base repo | `diff` the tokenizer files in the adapter dir vs the base | `AutoTokenizer.from_pretrained(adapter_dir)` |
@@ -3093,7 +3093,7 @@ Five scenarios. The first is the video's own, carried to a realistic scale. The 
 extractor = "pymupdf"          # + OCR fallback below 100 chars/page
 ocr_fraction = 0.07            # 7% of pages are scanned -> tesseract
 # Cleaning
-normalise = "NFKC"             # but preserve microg, superscripts (see §10.12)
+normalise = "NFKC"             # but preserve microg, superscripts (see §10 item 12)
 strip_headers_footers = True   # page-number + running-header removal
 # Dedup
 method = "minhash_lsh"; num_perm = 128; threshold = 0.85; shingles = 5
@@ -3134,7 +3134,7 @@ hardware = "1x A100 80GB"
 
 **Situation.** 40 lawyers, 60,000 contracts and opinions, 300M tokens, mostly confidential client work. The firm wants a model that drafts in the firm's house style and knows the firm's clause library.
 
-**Why CPT — and why not.** The style is a *format* problem (§10.5), and the clause library is a *retrieval* problem. Neither is CPT's strength. But the firm's documents use a genuine dialect — defined terms with idiosyncratic capitalisation, cross-references like "Clause 14.2(b)(iii)", and a drafting register that SFT on 2,000 examples cannot fully capture because the model lacks the vocabulary in context.
+**Why CPT — and why not.** The style is a *format* problem (§10 item 5), and the clause library is a *retrieval* problem. Neither is CPT's strength. But the firm's documents use a genuine dialect — defined terms with idiosyncratic capitalisation, cross-references like "Clause 14.2(b)(iii)", and a drafting register that SFT on 2,000 examples cannot fully capture because the model lacks the vocabulary in context.
 
 **What they actually did, in order:**
 
@@ -3150,7 +3150,7 @@ hardware = "1x A100 80GB"
 
 **Config that worked:** 8B base, QLoRA r=32 on all projections, 240M usable tokens, lr 1e-4, 1 epoch, replay 0.08 (legal text is a specialised register and needed more general anchoring), 1×A100 80GB, ~120 GPU-hours.
 
-> **Beyond the video:** the legal question the video never raises, and the one an interviewer will ask. Training on documents **you did not author** is governed by the terms under which you obtained them, not by whether you can read them. Three regimes to check: (a) **the site's ToS** — many publisher and database subscriptions (Westlaw, LexisNexis, most journal platforms) explicitly forbid use as training data regardless of whether you paid for access; (b) **copyright and its exceptions** — text-and-data-mining exceptions exist in the EU (DSM Directive Art. 4, subject to a machine-readable opt-out) and the UK (non-commercial research only), while the US leans on fair use, which is a defence you assert *after* being sued, not a permission; (c) **contract and confidentiality** — client documents carry duties that override whatever copyright allows. Practical operating rules: keep a provenance record per document (source URL, licence, date, retrieval method); honour `robots.txt` and any `ai.txt`/`TDM-Reservation` signal; exclude anything you cannot trace to a permissive source; and if you are in the EU, check for a machine-readable reservation of rights before you scrape. Note also that **the model may memorise**, and a model that emits a verbatim passage from a licensed document is a different (and worse) liability than one that learned a style — §10.6 and the dedup/epoch discipline of §4.10.3 are the technical mitigations, and they are mitigations, not guarantees.
+> **Beyond the video:** the legal question the video never raises, and the one an interviewer will ask. Training on documents **you did not author** is governed by the terms under which you obtained them, not by whether you can read them. Three regimes to check: (a) **the site's ToS** — many publisher and database subscriptions (Westlaw, LexisNexis, most journal platforms) explicitly forbid use as training data regardless of whether you paid for access; (b) **copyright and its exceptions** — text-and-data-mining exceptions exist in the EU (DSM Directive Art. 4, subject to a machine-readable opt-out) and the UK (non-commercial research only), while the US leans on fair use, which is a defence you assert *after* being sued, not a permission; (c) **contract and confidentiality** — client documents carry duties that override whatever copyright allows. Practical operating rules: keep a provenance record per document (source URL, licence, date, retrieval method); honour `robots.txt` and any `ai.txt`/`TDM-Reservation` signal; exclude anything you cannot trace to a permissive source; and if you are in the EU, check for a machine-readable reservation of rights before you scrape. Note also that **the model may memorise**, and a model that emits a verbatim passage from a licensed document is a different (and worse) liability than one that learned a style — §4.12.3 and the dedup/epoch discipline of §4.10.3 are the technical mitigations, and they are mitigations, not guarantees.
 
 ### 15.3 Industrial — multilingual maintenance manuals
 
@@ -3163,9 +3163,9 @@ hardware = "1x A100 80GB"
 | Element | Choice | Why |
 |---|---|---|
 | Base | **Qwen2.5-7B** (not Llama) | 151k vocab covers German compounds, Japanese, and part numbers far better — tokens/word dropped from 3.1 to 1.9 |
-| Script handling | No vocab resize | The resize would cost more than it gains at this corpus size (§10.2) |
+| Script handling | No vocab resize | The resize would cost more than it gains at this corpus size (§10 item 2) |
 | Chunking | Structure-aware (manual sections), 768 max | Manuals have hard section boundaries; a chunk must not span two procedures |
-| Dedup | Exact hash + template-profile | 40% of the corpus was the same boilerplate safety section repeated in every manual. Removed at the *template* level (§10.11) |
+| Dedup | Exact hash + template-profile | 40% of the corpus was the same boilerplate safety section repeated in every manual. Removed at the *template* level (§10 item 11) |
 | Training | QLoRA r=32, all projections, lr 1e-4, 1 epoch, 1×A100 80GB, 41 GPU-hours | |
 | **Serving** | **CPT'd model + RAG, always together** | Safety-critical; the model is never allowed to answer a specification question from memory |
 
@@ -3480,7 +3480,7 @@ T3 — the tier most enterprise projects should target — is **under $5 of A100
 No. Chinchilla's ~20 tokens/param is a *from-scratch pretraining* ratio. Domain adaptation operates at 10⁻³–10⁻¹ tokens/param — 8M–800M tokens for an 8B model (§4.10). At 1e-2 τ_cpt, an 8B model needs 80M tokens, which is a few thousand PDFs.
 
 **15. "I'll add my domain terms to the vocabulary first."**
-Adding tokens creates randomly-initialised embeddings that need a long run to converge, breaks the k-bit hook layout if you resize after `prepare_model_for_kbit_training`, and requires you to save the tokenizer with the adapter or you will silently mismatch at inference (§10.2). It is sometimes correct — for a genuinely new script — and never a casual first step.
+Adding tokens creates randomly-initialised embeddings that need a long run to converge, breaks the k-bit hook layout if you resize after `prepare_model_for_kbit_training`, and requires you to save the tokenizer with the adapter or you will silently mismatch at inference (§10 item 2). It is sometimes correct — for a genuinely new script — and never a casual first step.
 
 ### 17.5 About evaluation
 
@@ -3565,11 +3565,11 @@ Answer these without looking. Then check against the collapsed answers.
 
 **A6.** Every pad position is included in `input_ids` and therefore in `labels`, so the model is trained to predict `pad_token_id` (= `eos_token_id`) at every pad position. With `max_length=512` and a mean chunk of ~75 tokens, roughly **437 of 512 positions are padding — about 85% of the loss is on padding.** Because padding is trivially predictable (it is a constant sequence), those positions drive the loss down quickly, so the reported loss is dominated by a signal you do not care about and its *movements* mostly reflect padding dynamics. The real signal is the remaining ~15%. Fix: `padding=False`, `DataCollatorForLanguageModeling(tokenizer=tok, mlm=False)` (which pads labels with `-100`), and mask defensively with `-100` in `tokenize_fn` (§4.3.4, §7.8, §6.6).
 
-**A7.** `page.get_text("text")` emits text in the PDF's internal drawing order, which for a two-column layout is typically all of column 1 then all of column 2 — or, worse, interleaved line by line, producing sentences that alternate between columns and read as fluent nonsense. The failure is **silent**: the string is non-empty and the model trains on it. Fix: use layout-aware extraction — `page.get_text("blocks")` or `"dict"` and sort blocks by `(round(y0 / tolerance), x0)` to reconstruct reading order, or column-detect by clustering block x-coordinates and extract each column separately. Then verify with a sample of 20 pages read by a human (§4.5, §4.4.4).
+**A7.** `page.get_text("text")` emits text in the PDF's internal drawing order, which for a two-column layout is typically all of column 1 then all of column 2 — or, worse, interleaved line by line, producing sentences that alternate between columns and read as fluent nonsense. The failure is **silent**: the string is non-empty and the model trains on it. Fix: use layout-aware extraction — `page.get_text("blocks")` or `"dict"` and sort blocks by `(round(y0 / tolerance), x0)` to reconstruct reading order, or column-detect by clustering block x-coordinates and extract each column separately. Then verify with a sample of 20 pages read by a human (§4.5, §4.5.1).
 
 **A8.** Probably yes, and **not yet decided**. A 40% domain PPL improvement is a real result; a 4-point MMLU drop is within what CPT is expected to trade. The third number is **held-out general PPL on a corpus you did not train on** (WikiText-103 or C4), because MMLU is a 4-option multiple-choice format and is a coarse, high-variance proxy for capability. If general PPL regressed by ≤15% and the catastrophe probe dropped ≤2 points, ship it; if general PPL regressed 30%, you have over-forgotten and need to raise the replay ratio (§12.2, §12.5, §17.18).
 
-**A9.** It tells you the corpus is **mostly repetition, not 400M tokens of information**. A 55% removal rate means the unique information content is closer to 180M tokens, so your τ_cpt is a fiction and your effective corpus is heavily templated (filings share a skeleton: Risk Factors, MD&A, financial statements). What to do differently: compute the **unique-token count, not the token count**, before choosing a volume tier; apply **template/n-gram-profile dedup** (§13.5) in addition to MinHash; and consider re-scoping the corpus to the *novel* regions — the diff between consecutive filings and the standards they cite — which in the analogous case took 400M down to 60M and improved the task metric by 12 points (§15.4, §10.11).
+**A9.** It tells you the corpus is **mostly repetition, not 400M tokens of information**. A 55% removal rate means the unique information content is closer to 180M tokens, so your τ_cpt is a fiction and your effective corpus is heavily templated (filings share a skeleton: Risk Factors, MD&A, financial statements). What to do differently: compute the **unique-token count, not the token count**, before choosing a volume tier; apply **template/n-gram-profile dedup** (§13.5) in addition to MinHash; and consider re-scoping the corpus to the *novel* regions — the diff between consecutive filings and the standards they cite — which in the analogous case took 400M down to 60M and improved the task metric by 12 points (§15.4, §10 item 11).
 
 **A10.** Order: **(1) Prompting with 8 few-shot examples** — hours, $0, and it establishes the baseline you will be compared against. **(2) RAG** over the 3M tokens — days, near-zero training cost, and it solves factuality, citation, and currency in one move; if the user's question is "what does the document say", stop here. **(3) SFT** on 1,000–3,000 written or generated pairs — days, ~$20 of GPU, and it fixes format and behaviour. **(4) CPT** — only if 1–3 leave a *fluency and vocabulary* gap that nothing else closes, which at 3M tokens on a 7B model means τ_cpt ≈ 4×10⁻⁴ (T2, on the low end) and a real risk of under-fitting. With a 3-week deadline, the defensible plan is steps 1–3 shipped, with a **0.5B CPT probe** run in parallel to decide whether a full CPT run is worth scheduling afterwards (§8.3, §8.4, §13.2).
 
@@ -3652,7 +3652,7 @@ Direct quotes from `LLM_Fine-Tuning_14_Train_LLMs_on_Your_PDFText_Data_Domain-Sp
 | C-6 | Train on your PDFs [34:47] | Mechanically true, legally conditional. Terms of service, copyright exceptions, confidentiality, and sectoral rules all constrain it, and the provenance decision cannot be made after training. | §4.12 |
 | C-7 | Loss 9.66 presented as a result [1:41:35] | It is a perplexity of ~15,760 on the training set, dominated by pad-as-target positions, and the accompanying output is a prompt echo. It is evidence of failure, not success. | §4.3.4, §12.1 |
 | C-8 | The corpus in the demo is one PDF | It is a single-page, single-column synthetic document whose content stream is glyph-by-glyph positioned text — the one case that exercises none of the eight real extraction failure modes. | §4.4.2 |
-| C-9 | The demo's chunks contain zero-width spaces | The extracted text in the notebook's own output cell contains literal `​` characters, which the pipeline neither strips nor mentions. | §4.6.8, §4.5 |
+| C-9 | The demo's chunks contain zero-width spaces | The extracted text in the notebook's own output cell contains literal `​` characters, which the pipeline neither strips nor mentions. | §4.6.1, §4.5 |
 | C-10 | Inference via `AutoModelForCausalLM.from_pretrained(model_path)` (cell 63) | This loads the checkpoint *directory* as a base model and attaches no adapter. The output is therefore from the base model or an unadapted load, which is why it looks like a prompt echo. | §6.7, §9.4-S3 |
 
 ---

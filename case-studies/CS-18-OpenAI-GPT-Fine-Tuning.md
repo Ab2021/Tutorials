@@ -159,4 +159,411 @@ The correct version of the naive plan is: **collect 100–1,000 real support int
 metrics, and *then* decide whether the per-call economics beat a shorter prompt against the base
 model (§11.5).
 
+---
+
+## 2. First-Principles Mental Model
+
+### 2.1 The analogy: hosted fine-tuning is a laundry service, not a washing machine
+
+Open-weight fine-tuning (CS-16, CS-17, CS-23) is **buying a washing machine**. You get the machine in
+your basement, you control the water temperature, the spin cycle and the detergent, you can open the
+door mid-cycle and look at the clothes, and when you move house you take it with you. You also have to
+wire it in, fix it when it breaks, and pay for the electricity.
+
+Hosted fine-tuning is a **laundry service**. You drop a bag at the counter (the JSONL upload), tick
+three boxes on a form (`n_epochs`, `batch_size`, `learning_rate_multiplier`), and pick up a claim
+ticket (`ft:gpt-4.1-nano-2025-04-14:personal:second-finetune-model:AbCdEfGh`). Your clothes come back
+clean and pressed. You cannot see inside the machine, you cannot change the detergent, and when you
+move to a country the service does not operate in, your clothes stay dirty.
+
+**Where this analogy breaks.** Three places, and they matter:
+
+1. **A laundry has a price list; a hosted fine-tune has a price list *and* a token counter you cannot
+   audit.** The counter is deterministic once you know the overhead constants (§4.5), but you are
+   billed on the service's count, not yours. A 2% disagreement across 100M tokens is $3 you cannot
+   dispute.
+2. **You do not get the washed clothes back — you get a *key* to a room where clean clothes appear on
+   demand.** The fine-tuned model identifier is a pointer. Delete the job, lose access, and there is
+   no `.safetensors` on your disk that survives. This is the difference between an *artefact* and a
+   *capability*.
+3. **The service can close.** Which, for this specific service, it did (§16.8). A washing machine you
+   own does not get a deprecation email.
+
+### 2.2 The mechanism, stated precisely
+
+Hosted SFT runs **exactly the same loss** as open-weight SFT (CS-13 §2.2):
+
+$$L_{SFT} = -\sum_{t \in \mathcal{R}} \log p_\theta(x_t \mid x_{<t}), \qquad x \sim \mathcal{D}_{instruct},\ \ \mathcal{R} = \text{assistant token positions only}$$
+
+What differs is everything *around* the loss:
+
+| Dimension | Open-weight (CS-13/15/16/17/23) | Hosted (this module) |
+|---|---|---|
+| Who owns $\theta$ | You | The provider |
+| What you receive | `adapter_model.safetensors` (MB) or a merged checkpoint (GB) | A model ID string (`ft:...:`), a `FineTuningJob` object |
+| Loss masking | Your code decides (`-100` on prompt spans) | The provider decides, and documents it only obliquely — the SFT schema's `assistant` content is the supervised target |
+| Data format | Any (`alpaca`, `sharegpt`, `messages`, `prompt/completion`) | **`messages` only**, JSONL, one object per line |
+| Hyperparameters | ~40 knobs (LR, scheduler, warmup, optimiser, rank, alpha, target modules, …) | **3** (`n_epochs`, `batch_size`, `learning_rate_multiplier`) |
+| Cost unit | GPU-hours | **training tokens** (SFT) or wall-clock hours (RFT) |
+| Iteration latency | Minutes (relaunch a script) | Minutes to ~an hour (queue + train), and you re-upload per dataset change |
+| Deployment | You build it (`vLLM`, TGI, llama.cpp, Ollama) | `model="ft:..."` — already deployed |
+| Reproducibility | Seed + config + code + data hash, all yours | Seed + config + data, plus a provider-side training stack you cannot pin |
+| Determinism | Reasonably deterministic on one node | **Not guaranteed**; `seed` is accepted and is documented as best-effort |
+| Exit path | Merge, quantise, convert to GGUF, serve anywhere | **None** |
+
+### 2.3 The three-layer abstraction that actually matters
+
+Every hosted fine-tuning API in the industry (OpenAI, Azure OpenAI, Vertex AI, Bedrock, Together,
+Predibase, Fireworks) is the same three layers. Learn the shape once and you can move between
+vendors in an afternoon.
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│ LAYER 3 — INFERENCE SURFACE                                        │
+│   model = "ft:gpt-4.1-nano-2025-04-14:personal:my-suffix:AbCdEfGh" │
+│   POST /v1/chat/completions   (same endpoint as the base model)    │
+│   billed at the FINE-TUNED inference rate (§4.6)                   │
+└────────────────────────────────────────────────────────────────────┘
+                              ▲
+┌────────────────────────────────────────────────────────────────────┐
+│ LAYER 2 — TRAINING JOB (asynchronous, server-side)                 │
+│   fine_tuning.jobs.create(training_file, model, suffix,            │
+│                           method={"type":"supervised",             │
+│                                   "supervised":{"hyperparameters": │
+│                                       {"n_epochs":…,               │
+│                                        "batch_size":…,             │
+│                                        "learning_rate_multiplier" │
+│                                       }}})                         │
+│   → FineTuningJob{ id, status, trained_tokens, hyperparameters }   │
+└────────────────────────────────────────────────────────────────────┘
+                              ▲
+┌────────────────────────────────────────────────────────────────────┐
+│ LAYER 1 — DATA CONTRACT                                            │
+│   JSONL, one {"messages":[…]} object per line                      │
+│   roles: system | user | assistant | function (+ tool_calls, name, │
+│          weight in newer schemas)                                  │
+│   validated at upload; a malformed line fails the WHOLE file       │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+> **Beyond the video:** the layer that vendors compete on is Layer 2, and the layer that decides
+> whether your project succeeds is Layer 1. Layer 1 is also the only layer that is *portable*: a
+> `{"messages":[…]}` JSONL file that trains a `gpt-4.1-mini` will train a Llama-3.1-8B with
+> `trl`'s `SFTTrainer` after you apply that model's chat template (CS-13 §4.3). Build your pipeline
+> around Layer 1 and the vendor becomes a config value. Build it around Layer 3 and you are locked
+> in forever.
+
+---
+
+## 3. Core Concepts — Exhaustive Glossary
+
+| Term | Definition | Why it matters | Common confusion |
+|---|---|---|---|
+| **Hosted fine-tuning** | Fine-tuning performed on a provider's infrastructure, reached over an HTTP API, where the weights never leave the provider. | The subject of this module; the "hosted API" cell in CS-03's Axis 1. | People say "API fine-tuning" and mean "no training happens". Training happens; you just cannot see it. |
+| **JSONL** (JSON Lines, `.jsonl`) | A file where each *line* is one complete, self-contained JSON object, no commas, no enclosing array. | The only accepted training-data format. One bad line fails the file. | The video conflates JSON and JSONL for a full minute [25:55]–[26:10] — he is *describing* JSONL while saying "JSON". `.json` (an array) is rejected. |
+| **Example / row / training example** | One JSONL line = one conversation = one training sample. The instructor defines it correctly at [31:01]–[31:24]. | The unit of dataset size. "10 examples" means 10 lines. | Confusing examples with *unique* examples. The video's 10 rows contain 3 unique conversations (§4.2.4). |
+| **`messages`** | The single required top-level key: an array of `{role, content}` objects. | The whole schema. | Not `messages[]` with different names, not `conversations`, not `prompt`/`completion` — those are other vendors' schemas. |
+| **`role`** | One of `system`, `user`, `assistant`, `function` (legacy) / `tool` (current). Validated at upload. | Determines which turn the tokens belong to and, for `assistant`, whether they are supervised. | Roles are **not** `human`/`gpt` (ShareGPT) or `instruction`/`output` (Alpaca). CS-13's format table covers all five. |
+| **`content`** | The message text. Must be a non-empty string (or absent if `function_call`/`tool_calls` carries the payload). | Empty content is a validation error (`missing_content`), not a warning. | `""` fails; a single space passes. |
+| **`system` message** | The first message; sets persona and behavioural constraints. Not a training target. | The instructor's 10 rows all share one identical system prompt [54:00]–[54:05]. | It is a *conditioning* message, not a *supervised* one — but the whole system prompt is still billed as training tokens. |
+| **`assistant` message** | The model's turn; this is the supervised target. | The rule that actually matters: **an example with no `assistant` message contributes no learning signal.** The validator enforces `example_missing_assistant_message`. | The video's own `data2.jsonl` fails exactly this check [36:53]–[37:08]. |
+| **`function` / `tool` role** | Legacy way to return a function result to the model. Superseded by the `tool` role + `tool_calls`. | Only relevant if you fine-tune tool use. The instruction explicitly scopes this out: *"in our finetuning we are not going to fine-tune our model on a specific tool data… I'm just going to be fine tuned on a simple chatting"* [15:52]–[16:00]. | The validator accepts `function` (video era) but a modern file should use `tool`. |
+| **`name`** | Optional per-message speaker name; costs 1 extra token in the counter. | Distinguishes multiple participants in a multi-user conversation. | Rarely needed; adds tokens to the bill for nothing. |
+| **`weight`** | Optional per-message supervision weight in newer schemas. | Lets you up/down-weight individual turns without dropping them. | Not present in the video-era validator; if you include it, the video's validator flags `message_unrecognized_key`. |
+| **Format validation** | A client-side pre-flight pass over the JSONL that counts schema violations by category before you upload. | Cheap, local, and catches the failures that would otherwise cost you an upload and a round trip. §4.2.3 has the seven checks verbatim. | Validation checks *shape*, never *quality*. A dataset that passes 100% can still be worthless. |
+| **`defaultdict(int)`** | A `dict` subclass whose missing keys default to `0`, so `counts["x"] += 1` never raises `KeyError`. | The idiomatic way to build the error histogram. The notebook demonstrates the `KeyError` first (cell 14) then the fix (cells 17–23). | Not a "type". It is a factory-backed dict; `defaultdict(list)` gives `[]`, `defaultdict(int)` gives `0`. |
+| **`tiktoken`** | OpenAI's open-source BPE tokeniser library. `encoding = tiktoken.get_encoding("cl100k_base")` [39:47]–[40:03]. | The only way to count tokens locally before you are billed for them. | The instructor calls it a "transformer based model" [40:14]–[40:17]. It is **not** a neural network — see the Correction in §4.5.1. |
+| **`cl100k_base`** | The ~100k-merge byte-pair vocabulary used by `gpt-4`/`gpt-3.5-turbo`/embeddings-v2 era models. | The tokeniser the video's counter uses. | `o200k_base` is the vocabulary for the `gpt-4o`/`gpt-4.1` families. **Using `cl100k_base` to estimate `gpt-4.1-*` costs is a small systematic error** (§4.5.4). |
+| **Training tokens** | All tokens in the dataset, **× epochs**, capped per example at the model limit. | The unit you are billed in for SFT. | Not the same as *dataset* tokens. `n_epochs` multiplies the bill linearly. |
+| **Inference tokens** | Input + cached-input + output tokens on every call to the fine-tuned model. | The recurring cost, and at production volume the larger one. | The pricing page lists these in the *same table* as training price, which is exactly what confused the instructor. |
+| **`MAX_TOKENS_PER_EXAMPLE`** | `16385` in the cookbook code the video reproduces. Examples longer than this are **truncated**, not rejected. | Silent data loss on long examples. | 16385 is a 2024 constant for a 16k-context model family. For the `gpt-4.1` line-up it is stale (§4.5.5). |
+| **`TARGET_EPOCHS` / `MIN_TARGET_EXAMPLES` / `MAX_TARGET_EXAMPLES` / `MIN_DEFAULT_EPOCHS` / `MAX_DEFAULT_EPOCHS`** | The five constants of the automatic epoch policy: 3 / 100 / 25000 / 1 / 25. | They are the *entire* automated hyperparameter machinery. §4.8 works through the arithmetic. | These are **cookbook reference code**, not API behaviour you can rely on being identical today. Always read back `job.hyperparameters`. |
+| **`n_epochs`** | Number of full passes over the dataset. Also the linear multiplier on your training bill. | The single highest-leverage knob for cost. | "auto" is resolved by the server; the resolved value is what you pay for. |
+| **`batch_size`** | Examples per forward/backward step in the provider's trainer. | Interacts with the learning rate and with dataset size. | The instructor calls it "how many batches we are passing the data in, like in one batch we are passing 16 rows" [55:11]–[55:19] — the *direction* is right, the vocabulary is muddled (batch vs micro-batch). |
+| **`learning_rate_multiplier`** | A **multiplier** on the provider's internally chosen base learning rate — not a learning rate. | 1.0 means "use the provider's default"; 2.0 means "twice whatever that is". | You cannot express an absolute LR here. If you do not know the base LR, you do not know your actual LR. |
+| **`suffix`** | A human-readable tag appended to the fine-tuned model name so you can tell jobs apart. | The video uses `"first finetune model"` and `"second-finetune-model"` [53:52]–[54:16], [cell 76]. | It is a *label*, not the model ID. The ID also contains your org name and a random hash. |
+| **`finetuned_model` string** | `ft:<base>:<org>:<suffix>:<hash>`. E.g. `ft:gpt-3.5-turbo-0125:personal:first-finetune-model:B48axNSg` [cell 20]. | This is your deployment handle. | The video's chat test 404s because the job is not finished — a genuinely instructive failure (§14, row 1). |
+| **`FineTuningJob`** | The job object: `id`, `status`, `trained_tokens`, `hyperparameters`, `fine_tuned_model`, `error`, `seed`. | `trained_tokens` is the number you are billed for. Poll it. | `fine_tuned_model` is `null` until the job succeeds. `null` is not an error. |
+| **Job status machine** | `validating_files` → `queued` → `running` → `succeeded` / `failed` / `cancelled`. | Drives your polling loop and your alerting. | The video observes `validating_files` [cell 78] and a prior `cancelled` [cell 79] without naming the machine. |
+| **Validation file** | An optional second upload used to compute holdout loss during training. | The only automatic overfitting signal the hosted API gives you. | Absent from both of the video's notebooks. Without it, `metrics` are train-set only. |
+| **DPO (Direct Preference Optimization)** | Preference fine-tuning from `chosen`/`rejected` pairs on the same hosted surface [5:53]–[6:00]. | The hosted answer to CS-14's preference stage. | Not the same data format as SFT — different key names, and the video does not demonstrate it. |
+| **RFT (reinforcement fine-tuning)** | Grader-based RL fine-tuning on the hosted API (`o4-mini` class), *"a grader… you can manually grade the output whether it is a good or bad… otherwise you can use LLM as a grader"* [18:46]–[18:56]. | The hosted answer to CS-26's reasoning-RL stage. | The instructor calls it "RLHF" [1:08] and "reinforcement learning". It is **not** classical RLHF — there is no reward model, there is a *grader*. |
+| **Structured outputs / `response_format`** | Server-enforced JSON-schema-constrained decoding. | The correct tool for "always emit JSON of shape X" — **not** fine-tuning. §4.12. | Fine-tuning *biases* format compliance; structured outputs *guarantees* it. Different guarantees. |
+| **Data retention (API)** | By default, API and fine-tuning data is **not** used to train OpenAI's models; fine-tune data is retained until you delete the file; API data is retained ≤30 days for abuse monitoring. | The compliance answer for a regulated customer. | Consumer ChatGPT data *is* used for training unless you opt out. Business/API data is not. §4.13. |
+| **Data-sharing opt-in** | An explicit, org-owner-enabled flag that lets the provider train on your data in exchange for discounted or complimentary tokens. | The one case where "we do not train on your data" stops being true. | Zero-Data-Retention organisations cannot opt in at all. |
+| **Hosted-to-open distillation** | Using the hosted fine-tuned model as a *teacher* to label data, then training a small open student on those labels (CS-09). | The escape hatch that recovers an artefact from an endpoint-only model. §4.11. | It is a legal/ToS question before it is a technical one: many providers forbid using outputs to train competing models. |
+
+---
+
+## 4. Deep Dive — How It Actually Works
+
+### 4.1 Hosted vs open-weight: the difference is not performance, it is the artefact
+
+The instructor's own framing of the video's value proposition is the cleanest statement of the trade:
+*"in the previous video I showed you how you can fine-tune any LLM using Axolotl, which is low code
+and no code. And now from this video onwards we are going to start API based fine-tuning"*
+[0:16]–[0:30]. He positions hosted as the *next* rung of convenience after low-code open-weight
+tooling. That ordering is right. What he never states is what you give up to climb it.
+
+#### 4.1.1 The six capabilities you lose
+
+| Capability | What it means in open-weight | Why it is impossible hosted |
+|---|---|---|
+| **Weight access** | `model.state_dict()`, `peft` adapters, `safetensors` on your disk. You own the bytes. | The weights never leave the provider's cluster. You receive a string. |
+| **Merging** | `model.merge_and_unload()` folds a LoRA into the base for a single deployable artefact (CS-23). | There is no adapter to merge. There is nothing to fold into. |
+| **Quantisation control** | Your choice of NF4 during training (QLoRA), GPTQ/AWQ for serving, GGUF for CPU/edge (CS-10, CS-11). | The provider serves at its own precision, on its own hardware. You cannot produce a 4-bit version. |
+| **Local / on-prem serving** | `vLLM`, `SGLang`, `TGI`, `llama.cpp`, Ollama — any of them, on any GPU you own, at zero marginal cost per token. | Hard requirement: a network round trip to a third party for every token generated. Air-gapped deployments are impossible. |
+| **Distillation from the result** | Use the fine-tuned model as a teacher to train a 0.5B student you then own (CS-09). | You *can* do this over the API — it is just an inference workload — but you are paying hosted inference prices per teacher token, and the provider's terms may forbid it (§4.11). |
+| **Full hyperparameter control** | Rank, alpha, target modules, LR schedule, warmup ratio, optimiser, `max_seq_length`, packing, gradient checkpointing, `neftune_noise_alpha` (CS-13 §7). | Three knobs, one of which is a *multiplier*. That is the entire surface. |
+
+#### 4.1.2 The four costs you take on
+
+| Cost | Magnitude | Where you feel it |
+|---|---|---|
+| **Per-token inference markup** | Fine-tuned inference is ~1.5–2× the base model's per-token rate, forever. | Every call, for the life of the deployment. §11.5. |
+| **No batch economics on your side** | You cannot amortise by running a bigger GPU batch. You pay per token regardless of utilisation. | High-volume, low-latency workloads. |
+| **Data egress and retention policy dependence** | Your training data sits on someone else's disk until you delete it. | Procurement, DPIAs, regulated industries. §4.13. |
+| **Platform risk** | Deprecation, model retirement, pricing change, or shutdown. For this platform, all four. | The moment you have a product depending on the model ID. §16.8. |
+
+#### 4.1.3 Where hosted genuinely wins
+
+Being even-handed matters here, because the "just self-host everything" reflex is also wrong:
+
+| Situation | Hosted wins because |
+|---|---|
+| You have no GPU budget and no MLOps person | Total fixed cost is a credit card. |
+| You need to ship this sprint | Upload → job → deploy is under an hour of work, and the serving is already done. |
+| Your volume is spiky and low | Pay-per-token beats paying for an idle A100 at $1.50–3.00/hr. |
+| You need the *specific* base model's capabilities | You cannot get `gpt-4.1`-class quality from an 8B open model at the same context length. |
+| You are prototyping whether fine-tuning helps *at all* | Cheapest possible experiment. Do it, learn the answer, then decide where the production run lives. |
+| Compliance forbids GPU procurement for your team | The provider's SOC 2 / DPA is easier to sign than a GPU cluster is to stand up. |
+
+#### 4.1.4 The decision in one line
+
+```
+Do you need the WEIGHTS (on-prem, quantise, merge, distil, embed in a product you ship)?
+├── YES → hosted is disqualified. Go to CS-13 (data) → CS-15/16/17 (train) → CS-10/11 (quantise).
+└── NO  → Do you need it cheaper than a shorter prompt against the base model?
+          ├── YES → hosted is probably still disqualified (§11.5 — the 2× markup is hard to beat).
+          └── NO  → hosted is the right answer, and this module is the how.
+```
+
+#### 4.1.5 The "endpoint, not weights" consequence nobody mentions
+
+There is a second-order effect that costs teams weeks: **a hosted fine-tune breaks your evaluation
+infrastructure's assumption that a model is a file.**
+
+| Eval-harness assumption | Open-weight reality | Hosted reality |
+|---|---|---|
+| `model_path` is a directory | True | False — it is a string, and it is *scoped to your org* |
+| A checkpoint can be copied to a test runner | `cp -r` | Impossible |
+| An eval can run offline / in CI | True | Needs a network call and a live API key in CI |
+| A regression suite can pin a model version | `revision="step-1200"` | You pin a model ID, and the provider can retire it |
+| A model can be deleted and restored from a bucket | True | Deleting the job loses the model |
+| Cost per eval run is ~$0 (your own GPU) | True | Every eval run is a billed inference call |
+
+> **Beyond the video:** the practical fix is to treat the fine-tuned model ID as a *versioned
+> configuration value*, not as a code constant. Put it in a config table with `created_at`,
+> `base_model`, `training_file_id`, `trained_tokens`, and the eval score, and have your eval harness
+> read it from there. When (not if) the provider retires the base model, you have a one-row migration
+> instead of a grep across the repo.
+
+---
+
+### 4.2 The JSONL schema and its validation rules
+
+This is the section to memorise. Everything else in the module is arithmetic and policy; the schema
+is the part you will use on day one and the part that fails silently.
+
+#### 4.2.1 The schema, minimally and maximally
+
+**Minimal valid line** (this is what the API needs):
+
+```json
+{"messages":[{"role":"user","content":"How long does the warranty last on a new smartphone?"},{"role":"assistant","content":"Most smartphones include a one-year limited warranty that covers manufacturing defects."}]}
+```
+
+**The shape the video actually uses** — `system` + `user` + `assistant`, one conversation per line,
+all ten lines carrying the identical system prompt (`data.jsonl`, rows 1–10):
+
+```json
+{"messages":[{"role":"system","content":"You are a customer support assistant for a smartphone company. You are friendly, concise, and provide only factual answers related to smartphones."},{"role":"user","content":"How long does the warranty last on a new smartphone?"},{"role":"assistant","content":"Most smartphones include a one-year limited warranty that covers manufacturing defects. Exact details are available in the official documentation."}]}
+```
+
+**Maximal shape** (multi-turn, with a tool call — supported, not demonstrated):
+
+```json
+{"messages":[
+  {"role":"system","content":"You are a support agent with access to order lookup."},
+  {"role":"user","content":"Where is order 88231?"},
+  {"role":"assistant","content":null,"tool_calls":[{"id":"call_1","type":"function","function":{"name":"lookup_order","arguments":"{\"id\":\"88231\"}"}}]},
+  {"role":"tool","tool_call_id":"call_1","content":"{\"status\":\"in_transit\",\"eta\":\"2026-10-02\"}"},
+  {"role":"assistant","content":"Order 88231 is in transit and should arrive by 2 October."}
+]}
+```
+
+The instructor walks the shape out loud and gets it right [15:19]–[15:52]: *"the key name is the
+message and the value will be the list. Now inside this list you will be having the different
+different role like user, assistant, system… and then you can keep the content."* He then points out
+that `content` can be a tool call rather than a string [15:42]–[15:49] — correct.
+
+#### 4.2.2 The seven validation checks, verbatim from the notebook
+
+The notebook's markdown table (cell 25) is the cookbook's check list. Reproduced exactly, because
+the error keys are what you will see in your own validator's output:
+
+| # | Validation check | Code condition | What it ensures | Error key raised |
+|---|---|---|---|---|
+| 1 | Example type | `isinstance(ex, dict)` | Each JSONL line is a valid JSON object | `data_type` |
+| 2 | `messages` key exists | `ex.get("messages")` | Conversation structure is present | `missing_messages_list` |
+| 3 | Required keys in message | `"role"` and `"content"` | Every message follows chat format | `message_missing_key` |
+| 4 | No extra keys | allowed keys only | Prevents unsupported fields | `message_unrecognized_key` |
+| 5 | Valid role names | `system` / `user` / `assistant` / `function` | No invalid or typo roles | `unrecognized_role` |
+| 6 | Valid content | non-empty string or `function_call` | Message text is usable | `missing_content` |
+| 7 | Assistant present | at least one `assistant` role | Supervised learning signal exists | `example_missing_assistant_message` |
+
+Note what is **not** on the list, and why each omission bites:
+
+| Missing check | Consequence |
+|---|---|
+| Duplicate detection | The video's 10 rows are 3 unique conversations and nothing flags it. |
+| Class/behaviour balance | A dataset that is 95% refusals produces a model that refuses (§14). |
+| Length distribution | One 30,000-token example can eat your truncation budget silently. |
+| Train/validation overlap | Your "holdout" leaks and your eval is fiction. |
+| Encoding | A non-UTF-8 file uploads and fails server-side. The video's file-open uses `encoding="utf-8"` [27:20]–[27:27]. |
+| PII scan | Nobody in the pipeline will ever tell you that you fine-tuned on a customer's phone number. |
+
+> **Beyond the video:** build this validator as a **CI gate that exits non-zero**, not as a notebook
+> cell that prints "No errors found". A validator you have to remember to run is a validator that
+> runs on the one dataset where you already checked by hand. Wire it to `pytest` with a fixture file
+> of deliberately-broken rows — the notebook already ships one (`data2.jsonl`) — and assert that each
+> check fires.
+
+#### 4.2.3 The validator, annotated
+
+The notebook's implementation (cell 27). Comments added; the logic is unchanged.
+
+```python
+# notebook cell 26-27 — verbatim structure
+from collections import defaultdict
+
+format_errors = defaultdict(int)          # histogram of violation type → count
+
+for ex in data:                           # data = [json.loads(line) for line in file]
+    # --- CHECK 1: is this JSONL line even a JSON object? ---------------------
+    if not isinstance(ex, dict):
+        format_errors["data_type"] += 1
+        continue                          # nothing below can run on a non-dict
+
+    # --- CHECK 2: is the `messages` key present and non-empty? ---------------
+    messages = ex.get("messages", None)
+    if not messages:
+        format_errors["missing_messages_list"] += 1
+        continue                          # no conversation, no further checks
+
+    for message in messages:
+        # --- CHECK 3: required keys -----------------------------------------
+        if "role" not in message or "content" not in message:
+            format_errors["message_missing_key"] += 1
+
+        # --- CHECK 4: no unrecognised keys ----------------------------------
+        # NOTE: this allow-list is the 2024 list. `tool_calls` and `tool_call_id`
+        # are absent, so a modern tool-use dataset will be flagged here.
+        if any(k not in ("role", "content", "name", "function_call", "weight")
+               for k in message):
+            format_errors["message_unrecognized_key"] += 1
+
+        # --- CHECK 5: role must be one of four ------------------------------
+        if message.get("role", None) not in ("system", "user", "assistant", "function"):
+            format_errors["unrecognized_role"] += 1
+
+        # --- CHECK 6: content must be a non-empty string, unless it is a call
+        content = message.get("content", None)
+        function_call = message.get("function_call", None)
+        if (not content and not function_call) or not isinstance(content, str):
+            format_errors["missing_content"] += 1
+
+    # --- CHECK 7: at least one supervised turn ------------------------------
+    if not any(message.get("role", None) == "assistant" for message in messages):
+        format_errors["example_missing_assistant_message"] += 1
+
+if format_errors:
+    print("Found errors:")
+    for k, v in format_errors.items():
+        print(f"{k}: {v}")
+else:
+    print("No errors found")
+```
+
+Two things about this code are load-bearing and easy to miss:
+
+1. **Checks 3, 4, 5 and 6 are inside one loop and none of them `continue`.** One malformed message
+   can increment up to four counters. Your error histogram is therefore *not* a count of *examples*
+   affected — it is a count of *violations*. The instructor reads the output as if it were per-example
+   ("in all 10 example at one place… this assistant is missing" [37:01]–[37:08]) and in that specific
+   case he is right, because `example_missing_assistant_message` sits outside the loop.
+2. **Check 6's condition `(not content and not function_call)` treats `""` and `None` identically.**
+   So does `0`, `[]` and `{}`. If you ever generate content programmatically, a falsy-but-intended
+   value silently becomes `missing_content`.
+
+> **Correction:** at [31:57]–[32:00] the instructor describes check 3 as *"we are checking the
+> required key. Okay, role and content"* and then at [32:00]–[32:02] *"then we are checking there is
+> no extra key"* — both correct — but he never says the thing that matters most about check 4: **the
+> allow-list is stale.** It permits `name`, `function_call` and `weight` and rejects `tool_calls`,
+> `tool_call_id` and `refusal`, which are all valid in the current chat schema. A team that adopts
+> this validator unmodified and then fine-tunes a tool-using model will see
+> `message_unrecognized_key` on every single row and conclude their data is broken when their
+> *validator* is. Fix: drive the allow-list from a constant, and update it deliberately.
+
+#### 4.2.4 `data.jsonl` vs `data2.jsonl` — and the third dataset nobody mentions
+
+The instructor deliberately ships a second file with a defect so you can see the validator fire. The
+defect is real and the demonstration works [36:08]–[37:08]. But there are **three** datasets in play
+across the two notebooks, and they are not the same file. That matters, because the video's headline
+chat demo runs against the *worst* of the three.
+
+Verified by counting the files directly (script in §12.2):
+
+| Dataset | Where | Bytes | Rows | Unique conversations | Unique `user` turns | Missing `assistant` | Used for |
+|---|---|---|---|---|---|---|---|
+| `data.jsonl` (repo) | `LLM Fine-Tuning-20-GPT-Finetuning/data.jsonl` | 4,239 | 10 | **10** | 10 | 0 | Second notebook's job (`file-Hn8ooHUNEzwcPjBasULS25`, `gpt-4o-2024-08-06`) |
+| `data2.jsonl` (repo) | same folder | 4,060 | 10 | 10 | 10 | **1** (line 1) | Nothing. It exists to make the validator fail. |
+| *inline dataset* | first notebook, cell 7; uploaded as `file-PsuEt1x4gLPqY8f4sDD49t` | 6,429 | 10 | **4** | **4** | 0 | The first notebook's job, and the model the video chats with at [1:03:02] |
+
+The inline dataset in the first notebook is the redundant one. Its ten rows are four questions —
+warranty, apps-on-both-platforms, holiday discount, repair — repeated to fill ten lines, with an
+identical system prompt every time. The repo's `data.jsonl` is the clean one: ten distinct support
+questions, including the "can you recommend a good laptop" out-of-scope probe that teaches the
+refusal behaviour.
+
+So the picture is:
+
+- The validator's "No errors found" verdict [35:10]–[35:13] is correct for the file it was run on.
+- The file the video *first* trained on has an effective size of **four** examples.
+- The file with a genuine, instructive defect (`data2.jsonl`) is the one that would have taught the
+  most, and it is never uploaded.
+
+The lesson is not that the video is careless. It is that **the validator measures the wrong thing
+entirely**: it can tell you a file is *legal*, never that a file is *good*, and it says nothing at all
+about redundancy. A 6,429-byte file of four repeated conversations passes every one of the seven
+checks, and so does a 4,239-byte file of ten distinct ones.
+
+> **Beyond the video:** add an eighth check the platform will never run for you — a **uniqueness
+> ratio**. Compute
+> `len({tuple((m["role"], m["content"]) for m in ex["messages"]) for ex in data}) / len(data)`
+> and refuse to train below ~0.9. On the repo's `data.jsonl` that ratio is 1.0 (fine); on the first
+> notebook's inline dataset it is 0.4, and it would have stopped the job. On a real 1,000-row support
+> export, a ratio below 0.9 almost always means your export job ran twice, your dedup key is wrong,
+> or your synthetic generator collapsed into a loop.
+
+> **Beyond the video — the check that would have caught this at the door:** uniqueness is necessary
+> but not sufficient. A dataset can be 100% unique and still teach nothing, if every example is the
+> same *task* with different surface content. Compute two more numbers before you spend money:
+> **(a) task entropy** — cluster the assistant turns by embedding and count clusters; ten clusters
+> from 1,000 rows means your data is one behaviour repeated. **(b) label balance** — the fraction of
+> rows that are refusals, the fraction that are tool calls, the fraction that are answers. A dataset
+> that is 95% answers produces a model that never refuses; a dataset that is 40% refusals produces
+> the over-refusing model of CS-13 §4.9.3. Neither number is visible anywhere in this module's
+> tooling, and both cost about twenty lines of Python.
+
 <!-- CONTINUE -->
