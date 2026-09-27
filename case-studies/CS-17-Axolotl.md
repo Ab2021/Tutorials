@@ -2592,7 +2592,366 @@ trainer.train()
 
 > **Beyond the video:** the frameworks are converging and the choice is less consequential than it feels. All five call the same `transformers`, `peft`, `trl`, and `bitsandbytes` underneath; a LoRA adapter trained by any of them loads in all of them. The genuinely durable skills are the ones this module teaches — the chat template, the loss mask, the effective batch, the packing boundary — and they transfer unchanged. **Optimise for the artefact you can hand to a reviewer, not for the framework.**
 
+---
+
+## 14. Debugging Playbook
+
+### 14.1 The general method
+
+Every Axolotl failure lands in one of five buckets. Identify the bucket before touching a hyperparameter, because the four wrong buckets will each waste an afternoon.
+
+| Bucket | Distinguishing signature | Where to look |
+|---|---|---|
+| **1. Data/template** | Loss is plausible but the output is wrong-shaped; prompt appears in the completion | `axolotl preprocess --debug`, print one rendered example |
+| **2. Numerics** | Loss NaN/Inf, or explodes in the first 20 steps | `fp16` set, LR, `max_grad_norm`, `bf16` availability |
+| **3. Memory** | CUDA OOM, or a crash only at step 1 or only at the first eval | `micro_batch_size`, `sequence_len`, packing, `eval_sample_packing` |
+| **4. Throughput** | Loss correct, but the run will take 40 hours | packing, `dataloader_num_workers`, `flash_attention`, `gradient_checkpointing` |
+| **5. Distributed** | Works on 1 GPU, dies on 4; or loss differs between world sizes | `deepspeed`/`fsdp` block, `gradient_accumulation_steps` vs world size |
+
+### 14.2 The 20-row playbook
+
+| # | Symptom | Likely cause | Diagnostic | Fix |
+|---|---|---|---|---|
+| 1 | Loss **flat at ~2.3** (ln(V)) and never moves | Dataset produced **zero trainable tokens** — every label is `-100`. Wrong `type:`, wrong chat template, or `train_on_inputs: false` with a template that never marks an assistant turn | `axolotl preprocess --debug --debug-num-examples 3` and read the rendered text — does `<|im_start|>assistant` appear? | Fix the template (`chat_template:`), or set `type:` to match the data's real shape, or set `train_on_inputs: true` as a *diagnostic*, not a fix |
+| 2 | Loss flat at a **low** value (~0.1) from step 1 | You are evaluating on the training set, or the model has memorised a tiny dataset, or `val_set_size` is 0 and "eval loss" is train loss | Check `val_set_size` > 0 and that `eval_steps` fires | Set `val_set_size: 0.05`, `eval_steps: 50`; if the dataset is < 100 rows, you cannot measure generalisation — get more data |
+| 3 | Loss decreases then **spikes to 8–15** at step ~200 | LR too high for the effective batch; a bad batch (one very long example); grad clipping not on | Watch `grad_norm` — healthy is 0.1–10; a spike above 100 in the same step as the loss spike confirms it | Lower LR 2–5×, set `max_grad_norm: 1.0` (the notebook uses `0.1`), increase `gradient_accumulation_steps` |
+| 4 | Loss goes to **exactly 0.000** | The label mask includes the whole sequence *and* the sequence is duplicated verbatim in train and eval; or you are doing next-token prediction on a 3-example dataset | Count rows: 3 examples × 1 epoch / effective batch 8 = 0 steps | Get real data. Loss 0 is not success, it is memorisation of a degenerate dataset |
+| 5 | Loss is **NaN** | `fp16: true` with a model whose activations overflow (common with Qwen/Llama at LR > 3e-4), or a corrupted example with NaN tokens | Log `grad_norm`; NaN loss is usually preceded by a NaN grad norm | Switch `bf16: true` (Ampere+); if the GPU is pre-Ampere, lower LR and add `max_grad_norm: 1.0` |
+| 6 | **Eval loss diverges upward** while train loss falls | Classic overfitting; or eval is on a different distribution; or `eval_sample_packing` differences | Plot both curves; check the eval set is drawn from the same pool | Reduce `num_epochs`, add dropout (`lora_dropout: 0.05`), add data, or early-stop on best eval loss |
+| 7 | Model outputs the **prompt back** | `train_on_inputs: true`, or the chat template renders the user turn as trainable | Run a generation; look for the prompt echoed verbatim | `train_on_inputs: false`, `roles_to_train: [assistant]`, fix `chat_template` |
+| 8 | Model **never stops generating** | `train_on_eos` not set to train the EOS token, or `eot_tokens` missing so `<|im_end|>` was masked | Inspect the label mask for the final position — should be the EOS id, not `-100` | Set `train_on_eos: turn` (default) and `eot_tokens: ["<|im_end|>"]` for the Qwen family |
+| 9 | Output is **garbage tokens / wrong language / repetition** | The wrong chat template — you trained on a string the model was never pretrained to see as a turn boundary | Render one example and diff it against the model card's template | Set `chat_template` to the family default (`qwen3`, `chatml`, `llama3`, `tokenizer_default`); verify with `tokenizer.apply_chat_template` |
+| 10 | **CUDA OOM at step 1** | `micro_batch_size × sequence_len` too large for the model's activation footprint | `nvidia-smi` peak; compute from the six-term model in §4.4 | Halve `micro_batch_size`; turn on `gradient_checkpointing: true`; turn **off** `sample_packing` if you enabled it blindly |
+| 11 | **CUDA OOM only at eval** | `eval_sample_packing` defaults differently, or the eval batch is not scaled down | Look at which step it dies — if it is `eval_steps`-aligned, it is eval | Set `eval_sample_packing: false` and `eval_batch_size`/`micro_batch_size` smaller for eval |
+| 12 | **OOM after N steps** (not step 1) | Memory fragmentation from variable-length batches; packing disabled so long samples arrive unpredictably | Watch the step number — a fixed step means a specific long example | `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` [41:01]; enable packing; sort by length |
+| 13 | `ValueError: num_samples should be a positive integer value, but got num_samples=0` | `dataloader_num_workers: 0` combined with a prefetch factor that requires workers — or the dataset path resolved to zero rows | Print `len(dataset)` in the preprocess log | Set `dataloader_num_workers: 2` and `dataloader_prefetch_factor: 8` (the working Colab values) [51:44]–[53:18] |
+| 14 | Training is **10× slower** than expected | `sample_packing: false`, `flash_attention` unset, `gradient_checkpointing` off (you traded speed for memory), tiny `micro_batch_size` with no packing | Check `tokens/sec` in the W&B panel; compare to the throughput table in §4.4 | Turn on packing, set `attn_implementation: flash_attention_2`, raise `micro_batch_size` until VRAM is ~85% used |
+| 15 | **Loss differs between 1 GPU and 4 GPUs** | `gradient_accumulation_steps` kept the same while the world size changed — effective batch is now 4× larger (or the LR was never rescaled) | Compute `effective_batch = micro × grad_accum × world_size` for both runs | Keep the *effective* batch constant: divide `grad_accum` by the world size, or scale LR by √(world size) |
+| 16 | Multi-GPU run **hangs** at startup | NCCL cannot see the GPUs, or `--launcher torchrun -- --nproc_per_node=N` does not match the actual GPU count | `nvidia-smi` vs `nproc_per_node`; check `NCCL_DEBUG=INFO` | Match the count; in Docker add `--gpus all --ipc=host` |
+| 17 | Multi-GPU run **crashes with a shape error** in the DeepSpeed block | A ZeRO-3 config with a stage-2 `deepspeed:` path, or `zero3_init_flag` mismatched | Read the JSON path in the `deepspeed:` key — it must be a ZeRO stage you intend | Use `axolotl fetch deepspeed_configs` to get the shipped JSONs rather than hand-writing one |
+| 18 | Run starts from **step 0 every time** even though checkpoints exist | `resume_from_checkpoint` unset, or `output_dir` changed, or the checkpoint is not a full training-state save | `ls output_dir/checkpoint-*` — a resumable checkpoint contains `optimizer.pt`, `scheduler.pt`, `trainer_state.json` | `axolotl train config.yml --resume_from_checkpoint ./out/checkpoint-500` |
+| 19 | Loss is fine but the **adapter does nothing at inference** | You loaded the base model without the adapter, or applied the adapter but did not switch the model to eval, or the adapter was saved before training started | `axolotl inference config.yml --lora-model-dir ./out/checkpoint-500` | Use `PeftModel.from_pretrained(base, adapter_dir)` and confirm the adapter directory has `adapter_config.json` |
+| 20 | W&B shows **no metrics** | `wandb_project` set but not logged in, or the run is offline | Console shows the W&B URL or an auth error | `wandb login` first; or set `WANDB_MODE=offline` and sync later |
+
+### 14.3 The wrong-chat-template workflow (the leading cause)
+
+The instructor never says this explicitly, but it is the single most common cause of a run that "finishes successfully and produces a model that is worse than the base". Here is the 60-second diagnosis, expanded from §4.7.
+
+**Step 1 — Render one example exactly as the trainer sees it.**
+
+```python
+# diagnose_template.py — run this BEFORE any long training job
+from transformers import AutoTokenizer
+from datasets import load_dataset
+
+tok = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-3B-Instruct")
+ds = load_dataset("json", data_files="data/train.jsonl", split="train")
+
+row = ds[0]
+messages = row["messages"]           # [{"role": "user", ...}, {"role": "assistant", ...}]
+
+# What Axolotl will build, if chat_template is set correctly:
+rendered = tok.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
+print("=== RENDERED ===")
+print(rendered)
+print("=== TOKENS ===")
+ids = tok(rendered)["input_ids"]
+print(len(ids), tok.convert_ids_to_tokens(ids[:24]))
+```
+
+**Step 2 — Ask four questions of the printout.**
+
+| Question | If the answer is wrong | Fix |
+|---|---|---|
+| Do the role markers match the base model's pretraining? (`<\|im_start\|>` for Qwen/ChatML, `<\|start_header_id\|>` for Llama 3) | The model sees the markers as ordinary text and learns nothing about turn structure | Set `chat_template: qwen3` / `chatml` / `llama3` |
+| Does `<\|im_end\|>` (or the family's EOS) terminate each assistant turn? | The model never learns to stop | Add `eot_tokens: ["<\|im_end\|>"]`; confirm `train_on_eos: turn` |
+| Is the sequence under `sequence_len`? | Silent truncation cuts the assistant answer in half | Raise `sequence_len`, or filter long rows before training |
+| Does the rendered text contain the literal string `messages` or `[{'role'`? | `type:` and the data shape disagree — Axolotl is tokenising a Python repr | Set `type: chat_template` with `field_messages: messages` |
+
+**Step 3 — Compare the loss against the template hypothesis.**
+
+If you change *only* the chat template and the loss curve changes shape (not just level), the template was wrong. A correctly-templated run on the same data and LR typically starts 0.3–0.8 nats lower and descends faster, because the model is now predicting tokens it was pretrained to predict.
+
+> **Beyond the video:** this diagnosis is cheap and almost nobody runs it. Budget 5 minutes per dataset. Teams that skip it routinely burn 8–20 GPU-hours on a run that produces a model worse than the base, then conclude "fine-tuning doesn't work for our task". **The template is not a formatting detail; it is part of the model's interface.**
+
+### 14.4 Three bugs that look identical and are not
+
+Loss flat, output garbled, and output correct-but-unhelpful are three different diseases:
+
+| Presentation | Actual disease | The one experiment that separates it |
+|---|---|---|
+| Loss flat at ln(V), output repeats the prompt | **Label masking bug** — nothing is being trained | Print the label tensor; count non-`-100` positions. If 0, it is this |
+| Loss descends fine, output is fluent but wrong-shaped (no JSON, wrong language, ignores instructions) | **Template or data-quality bug** — you trained on the wrong distribution | Render an example, and read 20 raw training rows by hand |
+| Loss descends, output is shaped correctly, but the model is **no better than the base** | **Capacity or data-quantity bug** — the task is not in the data, or 200 examples cannot teach it | Train a 5× larger adapter (`lora_r: 64`) and evaluate. If still flat, it is data, not architecture |
+
+---
+
+## 15. Applied Case Studies
+
+Five scenarios, each grounded in the configs from §6 and the eval script from §12. Every one of them includes what went wrong first, because the first attempt is where the teaching is.
+
+### 15.1 Regulated Q&A — 8,400 → 48,000 rows, 2×A100 80 GB
+
+**Situation.** A pharmaceutical company needs an internal assistant that answers questions about their own SOPs (standard operating procedures). Legal requires the assistant to refuse when the answer is not in the source document, and to never invent a dosage. The base model is `Qwen/Qwen2.5-7B-Instruct`. Data: 8,400 hand-curated Q&A pairs, expanded to 48,000 with an LLM-assisted rewrite pass that a human spot-checks at 10%.
+
+**Why Axolotl.** The compliance team has to review and sign off the exact training procedure. A YAML file is reviewable; a 300-line Python training script is not. The same YAML is re-run quarterly when the SOP corpus is updated, and the diff between quarters is a three-line `git diff`. Multi-GPU is native — the FSDP2 variant runs on both A100s without code changes.
+
+**The config used** (this is `sft_pharma_v1.yaml` from §6, with the multi-GPU block added):
+
+```yaml
+base_model: Qwen/Qwen2.5-7B-Instruct
+trust_remote_code: false
+load_in_4bit: true
+adapter: qlora
+lora_r: 32
+lora_alpha: 64
+lora_dropout: 0.05
+lora_target_linear: true
+attn_implementation: flash_attention_2
+gradient_checkpointing: true
+sequence_len: 2048
+sample_packing: true
+pad_to_sequence_len: true
+micro_batch_size: 2
+gradient_accumulation_steps: 8
+num_epochs: 2
+learning_rate: 1e-4
+lr_scheduler: cosine
+warmup_ratio: 0.03
+optimizer: paged_adamw_8bit
+bf16: true
+max_grad_norm: 1.0
+chat_template: qwen3
+eot_tokens: ["<|im_end|>"]
+train_on_inputs: false
+roles_to_train: [assistant]
+datasets:
+  - path: data/pharma_sft.jsonl
+    ds_type: json
+    type: chat_template
+    field_messages: messages
+val_set_size: 0.05
+eval_steps: 100
+save_steps: 200
+output_dir: ./out/pharma-v1
+wandb_project: pharma-sft
+wandb_run_id: pharma-v1-2026q1
+fsdp_version: 2
+fsdp_config:
+  fsdp_auto_wrap_policy: TRANSFORMER_BASED_WRAP
+  fsdp_transformer_layer_cls_to_wrap: Qwen2DecoderLayer
+  fsdp_state_dict_type: SHARDED_STATE_DICT
+  fsdp_cpu_ram_efficient_loading: true
+  fsdp_offload_params: false
+```
+```bash
+axolotl preprocess sft_pharma_v1.yaml --debug --debug-num-examples 5
+axolotl train sft_pharma_v1.yaml --launcher torchrun -- --nproc_per_node=2
+```
+
+**Result.** 48,000 rows, 2 epochs, effective batch 32 → 3,000 steps. On 2×A100 with packing on, ~4,100 tokens/sec, ≈ 9.1 GPU-hours, ≈ $18 of rented compute. Train loss 1.42 → 0.71; eval loss 1.38 → 0.79 (eval loss bottoms at ~epoch 1.7 then rises 0.03 — the sign to stop at 2 epochs and not 3). On the frozen 300-question regression set: format compliance 100%, refusal-correct on unanswerable questions 96.3% (up from 41% for the base model + prompt), and 0 fabricated dosages in 300 samples, verified by the regex + human audit in `eval_pharma.py` (§12.4).
+
+**What went wrong first.** Attempt one used `type: completion` with `field: text` on data whose JSONL was already a list of messages. Axolotl tokenised the Python repr of the message list. Loss sat at 2.31 and never moved — bucket 1 from §14.1. The 40-minute run produced an adapter that emitted `[{'role': 'user', 'content':` when prompted. Fixing the `type:` and re-running took 12 minutes and produced loss 1.42 at step 100. **Nothing about the hyperparameters was wrong.**
+
+### 15.2 One T4, one afternoon — a solo developer's classifier-to-chat conversion
+
+**Situation.** A solo developer wants a 3B model that turns messy support tickets into structured JSON (`{"category": ..., "priority": ..., "summary": ...}`). Budget: free Colab, one T4 (16 GB). Data: 1,900 examples, generated by running the existing rules-based classifier over two years of tickets and having a larger API model clean up the output.
+
+**Why Axolotl.** The same YAML runs unchanged on Colab today and on a rented A100 next month when the dataset grows to 100k. Nothing has to be rewritten. The alternative — a Colab notebook full of `Trainer` arguments — has to be rewritten at the moment it matters most.
+
+**The config** (adapted from the notebook's demo config):
+
+```yaml
+base_model: Qwen/Qwen2.5-3B-Instruct
+load_in_4bit: true
+adapter: qlora
+lora_r: 16                      # smaller: 1,900 examples cannot feed a rank-32 adapter
+lora_alpha: 32
+lora_dropout: 0.05
+lora_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+attn_implementation: sdpa       # T4 has no bf16/flash-attn v2 path; see the correction in §4.3.4
+gradient_checkpointing: true
+sequence_len: 1024
+sample_packing: false           # T4 memory; see §4.6.6
+micro_batch_size: 1
+gradient_accumulation_steps: 8
+num_epochs: 3
+learning_rate: 2e-4
+lr_scheduler: cosine
+warmup_steps: 20
+optimizer: paged_adamw_8bit
+fp16: true
+max_grad_norm: 1.0
+chat_template: qwen3
+eot_tokens: ["<|im_end|>"]
+datasets:
+  - path: data/tickets.jsonl
+    ds_type: json
+    type: chat_template
+    field_messages: messages
+val_set_size: 0.1
+eval_steps: 25
+save_steps: 100
+output_dir: ./out/tickets-v1
+```
+
+**Result.** 1,710 train / 190 val rows, effective batch 8 → 642 steps over 3 epochs, ~38 minutes on the T4. Train loss 1.91 → 0.44, eval loss 1.88 → 0.61. JSON parse rate 99.4% (vs 78% for the prompted base model). Priority accuracy 94% vs a human-labelled holdout — but category accuracy only 81%, and inspection shows the failures are all in one under-represented category with 23 training examples.
+
+**What went wrong first.** The first run used `micro_batch_size: 1, gradient_accumulation_steps: 8` with `sample_packing: false` and `sequence_len: 2048`. It OOM'd at step 1. Dropping `sequence_len` to 1024 fit — which immediately revealed the second problem: 6% of the training examples were longer than 1024 tokens and were being silently truncated mid-JSON, teaching the model to emit unterminated objects. Fix: filter the dataset to rows under 900 tokens rather than raise `sequence_len`. **The truncation was invisible in the loss curve** — loss looked healthier with the long rows in, because truncated JSON is easier to predict than complete JSON.
+
+### 15.3 70B on 8×H100 — full fine-tune with ZeRO-3
+
+**Situation.** A research team needs a full fine-tune (not LoRA) of `meta-llama/Llama-3.3-70B-Instruct` on 400,000 domain documents reformatted as instruction pairs, because their ablation shows LoRA plateaus 4 points below full FT on their benchmark. Hardware: one node, 8×H100 80 GB.
+
+**Why Axolotl.** This is the case where the framework choice actually matters. Full FT of 70B needs ~1.1 TB of optimiser state; distributing that across 8 GPUs requires a correct ZeRO-3 or FSDP2 setup, and Axolotl ships and maintains both.
+
+**The memory arithmetic, shown.** With AdamW in bf16 with fp32 master weights and moments, the standard 16 bytes/parameter budget (§4.8.4):
+
+| Component | Per parameter | 70B total |
+|---|---|---|
+| bf16 weights | 2 B | 140 GB |
+| bf16 gradients | 2 B | 140 GB |
+| fp32 master weights | 4 B | 280 GB |
+| fp32 Adam m | 4 B | 280 GB |
+| fp32 Adam v | 4 B | 280 GB |
+| **Total** | **16 B** | **1,120 GB** |
+| ÷ 8 GPUs | | **140 GB/GPU** |
+
+140 GB > 80 GB, so pure ZeRO-3 sharding of states is not enough on 8×H100 — you need ZeRO-3 **plus** CPU offload of the optimiser state, or 16 GPUs. Axolotl's `zero3_offload.json` does exactly that.
+
+```yaml
+base_model: meta-llama/Llama-3.3-70B-Instruct
+adapter:                          # omitted entirely = full fine-tune
+attn_implementation: flash_attention_2
+gradient_checkpointing: true
+sequence_len: 4096
+sample_packing: true
+micro_batch_size: 1
+gradient_accumulation_steps: 16
+num_epochs: 2
+learning_rate: 1e-5               # full FT LR is ~20x lower than LoRA's
+lr_scheduler: cosine
+warmup_ratio: 0.01
+optimizer: adamw_torch
+bf16: true
+max_grad_norm: 1.0
+deepspeed: deepspeed_configs/zero3_offload.json
+datasets:
+  - path: data/domain_instruct.jsonl
+    ds_type: json
+    type: chat_template
+    field_messages: messages
+val_set_size: 0.01
+eval_steps: 500
+save_steps: 500
+save_total_limit: 3
+output_dir: ./out/llama70b-ft
+```
+```bash
+axolotl fetch deepspeed_configs          # get the shipped ZeRO JSONs first
+axolotl train llama70b_ft.yaml --launcher torchrun -- --nproc_per_node=8
+```
+
+**Result.** 2 epochs × 400,000 rows / (1 × 16 × 8 = effective 128) = 6,250 steps. With gradient checkpointing and offload, ~1,150 tokens/sec → ~118 GPU-hours → ~$350–450 at H100 spot pricing. Checkpoints are sharded; recombine with the FSDP helper only if you used FSDP — a DeepSpeed ZeRO-3 checkpoint is already recombined by `zero_to_fp32`.
+
+**What went wrong first.** Three things, in order:
+1. Started with `micro_batch_size: 2` → OOM at step 1. On 70B, `micro_batch_size` is always 1; you buy batch size with `gradient_accumulation_steps`.
+2. Used `optimizer: paged_adamw_8bit` out of LoRA habit → the paged optimiser plus ZeRO-3 offload fought over pinned memory and throughput collapsed to 180 tokens/sec. Full FT wants `adamw_torch` with ZeRO offload, not a paged 8-bit optimiser.
+3. Wrote `learning_rate: 1e-4` because that is the LoRA number. The first 300 steps showed grad norm above 400 and loss climbing. Full FT of a 70B model runs at 1e-5–2e-5.
+
+### 15.4 Preference alignment on top of an SFT adapter
+
+**Situation.** After §15.1's SFT run, the pharma assistant is accurate but too verbose and too hedgy. The team has 6,200 human preference pairs (chosen/rejected) from a clinical review team. They want to align on top of the existing SFT adapter rather than restart.
+
+**Why Axolotl, specifically.** Because the SFT run is already a YAML file, the DPO run is the same file with the SFT adapter path added and an `rl:` block. There is no pipeline to rebuild, and both stages are versioned as text.
+
+```yaml
+base_model: Qwen/Qwen2.5-7B-Instruct
+adapter: qlora
+load_in_4bit: true
+lora_r: 32
+lora_alpha: 64
+lora_dropout: 0.05
+lora_target_linear: true
+attn_implementation: flash_attention_2
+gradient_checkpointing: true
+sequence_len: 2048
+sample_packing: false             # packing is not supported for preference training
+micro_batch_size: 1
+gradient_accumulation_steps: 16
+num_epochs: 1
+learning_rate: 5e-6               # DPO is 10-40x below the SFT LR
+lr_scheduler: cosine
+warmup_ratio: 0.1
+optimizer: paged_adamw_8bit
+bf16: true
+max_grad_norm: 1.0
+chat_template: qwen3
+rl: dpo
+rl_beta: 0.1                      # replaces the deprecated dpo_beta
+dpo_loss_type: [sigmoid]
+datasets:
+  - path: data/pharma_prefs.jsonl
+    ds_type: json
+    type: chat_template.default
+    field_chosen: chosen
+    field_rejected: rejected
+    chosen_format: qwen3
+    rejected_format: qwen3
+output_dir: ./out/pharma-dpo
+# after training, merge the DPO adapter onto the SFT adapter, not onto the base
+```
+
+**Result.** 6,200 pairs, 1 epoch, effective batch 16 → 388 steps. Training took 1.9 GPU-hours. Implicit reward margin rose from 0.02 to 0.61; mean completion length fell from 214 to 118 tokens (the verbosity drop they wanted). On the frozen eval set, format compliance held at 100% and refusal-correct stayed at 95.7% — a 0.6-point drop inside noise, but worth watching.
+
+**What went wrong first.** The first DPO run used `type: preference` and `dpo_beta: 0.1` — both keys from the older dialect in the repo's `dpo(SFT → DPO).yaml` (§5.5). The current Axolotl rejects or warns on both; see the correction in §4.8.3 for the `rl:`/`rl_beta` replacement. Second problem: `sample_packing: true` carried over from the SFT config silently degraded the DPO run, because packing across chosen/rejected pairs changes what the implicit reward compares.
+
+### 15.5 The throughput rescue — 41 hours down to 6
+
+**Situation.** A team's Llama-3.1-8B SFT run on 4×A10G (24 GB each) is reporting an ETA of 41 hours for 3 epochs on 220,000 rows. Nothing is broken; it is simply slow.
+
+**Diagnosis.** This is bucket 4 from §14.1, and the numbers identify each cause:
+
+| Configuration | Effective batch | Tokens/sec (4×A10G) | Wall clock, 3 epochs | Notes |
+|---|---|---|---|---|
+| `packing: false`, `mbs: 2`, `ga: 8`, `sdpa`, `gc: true` | 64 | ~950 | **41 h** | The starting state |
+| `packing: true`, `pad_to_sequence_len: true` | 64 | ~3,400 | 11.5 h | 3.6× — the single biggest win |
+| + `attn_implementation: flash_attention_2` | 64 | ~4,100 | 9.5 h | Ampere supports FA2 |
+| + `gradient_checkpointing: false`, `mbs: 1` | 64 (rebalanced) | ~5,200 | 7.5 h | GC traded memory for ~25% speed; packing freed the memory |
+| + `dataloader_num_workers: 4`, `dataloader_prefetch_factor: 4` | 64 | ~5,900 | 6.6 h | CPU starvation was real at ~4,000 tok/s |
+
+**The changes, all in the YAML, none in code:**
+
+```yaml
+sample_packing: true
+pad_to_sequence_len: true
+attn_implementation: flash_attention_2
+gradient_checkpointing: false
+micro_batch_size: 1
+gradient_accumulation_steps: 16
+dataloader_num_workers: 4
+dataloader_prefetch_factor: 4
+```
+```bash
+# the allocator flag from [41:01] helps when freeing checkpointing memory
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+axolotl train llama8b_sft.yaml --launcher torchrun -- --nproc_per_node=4
+```
+
+**Result.** 41 h → 6.6 h, a 6.2× speedup, at identical effective batch and identical LR. The cost fell from ~$98 to ~$16 on the same hardware.
+
+**What went wrong first.** The team's first instinct was to raise the learning rate to compensate for "fewer steps". This is right in direction — packing reduces the step count because each step consumes far more tokens — but they raised it 3× and destabilised the run. The correct move (§4.6.7) is a *modest* increase (1.2–1.5×) **and** to re-check grad norm, or to keep the LR and simply accept fewer, denser steps. The Colab example's own comment — "when using packing, use a slightly higher learning rate to account for fewer steps" — says *slightly*. Three times is not slightly.
+
 <!-- CONTINUE -->
+
+
 
 
 

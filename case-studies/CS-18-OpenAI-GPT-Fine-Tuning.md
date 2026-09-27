@@ -566,4 +566,183 @@ checks, and so does a 4,239-byte file of ten distinct ones.
 > the over-refusing model of CS-13 §4.9.3. Neither number is visible anywhere in this module's
 > tooling, and both cost about twenty lines of Python.
 
+---
+
+### 4.3 The message roles and the system message
+
+#### 4.3.1 What each role means to the trainer
+
+The hosted trainer converts each message into a token sequence with role delimiters, and computes
+cross-entropy on the `assistant` spans. The roles behave as follows:
+
+| Role | Tokenised as | In the loss? | Billed as training tokens? | What it actually does |
+|---|---|---|---|---|
+| `system` | A leading turn, delimited | **No** | **Yes** | Sets persona and hard constraints for the whole conversation. |
+| `user` | A turn, delimited | **No** | **Yes** | The conditioning input. |
+| `assistant` | A turn, delimited; terminator included | **Yes** | **Yes** | The only thing the model is taught to produce. |
+| `function` / `tool` | A turn, delimited | No (it is context) | Yes | Returns tool output to the model. |
+
+Two consequences that surprise people:
+
+1. **You pay for tokens you do not learn from.** The system prompt in the video's data is 41 tokens
+   and is identical on all ten rows, so at `n_epochs=3` you pay for 123 tokens of system prompt that
+   teach nothing. On a real dataset with a 1,500-token system prompt and 50,000 rows over 3 epochs
+   you would pay for **225 million tokens** of pure repetition — at `gpt-4.1-mini`'s $3.00/M that is
+   **$675 for boilerplate**. §4.6.4 works this through.
+2. **The system message is part of the trained context, so it becomes part of the model's identity.**
+   Every row sharing one system prompt means the resulting model is *conditioned* on that prompt
+   appearing. Change the system prompt at inference and you are off-distribution. This is the hosted
+   analogue of CS-13's train/serve template mismatch, and it is the number one silent failure in
+   this module (§9.4).
+
+#### 4.3.2 The system-message discipline the video gets right, and the part it skips
+
+The instructor's data uses a single, well-formed system prompt with three properties worth copying
+(`data.jsonl`, all rows):
+
+```text
+You are a customer support assistant for a smartphone company.
+You are friendly, concise, and provide only factual answers related to smartphones.
+```
+
+| Property | Present? | Why it matters |
+|---|---|---|
+| **Role** ("customer support assistant") | Yes | Names the persona the model should adopt. |
+| **Style** ("friendly, concise") | Yes | Two adjectives that the model can actually act on. |
+| **Scope constraint** ("only… related to smartphones") | Yes | This is what produces the refusal on row 9 ("Can you recommend a good laptop for work?" → *"I'm here to assist only with smartphone-related questions."*) |
+| **Length guidance** | No | "Concise" is vague. A token-count target is not. |
+| **Output format** | No | No schema, no markdown policy. The model will produce prose. |
+| **Escalation rule** | No | Nothing tells it what to do when it does not know. |
+
+Row 9 is the most valuable row in the dataset and deserves to be called out. It is a **negative
+example with a soft refusal** — the only row that teaches the model what *not* to do. Everything else
+is a positive example. If you keep one idea from this subsection: **the marginal value of a dataset
+is in its negative space.** A dataset of 1,000 in-scope questions teaches the model to answer. A
+dataset of 900 in-scope questions plus 100 well-crafted out-of-scope probes teaches it *when not to*.
+
+> **Beyond the video:** the instructor never mentions that the system message must be *identical*
+> in training and serving, and his chat-test code repeats it by hand-typing the same string
+> [1:02:53]–[1:02:55]. That is a latent bug. Store the system prompt once as a constant, use it in
+> the data-generation script and in the inference call, and add an assertion that every training row
+> carries exactly that string:
+>
+> ```python
+> SYSTEM_PROMPT = ("You are a customer support assistant for a smartphone company. "
+>                  "You are friendly, concise, and provide only factual answers "
+>                  "related to smartphones.")
+>
+> def assert_system_prompt(data, expected=SYSTEM_PROMPT):
+>     bad = [i for i, ex in enumerate(data)
+>            if not ex["messages"] or ex["messages"][0]["role"] != "system"
+>            or ex["messages"][0]["content"] != expected]
+>     if bad:
+>         raise ValueError(f"{len(bad)} rows have a non-canonical system prompt: {bad[:10]}")
+> ```
+>
+> On a 10-row demo this is pedantry. On a 50,000-row dataset assembled from four different export
+> scripts over six months, it is the difference between a working model and a week of debugging.
+
+#### 4.3.3 Multi-turn conversations and where the supervision lands
+
+The video's data is strictly single-turn (system → user → assistant). Multi-turn is supported and
+changes the economics:
+
+```json
+{"messages":[
+  {"role":"system","content":"..."},
+  {"role":"user","content":"turn 1 question"},
+  {"role":"assistant","content":"turn 1 answer"},
+  {"role":"user","content":"turn 2 follow-up"},
+  {"role":"assistant","content":"turn 2 answer"}
+]}
+```
+
+Here **both** assistant turns are supervised, and both user turns are billed but not learned from.
+Three practical consequences:
+
+| Consequence | Detail |
+|---|---|
+| A 6-turn conversation counts as **one example**, not six | This makes your `MIN_TARGET_EXAMPLES=100` threshold misleading: 100 six-turn conversations is 600 supervised turns. |
+| Your "average tokens per example" explodes | The video measures ~56 tokens/example on single-turn data [45:51]–[45:53]. Real multi-turn support conversations average 400–1,200 tokens. Budget accordingly. |
+| Long conversations hit the per-example cap | Anything above the model's fine-tuning context is truncated. Which end gets truncated is provider-specific and usually the *end* — which means your final assistant turn, the one you most want supervised, may be silently cut. §4.5.5. |
+
+> **Beyond the video:** for multi-turn data, always compute a **truncation histogram** — the
+> percentage of examples above 50%, 75%, 90% and 100% of the per-example cap. If more than 2% of your
+> data sits above 90% of the cap, restructure (split long conversations into windows with overlapping
+> context) rather than shipping a dataset where a random 2% of your supervision is chopped off. This
+> is the single most common silent quality loss in hosted fine-tuning, and no vendor will warn you.
+
+---
+
+### 4.4 The base-model line-up, and the fact that it churns
+
+#### 4.4.1 What the pricing page showed him
+
+At [19:52]–[20:06] the instructor reads the fine-tuning model list off the pricing page. His spoken
+list, as transcribed, is:
+
+> *"these many model we can finetune like 04 mini 04 mini okay this is the date which when this model
+> was like published then here is a GPD 4.1 GPD 4.1 mini nano 40 mini and the other model also"*
+> [19:52]–[20:06]
+
+Decoded, that is: `gpt-4o-mini`, `gpt-4.1`, `gpt-4.1-mini`, `gpt-4.1-nano`, `gpt-4o-mini` — with the
+"date" column being the model snapshot date in the ID. He then chooses to demo the cheapest:
+*"in this video I will show you the finetuning using this GPT 4.1 nano because it is having the
+minimum pricing"* [20:58]–[21:02].
+
+#### 4.4.2 The base-model line-up, with the churn made explicit
+
+| Model | Fine-tuning era | Status as of Sept 2026 | The video's use |
+|---|---|---|---|
+| `babbage-002`, `davinci-002` | 2023-08 → 2024 | Retired | — |
+| `gpt-3.5-turbo-0613` / `-1106` / `-0125` | 2023-08 → 2024/25 | **Retired** from fine-tuning | First notebook's job; the model the video chats with at [1:03:02] |
+| `gpt-4o-mini-2024-07-18` | 2024-08 → 2025 | Deprecated for fine-tuning | Named by the instructor at [19:52] |
+| `gpt-4o-2024-08-06` | 2024-08 → 2025 | Deprecated for fine-tuning | Second notebook's job (`cell-78`), commented-out base in `cell-4` |
+| **`gpt-4.1-2025-04-14`** | 2025-04 → sunset | SFT available on the wind-down track | Named at [20:06] |
+| **`gpt-4.1-mini-2025-04-14`** | 2025-04 → sunset | SFT available on the wind-down track | Named at [20:06] |
+| **`gpt-4.1-nano-2025-04-14`** | 2025-04 → sunset | SFT available on the wind-down track | **The video's demo model** [54:44]–[54:47] |
+| `o4-mini-2025-04-16` | 2025-04 → sunset | **Reinforcement** fine-tuning only, billed **per hour** | Not used |
+
+Three observations from that table:
+
+1. **The video's demo model is one of three survivors, and all three are on the sunset track.** The
+   instructor could not have known this in 2025; he was reading a live pricing page correctly.
+2. **The first notebook's `gpt-3.5-turbo` job is now impossible to reproduce on this platform.**
+   Anyone following the repo as-is will get an error, not a model.
+3. **`o4-mini` is billed differently** — reinforcement fine-tuning is priced per hour of training
+   compute, not per token. That is a genuinely different cost model and it belongs in the same
+   sentence as `$100/hour` whenever someone claims "fine-tuning is cheap".
+
+> **Correction:** at [1:03]–[1:12] the instructor lists the platform's supported methods as *"SFT,
+> vision fine-tuning, DPO, RLHF"* and again at [5:55]–[6:04] *"direct preference optimization… DPO
+> reinforcement finetuning."* The fourth method is **reinforcement fine-tuning (RFT)**, not RLHF.
+> The distinction is not pedantry: classical RLHF (CS-24) trains a separate reward model on human
+> preference pairs and then runs PPO against it; RFT takes a **grader** — a Python function, a
+> unit-test harness, or an LLM judge — and optimises directly against its score. There is no reward
+> model, no preference dataset, and no PPO. The instructor himself describes the grader correctly at
+> [18:46]–[18:56] (*"we required few additional thing like a grader… you can manually grade the
+> output whether it is a good or bad, otherwise you can use the LLM model"*) without connecting it to
+> the mislabel. In an interview, saying "hosted RLHF" when you mean RFT is an immediate tell.
+
+#### 4.4.3 How to choose a base model when the line-up is churning
+
+The transcript's advice is implicit (*"pick nano because it's cheapest"*) and correct as far as it
+goes. The production version is a five-question filter:
+
+| Question | Why | What to do |
+|---|---|---|
+| **Is the base model you want still on the fine-tuning list?** | Most models are inference-only. | Check the current fine-tuning model table, not the pricing page — they differ. |
+| **What is your per-example token budget?** | A 1M-context base model does not mean a 1M-context *fine-tuning* context. | Measure your p95 example length, then confirm the fine-tuning context covers it. |
+| **Is the smallest model that works the right choice?** | Capacity, not price, is usually the binding constraint. | Run a 200-row SFT on nano *and* mini *and* a base-model prompt. Compare on a held-out set before committing. |
+| **What is the inference-price ratio?** | Nano FT inference is 2× nano base. Mini FT inference is 2× mini base. | Compute the break-even prompt length (§11.5) for each candidate. |
+| **When does this model retire?** | The base model's deprecation date *is* your product's end date. | Get it in writing from the provider's deprecations page and put it in your roadmap. |
+
+> **Beyond the video:** a rule the transcript never states — **always fine-tune the smallest model
+> that passes your evaluation, and always evaluate the smaller one first.** The reasoning is
+> economics, not capability: a `gpt-4.1-nano` fine-tune that hits 94% on your task costs 2.5× less to
+> train and ~4× less to serve than a `gpt-4.1-mini` fine-tune that hits 96%. Those two points of
+> quality only matter if you have a business justification for them, and you usually do not. The
+> inverse error — starting with the flagship because "quality" — costs 10–20× per experiment and
+> slows your iteration loop to the point where you stop iterating.
+
 <!-- CONTINUE -->

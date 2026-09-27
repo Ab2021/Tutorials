@@ -2301,4 +2301,139 @@ Three differences from OpenAI: the system prompt is **hoisted** out of the messa
 
 </details>
 
-<!-- CONTINUE -->
+---
+
+## 20. Cross-References
+
+| Relationship | Module | Why |
+|---|---|---|
+| **Builds on** | CS-13 (Instruction Fine-Tuning) | The objective, the masking, the data-format landscape and the "elicitation vs injection" thesis are all assumed here. |
+| **Builds on** | CS-02 (Transfer Learning & Fine-Tuning) | What a fine-tune is, before it becomes a managed API call. |
+| **Builds on** | CS-03 (Framework Landscape) | Where managed services sit relative to the open-source stacks. |
+| **Pairs with** | CS-18 (OpenAI GPT Fine-Tuning) | The sibling managed service. Read them together; the schema contrast in §4.2 and the comparison table in §13.1 are the payoff. |
+| **Contrasts with** | CS-16 (Unsloth) | The self-hosted counterfactual: 2–4× faster, low VRAM, and **you keep the adapter**. |
+| **Contrasts with** | CS-17 (Axolotl) | YAML-driven self-hosted training at scale. Every knob Vertex hides, Axolotl exposes. |
+| **Contrasts with** | CS-23 (LoRA & QLoRA) | What `adapterSize` means at the tensor level, and what you can do with an adapter you actually own. |
+| **Needed by** | CS-20 (SLMs), CS-21 (Multimodal) | The "should this be managed or self-hosted" decision recurs in both. |
+| **Related** | CS-04 (Fine-Tuning vs RAG vs Agents) | The decision that precedes this one. §15.3 is a RAG case in disguise. |
+| **Related** | CS-14 (The Alignment Map) | Vertex's second tuning method (preference tuning) [11:15] maps onto this module's taxonomy. |
+| **Related** | CS-10 / CS-11 (Quantization) | Only relevant on the self-hosted path — quantization is one of the capabilities the managed service removes. |
+| **Related** | CS-22 (Embeddings) | The data-drift detector in §16.4 uses embedding centroids over live inputs. |
+
+---
+
+## Appendix A — Instructor's Verbatim Key Claims
+
+Quotes reproduced as the transcript renders them, including the speech-to-text artefacts (`Jimny` = Gemini, `Vortex` = Vertex, `GPD` = Gemini). Timestamps are the video's.
+
+**On the closed-source constraint [3:35]:**
+> *"Again guys this is not a open-source model. This is a closed source. It is being provided by the Google. So we don't have access like where we can download the model but yeah we can access the model via API."*
+
+**On the two Google platforms [2:45] and [25:29]:**
+> *"Both are the different thing. I will discuss about both thing — what is the Jimny API and what is the Vortex AI or Vortex API."*
+>
+> *"If I'm saying GCP or Vortex AI, then both are same, right? And we have two way to access the Vortex AI. The first using the Google geni SDK. The second is Vortex AI SDK. Understood guys? Don't be confused here… GCP is a cloud platform, over the GCP you will get the Vortex AI. Okay, this is the service."*
+
+**On where fine-tuning is available [7:18]:**
+> *"they have clearly written with a depreation of the Jimny 1.5 flash in May 25, we no longer have a model available which support fine-tuning in the Jimny API or AI studio — uh but it support in the Vortex AI."*
+
+**On the models that support tuning [10:46]:**
+> *"GPD 2.5 pro, uh GPD 2.5 flash, GPD 2.5 flash light, uh 2.0 to flash and 2.0 flash light. So these many model is supporting for the finetuning. You can only fine-tune these mentioned model."*
+
+**On the two tuning methods [11:13]:**
+> *"So as of now they are just supporting two method. One is the supervised finetuning and second is the preference tuning."*
+
+**On the two weight-update regimes [13:14]:**
+> *"They are supporting two approaches. One they are first is the parameter efficient finetuning and second is the full fine tuning."*
+
+**On the difficulty of the setup [19:53]:**
+> *"That's why I was saying this fine tuning is not very straightforward. Whatever code they have given you in the documentation, if you're directly going to be executed, it will not work until and unless you are not doing a proper setup."*
+
+**On why no GPU is needed [18:50]:**
+> *"I will select the CPU only because I don't require any GPU here because I'm not going to train the model on my own server. Uh the model is being trained over the Google server only. I'm just hitting it through the Google API."*
+
+**On the identity requirement [23:38]:**
+> *"If you are logging to the GCP, right, so please create a notebook with the same ID… otherwise guys you will face a issue, you will face a trouble and you will not be able to authenticate properly."*
+
+**On billing as a hard gate [28:16] and [31:16]:**
+> *"You might get the error with respect to the billing."*
+>
+> *"Neither you can generate the output nor you can perform the finetuning. Nothing you can do until and unless you are not setting up the billing account."*
+
+**On the schema difference [34:53]:**
+> *"The format is a little bit different over here… We have system instruction in instead of the message. Now role will be the system. Then apart from this we have one more key that is part. Now under the part actually we will be having a text."*
+
+**On the role naming [36:10]:**
+> *"Role user means user is asking a question, role model means model is generating an answer."*
+
+**On the dataset and token count [40:10] and [40:50]:**
+> *"How many example we have? 10 rows in total. 10 rows we have. This is the total number of tokens — 5 64… minimum number of token in the example 51, 62 is a maximum one and 56 is the average token."*
+>
+> *"This data set actually it is all about the mobile… mobile customer support."*
+
+**On the tuning prices [22:29]:**
+> *"Jimny 2.5 Pro around $25 for the 1 million token, 2.5 flesh $5, 2.5 flesh light $1.5."*
+
+**On where the data must live [43:20]:**
+> *"Google cloud platform is not recommending this one… this Vortex AI is not recommending this one. So what they are saying: if you wanted to use the data then you will have to keep it inside the Google cloud storage."*
+
+**On starting the job [45:16]:**
+> *"I'm going to create my job — `client.tuning.tune`. I will pass my model, which model I want to be fine-tuned. Now here is my data set… and then this is my other configuration."*
+
+**On the automatic endpoint [50:06]:**
+> *"If you will check with the endpoint, so you will be getting the endpoint. So automatically it will be deployed and it will give you the end point… automatically the endpoint will be created once the job will be completed."*
+
+**On the wall-clock [50:56]:**
+> *"When I executed it first time guys, it took around — you won't believe it — took around guys 15 to 20 minutes. So you will have to wait maybe for 15 to 20 minutes sometime."*
+
+**On the automatic metrics [51:36]:**
+> *"Evaluation fraction of correct next step prediction, evaluation number of prediction, evaluation total loss, training loss — right, everything guys you will be able to get over here."*
+
+**On inference [54:53]:**
+> *"This is not the pre-trained model, the Jimny model. This is the fine-tuned model actually. I given my data and I fine-tuned the model and I'm accessing it — I'm accessing through the endpoint."*
+
+**On the cost of a demo [30:35] and [30:51]:**
+> *"You won't get much cost guys, just 5 to 10 rupees… even in the finetuning also I'll show you very minimum cost, 10 to 15 rupees, that's it."*
+>
+> *"After fine-tune, clean up everything that is required, otherwise the cost would be there… the cost will be increasing by the time."*
+
+---
+
+## Appendix B — Reference Links & Papers
+
+**Primary sources for this module**
+
+| Source | What it is |
+|---|---|
+| `D:\Finetuning\_source\transcripts\LLM_Fine-Tuning_21_Google_Gemini_Fine-Tuning_Masterclass_using_Vertex_AI_Supervi.txt` | The transcript (1539 lines). Ground truth for every timestamp above. |
+| `D:\Finetuning\_source\repo\Complete-LLM-Finetuning-main\LLM Fine-Tuning-21-GEMINI-Finetuning\gemini_finetuning_clean.ipynb` | The companion notebook. 760 lines of JSON. Contains the runnable cells, several of which raise `NameError` as shipped. |
+| `...\LLM Fine-Tuning-21-GEMINI-Finetuning\data.jsonl` | The 10-row mobile-customer-support SFT dataset. 564 tokens, constant system instruction. |
+| `...\LLM Fine-Tuning-21-GEMINI-Finetuning\handwritten-notes.pdf` | Scanned notes (not machine-readable without a PDF renderer; not used for the technical content above). |
+
+**Google documentation to verify against (all change frequently — check the date on the page)**
+
+| Topic | What to look for |
+|---|---|
+| Tune Gemini models (Vertex AI) | The current tunable-model list, the hyperparameter defaults and ranges, and the JSONL sample schema. |
+| Vertex AI pricing | The tuning $/1M-token rate **and** the endpoint per-hour / per-node-hour rate for the model generation you are using. Both lines. |
+| Vertex AI `TuningJob` REST reference | The exact `supervisedTuningSpec` field names, the `JobState` enum, and the string-vs-number typing of `epochCount`. |
+| Vertex AI quotas | Tuning jobs per project, endpoints per region. |
+| Gemini API (`ai.google.dev`) model and deprecation pages | The AI Studio deprecation timeline the instructor cites at [7:18]. |
+| `google-genai` SDK changelog | Breaking changes in the `tunings` module between the version in the notebook (1.62.0) and current. |
+| Google Cloud billing export schema | Column names for the §11.5 cost query. |
+
+**Background reading, and where it lives in this handbook**
+
+| Topic | Module |
+|---|---|
+| The SFT objective, masking, and the elicitation-vs-injection thesis | CS-13 |
+| The sibling managed service and its schema | CS-18 |
+| LoRA mechanics, rank selection, adapter mathematics | CS-23 |
+| Self-hosted alternatives that keep the artefact | CS-16, CS-17 |
+| When to fine-tune at all — the RAG/agent decision | CS-04 |
+| Preference tuning (Vertex's second method) | CS-14, CS-24, CS-25, CS-27 |
+
+---
+
+*End of CS-19.*
+

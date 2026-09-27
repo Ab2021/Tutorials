@@ -48,7 +48,7 @@ python 01_sft_lora.py --dry-run --data data/sample_sft.jsonl   # no GPU needed
 | 03 | The Fine-Tuning Framework Landscape | ✅ 1874 | ✅ | ✅ |
 | 04 | Fine-Tuning vs RAG vs Agents | ✅ 2058 | ✅ | ✅ |
 | 05 | From RNN/LSTM to Attention | ✅ 1878 | ✅ | ✅ |
-| 06 | The Hugging Face Masterclass | ✅ 2394 | ⬜ | ⬜ |
+| 06 | The Hugging Face Masterclass | ✅ 2394 | ⬜ | ✅ |
 
 ### Part II — Compression and Domain Adaptation (CS-07 … CS-12)
 | # | Module | Case study | IQ | Cheat sheet |
