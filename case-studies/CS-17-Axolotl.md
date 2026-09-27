@@ -1,0 +1,2145 @@
+# CS-17 — Axolotl: YAML-Driven Training at Scale
+
+| Field | Value |
+|---|---|
+| **Module** | Tooling / Config-driven training engines |
+| **Source video(s)** | LLM Fine-Tuning 19: Fine-Tune Any LLM with Axolotl 🔥 Low-Code YAML Based Training (No Heavy Coding) |
+| **Transcript file(s)** | `LLM_Fine-Tuning_19_Fine-Tune_Any_LLM_with_Axolotl_Low-Code_YAML_Based_Training_N.txt` |
+| **Companion code** | `LLM Fine-Tuning-19-Axolotl/axolotl_final_code.ipynb`, `colab_axolotl_example.py`, `axolotal-config/custom-config.yaml`, `axolotal-config/qlora.yaml`, `axolotal-config/base_sft_lora.yaml`, `axolotal-config/dpo(SFT → DPO).yaml`, `axolotal-config/fsdp(Single GPU → Multi-GPU).yaml`, `axolotl-docker-setup-steps.md` |
+| **Prerequisites** | CS-13 (SFT — the objective and the mask), CS-15 (LLaMA-Factory — the same idea with a UI), CS-16 (Unsloth — the same idea with kernel surgery), CS-23 (LoRA/QLoRA mechanics) |
+| **Neighbours** | CS-14 (DPO/ORPO — the `rl:` block), CS-18 (OpenAI SFT), CS-24 (multi-GPU training) |
+| **Difficulty** | Beginner to run. Advanced to configure correctly. Expert to debug when it silently trains garbage. |
+| **Hands-on required** | Yes — the video's Colab runs 25 steps of QLoRA on a free T4 in ~5–7 minutes |
+| **Estimated study time** | 6h theory + 6h practical (convert one of your own CS-13 datasets to a `chat_template` config and run it twice with different `type:` values — the second run is the lesson) |
+
+---
+
+## 0. Executive Summary
+
+- **Axolotl is a config-driven training engine, not a library you call.** The instructor's definition is exact and worth keeping verbatim: it is a *"configuration-driven framework with a Python extensibility"* [3:27] — you either write a YAML file and run `axolotl train config.yml`, or you import `axolotl.cli.config.load_cfg` / `axolotl.utils.dict.DictDefault` and build the same config as a Python object [4:00]–[4:04]. Both paths funnel into the same validated `DictDefault`. **The YAML is the artefact; the training script is the implementation detail.**
+- **The single most important idea in this module: a config file is a portable, reviewable, diffable record of an experiment.** The instructor's word for it is *reproducibility* [11:07]–[12:40] — *"after 1 month, 2 month again I can perform the same experiment… without touching the code part"*. That is the real product Axolotl sells: not speed, not a kernel, but **the ability to re-run a training job six months later from a 30-line text file that a reviewer can read in 30 seconds.**
+- **Corollary that the video does not state: the YAML alone does not give you reproducibility.** It gives you *config* reproducibility. You still need pinned library versions, a pinned dataset revision, a seed, and the resolved config that Axolotl actually ran with. §4.1.4 has the four-part checklist and the `resolved_config` mechanism.
+- **The whole framework is Hugging Face + an opinionated layer.** *"This Axolotl is a complete wrapper on top of the Hugging Face with some optimization where you don't need to do anything"* [43:39]–[43:44]. The stack is `transformers` + `trl` + `datasets` + `peft` + `accelerate`, with Axolotl supplying the config schema, the dataset normalisers, the packing collator, and the multi-GPU launcher glue [9:33]–[9:45].
+- **Everything in the config is one of six things:** model, adapter method, precision, data, optimisation, and run management. Every key in this module maps to one of those six buckets. If you can name the bucket, you can find the key.
+- **The highest-risk single key is the dataset `type:`.** Choosing `completion` where `chat_template` is correct does not error — it trains the model on raw text with no loss masking, and you discover it a day later when the model answers questions by continuing them. §4.5 lists the type zoo and the *observable* signature of each wrong choice.
+- **`sample_packing` is a 2–6× tokens-per-micro-batch multiplier and a correctness hazard.** Axolotl's own Colab comment claims *"2-6x increase in tokens per micro-batch"*; the instructor disables it on the T4 because *"it is required more memory"* [50:29]. Both are true. Packing only works with a varlen-capable attention backend, and when the boundary metadata (`cu_seqlens` / `position_ids`) is wrong the model attends across unrelated documents — §4.6 covers the two real bugs (Axolotl #3453, #3608) and how to detect the leakage from the loss curve alone.
+- **LoRA vs QLoRA vs full fine-tune is a three-line diff.** `adapter: lora` / `adapter: qlora` + `load_in_4bit: true` / omit the adapter key entirely. Quantised base weights force adapter-only training — you cannot full-fine-tune a 4-bit model, and Axolotl will tell you so.
+- **The most common silent failure is a chat-template / EOS mismatch, not a hyperparameter.** Symptoms: loss falls to ~0.3 and stays there, generations are fluent but ignore the turn structure, output runs past the end of the answer, or the model emits the *user's* prefix. §14's first four rows and §10.1 are all this one bug wearing different hats. The instructor never hits it — he uses `chat_template: "qwen3"` with `eot_tokens: ["<|im_end|>"]` [51:19] against a Qwen model, which is a matched pair — but it is the first thing that breaks when you swap to your own model.
+- **Axolotl moves fast and this course is 2025-era.** Four keys used in this video's own configs are now deprecated or renamed: `flash_attention`/`xformers_attention` → `attn_implementation`, `dpo_beta` → `rl_beta`, the bare `fsdp:` list → `fsdp_config`, and the DPO dataset `type:` strings. The repo's `dpo.yaml` and `fsdp.yaml` are stale as written. §5.5 and §5.6 annotate exactly what changed and what to write instead.
+- **When to reach for Axolotl over the alternatives:** you want FSDP/DeepSpeed multi-node, or you have a compliance requirement that training be defined by an auditable file, or you are running >50 experiments and want `--sweep` and W&B without writing code. When *not* to: a single-GPU 7B QLoRA on a free Colab is faster to write in Unsloth (CS-16), and a research variant of the loss function is faster to hack in raw TRL.
+
+---
+
+## 1. The Problem This Solves
+
+### 1.1 What breaks without a config-driven trainer
+
+The state before Axolotl is not "no tooling" — it is **every engineer's personal `train.py`**, forked from a blog post, subtly different, and undocumented.
+
+| Failure | What it looks like | Root cause |
+|---|---|---|
+| **The unreproducible run** | Six weeks later, a colleague asks how the shipped model was trained. The answer is "it was in a notebook on someone's Colab". | The hyperparameters lived in Python literals inside a deleted runtime. Nothing was versioned. |
+| **The nine-knob copy-paste** | You want to change `lora_r` from 16 to 32. You edit line 214 of `train.py`, and accidentally also change the warmup because both were computed from the same variable. | Hyperparameters and control flow are entangled in the same file. |
+| **The invisible data bug** | A teammate reformats the JSONL. Your `train.py` reads field `output`; the new file has `response`. The collator silently produces empty targets and the model trains on nothing. | The data contract is implicit — it lives in whichever string literal the author typed. |
+| **The "works on my GPU" launcher** | Single-GPU runs fine. Moving to 8×A100 means rewriting the whole script around `accelerate`/`torchrun`, re-testing, and re-finding the batch-size sweet spot. | Distributed launch is a separate engineering project in raw PyTorch. |
+| **The optimisation nobody enabled** | You shipped an 18-hour run. Colleagues shipped the same model in 6. Flash attention, packing, and gradient checkpointing were all off because nobody knew the flags. | Optimisation techniques are scattered across libraries with inconsistent APIs. |
+| **The audit gap** | Regulator or customer asks: what data, what base weights, what licence? You have a checkpoint and a memory. | No single artefact records the run. |
+
+### 1.2 What config-driven tooling actually changes
+
+The instructor frames the benefit as three properties [11:07]–[14:03], and his framing is the correct one:
+
+1. **Reproducibility** [11:07]–[12:40]. *"Simply I will run this particular file and I will fine-tune my model. Then let's say again I have to fine-tune my model after two weeks or three weeks — so I will take the same file and I will fine-tune the model."* One file = one experiment. Tweaks are diffs.
+2. **Faster experimentation in research and production** [13:01]–[13:26]. *"I no need to touch the code part. Everything I'm controlling from the YAML."* Changing `lora_r` from 16 to 64 is a one-character edit and a git commit, not a code review.
+3. **Automation / CI-CD friendliness** [13:28]–[14:03]. *"We don't need to touch the low-level coding, we can simply make a change inside the configuration and we can easily deploy that."* A sweep is a file generator; a nightly regression run is a cron job that calls `axolotl train`.
+
+> **Beyond the video:** the fourth benefit, unstated but the one that matters at team scale, is **reviewability**. A config diff shows *intent* — "we increased rank and lowered LR" — where a code diff shows *mechanics*. In practice, put the YAML in the same PR as the eval results and the dataset hash. The config becomes the experiment's lab notebook, and the PR becomes the audit trail.
+
+### 1.3 The naive approach, and precisely how it fails
+
+**Naive approach: "I'll copy the Axolotl example config for my model family, change `base_model` and `datasets.path`, and run it."**
+
+This works often enough to be dangerous. It fails in four separable ways:
+
+1. **You inherit a `chat_template` that does not match your model.** The example was written for Llama-3; your base is Qwen. The template string is a *prefix* on every training example, so the model learns a format it will never be served with (CS-13 §4.3). Loss looks normal. Output looks wrong. This is the #1 cause of "silently produces garbage" (§4.7).
+2. **You inherit a dataset `type:` that is wrong for your file.** `type: alpaca` on a `{"messages": [...]}` file does not crash loudly in every version — depending on the loader it produces empty or truncated targets. Your first warning is a suspiciously low loss around step 50.
+3. **You inherit `sample_packing: true` on a model whose attention backend cannot pack.** Packing requires varlen support; `eager` and `sdpa` do not have it. With a non-packing backend you get either an error or — worse — cross-document attention (§4.6.4).
+4. **You inherit a batch-size that was tuned for someone else's GPU.** `micro_batch_size × gradient_accumulation_steps × num_gpus` sets your effective batch. On 1×T4 with `micro_batch_size: 8` you OOM before step 1; the instructor hit exactly this and had to drop to `micro_batch_size: 1` with `gradient_accumulation_steps: 8` [49:30]–[50:00].
+
+The correct workflow is: **read the config top to bottom once, out loud, and be able to say what every line does before you run it.** That is what §4.3 and §4.4 of this module train you to do. The video's own walkthrough is the same exercise at speed [49:11]–[51:37].
+
+### 1.4 The motivating example, with numbers
+
+The video's own run — and it is a good one because it is small enough to check by hand:
+
+| Quantity | Value | Source |
+|---|---|---|
+| Base model | `Qwen/Qwen2.5-3B-Instruct` | notebook cell 7; spoken as *"coin 2.5 3b instruct"* [49:20]–[49:23] |
+| Method | QLoRA, 4-bit NF4, rank 32, alpha 64, 7 target modules | notebook cell 7 |
+| Dataset | `winglian/pirate-ultrachat-10k`, `type: chat_template` | notebook cell 7 |
+| `sequence_len` | 1024 | notebook cell 7 |
+| Batch | `micro_batch_size: 1` × `gradient_accumulation_steps: 8` = 8 sequences/step | notebook cell 7 |
+| Optimizer / LR | `paged_adamw_8bit`, `2e-4`, cosine, `warmup_steps: 5` | notebook cell 7 |
+| Epochs | 1, then capped at `max_steps: 25` for the demo | notebook cell 10 |
+| Total steps computed at load | **1,105** | spoken [47:39]–[47:43] |
+| Wall clock for 25 steps | **~5–7 minutes** on a free Colab T4 | spoken [51:52]–[51:55], [53:37]–[53:40] |
+| Output artefact | LoRA adapter (`adapter_model.safetensors`) in `./outputs/qwen-sft-pirate-rrr` | spoken [55:47]–[56:30] |
+
+**Worked check on the 1,105 steps:** `1105 steps × gradient_accumulation_steps 8 = 8,840 sequences` in the training split. The source dataset has ~10,000 rows, so **~1,160 rows (≈12%) were dropped for exceeding `sequence_len: 1024`**. That is not a guess — Axolotl's default `excess_length_strategy` is `drop`, and the numbers only reconcile that way. **This is the single most useful diagnostic in the module:** *steps × grad_accum tells you how many rows actually survived tokenisation.* If the product is much smaller than your file's row count, you are silently throwing away data (see §14, row "Steps far fewer than expected").
+
+> **Beyond the video:** the same arithmetic in reverse is how you size a run before you rent a GPU. Rows surviving tokenisation = `steps × grad_accum`; tokens per epoch ≈ `rows × mean_tokens`; GPU-hours ≈ `tokens ÷ (tokens/sec)`; dollars = `GPU-hours × $/hr`. §11 does this end to end.
+
+---
+
+## 2. First-Principles Mental Model
+
+### 2.1 The analogy: a config file is a recipe card, the trainer is the kitchen
+
+A restaurant kitchen (the training engine) contains every technique: sous-vide, blast chiller, combi oven. The recipe card (the YAML) says which techniques to use, in what order, with what quantities. A cook who has the card can reproduce the dish any night of the week without asking the chef what they meant. A *different* cook, in a *different* kitchen, with the same card and the same ingredients, gets the same dish.
+
+This is exactly the Axolotl value proposition. The engine is fixed and shared; the recipe is yours, and it is short enough to read over someone's shoulder.
+
+**Where this analogy breaks.** Two places, and they are the two that bite in production.
+
+1. **Ingredients drift.** A recipe card says "200 g flour". A config file says `path: timdettmers/openassistant-guanaco` — a *pointer* that resolves to whatever that dataset looks like today. If the dataset maintainer edits the file, your "identical" run trains on different data. Recipes are closed; configs are open. Pin revisions (§16.1).
+2. **The kitchen silently substitutes.** If the combi oven is missing, a real kitchen tells you. If `flash_attn` is not installed, Axolotl's deprecated `flash_attention: true` flag is *stripped from the config* and training proceeds with a different attention implementation — same recipe, different dish, one line of warning in a 400-line log. This is the "silent failure" category that §9.4 is built around.
+
+### 2.2 The mechanism: what actually happens between YAML and gradients
+
+The video never opens this box, so here is the box. Five stages, and every config key in this module lands in exactly one of them:
+
+```
+config.yml
+   │
+   ├─(1) PARSE + VALIDATE ──────────────────────────────────────────────┐
+   │      load_cfg() → DictDefault → pydantic schema validation         │
+   │      unknown keys → warning (or error with strict: true)           │
+   │      legacy keys → DeprecationWarning, then STRIPPED               │
+   │      result: an in-memory `cfg` object (this is `resolved_config`) │
+   │                                                                    │
+   ├─(2) DATASET LOAD + NORMALISE + TOKENISE ───────────────────────────┤
+   │      load_datasets(cfg)                                            │
+   │      datasets.load_dataset(path)  ← HF hub / local json / cloud    │
+   │      → prompt-strategy class chosen by dataset `type:`             │
+   │      → each row rendered with `chat_template` (or the alpaca fmt)  │
+   │      → tokenizer(row) → input_ids                                  │
+   │      → LABEL MASKING: prompt spans → -100                          │
+   │      → [optional] SAMPLE PACKING: concatenate + build cu_seqlens   │
+   │      → cache to `dataset_prepared_path` (default last_run_prepared)│
+   │                                                                    │
+   ├─(3) MODEL LOAD + ADAPTER ATTACH ───────────────────────────────────┤
+   │      AutoModelForCausalLM.from_pretrained(base_model, ...)         │
+   │      quantization_config (bitsandbytes) if load_in_4bit/8bit       │
+   │      attn_implementation (flash_attention_2 / sdpa / flex / …)     │
+   │      PeftModel: LoraConfig(r, alpha, dropout, target_modules)      │
+   │      embeddings_skip_upcast → keep embedding in fp16/bf16          │
+   │                                                                    │
+   ├─(4) TRAINER CONSTRUCTION ──────────────────────────────────────────┤
+   │      TRL SFTTrainer (plus transformers TrainingArguments)          │
+   │      collator: packing collator  or  DataCollatorForSeq2Seq        │
+   │      optimizer, lr_scheduler, warmup, grad-accum, precision        │
+   │      DeepSpeed / FSDP / DDP wrapper decided by the config keys     │
+   │                                                                    │
+   └─(5) TRAINING LOOP + CHECKPOINTING ─────────────────────────────────┘
+          forward → loss (masked CE) → backward → clip → step
+          log (logging_steps, W&B) → save (save_steps / saves_per_epoch)
+          → output_dir/checkpoint-N/{adapter_model.safetensors, ...}
+```
+
+Three consequences fall straight out of this pipeline, and they explain most of §14:
+
+- **Stage 2 is where configs lie.** Stages 3–5 are deterministic given a valid config; stage 2 depends on data that lives outside the file. Everything the instructor says about "flexible dataset handling" [17:02]–[17:24] — local, HF hub, cloud — is a statement about stage 2 and is exactly where portability breaks.
+- **Masking happens in stage 2, packing in stage 2, templating in stage 2.** The three operations you can get wrong without an exception are all in the same stage. This is why `axolotl preprocess --debug` (§6.5) is the single most valuable command in the toolchain.
+- **Stages 3–5 are where the money is.** GPU, VRAM, throughput, and multi-GPU topology are decided in stages 3–5, and they are the parts Axolotl has already written for you.
+
+### 2.3 What Axolotl adds over plain Hugging Face
+
+The instructor walks a comparison table twice [15:10]–[17:58] and [26:15]–[28:20]. His conclusion is right; the *reason* is worth stating more precisely than he does.
+
+| Capability | Native HF | Axolotl |
+|---|---|---|
+| Model download / load | Yes (`transformers`) | Yes (delegates to HF) |
+| Training methods (LoRA, QLoRA, full, DPO, KTO, ORPO, GRPO) | Only with TRL installed and wired by hand | Config key: `adapter:`, `rl:` |
+| Config-as-artefact | No — you write Python | Yes — the whole point |
+| Sample packing | Not natively; TRL has `packing:` and `DataCollatorWithFlattening` | `sample_packing: true` + fused collator |
+| Flash attention | You install the wheel and pass `attn_implementation` | Same wheel, one config key (historically `flash_attention: true`, now `attn_implementation`) |
+| Multi-GPU | Manual `accelerate config`, manual FSDP wrapping, manual sharding | `fsdp_config:` / `deepspeed:` block |
+| Multi-node | Manual | `--launcher torchrun -- --nnodes=N` |
+| Dataset format zoo | Write your own `map()` | 20+ prompt strategies selected by `type:` |
+| Chat templating | `apply_chat_template` manually | `chat_template:` + automatic mask offsets |
+| Metrics | Manual callbacks | `wandb_*`, TensorBoard, `axolotl lm-eval` |
+
+> **Beyond the video:** the honest framing for an interview is that Axolotl is not faster *because of a magic kernel* — it is faster because it turns on the four optimisations (packing, flash attention, gradient checkpointing, fused optimizers) that a hand-written script leaves off by default, and because it removes the two days of plumbing that surround every training run. Where a genuine kernel advantage exists — Unsloth's hand-written Triton kernels (CS-16) or Axolotl's own `lora_qkv_kernel` / `lora_mlp_kernel` Triton paths [49:59]–[50:06] — that is a separate, measurable claim, and the two toolkits are converging on the same kernels.
+
+---
+
+## 3. Core Concepts — Exhaustive Glossary
+
+Terms the video introduces, plus the terms you need to read the config reference without guessing.
+
+| Term | Definition | Why it matters | Common confusion |
+|---|---|---|---|
+| **Axolotl** | An open-source, config-driven LLM post-training framework built on the HF stack (`transformers` + `trl` + `datasets` + `peft` + `accelerate`), maintained by Axolotl AI. | The subject of this module. | Named after the Mexican salamander; the repo is `axolotl-ai-cloud/axolotl` (formerly `OpenAccess-AI-Collective/axolotl` — the old URL redirects but is stale). |
+| **YAML** | "YAML Ain't Markup Language" — a human-readable **data serialisation** format: mappings (key: value), sequences (`- item`), and scalars. | The config language. Indentation is semantic; tabs are illegal. | **It is not a markup language.** The instructor says *"YAML means a markup language"* [5:06] — see the Correction in §4.3.0. Markup describes documents; YAML serialises data structures. |
+| **`DictDefault`** | Axolotl's dict subclass that returns `None` for missing keys instead of raising `KeyError`. | Lets code ask `cfg.get("lora_r")` without guarding every key. Importable as `from axolotl.utils.dict import DictDefault` [42:44]–[42:50]. | Returning `None` instead of raising is exactly why a **typo'd key does not error** — it silently becomes `None` and the default is used. `strict: true` is the guard. |
+| **`load_cfg`** | `axolotl.cli.config.load_cfg` — parses, validates, and normalises a YAML path *or* a `DictDefault` into the final config object. | The validation gate. The Python-API path calls it explicitly [46:12]–[46:21]. | `load_cfg` is *not* just a YAML reader; it applies schema defaults, strips deprecated keys, and resolves derived fields. |
+| **`resolved_config`** | The fully-defaulted, post-validation config that the run actually used, dumped into the output directory / W&B. | The only trustworthy record of a run. | The YAML you wrote and the config that ran are different files. See §4.1.4. |
+| **`adapter`** | The PEFT method: `lora`, `qlora`, `loftq`, or omitted for full fine-tuning. | One key selects the entire training regime and its memory profile. | `adapter: qlora` *requires* `load_in_4bit: true`. Quantised base ⇒ frozen base ⇒ adapter-only. |
+| **`base_model`** | HF model ID or local path of the starting checkpoint. | Sets vocabulary, chat template family, context limit, and licence. | Base vs `-Instruct` is a real fork in the road. The instructor deliberately uses the *Instruct* model and re-aligns it to be a pirate — *"Use the instruct tuned model, but we're aligning it to be a pirate"* (notebook comment). |
+| **`load_in_4bit` / `load_in_8bit`** | bitsandbytes quantisation of the frozen base at load time. | ~4× / ~2× reduction in weight memory. | It quantises the *base*, not the adapter. LoRA weights stay in bf16/fp16. |
+| **NF4** | 4-bit NormalFloat — the information-theoretically optimal 4-bit datatype for normally distributed weights (QLoRA, Dettmers et al. 2023). | The default `bnb_4bit_quant_type`; better than plain int4 for LLM weights. | NF4 + double quantisation is what makes 7B fit on a 16 GB card. |
+| **Double quantisation** | Quantising the quantisation constants themselves (the absmax scales), saving ~0.4 bits/param. | ~3 GB saved on a 65B model; ~0.4 GB on 7B. | Not exposed as a config key in the sample configs; it is the bitsandbytes default. |
+| **Paged optimizer** | `paged_adamw_8bit` — 8-bit AdamW whose optimizer state can be paged to CPU RAM on memory pressure. | The standard QLoRA optimizer; avoids OOM spikes on long runs. | Paging is a *fallback*, not a speed feature — it costs host↔device bandwidth. |
+| **`sequence_len`** | The truncation window in tokens. Default `512` in the current config reference. | Anything longer is dropped (default) or truncated. | Not the model's context window. The video uses 1024 [50:33] where the model supports 32k — deliberately, to save memory. |
+| **`micro_batch_size`** | Sequences per forward/backward pass. | The knob you lower when you OOM. | Not the batch size. Effective batch = `micro_batch_size × gradient_accumulation_steps × num_gpus`. |
+| **`gradient_accumulation_steps`** | Number of micro-batches summed before one optimizer step. | Decouples effective batch size from VRAM. | Gradient accumulation does **not** reduce activation memory; only the optimizer step is amortised. |
+| **Effective batch size** | `micro_batch_size × gradient_accumulation_steps × num_gpus` sequences/step. | Determines gradient noise and the meaning of your LR. | Two runs with the same LR and different effective batch are not comparable. |
+| **`sample_packing`** | Concatenating multiple short examples into one `sequence_len` window so no compute is spent on padding. | 2–6× tokens per micro-batch on short-response data. | Requires a varlen-capable attention backend. Called *multipack* in the older docs — the docs URL is still `multipack.html` [18:56]–[19:14]. Not the same as `pad_to_sequence_len`. |
+| **`pad_to_sequence_len`** | Pad each batch out to `sequence_len` rather than to the longest member. | Needed by some generation/eval paths; defaults to true when packing is on. | With packing on it is largely a no-op; with packing off it wastes compute. |
+| **`cu_seqlens`** | Cumulative sequence lengths — the offset array that tells a varlen attention kernel where each packed document begins and ends. | **The only thing preventing cross-document attention when packing.** | Flash Attention "simply drops the attention mask" (Axolotl docs), so `cu_seqlens` replaces it. If it is wrong or unused, you get silent leakage. |
+| **`attn_implementation`** | The attention backend passed to `transformers`: `flash_attention_2`, `flash_attention_3`, `sdpa`, `eager`, `flex_attention`, `xformers`, `sage`, `s2`, `fp8`. | Determines both speed and whether packing is legal. | Replaces the deprecated booleans `flash_attention`, `xformers_attention`, `sdp_attention`, `flex_attention`, `sage_attention`, `eager_attention`. |
+| **`gradient_checkpointing`** | Recompute activations in the backward pass instead of storing them. | ~60–70% activation memory saved for ~25–30% more time. | Values are not just booleans any more: `offload` and `offload_disk` are also accepted. |
+| **`gradient_checkpointing_kwargs`** | Arguments forwarded to `torch.utils.checkpoint`. | `{"use_reentrant": False}` is required by many modern paths (and must be `True` for ZeRO-3 / EBFT). | Not a tuning knob; copy the value the docs prescribe for your topology. |
+| **Chat template** | The Jinja2 string that renders a message list into the exact token sequence the model was trained on. | Train/serve mismatch here is the #1 cause of garbage output. | A `chat_template:` *name* (`qwen3`, `chatml`, `llama3`) is not the same as `chat_template_jinja`, an inline string. |
+| **`eot_tokens`** | End-of-turn tokens that must be trained on so the model learns to stop. | If the template's turn terminator is not the tokenizer's EOS, you must name it here. | `["<|im_end|>"]` for Qwen-style templates [cell 7]. Each must be a *single* tokenizer token, or Axolotl warns and the mask shifts. |
+| **`roles_to_train`** | Which conversation roles contribute to the loss. Default `["assistant"]`. | The modern, template-aware expression of prompt masking. | The old way was `train_on_inputs` (a global boolean). |
+| **`train_on_inputs`** | Boolean: include the human's prompt in the labels. **Default `false`.** | At `false` you get prompt-masked training, which is what you want ~always. | Setting `true` triples the loss signal that teaches the model to write *your prompts*. |
+| **`excess_length_strategy`** | What to do with a row longer than `sequence_len`: `drop` (default), `truncate`, `raise`. | Explains "why did my 10k dataset become 8.8k?". | Not a token-count question; an *example-count* question. §1.4. |
+| **Prompt strategy** | The class Axolotl selects from the dataset's `type:` string to convert rows into `(prompt, response)`. | The `type:` zoo is the prompt-strategy zoo. | `type: alpaca` and `type: chat_template` are different classes, not different labels for the same thing. |
+| **`dataset_prepared_path`** | Directory where the tokenised/packed dataset is cached as Arrow (default `last_run_prepared`). | Makes re-runs start in seconds. | **The cache is keyed on the config — change the template and you may reuse a stale cache.** Delete the directory when in doubt. |
+| **`val_set_size`** | Fraction (or count) of data held out for evaluation. Default `0.0` — **no eval by default**. | Without it your loss curve has no independent signal. | `val_set_size: 0.05` and `test_datasets:` are mutually exclusive. |
+| **`saves_per_epoch`** | Number of checkpoints to write per epoch. | Convenient when you think in epochs, as the video does [51:05]. | Alternative to `save_steps`; do not set both with conflicting intent. |
+| **`max_steps`** | Hard cap on optimizer steps; overrides the epoch-derived schedule. | The demo uses `max_steps = 25` [cell 10], [47:24]–[48:11]. | Changing `max_steps` after computing a warmup *step count* changes the warmup fraction. |
+| **`strict`** | Config validation mode — unknown keys warn (default `false`) or fail. | Your defence against a typo'd key silently becoming `None`. | Default is permissive; set `strict: true` in CI. |
+| **DeepSpeed ZeRO** | Stage 1 shards optimizer state, stage 2 adds gradients, stage 3 adds parameters. | The standard route to multi-GPU when FSDP is not available. | More sharding = more communication. Pick the lowest stage that fits. |
+| **FSDP** | PyTorch's Fully Sharded Data Parallel — per-layer parameter sharding. | Axolotl's **recommended** multi-GPU strategy; only FSDP2 is supported now. | The bare `fsdp:` list is rejected; use `fsdp_config:`. `fsdp_version: 1` is a hard error. |
+| **DDP** | Distributed Data Parallel — full model replica per GPU. | The default when neither DeepSpeed nor FSDP is configured. | Duplicates optimizer state on every GPU; the baseline against which ZeRO/FSDP save memory. |
+| **GRPO** | Group Relative Policy Optimization — RL on a *prompt* set using group-normalised rewards. | The `rl: grpo` path; the reason Axolotl is now a post-training platform, not just SFT. | Not an offline preference method; it generates and scores online. The video names it but defers it to a future video [29:59]–[30:02]. |
+| **DPO** | Direct Preference Optimization — offline pairwise preference tuning against a frozen reference model. | `rl: dpo`. The video discusses it but its taxonomy is wrong — see Correction §4.8.3. | Not "supervised" in the SFT sense; it is derived from the KL-constrained RLHF objective. |
+| **ORPO** | Odds Ratio Preference Optimization — single-stage, reference-free preference tuning that folds SFT and preference into one objective. | `rl: orpo`; roughly half the VRAM of DPO because there is no reference model. | The instructor calls it "odd ratio preference optimization" [30:33]–[30:36] — the term is *odds-ratio*. |
+| **Liger Kernel** | LinkedIn's fused Triton kernel suite (fused linear cross-entropy, fused SwiGLU, RMSNorm). | Turned on via `lora_mlp_kernel` / `lora_qkv_kernel` / `lora_o_kernel` and the loss-fusion flags. | Not enabled by default; it is an opt-in plugin or config flag. Not compatible with LoRA dropout or bias on the targeted modules. |
+| **Cut Cross Entropy** | Apple's `ml-cross-entropy` — computes CE without materialising the full `[batch, seq, vocab]` logits tensor. | Large memory saving when vocab is 128k+; installed via the plugin path `axolotl.integrations.cut_cross_entropy.CutCrossEntropyPlugin`. | It is a *plugin*, not a boolean. The install is a separate pinned git dependency. |
+| **Sequence parallelism** | Splitting a single long sequence across GPUs (ring attention) rather than splitting the model. | The fix for "one sequence is too long for one GPU". | Mutually exclusive with nothing, but it stacks on DDP/DeepSpeed/FSDP. |
+| **`axolotl fetch`** | CLI: `axolotl fetch examples`, `axolotl fetch deepspeed_configs`. | Gets you a known-good starting config and the ZeRO JSON profiles. | The examples in `examples/` may still use deprecated attention booleans — they warn, they work. |
+| **`axolotl preprocess`** | CLI: tokenise and cache the dataset ahead of training. `--debug` prints processed examples. | The single best debugging tool in the framework. §6.5. | With `pretraining_dataset:` or `skip_prepare_dataset: true` it errors (`KeyError: 'input_ids'`) because those are prepared on demand. |
+
+---
+
+## 4. Deep Dive — How It Actually Works
+
+### 4.1 The config-as-artifact philosophy, and why it beats convenience
+
+#### 4.1.1 What the instructor claims, and what is actually being claimed
+
+The video's argument for config-driven training runs [9:53]–[14:03] and has one example at its centre: *"let's say I have to fine-tune my model after 2 weeks or 3 weeks, so I will take the same file and I will fine-tune the model — means I'm reproducing my experiment"* [11:53]–[11:57]. Then: *"reproducibility means what? After 1 month, 2 month again I can perform the same experiment with some tweak, with some changes, without touching the code part — so this is called the reproducibility"* [12:20]–[12:37].
+
+That is a correct and useful definition of **experiment-level reproducibility**: the *intent* of the run is recoverable from a small text file. It is the property that makes a results table meaningful, and it is what most teams lack.
+
+#### 4.1.2 Why the config is a better artefact than the notebook
+
+| Property | Notebook / `train.py` | YAML config |
+|---|---|---|
+| Diff in code review | Multi-line code diff, mixed with logic | 2-line semantic diff |
+| Machine-readable by schedulers | No | Yes — a sweep is a loop that writes files |
+| Reusable across model families | Usually not | Usually yes — change `base_model` |
+| Can be reviewed by a non-author | Hard | Easy |
+| Captured in experiment trackers | Manually | Natively (W&B stores the config) |
+| Hashable for provenance | Awkward | `sha256(config.yml)` is the run ID |
+| Can silently contain control flow bugs | Yes, constantly | No — YAML is declarative, there is no control flow |
+
+The last row is underrated. A config file **cannot** contain an `if` statement that quietly skips a preprocessing step only on Tuesdays. That is a real reliability gain, not an aesthetic one.
+
+#### 4.1.3 The cost of the convenience — five real downsides
+
+The video is promotional and does not list these. They are:
+
+1. **The Python escape hatch gets abused.** Because you *can* drive the whole thing programmatically (the notebook path [42:31]–[46:58]), teams drift into building their own wrappers around the config, and the config becomes an input to a private framework. Then you have two things to maintain.
+2. **You are coupled to the framework's release cadence.** This module's own examples prove it: four keys in the repo's configs are now deprecated or removed. Every Axolotl upgrade is a potential config migration.
+3. **The abstraction leaks when you need a custom loss.** Research variants (new DPO variants, custom regularisers) require a `plugins:` entry or a fork [50:15]–[50:23], at which point YAML's advantage evaporates.
+4. **Errors surface later.** A typo'd dict key becomes `None`, not an exception, unless `strict: true`. Errors that would be `TypeError` at line 1 in Python become a slow, wrong training run.
+5. **It encourages config cargo-culting.** Because copying a working config is easy, people copy one and never learn what is inside. That is precisely the failure mode §1.3 describes.
+
+#### 4.1.4 When config reproducibility is not reproducibility — the four-part checklist
+
+> **Correction:** the instructor equates "I re-ran the same YAML" with *"I'm reproducing my experiment"* [11:53]–[11:57]. **A YAML file is necessary but not sufficient.** Four additional things must be pinned or recorded, and none of them is in the YAML he shows:
+
+| Part | What to pin | How | Failure if you don't |
+|---|---|---|---|
+| **1. Library versions** | `axolotl`, `transformers`, `trl`, `peft`, `bitsandbytes`, `torch`, `flash-attn` | A lockfile or the Docker image tag (`axolotlai/axolotl:main-latest` is *not* a pin — use a digest) | Tokeniser or masking behaviour changes between releases; the same YAML trains differently |
+| **2. Dataset revision** | The HF dataset commit SHA, or a content hash of your local JSONL | `revision: <sha>` on the dataset entry; `sha256sum train.jsonl` recorded in the run notes | The upstream dataset is edited and your "identical" run uses new data |
+| **3. Seed + determinism flags** | `seed:`, plus `torch.use_deterministic_algorithms` awareness | Config `seed:` key; accept that full determinism costs speed and may be impossible with fused kernels | Same config, different loss curve; "reproduced" means "roughly similar" |
+| **4. The resolved config as actually run** | The post-validation config, including defaults you did not write | Axolotl writes it into the output directory / W&B; also log `sha256(config.yml)` as the run name | You cannot tell whether the difference was your edit or a changed default |
+
+A practical recipe that costs ten minutes and saves weeks:
+
+```bash
+# 1. Freeze the artefact
+sha256sum sft_pharma_v3.yaml > run_provenance.txt
+
+# 2. Record the resolved config (Axolotl dumps this next to the checkpoints)
+cp outputs/sft-pharma-v3/*.yaml run_provenance_resolved.yaml 2>/dev/null || true
+
+# 3. Record the data fingerprint
+sha256sum data/pharma_sft_train.jsonl >> run_provenance.txt
+
+# 4. Record the environment
+python -c "import axolotl, transformers, trl, peft, torch; \
+print(axolotl.__version__, transformers.__version__, trl.__version__, \
+peft.__version__, torch.__version__)" >> run_provenance.txt
+
+# 5. Commit all three files next to the config
+git add run_provenance.txt run_provenance_resolved.yaml && git commit -m "pin sft-pharma-v3"
+```
+
+> **Beyond the video:** in regulated settings this bundle is the deliverable. "Show me how this model was produced" should be answerable with a config file, a lockfile, a dataset hash, and a model card — no human memory required. Treat the config as the *primary* artefact and the checkpoint as a derived one; that inversion is the whole philosophy in one sentence.
+
+### 4.2 The two ways to run Axolotl
+
+The instructor states this at [3:30]–[4:02] and demonstrates both: *"we have two ways. The first we can write a configuration inside the YAML file and we can run it through the CLI. The second is a programmatic approach where we can install the Python package, import the classes, create an object, and write the entire configuration through that object itself."*
+
+#### 4.2.1 Path A — CLI + YAML (the production path)
+
+```bash
+# Train
+axolotl train sft_test.yaml
+
+# Inspect the tokenised dataset before spending GPU time
+axolotl preprocess sft_test.yaml --debug --debug-num-examples 5
+
+# Get known-good example configs and the DeepSpeed ZeRO profiles
+axolotl fetch examples
+axolotl fetch deepspeed_configs
+
+# Inference against the adapter
+axolotl inference sft_test.yaml --lora-model-dir ./outputs/lora-out --gradio
+
+# Fold the adapter into the base weights
+axolotl merge-lora sft_test.yaml --lora-model-dir ./outputs/lora-out
+
+# Multi-GPU: everything after `--` goes straight to the launcher
+axolotl train sft_test.yaml --launcher torchrun -- --nproc_per_node=4 --nnodes=1
+axolotl train sft_test.yaml --launcher accelerate -- --config_file=accelerate.yaml --num_processes=8
+```
+
+Key CLI facts the video's Docker walkthrough uses, all confirmed against the current CLI docs:
+
+| Command / flag | Purpose | Notes |
+|---|---|---|
+| `axolotl train config.yml` | Main entry point | Config path is positional; overrides like `--learning-rate 1e-4` work |
+| `axolotl preprocess config.yml --debug` | Tokenise + cache, print samples | Add `--debug-num-examples N` to limit output |
+| `axolotl fetch examples` | Copy example configs locally | `--dest <folder>` to choose destination |
+| `axolotl inference ... --lora-model-dir <dir>` | Chat / CLI / Gradio inference | `--chat` for multi-turn, `--gradio` for a UI |
+| `axolotl merge-lora ... --lora-model-dir <dir>` | Merge adapter into base | Writes `merged/`; `--dequant` for a bf16 output |
+| `axolotl lm-eval config.yml` | Run LM Evaluation Harness | Needs `lm_eval_tasks` set |
+| `axolotl export` | GGUF for llama.cpp / Ollama / LM Studio | e.g. `--quantize Q4_K_M` |
+| `--launcher torchrun -- --nproc_per_node=4` | Distributed launch | Legacy form still works: `accelerate launch -m axolotl.cli.train config.yml` |
+
+#### 4.2.2 Path B — Python API (the notebook path)
+
+The video's Colab uses this path end to end [42:20]–[47:04], and the notebook in the repo is the cleanest possible statement of it:
+
+```python
+# colab_axolotl_example.py / axolotl_final_code.ipynb — five imports, four calls
+from axolotl.cli.config import load_cfg          # [42:27] "load configuration"
+from axolotl.utils.dict import DictDefault       # [42:44] "dict default"
+
+config = DictDefault(                            # [42:56] "I will create a dict"
+    base_model="Qwen/Qwen2.5-3B-Instruct",
+    load_in_4bit=True,
+    adapter="qlora",
+    # ... every YAML key works here as a keyword argument
+    datasets=[
+        {
+            "path": "winglian/pirate-ultrachat-10k",
+            "type": "chat_template",
+            "split": "train",
+            "eot_tokens": ["<|im_end|>"],
+        }
+    ],
+)
+
+cfg = load_cfg(config)                           # [46:21] validation happens HERE
+
+from axolotl.utils import set_pytorch_cuda_alloc_conf
+set_pytorch_cuda_alloc_conf()                    # [cell 8] CUDA allocator tuning
+
+from axolotl.common.datasets import load_datasets
+dataset_meta = load_datasets(cfg=cfg)            # [46:02] returns input_ids/labels/attn mask
+
+from axolotl.train import train
+cfg.max_steps = 25                               # [48:09] "I will only run 25 steps"
+model, tokenizer, trainer = train(cfg=cfg, dataset_meta=dataset_meta)   # [46:15]
+```
+
+What `load_datasets` returns is the thing to look at once in your life: *"we have input ids, label, attention mask… the total number of steps is 1,105"* [47:28]–[47:43]. That object **is** the training data after stage 2 of the pipeline in §2.2.
+
+| | Path A (YAML) | Path B (Python) |
+|---|---|---|
+| Reproducible artefact | Yes — the file | Only if you also serialise the object |
+| Sweepable from a shell loop | Yes | Awkward |
+| Debuggable with a Python debugger | No | Yes |
+| Works on Colab free tier | Yes (write the file, then CLI) | Yes (the video's choice) |
+| Right for production CI | **Yes** | Only via a wrapper that dumps a resolved YAML |
+| Right for research spikes | No | Yes |
+
+> **Beyond the video:** a good production pattern is *both*: keep the canonical config as YAML in git, and let any Python code that needs to vary it write a derived YAML and shell out to `axolotl train`. That way the artefact always exists, even for runs launched from a notebook. The video's Colab demonstrates the API well but produces no config file at all — if the runtime dies, the experiment is gone.
+
+### 4.3 The annotated config — every significant key
+
+#### 4.3.0 YAML itself
+
+> **Correction:** at [5:06]–[5:11] the instructor says *"YAML means a markup language where we can write a configuration in the form of key and value."* **That is wrong on the name and misleading on the semantics.** YAML stands for **"YAML Ain't Markup Language"** (the recursive backronym; it originally meant "Yet Another Markup Language" and was renamed precisely to distance it from markup languages such as XML and HTML). It is a **data serialisation** language: it describes a data structure, not a document's presentation.
+
+What actually matters about YAML for config work, and what he demonstrates correctly:
+
+| Rule | Consequence if you break it |
+|---|---|
+| Indentation defines nesting; **tabs are forbidden** | `yaml.scanner.ScannerError: found character '\t' that cannot start any token` — the single most common copy-paste failure from web pages |
+| `key: value` — the space after the colon is required | `key:value` parses as the scalar string `"key:value"`, and your key silently does not exist |
+| Lists use `-` at the same indent level | A list item indented one level deeper becomes a nested mapping and the loader sees the wrong shape |
+| Unquoted `yes`/`no`/`on`/`off` are booleans in YAML 1.1 parsers | Use `true`/`false` explicitly — Axolotl's examples do, and you should copy that habit |
+| Numeric-looking strings need quotes | `lora_alpha: 1e-2` is a string; `learning_rate: 2e-4` is a float. Both are valid, but only one is what you think it is |
+| Comments are `#` to end of line | The repo's `qlora.yaml` is literally only comments plus five keys |
+
+> **Beyond the video:** validate the file before you schedule the GPU. `python -c "import yaml,sys; yaml.safe_load(open(sys.argv[1]))" config.yml` catches every syntax error in 50 ms. Then let Axolotl's own schema validation catch semantic errors with `strict: true` — which turns a silently-ignored typo into a startup failure.
+
+#### 4.3.1 Model identity — `base_model`, `tokenizer_type`
+
+```yaml
+base_model: Qwen/Qwen2.5-7B-Instruct   # repo: axolotal-config/custom-config.yaml
+tokenizer_type: AutoTokenizer          # optional; AutoTokenizer is the default guess
+```
+
+- `base_model` accepts an HF repo ID or a local path. It determines vocabulary, chat-template family, context length, and licence.
+- `tokenizer_type` is rarely needed. It exists for the handful of models where `AutoTokenizer` picks the wrong class (older GPT-NeoX/Falcon variants, some multimodal combinations).
+- **The `-Instruct` decision.** The video uses `Qwen/Qwen2.5-3B-Instruct` [49:20] and the upstream Axolotl Colab explicitly comments *"Use the instruct tuned model, but we're aligning it to be a pirate"* — i.e. the Instruct checkpoint is a fine starting point when you want to *re-style* an existing assistant. Start from the **base** model when you want to build a domain assistant from scratch (CS-13 §4.1.4); start from **Instruct** when you want to shift behaviour of a model that already follows instructions.
+
+> **Beyond the video:** base vs instruct is not cosmetic. Fine-tuning a base model needs more data and higher LR to acquire the instruction-following format at all; fine-tuning an Instruct model needs less data and a *lower* LR (often 1e-4 → 5e-5) because the model already sits near a good loss basin, and it carries a refusal prior you must respect or deliberately retrain around.
+
+#### 4.3.2 Quantisation and adapter — the three-way switch
+
+```yaml
+load_in_4bit: true        # [49:35] "we are loading in a 4bit"
+adapter: qlora            # [49:37] "adapter is a QLoRA"
+```
+
+```yaml
+# The full switch, in one table
+# ── Full fine-tune ────────────
+# (no adapter key, no load_in_*)
+adapter:                  # omitted
+load_in_4bit: false
+
+# ── LoRA (bf16 base) ──────────
+adapter: lora
+load_in_4bit: false
+lora_r: 16
+lora_alpha: 32
+lora_dropout: 0.05
+
+# ── QLoRA (4-bit base) ────────
+adapter: qlora
+load_in_4bit: true        # REQUIRED with adapter: qlora
+bnb_4bit_quant_type: nf4          # repo: axolotal-config/qlora.yaml
+bnb_4bit_compute_dtype: float16   # repo: axolotal-config/qlora.yaml
+lora_r: 32
+lora_alpha: 64
+```
+
+| Key | Values | What it does mechanically | Wrong-choice symptom |
+|---|---|---|---|
+| `adapter` | `lora`, `qlora`, `loftq`, omitted | Selects the PEFT method; omitted = full fine-tune | `adapter: qlora` without `load_in_4bit: true` → validation error |
+| `load_in_4bit` | `true`/`false` (default false) | bitsandbytes NF4 quantisation of the frozen base weights at load | `true` + full fine-tune = impossible; the base is frozen |
+| `load_in_8bit` | `true`/`false` | LLM.int8() — 2× not 4×; better quality, more VRAM | Choosing 8-bit "to be safe" costs ~2× the VRAM for a small quality delta |
+| `bnb_4bit_quant_type` | `nf4` (default), `fp4` | The 4-bit datatype | `fp4` is measurably worse for LLM weights; leave it alone |
+| `bnb_4bit_compute_dtype` | `float16`, `bfloat16`, `float32` | The dtype used for the *matmul* on dequantised weights | On a T4 (no bf16) use `float16`; on A100/H100 use `bfloat16` — the video's repo config sets `float16`, which is correct for Colab |
+
+> **Beyond the video:** the rule to memorise is **"quantised base ⇒ frozen base ⇒ adapter-only training."** You cannot QLoRA-then-full-fine-tune in one run, and a 4-bit base cannot be merged into a *different* precision without dequantising first (`axolotl merge-lora --dequant`). If a future requirement is "eventually full-fine-tune it", do not start in 4-bit.
+
+#### 4.3.3 The LoRA surface — `lora_r`, `lora_alpha`, `lora_dropout`, `lora_target_modules`, `lora_target_linear`
+
+```yaml
+lora_r: 32
+lora_alpha: 64
+lora_dropout: 0.05
+lora_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - down_proj
+  - up_proj
+```
+
+This is the video's own list at [49:41]–[49:52], where he describes them correctly as *"the matrix projection of the attention and the MLP layer"*.
+
+```text
+Attention block                      MLP block
+  ┌────────────────────---┐            ┌────────────────────---┐
+  │  q_proj  k_proj  v_proj │  ← 3 of  │   gate_proj  up_proj  │  ← 3 of
+  │  o_proj                 │    4     │   down_proj           │    3
+  └────────────────────---┘            └────────────────────---┘
+  LoRA usually ON                      LoRA usually ON in QLoRA recipes
+```
+
+| Parameter | Meaning | Typical | Too high → | Too low → |
+|---|---|---|---|---|
+| `lora_r` (rank) | Width of the low-rank update `BA`, where `A ∈ ℝ^{r×d_in}`, `B ∈ ℝ^{d_out×r}` | 8–32 (16 is the classic default; the video uses 32) | More parameters, more overfitting risk, slower, larger adapter; past r=64 the gains flatten for style/format SFT | Underfits a genuinely new task; the adapter cannot represent the shift |
+| `lora_alpha` (scaling) | The update is scaled by `alpha / r`. Controls effective step size on the adapter | 2× `lora_r` (16/32, 32/64) | Effectively a higher LR on the adapter → instability | Effectively a lower LR → slow learning |
+| `lora_dropout` | Dropout on the adapter input | 0.0–0.05. **Current default is `0.0`** | Longer to converge; under-training | Mild overfitting on small datasets |
+| `lora_target_modules` | Which `nn.Linear` modules get adapters | All 7 above for QLoRA on Llama/Qwen | More VRAM for activations + more optimizer state | Only `q_proj,v_proj` underfits complex tasks |
+| `lora_target_linear` | Boolean: *"if true, will target all linear modules"* | `true` when you don't want to enumerate | Same as above | — |
+
+**Parameter arithmetic.** For one targeted `d × d` linear layer, LoRA adds `r(d_in + d_out)` parameters. For Qwen2.5-3B (`d_model = 2048`, `ffn = 11008`, 36 layers, GQA with 2 KV heads):
+
+| Target set | Params added (r=32) | Adapter size on disk (fp16) | Approx. trainable fraction |
+|---|---|---|---|
+| `q_proj, v_proj` only | ≈ 36 × 32 × (2048+2048) × 2 = 9.4 M | ~19 MB | ~0.3% |
+| All 7 modules (attention + MLP) | ≈ 75 M (estimate, GQA-dependent) | ~150 MB | ~2.5% |
+| `lora_target_linear: true` (all linears, incl. `lm_head` if listed) | ≈ 90–110 M | ~200 MB | ~3% |
+
+The numbers are estimates because GQA (`k_proj`/`v_proj` are 1/4 the width of `q_proj`/`o_proj` in Qwen2.5) and the exact MLP dimensions vary. The *shape* of the answer is what matters: **the adapter is 1–3% of the model, which is why it is 20–200 MB instead of 6 GB.**
+
+> **Beyond the video:** `lora_target_linear: true` is the honest default when you do not want to reason about module names across model families — it is model-agnostic and removes an entire class of "I targeted `q_proj` on a model that spells it `query`" bug. Its costs: (1) it also targets layers you may not want (some configs exclude `lm_head`), and (2) it is incompatible with LoRA dropout on the fused-kernel paths — Axolotl's docs state that adapters targeted by `lora_qkv_kernel` / `lora_o_kernel` / `lora_mlp_kernel` **cannot use dropout or bias terms**. If you enable both `lora_target_linear: true` and the kernels, check `lora_dropout: 0.0` or you will get a validation error.
+
+#### 4.3.4 Attention backend — `flash_attention`, `xformers_attention`, `attn_implementation`
+
+```yaml
+# The video's config (repo + notebook, cell 7) — WORKS, but deprecated
+xformers_attention: true
+# The Axolotl Colab equivalent (colab_axolotl_example.py) — also deprecated
+flash_attention: false
+xformers_attention: true
+
+# What to write today
+attn_implementation: flash_attention_2     # Ampere+ / Hopper
+attn_implementation: xformers              # T4 / Turing or older
+attn_implementation: sdpa                  # portable fallback; NO packing support
+```
+
+> **Correction:** at [23:20]–[23:50] the instructor explains flash attention as *"a memory efficient attention algorithm that computes attention without materializing full matrices… whenever we are going to initialize the weight for the self attention, we have a huge matrix with respect to those QKV weights, so we are doing some sort of optimization on top of those weights."* **The first half is right; the second half is wrong.** Flash Attention (Dao et al., 2022) does **not** modify, quantise, or optimise the weights. It is an **exact, IO-aware** attention algorithm: it tiles the `Q·Kᵀ` computation through on-chip SRAM and never materialises the full `N×N` attention matrix in HBM, using online softmax to accumulate the result. The model's parameters and the mathematical result are unchanged (up to floating-point associativity); what changes is **memory traffic**, which drops from `O(N²)` HBM reads/writes to `O(N)`. That is why it is fast on long context and why it is *exactly* equivalent in quality — a distinction that matters when an interviewer asks "does Flash Attention change my model?"
+
+| Backend | Hardware | Packing support | Use when |
+|---|---|---|---|
+| `flash_attention_2` | Ampere (A100/3090), Ada, Hopper | **Yes** (varlen via `cu_seqlens`) | Default choice on modern GPUs; required if you want packing |
+| `flash_attention_3` / `flash_attention_4` | Hopper+ | Yes | H100/H200 fleets; FA4 via `flash_attn.cute` |
+| `xformers` | Turing (T4) and up | No | Colab T4 — the video's case |
+| `sdpa` | Any | **No** | CPU, older GPUs, and as a *diagnostic* workaround (§14) |
+| `eager` | Any | **No** | Debugging only; slowest |
+| `flex_attention` | torch ≥ 2.6 | Limited | Custom sparsity patterns; the instructor flags it as *"introduced by PyTorch"* [20:19]–[20:32] |
+| `sage` | SM80+ | — | Quantised attention (int8 QK / fp16 PV); throughput-oriented |
+| `s2` | LLaMA only | — | Shifted-sparse attention; niche |
+
+**The migration rule.** As of current Axolotl, the legacy booleans are *stripped from the validated config with a `DeprecationWarning`*. Setting a legacy boolean **and** `attn_implementation` raises an error rather than picking a winner. Setting only a legacy boolean silently falls back to the computed default — which is the dangerous case: you think you enabled Flash Attention 2 and you got SDPA.
+
+> **Beyond the video:** never trust that an optimisation is on. Verify with `nvidia-smi` for memory shape, and — better — read the model object: after `train()` returns, `model.config._attn_implementation` tells you the backend actually in use. Print it in your run log. A one-line assertion at the top of a run has saved more GPU-hours than any hyperparameter sweep:
+
+```python
+# after model, tokenizer, trainer = train(cfg=cfg, dataset_meta=dataset_meta)
+assert model.config._attn_implementation == "flash_attention_2", \
+    f"expected FA2, got {model.config._attn_implementation}"
+print("packing:", cfg.sample_packing, "| seq_len:", cfg.sequence_len,
+      "| micro_bs:", cfg.micro_batch_size, "| grad_accum:", cfg.gradient_accumulation_steps)
+```
+
+#### 4.3.5 Memory knobs — `gradient_checkpointing`, `micro_batch_size` vs `gradient_accumulation_steps`
+
+```yaml
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+micro_batch_size: 1
+gradient_accumulation_steps: 8
+```
+
+| Knob | Effect on VRAM | Effect on speed | Effect on optimisation |
+|---|---|---|---|
+| `micro_batch_size` ↓ | Large (activations scale linearly) | Slower per token (less kernel efficiency) | None, if grad-accum compensates |
+| `gradient_accumulation_steps` ↑ | **Zero** — activations are freed each micro-batch | Slower wall clock (more forward passes per step) | Preserves effective batch size |
+| `gradient_checkpointing: true` | −60 to −70% activation memory | +25 to +30% step time | None |
+| `sequence_len` ↓ | Large (attention is super-linear) | Faster | Truncates or drops data |
+| `attn_implementation: flash_attention_2` | Large at long seq | Faster | None |
+
+**The relationship, stated exactly:**
+
+$$
+\text{effective batch (sequences)} = \text{micro\_batch\_size} \times \text{gradient\_accumulation\_steps} \times \text{num\_gpus}
+$$
+
+$$
+\text{effective batch (tokens)} = \text{effective batch (sequences)} \times \text{sequence\_len}
+$$
+
+The video's run: `1 × 8 × 1 = 8` sequences per step, × 1024 tokens = **8,192 tokens per optimizer step**. That is on the low side of the 32k–128k tokens/step that is comfortable for SFT (CS-13 §7.6), and it is the direct consequence of running on a free T4 — which is exactly the trade a free-GPU run makes.
+
+**A mistake the video makes and then fixes.** The instructor initially hits a `ValueError` from the dataloader [51:44]–[52:03] and explains it as a worker problem [52:06]–[53:18]:
+
+> **Correction:** *"you don't need to set the value of this dataloader number of worker. Don't write zero here… if you are setting the value of this prefetch factor, then please write some value here for the dataset loader"* [52:20]–[52:49]. The diagnosis is right, but the explanation is incomplete and the recommended fix is one of two. The actual error is that PyTorch raises **`ValueError: prefetch_factor option could only be specified in multiprocessing. let num_workers > 0 to enable multiprocessing`** when `dataloader_num_workers: 0` is combined with an explicit `dataloader_prefetch_factor`. `num_workers: 0` is perfectly legal — it means "load in the main process", and it is the *only* option on Windows and in some sandboxed notebooks. The two correct fixes are:
+> 1. `dataloader_num_workers: 2` (and keep `dataloader_prefetch_factor: 2`), which is what he did; **or**
+> 2. keep `dataloader_num_workers: 0` and **delete `dataloader_prefetch_factor` entirely** — which is what he says at [52:40]–[52:44]. The trap is his phrasing "don't write zero here", which suggests zero is illegal. It is not; the illegal combination is zero *with* a prefetch factor.
+>
+> His explanation of *why* — *"prefetching only works when data is loaded in parallel; with zero workers there is nothing to prefetch"* [52:51]–[53:04] — is correct.
+
+The repo's `axolotl_final_code.ipynb` cell 7 shows the exact broken pair that produced the error:
+
+```python
+dataloader_prefetch_factor=2,     # ← this line
+dataloader_num_workers=0,         # ← plus this line = ValueError
+dataloader_pin_memory=True,
+```
+
+and the upstream notebook it was derived from has the working version:
+
+```python
+dataloader_prefetch_factor=8,
+dataloader_num_workers=2,
+dataloader_pin_memory=True,
+```
+
+#### 4.3.6 Optimisation schedule — `num_epochs`, `learning_rate`, `lr_scheduler`, `warmup_*`, `optimizer`, `max_grad_norm`
+
+```yaml
+num_epochs: 1
+learning_rate: 0.00019
+lr_scheduler: cosine
+warmup_steps: 5
+optimizer: paged_adamw_8bit
+max_grad_norm: 0.1
+```
+
+All seven of these are from the video's own notebook [50:33]–[51:05], and he walks them in that order: *"then we have learning rate, sequence length, micro batch size, gradient accumulation, gradient checkpointing… then we have optimizer, learning rate scheduler, warm-up step, fp16 true, bf16 false… then max_grad_norm, number of epoch, save per epoch"* [50:33]–[51:05].
+
+| Key | What it does | Typical SFT | Safe range | Too high → | Too low → | Notes |
+|---|---|---|---|---|---|---|
+| `num_epochs` | Passes over the data. Default `1.0` | 1–3 | 1–3 for SFT | Overfitting, format rigidity, over-refusal, catastrophic forgetting | Underfitting; the style never sticks | With 1k–10k rows, think in steps, not epochs |
+| `learning_rate` | Peak LR after warmup | Full FT 1e-5…5e-5; LoRA/QLoRA 1e-4…3e-4 | See left | Loss spikes, NaN, forgetting | Flat loss | The video uses 1.9e-4 for QLoRA — inside the standard band |
+| `lr_scheduler` | Shape of the LR curve. **Default `cosine`** | `cosine` | `cosine`, `linear`, `constant`, `cosine_with_restarts`, `one_cycle` | — | — | `cosine` decays to ~0 by the end, which is what makes a short run "settle" |
+| `warmup_steps` | Linear ramp length in **steps** | 5–10% of total steps | 0–10% | Wasted steps at low LR | First steps damage a pretrained model | **Cannot be combined with `warmup_ratio`** |
+| `warmup_ratio` | Same, as a fraction of total steps | 0.03–0.1 | 0–0.1 | Same as above | Same as above | Mutually exclusive with `warmup_steps` |
+| `optimizer` | Optimiser class | `adamw_torch_fused` is the current default; `paged_adamw_8bit` for QLoRA | — | — | — | See the optimiser table below |
+| `max_grad_norm` | Gradient clipping threshold | 1.0 | 0.1–1.0 | Nothing clips; spikes propagate | Aggressive clipping slows learning | The video uses 0.1, which is *tight* — fine for a 25-step demo, arguably too tight for a long run |
+
+**Why `warmup_steps: 5` is a degenerate case here, and why it is not in general.** With `max_steps: 25`, a 5-step warmup is 20% of the run — the model never reaches a settled LR before the cosine decay starts pulling it back down. That is acceptable for a demo whose purpose is to show the pipeline works. For a real 1,105-step run, 5 steps is 0.45% and effectively no warmup at all; you want ~50–110 steps (5–10%).
+
+**Optimiser choice, and what the defaults now are:**
+
+| `optimizer` value | State precision | CPU-offload capable | When |
+|---|---|---|---|
+| `adamw_torch` | fp32 | No | Portable baseline; the repo's `base_sft_lora.yaml` uses this |
+| `adamw_torch_fused` | fp32 | No | **Current Axolotl default** — fused CUDA kernel, faster than `adamw_torch` |
+| `paged_adamw_8bit` | 8-bit, pageable | **Yes** | QLoRA standard; the video's choice [50:48]–[50:53] |
+| `paged_adamw_32bit` | 32-bit, pageable | Yes | Better convergence than 8-bit at 4× the state memory |
+| `adamw_bnb_8bit` | 8-bit | No | Slightly faster than paged when you have headroom |
+| `adafactor` | factorised | — | Memory-constrained full fine-tunes; often needs a higher LR |
+
+> **Beyond the video:** `optimizer` is a place where *the default changed*. Older Axolotl defaulted to `adamw_torch`; the current config reference lists `adamw_torch_fused` as the default. If you omit the key entirely and compare against an old run where you also omitted it, you are not comparing the same optimiser. **Write the optimiser down explicitly in every config** — it costs one line and removes a silent A/B confound.
+
+#### 4.3.7 Sequence length and padding
+
+```yaml
+sequence_len: 2048        # repo configs; the Colab demo uses 1024
+sample_packing: false     # the video turns this off on a T4 [50:25]-[50:29]
+pad_to_sequence_len:      # not set — defaults to true when sample_packing is on
+```
+
+| Key | Default | Meaning | The trap |
+|---|---|---|---|
+| `sequence_len` | `512` | Truncation window | The video's 1024 on a model with a 32k context is a *deliberate* memory saving, not a limitation. But rows longer than this are **dropped**, not truncated, unless you change `excess_length_strategy` |
+| `sample_packing` | off unless set | Concatenate short examples into one window | 2–6× tokens/micro-batch; requires a varlen-capable attention backend; covered in full in §4.6 |
+| `pad_to_sequence_len` | true when packing is on | Pad the batch to `sequence_len` rather than to the longest member | With packing off and this on, you pay full compute for pad tokens; with packing on it is largely moot |
+| `eval_sample_packing` | inherits packing | Pack the eval set too | Docs: *"Set to 'false' if getting errors during eval with sample_packing on"* |
+| `excess_length_strategy` | `drop` | What to do with over-long rows: `drop`, `truncate`, `raise` | The default silently removes data. §1.4's 12% is this |
+
+#### 4.3.8 Data keys — `datasets`, `val_set_size`, `special_tokens`
+
+```yaml
+datasets:
+  - path: winglian/pirate-ultrachat-10k
+    type: chat_template
+    split: train
+    eot_tokens: ["<|im_end|>"]
+
+val_set_size: 0.0          # default — no eval
+```
+
+| Key | Meaning | Notes |
+|---|---|---|
+| `datasets:` | A **list** of dataset entries, each a mapping | Each entry resolves to a prompt-strategy class selected by `type:` |
+| `path:` | HF dataset ID, local file/dir, or cloud URI | Local files need `ds_type: json` / `csv` + `data_files:` |
+| `type:` | The prompt strategy | The single highest-risk key in the file — §4.5 |
+| `split:` | Which HF split | `train` is the common case |
+| `shards:` | Deterministic sampling of N shards | Debugging aid for large datasets; also a cheap way to make a small experiment |
+| `ds_type:` | `json`, `csv`, `parquet`, `arrow` for local data | Distinct from `type:` — easy to confuse |
+| `data_files:` | Path(s) for local data | Pairs with `ds_type:` |
+| `field_*` keys | Map your column names onto the strategy's expected fields | `field_instruction`, `field_input`, `field_output`, `field_messages`, `field_chosen`, `field_rejected`, `field_system`, `field_completion`, `field_prompt`, `field_response` |
+| `message_property_mappings` | Maps `role`/`content` inside a message list | e.g. `role: from`, `content: value` for ShareGPT-style rows |
+| `val_set_size` | Holdout fraction; **default 0.0** | Use `val_set_size: 0.05` or `test_datasets:`, never both |
+| `special_tokens` | `bos_token`, `eos_token`, `pad_token`, `unk_token`, `additional_special_tokens` | Resizes embeddings; the fix for the "missing padding token" error |
+| `tokens` | Extra tokens to add to the tokenizer | *"If you add tokens here, you don't need to add them to the `tokens` list"* — i.e. `special_tokens` is a superset |
+
+```yaml
+# The two special-token patterns you will actually need
+special_tokens:
+  pad_token: "<|endoftext|>"        # fixes "Missing pad token" errors
+  eos_token: "<|im_end|>"           # when the template's EOS differs from the tokenizer's
+
+tokens:                             # brand-new tokens the tokenizer has never seen
+  - "<|risk_tier|>"
+```
+
+#### 4.3.9 Run management — `output_dir`, `logging_steps`, `save_steps`, `saves_per_epoch`, `eval_steps`, `wandb_*`
+
+```yaml
+output_dir: ./outputs/qwen-sft-pirate-rrr
+logging_steps: 1
+saves_per_epoch: 2
+# repo custom-config.yaml adds:
+save_steps: 500
+logging_steps: 10
+```
+
+| Key | Meaning | Wrong-choice symptom |
+|---|---|---|
+| `output_dir` | Where checkpoints and the resolved config land | Long paths on Windows break; use forward slashes |
+| `logging_steps` | How often the loss is printed/logged | Too large and you cannot see a spike before it wastes an hour |
+| `save_steps` | Checkpoint every N optimizer steps | Too large and you lose the best checkpoint; too small and you fill the disk |
+| `saves_per_epoch` | Checkpoints per epoch | Convenient when you think in epochs — the video's frame [51:05]–[51:11] |
+| `eval_steps` | How often evaluation runs | Only meaningful with `val_set_size > 0` or `test_datasets` |
+| `dataset_prepared_path` | Arrow cache for the tokenised dataset | Change the template and reuse a stale cache = silently wrong data |
+| `hub_model_id` | Push the result to the HF Hub at the end | Set it and you get automatic upload; omit it and you upload by hand (§6.4) |
+
+```yaml
+# Weights & Biases — the keys you actually set
+wandb_project: "pharma-sft"
+wandb_entity: "acme-ml"
+wandb_name: "qwen25-3b-qlora-r32-lr2e4-v3"     # make it self-describing
+wandb_mode: "online"                            # online | offline | disabled
+wandb_watch: "gradients"                        # also: all, parameters
+wandb_log_model: "end"                          # checkpoint artefact upload policy
+```
+
+> **Beyond the video:** `wandb_watch: gradients` is cheap and disproportionately useful. Gradient-norm spikes that would be a single number in a log become a per-layer visual, and the top-1 cause of "the loss exploded at step 400" is one layer (usually `lm_head` or an embedding) with a 10× norm. Also: set `wandb_name` to encode the variables you are sweeping. A dashboard of `run-7f3a` and `run-b21c` is useless six weeks later; `qwen25-3b-qlora-r32-lr2e4-v3` is a results table.
+
+#### 4.3.10 Distributed keys — `deepspeed`, `fsdp`, `fsdp_config`
+
+```yaml
+# DeepSpeed: point at a ZeRO JSON profile
+deepspeed: deepspeed_configs/zero2.json
+# or, with the profiles fetched by the CLI:
+deepspeed: /workspace/axolotl/deepspeed_configs/zero3.json
+
+# FSDP — the current form
+fsdp_version: 2
+fsdp_config:
+  offload_params: true
+  cpu_ram_efficient_loading: true
+  auto_wrap_policy: TRANSFORMER_BASED_WRAP
+  transformer_layer_cls_to_wrap: Qwen2DecoderLayer
+  state_dict_type: FULL_STATE_DICT
+  reshard_after_forward: true
+```
+
+| Key | Meaning | Status |
+|---|---|---|
+| `deepspeed` | Path to a DeepSpeed JSON config (string) **or** an inline dict | Current |
+| `fsdp_version` | 1 or 2; **default 2** | FSDP1 removed — setting `1` is a hard error |
+| `fsdp_config` | The FSDP2 settings block | Current |
+| `fsdp:` (bare list) | Old FSDP1 enable-list | **Rejected** in current Axolotl |
+| `fsdp_sharding_strategy` | FSDP1 sharding mode | Renamed → `reshard_after_forward` |
+| `fsdp_state_dict_type` | Checkpoint format | Renamed → `state_dict_type` |
+| `fsdp_cpu_ram_efficient_loading` | Rank-0 load then broadcast | Renamed → `cpu_ram_efficient_loading` |
+| `fsdp_activation_checkpointing` | Activation checkpointing under FSDP | Renamed → `activation_checkpointing` |
+| `fsdp_backward_prefetch`, `fsdp_forward_prefetch`, `fsdp_sync_module_states`, `fsdp_use_orig_params` | FSDP1 prefetch/sync controls | **Removed** — dropped with a warning, or rejected for forward prefetch |
+| `distributed_type` | `FSDP`, `DEEPSPEED`, `MULTI_GPU` | **Not an Axolotl key.** It lives in the Accelerate config file |
+
+> **Correction:** the repo's `axolotal-config/fsdp(Single GPU → Multi-GPU).yaml` is written entirely in the removed FSDP1 dialect:
+>
+> ```yaml
+> distributed_type: fsdp          # ← Accelerate key, not an Axolotl key
+> fsdp:                           # ← the bare `fsdp:` list is REJECTED in current Axolotl
+>   sharding_strategy: FULL_SHARD # ← FSDP1 name; now `reshard_after_forward`
+>   auto_wrap_policy: transformer # ← now TRANSFORMER_BASED_WRAP
+>   state_dict_type: full         # ← now FULL_STATE_DICT
+>   sync_module_states: true      # ← removed in FSDP2
+> gradient_checkpointing: true
+> ```
+>
+> On a current Axolotl this file does not run. §5.6 gives the corrected version, and the memory reasoning behind each choice.
+
+### 4.4 Memory and compute accounting — the arithmetic behind the VRAM panic
+
+The video's most useful teachable moment is also its least precise: the instructor warns he might OOM because the free GPU has *"just 12 GB of VRAM"* and the run *"maybe requires 24 GB of VRAM at minimum"* [48:32]–[48:45], then reports it completed fine in ~7 minutes [51:52]–[51:55].
+
+> **Correction:** the free Colab GPU is a **Tesla T4 with 16 GB of GDDR6** — approximately **14.5–15 GiB usable** after driver/framebuffer reservation — not 12 GB. And the run needed nowhere near 24 GB: it completed on the T4 with `micro_batch_size: 1`, `sequence_len: 1024`, `gradient_checkpointing: true`, and a 4-bit base. The "24 GB minimum" figure is a rule-of-thumb for an *unquantised* LoRA fine-tune of a 3B model at a longer sequence length, not for this QLoRA configuration. The instructive part is *why* his estimate was three times too high: he was reasoning from the model size instead of from the four terms that actually consume VRAM.
+
+#### 4.4.1 The VRAM equation
+
+For adapter training, peak GPU memory is the sum of six terms:
+
+```
+VRAM_peak ≈  W_base          (frozen weights, quantised)
+           + W_adapter       (trainable A/B matrices)
+           + G_adapter       (their gradients)
+           + O_state         (optimizer moments for the adapter)
+           + A_activations   (activations for the micro-batch; the big one)
+           + F_frag          (CUDA allocator fragmentation + workspace)
+```
+
+Each term:
+
+| Term | Formula | QLoRA (4-bit base) | LoRA (bf16 base) | Full FT (bf16) |
+|---|---|---|---|---|
+| `W_base` | `params × bytes/param` | `P × 0.5` | `P × 2` | `P × 2` |
+| `W_adapter` | `~0.01–0.03 × P × 2` | small | small | — |
+| `G_adapter` | same as `W_adapter` | small | small | — |
+| `O_state` | Adam: `2 × trainable × bytes` | 8-bit: `2 × trainable × 1` | fp32: `8 × trainable` | fp32: `8 × P` |
+| `G_weights` | gradients, full FT only | — | — | `P × 2` |
+| `A_activations` | `≈ k × micro_bs × seq_len × d_model × layers × bytes` | dominant | dominant | dominant |
+| `F_frag` | 5–15% of the above | — | — | — |
+
+The `A_activations` term is why `micro_batch_size` and `sequence_len` dominate, and why gradient checkpointing changes everything: it trades ~65% of that term for ~28% more compute.
+
+#### 4.4.2 Worked example — exactly the video's run
+
+**Qwen2.5-3B-Instruct, QLoRA, `sequence_len: 1024`, `micro_batch_size: 1`, grad-checkpointing on, T4 16 GB.**
+`P ≈ 3.09 B` parameters; `d_model = 2048`; 36 layers; GQA with 2 KV heads.
+
+| Component | Arithmetic | GB (GiB) |
+|---|---|---|
+| Base weights, NF4 | `3.09e9 × 0.5 B` = 1.545 GB, + double-quant scales ≈ 0.05 GB | **~1.60** |
+| Adapter weights (7 modules, r=32) | ~75 M × 2 B | **~0.15** |
+| Adapter gradients | ~75 M × 2 B | **~0.15** |
+| Optimizer state (`paged_adamw_8bit`, 2 moments) | `75e6 × 2 × 1 B` ≈ 0.15 GB (+ fp32 master copy if used ≈ 0.3 GB) | **~0.15–0.45** |
+| Activations, `1 × 1024 × 2048`, 36 layers, bf16/fp16, **with checkpointing** | ~`1 × 1024 × 2048 × 36 × 2 B` ≈ 0.15 GB at full retention; with checkpointing only layer boundaries are stored, ~0.03 GB — plus attention workspaces | **~1.5–3.0** |
+| CUDA context, cuBLAS/cuDNN workspaces, fragmentation | driver + libraries | **~0.8–1.2** |
+| **Total** | | **≈ 4.4 – 6.6 GB** |
+
+That fits comfortably in 14.5 GiB. **The run that "needed 24 GB minimum" needed about 5 GB.** The instructor's own observation confirms it: it completed on the free GPU in ~5–7 minutes [51:52], [53:37].
+
+**Now the same model with LoRA (bf16 base) instead of QLoRA:** the base term becomes `3.09e9 × 2 = 6.2 GB`, so the total is **~9–11.5 GB** — still fits on a T4, but with little headroom and no room for `micro_batch_size: 2`.
+
+**And full fine-tuning:** `W_base 6.2 + G 6.2 + O_state (Adam fp32 = 8 bytes/param) 24.7 + activations ~2 ≈ 39 GB`. That is 3×A100-40GB or 1×A100-80GB for a **3B** model. This is the arithmetic behind "do not full-fine-tune without a plan" (CS-23).
+
+#### 4.4.3 The throughput side
+
+| Quantity | Formula | The video's run |
+|---|---|---|
+| Steps per epoch | `rows_surviving ÷ (micro_bs × grad_accum)` | `8,840 ÷ 8 = 1,105` ✔ matches [47:43] |
+| Tokens per optimizer step | `micro_bs × grad_accum × seq_len` | `1 × 8 × 1024 = 8,192` |
+| Tokens per epoch (upper bound) | `steps × tokens/step` | `1,105 × 8,192 = 9.05 M` |
+| Wall clock | `steps × sec/step` | 25 steps in ~300–420 s → **~12–17 s/step** |
+
+**~12–17 seconds per optimizer step for 8,192 tokens** is ≈ 480–680 tokens/sec on a free T4 in QLoRA. That is a realistic T4 number and it is the figure to remember when someone asks you to estimate a Colab run: **a free T4 does roughly 0.5k tokens/sec in QLoRA**, so a 10 M-token epoch is ~5 hours.
+
+> **Beyond the video:** the fast way to sanity-check any config before renting a GPU is to run `max_steps: 20` and multiply. Measure `sec/step` from the log, then `total_hours = (total_tokens ÷ tokens_per_step) × sec_per_step ÷ 3600`. Twenty steps of a real config give you a cost estimate accurate to ~15%, which is far better than any table — including this one, because throughput depends on the GPU, the attention backend, the packing efficiency, and the dataloader workers, all of which vary.
+
+---
+
+### 4.5 The dataset `type:` zoo — and the failure mode of choosing wrongly
+
+This is the section the video skips (it says *"I will show you in my next video"* [32:09]–[32:23] and moves to the documentation) but which decides whether your run works at all.
+
+#### 4.5.1 The four families
+
+```text
+                        ┌─────────────────────────────────────────┐
+      Raw text corpus ──▶│ pretrain      (streaming, big corpora)  │
+                        │ completion    (in-memory, small)        │
+                        └─────────────────────────────────────────┘
+                        ┌─────────────────────────────────────────┐
+   Instruction triples ─▶│ alpaca        {instruction,input,output}│
+                        │ (custom)      field_* + format strings  │
+                        │ input_output  {segments:[{text,label}]} │
+                        └─────────────────────────────────────────┘
+                        ┌─────────────────────────────────────────┐
+   Conversations ──────▶│ chat_template {messages:[{role,content}]}│  ← the modern default
+                        │ sharegpt      {conversations:[{from,value}]} ← DEPRECATED
+                        └─────────────────────────────────────────┘
+                        ┌─────────────────────────────────────────┐
+   Preferences ────────▶│ chat_template.default / chatml.* / llama3.*
+                        │ user_defined.default                    │
+                        └─────────────────────────────────────────┘
+```
+
+#### 4.5.2 The type table, with the signature of each wrong choice
+
+| `type:` | Expected row shape | Required keys | If you use it on the wrong data, you observe… |
+|---|---|---|---|
+| `pretrain` | `{"text": "..."}` (streaming) | `pretraining_dataset:`, `text_column` | Needs `max_steps` (it streams forever). Does not use `datasets:`. Errors if you put it under `datasets:` |
+| `completion` | `{"text": "..."}` | optional `field:` to rename the text column | On a chat dataset it trains on the *serialised conversation as plain text* — no role masking, no template. Loss looks great (~0.5) and the model answers questions by continuing them |
+| `alpaca` | `{"instruction":…, "input":…, "output":…}` | `field_instruction`, `field_input`, `field_output`, optional `field_system` | On a `messages` file: empty or null fields; loss collapses to near zero because the targets are empty strings |
+| custom instruct (inline mapping) | any | `field_*` + `format` / `no_input_format` | You must write the format string yourself; a wrong one puts the answer in the prompt and masks it |
+| `input_output` (**template-free**) | `{"segments": [{"text": "...", "label": true/false}]}` | explicit per-segment `label` | Not "no configuration needed" — you must hand-label every trained span |
+| `chat_template` | `{"messages": [{"role": …, "content": …}]}` | `chat_template:` (or `tokenizer_default`), `field_messages`, `message_property_mappings` if renamed | On an alpaca file: the loader finds no message list and either errors or produces empty conversations |
+| `sharegpt` | `{"conversations": [{"from": …, "value": …}]}` | `message_property_mappings` | **Deprecated.** Migrate to `chat_template` + `field_messages: conversations` + `message_property_mappings: {role: from, content: value}` |
+| pre-tokenised | `{"input_ids":…, "attention_mask":…, "labels":…}` | `type:` left **empty** | You own the masking. Nothing checks it for you |
+| `chat_template.default` | `{messages: [...], chosen: {...}, rejected: {...}}` | `field_messages`, `field_chosen`, `field_rejected` | This is the *current* DPO type. The old `type: dpo` / `type: preference` spellings are gone from the docs |
+| `chatml.ultra`, `chatml.intel`, `chatml.argilla`, `llama3.ultra`, … | Format-specific DPO shapes | none beyond the type | Each expects a precise field layout; `chatml.intel` wants `{question, chosen, rejected}` |
+| `user_defined.default` | anything | `field_prompt`, `field_system`, `field_chosen`, `field_rejected`, plus `prompt_format` / `chosen_format` / `rejected_format` | The escape hatch when your preference data matches none of the canned shapes |
+
+#### 4.5.3 Worked example — the same three rows, five types
+
+```json
+// (a) alpaca — type: alpaca
+{"instruction": "Explain QLoRA in simple words", "input": "", "output": "QLoRA loads the base model in 4 bits..."}
+
+// (b) messages — type: chat_template
+{"messages": [{"role": "user", "content": "Explain QLoRA in simple words"},
+              {"role": "assistant", "content": "QLoRA loads the base model in 4 bits..."}]}
+
+// (c) sharegpt — the DEPRECATED type: sharegpt, still valid as chat_template + mappings
+{"conversations": [{"from": "human", "value": "Explain QLoRA in simple words"},
+                   {"from": "gpt",   "value": "QLoRA loads the base model in 4 bits..."}]}
+
+// (d) completion — type: completion  (note: the role markers are now just text)
+{"text": "### User: Explain QLoRA in simple words\n### Assistant: QLoRA loads the base model in 4 bits..."}
+
+// (e) preference — type: chat_template.default
+{"messages": [{"role": "user", "content": "Explain QLoRA in simple words"}],
+ "chosen":   {"role": "assistant", "content": "QLoRA loads the base model in 4 bits..."},
+ "rejected": {"role": "assistant", "content": "It is a kind of training."}}
+```
+
+The matching config for (b) and (c):
+
+```yaml
+# (b) chat_template — the recommended shape
+datasets:
+  - path: ./data/my_sft.jsonl
+    ds_type: json
+    type: chat_template
+    chat_template: qwen3          # must match the model family!
+    field_messages: messages
+    message_property_mappings:
+      role: role
+      content: content
+
+# (c) the ShareGPT shape, migrated to the supported path
+datasets:
+  - path: ./data/my_sft_sharegpt.jsonl
+    ds_type: json
+    type: chat_template
+    chat_template: chatml
+    field_messages: conversations
+    message_property_mappings:
+      role: from
+      content: value
+```
+
+#### 4.5.4 The failure mode of choosing wrongly, ranked by how long it wastes
+
+| Rank | Wrong choice | Detectable at | Time lost |
+|---|---|---|---|
+| 1 | `completion` on chat data | Only by reading a generation | Hours to days |
+| 2 | `chat_template` with a template from the wrong model family | Only by inspecting tokens or a generation | Hours |
+| 3 | `alpaca` without `field_*` mappings on renamed columns | `axolotl preprocess --debug` shows empty targets | Minutes if you check, hours if you don't |
+| 4 | `pretrain` under `datasets:` | Immediately — config error | Seconds |
+| 5 | Pre-tokenised with labels not masked | Never automatically; loss is simply wrong | Days |
+
+> **Beyond the video:** the 30-second test that catches ranks 1–3 before you spend a GPU-second — `axolotl preprocess config.yml --debug --debug-num-examples 3`. It prints the decoded `input_ids` and, crucially, which positions carry a real label versus `-100`. If you cannot see the assistant's answer after the header *and* see the header itself masked out, stop and fix the `type:` before training. This is the single highest-ROI habit in the module.
+
+---
+
+### 4.6 `sample_packing` in depth — the speedup, and the bug it hides
+
+The instructor introduces it first as *"multipack"* [18:56]–[19:14] and then as sample packing [50:25]–[50:29]:
+
+> *"Multipack is a technique to pack multiple sequences into a single batch to increase the training throughput. The small sentences, we are going to combine into the single batch so that we can efficiently do the training."* [19:01]–[19:14]
+>
+> *"It eliminates the padding wastage — we don't need to do the padding. If we have lots of padding into the small sentences, if we are going to combine all the small sentences into the single sentence, then the padding wastage is going to be reduced."* [22:41]–[23:09]
+
+Both statements are correct. The second one is the *reason* the first one is true, and it is the sentence to remember.
+
+#### 4.6.1 The mechanism: what padding waste actually costs
+
+Take a dataset whose rows average 300 tokens with a p99 of 1024, and a batch of 8 sequences. Two collation strategies:
+
+```text
+NAIVE PADDING (pad to the longest member of the batch)
+row0  ████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   (600 tok, 424 pad)
+row1  ███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   (150 tok, 874 pad)
+row2  ████████████████░░░░░░░░░░░░░░░░░░░░░░░░   (800 tok, 224 pad)
+row3  ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   (300 tok, 724 pad)
+...
+total tokens computed = 8 × batch_max
+total tokens that carried a gradient ≈ 8 × mean
+efficiency = mean / batch_max       (here ≈ 300 / 850 ≈ 35%)
+
+SAMPLE PACKING (concatenate, no pad)
+[ row1 | row3 | row0 | row2 | row4 | row5 | row6 | row7 ][row8-part...]
+└──────────────── one sequence_len window ────────────────┘
+efficiency = (sum of real tokens) / sequence_len   (≈ 95–99%)
+cu_seqlens = [0, 150, 450, 1050, 1850, 2150, ...]   ← the boundary array
+```
+
+**Efficiency goes from ~35% to ~99%.** That is where the 2–6× claim comes from: Axolotl's own Colab notebook comments `sample_packing=True  # 2-6x increase in tokens per micro-batch`. The wide range is because the multiplier is `sequence_len / mean_row_tokens` — long-row datasets gain nothing, short-row datasets (classification, extraction, short Q&A) gain the most.
+
+#### 4.6.2 How the boundaries are enforced
+
+This is the part the video does not cover, and it is the part that fails silently. From Axolotl's own documentation:
+
+> "Because Flash Attention simply drops the attention mask, we do not need to construct a 4d attention mask. We only need to concatenate the sequences into a single batch and inform the kernel where each new sequence begins."
+
+So the mechanism is:
+
+| Backend | How boundaries are enforced |
+|---|---|
+| `flash_attention_2` / `_3` / `_4`, torch varlen | Nothing is masked. The sequences are concatenated into one row and **`cu_seqlens`** (cumulative sequence lengths) tells the varlen kernel where each document starts and ends. `position_ids` are reset per document |
+| `eager`, `sdpa` | **No packing support.** These require an explicit 4-D block-diagonal attention mask; Axolotl's docs say packing is possible only at "lower packing efficiency" via a 4-D mask |
+| `flex_attention` | Custom mask patterns; limited packing support |
+
+The docs are explicit that this support is **derived, not configurable**: Axolotl computes `attn_supports_packing` from the chosen `attn_implementation`, and it gates the multipack patches and `sample_packing_drop_attention_mask`. You cannot override it from YAML. **So: `sample_packing: true` with `attn_implementation: sdpa` is not a slow-but-correct configuration — it is the configuration where the correctness question is live.**
+
+#### 4.6.3 `pad_to_sequence_len` — what it does and does not do
+
+| | Packing OFF | Packing ON |
+|---|---|---|
+| `pad_to_sequence_len: false` | Batch padded to its longest member | N/A (nothing to pad) |
+| `pad_to_sequence_len: true` | Batch padded to `sequence_len` — wasteful, but every step has an identical tensor shape (good for `torch.compile` and for some generation paths) | Moot: the packed row *is* `sequence_len` long (or the last, partial row is padded) |
+| Default | `false` unless packing is on | **`true` by default when `sample_packing` is enabled** |
+
+The config reference states it directly: *"Defaults to True if `sample_packing` enabled."* There is also `eval_sample_packing`, with the docs' blunt guidance: *"Set to 'false' if getting errors during eval with sample_packing on."* A common production split is **pack the training set, do not pack the validation set** — packing changes the loss denominator, so an unpacked eval keeps your metric comparable across runs.
+
+#### 4.6.4 The attention-leakage bug — the failure mode that looks like success
+
+When the boundary metadata is wrong, the model attends across document boundaries. Two real, documented instances:
+
+| Bug | What happened | Signature |
+|---|---|---|
+| **Axolotl #3453** — "Sample packing causes loss 0 and ppl 1 for Qwen3.5" | With `sample_packing: true` + `flash_attention_2`, loss went to ~0 and perplexity to 1. Root cause: `cu_seqlens` never reached the model's gated-delta-rule kernel (`seq_idx` was hardcoded to `None` in the conv path), so **recurrent state leaked across packed sequence boundaries**; additionally `_is_packed_sequence()` misread Qwen3.5's 3-D `position_ids`. Swapping to `sdpa` "fixed" it — because SDPA does not pack, so the leak disappeared along with the speedup. Fixed upstream by a monkeypatch for Qwen3.5 (and earlier for Qwen3-Next) | Loss → ~0, ppl → 1: the model is reading the next document's tokens as its own continuation, which is trivially predictable |
+| **Axolotl #3608** — "Ring Attention with document packing produces different results" | With context parallelism + document packing, the default `batch_ring` produced **~1.84× higher loss** — attention crossing document boundaries; `varlen_llama3` ring attention matched the baseline. Suspected cause: document ids not rotated along the ring | Loss ~1.8× the unpacked baseline from step 1, never converging to it |
+
+**The general lesson, which is worth stating as a rule:**
+
+> **Packing correctness is a property of the model architecture × the attention backend × the Axolotl version — not of your config.** It is not something you can verify by reading your YAML.
+
+**Detection, in increasing order of effort:**
+
+1. **Loss → ~0 or ppl → 1 early in training.** That is leakage of a *predictable* continuation, not learning. Stop.
+2. **Loss ~1.5–2× the unpacked baseline, flat.** That is attention crossing boundaries and confusing the model. Stop.
+3. **The A/B test — the only definitive check.** Run 50–100 steps twice, identical config except `sample_packing`, with `max_steps` fixed. Losses should track within noise (packing changes the *loss denominator* slightly, so expect a small constant offset, not a shape change). If the packed run is dramatically lower or higher, do not ship it.
+
+```bash
+# The regression test that should be in your repo
+for pack in false true; do
+  sed "s/^sample_packing:.*/sample_packing: ${pack}/" sft_base.yaml > /tmp/sft_${pack}.yaml
+  axolotl train /tmp/sft_${pack}.yaml \
+    --max-steps 100 --output-dir /tmp/pack_${pack} 2>&1 | tee /tmp/log_${pack}.txt
+done
+python - <<'PY'
+import re
+for tag in ("false", "true"):
+    losses = [float(m) for m in re.findall(r"'loss': ([0-9.]+)", open(f"/tmp/log_{tag}.txt").read())]
+    print(f"packing={tag:5s} steps={len(losses):4d} first={losses[0]:.3f} last={losses[-1]:.3f} "
+          f"mean_last10={sum(losses[-10:])/10:.3f}")
+PY
+```
+
+If `packing=true` shows a *much* lower loss than `packing=false` at the same step count, you have leakage, not efficiency. (Some gap is expected — packing changes how many examples each step sees — so calibrate the expected gap once on a known-good model, then treat deviations from *that* as the alarm.)
+
+#### 4.6.5 When NOT to pack
+
+| Situation | Why packing is wrong or useless |
+|---|---|
+| Your rows are already near `sequence_len` | Efficiency is already ~90%+; the multiplier is ~1.0 and you take on the correctness risk for nothing |
+| You are on `eager`/`sdpa` | No varlen support; you get either an error or the 4-D-mask fallback at "lower packing efficiency" |
+| You use per-example weighting or a custom loss over sample boundaries | Packing destroys the sample boundary as a tensor concept |
+| You need interpretable per-example loss | A packed batch reports one averaged loss for N documents |
+| Evaluation / perplexity reporting | Packing changes the denominator; an unpacked eval keeps numbers comparable across runs |
+| Sequence-level RL / reward models that score per sample | The trainer sees one long sequence; per-sample credit assignment is ambiguous |
+| Very small debug runs | The docs recommend `sample_packing: False` and `eval_sample_packing: False` with tiny datasets "to avoid errors" |
+
+#### 4.6.6 The consequence nobody mentions: your LR is now wrong
+
+The upstream Axolotl Colab says it in a code comment, and it is the most under-appreciated line in the whole file:
+
+```python
+sample_packing=True,  # 2-6x increase in tokens per micro-batch
+# when using packing, use a slightly higher learning rate to account for fewer steps
+# alternatively, reduce the micro_batch_size + gradient_accumulation_steps to achieve
+# closer to the same number of steps/epoch
+```
+
+The mechanism: packing does not change `gradient_accumulation_steps`, so **the number of optimizer steps per epoch drops by the packing factor**. With 3× packing you take 3× fewer steps per epoch at the same LR schedule and the same `warmup_steps` — which means your warmup is now 3× longer as a fraction of the run, and your cosine decay finishes at a different point in the data. The video's run has `max_steps: 25` and `warmup_steps: 5` [cell 7]; turn packing on and those 5 warmup steps cover a very different slice of the data.
+
+> **Beyond the video:** the rigorous fix is not "raise the LR a bit" — it is to **recompute the schedule in token space**. Fix `tokens_per_step` and `total_tokens`, then derive `steps = total_tokens / tokens_per_step` and set `warmup_steps = 0.05 × steps`. Packing then becomes purely a throughput knob and never a hyperparameter change. The alternative — `micro_batch_size` and `gradient_accumulation_steps` unchanged with packing on — guarantees that two runs you are comparing differ in *two* variables.
+
+---
+
+### 4.7 The chat template — the leading cause of silently-garbage runs
+
+The video gets this right by accident, which is worth examining. It sets *"here is a chat template, Qwen — so we are using the Qwen model, so this chat template only we are using"* [51:19]–[51:24] and the notebook has:
+
+```python
+chat_template="qwen3",
+datasets=[{"path": ..., "type": "chat_template", "eot_tokens": ["<|im_end|>"]}],
+```
+
+**Model family (Qwen) → template name (`qwen3`) → terminator token (`<|im_end|>`): a matched triple.** Every part of the pipeline agrees. That is why his demo works.
+
+Break any one of the three and you get the failure class this section is about.
+
+#### 4.7.1 The three ways the triple breaks
+
+| Break | What you wrote | What happens | Symptom |
+|---|---|---|---|
+| **Wrong template name** | `chat_template: chatml` on a Llama-3 model | The model is trained on `<|im_start|>user…` when it was pretrained on `<|start_header_id|>user<|end_header_id|>` | Loss trains normally. Generations are fluent, ignore instructions, or bleed into the next turn |
+| **Wrong EOS/EOT** | `eot_tokens` omitted on a Qwen template | The `<|im_end|>` position is masked out of the loss, so the model never learns to stop | Generations run until `max_new_tokens`; the model produces a second, third, fourth turn |
+| **Template ≠ serving format** | Training with `qwen3`, serving with `tokenizer.apply_chat_template` on a tokenizer that has no template | Train/serve mismatch | Great in the eval notebook, garbage behind the API |
+
+#### 4.7.2 The inspection one-liners
+
+Do these three things once, before training:
+
+```python
+from transformers import AutoTokenizer
+
+tok = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-3B-Instruct")
+msgs = [{"role": "user", "content": "Explain QLoRA in simple words"}]
+
+# 1. What does the tokenizer's OWN template render?
+print(repr(tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)))
+
+# 2. What will Axolotl render with the template NAME you configured?
+#    (Axolotl's `qwen3` template is a named constant; compare it to (1).)
+#    If they differ, you have found your bug.
+
+# 3. Are the structural tokens single tokens?
+for t in ["<|im_end|>", "<|im_start|>"]:
+    ids = tok(t, add_special_tokens=False)["input_ids"]
+    print(t, "->", ids, "single token" if len(ids) == 1 else "*** MULTI-TOKEN: eot_tokens will misalign ***")
+```
+
+Step 3 is not paranoia. Axolotl's docs state that `eot_tokens` requires each entry to be **a single tokenizer token**, *"otherwise the tokenizer will split the token"* — and a split token means the mask offsets computed for the turn boundary are off by one or more positions. That is exactly the sort of off-by-one that produces a model which trains to a beautiful loss and behaves strangely.
+
+#### 4.7.3 The masking rules you are relying on
+
+Axolotl's conversation docs describe the current masking model, which is more granular than the SFT module's simple "mask the prompt":
+
+| Control | Default | Meaning |
+|---|---|---|
+| `roles_to_train` | `["assistant"]` | Which roles contribute to the loss. The modern expression of prompt masking |
+| `train_on_eos` | `turn` (options: `turn`, `last`, `all`) | Which end-of-sequence tokens to train on — `turn` trains the EOS that ends a turn |
+| `train_on_eot` | inherits `train_on_eos` | Same for explicit `eot_tokens` |
+| `train_on_inputs` | `false` | The coarse global switch; superseded in practice by `roles_to_train` |
+| `message_field_training` | — | Per-message explicit `train: true/false` |
+| Per-part `train` / `weight` | inherits the turn decision | For content broken into multiple parts |
+| Boundary rule | — | A token straddling two parts with different flags is **conservatively masked** (not trained), and Axolotl logs a warning when it detects this |
+
+The last row is the subtle one: **whitespace at the boundary between the prompt and the answer can eat the first token of the answer.** If your model consistently misses the first word of its response, this is a candidate cause.
+
+#### 4.7.4 The 60-second diagnosis
+
+```bash
+# Print the tokenised dataset with labels, then answer four questions
+axolotl preprocess sft_pharma.yaml --debug --debug-num-examples 2
+```
+
+1. Do I see the model's **own** turn markers (`<|im_start|>` / `<|start_header_id|>` / `[INST]`) — not invented ones?
+2. Is the **user's text masked** (label `-100`) and the **assistant's text labelled**?
+3. Is the **final EOS/EOT position labelled** (not `-100`)? If it is masked, the model cannot learn to stop.
+4. Does the **last labelled token** look like the *end* of the assistant's answer, or is it truncated mid-sentence by `sequence_len`?
+
+Any "no" is your bug, and it is a config change, not a hyperparameter search.
+
+> **Beyond the video:** the strongest defence is to *never let the training template be a name you typed*. Fetch it from the tokenizer itself (`tokenizer_default`), so that the template and the model can never drift apart: `chat_template: tokenizer_default`. You lose the ability to hand-tune the format; you gain the guarantee that train and serve agree. When the tokenizer has no template at all (the FAQ documents the `chat_template is tokenizer_default but tokenizer's chat_template is null` error), supply one explicitly in the tokenizer config rather than in the training YAML — otherwise the serving stack will not have it either.
+
+---
+
+### 4.8 Training methods and topologies — the configs side by side
+
+#### 4.8.1 LoRA vs QLoRA vs full fine-tune: a three-line diff
+
+```yaml
+# ─────────────── config A: LoRA (bf16 base) ───────────────
+base_model: meta-llama/Llama-2-7b-hf        # repo: base_sft_lora.yaml
+adapter: lora
+lora_r: 16
+lora_alpha: 32
+lora_dropout: 0.05
+lora_target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
+fp16: true
+gradient_checkpointing: true
+
+# ─────────────── config B: QLoRA (4-bit base) ─────────────
+base_model: Qwen/Qwen2.5-7B-Instruct         # repo: custom-config.yaml
+load_in_4bit: true                           # ← the difference
+adapter: qlora                               # ← and this
+bnb_4bit_quant_type: nf4                     # repo: qlora.yaml
+bnb_4bit_compute_dtype: float16              # repo: qlora.yaml
+optimizer: paged_adamw_8bit                  # ← and this
+lora_r: 16
+lora_alpha: 32
+
+# ─────────────── config C: full fine-tune ─────────────────
+base_model: meta-llama/Llama-2-7b-hf
+# adapter:  (omitted entirely)
+# load_in_4bit:  (omitted entirely)
+learning_rate: 2e-5                          # ← 10× lower than LoRA
+optimizer: adamw_torch_fused
+deepspeed: deepspeed_configs/zero3.json      # ← you will need this
+```
+
+| | Full FT | LoRA (bf16) | QLoRA (4-bit) |
+|---|---|---|---|
+| Trainable params (7B) | 7 B (100%) | ~20–160 M (0.3–2.3%) | ~20–160 M |
+| Frozen base weights | 14 GB | 14 GB | **3.5 GB** |
+| Gradients | 14 GB | < 0.4 GB | < 0.4 GB |
+| Optimizer state (Adam) | 84 GB | < 2 GB | **< 1 GB (8-bit, pageable)** |
+| Peak VRAM, 7B, bs=1 seq=2048 | **~110–140 GB** | ~22–28 GB | **~8–12 GB** |
+| Minimum viable hardware | 2×A100-80GB | 1×A100-40GB / 1×L40S | **1×T4-16GB / 1×RTX 4090** |
+| LR | 1e-5…5e-5 | 1e-4…3e-4 | 1e-4…3e-4 |
+| Quality ceiling | Highest | Within ~1–2% for style/format SFT | Slightly below LoRA; the gap widens on knowledge-heavy tasks |
+| Artefact | 14 GB | 2.7 MB – 200 MB | 2.7 MB – 200 MB |
+| Mergeable | N/A | Yes | Yes (`merge-lora`, `--dequant` if needed) |
+| Right when | New domain knowledge, big budget | The default for most production SFT | One GPU, tight VRAM, fast iteration |
+
+The rule that shortcuts the table: **quantised base ⇒ frozen base ⇒ adapter-only.** LoRA vs QLoRA is a memory/quality trade; both are adapters and both merge back identically. Full FT is a different regime: 10× the memory, a 10× lower LR, and no adapter to roll back independently.
+
+> **Beyond the video:** the production argument for adapters is not VRAM, it is **rollback**. An adapter is a 50 MB artefact you can version, A/B, hot-swap per request, and revert in seconds; a full fine-tune is a 14 GB model you must redeploy. Even when you *can* afford full FT, ship the adapter unless a measured quality gap justifies the operational cost.
+
+#### 4.8.2 Preference tuning — the `rl:` block
+
+```yaml
+# Current Axolotl: one key selects the RL objective
+rl: dpo                              # dpo | orpo | kto | simpo | grpo | gdpo | ebft
+rl_beta: 0.1                         # ← the beta (the old `dpo_beta` is deprecated)
+dpo_loss_type: [ipo]                 # IPO is a loss type now, not a separate `rl: ipo`
+datasets:
+  - path: argilla/ultrafeedback-binarized-preferences
+    split: train
+    type: chat_template.default      # ← current DPO dataset type
+    field_messages: "messages"
+    field_chosen: "chosen"
+    field_rejected: "rejected"
+    message_property_mappings: {role: role, content: content}
+```
+
+```yaml
+# The repo's dpo(SFT → DPO).yaml — written in a dialect that no longer validates
+training_type: dpo                   # ← not an Axolotl key (see §5.5)
+datasets:
+  - path: argilla/ultrafeedback-binarized     # ← superseded dataset id
+    type: preference                          # ← not a documented type today
+dpo_beta: 0.1                        # ← deprecated, renamed to rl_beta
+```
+
+| Method | `rl:` value | Reference model | Data shape | VRAM vs DPO |
+|---|---|---|---|---|
+| DPO | `dpo` | **Yes** (a frozen copy of the SFT model) | paired (`chosen`/`rejected`) | 1× |
+| IPO | `dpo` + `dpo_loss_type: [ipo]` | Yes | paired | 1× |
+| ORPO | `orpo` | **No** | paired | ~0.5× |
+| SimPO / CPO | `simpo` | No | paired | ~0.5× |
+| KTO | `kto` | Yes | unpaired + binary label | 1× (+ `remove_unused_columns: false`) |
+| GRPO | `grpo` | Yes + an optional vLLM server | **prompts** (online reward) | ≥2× (generation dominates) |
+| GDPO | `gdpo` | Yes | paired, multi-objective | 1× |
+
+The reference model is the memory story: DPO and KTO hold a second frozen copy of the policy (or score against cached reference log-probs via `precompute_ref_log_probs`), which is why ORPO and SimPO are advertised as the cheap options.
+
+#### 4.8.3 The taxonomy correction
+
+> **Correction:** at [29:47]–[30:27] the instructor classifies the post-training methods: *"KTO and IPO is an RL based method… this GRPO is also RL based method… this DPO is not an RL based method and this ORPO is also not an RL based method. So this DPO is a simple supervised method and this ORPO is also a simple supervised method."*
+>
+> **The DPO half of that is wrong, and it is wrong in a way that costs you money and quality.** DPO (Rafailov et al., 2023) is derived by *analytically solving* the KL-constrained RLHF objective: the optimal policy under a reward model with a KL penalty to a reference model has a closed form, and DPO reparameterises that closed form so the reward is implicit in the log-ratio `log π_θ(y|x) − log π_ref(y|x)`. It is therefore an **offline preference-optimisation method rooted in the RLHF objective** — an implicit-reward method. It is not supervised in the SFT sense, and treating it as "supervised" leads to three concrete mistakes:
+>
+> 1. **Forgetting the reference model's memory.** DPO needs `π_ref` — a second copy of the model, or cached reference log-probs. Budgeting it as "another SFT run" underestimates VRAM by ~1.5–2×.
+> 2. **Ignoring beta.** `rl_beta` is the KL-penalty coefficient from the derivation. `beta → 0` ignores the reference and over-optimises; `beta` large keeps you close to SFT. It is not a learning rate and it has no analogue in supervised training.
+> 3. **Expecting it to behave like SFT.** DPO on a raw base model with no competent SFT underneath is a known way to burn a week (CS-14).
+>
+> ORPO (Hong et al., 2024) is genuinely *not* an RL method in the usual sense — it adds an odds-ratio preference term to the SFT loss and needs no reference model — so the instructor is right about ORPO and wrong about DPO. The practical upshot is in the table above: **ORPO ≈ half the VRAM of DPO**, and that is the only reason to care about the taxonomy.
+
+#### 4.8.4 Multi-GPU: DeepSpeed ZeRO stages vs FSDP, with the memory arithmetic
+
+Axolotl's docs are explicit that these are **mutually exclusive**: you choose DeepSpeed, FSDP (recommended), or DDP, and you cannot combine strategies. Sequence parallelism and FSDP+QLoRA are the two features that can be layered on top.
+
+**The memory model.** For full fine-tuning with mixed precision and Adam, per-parameter state costs roughly:
+
+```
+2 bytes  bf16/fp16 weights
+2 bytes  bf16/fp16 gradients
+4 bytes  fp32 master weights
+4 bytes  Adam first moment (m)
+4 bytes  Adam second moment (v)
+─────────────────────────────────
+16 bytes per parameter  →  7 B model ≈ 112 GB   →  does not fit one 80 GB GPU
+```
+
+What each strategy shards (`P` = parameters, `N` = number of GPUs):
+
+| Strategy | Weights | Gradients | Optimizer state | Per-GPU total (7B, N=8) |
+|---|---|---|---|---|
+| **DDP** | full (2P) | full (2P) | full (12P) | `16P` = **112 GB** → does not fit |
+| **ZeRO-1** | full (2P) | full (2P) | `12P/N` | `4P + 1.5P` = **38.5 GB** |
+| **ZeRO-2** | full (2P) | `2P/N` | `12P/N` | `2P + 0.25P + 1.5P` = **26.3 GB** |
+| **ZeRO-3** | `2P/N` | `2P/N` | `12P/N` | `16P/N` = **14 GB** |
+| **FSDP2** | sharded per layer | sharded | sharded | ≈ ZeRO-3, **~14 GB** |
+| plus activations + workspace | — | — | — | **+ 4–12 GB** with gradient checkpointing |
+
+*(These are estimates from the standard 16-bytes-per-parameter model; real figures vary with attention backend, sequence length, and whether activation offloading is on.)*
+
+**Choosing, with the tradeoffs stated:**
+
+| Situation | Choose | Why |
+|---|---|---|
+| 1 GPU, model fits | **DDP** (nothing configured) | Zero communication overhead; fastest |
+| Multi-GPU, memory-tight, want the fastest path | **FSDP2** — Axolotl's recommendation | Shards per layer, overlaps communication with compute |
+| Multi-GPU, DeepSpeed ecosystem / existing ZeRO JSONs | **ZeRO-2** first, then 3 | Docs' guidance: pick the setup that offloads the least while still fitting; step 1 → 2 → 3 |
+| You are OOM at ZeRO-2 and cannot reduce batch | **ZeRO-3** | Shards weights too; costs the most communication |
+| Host RAM is plentiful, GPU VRAM is not | **ZeRO-3 + CPU offload** | Moves optimizer state (and optionally params) to host RAM |
+| One sequence is too long for one GPU | **Sequence parallelism** | Ring-attention style split; stacks on DDP/DeepSpeed/FSDP |
+| QLoRA + multi-GPU | **FSDP only** | QLoRA + FSDP is a documented supported combination; QLoRA + ZeRO-3 is not the recommended path |
+
+**FSDP2 config, corrected and annotated:**
+
+```yaml
+fsdp_version: 2                        # default; FSDP1 is removed and `1` is a hard error
+fsdp_config:
+  offload_params: true                 # move params/grads to CPU RAM when idle (slower, smaller)
+  cpu_ram_efficient_loading: true      # rank 0 loads the weights, then broadcasts — saves host RAM
+  auto_wrap_policy: TRANSFORMER_BASED_WRAP
+  transformer_layer_cls_to_wrap: Qwen2DecoderLayer   # inspect _no_split_modules of the model
+  state_dict_type: FULL_STATE_DICT     # or SHARDED_STATE_DICT for huge models
+  reshard_after_forward: true          # free the gathered layer after its forward pass
+  activation_checkpointing: true       # FSDP-native activation checkpointing
+```
+
+**DeepSpeed config, corrected:**
+
+```yaml
+deepspeed: deepspeed_configs/zero2.json     # fetched with `axolotl fetch deepspeed_configs`
+# or inline, for a self-contained artefact:
+deepspeed:
+  zero_optimization:
+    stage: 2
+  bf16:
+    enabled: true
+```
+
+> **Beyond the video:** three operational facts that decide whether a multi-GPU run succeeds. (1) **DeepSpeed expects to be launched properly** — the FAQ lists `mpi4py` import errors and `DummyOptim` on a single GPU as symptoms of using a `deepspeed:` config without a distributed launcher; on 1 GPU, remove the key. (2) **`exitcode: -9` is host RAM exhaustion, not VRAM** — `cpu_ram_efficient_loading` and offload increase host RAM pressure; a ZeRO-3 + offload job can need 100 GB+ of system RAM. (3) **Sharded checkpoints must be recombined** — `axolotl merge-sharded-fsdp-weights` exists for exactly this; a sharded checkpoint is not directly servable.
+
+---
+
+## 5. The End-to-End Pipeline
+
+### 5.1 Stage 0 — environment
+
+The video's exact sequence [38:29]–[40:16], reconstructed from the notebook, with commentary:
+
+```bash
+# 1. Scrub the environment. The instructor's reason [38:46]-[38:56]:
+#    "this Axolotl is very sensitive for all this module — I don't want any conflict"
+pip uninstall -y axolotl peft transformers accelerate datasets trl optimum cut-cross-entropy flash-attn
+
+# 2. Install Axolotl with the flash-attn extra, from a pinned source
+pip install --no-build-isolation "axolotl[flash-attn]>=0.9.1"
+
+# 3. Install Apple's Cut Cross Entropy at a pinned commit (memory-efficient loss)
+pip install "cut-cross-entropy[transformers] @ git+https://github.com/axolotl-ai-cloud/ml-cross-entropy.git@318b7e2"
+```
+
+```python
+# 4. Telemetry off  [40:42]-[40:51] "if I don't want to track anything... for disabling the telemetry"
+import os
+os.environ["AXOLOTL_DO_NOT_TRACK"] = "1"
+
+# 5. CUDA allocator: reduce memory fragmentation  [41:01]-[41:13]
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+
+# 6. The same allocator setting via Axolotl's helper (colab_axolotl_example.py)
+from axolotl.utils import set_pytorch_cuda_alloc_conf
+set_pytorch_cuda_alloc_conf()
+```
+
+| Command | What it does | Current status |
+|---|---|---|
+| `pip uninstall -y axolotl peft transformers …` | Guarantees a clean dependency graph | Still good practice in a Colab; unnecessary in the Docker image |
+| `pip install --no-build-isolation axolotl[flash-attn]>=0.9.1` | Installs Axolotl + the FA2 CUDA wheel; `--no-build-isolation` reuses the existing torch instead of downloading a fresh one into an isolated build env | `--no-build-isolation` is still required with flash-attn. The version floor is stale — current releases are 0.1x |
+| `pip install git+https://github.com/OpenAccess-AI-Collective/axolotl.git` | The video's cell 1 uses the *from-source* URL | The canonical repo is now **`axolotl-ai-cloud/axolotl`**. The old org URL redirects, but pin the new one |
+| Cut Cross Entropy from a pinned commit | Avoids materialising the `[bs, seq, vocab]` logits tensor | Still a separate install; exposed to training via the plugin path |
+| Restart the session | The instructor insists twice [41:33]–[41:55], [44:00]–[44:11]: *"please restart the session after installing all the required library, otherwise you might get issues"* | Correct — `flash-attn` and `bitsandbytes` link against the installed torch |
+
+> **Correction:** `pip install --no-build-isolation git+https://github.com/OpenAccess-AI-Collective/axolotl.git` [39:09]–[39:15] targets the **old organisation**. The project now lives at **`axolotl-ai-cloud/axolotl`**; the OpenAccess-AI-Collective URL redirects for now but is not the source of truth, and the current installation guidance is `pip install axolotl[flash-attn,deepspeed]` from PyPI or a **prebuilt Docker image** (`axolotlai/axolotl:main-latest`). The instructor demonstrates the Docker path himself in the companion `axolotl-docker-setup-steps.md`, and for reproducibility that is the better default — a from-source install at an unpinned commit is the opposite of the reproducibility the module is about.
+
+**Docker, which is what the video defers to a later video but whose steps are in the repo:**
+
+```bash
+# Windows host: enter WSL first, then verify GPU visibility
+wsl
+nvidia-smi                 # GPU visible inside WSL = OK
+docker -v && docker ps     # Docker daemon reachable = OK
+
+# Start the official image with the host repo bind-mounted
+docker run --gpus all -it --rm \
+  -v $(pwd):/workspace \
+  axolotlai/axolotl:main-latest
+
+# → root@container-id:/workspace/axolotl#   (expected prompt)
+
+# Explore the source the way the instructor does in the video
+cd src/axolotl && ls && sed -n '1,200p' train.py      # mirrors [5:36]-[6:20]
+cd cli && ls && sed -n '1,200p' main.py                # mirrors [5:46]-[5:59]
+
+# Fetch a known-good config and run the smallest real training job
+axolotl fetch examples
+axolotl train examples/llama-3/lora-1b.yml             # ~15–30 min, GPU dependent
+```
+
+Pinning note: `axolotlai/axolotl:main-latest` is a *moving* tag. For reproducibility use an immutable tag or image digest.
+
+### 5.2 The pipeline, end to end
+
+```mermaid
+flowchart TD
+    A["config.yml<br/>+ CLI flags"] --> B["load_cfg()<br/>validate + default + strip deprecated"]
+    B --> C{"dataset type:"}
+    C -->|alpaca| D1["field mapping<br/>instruction/input/output"]
+    C -->|chat_template| D2["render via chat template"]
+    C -->|completion| D3["raw text, no template"]
+    D1 --> E["tokenize"]
+    D2 --> E
+    D3 --> E
+    E --> F["mask: prompt spans → -100<br/>roles_to_train / train_on_inputs"]
+    F --> G{"sample_packing?"}
+    G -->|yes| H["concatenate + build cu_seqlens<br/>+ per-doc position_ids"]
+    G -->|no| I["pad batch"]
+    H --> J["cache → dataset_prepared_path"]
+    I --> J
+    J --> K["load base_model<br/>quantize if load_in_4bit"]
+    K --> L["attach adapter<br/>LoraConfig(r, alpha, dropout, targets)"]
+    L --> M["SFTTrainer / TRL<br/>+ DeepSpeed | FSDP | DDP"]
+    M --> N["train loop:<br/>fwd → masked CE → bwd → clip → step"]
+    N --> O["log: logging_steps → W&B / stdout"]
+    N --> P["checkpoint: save_steps | saves_per_epoch"]
+    P --> Q["output_dir/checkpoint-N/<br/>adapter_model.safetensors + resolved config"]
+    Q --> R["merge-lora → merged/<br/>or serve the adapter directly"]
+```
+
+| Stage | Input | Operation | Output | Failure mode |
+|---|---|---|---|---|
+| 1. Parse | `config.yml` | Schema validation, defaulting, deprecation stripping | `cfg` (the resolved config) | Unknown key silently `None`; deprecated key silently dropped |
+| 2. Load data | `datasets[].path` | `datasets.load_dataset` from hub/local/cloud | Raw rows | Auth error; a *changed* upstream dataset |
+| 3. Normalise | Raw rows | Prompt strategy selected by `type:`; field mapping; `apply_chat_template` | `(prompt, response)` strings | **Wrong `type:` → empty or misaligned targets** |
+| 4. Tokenise | Strings | `tokenizer(...)`, EOS/EOT handling | `input_ids` | `eot_tokens` not single tokens; truncation mid-answer |
+| 5. Mask | `input_ids` | `roles_to_train` / `train_on_inputs` → labels `-100` | `labels` | Boundary whitespace eating the first answer token |
+| 6. Pack (opt.) | `input_ids` | Concatenate, build `cu_seqlens` + `position_ids` | Packed rows | **Cross-document attention if the backend ignores them** |
+| 7. Cache | Prepared rows | Write Arrow to `dataset_prepared_path` | Reusable cache | Stale cache reused after a template change |
+| 8. Model | `base_model` | `from_pretrained`, quantise, set `attn_implementation` | Model in VRAM | `flash_attention` flag stripped → SDPA silently |
+| 9. Adapter | Model | `get_peft_model(LoraConfig(...))` | Trainable adapter | `adapter: qlora` without `load_in_4bit` → error |
+| 10. Train | Batches | Forward → masked CE → backward → clip → step | Gradients, checkpoints | Loss NaN, spikes, OOM, no learning |
+| 11. Log | Metrics | `logging_steps`, `wandb_*` | Curves | Logging too sparse to catch a spike |
+| 12. Save | Model + adapter | Checkpoint to `output_dir` | Adapter + resolved config | Disk full; checkpoints silently overwriting |
+| 13. Merge | Adapter + base | `axolotl merge-lora` | `merged/` model | Quantised-base merge needs `--dequant` |
+
+### 5.3 The demo, step by step, with the numbers
+
+| Step | Command / action | Observed result |
+|---|---|---|
+| 1 | Runtime → Change runtime type → T4 GPU; save; connect | Free tier, T4 16 GB [38:00]–[38:26] |
+| 2 | `pip uninstall` the eight conflicting packages | Clean slate [38:35]–[38:40] |
+| 3 | `pip install --no-build-isolation axolotl[flash-attn]` and cut-cross-entropy | ~5–10 min |
+| 4 | **Restart the session** | Mandatory [41:33]–[41:41] |
+| 5 | `dataset_id = "winglian/pirate-ultrachat-10k"` | The demo dataset [cell 2] |
+| 6 | `os.environ["AXOLOTL_DO_NOT_TRACK"] = "1"`; `PYTORCH_CUDA_ALLOC_CONF` | Telemetry off; allocator tuned [cell 4–5] |
+| 7 | Build `DictDefault(...)`; `cfg = load_cfg(config)` | Validation; HF token grant prompt [44:35]–[44:51] |
+| 8 | `dataset_meta = load_datasets(cfg=cfg)` | Returns `input_ids`, `labels`, `attention_mask`; **1,105 total steps** [47:28]–[47:43] |
+| 9 | `cfg.max_steps = 25; model, tokenizer, trainer = train(...)` | First attempt fails: `ValueError` from the dataloader [51:44]–[52:03] |
+| 10 | Fix: `dataloader_num_workers: 2` (or delete `dataloader_prefetch_factor`) | Training completes 25 steps in ~5–7 min [53:37]–[53:40] |
+| 11 | `tokenizer.apply_chat_template(...)` + `model.generate(..., streamer=TextStreamer(...))` | First output is raw token IDs; converted to text [55:06]–[55:32] |
+| 12 | `ls -lh ./outputs/qwen-sft-pirate-rrr` | `adapter_model.safetensors` + tokenizer files + optimizer state [55:47]–[56:30] |
+
+The instructor's summary of the artefact is correct and worth keeping: *"this is the main file, the **save tensor file** — this is your LoRA adapter, and you can merge it with your existing model as well… so your model will become a LoRA-enabled model."* [56:21]–[56:30] That `adapter_model.safetensors` is the deliverable; the base model is a dependency, not an artefact.
+
+### 5.4 What the notebook does *not* do
+
+Worth stating explicitly, because it is what separates a demo from a run:
+
+| Missing | Consequence | Add it |
+|---|---|---|
+| `val_set_size` | Loss is the only signal; no held-out measurement [47:35]–[47:38] | `val_set_size: 0.05` + `eval_steps` |
+| `wandb_*` | Metrics exist only in Colab scrollback | `wandb_project`, `wandb_name` |
+| `seed` | Run-to-run variance is unmeasured | `seed: 42` |
+| A dataset revision pin | `winglian/pirate-ultrachat-10k` can change | `revision: <sha>` |
+| A saved config | The experiment exists only as a notebook cell | Write the YAML next to the run |
+| An eval | "It answered in pirate" is the entire evaluation | `axolotl lm-eval` + a task-specific suite (§12) |
+
+---
+
+### 5.5 The repo's five configs, annotated — and which parts are now stale
+
+These files are the course's own artefacts. Annotating them is exactly the exercise §1.3 asks you to do on any config you inherit.
+
+#### 5.5.1 `axolotal-config/custom-config.yaml` — the working single-GPU SFT config
+
+```yaml
+base_model: Qwen/Qwen2.5-7B-Instruct      # [49:18] "the model name is Qwen 2.5 7B instruct"
+tokenizer_type: AutoTokenizer             # optional; the default
+
+datasets:
+  - path: timdettmers/openassistant-guanaco
+    type: completion                        # ← raw-text path (see the note below)
+    field: text                             # correct key for `completion`: column override
+
+load_in_4bit: true                          # [49:35] QLoRA
+adapter: qlora                              # [49:37]
+
+sequence_len: 2048                          # [50:33]
+micro_batch_size: 1                         # [50:33]
+gradient_accumulation_steps: 8              # [50:36]
+num_epochs: 1                               # [51:02]
+
+learning_rate: 2e-4                         # [50:33]
+optimizer: paged_adamw_8bit                 # [50:48]
+lr_scheduler: cosine                        # [50:58]
+
+fp16: true                                  # [50:58] correct on a T4
+gradient_checkpointing: true                # [50:36]
+
+output_dir: /workspace/my_runs/output_sft   # [51:13]
+logging_steps: 10                           # [51:11]
+save_steps: 500
+```
+
+Line-by-line verdict:
+
+| Line | Verdict |
+|---|---|
+| `base_model`, `tokenizer_type` | Fine |
+| `type: completion` + `field: text` | **Verdict: valid but suboptimal.** `field:` is the correct key for completion datasets (it overrides the default `text` column). But `timdettmers/openassistant-guanaco` is a *conversation* dataset whose rows are pre-formatted chat text — treating it as `completion` trains on the whole string with no role masking. It works; a `chat_template` config on the same data is strictly better (see `base_sft_lora.yaml` below, which uses `chat_template` on the same dataset) |
+| `load_in_4bit` + `adapter: qlora` | Correct pair |
+| Missing `bnb_4bit_quant_type` / `bnb_4bit_compute_dtype` | Relies on defaults (`nf4`); `qlora.yaml` supplies them explicitly, which is better |
+| `fp16: true` | **Correct for a T4** (no bf16). On an A100/H100 this is the wrong choice — use `bf16: true` |
+| Missing `sample_packing` | Off. Acceptable; costs throughput on short-row data |
+| Missing `val_set_size` | **No evaluation at all.** The single biggest gap |
+| Missing `chat_template` | Not needed for `completion` — but this is what makes the config model-agnostic in a dangerous way (§4.7) |
+| `save_steps: 500` with `num_epochs: 1` | Fine for guanaco (9,846 rows ≈ 1,230 steps); you get 2 checkpoints |
+
+#### 5.5.2 `axolotal-config/qlora.yaml` — a fragment, not a config
+
+```yaml
+# qlora.yaml (changes only)
+load_in_4bit: true
+bnb_4bit_compute_dtype: float16   # T4-friendly; use bfloat16 on Ampere+
+bnb_4bit_quant_type: nf4          # the QLoRA datatype
+adapter: qlora
+optimizer: paged_adamw_8bit
+```
+
+The header comment is the important part: **this is a diff, not a runnable config.** Axolotl has no merge semantics for fragments — there is no `--base-config` flag that overlays one YAML on another. If you want composition, generate the merged file (Python or a template engine) and keep *that* as the artefact. Shipping a fragment in a repo of "configs" is how a teammate runs a half-config with every important key missing.
+
+#### 5.5.3 `axolotal-config/base_sft_lora.yaml` — clean, with one phantom key
+
+```yaml
+base_model: meta-llama/Llama-2-7b-hf
+
+# ===== Training type =====
+training_type: sft                 # ← NOT an Axolotl key
+```
+
+**`training_type` does not exist in Axolotl's config schema.** The framework selects the training method by *absence*: SFT is the default, `rl: dpo|orpo|kto|simpo|grpo|gdpo|ebft` selects RL, `reward_model: true` / `process_reward_model: true` select reward modelling, and `pretraining_dataset:` selects continued pretraining. Because `DictDefault` returns `None` for unknown keys, this line is silently ignored (and would **fail** under `strict: true`). It is harmless here — the file is an SFT config and SFT is the default — but it is exactly the class of config rot this module warns about. **Delete it.**
+
+The rest of the file is a good, readable SFT template:
+
+```yaml
+adapter: lora
+lora_r: 16
+lora_alpha: 32                     # 2× rank — the standard ratio
+lora_dropout: 0.05
+lora_target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
+
+fp16: true
+bf16: false                        # explicit; note the current default is `auto`
+gradient_checkpointing: true
+
+datasets:
+  - path: timdettmers/openassistant-guanaco
+    type: chat_template            # ← better than custom-config.yaml's `type: completion`
+
+sequence_len: 2048
+micro_batch_size: 1
+gradient_accumulation_steps: 8
+
+optimizer: adamw_torch             # valid; the current default is adamw_torch_fused
+learning_rate: 2e-4
+
+output_dir: ./outputs/sft-lora
+```
+
+Three observations: (1) `type: chat_template` with no `chat_template:` key means Axolotl uses the model's own tokenizer template — `tokenizer_default` — which is the safest possible choice (§4.7.4); (2) `bf16: false` with `fp16: true` is correct on Turing but wrong on Ampere+, and the current default for both is `auto`; (3) there is no `lr_scheduler` line, so it takes the default `cosine` — fine, but implicit.
+
+#### 5.5.4 `axolotal-config/dpo(SFT → DPO).yaml` — two dead keys
+
+```yaml
+# dpo.yaml (changes only)
+training_type: dpo                    # ← not a key (same issue as 5.5.3)
+datasets:
+  - path: argilla/ultrafeedback-binarized        # ← superseded dataset id
+    type: preference                             # ← not a documented type today
+dpo_beta: 0.1                         # ← DEPRECATED → rl_beta
+```
+
+What it should say today:
+
+```yaml
+rl: dpo                               # selects the DPO trainer
+rl_beta: 0.1                          # the KL/regularisation coefficient
+datasets:
+  - path: argilla/ultrafeedback-binarized-preferences
+    split: train
+    type: chat_template.default       # current DPO dataset type
+    field_messages: "messages"
+    field_chosen: "chosen"
+    field_rejected: "rejected"
+    message_property_mappings:
+      role: role
+      content: content
+```
+
+#### 5.5.5 `axolotal-config/fsdp(Single GPU → Multi-GPU).yaml` — the FSDP1 dialect
+
+Covered in full in §5.6.
+
+#### 5.5.6 The staleness summary
+
+| Key in the repo's files | Status today | Replacement |
+|---|---|---|
+| `training_type:` (any value) | Not a key | Omit; `rl:` / `reward_model:` / `pretraining_dataset:` select the method |
+| `type: preference` | Not a documented dataset type | `chat_template.default`, `chatml.*`, `llama3.*`, or `user_defined.default` |
+| `dpo_beta` | Deprecated (still works) | `rl_beta` |
+| `argilla/ultrafeedback-binarized` | Superseded id | `argilla/ultrafeedback-binarized-preferences` |
+| `flash_attention` / `xformers_attention` | Deprecated booleans | `attn_implementation: flash_attention_2` / `xformers` |
+| `distributed_type: fsdp` | An Accelerate key, not Axolotl | `fsdp_version: 2` + `fsdp_config:` |
+| bare `fsdp:` list | **Rejected** | `fsdp_config:` |
+| `fsdp.sync_module_states`, `fsdp.use_orig_params`, `fsdp.backward_prefetch` | Removed (FSDP2) | No replacement; FSDP2 handles this |
+| `fsdp.sharding_strategy: FULL_SHARD` | FSDP1 name | `reshard_after_forward: true` |
+| `fsdp.auto_wrap_policy: transformer` | FSDP1 name | `auto_wrap_policy: TRANSFORMER_BASED_WRAP` |
+| `fsdp.state_dict_type: full` | FSDP1 name | `state_dict_type: FULL_STATE_DICT` |
+
+> **Beyond the video:** config rot is not an Axolotl problem, it is the cost of config-as-interface, and the mitigation is procedural: (1) set `strict: true` in CI so unknown keys fail the build; (2) run one CI job that trains 10 steps on a tiny model with every config in the repo on every release upgrade — a "config smoke test"; (3) treat a `DeprecationWarning` in the training log as a failing test, not a note. All three are cheap, and together they catch every row in the table above at the moment it becomes a problem rather than six months later.
+
+### 5.6 The FSDP config, corrected
+
+```yaml
+# axolotal-config/fsdp(Single GPU → Multi-GPU).yaml — AS SHIPPED (will not run today)
+distributed_type: fsdp                  # Accelerate key, not an Axolotl key
+fsdp:                                   # the bare `fsdp:` list is REJECTED in current Axolotl
+  sharding_strategy: FULL_SHARD         # FSDP1 → replaced by reshard_after_forward
+  auto_wrap_policy: transformer         # → TRANSFORMER_BASED_WRAP
+  state_dict_type: full                 # → FULL_STATE_DICT
+  sync_module_states: true              # removed in FSDP2
+gradient_checkpointing: true
+```
+
+```yaml
+# The corrected FSDP2 version
+fsdp_version: 2                         # default; `1` is a hard error now
+fsdp_config:
+  offload_params: true                  # CPU-offload params/grads when idle (slower, smaller)
+  cpu_ram_efficient_loading: true       # rank-0 load + broadcast: saves host RAM
+  auto_wrap_policy: TRANSFORMER_BASED_WRAP
+  transformer_layer_cls_to_wrap: Qwen2DecoderLayer
+  reshard_after_forward: true           # ≈ FSDP1's FULL_SHARD
+  state_dict_type: FULL_STATE_DICT      # or SHARDED_STATE_DICT for very large models
+  activation_checkpointing: true
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+```
+
+```bash
+# Launch it (the launcher, not the YAML, decides the process count)
+axolotl train sft_test.yaml --launcher torchrun -- --nproc_per_node=4 --nnodes=1
+
+# Or via accelerate
+axolotl train sft_test.yaml --launcher accelerate -- \
+  --config_file=accelerate_fsdp.yaml --num_processes=4
+
+# Recombine sharded checkpoints before serving
+axolotl merge-sharded-fsdp-weights <sharded_checkpoint_dir>
+```
+
+**How to find `transformer_layer_cls_to_wrap` for your model** — the FAQ's method, which is the only reliable one:
+
+```python
+from transformers import AutoConfig
+cfg = AutoConfig.from_pretrained("Qwen/Qwen2.5-7B-Instruct")
+print(cfg.architectures)              # ['Qwen2ForCausalLM']  → inspect that modeling file
+# then look for the _no_split_modules attribute in the modeling source:
+# class Qwen2DecoderLayer(nn.Module):
+#     _no_split_modules = ["Qwen2DecoderLayer"]
+```
+
+> **Beyond the video:** `reshard_after_forward: true` is the FSDP2 spelling of `FULL_SHARD`, and it is the *safest* default for memory but the *slowest* for communication — it frees each gathered layer immediately after its forward pass, so the backward pass must re-gather it. Setting it to `false` keeps parameters resident (like ZeRO-2 for weights) and trades memory for speed. The correct debugging sequence when a multi-GPU run OOMs is: `reshard_after_forward: true` → lower `micro_batch_size` → `offload_params: true` → lower `sequence_len`. Adding GPUs is the *last* resort, not the first — communication overhead can make an 8-GPU run slower than a 4-GPU run at the same effective batch.
+
+---
+
+## 6. Hands-On Code (annotated)
+
+### 6.1 A production-ready single-GPU starter config
+
+This is the shape to copy. Every line has a reason; nothing is inherited cargo-cult.
+
+```yaml
+# sft_pharma_v1.yaml — QLoRA SFT of an 8B model on one 24 GB card.
+# Run: axolotl preprocess sft_pharma_v1.yaml --debug --debug-num-examples 3
+#      axolotl train sft_pharma_v1.yaml
+
+# ── 1. Model identity ────────────────────────────────────────────────────────
+base_model: meta-llama/Llama-3.1-8B-Instruct   # start from a base model only if you
+                                               # are building the assistant from scratch
+tokenizer_type: AutoTokenizer
+
+# ── 2. Adapter method (quantised base ⇒ frozen base ⇒ adapter-only) ──────────
+adapter: qlora
+load_in_4bit: true
+bnb_4bit_quant_type: nf4
+bnb_4bit_compute_dtype: bfloat16        # Ampere+; use float16 on a T4
+lora_r: 32
+lora_alpha: 64                          # 2 × rank
+lora_dropout: 0.05
+lora_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+
+# ── 3. Attention & memory ────────────────────────────────────────────────────
+attn_implementation: flash_attention_2  # varlen-capable; required for packing
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+embeddings_skip_upcast: true            # keep embeddings low-precision under PEFT
+
+# ── 4. Sequence & batching ───────────────────────────────────────────────────
+sequence_len: 2048                      # p99.5 of YOUR token lengths, not the model's max
+sample_packing: true
+pad_to_sequence_len: true               # default when packing is on; stated for clarity
+micro_batch_size: 2
+gradient_accumulation_steps: 8          # 2 × 8 × 1 gpu × 2048 = 32,768 tokens/step
+
+# ── 5. Optimisation ──────────────────────────────────────────────────────────
+optimizer: paged_adamw_8bit
+learning_rate: 2e-4
+lr_scheduler: cosine
+warmup_ratio: 0.05                      # mutually exclusive with warmup_steps
+num_epochs: 2
+max_grad_norm: 1.0
+
+# ── 6. Precision ─────────────────────────────────────────────────────────────
+bf16: true                              # auto is the default; be explicit
+fp16: false
+tf32: true                              # free speedup on Ampere+ for fp32 matmuls
+
+# ── 7. Data ──────────────────────────────────────────────────────────────────
+datasets:
+  - path: ./data/pharma_sft_train.jsonl
+    ds_type: json
+    type: chat_template
+    chat_template: tokenizer_default     # ← never type a template name you can inherit
+    field_messages: messages
+    message_property_mappings:
+      role: role
+      content: content
+    roles_to_train: ["assistant"]
+    train_on_eos: turn
+    # revision: <sha>                    # ← add this for a Hub dataset
+val_set_size: 0.05
+eval_steps: 50
+eval_sample_packing: false               # keep eval unpacked so metrics compare across runs
+
+# ── 8. Special tokens (only if the tokenizer needs them) ─────────────────────
+special_tokens:
+  pad_token: "<|eot_id|>"
+
+# ── 9. Run management ────────────────────────────────────────────────────────
+output_dir: ./outputs/pharma-v1
+dataset_prepared_path: ./last_run_prepared
+save_steps: 200
+saves_per_epoch: 2
+logging_steps: 5
+seed: 42
+strict: true                             # ← fail on an unknown key. Always.
+hub_model_id: acme/pharma-qwen-v1        # omit to skip the automatic upload
+
+# ── 10. Observability ────────────────────────────────────────────────────────
+wandb_project: pharma-sft
+wandb_name: llama31-8b-qlora-r32-lr2e4-v1
+wandb_watch: gradients
+wandb_log_model: end
+```
+
+**What to change for your own data:** `base_model`, `datasets[].path`, `chat_template` (leave it as `tokenizer_default` unless you have a reason), `sequence_len` (measure it), and `output_dir`. Everything else is a starting point you should *measure*, not inherit — but at least you now know what each line does.
+
+### 6.2 Variant — multi-GPU with FSDP2
+
+```yaml
+# Same file, plus:  axolotl train sft_pharma_v1.yaml --launcher torchrun -- --nproc_per_node=4
+adapter: lora                 # full-parameter LoRA on unquantised weights across 4 GPUs
+load_in_4bit: false
+bf16: true
+micro_batch_size: 8           # 8 × 4 × 4 gpus × 2048 = 262,144 tokens/step — too big; see below
+gradient_accumulation_steps: 2
+learning_rate: 1e-4           # re-tune for the new effective batch; do not keep 2e-4 blindly
+
+fsdp_version: 2
+fsdp_config:
+  auto_wrap_policy: TRANSFORMER_BASED_WRAP
+  transformer_layer_cls_to_wrap: LlamaDecoderLayer
+  reshard_after_forward: true
+  cpu_ram_efficient_loading: true
+  state_dict_type: FULL_STATE_DICT
+  activation_checkpointing: true
+```
+
+**The effective-batch trap in one line:** scaling from 1 GPU to 4 multiplies your effective batch by 4. At `micro_batch_size: 2, grad_accum: 8` that is 131k tokens/step — above the comfortable range and a different optimisation regime. Either divide `gradient_accumulation_steps` by the GPU count (keeping the token batch constant) or scale the LR with the batch (roughly linearly, or with a square-root rule for large jumps) — but do not silently do neither.
+
+### 6.3 Variant — DPO after SFT
+
+```yaml
+# dpo_pharma_v1.yaml — starts from the SFT adapter/checkpoint, not the base model
+base_model: ./outputs/pharma-v1            # the SFT result
+rl: dpo
+rl_beta: 0.1
+learning_rate: 5e-6                        # DPO runs ~10-40× lower than SFT
+num_epochs: 1                              # preference tuning over-trains fast
+adapter: qlora
+load_in_4bit: true
+datasets:
+  - path: ./data/pharma_prefs.jsonl
+    ds_type: json
+    type: chat_template.default
+    field_messages: messages
+    field_chosen: chosen
+    field_rejected: rejected
+    message_property_mappings: {role: role, content: content}
+val_set_size: 0.05
+remove_unused_columns: false               # required by several RL trainers
+output_dir: ./outputs/pharma-dpo-v1
+```
+
+> **Beyond the video:** note that `base_model` is the *SFT checkpoint*, not the original base model. DPO's reference distribution is `π_ref` — the model you are regularising toward — and if you start from the raw base model, your reference is a model that cannot follow instructions, which makes the preference signal meaningless. This is the single most common DPO setup error.
+
+### 6.4 Inference, merge, upload
+
+```bash
+# 1. Inference against the adapter, with a Gradio UI
+axolotl inference sft_pharma_v1.yaml --lora-model-dir ./outputs/pharma-v1 --gradio
+
+# 2. Merge the adapter into the base weights (irreversible; keep the adapter)
+axolotl merge-lora sft_pharma_v1.yaml --lora-model-dir ./outputs/pharma-v1
+#    → ./outputs/pharma-v1/merged/
+#    Add --dequant if the base was quantised and you want a bf16 merged model.
+
+# 3. Upload the adapter (the artefact you should version)
+huggingface-cli upload --repo-type=model acme/pharma-qwen-v1 ./outputs/pharma-v1
+```
+
+```python
+# 4. Programmatic inference against an adapter — the pattern that works
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from peft import PeftModel
+import torch
+
+base_model_id = "meta-llama/Llama-3.1-8B-Instruct"
+lora_path = "./outputs/pharma-v1"
+
+tokenizer = AutoTokenizer.from_pretrained(base_model_id)
+base = AutoModelForCausalLM.from_pretrained(
+    base_model_id, device_map="auto", torch_dtype=torch.bfloat16
+)
+model = PeftModel.from_pretrained(base, lora_path)     # ← adapter on top of base
+model.eval()
+
+messages = [{"role": "user", "content": "Explain QLoRA in simple words"}]
+# CRITICAL: render with the SAME template used in training, from the tokenizer itself
+prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+
+inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+with torch.no_grad():
+    out = model.generate(**inputs, max_new_tokens=200, temperature=0.7, do_sample=True)
+print(tokenizer.decode(out[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True))
+```
+
+Note the slice `out[0][prompt_len:]` — the video's first attempt printed raw token IDs [55:06]–[55:29], which is the same mistake in miniature: `model.generate` returns prompt + continuation, and the prompt has to be stripped before decoding.
+
+### 6.5 The debug workflow — `preprocess` before you pay for a GPU
+
+```bash
+# Tokenise + cache + print samples. Runs on CPU-ish work; no training.
+CUDA_VISIBLE_DEVICES=0 axolotl preprocess sft_pharma_v1.yaml --debug --debug-num-examples 3
+```
+
+This is the highest-value command in the framework and the video only shows its output indirectly (the `dataset_meta` print at [47:28]–[47:43]). What to look for, in order:
+
+| Check | Pass | Fail means |
+|---|---|---|
+| Loss mask | Assistant spans labelled, user spans `-100` | `type:`/`roles_to_train`/`train_on_inputs` wrong |
+| EOS included | Final EOS/EOT position **labelled** | `train_on_eos` / `eot_tokens` wrong → the model never learns to stop |
+| Template | The model's own markers appear | `chat_template:` name wrong for the family |
+| Truncation | The answer ends with a natural stop, not mid-sentence | `sequence_len` too small, or `excess_length_strategy` should be `raise` during dev |
+| Row survival | Sample count ≈ your file's row count | You are dropping data — §14, "steps far fewer than expected" |
+| Cache | Path is fresh | Delete `last_run_prepared/` after any template or `type:` change |
+
+```bash
+# Full debugging recipe from the docs, applied here
+rm -rf last_run_prepared/                 # never debug against a stale cache
+CUDA_VISIBLE_DEVICES=0 axolotl train sft_pharma_v1.yaml \
+  --dataset-num-proc 1 --micro-batch-size 1 --max-steps 5 --val-set-size 0
+# In a second shell:
+nvidia-smi -l 1
+```
+
+### 6.6 The Docker workflow — the reproducible default
+
+```bash
+# On Windows: WSL first (the repo's own setup steps)
+wsl
+nvidia-smi                                  # GPU visible inside WSL
+docker -v
+
+# Start a container with your work bind-mounted and a persistent HF cache
+docker run --gpus all -it --rm \
+  -v $(pwd):/workspace \
+  -v $HOME/.cache/huggingface:/root/.cache/huggingface \
+  axolotlai/axolotl:main-latest
+# → root@<id>:/workspace/axolotl#
+
+# Inside: fetch a known-good config, run the smallest real job
+axolotl fetch examples
+axolotl train examples/llama-3/lora-1b.yml       # ~15-30 min depending on GPU
+axolotl inference examples/llama-3/lora-1b.yml --lora-model-dir ./outputs/lora-out
+axolotl merge-lora examples/llama-3/lora-1b.yml --lora-model-dir ./outputs/lora-out
+```
+
+```markdown
+<!-- Operational hygiene, condensed from the repo's docker setup notes -->
+- Redirect caches to a data volume:  export HF_HOME=/mnt/data/hf_cache
+- Watch disk:                        df -h ; du -sh ~/.cache/*
+- Clean prepared datasets:           rm -rf last_run_prepared/ output/checkpoint-*
+- Host-side cleanup:                 docker system prune -a ; docker image prune
+```
+
+> **Beyond the video:** the Docker image is the reproducibility answer the YAML alone cannot give you. Pin it by digest (`axolotlai/axolotl@sha256:…`), not by `main-latest`, and the same config trains identically on your laptop, a RunPod pod, and CI. The cost is image pull time (several GB) and less flexibility to patch the source — which is the correct trade for production and the wrong one for research.
+
+---
+
+## 7. Hyperparameters & Configuration — Every Knob
+
+### 7.1 The master table
+
+Read this as a lookup, not a tutorial. Every row has a `§` pointer into the explanation.
+
+| Param | What it does | Typical | Safe range | Too high → | Too low → | Framework flag |
+|---|---|---|---|---|---|---|
+| `base_model` | Starting checkpoint | your task's best base | — | Wrong family ⇒ template/vocab mismatch | An under-trained base costs you data | `base_model` |
+| `load_in_4bit` | NF4-quantise the frozen base | `true` for QLoRA | — | Quality loss on knowledge tasks | 2× more VRAM than needed | `load_in_4bit` |
+| `adapter` | PEFT method | `qlora` on 1 GPU; `lora` otherwise | `lora`, `qlora`, `loftq`, omit for full FT | — | — | `adapter` |
+| `lora_r` | Adapter rank | 16–32 | 8–64 | Overfitting, bigger adapter, slower | Underfitting a genuinely new task | `lora_r` |
+| `lora_alpha` | Adapter scaling (`alpha/r`) | 2 × `lora_r` | 1–4 × `lora_r` | Instability | Slow learning | `lora_alpha` |
+| `lora_dropout` | Dropout on adapter input | 0.0–0.05 | 0–0.1 | Under-training on small data | Mild overfit | `lora_dropout` |
+| `lora_target_modules` | Which linears get adapters | all 7 attention+MLP | `q_proj,v_proj` … all-linear | VRAM + optimizer state | Underfit complex tasks | `lora_target_modules` |
+| `lora_target_linear` | Target *all* linear modules | `true` to be model-agnostic | — | Includes modules you may not want | — | `lora_target_linear` |
+| `attn_implementation` | Attention backend | `flash_attention_2` | see §4.3.4 | — | `sdpa`/`eager` ⇒ **no packing** | `attn_implementation` |
+| `gradient_checkpointing` | Recompute activations | `true` | `true` unless you have headroom | — | Higher VRAM, faster steps | `gradient_checkpointing` |
+| `micro_batch_size` | Sequences per fwd/bwd | 1–8 | ≥1 | OOM | Slow; kernel under-utilisation | `micro_batch_size` |
+| `gradient_accumulation_steps` | Micro-batches per step | 4–16 | ≥1 | Longer wall clock per step | Effective batch too small ⇒ noisy | `gradient_accumulation_steps` |
+| `sequence_len` | Truncation window | p99.5 of your data | 512–8192 | VRAM quadratic; mostly pad tokens | Drops answers (§1.4) | `sequence_len` |
+| `sample_packing` | Concatenate short rows | `true` when rows ≪ seq_len | — | Silent leakage if backend unsupported | 2–6× wasted compute | `sample_packing` |
+| `pad_to_sequence_len` | Pad to `sequence_len` | default true with packing | — | Wasted compute when unpacked | — | `pad_to_sequence_len` |
+| `train_on_inputs` | Include the prompt in the loss | **`false`** | `false` | Trains the model to write your prompts | — | `train_on_inputs` |
+| `roles_to_train` | Which roles carry the loss | `["assistant"]` | `["assistant"]` | Training the user's turns | No loss on the model's turns | dataset-level |
+| `train_on_eos` | Which EOS to train | `turn` | `turn`, `last`, `all` | Model never stops | Model stops too eagerly | dataset-level |
+| `special_tokens` | Add/override special tokens | only when needed | — | Embedding resize can break a checkpoint | Missing pad token error | `special_tokens` |
+| `num_epochs` | Passes over the data | 1–3 | 1–3 for SFT | Overfit, format rigidity, forgetting | Underfit | `num_epochs` |
+| `max_steps` | Hard step cap | for demos/sweeps | — | — | Stops before convergence | `max_steps` |
+| `learning_rate` | Peak LR | 1e-4…3e-4 (LoRA); 1e-5…5e-5 (full FT) | see left | Spikes, NaN, forgetting | Flat loss | `learning_rate` |
+| `lr_scheduler` | LR curve shape | `cosine` (default) | `cosine`, `linear`, `constant`, `one_cycle` | — | — | `lr_scheduler` |
+| `warmup_steps` / `warmup_ratio` | LR ramp | 5–10% of steps | 0–10% | Wasted steps | Early instability | mutually exclusive |
+| `optimizer` | Optimiser class | `paged_adamw_8bit` (QLoRA) | see §4.3.6 | — | — | `optimizer` |
+| `max_grad_norm` | Gradient clipping | 1.0 | 0.1–1.0 | Nothing clips | Slows learning | `max_grad_norm` |
+| `bf16` / `fp16` | Compute precision | `bf16` on Ampere+, `fp16` on Turing | `auto` | Overflow with `fp16` on large LR | Slow / unstable | `bf16`, `fp16` |
+| `val_set_size` | Holdout fraction | 0.05 | 0.02–0.1 | Too little training data | No signal / noisy eval | `val_set_size` |
+| `eval_steps` | Eval frequency | 50–200 | — | Slow runs | Sparse curves | `eval_steps` |
+| `save_steps` / `saves_per_epoch` | Checkpoint frequency | 200–500 | — | Fills the disk | Loses the best checkpoint | `save_steps`, `saves_per_epoch` |
+| `logging_steps` | Log frequency | 1–10 | — | Log spam | Misses spikes | `logging_steps` |
+| `seed` | RNG seed | 42 | any | — | Unmeasured run variance | `seed` |
+| `strict` | Fail on unknown keys | `true` in CI | — | Blocks a deliberate new key | Silent typos | `strict` |
+| `deepspeed` | ZeRO JSON path | `zero2.json` first | — | More sharding = more comms | OOM | `deepspeed` |
+| `fsdp_config` | FSDP2 settings | see §5.6 | — | `FULL_SHARD` is slowest | OOM | `fsdp_version`, `fsdp_config` |
+| `wandb_project` / `wandb_name` | Experiment tracking | always | — | Noise | **No data to debug with** | `wandb_*` |
+| `dataset_prepared_path` | Tokenised Arrow cache | `last_run_prepared` | — | Stale cache ⇒ wrong data | Slower restarts | `dataset_prepared_path` |
+| `excess_length_strategy` | Over-long row handling | `drop` (default) | `drop`, `truncate`, `raise` | Silent data loss | — | `excess_length_strategy` |
+
+### 7.2 Interaction effects — the five that actually bite
+
+**1. `lora_r` × `lora_alpha` × `learning_rate`.** These are not independent. The adapter's effective update scale is `alpha / r`, so doubling `r` while holding `alpha` halves the per-parameter update — and people then compensate by raising the LR, which changes the optimizer dynamics rather than the parameterisation. **Rule: change `r` and `alpha` together, keeping `alpha = 2r`; then sweep LR on a fixed ratio.**
+
+**2. Effective batch × `learning_rate`.** If you move from 1 GPU to 4 and hold `micro_batch_size` and `gradient_accumulation_steps` constant, your effective batch quadruples. The loss curve will look *smoother* and *slower*, and you will be tempted to raise the LR. Do the arithmetic explicitly: either divide gradient accumulation by the GPU count to hold tokens/step constant (recommended for reproduction), or scale the LR with the batch and record that you did.
+
+**3. `sequence_len` × `sample_packing` × steps.** Packing plus a large `sequence_len` maximises tokens per step, which *reduces* steps per epoch, which changes what `warmup_steps` and `num_epochs` mean. §4.6.6.
+
+**4. `warmup_steps` × `max_steps`.** The video's `warmup_steps: 5` with `max_steps: 25` is a 20% warmup — the LR never plateaus before the cosine decay starts eating it. A 5-step warmup on a 1,105-step run is 0.45% and effectively no warmup. **Warmup is only meaningful as a fraction.** Use `warmup_ratio` unless you have a reason to think in absolute steps.
+
+**5. `eval_sample_packing` × your metric history.** Packing changes the loss denominator (tokens, not examples). If you pack the eval set in one run and not in another, your eval numbers are not comparable even though the model may be identical. Pick one convention and never change it — the recommended convention is *pack training, do not pack eval*.
+
+### 7.3 The optimisation techniques the video enumerates
+
+The video walks the optimisation list twice — conceptually [18:33]–[26:13] and then as an availability table [26:15]–[28:20]. Its definitions are accurate; here they are with the current status.
+
+| Technique | The instructor's definition | Verdict |
+|---|---|---|
+| **Multipack / sample packing** [18:56]–[19:14], [22:37]–[23:09] | *"Pack multiple short sequences into a single training batch to maximize GPU utilization… it eliminates the padding wastage"* | Correct. The **key is `sample_packing`**; `multipack` is the old documentation name (§4.6) |
+| **Flash Attention** [19:36]–[19:53], [23:20]–[23:50] | *"A memory-efficient attention algorithm that computes attention without materializing full matrices, enabling faster training in longer context"* | Correct — but see the Correction in §4.3.4: it does **not** optimise weights |
+| **xFormers** [20:02]–[20:17] | *"From Facebook… a modular library providing optimized transformer building blocks including efficient attention kernels and memory-aware operations"* | Correct. Relevant because it is the T4-compatible backend the video actually uses |
+| **Flex Attention** [20:19]–[20:32] | *"Introduced by PyTorch… supports custom sparsity patterns and dynamic attention layouts"* | Correct. Available as `attn_implementation: flex_attention` (torch ≥ 2.6) |
+| **Liger Kernel** [20:34]–[20:55] | *"From LinkedIn… a fused GPU kernel suite that combines multiple transform operations to reduce memory bandwidth and kernel launch overhead"* | Correct. In Axolotl it surfaces as the `lora_*_kernel` flags and the Liger plugin, not a single `liger_kernel: true` key |
+| **Cut Cross Entropy** [24:49]–[25:00] | *"A loss function… optimizes loss computation to avoid unnecessary token processing, reduces memory use and speeds up backpropagation"* | Correct. Apple's `ml-cross-entropy`; enabled as a **plugin**, not a boolean |
+| **Sequence parallelism** [25:02]–[25:22] | *"Split long input sequence across GPUs instead of model weights, enabling scalable long-context training"* | Correct. The fix when a single sequence OOMs |
+| **LoRA optimisation** [21:32]–[22:03] | *"How to choose the best possible parameter when we configure LoRA"* | Correct framing. The concrete Axolotl keys are `lora_qkv_kernel`, `lora_o_kernel`, `lora_mlp_kernel` |
+| **Multi-GPU / torchrun / Ray** [25:45]–[26:11] | *"Some extension on top of the torch library for distributed training"* | Correct: `--launcher torchrun -- --nproc_per_node=N`, or `accelerate` |
+| **DeepSpeed / FSDP** [25:35]–[25:43] | *"Fully sharded data parallel technique"* | Correct; §4.8.4 for the memory arithmetic |
+
+**The availability comparison, corrected:**
+
+| Technique | In native HF? | In Axolotl? | Correction to the video |
+|---|---|---|---|
+| Sample packing | **Partly** — TRL has `packing:` and transformers has `DataCollatorWithFlattening` | Yes, `sample_packing: true`, with fused/patched attn | The instructor says *"not available directly in Hugging Face"* [26:26]–[26:29]. It is not in the base `transformers` trainer, but TRL — which is *part of* the HF ecosystem he says Axolotl wraps [9:37] — supports packing |
+| Flash Attention | Yes — install the wheel, pass `attn_implementation` | Yes, one config key | The instructor says it is *"manually enabled"* in HF and given *"directly"* in Axolotl [26:33]–[26:45]. The wheel install is required in **both**; Axolotl supplies the flag, not the CUDA build |
+| xFormers | Yes, same story | Yes | Same |
+| Liger Kernel | Yes — `liger-kernel` package, monkeypatch or `LigerSFTTrainer` | Yes | *"Not natively available but integrated in Axolotl"* [26:52]–[26:57] — fair |
+| Cut Cross Entropy | **Yes** — it is a standalone library with a transformers integration | Yes | *"Not available in Hugging Face directly; you will have to write custom logic"* [27:00]–[27:04]. You do not write custom logic; you `pip install cut-cross-entropy[transformers]` and use its patched loss |
+| Sequence parallelism | No | Yes | Fair |
+| DeepSpeed | Yes, but you write the config | Yes | *"Challenging, you will have to write some configuration"* [27:54]–[28:03] — fair |
+| Multi-node | Requires your own launcher setup | Yes | Fair |
+
+> **Beyond the video:** the honest summary of the availability table is **"Axolotl's advantage is integration and defaulting, not exclusive access."** Every technique in that list is available to a determined engineer with plain `transformers` + `trl`. What Axolotl sells is that they are *on by default in a validated combination*, so you do not spend a week discovering that `packing=True` requires a varlen attention backend and that your `position_ids` therefore need resetting. That is a real and valuable product — but it is an engineering-integration product, not a research one, and it should be priced accordingly when you choose a framework.
+
+---
+
+## 8. Decision Framework — When To Use Axolotl / When NOT To
+
+### 8.1 The situation table
+
+| Situation | Use Axolotl? | Instead use | Why |
+|---|---|---|---|
+| Single-GPU QLoRA of a 7–8B model on a Colab, first attempt | **No** | Unsloth (CS-16) or plain TRL | Unsloth is a few lines of Python and its kernels are faster on a single GPU. Axolotl's overhead (config schema, Docker, dataset plumbing) buys you nothing here |
+| Same, but you will run it 30 times with variations | **Yes** | — | Once you have 30 experiments, the config *is* the value: sweeps, diffs, W&B grouping |
+| Multi-GPU (4–8 GPUs) or multi-node | **Yes** | — | FSDP2/DeepSpeed wiring is the single biggest time sink in hand-rolled training. This is Axolotl's strongest case |
+| You need DPO / ORPO / KTO / GRPO after SFT, in one toolchain | **Yes** | TRL directly for one-off research | `rl:` is one key; the SFT→DPO→eval loop shares the config, dataset normalisers, and launcher |
+| Regulated environment: training must be defined by an auditable file | **Yes** | — | A YAML + frozen Docker digest + dataset hash is a defensible audit artefact. A notebook is not |
+| You are implementing a novel loss or optimiser variant | **No** | Raw TRL / a fork | You will be fighting the abstraction, or writing a plugin anyway |
+| You need a model that is not in HF `transformers` | **No** | Custom training loop | Axolotl's remote-code support exists but is a known rough edge, and remote modeling code is explicitly unsupported by the fused LoRA kernels |
+| You have 2 A100s and a 70B model | **Yes** | — | ZeRO-3 / FSDP2 with CPU offload is exactly the documented path |
+| CPU-only inference or a tiny toy experiment | **No** | HF `Trainer` | The setup cost dominates |
+| You need to fine-tune a vision-language model | **Maybe** | Check the model guide first | Axolotl supports VLMs, but the text+image dataset mixing rules have exceptions (LLaVA, Pixtral) and the config surface is larger |
+| Your team already has a heavily customised internal trainer | **No** | Extend yours | Migration cost exceeds the benefit unless the customisation is small |
+
+### 8.2 STOP conditions — signals this is the wrong tool
+
+1. **You spend more time on the config schema than on the data.** If three days have gone into YAML keys and the dataset is still 200 rows, the tool is the bottleneck. Go run Unsloth or a 30-line TRL script.
+2. **You need a custom loss and you are writing your third `plugins:` entry.** At that point you have built a framework on top of a framework.
+3. **Your iteration loop is "edit YAML → 6-hour run".** The config's value is fast iteration; if each iteration is six hours, you have bigger problems than tool choice (fix `micro_batch_size`/`max_steps` for a smoke run first).
+4. **The model you need is not supported, or needs remote code.** You will spend your time on monkeypatches; the fused kernels explicitly do not support remote modeling code.
+5. **You are on a single GPU with a small dataset and no plan to scale.** Every config-driven framework adds a translation layer between you and the tensors, and that layer is pure cost at N=1.
+6. **Nobody on the team can read YAML's pitfalls** (tabs, `key:value`, unquoted booleans) and you have no CI validation. You will ship a silently-wrong key.
+7. **Your compute is a free Colab session that dies every 90 minutes.** Axolotl's install (~5–10 min), model download, and dataset prep will eat a meaningful fraction of the session. A lighter stack wins.
+
+### 8.3 The decision as a flowchart
+
+```text
+Do you need >1 GPU or >1 node?
+├─ Yes ──────────────────────────────────────────────▶ Axolotl (or torchtune)
+└─ No
+   Is the run one-off / exploratory?
+   ├─ Yes ──▶ Unsloth (fastest to first result) or TRL
+   └─ No
+      Will you run ≥10 variations, or need an audit trail?
+      ├─ Yes ───────────────────────────────────────▶ Axolotl
+      └─ No
+         Do you need DPO/ORPO/KTO/GRPO in the same toolchain?
+         ├─ Yes ─────────────────────────────────────▶ Axolotl or LLaMA-Factory
+         └─ No ──▶ Unsloth / TRL / raw transformers
+```
+
+---
+
+## 9. Pros · Cons · Limitations · Failure Modes
+
+### 9.1 Pros
+
+| Strength | Evidence |
+|---|---|
+| **One file defines a run** | The instructor's three benefits [11:07]–[14:03]; verified by the fact that the repo's five YAMLs are readable in a minute each |
+| **Multi-GPU without writing launcher code** | `fsdp_config:` / `deepspeed:` blocks plus `--launcher torchrun` |
+| **20+ dataset formats resolved by one string** | The `type:` zoo (§4.5) — and the same string drives the mask |
+| **Optimisations are defaulted, not discovered** | Packing, flash attention, gradient checkpointing, paged optimisers, all config flags |
+| **A real post-training platform** | SFT, pretraining, DPO, IPO, ORPO, KTO, SimPO, GDPO, GRPO, reward modelling [29:47]–[30:41] and the current support matrix |
+| **Both interfaces** | YAML for production, a Python API for notebooks [3:30]–[4:02] |
+| **A large, tested model guide** | `axolotl fetch examples` plus the per-model documentation pages the instructor walks [33:12]–[33:36] |
+| **Deep HF compatibility** | Your data stays in `datasets` format; your model stays `transformers`; the output is a standard PEFT adapter servable by vLLM/TGI |
+| **Active maintenance** | The "latest updates" section the instructor shows at [6:33]–[7:05] is real, and it is also the source of the churn in §5.5 |
+
+### 9.2 Cons
+
+| Cost | Detail |
+|---|---|
+| **Fast-moving schema** | Four keys in this video's own configs are deprecated or removed. Every upgrade risks a config migration |
+| **Unknown keys fail silently** | `DictDefault` returns `None`; without `strict: true` a typo is a silent no-op |
+| **Abstraction tax on research** | A custom loss or optimiser means a plugin or a fork |
+| **Errors surface late** | Stage 2 of the pipeline (§2.2) has no type system; a data mismatch shows up as a bad loss |
+| **Install sensitivity** | The instructor's own first step is uninstalling eight packages because *"this Axolotl is very sensitive for all this module"* [38:46]–[38:56] |
+| **Memory footprint of the framework itself** | Docker images are multi-GB; disk fills fast with checkpoints and HF caches |
+| **Documentation sprawl** | The doc set has 6+ top-level sections [32:31]–[32:49]; the instructor's own reaction is *"it looks scary"* [37:27]–[37:31] |
+| **Config cargo-culting** | The easier it is to copy a working config, the less likely anyone reads it |
+
+### 9.3 Hard limitations
+
+1. **A quantised base model cannot be fully fine-tuned.** `load_in_4bit: true` freezes the base by construction.
+2. **`adapter: qlora` requires `load_in_4bit: true`.** Not a suggestion; the config will not validate.
+3. **Packing requires a varlen-capable attention backend.** `eager` and `sdpa` do not have packing support, per Axolotl's own attention docs.
+4. **FSDP1 is gone.** `fsdp_version: 1` and the bare `fsdp:` list are rejected.
+5. **Fused LoRA kernels are incompatible with LoRA dropout/bias on the targeted modules**, unsupported for RLHF (SFT only), and unsupported for remote modeling code.
+6. **Fragments are not composed.** There is no overlay/merge semantics for YAML files; each config must be complete.
+7. **`pretraining_dataset:` and `skip_prepare_dataset: true` cannot be preprocessed with the `preprocess` CLI** — they are prepared on demand, and the CLI errors with `KeyError: 'input_ids'`.
+8. **Multi-GPU strategies are mutually exclusive.** You pick DeepSpeed, FSDP, or DDP; sequence parallelism and FSDP+QLoRA are the only layered features.
+9. **Sharded checkpoints are not directly servable.** FSDP/ZeRO-3 sharded output needs recombination (`axolotl merge-sharded-fsdp-weights`).
+10. **`excess_length_strategy` defaults to `drop`.** You lose over-long rows by default and nothing tells you how many.
+
+### 9.4 Silent failure modes — looks fine, is broken
+
+This is the most important table in the module, because every row here survives a normal training run and produces a checkpoint that *looks* successful.
+
+| # | Failure | Why it is silent | Detection | Fix |
+|---|---|---|---|---|
+| 1 | **Wrong chat template** | Loss decreases normally; the model learns the wrong format perfectly | Inspect the tokenised sample; compare to `tokenizer.apply_chat_template` | `chat_template: tokenizer_default` |
+| 2 | **Wrong dataset `type:`** | Empty/misaligned targets produce a *low* loss, which reads as success | `axolotl preprocess --debug`; check the labels | Correct `type:` + `field_*` mappings |
+| 3 | **Prompt not masked** (`train_on_inputs: true`) | Loss is lower and looks healthier; you are training on prompts | Inspect labels: user spans should be `-100` | `train_on_inputs: false`, `roles_to_train: ["assistant"]` |
+| 4 | **EOS/EOT masked out** | Loss is fine; the model just never stops | Check the final turn token's label | `train_on_eos: turn`; correct `eot_tokens` |
+| 5 | **Deprecated attention boolean stripped** | You asked for Flash Attention, got SDPA; a warning scrolls past | Assert `model.config._attn_implementation` | `attn_implementation: flash_attention_2` |
+| 6 | **Packing with a non-varlen backend** | Loss curve may look plausible; attention crosses documents | A/B test packed vs unpacked on 100 steps (§4.6.4) | Use a varlen backend, or disable packing |
+| 7 | **Packing boundary-metadata bug** (model-specific) | Loss → ~0 / ppl → 1, or ~1.8× baseline | Compare against the unpacked baseline | Upgrade Axolotl; or disable packing for that architecture |
+| 8 | **Stale `dataset_prepared_path` cache** | The run uses yesterday's tokenisation with today's template | Timestamp the cache directory | `rm -rf last_run_prepared/` after any data/template change |
+| 9 | **`eot_tokens` not single tokens** | Mask offsets shift by one; the model is trained slightly off-by-one | Tokenise each `eot_token` and assert length 1 | Pick a single-token terminator, or fix the tokenizer |
+| 10 | **Row loss from `excess_length_strategy: drop`** | 10k rows silently become 8.8k (§1.4) | `steps × grad_accum` vs row count | Raise `sequence_len`, or set `truncate`, or `raise` in dev |
+| 11 | **`gradient_accumulation_steps` change without recomputing warmup** | Schedule silently shifts; nothing errors | Log `total_steps` and `warmup_steps` at start | Recompute from tokens (§4.6.6) |
+| 12 | **`save_steps` larger than the whole run** | No intermediate checkpoint; you cannot pick the best epoch | Check whether `checkpoint-*` directories exist | `saves_per_epoch: 2` |
+| 13 | **`val_set_size: 0`** (the default) | Eval loss never appears; nobody notices because the train loss is fine | Look for an `eval_loss` in the log | `val_set_size: 0.05` |
+| 14 | **Adapter never merged / wrong base at serve time** | The adapter loads onto the wrong revision and quality drops subtly | Assert the base hash at load time | Pin `base_model` by revision in the serving config too |
+| 15 | **`wandb_mode: disabled` left in from a debug run** | No metrics for the run you actually care about | Check the W&B project has the run | Fail the job if `wandb_mode != online` |
+
+<!-- CONTINUE -->
+
+
+
+
+
+
+
+
+
+
+
+

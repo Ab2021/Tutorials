@@ -1,0 +1,61 @@
+# Fine-Tuning Handbook — reference codebase dependencies
+#
+# Install the CUDA-appropriate torch FIRST, then the rest:
+#   pip install torch --index-url https://download.pytorch.org/whl/cu124
+#   pip install -r requirements.txt
+#
+# Version pins here are known-good together as of early 2026. The LLM tooling
+# ecosystem breaks on minor bumps more than most; pin, then upgrade deliberately.
+
+# ---- core -------------------------------------------------------------------
+torch>=2.4,<2.7
+transformers>=4.46,<5
+datasets>=3.0
+accelerate>=1.0
+tokenizers>=0.20
+
+# ---- training ---------------------------------------------------------------
+peft>=0.13                  # LoRA / QLoRA adapters
+trl>=0.12                   # SFTTrainer, DPOTrainer, ORPOTrainer, GRPOTrainer
+bitsandbytes>=0.44          # 4-bit / 8-bit quantization for QLoRA
+safetensors>=0.4
+
+# ---- optional: speed ---------------------------------------------------------
+# flash-attn is the single biggest training-speed win, but it needs a matching
+# CUDA toolkit and takes 30+ min to compile. Install separately:
+#   pip install flash-attn --no-build-isolation
+# unsloth                        # 2-4x faster QLoRA, narrower model support
+# deepspeed                      # ZeRO stages for multi-GPU
+
+# ---- quantization / export --------------------------------------------------
+optimum>=1.23               # GPTQ via optimum
+auto-gptq>=0.7              # GPTQ (GPU)
+autoawq>=0.2                # AWQ  (GPU)
+llama-cpp-python>=0.3       # GGUF conversion + CPU inference
+hqq                         # fast half-quadratic quantization
+
+# ---- evaluation -------------------------------------------------------------
+evaluate>=0.4
+scikit-learn>=1.5           # precision/recall/F1, confusion matrix
+seqeval>=1.2                # NER span-level F1 (token accuracy is a lie)
+rouge-score>=0.1
+bert-score>=0.3
+
+# ---- embeddings / retrieval -------------------------------------------------
+sentence-transformers>=3.0
+faiss-cpu>=1.8              # or faiss-gpu
+
+# ---- data / PDF -------------------------------------------------------------
+pandas>=2.2
+pdfplumber>=0.11            # best permissive PDF extraction
+pypdf>=5.0
+unstructured>=0.15          # broader document ingestion
+# marker-pdf                    # highest-quality PDF→markdown (GPU, heavy)
+# docling                       # IBM's layout-aware extractor
+
+# ---- experiment tracking / dev ----------------------------------------------
+wandb                       # set REPORT_TO=wandb
+tensorboard
+mlflow
+pytest
+rich                        # nicer CLI output
