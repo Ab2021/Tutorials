@@ -1,0 +1,77 @@
+# T14 — Fleet declaration and gateway wiring (REFERENCE-GRADE, NOT EXECUTED HERE)
+#
+# The pool says WHAT the fleet is; the HTTPRoute says HOW it is addressed. Keeping the
+# two separate lets the fleet be re-labelled without touching the gateway -- the corpus's
+# deployment hooks into an existing gateway (GKE / Istio / Envoy) rather than replacing
+# the ingress [T].
+---
+apiVersion: inference.networking.x-k8s.io/v1alpha2
+kind: InferencePool
+metadata:
+  name: agent-fleet
+  namespace: inference
+spec:
+  # The endpoint picker is the router deployment. ONE of these for the fleet -- a
+  # per-pod picker can only ever see its own residency, which is the one thing the
+  # filter step cannot work with.
+  endpointPickerRef:
+    name: router
+    port: 9002
+
+  targetPorts:
+    - number: 8000
+
+  selector:
+    matchLabels:
+      app: inference-engine
+
+  # Prefill and decode are separate pools downstream of this one, which is what makes
+  # the phase-aware scorer in router-config.yaml meaningful: a decode routed by prefix
+  # identity pulls KV across a boundary it should not have to.
+  extensions:
+    - name: prefill
+      selector: { app: inference-engine, role: prefill }
+    - name: decode
+      selector: { app: inference-engine, role: decode }
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: agent-fleet
+  namespace: inference
+spec:
+  parentRefs:
+    # The EXISTING gateway. The corpus's hook-in point [T].
+    - name: inference-gateway
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /v1
+      backendRefs:
+        - group: inference.networking.x-k8s.io
+          kind: InferencePool
+          name: agent-fleet
+---
+# Priority classes. The SLO class is what flow control's priority bands read [T];
+# it has to be attached at the route, not inferred at the router, because the router
+# cannot tell a premium request from a best-effort one by looking at it.
+apiVersion: inference.networking.x-k8s.io/v1alpha2
+kind: InferenceObjective
+metadata:
+  name: premium
+  namespace: inference
+spec:
+  priority: 100
+  poolRef: { name: agent-fleet }
+  # Premium is protected under saturation. Everything not matching an objective falls
+  # to best-effort, and best-effort is the class that gets shed -- run.py §5.
+---
+apiVersion: inference.networking.x-k8s.io/v1alpha2
+kind: InferenceObjective
+metadata:
+  name: best-effort
+  namespace: inference
+spec:
+  priority: 10
+  poolRef: { name: agent-fleet }

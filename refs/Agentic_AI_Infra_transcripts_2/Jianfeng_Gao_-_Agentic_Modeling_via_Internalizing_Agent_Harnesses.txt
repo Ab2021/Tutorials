@@ -1,0 +1,385 @@
+Title: Jianfeng Gao - Agentic Modeling via Internalizing Agent Harnesses
+
+--- TRANSCRIPT ---
+
+[0:02] Hi, good morning.
+[0:03] I'm Cheng from Microsoft Research.
+[0:07] I'm very glad to
+[0:09] have this opportunity to present some of
+[0:11] our recent work.
+[0:13] I pick a few projects around the topic
+[0:17] called agentic modeling.
+[0:19] As I show in the title of the talk,
+[0:21] right? Yes.
+[0:23] Can you see this? Okay, okay. Agentic
+[0:25] modeling by internalization agent
+[0:27] harness.
+[0:28] So, before I go into the details, I want
+[0:31] to give some definition
+[0:33] regarding the three terminologies I used
+[0:36] in the title: agentic modeling,
+[0:38] internalization,
+[0:40] and agent harness.
+[0:43] And agentic modeling actually aim to
+[0:45] transform large-scale language models
+[0:48] into autonomous agent capability of
+[0:52] performing complex tasks by interacting
+[0:54] with the environment. We all know that
+[0:56] the pre-trained large-scale language
+[0:58] model is mainly a talker.
+[1:01] It seems that the model knows
+[1:03] everything, but it's really difficult
+[1:06] if you ask it to do something for you.
+[1:08] So, agentic modeling is the process
+[1:12] where we want to turn
+[1:14] this talker to a doer.
+[1:17] And
+[1:18] this is called the agent harness. I
+[1:20] think everyone familiar with the
+[1:23] with the terminology, okay? Usually,
+[1:26] uh
+[1:27] because the large language model can not
+[1:30] do a lot of things. It's just a talker.
+[1:32] So, in order to make the language model
+[1:34] to do some to perform some real-world
+[1:36] task,
+[1:37] you need to couple it with the large
+[1:40] language model sort of an an agent
+[1:42] harness. So, when we talk about AI
+[1:46] agents, usually it's the combination of
+[1:48] the language model, probably multiple
+[1:50] language models, and the agent harness.
+[1:53] In some sense, the harness is a bunch of
+[1:55] code.
+[1:57] It can handle a lot of things that the
+[1:59] current language model cannot handle
+[2:01] well.
+[2:02] Internalization refers to a process of
+[2:06] distilling agentic capabilities
+[2:09] from the harness to language model. What
+[2:11] are these capabilities?
+[2:13] Uh
+[2:14] great example is the memory or contest
+[2:17] management to use and the planning.
+[2:22] Uh typically, this is
+[2:24] achieved by pre-training and
+[2:27] post-training large language models
+[2:29] through supervised learning or
+[2:30] reinforcement learning.
+[2:33] Okay?
+[2:38] Uh this figure shows the some key
+[2:42] components that are needed for agentic
+[2:45] modeling. There are three of them.
+[2:48] Uh
+[2:49] I I I use different colors.
+[2:51] Uh in the left-hand side,
+[2:53] this part,
+[2:55] it's the agent.
+[2:56] For example, well, we assume that our
+[2:59] lab is not building a new large language
+[3:02] model because so
+[3:04] resource-intensive.
+[3:06] Uh Microsoft has a dedicated team called
+[3:09] MAI. They are responsible for building
+[3:12] uh in-house large-scale language models
+[3:14] such as MAI. Uh I think they released uh
+[3:17] dozens of models
+[3:19] um recently. It helps uh Microsoft
+[3:22] stocks.
+[3:24] Okay? Uh
+[3:25] again, we have deals, contracts with
+[3:29] other companies such as OpenAI. They
+[3:32] provide us and they are
+[3:33] frontier models. And then we have Azure
+[3:36] Star Azure Foundry, which can host uh
+[3:39] hundreds to thousands of open-source
+[3:43] uh language models. Yeah.
+[3:45] But the the focus of the lab actually is
+[3:48] to develop uh
+[3:51] enabling technologies
+[3:53] to help develop, uh, the aging harness.
+[3:57] Aging harness can be viewed as a
+[3:59] hard-coded modules
+[4:02] and the layers. They're not models by
+[4:03] themselves, but they are they're they're
+[4:05] they're modules. Most of them are
+[4:07] hard-coded.
+[4:08] Uh, these layers can do things that the
+[4:11] current language model cannot do. Well,
+[4:13] for example, the information layer
+[4:16] consists of the,
+[4:18] uh,
+[4:19] ma- memory and the context management
+[4:22] and contains a lot of tools and skills
+[4:24] for the language model to call. And the
+[4:26] execution layer
+[4:28] uh, consists of a prompt builder,
+[4:31] action parser, task decom- decomposition
+[4:35] modules,
+[4:36] uh, and the some some error recovering
+[4:39] mechanisms. And the most importantly,
+[4:41] the feedback layer,
+[4:43] uh, which helps, uh, the system to
+[4:46] collect all the trajectories generated
+[4:49] by the agents. And these trajectories
+[4:52] can be used to refine, uh, the
+[4:55] underlying model, the ARM, by
+[4:58] post-training. This actually is the key
+[5:00] of the, uh,
+[5:02] agentic modeling. Okay? That's the first
+[5:04] part. Second part is the environment.
+[5:08] Um,
+[5:09] in some sense, the environment,
+[5:11] sometimes people call this reinforcement
+[5:14] learning environment or RLEs,
+[5:17] okay? Where the AI agents can interact
+[5:20] with the external world to perform tasks
+[5:23] while generating trajectories.
+[5:25] And the the last component is the yellow
+[5:28] one. Uh, it's the trainer. It's a model
+[5:31] trainer.
+[5:32] Uh, where the generated trajectories are
+[5:36] used to input large language models
+[5:39] agentic capabilities by post-training
+[5:42] and meta-training. Some of the, for
+[5:44] example, most important training methods
+[5:47] are reinforcement learning and its
+[5:49] variation such as on policy
+[5:51] distillation, uh reverse KL divergence
+[5:55] algorithms. Uh actually, here for the
+[5:58] trainer, the cost-efficiency
+[6:01] uh it it it is the key. So, it's not
+[6:03] only that we require the model to be uh
+[6:07] served in cost-effective
+[6:10] way way. More importantly, we hope that
+[6:12] the model training uh is very
+[6:15] sample-efficient, meaning that um
+[6:17] probably we don't need a lot of samples
+[6:19] to train a model.
+[6:21] Uh putting together, we witness a new
+[6:24] paradigm of AI modeling where harness is
+[6:27] like the training data to any team
+[6:30] modeling just like the internet data
+[6:34] to model pre-training, right? As AI
+[6:37] industry and the community are building
+[6:40] many many uh AI agents and harness
+[6:43] almost every day.
+[6:45] Then, we can we actually witness an
+[6:47] emergence of a new data flywheel.
+[6:51] Uh where the steadying uh
+[6:54] agent capabilities from harness leads to
+[6:57] AI models that are more capable of doing
+[7:00] things.
+[7:02] And which these models can help us build
+[7:05] even better AI agents that can generate
+[7:08] uh
+[7:09] more sophisticated uh
+[7:11] trajectory data and by solving uh more
+[7:15] sophisticated tasks. And then again,
+[7:18] uh
+[7:19] this process continue as we advance both
+[7:22] the harness
+[7:24] and the models, okay?
+[7:26] So, many of the ongoing uh AI research
+[7:29] projects at the MSR can be grouped uh
+[7:33] into these three categories as I
+[7:35] outlined here.
+[7:37] Uh
+[7:37] under for example, the modern technology
+[7:40] as shown in the green box. Yeah, to
+[7:43] facilitate harnessing engineering such
+[7:45] as the memory management and test and
+[7:48] learning. And the
+[7:50] the the the environment service as you
+[7:53] in the blue box.
+[7:55] And to host the Imperial Manning
+[7:58] reinforcement learning
+[8:00] environments where agents perform tasks
+[8:02] and generate trajectories.
+[8:05] And actually this is a source of the
+[8:08] training data for any to model. And the
+[8:11] yellow box, the trainer.
+[8:13] So.
+[8:17] Yeah. In work for also I will present
+[8:20] for each group
+[8:22] an ongoing research project we recently
+[8:24] released to the public or we're about to
+[8:26] release it.
+[8:28] Uh on the environment side I will
+[8:30] present our chart, which is an open
+[8:32] source agent model framework for
+[8:34] research.
+[8:35] Uh as for agent harness, I will describe
+[8:38] a new test and learning framework called
+[8:42] Evo Lab,
+[8:43] which allows large scale language models
+[8:46] to accumulate, reuse, and then involve
+[8:48] knowledge across a sequence of tasks.
+[8:52] And on the model trainer I will present
+[8:54] the G for IO, which is a new
+[8:57] reinforcement learning method, which I
+[8:58] really hope can
+[9:01] provide an alternative to the dominating
+[9:04] IO methods such as GRPO PPO
+[9:08] because this new method unlock the great
+[9:11] diversity and turns out to be a more
+[9:13] cost effective training method.
+[9:20] Okay.
+[9:22] Uh this is the
+[9:24] overall it's a summary one one one slide
+[9:27] summary of the our chart project. And I
+[9:30] I I believe the paper and the code code
+[9:33] and data will be
+[9:34] released sometime next week.
+[9:37] Um we know that despite the rapid
+[9:41] progress in in in AI aging
+[9:45] the open research on agentic modeling
+[9:48] remains constrained by infrastructure
+[9:50] gaps.
+[9:51] Early days when we are doing this
+[9:53] pre-training, uh
+[9:55] the
+[9:56] as long as you have access to internet
+[9:59] there's a no lack of training. You can
+[10:02] you can grab grab it to train it from
+[10:04] the web.
+[10:05] But
+[10:06] agentic modeling is different. You need
+[10:08] that environment
+[10:10] to run
+[10:11] hundreds of thousands of agents
+[10:14] simultaneously
+[10:16] so that they can generate a lot of
+[10:17] trajectory data. And then you can use
+[10:20] this trajectory data to train your
+[10:22] model.
+[10:23] So
+[10:25] it's not there yet. In the research
+[10:26] community people have been focusing on
+[10:30] infrastructure mainly designed to
+[10:33] improve the harness itself.
+[10:35] But not the environment that can host uh
+[10:39] different agents different agents to run
+[10:43] in parallel. So to narrow the gap we
+[10:45] program present our chart which is the
+[10:48] open source ecosystem for scalable
+[10:52] agentic modeling. At the core of the our
+[10:54] charts is a thing called that native
+[10:56] environment service that provide a
+[10:59] reusable primitives of sandbox life
+[11:02] cycle environment.
+[11:05] It's called uh
+[11:06] Orchestra evolve.
+[11:09] E-
+[11:11] Orchestra environment. In some sense the
+[11:13] Orchestra environment is like an
+[11:16] operating system runtime
+[11:18] for AI agents. It acts as a
+[11:20] orchestration and the virtualization
+[11:23] layer that manages the container
+[11:26] images inside the sandbox that expose a
+[11:29] clean interface for the AI agents to
+[11:32] write.
+[11:34] Intuitively speaking, what this does is
+[11:36] provide the environment. It's just like
+[11:39] the
+[11:40] uh organizer of this workshop, organizer
+[11:43] of this conference, right? The operating
+[11:45] system in this context is like the the
+[11:48] the this building, okay? It provides all
+[11:50] the electricity's
+[11:52] facilities to us to host a lot of
+[11:55] workshops. If we view each workshop as a
+[11:58] agent,
+[11:59] then the organizer of this of this
+[12:01] conference did a great job to put each
+[12:04] workshop in a particular room. This is
+[12:06] like a
+[12:08] uh
+[12:09] uh real facility environment, mini rooms
+[12:11] environment or or pod in in in this
+[12:14] context. And after all these workshops,
+[12:18] uh
+[12:19] the organizer would
+[12:20] again collect all the results of this
+[12:24] workshop and share the results with us.
+[12:26] In some sense, the
+[12:28] uh Octo Eval is the organizer of this uh
+[12:32] this whole conference.
+[12:34] Okay? Then in order to demonstrate
+[12:37] effectiveness of this environment,
+[12:40] we build
+[12:42] three uh
+[12:44] m- uh
+[12:45] agent modeling recipes on top of that as
+[12:48] a demonstration. Okay? First is uh Octo
+[12:51] Eval.
+[12:53] Our first is Octo Swing.
+[12:55] This is target to the software
+[12:57] engineering agent.
+[12:58] Uh what we did is we distill about
+[13:01] 100,000
+[13:03] uh trajectories uh from from from from
+[13:07] from from the models.
+[13:09] And then
+[13:10] and
+[13:11] it's interestingly
+[13:13] we see that we got a very good results,
+[13:15] 70 73%. If you are you you you know this
+[13:19] benchmark pretty well, this webench
+[13:21] verified. Um
+[13:23] this result
+[13:24] already surpass a lot of uh open source
+[13:27] models, uh regardless of the of the
+[13:29] small size of the model. Then we also
+[13:33] take two other examples.
+[13:36] The the
+[13:38] which is the ultra
+[13:40] GUI. GUI is for navigation. The other is
+[13:43] crawl. Crawl is for personal assistant.
+[13:49] Now this this is
+[13:52] I want to give a quick update of this
+[13:54] project. It's test has some learning
+[13:56] within involving libraries.
+[13:59] And memory is important.
+[14:01] But typically we view a memory
+[14:04] as a storage of raw experience.
+[14:08] And but this experience is not learning.
+[14:12] This experience
+[14:14] very quickly you will see oh I I collect
+[14:16] a lot of experience previously. I I have
+[14:18] no idea how to use this experience to
+[14:20] solve new tasks.
+[14:22] But human learning is different.
+[14:25] I never recall all the details of my
+[14:28] previous experience. I only remember
+[14:31] what matters, right? The the the the the
+[14:33] failures I try to avoid, the new skills
+[14:36] I learned once and I hopefully can apply
+[14:39] them multiple times in the future.
+[14:41] So
+[14:42] this algorithm
+[14:44] uh is developed
+[14:46] to simulate the human learning.
+[14:50] Now the last project I want to
+[14:53] uh
+[14:54] given overview is
+[14:57] uh is GFlow IA.
+[14:59] The difference between this and the
+[15:01] traditional approach like the GRPO is
+[15:04] that this in this
+[15:06] uh reinforcement learning setting we
+[15:09] define policy learning as distribution
+[15:12] matching rather than maximum
+[15:15] reward maximization. The key difference
+[15:17] is that now using this algorithm we can
+[15:20] sample uh trajectories, sample uh
+[15:25] solutions proportional to the reward
+[15:28] they have
+[15:29] to
+[15:30] proportion to the reward they got at
+[15:32] site.
+[15:33] Okay.
+[15:36] Yeah, I have to stop here. If you have
+[15:38] any questions, feel free to to reach out
+[15:40] to me in an offline manner. Thank you.

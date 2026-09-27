@@ -1,0 +1,1694 @@
+Title: CMU LLM Inference (1): Introduction to Language Models and Inference
+
+--- TRANSCRIPT ---
+
+[0:01] Hello everyone. Uh welcome to the new
+[0:05] school year and welcome to uh this
+[0:07] class. Uh so this is a new class and
+[0:12] it's a class on um kind of advanced
+[0:15] topics. So uh that are developing very
+[0:18] rapidly in research. So I would love uh
+[0:21] we would all love uh feedback on what
+[0:23] you think uh what you'd like to talk
+[0:25] about uh more or less than what we are
+[0:28] talking about here. Um, this is also a
+[0:31] new room and it has this screen here.
+[0:34] So, I'm going to have to try to figure
+[0:35] out what to do with this uh this screen
+[0:37] so it doesn't get in the way. But, um,
+[0:39] uh, yeah. So, I'd be happy to get
+[0:42] started. Let me make sure my screen is
+[0:44] shared. Yeah. Yes, I am recording. Uh,
+[0:48] thank thank you for reminding me though
+[0:49] because I might not be recording. So,
+[0:51] you might want to remind me every time.
+[0:53] Um, so yeah. Uh, let's get started. Um
+[0:58] at any time feel free to raise your hand
+[1:00] uh and ask questions or or make comments
+[1:03] or or whatever. Uh we tried to keep the
+[1:05] size of the class manageable uh so that
+[1:07] we can go uh we can you know have
+[1:09] discussions and everything.
+[1:14] >> Cool. So uh this this is the obligatory
+[1:16] slide that I need to show at the very
+[1:18] beginning. I promise this is the only
+[1:19] slide but we all use language models all
+[1:21] the time. Um so uh we use chat GPT
+[1:25] Google search uh copilot cursor uh for
+[1:28] code completion uh coding agents like
+[1:30] codeex jewels open hands uh specialized
+[1:32] apps so uh no matter which industry
+[1:35] you're in people are probably using
+[1:37] language models uh in that industry so
+[1:41] um you know there's Harvey for legal or
+[1:43] a bridge for um uh medical etc etc.
+[1:49] So, um, for a language model, uh, I'm
+[1:54] coming into this assuming that almost
+[1:55] everybody in this class or everybody in
+[1:57] this class has either taken a natural
+[2:00] language processing class or a deep
+[2:01] learning class. So, I'm assuming that
+[2:04] most people know all of this stuff
+[2:06] already, but I want to get us all on the
+[2:08] same kind of page with respect to, you
+[2:10] know, the notation that we're going to
+[2:12] be using and other stuff, uh, the
+[2:13] terminology that we're going to be
+[2:15] using. So a lot of this class is going
+[2:17] to be an overview of that.
+[2:20] So for a language model uh what we talk
+[2:22] about when we are uh talking about a
+[2:25] language model is a model that assigns
+[2:27] probabilities to sequences of tokens. Um
+[2:30] this could be conditioned on you know
+[2:34] something else like an image or
+[2:35] something but mostly we're going to be
+[2:37] talking about in output where it's a
+[2:39] sequence of tokens either in natural
+[2:41] language or code or something like that.
+[2:44] And uh so we're calculating the
+[2:46] probability of X for a sequence uh where
+[2:49] the sequence is X1, X2 all the way up to
+[2:51] XL.
+[2:53] And uh the most common method, it's not
+[2:56] the only method we're going to talk
+[2:57] about, but it's the method we're going
+[2:58] to be talking about most of the time is
+[3:00] auto reggressive models. And so auto
+[3:02] reggressive models decompose like this,
+[3:05] uh where we had the probability of the
+[3:07] next token given the previous token. So
+[3:09] we have P uh the P of the whole sequence
+[3:13] is the probability of the first token um
+[3:15] and then the probability of a second
+[3:17] token given the first token probability
+[3:19] of third given the previous ones etc
+[3:21] etc.
+[3:23] Um
+[3:24] there are some counter examples to this.
+[3:26] So the one major counter example that
+[3:28] we're going to talk about in this class
+[3:29] is diffusion models. Um and diffusion
+[3:31] models are a very different type of
+[3:33] model with a very different inference
+[3:34] algorithm. uh and so from the point of
+[3:36] view of inference they're interesting in
+[3:38] that way but that's going to be like one
+[3:39] class out of all of them so unless I
+[3:41] mention that we're doing something
+[3:42] different uh assume that we're talking
+[3:44] about auto reggressive models
+[3:48] um so we can look at uh some
+[3:52] unconditioned completions so I uh I took
+[3:56] uh re a smallish model um quen 3 1.7b
+[4:03] uh base and uh generated some uh
+[4:06] completions from the uh BOS token uh the
+[4:11] beginning of sentence token. Actually,
+[4:12] fun doesn't have a beginning of sentence
+[4:14] token, so I I generated it from uh the
+[4:16] end of sentence token, but it's more or
+[4:18] less the same. Um and I split these into
+[4:23] high probability, medium probability,
+[4:25] and low probability sequences out of the
+[4:27] 100 sequences that I sampled. Um any
+[4:30] anybody oh and sorry one additional
+[4:33] thing is when you do inference you need
+[4:34] to decide when to stop and so I stopped
+[4:37] when I got a period or an end of line.
+[4:39] Uh so any idea what the highest
+[4:42] probability token sequences are if you
+[4:44] sample from nothing.
+[4:47] >> Yeah
+[4:49] the token
+[4:50] >> the to uh this is a token sequence not a
+[4:53] token. So it's not just the token the
+[4:55] Yeah.
+[4:57] Any ideas?
+[4:59] >> This is the B. Okay. This is the base
+[5:00] model. It's
+[5:02] >> happy to help or something like that.
+[5:04] >> Yeah, it's instruct.
+[5:06] >> It's not an instruct tune model though
+[5:10] any any ideas
+[5:12] >> is something in Chinese.
+[5:15] >> Some of them are in Chinese but it's not
+[5:17] these are not the highest probability
+[5:19] ones. Okay. Um so uh the highest
+[5:22] probability ones are three period four
+[5:25] period and zero uh zero parentheses and
+[5:31] then end of line symbol. So um yeah
+[5:34] these are uh these are relatively high
+[5:37] probability. This is the log
+[5:38] probabilities. So you can see minus 4.22
+[5:41] means if you sampled quite a few times
+[5:43] you would get a bunch of these. Um what
+[5:46] about middle probability?
+[5:49] This is from the Quen model. If people
+[5:51] are familiar with Quen,
+[5:54] um this might might have been a little
+[5:56] bit unlucky, might be a little bit of an
+[5:58] artifact, but I got a lot of uh code.
+[6:01] So, um the these were kind of the middle
+[6:03] probability ones out of the 100s that I
+[6:05] sampled. Uh also a lot of math. Um and
+[6:09] then the low lowest probability ones
+[6:11] which are still high probability because
+[6:13] we're sampling a h 100red and picking
+[6:14] the lowest probability ones uh were uh
+[6:17] mostly Chinese actually.
+[6:21] So uh so lots of Chinese. I don't know
+[6:23] if this is good Chinese or bad Chinese.
+[6:26] >> Political Chinese. Okay. Well, you could
+[6:29] guess what uh guess what Quen was uh was
+[6:32] trained in.
+[6:35] Cool. Um but uh that's actually not what
+[6:38] we do most of the time. We use a
+[6:39] language model, right? Uh instead what
+[6:42] we want is we want to do something
+[6:44] that's useful. Um and usually something
+[6:46] that's useful means conditioning on uh
+[6:49] on something else. And
+[6:52] so uh
+[6:54] when we do this uh basically we want to
+[6:59] condition on the previous sequence and
+[7:02] generate the next sequence. Um this is
+[7:05] also written uh where the input sequence
+[7:07] is X and the output sequence is Y. And
+[7:11] so in this case um uh we will treat the
+[7:15] first part that we're conditioning on as
+[7:16] the prefix or the query and the second
+[7:19] part is the completion or response uh
+[7:21] that we want to generate from this.
+[7:24] Um so mathematically what this uh
+[7:29] essentially means is if we have the auto
+[7:31] reggressive decomposition that means we
+[7:33] can just omit the first tokens in the in
+[7:36] the product. So um you know we were
+[7:40] conditioning on all the previous tokens
+[7:42] uh typically when we generate the output
+[7:44] but now we can just emit them we
+[7:45] calculate this auto reggressive
+[7:47] decomposition.
+[7:50] So um uh for my prompt here for the
+[7:53] prefix I use the best thing about uh
+[7:55] Carnegie Melon University is uh and any
+[7:59] idea what the highest probability tokens
+[8:01] are? What everybody would be saying is
+[8:04] the best thing about CMU
+[8:07] >> computer science.
+[8:08] >> Computer science.
+[8:10] That's kind of a weird sentence though.
+[8:12] The best thing about computer about
+[8:13] Carnegie Melon University is computer
+[8:15] science. Uh may maybe that's just like
+[8:21] >> the faculty. That that would be a pretty
+[8:22] good one. And thank you for flattering
+[8:24] me. You get two bonus points.
+[8:30] The community.
+[8:32] Okay. Um we got its diversity. Um so and
+[8:37] uh that it's a community. So,
+[8:40] uh, that it's a community is kind of
+[8:42] faint praise, I think, but you know, um,
+[8:45] maybe maybe okay. Uh, middle
+[8:47] probability, um, we get ones that are a
+[8:50] little bit longer.
+[8:52] Um, it's location and the vibrant
+[8:54] community it has built. Uh, that there's
+[8:58] always something else to learn. Uh, that
+[9:00] it gives you the ability to take your
+[9:01] education to the next level. So um these
+[9:04] are you know a little bit longer but
+[9:07] maybe still pretty typical sentences and
+[9:09] that if we look at the lowest ones out
+[9:10] of the ones I sampled um it's focus on
+[9:13] the interdisciplinary approach with
+[9:15] students uh majoring in computer science
+[9:18] mathematics and engineering um the
+[9:21] community that you get with it so many
+[9:22] people doing uh so many different things
+[9:25] and not just its academics and research
+[9:27] and engineering computer science and uh
+[9:29] business uh it's the amazing out of the
+[9:33] ordinary experiences your uh students
+[9:35] create in the classroom. So, um you
+[9:38] know, all all pretty reasonable things.
+[9:40] Computer science made its appearance uh
+[9:43] I guess. Um what what's something you
+[9:46] notice about these uh other than you
+[9:48] know just the the text content,
+[9:52] the length? Yeah, exactly. Um, and why
+[9:55] why are the shorter ones higher
+[9:57] probability?
+[10:00] >> When you multiply something with less
+[10:02] than one, it's always even less than.
+[10:05] >> Yeah. So, when you multiply something by
+[10:06] less than one, it's always less than the
+[10:08] thing that you start off with. So, like
+[10:10] you notice here that we're, you know,
+[10:12] making many multiplications. They're all
+[10:14] probabilities. So, they need to be less
+[10:16] than one. And so, uh, they will get, uh,
+[10:18] shorter and shorter. Um, notably this
+[10:23] I'm using the Quen base model and um,
+[10:27] how do we train a base model? Um, I'll
+[10:30] get to in a few uh, seconds and then or
+[10:33] in a few slides and then get back to
+[10:35] this. So, um, in terms of modeling,
+[10:39] again, this is, uh, a bit of review. Uh,
+[10:41] I'm assuming that everybody here has
+[10:44] looked at transformers and probably even
+[10:46] implemented transformers in one of your
+[10:47] previous classes. Um but uh basically uh
+[10:52] we have transformer models and uh unlike
+[10:56] the transformer model in the original
+[10:58] paper this is a um a fully uh it's a
+[11:03] decoder only model
+[11:05] and um and what that means is if you
+[11:10] look at the original paper you had like
+[11:11] an encoder and then you had a non-masked
+[11:16] attention and you had cross attention in
+[11:18] other things like this. But now in the
+[11:21] decoder only models essentially uh we
+[11:24] have uh an embedding process positional
+[11:27] embeddings masked multi head attention.
+[11:30] So you're masking to not attend to
+[11:33] future tokens or or the current uh yeah
+[11:36] not attend to future tokens uh layer
+[11:39] norm and then the feed forward network
+[11:42] and then uh layer norm again a linear
+[11:45] layer and a prediction.
+[11:48] So
+[11:50] this is I I guess this is probably
+[11:52] familiar to everyone given that you've
+[11:53] taken the prerequisites for the course.
+[11:55] Um so there's lots of other options and
+[12:00] I think we will talk about some of the
+[12:02] other options uh as well. um like there
+[12:06] are mixture of experts models uh which
+[12:10] you know don't necessarily uh do you
+[12:13] know full uh full mixed uh feed forward
+[12:17] layers or things like that. There's also
+[12:19] uh recurrent neural networks or um state
+[12:22] space models such as mamba. Um I don't
+[12:25] necessarily assume that that you know of
+[12:27] all of these or at least are like super
+[12:29] familiar with all of them but we will
+[12:31] cover these in more detail in future
+[12:33] classes.
+[12:36] Um but one thing that's super super
+[12:39] salient uh when we're doing inference is
+[12:41] the modeling cost. And so I wanted to
+[12:43] talk about transformers uh mostly from
+[12:45] the point of view of modeling cost. And
+[12:49] so there are two components that take
+[12:52] the majority of the modeling costs that
+[12:54] we deal with um which is uh that they
+[12:58] have self attention and self attention
+[13:00] is costly but it's also quadratic in
+[13:02] sequence length. uh for some components
+[13:04] of the attention. Um and then the feed
+[13:07] forward layers uh which are wide and
+[13:09] heavy. Um and we also have n layers uh
+[13:14] where n can be a relatively large number
+[13:16] in our very big models. Um so here's a a
+[13:21] quick quiz.
+[13:24] Who thinks that in modern large language
+[13:29] models self attention uh takes more
+[13:35] uh time or is more costly than feed
+[13:37] forward networks? Anybody uh think self
+[13:40] attention is more costly?
+[13:43] Anybody think feed forward networks are
+[13:45] more costly?
+[13:49] Um anyone think this was a trick
+[13:51] question?
+[13:54] Okay, it was so I'll I'll talk about
+[13:57] that in a second, but uh thank you for
+[13:59] thank you for volunteering to answer
+[14:00] anyway. I appreciate it. Um
+[14:03] so I' I'd like to talk a little bit
+[14:05] about the number of flops that it takes
+[14:08] to calculate a transformer model um per
+[14:11] layer. And specifically I'm going to
+[14:13] focus on the grouped query attention
+[14:15] transformer which is a transformer that
+[14:17] is used pretty widely nowadays. And
+[14:20] basically what grouped query attention
+[14:22] does um is uh
+[14:30] you can put it on the board.
+[14:35] So in the typical multi head attention
+[14:38] in
+[14:43] um in transformers basically we what we
+[14:46] do is we
+[14:51] have some big vectors uh that are the
+[14:54] hidden states that go into the attention
+[14:56] function.
+[15:05] And then we split them into heads. And
+[15:07] then each head kind of attends to the um
+[15:11] each query of the head attends to the
+[15:14] keys uh of the other head. And then you
+[15:16] use that to weight the values. Um, in
+[15:20] grouped query attention, you essentially
+[15:24] create groups
+[15:28] of the key vectors and value vectors.
+[15:31] Um, and
+[15:35] you um
+[15:43] you attend like this to save memory. Um,
+[15:46] and so
+[15:51] What this entails is uh self attention.
+[15:55] Um first you calculate the um the
+[15:58] projection of the uh
+[16:02] of the queries and this uh basically
+[16:06] costs you know all of the um all of the
+[16:09] compute because you're uh you're
+[16:11] calculating this for every head. But for
+[16:13] the key and value projections, you uh
+[16:15] calculate less because um uh you're
+[16:18] grouping them together. And then uh you
+[16:21] have the actual attention calculation.
+[16:24] And for all of these, if L is the length
+[16:27] of the sequence and D is the
+[16:29] dimensionality of the entire uh entire
+[16:32] vector and um DH is the dimensionality
+[16:36] of the head. um you are calculating uh
+[16:41] this over the entire um
+[16:45] over the entire vector but you're also
+[16:48] um doing a quadratic uh attention
+[16:50] calculation because each uh each
+[16:53] position the query is attending to the
+[16:55] keys um or the qu you're multiplying the
+[16:58] queries in the keys. So um this is the
+[17:00] quadratic component um and then you have
+[17:03] the output projection here. But um so
+[17:06] you can split this into a quadratic
+[17:08] component that uh grows quadratically as
+[17:11] the sequence length gets longer and then
+[17:14] um you have this component over here uh
+[17:17] which and this component over here which
+[17:18] is basically linear in the sequence
+[17:20] length. You can see by looking at L.
+[17:23] And then if you look at the feed forward
+[17:25] network um the flops per layer is
+[17:28] basically um the dimensionality of the
+[17:32] underlying embedding times the
+[17:33] dimensionality of the feed forward
+[17:35] network and you calculate that for um
+[17:38] like if you're using the swiggloo you
+[17:40] have a gating function and then you have
+[17:42] an up projection and down pro
+[17:43] projection. So uh basically this is
+[17:45] entirely linear in the sequence length.
+[17:49] Um so let's look at an example of how
+[17:54] big these values are for um each of the
+[17:59] um
+[18:00] for the llama uh 3.1 series. And I just
+[18:04] picked the llama 3.1 series because it
+[18:06] has one example of like a very big dense
+[18:08] model 405b. Um you this architecture is
+[18:12] used pretty widely in a bunch of other
+[18:14] model classes as well. Um but we can see
+[18:18] we have like 32 layers and 80 layers and
+[18:20] 126 layers. Um the hidden size is like
+[18:23] 4,000 8,000 and 16,000. Um the attention
+[18:28] heads are kind of uh you know
+[18:29] proportional to to this. Uh in grouped
+[18:33] query attention they always have eight
+[18:35] uh over all of them in the llama 3.1
+[18:38] series. And then the MLP size is um uh
+[18:43] approximately 3.5 times the uh the
+[18:46] hidden size. So
+[18:52] uh one other thing I forgot to put in
+[18:54] this table is that the maximum context
+[18:56] length is 128k. So because the maximum
+[18:59] context length is 128k, the largest elk
+[19:02] would become in these cases is 128k.
+[19:05] So let's look at the um the flops that
+[19:08] we spend on each component versus
+[19:09] context length. Um basically it looks
+[19:13] like this. And
+[19:16] you can see that as the context length
+[19:18] gets uh longer the flops you know
+[19:20] increase uh super linearly with the
+[19:24] context length.
+[19:26] And uh so we can see the total flops
+[19:28] scale quadratically uh with the context
+[19:30] at least uh if you look in big O
+[19:33] notation. And when the context length is
+[19:36] shorter like a th00and a thousand is
+[19:38] still not a super short context length.
+[19:41] The um the MLP part is the green part
+[19:44] here this dominates the the cost of the
+[19:47] computation because it's 3.5 times uh
+[19:50] larger than the the other parts. And
+[19:53] then the linear part of attention the
+[19:56] projection is uh cost a lot of money.
+[19:58] And actually multiplying the attention
+[20:00] vectors together doesn't cost a whole
+[20:01] lot. Um but as you get up to larger
+[20:05] context lengths actually the uh
+[20:07] quadratic part of attention starts to
+[20:09] dominate and so um this becomes a
+[20:11] problem if you want to scale attention
+[20:13] to you know much longer uh longer
+[20:15] lengths
+[20:17] and so practically what does this mean
+[20:19] for inference? It means that um it's
+[20:22] expensive. So this is a lot of uh a lot
+[20:25] of flops and it also means that you
+[20:28] start to become limited as you have very
+[20:30] long sequences that you're dealing with.
+[20:34] Great. Um, so this is the base and this
+[20:37] is uh kind of like the ideal
+[20:42] setting where we're only calculating
+[20:44] flops and we're not worrying about like
+[20:47] whether we can use all of the flops that
+[20:49] our processor or chip allows us to use
+[20:51] efficiently. And I'm going to talk a
+[20:53] little bit more about that in uh in a
+[20:55] second. But are there any questions here
+[20:57] so far or comments or discussion?
+[21:05] Yeah,
+[21:06] >> you mentioned the size three and a half
+[21:09] times again. Um why?
+[21:12] >> Yeah, it's a it's a good question. I
+[21:14] think um there's two parts to this. Um
+[21:17] the first part to this is just people
+[21:20] have experimented uh a bit around it and
+[21:24] this seems to work relatively well in
+[21:26] terms of the like compute uh accuracy
+[21:28] trade-off. it it should be larger than
+[21:31] the hidden size. And the reason why it
+[21:33] should be larger than the hidden size is
+[21:34] this allows you to like combine uh learn
+[21:36] combination features. Um, another reason
+[21:40] why is, um, there's,
+[21:45] and I'm not going to be able to give
+[21:46] this super accurately off the top of my
+[21:48] head, but there's, um, like
+[21:52] this tends to be
+[21:56] this tends to be a
+[21:59] like
+[22:02] exponent of two and this tends to not be
+[22:04] an exponent of two. But when you
+[22:06] actually go in and calculate the like
+[22:08] utilization of the GPU, having um having
+[22:11] this be like an X uh 3.5 is good for GPU
+[22:16] utilization based on threads. Um uh but
+[22:20] yeah, sorry that's uh I'll I'll have to
+[22:22] go back and look up the like actual
+[22:24] justification for that to say that more
+[22:26] accurately. Yeah.
+[22:35] Oh yeah, great question. Why are all of
+[22:37] these things multiplied by two? And the
+[22:38] reason why is a matrix multiply is a
+[22:40] multiplication and in an addition. So
+[22:44] you multiply you multiply by the weight
+[22:47] and then you add it to the sum. Yeah,
+[22:50] >> you did two operations.
+[22:52] >> Yes, exactly. Yeah.
+[22:55] Cool. Anything else?
+[22:59] Okay,
+[23:01] cool. So anyway, this this is really um
+[23:04] really expensive and so we need to find
+[23:06] ways to
+[23:08] you know we're willing to pay the cost
+[23:10] if this gives us a really good model but
+[23:12] you know we need to find a way to
+[23:14] utilize these flops as efficiently as
+[23:16] possible.
+[23:19] Cool. So another uh big theme of this
+[23:23] class is going to be you know how we can
+[23:28] uh make inference efficient and to make
+[23:31] inference efficient you need to know a
+[23:32] lot about hardware and typically we use
+[23:37] different varieties of hardware for
+[23:38] inference what we don't use that often
+[23:41] for larger models but we still use for
+[23:43] smaller models is CPUs and CPUs are you
+[23:48] know um general purpose compute, but
+[23:51] they don't have a very high level of
+[23:53] threading. And so because of this,
+[23:55] they're not particularly good at the
+[23:57] operations we need to do for uh neural
+[23:59] networks.
+[24:01] Um
+[24:03] then there are NVIDIA GPUs and NVIDIA
+[24:06] GPUs are kind of the gold standard of
+[24:09] what everybody uses. Uh there's also
+[24:10] like AMD GPUs and other things like this
+[24:12] which are very good hardware but not as
+[24:14] well supported in the software
+[24:16] ecosystem. So people don't use them
+[24:17] quite as broadly. Um but uh with respect
+[24:22] to Nvidia GPUs uh there are
+[24:26] a variety of GPUs that people use. Um
+[24:30] the typical ones are like A100, H100,
+[24:33] B200. Um these are kind of server grade
+[24:36] ones that you know if you have lots of
+[24:40] money uh you you spend that money uh
+[24:44] hiring these uh these expensive GPUs or
+[24:47] buying these GPUs. Um there's also uh
+[24:50] cheaper uh kind of like non-server grade
+[24:52] ones that people typically use for
+[24:54] gaming or other applications. Um but
+[24:57] these still are quite powerful and much
+[24:59] better than using a CPU. Um
+[25:03] there's also special purpose hardware.
+[25:05] So there's things like the Google TPUs
+[25:08] and Google TPUs are maybe maybe the
+[25:12] second most commonly used type of
+[25:13] hardware for this uh this sort of uh
+[25:16] training just because GP uh Google uses
+[25:18] them a lot and they're available on
+[25:20] Google Cloud. Um these are optimized.
+[25:23] So GPUs, you know, originally started
+[25:26] for gaming. Uh so they weren't
+[25:27] originally made for training uh you know
+[25:31] uh AI models. Um, now arguably they are
+[25:36] made specifically for training AI models
+[25:38] just because that's how Nvidia makes all
+[25:39] their money. Um, but uh TPUs were
+[25:42] created from the ground up for doing
+[25:44] this and they have things like very
+[25:45] large memory, very fast interconnect and
+[25:48] then there's um also uh other special
+[25:52] purpose hardware like Cerebras and Grock
+[25:54] and other things like this. Um,
+[25:58] one one thing actually is a little bit
+[26:01] of a logistics thing for this class. Uh,
+[26:04] so in this class, um, we're going to
+[26:07] want to run some inference on GPUs and
+[26:10] we're going to try to provide this for
+[26:12] you. Uh, we have maybe three main ways.
+[26:14] One is if you already have access to
+[26:16] inference compute uh, or to compute that
+[26:19] you can use for inference, you can use
+[26:21] that. So like for example, if you're an
+[26:23] LTI and you have access to the Babel
+[26:25] cluster or something like that, you're
+[26:26] welcome to use that for the the class.
+[26:29] Um we're also uh going to provide AWS
+[26:33] credits. Um AWS credits can get you some
+[26:37] amount of compute. Uh but uh I will warn
+[26:42] you in advance that it takes a
+[26:44] relatively long time for us between when
+[26:46] we apply for them and when you actually
+[26:48] get it. Uh, so having a backup plan is
+[26:51] good. It's not our fault. It's AWS's
+[26:53] fault. But um, uh, and thank you if
+[26:56] anybody's listening. Thank you AWS for
+[26:57] giving us free credits. I'm not blaming
+[26:59] you for anything. But
+[27:02] uh, and then uh, also uh, we've had a
+[27:05] lot of success with Google Collab Pro,
+[27:07] uh, which costs a little bit of money,
+[27:09] but it's, uh, you know, very convenient
+[27:10] for running, uh, running experiments.
+[27:12] It's like$9.99 a month. And actually, I
+[27:15] think you can get it for free for
+[27:16] students. So, um, that's another one we
+[27:19] recommend. Um, another thing that you
+[27:22] may be interested in, I don't
+[27:24] necessarily recommend that you do this,
+[27:26] uh, you know, for this class project,
+[27:27] but, um, there's also a lot of, uh,
+[27:32] sorry,
+[27:33] if I press escape,
+[27:37] if I press escape, this happens. But,
+[27:39] uh,
+[27:41] um, there's also recently a lot of GPU,
+[27:44] uh, like marketplaces
+[27:49] Um, so just to give an example,
+[27:58] so if I if I wanted to actually go out
+[28:00] and do training or or serve um something
+[28:03] myself in kind of a more uh like
+[28:07] industrial
+[28:11] setting,
+[28:13] there's kind of two varieties.
+[28:16] of
+[28:18] um of GPU service that I would suggest.
+[28:21] Um one ones that I have used are modal
+[28:24] and uh runpod. And modal and runpod are
+[28:28] are particularly good for like if you
+[28:30] want to spin up a bunch of GPUs uh
+[28:32] quickly or you want to have like
+[28:33] serverless GPUs or things like this. And
+[28:36] so um one of the assignments in this
+[28:38] class is going to be build an inference
+[28:40] server. And then if I actually wanted to
+[28:42] build an inference server and deploy it
+[28:44] somewhere, what I would do is I would uh
+[28:46] serve it here and then I would use uh
+[28:48] serverless endpoints. So like when
+[28:49] somebody hit it um they would you know
+[28:52] they would be able to do it inference
+[28:54] there. And then separately for things
+[28:56] like training, there's also um things
+[28:59] like San Francisco Compute Company and
+[29:01] Prime Intellect. And these are basically
+[29:02] GPU marketplaces where you can like rent
+[29:05] GPUs. And what they do is um they have
+[29:08] people who sell GPUs or rent out GPUs
+[29:11] and then people who want to rent GPUs.
+[29:13] And so they have a market. So you can
+[29:15] actually see the um
+[29:22] actually I don't see it right now but
+[29:24] like Prime Intellect has like a stock
+[29:26] price like a stock ticker but for GPU
+[29:28] prices. So it's kind of Yeah. Here here.
+[29:31] So this is like the price for an H100
+[29:33] and you can actually see it go up and
+[29:34] down like the stock market. So it's kind
+[29:36] of kind of fun.
+[29:38] Cool. Sorry that's a little bit of a
+[29:40] divergence but um compute is going to be
+[29:43] important. So just to summarize um you
+[29:46] can use existing compute if you have it.
+[29:47] We will try to get you AWS credits and
+[29:50] um you can use Google Google Collab for
+[29:53] free uh Google Collab Pro for free. So
+[29:55] those are my suggestions for this class.
+[29:59] Um actually TAS could you take a note
+[30:01] that we need to do that. So thank you.
+[30:04] Cool. Um any questions here?
+[30:10] Okay great.
+[30:19] Um
+[30:21] so next I'd like to go into training. Um
+[30:23] we are not going to do very much
+[30:25] training if at all. Uh none of our
+[30:27] assignments require training because
+[30:29] this is a class on inference. It's not a
+[30:31] class on training. Um but you might
+[30:34] nonetheless be uh interested in doing
+[30:36] this. And it's particularly salient for
+[30:38] me to like explain the most important
+[30:40] differences between training and
+[30:42] inference. And so uh usually we train on
+[30:45] large corpora of text and then you know
+[30:48] uh maybe do pre-training on you know all
+[30:50] of the text on the internet and then do
+[30:52] post-training or fine-tuning on
+[30:54] instruction data and recently lots of
+[30:57] reinforcement learning. Uh
+[31:01] so here the goal is to learn parameters
+[31:04] uh such that uh the probability
+[31:06] approximates uh the probability of the
+[31:09] true true distribution using maximum
+[31:10] likelihood estimation. I assume
+[31:12] everybody knows this and has done this
+[31:14] in previous classes. Um and you know we
+[31:17] want to maximize the log likelihood of
+[31:20] whatever data we have. Um, importantly,
+[31:25] um, oh yeah, sorry. And we do a forward
+[31:27] pass, a backward pass to compute
+[31:29] gradients and a parameter update, uh,
+[31:32] where we have a learning rate. Um, and
+[31:34] practically we process large batches of
+[31:36] text, um, with tensor operations using
+[31:40] GPUs or whatever else. And so what this
+[31:43] looks like is a little bit like this. So
+[31:47] essentially we have an embedding layer
+[31:49] and we step through each layer of the
+[31:51] model until we get to the very end and
+[31:53] we um we predict the loss and then we uh
+[31:57] add the loss together and we get a final
+[31:59] loss for our entire u entire data.
+[32:03] So just to do that again to contrast
+[32:05] with the one I'm about to show for
+[32:07] inference it's like this. So big block
+[32:09] big block big block big block big block
+[32:12] big block and then finally predicting
+[32:15] the outputs. So this is really important
+[32:18] because it's very different from
+[32:19] inference.
+[32:21] Um and when you're doing training if
+[32:23] things go well you can like completely
+[32:25] saturate a GPU all the time. Um or you
+[32:29] know get very high very high flop
+[32:31] utilization.
+[32:38] Um so what what about inference? Um
+[32:42] inference given a prompt X we want to
+[32:44] generate a continuation. There's two
+[32:47] main approaches here. Um the first is uh
+[32:51] drawing samples. So from the probability
+[32:53] distribution or from a probability
+[32:55] distribution we randomly draw uh samples
+[32:58] from the model.
+[33:01] The other one is search and here search
+[33:05] instead is trying to argax
+[33:08] some score of the output
+[33:12] and this score may or may not be the
+[33:14] probability and in fact in many cases
+[33:16] it's not the probability
+[33:19] um
+[33:21] and I'll explain why we would choose
+[33:23] something other than the probability in
+[33:25] a second but going back to the diagram
+[33:27] that I showed before let's look at
+[33:29] inference. So now we have smaller block,
+[33:31] smaller block, smaller block, smaller
+[33:33] block, smaller block. Predict a word.
+[33:36] And now we're kind of walking through in
+[33:40] an auto reggressive fashion to do um uh
+[33:44] to calculate the outputs like this. And
+[33:46] then we finally get to the end of
+[33:47] sentence symbol here. So
+[33:51] what do people notice or know about the
+[33:54] difference between training and
+[33:55] inference?
+[34:00] Yeah.
+[34:02] [Music]
+[34:10] >> Yeah. So great. Great. I'll just repeat
+[34:12] it. So training you know all of the
+[34:15] tokens beforehand. So you only need to
+[34:18] make one essentially one step through
+[34:20] each layer. Right. Um here we had three
+[34:24] in the prefix and then three tokens we
+[34:26] generated. So we had to make four steps
+[34:28] through each layer. Um we had the first
+[34:31] three and then one and then one and then
+[34:33] one. Um and so we have a lot more steps.
+[34:36] And this is a problem. The reason why
+[34:39] it's a problem is because um each step
+[34:43] here essentially has a fixed cost um in
+[34:47] that we have to dispatch to our GPU and
+[34:51] then we need to wait for the GPU to
+[34:52] finish processing. And both of those
+[34:54] things can take time and also we might
+[34:56] not fully saturate our GPU because GPUs
+[34:58] have many many threads and we might not
+[35:01] be using all of the threads at the same
+[35:03] time. So this is a big challenge in
+[35:06] efficient inference and uh it's
+[35:09] something we'll be talking about for
+[35:10] like a good portion of the class. How do
+[35:12] we make uh how do we overcome this
+[35:14] challenge?
+[35:16] Cool.
+[35:23] Yeah.
+[35:25] >> So when you generate new words, don't we
+[35:27] update the previous?
+[35:31] >> Oh yeah. So great question. When we
+[35:33] generate new words, don't we have to
+[35:34] update the embedding of the previous
+[35:35] words? Um, and the answer is no. And the
+[35:39] reason why we don't have to update the
+[35:41] embedding of the previous words is
+[35:42] because we're using masked attention.
+[35:45] And so we're masking out all of the um
+[35:48] uh all of the future inputs when we
+[35:52] calculate the embeddings of the previous
+[35:53] inputs which means that the the inputs
+[35:56] at position three cannot depend on the
+[35:58] word in position 4.
+[36:01] Um and this is really important. Uh the
+[36:03] reason why it's important is
+[36:07] clear if we go back
+[36:10] um all the way to the auto reggressive
+[36:12] decomposition.
+[36:22] So the um you'll notice that when we
+[36:26] generate the words we're always
+[36:27] conditioning only on the previous words
+[36:30] and the reason or sorry tokens when we
+[36:33] generate the next token we're only
+[36:34] conditioning on the previous tokens.
+[36:36] We're not conditioning on future tokens
+[36:38] because otherwise the chain rule of
+[36:40] probability doesn't hold here and we
+[36:42] can't calculate this. Um also
+[36:44] practically it would be difficult to um
+[36:48] it would you know there there are
+[36:51] practical difficulties with updating all
+[36:52] the previous tokens. So that that would
+[36:54] be an issue. There is a um
+[36:58] the one exception to this that we're
+[37:00] going to talk about is diffusion models.
+[37:02] In diffusion models you actually do
+[37:03] generate like not entirely left to
+[37:05] right. You generate from like the whole
+[37:07] thing at the same time.
+[37:11] Yeah, it's uh it's related to the
+[37:13] markoff assumption. So it's like um well
+[37:16] kind of the markoff assumption is like
+[37:18] assuming that some tokens far in the
+[37:21] past are like not actually uh relevant.
+[37:24] But we don't actually do that in
+[37:25] transformer models typically. Yeah,
+[37:29] great qu though. Any other questions?
+[37:34] Cool.
+[37:40] So
+[37:55] okay.
+[37:57] So now I'd like to talk about basic
+[37:58] generation algorithms. And basically
+[38:00] this class is kind of split into three
+[38:03] parts. Um the first part is going to be
+[38:06] more on basic generation algorithms. Uh
+[38:10] we often just call them generation
+[38:12] algorithms or inference algorithms. But
+[38:14] what I mean by this is essentially
+[38:16] they're algorithms that um in an auto
+[38:21] reggressive model are typically one
+[38:22] token at a time or maybe one token at a
+[38:25] time while maintaining multiple
+[38:26] hypotheses uh that we're searching over
+[38:29] like in beam search. And so a simplified
+[38:33] view, this is the the most simplified
+[38:35] view of this, which is that we have a
+[38:38] generation function that takes in a
+[38:40] model and then uh has an input as a list
+[38:45] of tokens uh which would be our prefix.
+[38:48] And then while we have not finished
+[38:51] generation
+[38:53] um and then we take the model and we
+[38:57] calculate a probability and then we
+[39:00] somehow sample from this probability and
+[39:02] append this to Y. Um and the model
+[39:05] always takes in a prefix of the previous
+[39:07] tokens and the next token. And in
+[39:09] reality we're not like appending tokens
+[39:11] like this where you know appending to a
+[39:13] tensor or or something like this for
+[39:15] efficiency. But this is a basic idea.
+[39:17] Um
+[39:19] and we'll cover many variants in the
+[39:21] course uh starting two classes from now
+[39:24] uh basically but uh this is kind of the
+[39:27] first several classes that we're going
+[39:29] to talk about in the course.
+[39:31] Should be familiar to everyone I guess.
+[39:35] So the next thing I'd like to talk about
+[39:36] is something um called metageneration.
+[39:39] Uh we coined this term so it's not like
+[39:41] a super standard term. I guess it's in
+[39:43] the survey paper that was in the like
+[39:45] reference uh for this course, but I I
+[39:48] think it's a a reasonably good term. And
+[39:51] basically what it means is it's a class
+[39:53] of algorithms that generate token
+[39:55] sequences
+[39:56] more or less as a sub routine to the
+[39:58] main algorithm. And so one
+[40:02] most common example of this is a
+[40:04] reranking algorithm. And there's many
+[40:06] many other examples but this is this is
+[40:08] the most common one which is um we have
+[40:11] generate and rerank. So we have the
+[40:14] model uh that we're using to generate we
+[40:17] have a reranking model and then we have
+[40:21] uh the number of um candidates that we
+[40:24] are going to generate and then we have
+[40:26] the prefix. And so we generate um we
+[40:31] generate that many candidates.
+[40:34] We generate scores from the reranker and
+[40:38] then we return the candidate that has
+[40:40] the highest score. So this is just one
+[40:42] one example.
+[40:45] Um any
+[40:49] again we're going to cover many of these
+[40:50] of course. Uh any questions or
+[40:54] everything? Okay.
+[40:55] >> Yeah.
+[40:57] Does that like wait till the Q token is
+[41:00] received or like you start to leave a
+[41:03] >> Oh yeah that's a that's a great
+[41:04] question. So this is number one this is
+[41:06] like the simplest possible
+[41:08] metageneration algorithm. There are also
+[41:09] other ones uh that that would do
+[41:11] something more like this. Um but
+[41:16] I didn't actually define done here. So I
+[41:18] didn't define done is like why has you
+[41:22] know hit the EOS token? In fact, when I
+[41:24] generated from uh Quen to generate the
+[41:27] examples here, uh I defined done as
+[41:32] hitting the EOS token or the period
+[41:35] token or the end of line tokens. So you
+[41:38] can define it in other ways. And so you
+[41:39] could also define it in a way which is
+[41:41] like generate five tokens and then
+[41:42] rerank them or something like that too.
+[41:44] Yeah,
+[41:46] cool.
+[41:50] Um
+[41:52] so another thing we're going to talk
+[41:53] about is latent variables and this is
+[41:55] really important uh recently in
+[41:57] particular uh very big uh like focus and
+[42:01] that a lot of people are are paying
+[42:03] attention to like uh 01 or R1 uh
+[42:07] reasoning models and stuff but the basic
+[42:10] idea is sometimes we want to model
+[42:11] things other than the actual answer that
+[42:14] we're going to be showing to the user
+[42:17] And the most common variety of this is
+[42:20] chain of thought. And so what this would
+[42:23] mean is our input X would be something
+[42:25] like um how many years since the
+[42:28] transformer paper was published. Um and
+[42:32] then the latency would be now is 2025
+[42:35] and the transformer paper was published
+[42:36] in 2017. Uh 2025 minus 2017 uh equals 8.
+[42:42] And then the output would be it has been
+[42:44] 8 years since the transformer paper was
+[42:46] published.
+[42:48] And
+[42:50] this is um people have demonstrated that
+[42:53] this is a really good way to improve the
+[42:55] accuracy of models. And in particular re
+[42:59] recently uh people have been training
+[43:01] models to do this. But lat variables
+[43:04] pose a lot of issues with respect to
+[43:06] inference.
+[43:08] Notably two are the most uh obvious
+[43:11] ones. The first one is efficiency. So,
+[43:14] um, who uses like GPD5,
+[43:19] um, or you know, any of the other
+[43:20] models? How long have you gotten it to
+[43:22] think?
+[43:26] Too long. Anybody over five minutes?
+[43:30] Okay, that's uh that's pretty
+[43:32] impressive. Anyone over 10 minutes?
+[43:34] Okay, cool. Okay. Yeah, so that's
+[43:38] impressive, but that's an efficiency
+[43:39] problem, right? Like you would like your
+[43:41] answers as quickly as possible. And so
+[43:43] if the model needs to think for 10
+[43:44] minutes before you can do that, then you
+[43:46] know maybe that's an issue. So that's
+[43:48] the first thing. Um the second thing is
+[43:52] actually you don't really care about
+[43:57] um you don't really care about the
+[43:59] latent variable a lot of the time,
+[44:01] right? Like often you just want the
+[44:02] answer. And in fact uh GP5 doesn't show
+[44:06] you the latent variable. It doesn't show
+[44:07] you the full thinking process of the
+[44:09] model. So, you know, if you're not
+[44:11] showing it to users anyway, you don't
+[44:12] really care about it. Um,
+[44:15] so or as as a model provider, you
+[44:17] obviously don't care about it. So, um,
+[44:20] what
+[44:22] you could do is you could also consider
+[44:24] multiple chains of thought and then
+[44:26] finally uh decide to find the output
+[44:30] that is the best given multiple ways of
+[44:32] deriving that output. So like you could
+[44:34] solve a proof in like or you could solve
+[44:36] a math problem in like 10 different ways
+[44:38] and find the answer that's most common.
+[44:41] And this is called self-consistency.
+[44:43] Um and so there's a bunch of different
+[44:45] varieties of this too.
+[44:50] Okay. Um so another big topic that we're
+[44:54] going to cover in this class is
+[44:55] evaluation of inference outputs. And so
+[44:59] we don't actually want high probability
+[45:02] outputs most of the time. We want good
+[45:05] outputs by some measure of good. And
+[45:09] it's not necessarily the case that high
+[45:11] probability outputs will be good.
+[45:14] So there's a lot of ways you could
+[45:15] define good. You could define good as
+[45:16] human preference being, you know, what
+[45:19] humans like the most. You could also
+[45:22] define good by asking uh an LLM to grade
+[45:26] the outputs.
+[45:27] uh in the same way that you ask humans
+[45:29] to grade the outputs. So uh this is
+[45:33] typically nowadays called LM is a judge.
+[45:36] Um you could also use deterministic
+[45:38] metrics. So like if you're solving a
+[45:40] math problem there might be only one
+[45:42] real answer. Um and so you could just
+[45:44] check if the answer equal is equal to
+[45:46] the correct answer. Um also these are
+[45:49] less common nowadays but there are
+[45:50] deterministic metrics to evaluate
+[45:52] generated text as well like blue blue or
+[45:54] rouge.
+[45:56] Um, if you're talking about
+[45:58] reinforcement learning or talking to
+[46:00] somebody who knows a lot about
+[46:01] reinforcement learning, they'll often
+[46:03] also call this a reward. Um, and I will
+[46:07] basically use these um interchangeably
+[46:10] like an evaluation metric or a reward.
+[46:12] They basically mean the same thing. Uh,
+[46:14] it's just like how good your output is.
+[46:21] So a really important concept which
+[46:23] everybody who is working on inference
+[46:26] should know uh but unfortunately not
+[46:28] everybody working on inference knows is
+[46:30] uh the idea of search errors and model
+[46:32] errors. And a search error is where the
+[46:36] search algorithm failed to find the
+[46:38] output that gives you the highest model
+[46:40] score. Um and so if your model's a
+[46:43] probabilistic model, the model score is
+[46:45] a probability.
+[46:47] And so basically what this means is um
+[46:51] when you ran whatever generation
+[46:54] algorithm you were using uh it did not
+[46:57] find the highest scoring
+[47:01] um uh highest scoring output. And so
+[47:03] this could be s could be the highest
+[47:05] probability or um it could also be you
+[47:09] know the most consistent uh output the
+[47:12] thing with the highest marginal
+[47:14] probability when you're marginalizing
+[47:15] over uh over chains of thought or
+[47:18] something like this.
+[47:20] So what this means is basically your
+[47:22] search algorithm failed uh if you're
+[47:24] using an arg argmax search algorithm it
+[47:26] did not find the max.
+[47:29] Um so if search errors are your problem
+[47:33] uh this can be mitigated by better
+[47:34] inference algorithms. You can find a
+[47:36] better search algorithm and this will do
+[47:37] a better job at finding the highest
+[47:39] probability thing. So you might switch
+[47:41] greedy search into beam search or you
+[47:43] might search switch beam search into a
+[47:46] star search or like some search uh some
+[47:49] other search algorithm.
+[47:52] The other thing is model uh model errors
+[47:54] and model errors are basically when your
+[47:56] model's score s theta is not a good
+[48:01] output according to whatever evaluation
+[48:03] metric you care about. And so what this
+[48:06] means is you get a lower reward for your
+[48:11] generated output than you get for um uh
+[48:17] than you get when you um
+[48:23] actually now that I look at this again I
+[48:25] don't I don't like this.
+[48:27] Sorry. Um this might be wrong. I might
+[48:30] have to fix my slides. This is the first
+[48:32] time I teach this class so I might have
+[48:34] lots of errors in my slides. still try
+[48:35] to catch them. But if you catch them uh
+[48:37] instead of me, that's very welcome to
+[48:39] sell as well. So basically here
+[48:42] um what this means is
+[49:12] So we define y hat is the highest
+[49:14] scoring um the highest scoring output.
+[49:19] And
+[49:21] then based on that we have
+[49:43] So um what this means is whichever
+[49:46] output is scored the highest by your
+[49:48] model is not as good an output as the
+[49:50] high as the best output. So what this
+[49:53] means is your model is miscoring the
+[49:56] outputs and it's um it's basically
+[49:59] assigning a higher score to bad outputs
+[50:01] or outputs that are not ideal.
+[50:04] Um and the reason why this is an
+[50:07] important distinction is this can be
+[50:10] mitigated by better model training or
+[50:11] inference. And what I mean by this is
+[50:16] probably the quoteunquote correct way of
+[50:19] solving this problem is by training your
+[50:22] model better because your model is
+[50:23] wrong, right? Your model is giving a low
+[50:25] score to a good output and a high score
+[50:27] to a bad output. So
+[50:30] back when I was more strongly
+[50:33] opinionated, I would actually say this
+[50:35] should not be fixed by inference. this
+[50:36] should be fixed by you know coming up
+[50:38] with a a better scoring function by like
+[50:41] better training your model or using some
+[50:42] alternative decision criterion or
+[50:44] something like that using a different
+[50:46] reranking. Now um I I have seen enough
+[50:51] people succeed at fixing these problems
+[50:53] through inference that I also think it
+[50:54] can be fixed through inference. So um
+[50:57] but we need to think about what fixing
+[51:00] this problem through inference means. It
+[51:01] basically means breaking your inference
+[51:03] algorithm to get a better output. So not
+[51:07] intentionally not finding the highest
+[51:08] scoring output so that you get a better
+[51:10] output. So uh you just need to keep that
+[51:13] in the back of your mind whenever you're
+[51:14] doing like tweaks to your inference
+[51:16] algorithm to get a better score. Um so
+[51:18] uh this is an important thing and we can
+[51:20] talk about it again when we talk about
+[51:21] beam search or um uh versus sampling and
+[51:24] other stuff like that.
+[51:28] >> Yes.
+[51:29] high level question about the goal of
+[51:31] this goal of inference to sample or to
+[51:35] optimize. So am I interested I have a
+[51:37] property distribution of outputs do I
+[51:38] want to sample many outputs or sample
+[51:42] the other mode or do I want the mode
+[51:44] right
+[51:44] >> yeah that I mean that's a great question
+[51:47] and I actually
+[51:49] provided two alternatives right to do
+[51:52] argmax or to sample um I would say
+[51:56] the
+[51:58] which
+[51:59] >> yeah so
+[52:02] it's a good it's a good question um I I
+[52:05] think typically we use it to refer to
+[52:07] both um and there are two different
+[52:10] varieties two different varieties of
+[52:11] inference I understand if you come from
+[52:13] statistics or something like that uh
+[52:15] there's probably a more strict
+[52:17] definition but I think it's used for uh
+[52:19] for both of them mostly yeah
+[52:21] >> but if it's for sampling then the first
+[52:24] one doesn't feel like a search error
+[52:26] because I wasn't
+[52:28] I generated something.
+[52:30] >> Yeah, this
+[52:33] >> and actually this is
+[52:36] um this is particularly focused towards
+[52:38] the case where you want to get a good
+[52:41] output and so people use sampling
+[52:45] algorithms to get good outputs nowadays
+[52:47] largely because models tend to be
+[52:49] broken. Um, one thing I should point out
+[52:52] is,
+[52:54] um,
+[52:56] with the best language models that we
+[52:58] have nowadays, people are sampling less
+[53:01] and searching more. Um, so like the best
+[53:05] models, if you want to get them to do
+[53:06] things like uh, code generation or
+[53:09] mathematical reasoning, very often
+[53:11] people are using greedy search, which is
+[53:12] not a great search algorithm, but it's
+[53:14] still like much more likely to give a
+[53:16] high probability sequence. And the
+[53:17] reason why is because they've fixed a
+[53:19] lot of the search errors through model
+[53:20] training. Um so they've like trained
+[53:22] models to be really good at at like
+[53:25] actually generating good outputs. Um it
+[53:27] used to be that this was a really bad
+[53:29] idea. Like if you use greedy search it
+[53:31] would repeat itself over and over again.
+[53:32] And in fact um next class I'm going to
+[53:34] show how to generate from GPT2 and
+[53:36] you're going to see greedy search
+[53:37] completely fall apart on GPT2. Um but uh
+[53:41] which is an old model. Uh maybe that I
+[53:45] should mention that but um but yeah this
+[53:49] is particularly focused on the case
+[53:52] where you want good outputs this
+[53:53] discussion here. Yeah.
+[53:56] >> Cool.
+[53:56] >> And so the amount of like search error
+[53:58] you have and model error you have does
+[54:00] that vary on like how you're scoring and
+[54:02] what good means?
+[54:05] >> Um yes definitely. So like if you switch
+[54:08] your scoring
+[54:10] so like the question was um the amount
+[54:12] of search error and model error that you
+[54:14] have um uh does it depend on what your
+[54:18] reward function is basically and the
+[54:20] answer is yes definitely because the
+[54:22] reward like for um model layers oh
+[54:27] actually that only applies to model
+[54:28] errors because um how you're defining
+[54:30] good only uh shows up in model errors if
+[54:33] you look at the equations for search
+[54:34] errors it doesn't show anywhere so the
+[54:36] search errors are only defined um by the
+[54:38] model uh by the model scores themselves.
+[54:42] >> Yeah.
+[54:43] >> How can you know if a given error is
+[54:46] like a search error or model? How do you
+[54:48] distinguish?
+[54:49] >> Yeah, I mean I gave you equations to
+[54:52] distinguish between them, but um like
+[54:55] you can
+[54:58] how do you know if a search error
+[55:00] exists? Um one way you can do that is
+[55:02] come up with a better search algorithm
+[55:04] and see if you can find a better
+[55:05] hypothesis.
+[55:07] And so if uh beam search is a example
+[55:11] that we're going to talk about and you
+[55:12] can expand your beam and search more and
+[55:14] see if you can find better hypothesis
+[55:17] and if you don't find any better
+[55:18] hypothesis it's not an existence proof
+[55:20] uh it's not a proof that your best
+[55:23] hypothesis is the best ever but it's you
+[55:26] know some evidence for it. If you do a
+[55:28] star search which we're going to talk
+[55:29] about too there you can actually prove
+[55:31] that you found the optimal output. Um
+[55:33] but a star search is not feasible in in
+[55:36] neural networks. Um
+[55:39] then uh for model errors if you find
+[55:44] many hypotheses and you can find at
+[55:46] least one where this equation holds then
+[55:49] you have a model error.
+[55:51] So you could output a 100 hypotheses and
+[55:53] you could uh you could try to find one
+[55:55] where this equation holds.
+[55:58] Great question.
+[56:01] Cool.
+[56:02] Okay. Um,
+[56:05] so I I'd also like to talk about
+[56:07] diversity versus quality, which is kind
+[56:09] of like going into the same point like
+[56:10] what's our goal of uh of searching or
+[56:13] what what's our goal of doing inference.
+[56:15] And so the first um is uh if we do
+[56:20] argmax search, if we search for things
+[56:22] that maximize the the probability, this
+[56:24] will often give us lower diversity. And
+[56:27] so like if we're only picking the top
+[56:28] one, then we're not going to get any
+[56:29] diversity at all. in modulo like
+[56:33] numerical instability due to GPU
+[56:35] processing or something like this. Um
+[56:38] but uh if we do an NB best search where
+[56:42] we try to find that a top n uh examples
+[56:45] sometimes they'll vary by like one token
+[56:47] or something like that and we're not
+[56:48] going to get a whole lot of diversity in
+[56:49] our outputs. In contrast, sampling gives
+[56:53] high diversity um and sometimes lower
+[56:55] quality and uh that
+[57:00] especially if we have a relatively good
+[57:02] model with few model errors. Um
+[57:05] typically the highest scoring one will
+[57:07] be the best. So our exact search will uh
+[57:09] will give you the best results. Um but
+[57:11] both are useful in different cases. Does
+[57:13] anyone have an idea where we want to
+[57:15] have more diversity uh for sampling?
+[57:18] >> Yeah.
+[57:21] like creative writing like writing
+[57:23] probably an essay where you want to like
+[57:26] be more expressive. So maybe something
+[57:28] like that whereas if you were like
+[57:29] predicting like something which is more
+[57:32] emp
+[57:34] [Music]
+[57:36] that's a great point the answer was
+[57:37] something like creative writing um
+[57:40] arguably yes but what if you could come
+[57:42] up with a really good evaluation metric
+[57:44] for creativity and optimize it. Maybe
+[57:47] you only need one output given a prompt.
+[57:49] So if I say like uh you know tell me
+[57:53] tell me a story about a fairy that
+[57:55] really likes to do math. Um maybe your
+[57:58] arcmax is good enough. So but if you
+[58:02] want the case where you show 10
+[58:04] different outputs to a writer and let
+[58:06] them choose the one they like the best
+[58:08] then you obviously need some diversity
+[58:09] in there. So yeah. Um I saw some other
+[58:13] hands. Yeah.
+[58:14] >> Okay. Yeah. Yeah. synthetic data set
+[58:17] creation.
+[58:18] >> Synthetic data set creation. So you want
+[58:20] to create data that like mimics a true
+[58:22] data distribution. That's a great
+[58:24] example. Um another example might be
+[58:26] reinforcement learning. So if you're
+[58:27] like training a model and you want to
+[58:28] sample lots of outputs, you want to make
+[58:30] sure that you have enough outputs to
+[58:32] represent the true like variety and so
+[58:34] there you'd want diversity as well. Um
+[58:38] and we'll talk a bit more about that
+[58:39] later.
+[58:41] Cool. So um this is the recap. uh we're
+[58:45] approaching the end of the uh like
+[58:46] actual content of this class, but um we
+[58:49] want outputs uh that give us good
+[58:51] evaluation scores. We also might want uh
+[58:55] low latency. So in terms of like you put
+[58:57] in a prompt and you get the output
+[58:59] pretty quickly. Um if you're a model
+[59:02] provider uh like OpenAI or Anthropic,
+[59:04] you might want high throughput because
+[59:06] you're getting millions of people asking
+[59:08] you queries. So you want it to be able
+[59:09] to generate lots and lots of them.
+[59:12] possibly high diversity for model
+[59:14] training or for showing different
+[59:15] outputs to different users, things like
+[59:17] that. And depending on the application,
+[59:19] the priorities might vary. So it's very
+[59:22] dependent on uh what specifically you're
+[59:24] trying to do.
+[59:27] Um so in this course, I'm just going to
+[59:28] go through all of the topics that we're
+[59:30] going to cover. So the first one is uh
+[59:33] what we just did now. Um next time I'm
+[59:36] going to talk a bit of probability
+[59:37] review and I'm actually going to mostly
+[59:40] do Jupyter notebooks. next time instead
+[59:42] of slides and give some quick examples
+[59:44] of each of the three topics we talked
+[59:46] about. Um so talk about uh some
+[59:49] probability background some probability
+[59:51] basics um generation algorithms oh sorry
+[59:55] uh like a simple implementation of the
+[59:57] transformer generation algorithms uh
+[1:00:00] metageneration algorithms and then uh
+[1:00:02] then inference uh sorry uh efficiency
+[1:00:06] um then we're going to talk about common
+[1:00:08] sampling methods um beam search and
+[1:00:11] variance uh intro to aar and best first
+[1:00:14] search and uh other varieties of control
+[1:00:17] generation. So this is going to be like
+[1:00:19] kind of the generation section that
+[1:00:20] we're going to be talking about.
+[1:00:24] Um next we're going to be talking about
+[1:00:26] reasoning tool use and agents. And so
+[1:00:28] these are um basically topics where we
+[1:00:31] do uh chains of thought uh and kind of
+[1:00:35] like intermediate steps uh self-refining
+[1:00:38] and self-correction methods. So these
+[1:00:40] are methods where we go in and like
+[1:00:41] correct uh the outputs uh reasoning
+[1:00:44] models um incorporating tools in
+[1:00:46] inference. So this is like where you
+[1:00:48] actually can make calls to external
+[1:00:49] tools and do inference and then uh
+[1:00:52] agents and multi- aent communication.
+[1:00:55] Um next uh we will talk about um
+[1:01:00] metageneration methods or ways to scale
+[1:01:02] inference time compute by using
+[1:01:03] generation as kind of like a a sub
+[1:01:06] routine. And so this includes minimum
+[1:01:08] based risk and multi-sample strategies,
+[1:01:11] reward models and best of N reanking
+[1:01:14] um how we build uh kind of language
+[1:01:17] model systems not uh models themselves.
+[1:01:21] Um contrasting inference scaling and
+[1:01:24] model size uh and using external
+[1:01:26] verifiers
+[1:01:29] as well as uh token budgets and training
+[1:01:31] time distillation.
+[1:01:34] And then finally uh we're going to talk
+[1:01:35] about um kind of efficiency and system
+[1:01:38] level optimization like defining
+[1:01:39] efficiency uh library implementations
+[1:01:42] and optimizations uh KV cache
+[1:01:44] optimization uh draft models and
+[1:01:47] speculative decoding and uh ways to come
+[1:01:50] up with alternative modeling strategies
+[1:01:52] like or sparse attention other things
+[1:01:55] like that. Um and then also uh probably
+[1:01:58] transformer alternatives.
+[1:02:02] Um what won't we cover? So we're very
+[1:02:06] going to talk in a very limited context
+[1:02:08] about model training only together with
+[1:02:10] inference algorithms that these are
+[1:02:12] training is used to optimize. Um we're
+[1:02:15] not going to talk a whole lot about
+[1:02:16] model architecture only a very small
+[1:02:18] amount. Um not going to talk a whole lot
+[1:02:21] about evaluation or reward models and
+[1:02:25] inference is basically going to be on
+[1:02:26] text data.
+[1:02:29] Um, in terms of grading, um, 15% is
+[1:02:33] going to be either quizzes or, um,
+[1:02:36] in-class participation. Uh, for in-class
+[1:02:40] participation because, uh, we really
+[1:02:42] want to cover kind of like the cutting
+[1:02:43] edge techniques that people are using.
+[1:02:46] Um, this actually wasn't written on the
+[1:02:48] site, uh, but we're going to ask
+[1:02:50] everybody to, um, give a short talk
+[1:02:52] about a paper sometime during the
+[1:02:54] semester. It's going to be about five
+[1:02:56] minutes where you go and read a paper
+[1:02:58] and introduce it on one of the topics
+[1:02:59] we're going to talk about in the class.
+[1:03:01] Um so that will be about 5% of the grade
+[1:03:04] and the other 10 will be like uh quizzes
+[1:03:07] or or small things like that. Um 60% is
+[1:03:11] going to be the assignments. Uh so
+[1:03:13] there's going to be three of these total
+[1:03:15] and then 25% is going to be the final
+[1:03:18] project. Um in terms of what the
+[1:03:20] assignments Oh yeah, sorry. And so the
+[1:03:23] assignments, uh, I'll explain what
+[1:03:25] they're going to look like in a second,
+[1:03:27] but they're all going to be, uh, shared,
+[1:03:31] uh, tasks. And we're going to have three
+[1:03:33] tasks that we ask you to handle through
+[1:03:35] inference. And we think this is
+[1:03:36] interesting because they handle kind of
+[1:03:39] different types of things people are
+[1:03:41] doing with language models. And also,
+[1:03:43] uh, they have different challenges for
+[1:03:45] inference algorithms. So the first one
+[1:03:47] is mathematical reasoning. Uh, very
+[1:03:49] popular nowadays. Uh so basically trying
+[1:03:51] to solve math problems. Uh the second
+[1:03:54] one is multiple choice question
+[1:03:55] answering. Uh this is kind of
+[1:03:57] interesting because your choices are
+[1:03:58] very limited but you can use uh latent
+[1:04:01] variables like thinking uh to try to
+[1:04:04] improve your accuracy and also
+[1:04:05] evaluation is very simple. Um and then
+[1:04:08] the final one is open-ended generation.
+[1:04:10] So this is like generating just text.
+[1:04:13] And uh this is interesting because
+[1:04:15] actually evaluation of it is tricky. Um
+[1:04:18] and uh there's less reasoning that will
+[1:04:21] go into it and maybe more like refining
+[1:04:23] the output.
+[1:04:25] Um details to be released soon. Uh this
+[1:04:28] is a new class so pardon our our mess.
+[1:04:32] Um then the assignments what they're
+[1:04:34] going to look like is the first one's
+[1:04:35] going to be on generation algorithms. Uh
+[1:04:37] we have the actual schedule on the on
+[1:04:39] the site but this is like roughly
+[1:04:41] September uh end of September
+[1:04:44] metageneration algorithms. So this is
+[1:04:47] you know things like reranking or
+[1:04:48] minimum based risk and so this is going
+[1:04:50] to be um uh roughly end of October. Um
+[1:04:54] hardware and optimization this is going
+[1:04:55] to be roughly uh end of November. And
+[1:04:58] then the final project uh basically
+[1:05:01] we're going to ask you to put all of
+[1:05:02] them together and you get to be uh you
+[1:05:04] get to be open AI and come up with your
+[1:05:07] GPT uh GPT whatever uh you can name it
+[1:05:09] whatever you want and uh you you give us
+[1:05:12] an API endpoint and we hit your API
+[1:05:15] endpoint and measure its latency
+[1:05:17] throughput and accuracy and so um
+[1:05:21] whichever one you're most excited about
+[1:05:24] um you can optimize the most. So you can
+[1:05:26] try to be the person who gets the most
+[1:05:27] latency, the person who gets the best um
+[1:05:30] uh throughput or the person who gets the
+[1:05:32] best accuracy, but you can't be really
+[1:05:33] bad at any of them. So um so that's uh
+[1:05:37] that's basically the idea. And the idea
+[1:05:39] is homework one, two, and three should
+[1:05:41] give you a foundation to do the final
+[1:05:43] project. So you shouldn't be have to
+[1:05:44] throw everything out. You can go and um
+[1:05:46] uh use the stuff that you did before.
+[1:05:50] Great. Um, that's all I have, but I I
+[1:05:53] realized I forgot the TA introduction
+[1:05:55] slide. So, I'd love to
+[1:06:02] >> Yeah, I I did mention it. Yeah. Sorry.
+[1:06:04] Um, I'd like to introduce our TAs and uh
+[1:06:07] Amanda who's a head TA and co
+[1:06:08] instructor. So, if you guys can come up.
+[1:06:14] >> Yeah. Actually, I didn't introduce
+[1:06:15] myself. I'm Graham. Nice to meet you. Um
+[1:06:19] uh so uh in particular with respect to
+[1:06:22] inference I'm interested in um
+[1:06:24] reasoning. I'm interested in agents and
+[1:06:27] tool use and uh kind of things in that
+[1:06:31] general direction. Um so th those are
+[1:06:34] kind of my specialties here. Um and then
+[1:06:37] Amanda if you want to.
+[1:06:38] >> I'm Amanda. I'm a fifth over here.
+[1:06:41] >> I'm a fifth year PhD student. I work
+[1:06:43] with Graham and with Matt Brimley for
+[1:06:45] machine learning and I'll be giving
+[1:06:47] about half the lectures. So you'll be
+[1:06:48] seeing a lot of me. Um I'm particularly
+[1:06:51] interested in long context in sort of
+[1:06:54] scaling up inference time compute to
+[1:06:56] accomplish different tasks and in
+[1:06:58] retrofitting or changing models to
+[1:07:00] behave differently at inference time
+[1:07:02] than they were originally trained to be.
+[1:07:07] >> Hi, my name is Bos Vish. Uh I am a first
+[1:07:10] year PhD student in LTI. uh figuring out
+[1:07:14] my interests, but I'm largely interested
+[1:07:16] in making smaller models better. So
+[1:07:18] whether it be from a compression angle
+[1:07:20] or like from from the training angle
+[1:07:23] with with synthetic data or
+[1:07:25] distillation.
+[1:07:31] >> Hi guys, I'm Clara. I'm also a fifth
+[1:07:33] year PhD student at LTI. Um I work on
+[1:07:37] efficiency. Um so then inferences become
+[1:07:39] more and more relevant to that side of
+[1:07:42] things as well. Yeah.
+[1:07:43] >> Great. And
+[1:07:46] yeah and unfortunately Shinra could not
+[1:07:49] be here uh for good reasons but he will
+[1:07:52] be here next week and uh maybe give a
+[1:07:55] self introduction then. So um that
+[1:07:58] that's all we have. Uh the questions and
+[1:08:01] discussion are up here. Um, oh, one one
+[1:08:03] other thing I forgot to mention is
+[1:08:05] there's a poster presentation at the end
+[1:08:07] of the course. It's going to be on
+[1:08:08] December 2nd. So, uh, make sure you have
+[1:08:10] that on your schedule. Um, and don't
+[1:08:13] forget about it. Uh, all the other
+[1:08:15] course policies are on the website. Um,
+[1:08:17] one thing I'd like to do now before
+[1:08:19] everyone leaves is I talked about what
+[1:08:22] we're going to talk about and I would
+[1:08:24] love feedback on what was missing, but
+[1:08:27] you would like to hear more of. Um, it
+[1:08:29] might be that I just didn't mention it
+[1:08:30] and we're already planning on handling
+[1:08:31] it, but I'd love to hear like, you know,
+[1:08:34] things that people are interested in
+[1:08:36] either now. Um, we can also take them on
+[1:08:38] Patza, but you know, any anyone have
+[1:08:41] questions or have any ideas of things
+[1:08:43] you'd like to hear more about?
+[1:08:47] >> Oh, yes. And there's going to be a quiz
+[1:08:51] um on Canvas, and that quiz for this
+[1:08:54] class is basically going to be that
+[1:08:56] feedback. So you can you can put it on
+[1:08:58] the quiz, but if you want to raise your
+[1:08:59] hand and talk about it now, um happy to
+[1:09:02] do that as well.
+[1:09:05] >> Yeah,
+[1:09:06] >> maybe a little bit about GPU basics. So
+[1:09:10] um you talked a little bit about how
+[1:09:12] GPUs are not being utilized at the time
+[1:09:14] of inference. Um that I clearly do not
+[1:09:18] understand completely because like what
+[1:09:20] does that even mean?
+[1:09:22] >> Yep.
+[1:09:23] >> Yeah. G GPU basics. We have a one class
+[1:09:25] on hardware. So yes, we will do that.
+[1:09:29] >> Yeah.
+[1:09:30] >> One is like
+[1:09:33] an assignment.
+[1:09:36] >> Yeah. serving of so for all of the
+[1:09:39] assignments
+[1:09:42] we we haven't completely worked this out
+[1:09:44] but I think what we want to do is we
+[1:09:45] want to say you need to implement two
+[1:09:47] things and we will give maybe two to
+[1:09:51] three recommended things and then if you
+[1:09:53] want to implement something else that's
+[1:09:54] not in the recommended things maybe you
+[1:09:56] can have one free uh like free thing
+[1:09:59] where you can propose a thing that you
+[1:10:01] uh you implement would be great for the
+[1:10:03] efficiency portion I think um But uh one
+[1:10:07] thing I I didn't mention is we are kind
+[1:10:08] of like fixing the models that people
+[1:10:11] are allowed to use for the last um for
+[1:10:14] the last assignment because we want
+[1:10:16] everybody to be on efficient foot sorry
+[1:10:18] on the same footing. Um and so I don't
+[1:10:22] think at the moment we plan to have ane
+[1:10:24] model there just because it'd be uh more
+[1:10:27] more more work and and more tricky but
+[1:10:30] um yeah that that's great feedback and
+[1:10:32] we will talk about a lot.
+[1:10:34] >> Second is that
+[1:10:36] how
+[1:10:38] quests are batched together so like
+[1:10:40] you're getting requests from multiple
+[1:10:42] people at different amount of times.
+[1:10:44] >> Yeah.
+[1:10:45] >> How is this request which can return in
+[1:10:47] the
+[1:10:48] >> Yeah. So how how requests are batched
+[1:10:51] together, we're going to talk about that
+[1:10:52] a little bit when we talk about uh
+[1:10:54] libraries like BLM and SG lang because
+[1:10:56] that's basically like one of the big
+[1:10:57] innovations they have there. But yeah,
+[1:10:59] we'll we'll definitely cover that.
+[1:11:01] >> Um model size and how it affects
+[1:11:03] accuracy and if that's a mode to
+[1:11:06] increase infrance speed and stuff like
+[1:11:08] that.
+[1:11:08] >> Yeah, for sure. model model size and I
+[1:11:10] think we're gonna talk about the
+[1:11:11] trade-offs between spending time on
+[1:11:14] using a big model versus spending time
+[1:11:15] on uh you know like doing lots of
+[1:11:17] rollouts and reanking them. So yeah,
+[1:11:19] it's on the menu. Yeah.
+[1:11:21] >> Rag
+[1:11:23] >> is rag going to be covered? Rag is
+[1:11:27] probably not going to be covered, but
+[1:11:28] we're going to be covering um yeah,
+[1:11:31] we're not we're not going to be talking
+[1:11:32] about uh embedding lookup really
+[1:11:36] probably.
+[1:11:40] Okay. Yeah. So, we'll we'll talk about
+[1:11:42] it briefly in the systems.mmodels thing.
+[1:11:44] Um uh but yeah,
+[1:11:47] >> which search algorithm
+[1:11:50] problem
+[1:11:51] >> which search algorithm to pick for the
+[1:11:53] problem? Yeah. Hopefully, we'll have
+[1:11:54] lots of lots of that in the first part.
+[1:11:56] Yeah.
+[1:11:57] >> Yeah.
+[1:12:00] >> What is going on in the back end?
+[1:12:04] that
+[1:12:06] >> um what's going on with reasoning
+[1:12:08] models? That's a good question. I wish I
+[1:12:09] knew the answer to that question too.
+[1:12:12] Uh but uh we we might talk about that a
+[1:12:16] little bit in the reasoning models
+[1:12:18] section to the extent that anybody knows
+[1:12:21] the answer to that. But yeah.
+[1:12:23] >> Yes.
+[1:12:27] >> Uh we will talk about distillation. I
+[1:12:30] don't think we're going to talk about
+[1:12:31] pruning because that's more a model size
+[1:12:33] model side thing, but maybe maybe we
+[1:12:35] could talk about it a little bit. We
+[1:12:36] could see. Yeah. Yeah.
+[1:12:43] >> Multi language model.
+[1:12:46] >> Um
+[1:12:48] we're not going to talk about generation
+[1:12:50] of stuff other than token sequences, you
+[1:12:53] know, which is usually text. Um, for
+[1:12:56] multimodal language models, I actually
+[1:12:58] don't know if like if the decoder is the
+[1:13:00] same, I don't know how much the
+[1:13:01] inference uh process changes. It it
+[1:13:05] could um but like it's not my specialty.
+[1:13:08] So, if you have anything in particular
+[1:13:10] that you'd like to hear about it, happy
+[1:13:11] to get feedback, but
+[1:13:16] okay. Yeah. Thanks a lot everyone. Uh,
+[1:13:19] great great feedback and we will uh see
+[1:13:22] you on Thursday.

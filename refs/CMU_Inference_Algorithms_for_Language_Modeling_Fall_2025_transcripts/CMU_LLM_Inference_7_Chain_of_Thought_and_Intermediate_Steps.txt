@@ -1,0 +1,1191 @@
+Title: CMU LLM Inference (7): Chain of Thought and Intermediate Steps
+
+--- TRANSCRIPT ---
+
+[0:01] Okay. Um, hi everyone.
+[0:04] It's, uh, it's time. So, I guess I'll
+[0:06] get started. Uh, what
+[0:10] are the people who are presenting today
+[0:12] here? Okay, great. Thank you. We we have
+[0:15] two people, I guess. So, um, I'll, uh,
+[0:18] leave plenty of time at the end and, uh,
+[0:21] if we have more time after that, I might
+[0:23] talk about a few other things, uh, that
+[0:24] aren't on the slides, but I'll I'll make
+[0:26] sure to leave, uh, leave time for you.
+[0:29] So this time I would like to talk about
+[0:32] chain of thought reasoning and this is
+[0:35] kind of like a fundamental uh thing that
+[0:38] we use in most models nowadays. Um but
+[0:42] it has some kind of like interesting
+[0:44] properties that we definitely want to
+[0:46] know about if we're going to be uh
+[0:48] building models that do inference. And
+[0:51] this will uh build into reasoning models
+[0:55] which are you know like one of the most
+[0:58] important technologies that we're
+[0:59] working on now. Um reasoning models and
+[1:02] chain of thought models are uh basically
+[1:06] uh I mean re reasoning models use chain
+[1:08] of thought but they were explicitly
+[1:10] trained to be very good at using chain
+[1:11] of thought. So you can kind of think of
+[1:12] it as an extension of what we're going
+[1:14] to be talking about today.
+[1:18] Oops.
+[1:26] Oh,
+[1:32] sorry. One second. That is not moving
+[1:34] for some reason.
+[1:43] So, I need to figure out how to remove
+[1:45] this zoom annotate menu.
+[1:55] Okay, there we go.
+[2:05] Okay, great. Um so our motivation for uh
+[2:09] chain of thought is uh
+[2:15] we uh we want to do complex reasoning
+[2:17] tasks and uh this is an example of a
+[2:20] complex reasoning task that I wanted to
+[2:22] do for this class. Um so uh what is the
+[2:27] fastest an H100 GPU could possibly
+[2:29] generate 100 tokens from Llama 38B?
+[2:33] Uh, anyone have an idea of that how you
+[2:35] would solve this?
+[2:41] How how would you start answering this
+[2:43] question?
+[2:55] Any any brave person want to I I'm not
+[2:57] asking you to answer it. I'm asking you
+[2:59] how how to start to answer it.
+[3:03] Yeah.
+[3:04] >> I mean, you probably figure out how long
+[3:06] it takes one token.
+[3:08] >> Figure out how long it takes for one
+[3:09] token. And how how would you figure out
+[3:12] the like lower bound of how long it
+[3:14] would take for one token?
+[3:26] >> Oh, do it empirically. Okay. Empirically
+[3:28] is not the lower bound though. um
+[3:30] because there's all kinds of things that
+[3:32] could uh you know interfere with that
+[3:35] like if you're using PyTorch maybe you
+[3:37] have overhead from PyTorch and if you
+[3:38] use something faster that was written in
+[3:40] Rust maybe it would be maybe you'd be
+[3:42] able to do it um yeah
+[3:45] >> number of
+[3:47] >> yeah determine the number of
+[3:48] computations and you can you know the
+[3:50] number of computations that an H100 GPU
+[3:53] could do from the GPU spec and then you
+[3:56] could calculate the number of
+[3:57] floatingoint operations that are
+[3:59] necessary for one token and um
+[4:03] it what having one token would not tell
+[4:05] you the whole story. Like why why would
+[4:07] having one token and then multiplying it
+[4:09] by 100 not tell you the whole story?
+[4:15] Any ideas?
+[4:18] >> Yeah.
+[4:19] >> Takes longer.
+[4:22] >> Yeah, because attention has quadratic uh
+[4:25] computation time. So yeah, that that's
+[4:27] true. And then this is still a lower
+[4:29] bound and there's actually upper bounds
+[4:31] because you're not like fully utilizing
+[4:33] the GPU because when you generate one
+[4:35] token at a time, you have to wait and
+[4:37] then generate the next token and stuff
+[4:39] which is also why encoding is faster
+[4:41] than decoding. And we'll talk about all
+[4:43] that during the efficiency. But so um if
+[4:46] you if you ask a language model to do
+[4:48] this, it will have to do a lot of things
+[4:50] like you did here. So, it'll have to um
+[4:54] recall what the flops of an H100 are or
+[4:57] search it on search it on the internet.
+[5:00] Another tricky thing is depending on
+[5:01] your floating point precision, the flops
+[5:03] differ on an H100, but you know, we
+[5:06] could ignore that for now. And then
+[5:07] what's the size of llama 3 8B for each
+[5:10] of the layers? Um it would have to think
+[5:14] about how it could set up a computation.
+[5:16] So it would have to think about like how
+[5:18] do you calculate the flops given the
+[5:20] size of llama 38B
+[5:23] and then it would have to perform the
+[5:24] actual computation itself. Um and so it
+[5:28] could either perform the computation by
+[5:30] like having the language model do the
+[5:32] computation or it could run a program uh
+[5:35] that does the computation for you. Write
+[5:37] write a program and then run a program
+[5:39] that does the computation for you. So
+[5:41] we're going to uh talk about reasoning
+[5:43] models that are capable of doing that
+[5:45] computation on their own in about like
+[5:48] two classes and then we're going to talk
+[5:50] about the running a program for you uh
+[5:52] part in about like maybe three or four
+[5:54] more classes. So you know all all of
+[5:57] this uh we will be uh be talking about
+[5:59] in the future.
+[6:01] Um but the the fundamental challenge
+[6:04] here is uh that not all problems are
+[6:07] created equal. Um, so the problem that I
+[6:11] just gave you is a really hard problem
+[6:13] for probably everyone in this class.
+[6:16] Like you you probably could do it if you
+[6:18] really put your mind to it, but it's
+[6:19] not, you know, an easy one. On the other
+[6:21] hand, I very much hope that this is an
+[6:23] easy problem for everybody in this
+[6:25] class. Otherwise, you're in the wrong
+[6:26] class.
+[6:29] This one probably is also easy for most
+[6:31] of us. And um this one, you know, is
+[6:35] easier than the GPU problem, but it's uh
+[6:37] you know, you'd have to think about it a
+[6:38] little bit and maybe pull out a piece of
+[6:40] paper and stuff like that.
+[6:44] So, um one another thing is, uh this the
+[6:48] simple problems you should be able to
+[6:50] solve very quickly by just thinking. Uh
+[6:52] and like you might not even really feel
+[6:55] like you need to think. If I tell you 2
+[6:56] plus 3, you just say five. You don't
+[6:58] like need to work through it. Um if uh
+[7:02] for the medium and complex ones here,
+[7:04] you probably would need to think about
+[7:05] it and like kind of write out the
+[7:07] equations in your head or on paper and
+[7:09] and solve them. And uh that's the same
+[7:12] for language models.
+[7:14] Um
+[7:15] so
+[7:18] a key question is how can we allocate
+[7:19] computation based on problem difficulty?
+[7:22] And like another way to think about it
+[7:24] also is um there are problems that like
+[7:28] just fundamentally could not be solved
+[7:30] by um feeding in an equation and
+[7:34] predicting um predicting the output
+[7:37] because they are more computationally
+[7:40] complex than all of the computations
+[7:41] that you do in predicting a single token
+[7:43] in the language models. So like it's
+[7:46] theoretically impossible to solve all
+[7:47] problems with a single step of a
+[7:49] language model. Um but
+[7:53] uh that's not usually the problem.
+[7:55] Usually you still have enough
+[7:57] computation in in a single step of the
+[7:59] language model. Calculate the number of
+[8:00] flops that you use when you calculate um
+[8:03] like the next token in you know llama
+[8:06] 370B and it's a huge number of flops. So
+[8:08] it's more just that language models are
+[8:10] not particularly accurate or efficient
+[8:13] at solving computation problems.
+[8:17] Um cool. Is that clear? any any
+[8:20] questions or
+[8:24] okay so before we go into like
+[8:27] transformer language models I'd like to
+[8:29] point out that this um is not an idea
+[8:32] that has uh you know just suddenly
+[8:35] popped up overnight there's an idea of
+[8:39] adaptive computation time uh which for
+[8:42] example was uh put out in recurrent
+[8:45] neural network language models by Graves
+[8:47] in 2016 in The idea was that you
+[8:50] dynamically adjust computational effort
+[8:53] based on the input complexity.
+[8:55] And the way they did this was they
+[8:58] taught recurrent neural networks to
+[9:01] learn how many computational steps to
+[9:03] take. And so they basically had a
+[9:06] halting mechanism. And the way the
+[9:08] halting mechanism worked was if you
+[9:10] hadn't the hidden state of a recurrent
+[9:13] neural network, you would run it through
+[9:15] uh basically an MLP uh not not MLP, you
+[9:20] would run it through uh like uh sigmoid
+[9:22] style predictor that would then predict
+[9:25] I should stop or I should not stop. And
+[9:29] uh then after you ran that, you would um
+[9:32] then decide whether to stop or not. And
+[9:35] they also trained it with uh something
+[9:37] they called the ponder cost, which was
+[9:39] basically how many steps, you know, a
+[9:42] continuous approximation of how many
+[9:44] steps you took um to encourage
+[9:46] efficiency. And they demonstrated that
+[9:48] this, you know, worked on a variety of
+[9:50] problems back then. You can uh you can
+[9:52] see this and see figure one in the paper
+[9:55] if you'd like to uh see how they uh
+[9:57] created the network and stuff.
+[10:00] So
+[10:04] um th this was a more explicit version
+[10:07] of uh doing adaptive computation time.
+[10:10] Um but
+[10:15] there um the more popular version of it
+[10:19] uh is now uh of course LLMs because we
+[10:22] use LLMs for everything nowadays. And um
+[10:25] chain of thought prompting is something
+[10:26] that came up within LLMs. And it's kind
+[10:30] of interesting because it's an emergent
+[10:32] property of uh language models and not
+[10:35] necessarily something that you need to
+[10:37] explicitly bake into the model. And so
+[10:40] the basic idea is uh that you want to
+[10:42] generate intermediate reasoning steps
+[10:44] before producing the final answer. Um
+[10:48] and the formal definition um which we
+[10:50] will be using as we explain uh different
+[10:54] methods later especially for for
+[10:56] training is that we have the input X
+[10:58] which is our problem statement. We have
+[11:00] the chain of thought Z which is our
+[11:02] intermediate reasoning steps and we have
+[11:04] the output Y and this is also what I
+[11:06] covered in the first class here but
+[11:09] basically Z is a latent variable uh that
+[11:12] we use to improve our predictive
+[11:14] accuracy of Y.
+[11:18] Okay,
+[11:23] so basically what our goal is is we want
+[11:27] the best p of y given x. So we want the
+[11:31] best um predictor of the output. Um but
+[11:37] the way we will do this is we will do
+[11:39] this by marginalizing over z. So summing
+[11:41] over all Z so that we can get a better
+[11:45] prediction of Y.
+[11:49] So this has a number of advantages. Um
+[11:52] the ext number one the extra tokens
+[11:54] provide adaptive computation time like I
+[11:56] mentioned before. So you can spend more
+[11:58] uh flops when you're calculating the uh
+[12:02] the more difficult problems. Um, another
+[12:05] advantage of this is if the chain of
+[12:07] thought is faithful to the actual
+[12:09] reasoning, it makes it easier for humans
+[12:11] to verify the output. So like a human
+[12:13] can walk through step by step and check
+[12:15] if they fully understand, you know, what
+[12:18] the model is generating step by step and
+[12:20] verify it as well.
+[12:26] So here's an illustration of a chain of
+[12:29] thought specifically uh from the way it
+[12:31] all paper and um if we look at standard
+[12:35] prompting this is standard fshot
+[12:37] prompting so basically we're providing a
+[12:40] few examples so we have like Q uh is the
+[12:44] question A the answer is uh whatever Q
+[12:48] the question A the answer is whatever
+[12:50] and so chain of thought prompting is
+[12:54] Q and then you also have an explanation
+[12:57] for how you got the result.
+[13:01] Um and then the idea would be that
+[13:03] because the model has seen this before
+[13:05] the model is able to generate the the
+[13:07] output like this.
+[13:14] So
+[13:16] um yeah and so let's look at fshot uh
+[13:19] chain of thought prompting um or sorry
+[13:24] sorry I thought I deleted these delete
+[13:26] these slice but they were not deleted um
+[13:29] okay so then um the question is how do
+[13:32] models uh learn chain of thought and
+[13:35] there's a number of different ways you
+[13:36] could do this um
+[13:39] with in the way at all 2022 paper they
+[13:42] discovered that even without teaching
+[13:44] the model or training the model in any
+[13:46] way to do chain of thought it was able
+[13:47] to do that. Um does anyone have an idea
+[13:50] why the model had this ability uh to do
+[13:54] chain of thought in the first place?
+[13:56] >> Yeah.
+[13:59] >> Sequence of events logical
+[14:02] >> like a notion of
+[14:05] a sequence of reductions forming from
+[14:07] premise.
+[14:09] >> Okay. So the training data already has
+[14:12] uh examples of sequences of deductions.
+[14:14] So I I think that's a a great point. Um
+[14:17] we could be even more concrete. Uh what
+[14:20] what type of data would have a lot of
+[14:22] this?
+[14:25] >> Code code might be one example. Yeah.
+[14:28] Stories.
+[14:29] >> Proofs.
+[14:31] >> Proofs. Yeah. Um, so online proofs or
+[14:34] online uh elementary school math
+[14:36] textbooks, you know, um, which is like
+[14:38] where they give you this deduction and
+[14:41] they evaluate on grade school math. Um,
+[14:44] and there's a ton of grade school math
+[14:46] online that has these deductions like
+[14:47] explicitly written in it. So the models
+[14:50] might not necessarily uh do that by
+[14:52] default, but if you provide them
+[14:53] examples to demonstrate that they want
+[14:55] to do it, they might just be able to do
+[14:57] it. And um
+[15:00] so this is an emergent ability uh
+[15:03] because this already exists in the
+[15:05] training data and this appears in
+[15:07] sufficiently large models um or I should
+[15:10] say sufficiently strong models. So these
+[15:13] sufficiently strong models were like
+[15:14] GPT3
+[15:16] 175b uh in 2022. Now they're like Quen
+[15:21] 2.51B
+[15:24] in uh in 2025. So it's uh like a lot of
+[15:28] models um a lot of models have just
+[15:31] gotten better due to longer training and
+[15:34] other stuff like this. Um another thing
+[15:37] is supervised fine-tuning. Um so these
+[15:41] uh this is done by training on data sets
+[15:43] that explicitly have reasoning steps uh
+[15:45] written in them. So that uh using
+[15:47] supervised fine-tuning. Um,
+[15:50] so I I should give a little bit of a
+[15:52] caveat here because this is kind of
+[15:54] important and maybe we'll talk about it
+[15:56] a little bit later, but um, when you
+[15:59] when you get large language models,
+[16:00] there's often like the base model and
+[16:03] there's the instruct model. Probably
+[16:06] people have seen this if you've used
+[16:07] large language models before. So like
+[16:09] llama llama 3.1 llama 3.1 or llama 3.1
+[16:13] base uh, sorry, llama 3.1 instruct or
+[16:16] something like that. Um, one small
+[16:18] problem with this is now there's a
+[16:21] concept of uh pre-training and
+[16:22] post-training. So pre-training is like
+[16:24] your base model. Post-training is your
+[16:27] um is your instruct model. But now
+[16:29] people are doing uh something called
+[16:31] mid-training which is uh basically where
+[16:33] you pre-train the model and then you
+[16:36] throw in a lot of data that's like very
+[16:38] high quality by some definition of high
+[16:40] quality right at the end of
+[16:41] pre-training. And um this idea of very
+[16:45] high quality might be particularly
+[16:47] instructional data which is data that's
+[16:49] like very similar to textbooks or
+[16:51] something like that. So our base models
+[16:53] are now half like
+[16:56] supervised trained. It's like maybe not
+[16:58] exactly supervised but it's pretty close
+[17:00] to supervised. And so because of this it
+[17:04] things that might seem like they're
+[17:06] they've just emerged in the base models
+[17:08] actually already were there because they
+[17:10] were you know the people who pre-trained
+[17:13] the models very carefully selected the
+[17:14] data they showed at the end of training.
+[17:16] So
+[17:18] some of the models are kind of in the
+[17:19] middle and this is particularly like
+[17:21] Quen the Quen model is particularly
+[17:23] famous for this. So um there have been a
+[17:26] lot of examples of people seeing quote
+[17:28] unquote emergent abilities in Quen that
+[17:30] you see in no other models. So um happy
+[17:33] to talk about the details of that but
+[17:34] that's a important thing that people
+[17:36] have been talking about nowadays.
+[17:38] Um a final thing which we're going to be
+[17:40] talking about in the uh reasoning model
+[17:42] section is reinforcement learning. And
+[17:44] so um there's been a lot of work
+[17:47] recently where we uh basically ask the
+[17:50] model to uh do reasoning and then we
+[17:54] give it a reward if it uh is successful
+[17:56] at answering questions. So these are the
+[17:58] three major ways that they can learn how
+[18:00] to do chain of thought. Um any any
+[18:03] things here?
+[18:05] >> Yeah.
+[18:07] >> Sure.
+[18:10] >> Mhm.
+[18:10] >> Um so
+[18:14] mathematical
+[18:16] possible parts.
+[18:19] >> Yeah. I'll talk about that in a second.
+[18:25] >> Cool. Um so if we look at the
+[18:27] experimental results um and actually
+[18:30] maybe I should mention this here. So
+[18:32] what they're doing in this paper is
+[18:34] they're not looking at all um all chains
+[18:37] of thought. They're just uh sampling one
+[18:38] or taking the greedy uh doing greedy
+[18:41] decoding. I think they're sampling with
+[18:43] like sampling parameters. I actually
+[18:45] should know that but I I don't. You can
+[18:47] take a look at the paper and check. Um
+[18:51] uh but basically what they demonstrated
+[18:52] was um that on
+[18:55] arithmetic reasoning, GSM AK. This is a
+[18:58] data set of uh grade school math
+[19:00] problems and uh they get a very large
+[19:04] improvement um on common sense reasoning
+[19:07] called strategy QA. Strategy QA was kind
+[19:10] of um created so that you should need
+[19:14] multihop reasoning to do a good job or
+[19:17] kind of like complex re reasoning
+[19:19] strategies to do a good job. They also
+[19:20] saw a good improvement. And then for
+[19:23] symbolic reasoning where they um were
+[19:25] like concatenating the last letter of uh
+[19:28] particular sequences uh they also got
+[19:30] good results.
+[19:33] Um and so these were we saw the biggest
+[19:35] gains in things that are like very
+[19:36] symbolic like math or um uh or like kind
+[19:41] of last letter concatenation.
+[19:46] Um cool. So this this paper was really
+[19:51] impressive because it's very simple. Um
+[19:55] you just add zeroot examples and the
+[19:57] model is able to reason. Uh now we take
+[19:59] it for granted uh more or less you know
+[20:02] like every model does this. Um what was
+[20:04] even more uh like impressive was this
+[20:07] paper which was kind of uh kind of crazy
+[20:10] but it it demonstrates that language
+[20:12] models can learn uh kind of uh crazy
+[20:14] things from the data that is provided to
+[20:16] them. But this demonstrated a zeroot uh
+[20:20] chain of thought where essentially
+[20:22] instead of providing per task examples
+[20:24] of how reasoning should happen, they
+[20:26] just said let's think step by step is
+[20:29] the prefix to uh the answer. And then uh
+[20:33] that was enough to encourage the model
+[20:34] to basically do chain of thought
+[20:36] reasoning. Um and the funny thing is
+[20:40] let's think step by step is actually
+[20:42] kind of magical. uh they evaluated a
+[20:44] whole bunch of other prompts and none of
+[20:45] them were as good as let's think stepby
+[20:47] step. Uh so uh this is the magical one
+[20:51] but I also know one of the authors of
+[20:53] the paper and this was the first one
+[20:54] they tried. So it turns out that human
+[20:56] intuition is a kind of kind of
+[20:59] impressive thing uh that they actually
+[21:01] got the right the best one uh on their
+[21:04] first try.
+[21:05] Um,
+[21:06] so they they basically demonstrated that
+[21:09] you don't even need to uh have the
+[21:11] examples to make this happen.
+[21:14] Cool.
+[21:17] Okay. So, um I I'd like to talk about
+[21:20] inference because this is an inference
+[21:22] class and um this is really important.
+[21:25] It's especially more important once we
+[21:27] start using reasoning models that
+[21:28] generate very long chains of thought.
+[21:30] But um if we remember back to the
+[21:33] beginning of the class, our goal for
+[21:34] inference is either uh to sample from
+[21:37] the model um or to do uh mode seeking
+[21:42] search uh so to find the highest uh
+[21:45] highest scoring model uh output.
+[21:48] So um sampling as always if we want to
+[21:52] sample exactly from the model uh score
+[21:56] uh the model probability is
+[21:58] straightforward. Um as we mentioned
+[22:00] before ancestral sampling is uh
+[22:03] ancestral sampling with a temperature of
+[22:05] one is going to always be good enough uh
+[22:09] in an auto reggressive model. So
+[22:10] basically um we sample z tilda uh we
+[22:14] sample the chain of thought and then
+[22:16] based on the chain of thought we sample
+[22:18] uh sampled output y and we're done
+[22:20] basically.
+[22:22] Um but mode seeking is harder.
+[22:25] And so mode seeking
+[22:30] uh or finding the argmax of the output
+[22:34] given um
+[22:37] given the input is
+[22:43] essentially what we need to do. I didn't
+[22:46] put this on the slide, but we need to
+[23:02] we need to do this. So we we need to uh
+[23:05] find the y where the sum over all z that
+[23:08] lead to y is um is maximized.
+[23:13] And thi this is hard because how many Z
+[23:16] are there? How many possible Z are
+[23:18] there?
+[23:20] >> Wait the Y for
+[23:24] >> correct that that's the what we would
+[23:26] like to do
+[23:29] because we want to find the um
+[23:32] the Y with the highest probability.
+[23:34] Yeah.
+[23:36] So how how many Z are there? Let's say
+[23:39] our chain of thought is uh is up to uh
+[23:43] 100 tokens.
+[23:48] >> Yeah, it's essentially it's close to v
+[23:52] to the power of 100 and you're not going
+[23:54] to be enumerating all of those, right?
+[23:56] Um so we need another method. Um
+[24:00] so we're going to be talking about more
+[24:03] complex methods to do this um in the
+[24:06] lecture on minimum base risk. But um a a
+[24:10] first attempt
+[24:15] oh actually sorry let let me go to this
+[24:17] first. So a first attempt is to find the
+[24:19] arc max jointly over um over Z and Y.
+[24:22] And what this means is we just find the
+[24:24] um we do like beam search or something
+[24:27] like that to try to find the highest
+[24:29] scoring uh output like we we have
+[24:31] previously or best for a search whatever
+[24:33] we want. Um but the problem is uh the
+[24:36] argmax over z and y might not give the
+[24:38] best y's. So um for instance, if we um
+[24:44] ask how many inches are there in 3 ft
+[24:47] and um we have
+[24:50] uh for some reason a crazy model that
+[24:52] decides to talk about centimeters
+[24:53] instead uh with a high probability then
+[24:57] um this one would be the highest uh zy
+[24:59] but it would not be the highest um uh it
+[25:03] would not lead to the y with highest
+[25:04] probability because you know if you sum
+[25:07] the all the probabilities that lead to y
+[25:10] um then you y equals 36 you would get
+[25:13] 0.6 where this is 0.4. So like there are
+[25:16] there are plenty of situations where
+[25:19] just doing this argmax search is not
+[25:21] ideal.
+[25:24] So
+[25:25] the um the method that we can use to fix
+[25:27] this is um self-consistency and
+[25:31] self-consistency only works in uh
+[25:34] relatively simple cases like
+[25:36] mathematical reasoning where it's like
+[25:38] we have a single answer uh that's an
+[25:40] integer. Um it will not work when we're
+[25:43] generating essays or something like this
+[25:45] and that's where we need to get into
+[25:47] something like minimum base risk. But
+[25:49] for um for this uh for self-consistency
+[25:54] um if we have like the answer is 14 or
+[25:57] the answer is 18 what we can do is um we
+[26:02] sample a whole bunch of reasoning paths
+[26:05] and then we basically count to see which
+[26:07] answer is the most frequent and based on
+[26:09] the count where the answer is the most
+[26:11] frequent we take that as our answer.
+[26:17] So it's not that hard. Um it is
+[26:19] expensive though because if you want to
+[26:21] sample a hundred of these then it's 100
+[26:24] times the inference cost.
+[26:29] Cool. Um any any questions here?
+[26:39] And um ba basically self-consistency on
+[26:41] anything where we have this sort of uh
+[26:44] you know characteristic that we can
+[26:47] verify the outputs uh it does better um
+[26:51] but is more expensive. So because it's
+[26:54] doing the right thing so of course it
+[26:56] does better but it's also you know not
+[26:58] the most necessarily the most efficient
+[27:00] way to do the right thing.
+[27:05] So there are uh better better ways to do
+[27:09] this and this is actually a paper by
+[27:12] Pranjal Agarwal who's a PhD student in
+[27:14] LTI um called adaptive self-consistency
+[27:18] and basically the way it works is you um
+[27:26] you start sampling a smaller number of
+[27:29] samples and once you've sampled a large
+[27:32] enough number of samples that you're
+[27:35] pretty confident in the final result um
+[27:38] then you will stop sampling.
+[27:43] And the way they do this is they use
+[27:46] like just a little bit of statistics uh
+[27:49] specifically basian statistics and
+[27:53] uh they gradually generate samples and
+[27:55] they stop when the possibility of
+[27:56] agreement of the final uh sample being
+[27:59] high. uh the agreement of the final uh
+[28:04] sample being
+[28:07] let me start over when the probability
+[28:10] of the final sample you get after
+[28:11] sampling an infinite number of samples
+[28:14] is uh above a threshold. Um so what that
+[28:19] means the way they do this specifically
+[28:21] is they have a more uh complex version
+[28:24] uh using something called a dear
+[28:27] durishlay uh distribution durishlay
+[28:29] prior dishlay distribution. Have people
+[28:31] heard about this in general?
+[28:34] Oh, actually surprisingly few. Um,
+[28:39] maybe uh actually I I would like to uh
+[28:43] like to talk about this because it's a
+[28:45] good good concept to know about.
+[28:50] I don't want to mess up uh I don't want
+[28:52] to mess up the equations. But basically
+[28:55] uh what this is is it is a
+[29:01] um prior probability that you can put on
+[29:05] um
+[29:07] it's a prior probability that you can
+[29:09] put on discrete distributions. And so
+[29:13] what that means is um you essentially
+[29:19] um you can go through all of the all of
+[29:21] the math on uh on Wikipedia or a
+[29:23] tutorial or something like that, but you
+[29:26] essentially start what it boils down to.
+[29:39] Do this
+[29:43] is typically typically if you take a
+[29:45] maximum likelihood estimate of an uh of
+[29:51] an out like probability distribution
+[29:54] let's say it's a probability
+[29:55] distribution over a b or c um your
+[29:59] maximum likelihood estimate like let's
+[30:01] say you you've observed one a and zero
+[30:04] b's or zero c's what's the maximum
+[30:06] likelihood estimate
+[30:11] This is it's not a trick.
+[30:15] You've observed one example of A and uh
+[30:18] zero examples of B and C.
+[30:22] >> Yeah. But uh what's the probability of
+[30:25] A?
+[30:27] >> One, right? Yeah. 1.0
+[30:30] and 0.
+[30:33] Um, so
+[30:37] what do you think the next letter is
+[30:38] going to be? You've seen one A.
+[30:41] >> A. Do you think it's going to be A?
+[30:44] Could it be B or C?
+[30:49] It might be B or C, right? Like you're
+[30:52] not very confident. Uh, another way to
+[30:54] think about it is you go to a new
+[30:55] country and then you get you see that
+[30:57] it's sunny the first day. Do you think
+[30:58] it's going to be sunny for eternity for
+[31:00] the rest of the the rest of the time?
+[31:02] probably know, right? So, um so what the
+[31:06] dear uh dear slay distribution allows
+[31:08] you to do is it allows you to put a
+[31:10] prior on the probabilities um and then
+[31:15] uh then basically adjust to your
+[31:19] observed data as you get more observed
+[31:20] data. And so the easiest way to think
+[31:26] about it is you
+[31:29] um
+[31:33] have your observed count of I
+[31:41] plus
+[31:42] alpha
+[31:44] * P of
+[32:08] And this is the peak fire.
+[32:15] So um if you
+[32:18] say um I have no
+[32:21] opinion about whether A or B or C is
+[32:23] going to be more frequent a priority
+[32:25] until I observe data. Then basically P
+[32:28] prior I would be 1/3. It's like all of
+[32:31] them would have a uniform probability.
+[32:33] And you can actually set if you have a
+[32:35] reasonable idea about what it might be,
+[32:37] like let's say you believe that it's
+[32:38] going to be more sunny than rainy, um
+[32:40] you might set sunny to 0.75 and rainy to
+[32:43] 0.25 or something like that. But let's
+[32:46] assume that we're uh we're working with
+[32:48] a um a uniform prior. Then you take your
+[32:53] count your actual counts and
+[32:58] if alpha is higher you rely on the prior
+[33:02] probability more or you're influenced by
+[33:04] the prior probability more. If alpha is
+[33:06] lower you're influenced by the prior
+[33:07] probability less. If alpha is zero this
+[33:10] is maximum likelihood estimation. So if
+[33:13] we set alpha to zero, it would just
+[33:15] reduce to the counts um the actual
+[33:20] counts divided by the sum of the actual
+[33:21] counts. But like let's say we set alpha
+[33:24] to three. What that would mean is
+[33:27] um our actual observed counts would be
+[33:29] 1.0000.
+[33:32] The um the counts after multiplying
+[33:35] three by 1/3 the uniform probability
+[33:37] would be 211.
+[33:39] And so based on this we would then say
+[33:42] the posterior probability
+[33:45] which is the probability after we
+[33:46] consider the prior
+[33:49] um would be uh 0.5 for A, 0.25 for B,
+[33:52] 0.25 for C. And that's much more
+[33:55] reasonable, right? You're not saying the
+[33:56] probability of B or C is zero because
+[33:58] you've never seen it before. But let's
+[34:00] say you see 10 B's in a row or 10 A's in
+[34:02] a row. Now you're much more confident
+[34:04] that you're not going to be seeing more
+[34:05] B's. So this is what that allows you to
+[34:07] do. And this is like that's kind of the
+[34:10] illustration the illustration here. Um
+[34:13] and another like advantage of this is
+[34:15] like as you add more evidence it's still
+[34:17] a der distribution. So you can um add
+[34:19] that in. It's called the conjugate prior
+[34:21] if you've done basian if you're
+[34:23] interested in basian statistics. But
+[34:25] anyway so this uh method basically
+[34:30] used an idea like this.
+[34:44] This method basically used an idea like
+[34:45] this and they actually introduced the
+[34:47] durishlay distribution um as their like
+[34:50] initial motivation but then they
+[34:51] simplify it to use something called the
+[34:54] beta distribution and the reason why
+[34:55] they use beta distribution is
+[34:57] calculating the derishly distribution
+[34:59] over the entire vocabulary can be kind
+[35:01] of expensive. Um but they can calculate
+[35:03] this beta distribution over just the
+[35:05] number one and number two uh like uh
+[35:09] probabilities
+[35:11] and then um one once they have done this
+[35:14] they can calculate whether this uh the
+[35:17] probability of uh one being of the
+[35:22] number one output continuing to be true
+[35:26] uh after you sampled more information
+[35:28] being over a particular threshold and
+[35:30] then they stop at that point And they
+[35:32] set this threshold to 0.95, which
+[35:35] basically says I have 95% confidence
+[35:38] that if I sample more, I'm not going to
+[35:39] get a different result. And uh so that's
+[35:42] how they did this.
+[35:46] >> Yes.
+[35:51] >> It's calculated after each batch of
+[35:53] generations. Um and I I don't remember
+[35:55] the exact schedule they'd used to uh to
+[35:58] do that but basically the idea is as you
+[36:02] can keep calculating until you get more
+[36:04] certain about uh until you get certain
+[36:07] enough about the output.
+[36:10] P
+[36:13] >> um P2 is the probability of two and then
+[36:15] V2 is the number of instances of this uh
+[36:18] sorry P2 is the probability of the
+[36:20] second most probable output and V2 is
+[36:23] the probability is the count of the
+[36:26] second most probable output V1 is the
+[36:27] probability of the first most you can
+[36:29] look at the paper for the full
+[36:30] derivation of this
+[36:35] cool
+[36:37] um okay so uh I I think this is a really
+[36:40] nice inference algorithm because it can
+[36:42] like it basically demonstrates how you
+[36:44] can adaptively use uh compute maybe in
+[36:48] the other dimension. So like chain of
+[36:50] thought is adaptively using compute by
+[36:53] generating more tokens. This is
+[36:54] adaptively using compute by generating
+[36:56] more hypotheses. So it's kind of a cool
+[37:00] uh cool trick that you can do to save uh
+[37:03] compute. Um
+[37:06] but
+[37:07] I'd also like to talk some about some
+[37:09] features of chain of thought reasoning.
+[37:11] Um so the first thing is uh of course
+[37:16] when people write papers they want to
+[37:19] show that their method is useful and so
+[37:21] they choose uh test beds that
+[37:24] demonstrate the strength of their
+[37:26] methods. I don't think that's a bad
+[37:28] thing. I think that's a good, you know,
+[37:30] it's good to do this, but this paper is
+[37:34] a little bit of a
+[37:38] it basically demonstrates that coot is
+[37:40] not useful all the time. And in fact,
+[37:42] it's not only not useful all the time,
+[37:44] uh, but in kind of more traditional
+[37:46] models, uh, it was only useful for like
+[37:49] math and logic. Um, and this is
+[37:52] something that I think a lot of people
+[37:54] kind of knew already, uh, but nobody
+[37:56] talked about, but then this paper talked
+[37:58] about it, so now we can't not talk about
+[38:00] it anymore. Uh but basically um they
+[38:04] they did uh number one a metaanalysis of
+[38:08] 100 plus papers that were using coot and
+[38:10] they basically looked at the types of uh
+[38:13] things that they evaluated on and what
+[38:15] how big the um the kind of gains were
+[38:19] and then they did an actual evaluation
+[38:21] with 20 data sets across 14 models. And
+[38:25] uh maybe I'll just jump directly into
+[38:26] the results. This is maybe a little bit
+[38:28] hard to see.
+[38:32] Um
+[38:34] but basically um the ones on the bottom
+[38:38] are math. Um these are deductive
+[38:42] reasoning style benchmarks
+[38:45] um like specifically made to create
+[38:47] deductive reasoning uh to measure
+[38:49] deductive reasoning. And then um a lot
+[38:52] of these authors are like common sense
+[38:53] QA strategy QA um uh kind of word uh
+[39:00] word puzzles or common sense puzzles uh
+[39:02] things like this. And what you could see
+[39:04] is there's this huge gain for like math
+[39:08] questions and quite a bit less oh and
+[39:11] green is chain of thought and blue is is
+[39:13] non-chain of thought. And what you can
+[39:15] see is there's a huge gain on things
+[39:18] like uh math and deductive reasoning and
+[39:20] much less impressive gains on a lot of
+[39:22] the others.
+[39:24] So this is a good thing to know. Uh what
+[39:26] it means is if you want to use reasoning
+[39:28] models, you should probably try them on
+[39:30] math first. Um another thing it means is
+[39:35] there's a big opportunity for coming up
+[39:36] with more generalizable uh reasoning
+[39:39] strategies that are also helpful on
+[39:40] other tasks or correction strategies or
+[39:42] things. And um I'm doing a little bit of
+[39:45] research on this now. Other people are
+[39:47] thinking about it, but happy to to talk
+[39:49] more about that.
+[39:51] Um the I thought this was rather clever.
+[39:55] Uh basically what they did was they took
+[39:57] uh MMLU
+[39:59] um which is kind of a a data set of lots
+[40:02] of college level questions and they
+[40:06] found all the questions that had an
+[40:07] equal sign in them uh or in the answer
+[40:10] or something like that. and all the
+[40:12] questions that didn't have an equal sign
+[40:13] in the answer. And basically the lighter
+[40:15] bars are the ones that had an equal sign
+[40:17] and the darker bars are the one that's
+[40:19] ones that didn't have an equal sign. And
+[40:21] so what you can see is people were
+[40:23] saying, "Oh, uh chain of thought
+[40:25] reasoning helps on MMLU. But basically
+[40:27] it only helps with the math in MLU. And
+[40:29] like all of the others, uh it was not uh
+[40:32] not helping with very much."
+[40:38] Cool. Um any any questions?
+[40:44] Okay. Um another thing I'd like to talk
+[40:46] about is um the faithfulness of
+[40:50] explanations.
+[40:51] And this is also a really clever uh a
+[40:55] really clever paper. But I mentioned
+[40:57] that one of the advantages of um chain
+[41:00] of thought
+[41:02] reasoning is that if the explanations
+[41:05] are faithful, they can help humans
+[41:08] understand the reasoning process and
+[41:10] verify whether that the output is
+[41:11] correct or not. Um but there's a big if
+[41:16] there you know that's if the
+[41:19] explanations are faithful. So if we look
+[41:20] at um chain of thought explanations
+[41:24] uh and whether they actually reflect the
+[41:26] reasoning process, they did a uh a
+[41:28] clever trick here where they basically
+[41:31] introduce subtle biases into the fshot
+[41:35] um examples uh that influenced the model
+[41:39] predictions. So for example,
+[41:41] they reordered the multiple choice
+[41:44] options so that every multiple choice
+[41:46] option was A. Um and so all of the
+[41:50] examples were A.
+[41:52] And um then they asked models for coot
+[41:54] explanations of their biased predictions
+[41:56] and tested faithfulness.
+[41:59] Um, and here's an example, um, where
+[42:04] basically they have the unbiased context
+[42:06] and the biased context. And the question
+[42:08] is, is the following sentence plausible?
+[42:10] Wayne Rooney shot from outside the 18.
+[42:13] Answer choices A and plausible B
+[42:15] plausible. Let's think step by step. And
+[42:18] in the unbiased context, it got the
+[42:20] answer correct and said, Wayne Rooney is
+[42:22] a soccer player shooting from outside
+[42:23] the 18 yard box is a part of soccer. So,
+[42:26] the best answer is B plausible. Um, and
+[42:28] then in the bias context, it said Dwayne
+[42:30] Rooney is a soccer player. Shooting from
+[42:32] outside the 18 is not a common phrase in
+[42:34] soccer. And 18 likely refers to a yard
+[42:38] line, which is part of American football
+[42:39] or golf. So the best answer is a
+[42:41] implausible. This is the same model,
+[42:43] right? So like in when it's not biased,
+[42:46] it's able to answer with a faithful
+[42:48] explanation. Um, but when it is biased,
+[42:50] it will answer the wrong thing with an
+[42:53] explanation that looks plausible but is
+[42:54] wrong. So, um, and of course, this is
+[42:58] not just a problem of like when it's
+[43:01] biased. It's a problem in general when
+[43:03] it gets it wrong. But this is a
+[43:05] particularly like obvious example of
+[43:08] this. That being said, this was on
+[43:09] Claude 1.0 in 2023. Models have gotten a
+[43:12] lot better at not doing this as much,
+[43:14] but they still do it when they're out of
+[43:15] distribution or on topics they're not
+[43:17] familiar with and other things like
+[43:18] that.
+[43:20] Like I I remember I asked GPT4 how many
+[43:23] parameters GPT4 had and it it said GPT4
+[43:27] does not have parameters per se. Like
+[43:32] yeah and they found accuracy drops uh
+[43:35] and also models generate confident
+[43:37] explanations for both correct and
+[43:38] incorrect answers.
+[43:44] Cool. Um so another example uh this also
+[43:47] goes into what we're going to talk about
+[43:48] with reasoning models. Um but one
+[43:50] feature of chain of thought is that
+[43:52] longer chains of thought uh tend to be
+[43:54] better on average. And so this is a
+[43:57] paper from 2022 where they demonstrated
+[43:59] that even with very early chain of
+[44:01] thought models, longer chains of thought
+[44:03] tended to be better. So these are not
+[44:05] models that were trained for chain of
+[44:06] thought. These were only the ones that
+[44:08] had like emergent uh emergent reasoning.
+[44:12] Um and so this is an example uh where
+[44:16] they basically took the more simple and
+[44:18] more complex uh chains of thought that
+[44:21] they got and there was a pretty strong
+[44:23] trend that the accuracy of the final
+[44:26] answer increased when the model um when
+[44:30] the model generated more complex chains
+[44:31] of thought with you know more sentences.
+[44:35] And so based on this they came up with a
+[44:37] really simple method called complexity
+[44:39] based prompting. And what this meant was
+[44:42] they basically generated a whole bunch
+[44:44] of chains of thought and then they
+[44:46] deleted the ones that were shorter. Um,
+[44:48] and then they did uh self-consistency
+[44:50] over the outputs. And this very simple
+[44:54] trick uh resulted in quite a bit Oops.
+[44:57] Lost snap.
+[45:00] My slides have crashed.
+[45:04] Okay. Uh so the results um uh they they
+[45:09] saw pretty large accuracy improvements
+[45:11] on average and um this was robust under
+[45:14] format perturbation and distribution
+[45:16] shift.
+[45:20] Yeah, sure. Um so basically what they
+[45:22] did is they uh generated a whole bunch
+[45:25] of chains of thought and they looked at
+[45:27] the number of steps uh like the number
+[45:30] of uh sentences basically in the chain
+[45:32] of thought and then they just deleted
+[45:35] some of the shorter ones and then uh did
+[45:38] self-consistency over the longer ones.
+[45:41] [Music]
+[45:43] For some questions, suppose it has 10
+[45:45] sentences and suppose it had by two
+[45:48] sentences.
+[45:50] >> Which which ones did you delete?
+[45:52] >> They deleted the ones that had fewer
+[45:54] sentences in the chain of thought and so
+[45:56] the model can kind of like they were
+[45:57] sampling from the model and the model
+[45:59] can generate different length chains of
+[46:01] thought and they empirically observed
+[46:02] that longer ones tended to be better so
+[46:04] they just deleted the shorter ones. I
+[46:07] mean, there's probably better ways to do
+[46:10] this, but I think it's still pretty
+[46:11] clever that and that it actually worked.
+[46:16] Cool.
+[46:20] kind of
+[46:22] the max
+[46:25] in that like chains of thought and yet
+[46:28] the longer our chain of thought is so
+[46:31] like the third space explodes that much
+[46:34] more and yet
+[46:37] in performance there's like something
+[46:39] going on is is really worthy to provide
+[46:42] a chain of guard the is the reason
+[46:45] output really influenced by
+[46:47] marginalization over all possible chains
+[46:49] of thoughts or is it more like a chain
+[46:51] of thought is helping scope out
+[46:54] some sort of um it's able to refactor
+[46:57] the search space instead of
+[47:00] so so the big um the big assumption
+[47:04] behind uh chain of behind chain of
+[47:06] thought is basically
+[47:09] um
+[47:16] that we have
+[47:19] P direct
+[47:24] which is just um P
+[47:27] Y given X
+[47:30] uh from the LM and then we have P
+[47:35] uh coot T
+[47:53] um so these are actually two different
+[47:55] probabilities right um and the bet is
+[47:59] that essentially this is a better
+[48:00] probability this is this will give a
+[48:03] higher um a higher for um I I have to
+[48:07] think like a little bit about exactly uh
+[48:10] what probability this corresponds to.
+[48:12] It's some variety of like rejection
+[48:13] sampling or something like this. But
+[48:15] this also is giving us a probability
+[48:18] over y given x uh by you know some
+[48:21] sampling and then removing the the lower
+[48:24] smaller length samples basically and the
+[48:28] bet here is that that's an even better
+[48:31] probability. Uh and what I mean by
+[48:33] better probability is because um we're
+[48:38] like self-consistency for example is
+[48:40] basically trying to take the argmax of
+[48:41] the probability and so if you take the
+[48:44] argmax of that the error will be lower
+[48:46] is what I mean by better
+[48:48] >> you see that even if you have just one
+[48:51] chain one
+[48:54] you're not doing this sort of projection
+[48:55] sampling y
+[48:56] >> you see math importing task logic budget
+[48:58] tasks like performance just so not this
+[49:02] monetization simply trees that
+[49:03] particular y is better than being
+[49:08] >> so one thing I will say is having having
+[49:10] just one example is a really bad form of
+[49:14] marginalization because you're you're
+[49:16] still sampling from the model um it's
+[49:19] just one sample is not a very good
+[49:21] estimate of the marginalization but it
+[49:23] still is an estimate of the
+[49:24] marginalization because like um you uh
+[49:28] an estimate of the true probability
+[49:30] because you're sampling
+[49:31] when you sample you're estimating the
+[49:34] circle. Yeah,
+[49:37] >> I think the two right hand sides are
+[49:39] actually equal by probability. So
+[49:48] >> um
+[49:50] the two right hand sides are
+[49:58] not
+[50:01] um I need to
+[50:09] I might need to fix this somehow. Well,
+[50:12] but they they're not equal because
+[50:17] essentially this
+[50:35] I'm trying to figure out the best way
+[50:36] the best way to write this. But
+[50:38] basically like Y coming after Z has a
+[50:41] different probability than Y like not
+[50:43] coming after Z.
+[50:44] >> Oh, I see. So it's Yeah, it's the orbit.
+[50:48] >> Yeah, the it's Yeah, like the the fact
+[50:50] that Z exists influences the output.
+[50:53] Yeah. So sorry, my my terminology is my
+[50:56] my formulas are not uh very good, but
+[50:59] I'll have to think of a better way to
+[51:01] >> select steps below each.
+[51:04] [Music]
+[51:06] How do you select the number of steps?
+[51:08] Um
+[51:11] well I guess one answer is how much
+[51:13] compute do you want to spend on doing
+[51:14] this because generally the accuracy will
+[51:17] just go up as you sample more. Um it
+[51:19] will eventually plateau and then it's
+[51:21] not worth doing it anymore. Um are are
+[51:23] you talking about specifically for this
+[51:24] method?
+[51:25] >> Yeah.
+[51:26] >> So this method's pretty heristic
+[51:28] honestly. So um I I think if you wanted
+[51:31] to adjust the hyperparameters, you would
+[51:34] mostly have to do it empirically, but um
+[51:37] there probably are better
+[51:40] versions of this. And so like actually
+[51:42] we're going to be talking about like
+[51:43] reward models um uh later. And
+[51:47] essentially this is also kind of a
+[51:50] really heristic reward model that's
+[51:52] saying longer ones must be better than
+[51:54] shorter ones. And there are like better
+[51:55] ways to come up with reward models that
+[51:57] like actually predict whether whether
+[51:59] the jot is good or not.
+[52:02] Yeah.
+[52:05] >> Like you said that recent models it's
+[52:08] fixed for like that reasoning along with
+[52:11] like
+[52:12] >> it's it's better it's not fixed for
+[52:14] recent models. Yeah. No, does this
+[52:17] doesn't hold true for multi-step
+[52:19] scenarios like let's say we have an
+[52:21] agent doing things and like they like
+[52:28] >> Oh yeah,
+[52:30] I I said it's better. It's definitely
+[52:32] not fixed and um so you said in
+[52:35] multi-step scenarios it's not uh not
+[52:38] good. Yeah, I think agents do lie to you
+[52:40] all the time uh is my experience. So
+[52:43] it's not uh definitely not fixed.
+[52:47] Cool. Um I definitely want to leave uh
+[52:50] leave time for our uh student
+[52:52] presentations also. So um another thing
+[52:55] is uh chain of thought can be used uh
+[52:58] multimodally as well. Um the early
+[53:02] attempts to do chain of thought uh like
+[53:07] multimodally were basically like you
+[53:09] write down um you you take a vision
+[53:14] model um
+[53:17] or you take a vision input and a
+[53:18] language input and then it comes up with
+[53:20] a rationale and um uh predicts the
+[53:25] predicts the output and the results are
+[53:26] much better. Um also um I'm not super
+[53:31] familiar with uh these but I have seen a
+[53:33] few papers where like they actually try
+[53:35] to find bounding boxes that they
+[53:37] incorporate into the um uh into the
+[53:39] outputs as well. So if you're interested
+[53:41] in multimodal stuff there's a fair
+[53:43] amount of uh work on this as well.
+[53:48] Cool. Um and so
+[53:51] ju just looking a little bit into the
+[53:53] future. Next we're going to talk about
+[53:54] self-refined and self-correction models
+[53:56] methods which kind of um you know go
+[54:00] back and correct uh previous outputs and
+[54:02] then we're going to put the two together
+[54:04] into resyn models in the the following
+[54:06] class. Yeah.
+[54:12] >> Yeah. The fact that it's an emergent
+[54:15] ability is due to the pre-training data.
+[54:17] I would say that most models nowadays
+[54:19] are also trained on large amounts of SFT
+[54:22] data. Um, but
+[54:25] it being an emergent ability is like
+[54:27] kind of one of the really exciting
+[54:29] things about reasoning models. So like
+[54:31] there was a paper deep on DeepSeek R1
+[54:33] where they basically demonstrated that
+[54:35] you could take mostly a base model with
+[54:37] very little SFT data and it's still able
+[54:39] to learn how to reason. And I think that
+[54:41] comes from the emergent ability of the
+[54:42] models uh from the free training data.
+[54:48] Cool. Okay. Um, thank you. And we'll
+[54:50] have the the two presentations next.

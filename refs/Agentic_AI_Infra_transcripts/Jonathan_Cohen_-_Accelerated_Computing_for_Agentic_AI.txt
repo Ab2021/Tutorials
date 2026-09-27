@@ -1,0 +1,269 @@
+Title: Jonathan Cohen - Accelerated Computing for Agentic AI
+
+--- TRANSCRIPT ---
+
+[0:02] Good morning.
+[0:07] So, I want to talk a little bit about um
+[0:09] what is an agent and and where did this
+[0:12] all come from?
+[0:13] So, when the modern AI era was kicked
+[0:17] off with ChatGPT largely a few years
+[0:20] ago, we thought of these AI systems as
+[0:22] things that a human would talk to a an a
+[0:25] large language model. Maybe that large
+[0:27] language model had access to some
+[0:28] database. But fundamentally, this was
+[0:30] about chat, people talking to AIs.
+[0:33] But this has evolved considerably.
+[0:35] Today, we really think of
+[0:37] um a complete autonomous system.
+[0:40] This is made up of many models, some
+[0:43] open-weight models, some proprietary
+[0:45] models, access to um tools,
+[0:48] infrastructure, uh memory systems,
+[0:50] context management, ability to spawn
+[0:52] sub-agents, uh security infrastructure.
+[0:56] And there might be a human or or or in
+[0:58] some cases even not a human starting
+[1:00] this whole interaction with the a
+[1:02] request. But But now we have a very
+[1:04] complicated set of interlocking um AI
+[1:08] systems and large language models
+[1:10] performing some autonomous task.
+[1:12] And so, what is this
+[1:13] agentic AI?
+[1:16] Oh. No, these are not my latest slides.
+[1:19] Oh, well. Okay.
+[1:20] Uh
+[1:21] >> [laughter]
+[1:23] >> I guess not. Uh well, I'll just talk
+[1:25] over the slide for a second. Um
+[1:29] So, what is an agent?
+[1:31] Uh
+[1:32] An agent isn't just a large language
+[1:35] model. It's a large language model
+[1:37] that's surrounded by what I'm going to
+[1:39] call infrastructure. Um and by
+[1:41] infrastructure, I mean the software that
+[1:43] um
+[1:44] that allows the large language model to
+[1:45] actually do things. So, this includes
+[1:47] things like marshaling data between an
+[1:49] API,
+[1:50] um potentially type checking, rule-based
+[1:53] enforcement of policies. Um another word
+[1:56] for all of this stuff that we surround
+[1:58] our large language model with that makes
+[2:00] it into an agent is computer science.
+[2:03] Now, there's a lot of reasons why this
+[2:04] is a really good idea. Um, LLMs are
+[2:07] incredibly powerful. They're the only
+[2:10] method we know of to solve all sorts of
+[2:12] problems that were previously unsolved.
+[2:15] Right? For many uh many decades, we've
+[2:17] been trying to crack all kinds of
+[2:19] challenging problems and large language
+[2:20] models come along and they can do these
+[2:21] things.
+[2:23] But, at the same time, um
+[2:25] they're probabilistic and they're
+[2:27] non-deterministic. It's precisely the
+[2:29] opposite of software, for the most part.
+[2:32] Software tends to be deterministic,
+[2:35] for the most part, not probabilistic. We
+[2:37] can understand it. We can inspect its
+[2:39] state. We can make um assertions about
+[2:41] it.
+[2:42] And and so, an agent is really the
+[2:44] combination of these two things, where
+[2:46] you take the intelligence from this
+[2:48] probabilistic
+[2:50] AI or sorry, probabilistic um machine
+[2:52] learned large language model, but you
+[2:55] surround it with the
+[2:57] the um determinism and the power of
+[2:59] computer science.
+[3:01] Data structures and algorithms and the
+[3:02] you know, many decades that we've spent
+[3:05] learning how to be good at building
+[3:06] software and and make things reliable.
+[3:08] Um
+[3:10] Now, an agentic system then is this
+[3:12] complicated interaction of all these
+[3:13] things.
+[3:14] Uh a typical agent, right? You have some
+[3:16] some way of managing the prompts that go
+[3:18] into the large language model that you
+[3:19] feed the large language model with. You
+[3:21] typically have um some infrastructure
+[3:23] that allows the large language model to
+[3:25] access tools, potentially check
+[3:28] permissions. Um all of these things are
+[3:31] running on a uh
+[3:32] an increasingly complicated hardware
+[3:34] substrate now. So, some of the the
+[3:37] software that this agent is going to
+[3:39] invoke runs on accelerated computing
+[3:41] infrastructure,
+[3:42] uh like GPUs. Some of it runs on CPUs.
+[3:45] You have very complicated uh storage
+[3:47] hierarchies now. You have agents and
+[3:49] sub-agents. You you scoped uh data that
+[3:52] needs to be passed between these
+[3:53] different systems.
+[3:55] Um you have communication patterns that
+[3:57] are becoming increasingly complicated.
+[4:00] Sandboxes,
+[4:02] uh secure enclaves, all sorts of
+[4:03] complicated things. Now, the the the
+[4:05] platform is heterogeneous both at the
+[4:06] hardware and software level.
+[4:08] Um and not to mention the collection of
+[4:10] models. So, you have large models, uh
+[4:13] you may have small models, you have you
+[4:15] may have models that you have
+[4:16] fine-tuned, um and specialized in some
+[4:19] area. You may have a general-purpose
+[4:21] proprietary model that's hosted
+[4:22] externally on an API.
+[4:25] Um and all of this works together
+[4:28] to solve some complicated uh
+[4:30] autonomous task.
+[4:32] Uh we call this platform, uh Nvidia's
+[4:34] version of this platform we call the
+[4:35] Nvidia Nvidia Agent Toolkit.
+[4:38] And it's a collection of things like
+[4:39] deployment.
+[4:40] Um so, for deployment, uh everything
+[4:42] from Kubernetes to again um hosted
+[4:46] infrastructure,
+[4:47] uh computer use agents.
+[4:50] It also has accelerated tools. So, we
+[4:52] what we call CUDA X, which is a
+[4:54] collection of tools for example for um
+[4:57] computational fluid dynamics or solving
+[4:59] differential equations or computing um
+[5:03] um secondary analysis of a uh DNA
+[5:05] sequences um from DNA sequencing
+[5:08] instruments. All of these
+[5:09] um again, more computer science kind of
+[5:12] tasks that we have accelerated uh
+[5:14] solutions for, APIs and tools for, which
+[5:16] are now made agentic. So, your agent has
+[5:19] access to this wide variety of
+[5:20] accelerated tools.
+[5:22] And then a collection of open weight
+[5:23] models. So, the NeMo Tron models,
+[5:26] which is our family of general-purpose
+[5:27] models. We have more domain-specific
+[5:29] models in robotics, uh physical AI,
+[5:33] uh BioNeMo, which are predictive models
+[5:35] for biology.
+[5:37] And again, all of this is running on
+[5:39] this very complicated infrastructure,
+[5:41] which includes um the ability to deploy
+[5:43] and run all these different models,
+[5:45] the ability to um
+[5:48] have sandbox environments that surround
+[5:50] the system to ensure that your AI isn't
+[5:52] doing something you didn't want it to do
+[5:55] and ideally running all this in an
+[5:57] efficient way.
+[6:00] We also have built into this
+[6:02] infrastructure
+[6:03] typically you also want to be able to
+[6:05] capture the knowledge that's flowing in
+[6:07] and out of the system and then you can
+[6:09] use that to post train
+[6:12] a model to be specialized in a task that
+[6:14] you care about. So I would include in
+[6:16] the infrastructure itself also this
+[6:17] ability to in an offline way improve the
+[6:20] AI for example with post training using
+[6:22] reinforcement learning.
+[6:25] This is
+[6:27] often performed to take a small model
+[6:30] and specialize it to make it
+[6:32] very good at some task just as good as a
+[6:35] much larger model would be at a more
+[6:37] general purpose.
+[6:41] I also want to talk a little bit about
+[6:43] the actual interface between the say
+[6:45] agentic system and the large language
+[6:47] model and this is what people refer to
+[6:48] as the agent harness. So the harness
+[6:51] really matters the large language model
+[6:53] encapsulates a lot of intelligence
+[6:55] but this is for example recent work from
+[6:57] my group
+[6:59] to develop a harness we call the Nemo
+[7:01] object oriented agents and the idea here
+[7:03] is very simple and if you
+[7:04] check out the link on this QR code you
+[7:06] can find this project on GitHub. The
+[7:08] idea here is that an agent is is simply
+[7:09] a python object and what do I mean by
+[7:12] that? Well you you write your agent in
+[7:14] python and there's a special syntax with
+[7:17] this ellipsis notation which basically
+[7:19] says to the LLM hey fill this block in
+[7:21] with code and so the LLM is able to or
+[7:24] sorry the agent is able to actually
+[7:25] modify itself.
+[7:27] So you can execute it can call
+[7:29] methods that it has written and it can
+[7:31] modify its own methods. It can decide
+[7:33] this is some information I need to store
+[7:35] and actually include include it as state
+[7:37] in the python object. It can it can take
+[7:40] some um plan or some way that it solved
+[7:43] the problem and encode it in Python as a
+[7:46] method and call it in the future. Um
+[7:48] another important idea is rather than
+[7:50] passing around all this information uh
+[7:53] as strings compacted into some very
+[7:55] large context, you can just pass things
+[7:57] by reference because they're all Python
+[7:58] objects.
+[8:00] In this case uh and if you check out the
+[8:02] tech report, you can see uh more
+[8:04] results. You can get significant lift
+[8:07] over just a large language model or even
+[8:09] over other agent harnesses um just from
+[8:12] a lot of these ideas integrated into
+[8:13] your agent harness. And so
+[8:15] um we have results where we can get, for
+[8:17] example, the same score but using half
+[8:19] the tokens. Um or the Cyber Gym score uh
+[8:22] which is um among the the strongest
+[8:24] Cyber Gym scores.
+[8:26] Uh and the lift from the harness in this
+[8:28] case is significant.
+[8:31] So this NVIDIA Agent Toolkit
+[8:33] encompasses, as I said, all of these
+[8:35] things. We have models, we have
+[8:36] deployment technology like NIMs and
+[8:38] Dynamo. Um we have uh tools built into
+[8:41] the infrastructure for capturing traces
+[8:42] like Nemo Relay,
+[8:44] uh routing uh algorithms like
+[8:46] Switchyard.
+[8:48] Um we have what we call blueprints,
+[8:50] which are open source imple- reference
+[8:53] implementations that show how to pull
+[8:54] all these pieces together to solve
+[8:55] specific tasks. Um whether it's building
+[8:58] an open claw or um
+[9:01] AI Q, which is a uh um
+[9:04] like [clears throat] a research
+[9:04] assistant agent. Um and then we have
+[9:07] runtime technology like Open Shell,
+[9:09] which is essentially a firewall that
+[9:12] allows you to control access
+[9:14] between your agent and the outside
+[9:15] world.
+[9:18] Um and a lot of this is being deployed
+[9:20] and adopted um by many of our partners.
+[9:22] And with that, I'll wrap up and I look
+[9:24] forward to the panel. Thank you very
+[9:25] much.

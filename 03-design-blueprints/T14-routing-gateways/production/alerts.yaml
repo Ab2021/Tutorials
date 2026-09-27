@@ -1,0 +1,122 @@
+# T14 — Alerts for the routing layer (REFERENCE-GRADE, NOT EXECUTED HERE)
+#
+# Every rule here fires on a SILENT failure -- a condition the router reports as healthy
+# while it is degrading. Error-rate and latency alerts are structurally blind to all of
+# them, which is why this file exists at all.
+---
+groups:
+  - name: router-view
+    rules:
+      # THE high-severity alert for this component. Every other guarantee depends on the
+      # view being true. A stalled event feed does not error; hit rate just decays and
+      # TTFT rises for reasons nobody can attribute.
+      - alert: RouterViewStale
+        expr: max by (instance) (view_staleness_seconds) > 30
+        for: 2m
+        labels: { severity: critical }
+        annotations:
+          summary: "Router view for {{ $labels.instance }} is {{ $value }}s stale"
+          runbook: >
+            The router is placing requests using a cache map that no longer matches the
+            engine. It will keep returning 200s. Check the event feed from the engine
+            first; if the feed is alive but the router is not applying it, the router is
+            the fault. Degrade to load-only routing rather than serving from a wrong view.
+
+      # A gap in an instance's per-instance seq means an event was lost. That belief is
+      # wrong until the block is re-created, which may be never.
+      - alert: RouterEventGap
+        expr: increase(kv_event_seq_gaps_total[10m]) > 0
+        labels: { severity: warning }
+        annotations:
+          summary: "Lost KV events from {{ $labels.instance }}"
+
+      # Rebuild after restart is a degraded mode, not an outage. Track the recovery curve
+      # so a slow rebuild is visible before someone notices it in TTFT.
+      - alert: RouterViewRebuildSlow
+        expr: view_populated_fraction < 0.8
+        for: 10m
+        labels: { severity: warning }
+
+  - name: router-placement
+    rules:
+      # The cost of a stale view and of cache-blind routing, in one number. It does NOT
+      # appear in any per-instance hit rate, because each instance's own hit rate looks
+      # fine -- the waste is that a DIFFERENT instance held the prefix.
+      - alert: RouterMisrouteRateHigh
+        expr: >
+          rate(misroutes_total[10m])
+            / (rate(misroutes_total[10m]) + rate(prefix_hits_total[10m])) > 0.10
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          summary: "{{ $value | humanizePercentage }} of routed requests re-prefilled a cached prefix"
+          runbook: >
+            Compare against run.py §2: load-aware-only routing misroutes 24.9-29.4% of a
+            Zipf workload; a live view misroutes ~0%. A rate this high with a healthy
+            event feed means the filter stage is not running -- check the policy order.
+
+      # The gap between the fleet the operator believes they have and the one they
+      # reach. The saturation threshold guards assumed_fleet_size; this is the truth.
+      - alert: RouterEffectiveCapacityLow
+        expr: effective_capacity < 0.7 * assumed_fleet_size
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          summary: "Reachable fleet is {{ $value }} instances of {{ $labels.assumed }}"
+          runbook: >
+            A saturation threshold guarding a fleet that is only partly reachable is a
+            signal about the wrong thing. This is usually load imbalance, not cache
+            affinity -- the busiest instance saturates first and the threshold never
+            sees it.
+
+  - name: router-flow-control
+    rules:
+      # ---------------------------------------------------------------------------
+      # THE ALERT THAT MATTERS MOST AND IS ALMOST NEVER WRITTEN.
+      #
+      # run.py §5: priority bands take premium SLO attainment from 2.9% to 99.3% while
+      # shedding 1,324 best-effort requests, and best-effort's MEAN WAIT IMPROVES
+      # (98.42 -> 27.34) because the longest-waiting requests were dropped rather than
+      # queued.
+      #
+      # Any dashboard showing latency without sheds reports that as an unambiguous
+      # improvement. This rule is the counterweight.
+      # ---------------------------------------------------------------------------
+      - alert: RouterSheddingBestEffort
+        expr: rate(shed_total_by_priority{priority="best_effort"}[10m]) > 1
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "Shedding {{ $value }}/s of best-effort traffic"
+          runbook: >
+            This is priority bands working as designed. Confirm it is a decision and not
+            an accident: check whether the shedding started at a saturation-threshold
+            change. If the shed rate is climbing while best-effort mean wait is FALLING,
+            the wait metric is lying to you -- it is dropping the slow requests, not
+            serving them faster.
+
+      - alert: RouterSheddingPremium
+        expr: rate(shed_total_by_priority{priority="premium"}[5m]) > 0
+        for: 1m
+        labels: { severity: critical }
+        annotations:
+          summary: "Premium traffic is being shed -- the protected class is not protected"
+          runbook: >
+            Priority bands exist to make this impossible. Either the saturation threshold
+            is misconfigured, the queue bound is too small for the offered premium load,
+            or the priority class is not being attached at the route. Check the
+            InferenceObjective binding first.
+
+      # Saturation that never engages while requests queue is the subtlest failure in
+      # this component: the signal and the symptom are different things.
+      - alert: RouterQueueingWithoutSaturation
+        expr: sum(queue_depth) > 50 and router_saturated == 0
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "Queueing with no saturation declared -- the threshold measures the wrong thing"
+          runbook: >
+            If saturation is derived from KV occupancy and the deployment is prefill-heavy
+            with fast turnover, the cache may never reach 80% while the fleet is queueing.
+            The signal and the symptom must be the same thing. Re-derive the threshold
+            from the dimension that is actually binding.

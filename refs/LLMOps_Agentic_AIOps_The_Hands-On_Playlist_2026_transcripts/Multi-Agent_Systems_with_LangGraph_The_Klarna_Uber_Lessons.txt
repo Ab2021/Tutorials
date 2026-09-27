@@ -1,0 +1,181 @@
+Title: Multi-Agent Systems with LangGraph: The Klarna & Uber Lessons
+
+--- TRANSCRIPT ---
+
+[0:00] When one agent is not enough, how do you
+[0:02] make several work together reliably? It
+[0:04] is tempting to spawn a swarm of agents
+[0:06] and hope they cooperate. In practice,
+[0:08] uncoordinated agents duplicate work,
+[0:11] contradict each other, and are
+[0:12] impossible to debug. Real companies are
+[0:15] shipping multi-agent systems today with
+[0:17] results worth studying, including one
+[0:19] very public lesson about going too far.
+[0:22] Orchestration means making the flow
+[0:23] explicit instead of hoping for
+[0:25] emergence. Each agent is a node in a
+[0:27] graph. The edges decide who runs next. A
+[0:30] single shared state object travels along
+[0:32] those edges, so every agent reads and
+[0:34] updates the same source of truth. A
+[0:36] supervisor node routes the work and the
+[0:38] riskiest steps pause for a human. That
+[0:40] structure is what makes a multi-agent
+[0:41] run auditable instead of chaotic.
+[0:44] Picture a concrete workflow, drafting a
+[0:46] market report. A planner agent splits
+[0:48] the job into research, analysis, and
+[0:50] writing. The researcher and analyst run
+[0:52] and write their findings into the shared
+[0:54] state. Before the expensive writing
+[0:56] step, the graph pauses for a human to
+[0:59] approve the outline. Only then does the
+[1:01] writer run. Every agent saw the same
+[1:03] state, and a person gated the costly,
+[1:05] hard-to-reverse step.
+[1:06] In LangGraph, you declare the nodes and
+[1:08] the routing between them explicitly. The
+[1:10] conditional edges let the planner decide
+[1:12] who runs next, and the interrupt node is
+[1:14] the human review step from our example.
+[1:16] The checkpointer persists the whole
+[1:18] state, so a run can pause for approval
+[1:20] and resume days later exactly where it
+[1:23] stopped without losing a thing.
+[1:25] Here is the case study everyone should
+[1:27] study because its story has a crucial
+[1:29] second half. Klarna's assistant, built
+[1:31] on LangGraph and LangSmith, cut average
+[1:34] resolution time about 80% and handled
+[1:36] the work of hundreds of agents. The
+[1:38] headlines were huge. Then quality on
+[1:41] hard cases slipped, and by 2025, they
+[1:43] rehired humans and moved to a hybrid
+[1:46] model, keeping automation for routine
+[1:48] chats and sending disputes back to
+[1:50] people. Full autonomy was not the
+[1:52] destination. A human-in-the-loop hybrid
+[1:54] was.
+[1:55] The most common shape is a supervisor
+[1:57] that fans work out and merges it back.
+[2:00] The supervisor hands a subtask to each
+[2:02] specialist agent. They work in parallel
+[2:04] where it is safe and a merge step
+[2:06] reconciles their results into one
+[2:08] answer. Parallel where tasks are
+[2:10] independent, sequential where they
+[2:12] depend on each other, and always a
+[2:14] reconciliation step so the outputs do
+[2:16] not silently conflict.
+[2:19] The hardest decision here is how many
+[2:20] agents you actually need. The honest
+[2:22] default is one capable agent with a good
+[2:24] set of tools. It handles more than
+[2:26] people expect. Split into multiple
+[2:28] agents only when you need genuinely
+[2:30] distinct skills or strict isolation
+[2:32] between them. Every agent you add
+[2:34] multiplies coordination cost and failure
+[2:36] surface, so make each one justify its
+[2:38] existence.
+[2:39] The supervisor pattern is common, but it
+[2:42] is one of several topologies and the
+[2:43] choice has real consequences. A
+[2:45] supervisor topology has one router that
+[2:47] decides which specialist runs next,
+[2:49] which keeps control central and
+[2:51] auditable. A sequential pipeline is even
+[2:53] simpler. Fixed handoffs from stage to
+[2:56] stage like an assembly line. A group
+[2:58] chat topology lets the agents talk
+[3:00] amongst themselves and debate. It is the
+[3:02] most flexible and the most powerful, but
+[3:04] also the hardest to keep on the rails.
+[3:06] Default to the simplest topology that
+[3:08] fits, a pipeline if the order is fixed,
+[3:10] a supervisor if it needs routing, and
+[3:12] group chat only when the problem
+[3:14] genuinely needs open collaboration.
+[3:17] Beyond Klarna, here is a very different
+[3:19] and very successful multi-agent
+[3:21] deployment. Uber's developer platform
+[3:23] team used LangGraph to build a network
+[3:25] of agents that automate large-scale code
+[3:28] migrations across the company and even
+[3:30] generate the unit tests for the code
+[3:32] they change. Crucially, they put their
+[3:34] own evaluations on top to check the
+[3:36] agents' work. Internal engineering tasks
+[3:39] like this, with clear correctness
+[3:41] checks, are where multi-agent systems
+[3:43] are quietly delivering the most value
+[3:45] today.
+[3:46] Multi-agent systems add power and a
+[3:48] whole new class of bugs. Spin up five
+[3:50] agents for a job one prompt could handle
+[3:52] and you have multiplied cost and latency
+[3:54] for nothing. Without shared state, they
+[3:56] duplicate work and even disagree. And
+[3:58] the Klarna lesson lands right here.
+[4:00] Never wire full autonomy to a refund or
+[4:02] a delete without a human gate. Start
+[4:04] with the smallest graph that works, then
+[4:06] grow it.
+[4:07] Each framework encodes a different
+[4:09] orchestration model, so choose by the
+[4:11] shape of your problem. LangGraph for
+[4:13] explicit branching graphs, CrewAI for
+[4:15] role-based crews, AutoGen for
+[4:16] conversational group chat, and the
+[4:18] OpenAI SDK for simple handoffs between
+[4:21] agents. For durable, resumable runs with
+[4:23] human approvals, lean on LangGraph
+[4:26] checkpoint pointers or a workflow engine
+[4:27] like Temporal underneath.
+[4:29] So, what is LangGraph? It is a library
+[4:31] from the LangChain team for building
+[4:33] stateful, graph-based agent workflows.
+[4:36] You model agents as nodes and control
+[4:38] flow as edges, and you get persistence
+[4:40] and human-in-the-loop pauses as
+[4:42] first-class features rather than
+[4:44] bolt-ons. That is why it has become the
+[4:46] production standard for auditable
+[4:48] multi-agent systems.
+[4:50] Start with a single node and grow the
+[4:52] graph from there. Add your nodes, wire
+[4:54] the edges, and compile with a
+[4:56] checkpointer. That one argument gives
+[4:57] you a persistent, resumable workflow you
+[5:00] can pause for a human at any node. From
+[5:02] this two-node skeleton, adding a
+[5:04] supervisor and specialists is just more
+[5:06] nodes and a routing function.
+[5:08] For a multi-agent system, measure the
+[5:10] system, not just each agent. End-to-end
+[5:13] success rate is what the user cares
+[5:15] about. The human intervention rate tells
+[5:17] you how much autonomy you have genuinely
+[5:19] earned and where to invest next. Break
+[5:21] failures down per agent to find the weak
+[5:24] node and track total time to complete,
+[5:26] since a graph that is correct but
+[5:28] glacially slow is its own kind of
+[5:29] failure.
+[5:30] Here are the four things to take from
+[5:32] orchestration. First, model the workflow
+[5:35] as an explicit graph rather than hoping
+[5:38] agents self-organize. Second, give them
+[5:40] one shared state and a supervisor to
+[5:42] route the work. Third, put a human in
+[5:44] the loop on the risky, irreversible
+[5:46] steps. And fourth, remember Klarna, a
+[5:49] human-in-the-loop hybrid beats full
+[5:51] autonomy in production. Start with the
+[5:53] smallest graph that solves the problem
+[5:55] and add agents only when each one
+[5:57] clearly earns its coordination cost.
+[6:00] The one-line answer, agents that act
+[6:02] across many turns need to remember what
+[6:03] happened. Memory is next.

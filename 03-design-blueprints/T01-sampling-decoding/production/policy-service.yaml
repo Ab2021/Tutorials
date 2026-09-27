@@ -1,0 +1,84 @@
+# REFERENCE-GRADE -- NOT EXECUTED IN THIS ENVIRONMENT.
+# No cluster, no image, no GPU. Adapt before use.
+#
+# The control-plane half of the design: a stateless resolver in front of an
+# immutable, versioned policy registry. The resolver is on the request path, so
+# it is replicated and cached at the router; the registry is read-mostly and
+# must not be on the token path.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sampling-policy-resolver
+  namespace: inference
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: sampling-policy-resolver }
+  template:
+    metadata:
+      labels: { app: sampling-policy-resolver }
+    spec:
+      containers:
+        - name: resolver
+          image: inference/policy-resolver:0.1.0
+          ports: [{ containerPort: 8080, name: http }]
+          env:
+            # The resolver fails *closed* on a missing surface policy and
+            # serves last-known-good on a registry outage. It never falls back
+            # to a global default: that is how one surface's parameters
+            # silently become another's.
+            - name: FALLBACK_MODE
+              value: "last_known_good"
+            - name: ALLOW_GLOBAL_DEFAULT
+              value: "false"
+            - name: REGISTRY_ADDR
+              value: "policy-registry.inference.svc:9090"
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          resources:
+            requests: { cpu: "200m", memory: "256Mi" }
+            limits:   { cpu: "1",    memory: "512Mi" }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sampling-policy-resolver
+  namespace: inference
+spec:
+  selector: { app: sampling-policy-resolver }
+  ports:
+    - { name: http, port: 80, targetPort: 8080 }
+---
+# The registry is immutable and append-only. A "change" is a new version plus a
+# pointer move, never an edit -- so an audit replay of a six-month-old request
+# still resolves the policy that produced it.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: policy-registry-policy
+  namespace: inference
+data:
+  write_principals: "sampling-eval-gate"   # single writer
+  mutation: "append_only"
+  retention: "indefinite"                  # replay depends on this
+  # A policy is unreachable by the resolver until eval_run_id is non-null.
+  require_eval_run_id: "true"
+---
+# The surface -> version pointer. This is the object rollback flips, and the
+# only mutable state in the control plane.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: surface-policy-pointers
+  namespace: inference
+data:
+  # surface: policy_id          (version is inside the identity, never beside it)
+  support.chat: "support.chat.v7"
+  code.migrator: "code.migrator.v3"
+  doc.summarizer: "doc.summarizer.v4"
+  copy.studio: "copy.studio.v9"
+  underwriting.extractor: "underwriting.extractor.v5"
+  model.quality: "model.quality.research.v1"

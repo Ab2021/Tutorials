@@ -1,0 +1,325 @@
+Title: Sovereign AI Inference: Own Your AI. Control Your Data.
+
+--- TRANSCRIPT ---
+
+[0:00] And then you you can follow the company,
+[0:02] give them.
+[0:05] But
+[0:06] there is one other important thing
+[0:08] that's
+[0:09] really coming into the
+[0:11] front front seat, right? So, people have
+[0:14] started to talk This is This is not
+[0:16] enough, but there's another layer,
+[0:18] important layer, which is inference,
+[0:20] which we have to consider when we talk
+[0:22] about the when we talk about the
+[0:24] sovereign stuff, right? So,
+[0:26] why is that?
+[0:27] Now, your data is sitting in
+[0:30] an isolated place, right? In an secure
+[0:32] infrastructure, whatever you want to
+[0:34] call it, your sovereign infrastructure
+[0:36] uh place. But, is it useful? It is not,
+[0:40] right? So, if it's just sitting idle
+[0:41] over there, it's like nothing. It's
+[0:44] unless
+[0:45] it is being used, it's being called, and
+[0:47] it starts acting, it starts
+[0:50] making those connections to bring out
+[0:52] the intelligence that it should, it's
+[0:54] absolutely useless. So, that's
+[0:56] where we lead to a simple question here,
+[0:59] right? So, so if
+[1:01] inference leaves
+[1:03] your control,
+[1:04] can you really call that as sovereign
+[1:06] AI?
+[1:09] So, imagine you have a open model,
+[1:11] right? Your
+[1:13] data is in house, and then you have an
+[1:14] infrastructure that is under your
+[1:16] control,
+[1:17] but now you have this inference layer,
+[1:20] which is actually
+[1:23] doing stuff
+[1:24] beyond your control, right? So,
+[1:27] what happens? It's
+[1:29] it has a lot of tons of dependencies, it
+[1:32] pulls out information from various
+[1:33] different layers, it has runtimes and
+[1:36] everything, right? So, all of these
+[1:37] multiple different layers that it
+[1:39] interacts with to deliver that
+[1:41] intelligence, and if that is not in your
+[1:42] control,
+[1:44] then can we really call that as AI
+[1:46] sovereign?
+[1:49] But, in reality, right? Dependency is
+[1:52] something that you really cannot avoid
+[1:54] it. I mean, realistic, you I need to
+[1:56] have dependencies, and you cannot have.
+[1:58] But what I what I'm trying to infer here
+[2:00] is
+[2:01] you know, when we talk about sovereign
+[2:02] AI, we should definitely talk about
+[2:05] inference as one of its major component
+[2:07] because otherwise you are like shooting
+[2:09] in the dark.
+[2:14] All right, so um
+[2:16] >> [clears throat]
+[2:17] >> Let's see. So so thinking about
+[2:19] sovereign Think about sovereign as
+[2:22] sovereignty as something like binary
+[2:24] it's a sovereign setup or non-sovereign
+[2:26] setup. I don't I think that's wrong,
+[2:27] right? So you need to start looking at
+[2:29] it from as as a as a system property,
+[2:33] right? And and this particular system
+[2:35] property has various dimensions.
+[2:37] So we have control. Um
+[2:40] So what is control? So where where does
+[2:41] the actual inference run? And then the
+[2:43] choice, which model are you choosing and
+[2:45] which uh accelerator that you're running
+[2:47] on? Trust, what actually what
+[2:50] code and artifacts that are getting
+[2:51] executed in the in this environment,
+[2:54] right?
+[2:56] Economics, who controls the token cost?
+[2:58] Ramki is going to talk about tokenomics.
+[3:00] But say you're in a say you're running a
+[3:03] sovereign AI model, you're inferencing
+[3:04] with it in Bengaluru, right? And the
+[3:07] bill should not come to you from Belarus
+[3:08] or something, right? So you need to be
+[3:10] very conscious about that.
+[3:12] And then the community, right?
+[3:13] Continuity, sorry. Too much of
+[3:15] community, sorry. So continuity, so
+[3:18] there's a lot of geopolitical stuff that
+[3:20] goes on. Today you have dependency on
+[3:22] something and tomorrow your country say,
+[3:24] "Ah, you cannot use something from the
+[3:25] other country." And then all of a sudden
+[3:27] you see that oh, you cannot use it. So
+[3:29] can you operate without a single vendor,
+[3:32] right? So these are some of the
+[3:33] important things. So if you really look
+[3:34] at it, right? So it's uh
+[3:36] it's an entire system, right? It's not
+[3:40] about owning a particular component,
+[3:43] but it is all about owning an entire
+[3:47] system
+[3:49] that delivers the outcome, right? So
+[3:51] that's an important thing that we need
+[3:53] to keep in mind.
+[3:59] Okay. All right.
+[4:00] Oops.
+[4:02] Yeah.
+[4:03] All right. So, uh
+[4:05] somebody said they're interested in
+[4:07] training, right? So, soaring people
+[4:08] think about training or training on this
+[4:09] particular data. But, how often do we do
+[4:12] the training?
+[4:13] Very less, right? So, you train once and
+[4:16] probably you do some some of the other
+[4:18] training and then that's it. But,
+[4:19] inference is not like that, right? So,
+[4:21] whenever you ask
+[4:23] user ask a question, you're using
+[4:25] inferencing. Whenever there is
+[4:28] application that's trying to drive
+[4:30] intelligence out of something, right?
+[4:31] So, that's when you're using
+[4:32] inferencing. And then even even an agent
+[4:35] that is talking to a model, right? So,
+[4:37] you use inference. So, that's where the
+[4:39] things like latency, throughput,
+[4:41] routing, caching, observability, they
+[4:42] all become really really super
+[4:44] important, right? So,
+[4:48] in the soaring context, right?
+[4:51] So, the strategic questions becomes who
+[4:53] controls this particular layer,
+[4:55] right? So,
+[4:58] So, when you start thinking about
+[5:01] inference and soaring AI in this
+[5:04] perspective, right? Then you see that
+[5:07] it's not just like one component or one
+[5:08] product, uh
+[5:10] but rather it's a stack.
+[5:13] So, at the bottom you have the Linux and
+[5:16] then you have accelerators and then you
+[5:18] have models and architectures tags,
+[5:20] right? And then you have inference
+[5:22] engines like VLLM and distributed
+[5:25] inferencing on top of it that takes care
+[5:27] of all the distribution of intelligence.
+[5:29] And then, you know, the application
+[5:31] where where the actual value gets
+[5:34] created. Yeah? Oh, it's bad. All right.
+[5:38] Thank you.
+[5:40] I change of mic.
+[5:42] Oops.
+[5:44] Uh okay. No problem.
+[5:47] All right.
+[5:48] Um
+[5:50] So, is is inference engine good enough?
+[5:54] So, when we talk about AI sovereignty,
+[5:57] scale, and stuff like that, I mean, look
+[5:58] at India. I mean, the amount of people
+[6:00] that we are, right? So, you
+[6:02] you don't want to you don't want to be
+[6:04] stuck with some one monolithic model
+[6:07] that is serving you, right? You need to
+[6:09] have the ability to scale it. All right,
+[6:12] so that's really important.
+[6:15] So,
+[6:15] he has a he has a nice analogy. Right?
+[6:18] >> [clears throat]
+[6:21] >> Most of you are from Bangalore, right? I
+[6:22] mean, all from metros, right? So, say
+[6:24] you want to do the traffic management,
+[6:26] or you want to make your cars go fast go
+[6:30] seamlessly or something
+[6:32] in in the traffic of a metro city. Can
+[6:35] you make each car fast
+[6:37] and then expect to solve the congestion
+[6:39] problem?
+[6:40] You cannot, right? So, that's where LLMD
+[6:43] comes into picture, right? So, the vLLM
+[6:45] has done tons of tons of work in terms
+[6:49] of high throughput, and they've
+[6:50] literally taken the
+[6:53] inference engine forward by making the
+[6:55] models faster, right? So, they can do
+[6:57] really fast inferencing, stuff like
+[6:59] that. But,
+[7:01] in production, when we talk about scale,
+[7:03] right? You need to talk about things
+[7:06] like LLMD, which
+[7:07] manages your traffic. You need to
+[7:09] understand the congestion. You need to
+[7:11] understand the alternate routes. You
+[7:13] need to start routing things into the
+[7:15] right place and stuff like that. Right?
+[7:17] So,
+[7:23] So, now, once we start solving all of
+[7:25] these dependencies and stuff like that,
+[7:27] you know, there's another trap that you
+[7:29] need to be really considerate about. You
+[7:33] know, when you talk about um
+[7:36] AI accelerators, we think of my
+[7:39] particular accelerator many a times,
+[7:42] right?
+[7:44] is it really the case, right? So
+[7:49] the the choice of accelerator, right? It
+[7:53] is extremely important, and it should
+[7:55] not be treated as an option when we are
+[7:58] doing the sovereign stuff, but it is
+[8:00] should should be the part of the
+[8:02] implementation strategy. Right? So,
+[8:04] that's it's really important that we
+[8:06] take care of that one. So, you need to
+[8:07] have, you know, the models and portable
+[8:09] services and multiple accelerators and
+[8:11] hybrid cloud. So, these are some of the
+[8:13] things that you should really look at
+[8:15] and next gen is here. They are New York
+[8:16] cloud folks, and then they do tons of
+[8:19] brilliant stuff, right? So, having
+[8:20] multiple different accelerators and so
+[8:22] you need to have something that runs
+[8:23] seamlessly across. So, that's really
+[8:25] really important for us to we are when
+[8:28] you are working when you are if you are
+[8:29] if you are from Serverless I heard
+[8:30] somebody is from Serverless. So, when
+[8:32] you looking at establishing these
+[8:34] architecture details, right? So, you
+[8:36] really need to start thinking from a
+[8:38] from a broader perspective, from a
+[8:40] perspective of
+[8:41] where your code lies, where does it go,
+[8:44] where does it execute, what are the
+[8:45] layers, right? So, that's extremely
+[8:47] important. Do we have a choice of
+[8:49] accelerators and things like that?
+[8:53] All right. So, but then again, like I
+[8:54] said, control isn't enough, right? So,
+[8:56] you should know what is going on inside
+[8:59] the systems. That's really important,
+[9:01] right? So,
+[9:02] um
+[9:04] you know, you need to have the
+[9:05] providence. So, you know, you need to
+[9:07] know what code and artifacts that are
+[9:08] being executed. You need to have the
+[9:10] reproducibility, right? So,
+[9:12] um many times we talk about this in the
+[9:14] in the security scenarios like the
+[9:16] Department of of Defense and other
+[9:18] places where they have this airtight
+[9:20] environment, right? So, where you put
+[9:22] things and then install stuff, and these
+[9:25] are these
+[9:26] have to
+[9:27] uh
+[9:28] you know, be fully working without
+[9:30] talking to the outside internet, right?
+[9:32] So, it has to be fully secure. And so,
+[9:34] it's sort of you know, it comes to that
+[9:36] and that's where things like
+[9:39] hermetic builds
+[9:41] become really important, right? So, you
+[9:43] which works in an
+[9:45] air-gapped environment and that is
+[9:47] purely reproducible. It knows where the
+[9:49] dependencies are being pulled from and
+[9:51] everything, right? So, it's extremely
+[9:53] important for us to think from all these
+[9:56] perspectives.
+[9:59] Yeah, so this is okay, so this is
+[10:01] something that
+[10:02] I'm this is just me, right? So, I'm I'm
+[10:04] thinking
+[10:06] thinking a step forward. Right? So, I
+[10:09] don't think that the future will be like
+[10:11] one big model that keeps serving. So,
+[10:14] you you keep getting these new models
+[10:16] every now and then from all of these um
+[10:19] frontier model uh
+[10:21] companies and then, you know, you start
+[10:23] using it and talking, right? So, I don't
+[10:25] think that's the future. I think the
+[10:26] future is going to be more like the
+[10:28] intelligence will be distributed, right?
+[10:30] So, the critical question that we all
+[10:33] need to ask is
+[10:34] is this the model from from is it the
+[10:37] which model I'm running on to how the
+[10:40] intelligence is actually moving.
+[10:42] Right? So, you need to start thinking
+[10:45] from those perspectives.
+[10:47] I I'm going to leave you with this,
+[10:49] right?
+[10:50] >> [clears throat]
+[10:51] >> So, sovereignty is not about just owning
+[10:54] or doing everything yourself, right? So,
+[10:56] you need to it's about having the
+[10:58] freedom to choose,
+[11:00] having the freedom to control, having
+[11:02] the freedom to verify, and having the
+[11:04] freedom to operate, right? So, and
+[11:07] open source
+[11:08] gives us the foundation.
+[11:10] And then open inference, it gives us the
+[11:13] leverage and engineering, right? So,
+[11:16] you all give us the sovereignty, right?
+[11:17] So, think from an engineering
+[11:19] perspective multiple levels. So, thank
+[11:21] you.
+[11:23] >> [applause]
+[11:25] >> I am

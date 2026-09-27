@@ -1,0 +1,331 @@
+Title: Tim Hockin - Is Kubernetes Good for Agents? Infrastructure Solutions for Agent Shaped Problems
+
+--- TRANSCRIPT ---
+
+[0:02] Thank you all uh for coming out today.
+[0:04] Uh I didn't realize this conference was
+[0:06] on a weekend when I signed up for it.
+[0:07] So, I really appreciate you all coming
+[0:09] out uh instead of getting a day off of
+[0:11] work. Uh my name is Tim. Uh you may be
+[0:14] familiar with some of my previous
+[0:16] projects, Kubernetes. Um if so, I
+[0:19] apologize in advance.
+[0:21] Um
+[0:21] given my background, I tend to look at
+[0:24] this agentic AI problem as an
+[0:26] infrastructure problem. I see it from
+[0:27] the bottom up. Um the customers that I
+[0:30] talk with uh come to me and they say,
+[0:32] "We've got these agents." And
+[0:33] like your explanations of the breadth of
+[0:36] agents was is exactly on point. There's
+[0:38] a million kinds of agents, but they all
+[0:40] come to us with uh similar problems
+[0:43] saying, "We need to run them. We need to
+[0:45] run a lot of them. We need the
+[0:46] efficiencies that we're not getting."
+[0:50] Agents agentic workloads are very
+[0:51] different from traditional applications,
+[0:55] um which is really it's caused people to
+[0:57] ask whether Kubernetes is the right
+[0:58] platform to run these things. It warms
+[1:01] my heart to see Kubernetes mentioned on
+[1:02] other people's slides. Um
+[1:04] but I think it's a fair question. Um and
+[1:07] so given this audience, I'm not going to
+[1:09] go too deeply into how agents are
+[1:11] different. Touch on it just a little
+[1:12] bit. Um I apologize for racing through
+[1:14] this material. I'm happy to do it again
+[1:16] in the halls or talk whenever, you know,
+[1:18] after we're here for the next 2 days. Um
+[1:21] so let's uh let's look at a couple of
+[1:23] the things that make agents interesting.
+[1:26] Agents are very bursty. They tend to
+[1:28] work in in very short spurts and then go
+[1:30] idle for a long time, minutes, hours,
+[1:32] even days, weeks at a time. This means a
+[1:35] lot of idle resources if you approach it
+[1:37] naively.
+[1:38] Um
+[1:39] agent workloads generally untrusted. I
+[1:42] think it's a pretty well understood at
+[1:44] this point. Um because of that, they
+[1:46] have to run in sandboxes and we're
+[1:47] always looking at new kinds of
+[1:49] sandboxing. Um and they have to run
+[1:51] single tenant cuz you can't share a
+[1:53] sandbox. That would kind of defeat the
+[1:54] purpose. Um that means we miss out on a
+[1:57] ton of opportunities for optimizations,
+[1:59] specifically the amortization of
+[2:01] overheads.
+[2:02] Um, and lastly, they tend to have humans
+[2:04] in the loop, which makes them very
+[2:06] sensitive to the perceived latency of
+[2:08] these systems.
+[2:10] Taken together,
+[2:12] uh, this kind of makes it problematic to
+[2:14] run them on Kubernetes. Kubernetes was
+[2:15] built for things that run for a long
+[2:18] time and tend to be, uh, scale out,
+[2:21] horizontally scalable, and you can
+[2:22] amortize your costs. Um, so before
+[2:25] jumping to a solution, I'm going to
+[2:26] touch on the state of the art, what
+[2:28] we've observed, um, at Google and in the
+[2:30] Kubernetes world, of how people tend to
+[2:33] run agents on Kubernetes. And there's
+[2:34] really only two patterns with a few
+[2:36] variations. Um, so first is the obvious
+[2:39] way. So Kubernetes has this idea of a
+[2:41] runtime class, which lets you define a
+[2:44] kind of sandbox. And the default runtime
+[2:45] class is a Docker-style container, an
+[2:48] OCI container. Um, but we also have
+[2:50] runtime classes for G Visor and for
+[2:52] micro VMs, and it is an extension point
+[2:54] for Kubernetes, so people can, you know,
+[2:56] do interesting research around that.
+[2:58] Some event causes the need for a new
+[3:01] instance of an agent. So, for example, a
+[3:02] user starts a chat session. Uh, this
+[3:05] obviously requires instantiating their
+[3:07] agent, a special dedicated single-tenant
+[3:10] instance just for them, and each of
+[3:12] those runs inside of an agent, uh,
+[3:13] sandbox pod. Now, there's some cost.
+[3:16] Starting up a pod on Kubernetes is not
+[3:19] the thing that Kubernetes does the
+[3:21] fastest. It's not optimized for that,
+[3:23] it's not built for that. It's fast,
+[3:25] seconds usually, but that's not fast
+[3:27] enough. Um, and so depending on what
+[3:29] that agent does at startup, it could
+[3:31] take a long time. And we've seen agents
+[3:33] that load runtime environments that can
+[3:35] take 10s or 15 seconds or more,
+[3:38] browsers, like all sorts of things.
+[3:41] Eventually, that pod becomes ready and
+[3:43] the user can chat with it, and they send
+[3:45] their message to the pod, and it comes
+[3:47] back, and one turn is done, right? And
+[3:51] now what? So, because pod startup isn't
+[3:54] free, what people tend to do is they
+[3:56] wait for another event. And how long
+[3:58] should they wait? Well, that really
+[3:59] depends on what your agent is doing and
+[4:02] what the startup cost was, and you have
+[4:03] to do some math, and it's different for
+[4:05] everybody.
+[4:06] Um we've seen this range from tens of
+[4:08] seconds at the low end to tens of
+[4:10] minutes at the high end. And during
+[4:13] those tens of minutes, your your agent
+[4:15] is sitting there consuming resources
+[4:16] that can't be used by anybody else.
+[4:19] Eventually, and this of course this
+[4:21] might happen multiple times, right? At 9
+[4:22] minutes and 59 seconds, the next turn
+[4:24] might happen, and you start the whole
+[4:26] process over again. Um
+[4:28] So, eventually you get a timeout, and
+[4:30] you're deemed idle, and either you're
+[4:33] discarded entirely or we save your state
+[4:36] somehow, and then we terminate the pod,
+[4:38] right? This is the standard Kubernetes
+[4:39] life cycle. Now, keep in mind this is
+[4:41] happening for every instance of every
+[4:43] agent for every user that is happening
+[4:46] on your system.
+[4:47] There are tricks we can play with warm
+[4:49] pools, and there's uh tricks we can play
+[4:51] with suspend and resume, um
+[4:53] but Kubernetes doesn't support those
+[4:55] things natively, and so you're kind of
+[4:57] working around the system, and it's
+[4:59] difficult to justify at this scale.
+[5:02] The second approach is uh for people to
+[5:05] build a DIY system on top of Kubernetes.
+[5:07] Um basically this looks like a giant
+[5:09] workload per machine. Inside that
+[5:11] workload is a manager application. Uh a
+[5:13] bespoke control plane is responsible for
+[5:16] scheduling things into those that that
+[5:18] mega sandbox. Uh the manager manages the
+[5:20] life cycle. Everything's opaque.
+[5:22] Kubernetes doesn't know what it's doing.
+[5:23] You end up reinventing large parts of
+[5:25] Kubernetes. It's fairly complicated to
+[5:27] build. It can be very efficient. Um it's
+[5:30] it's difficult to operate for smaller
+[5:31] companies, especially startups. Now, I'm
+[5:34] a huge fan of open source. Maybe you can
+[5:36] tell cuz I work in Kubernetes for the
+[5:37] last 12 years. Um
+[5:39] I have a deeply held belief that when it
+[5:41] comes to infrastructure, open always
+[5:43] wins.
+[5:44] And so earlier this year we set out to
+[5:46] build something new that takes the best
+[5:48] parts of both of these models, leverages
+[5:51] Kubernetes where it can cuz almost
+[5:53] everybody has some Kubernetes in their
+[5:55] fleet, um and builds new components
+[5:57] where we have to. Um now, I'm not going
+[5:58] to pretend that we've discovered
+[6:00] anything new. We have not done any
+[6:01] earth-shaking research here. What we've
+[6:03] done is take some of the best ideas from
+[6:05] all of our customers and our users and
+[6:06] tried to glue them together into a way
+[6:08] that everybody can use. In the same way
+[6:10] that you put Kubernetes up on the slides
+[6:12] as the the middle box, I'm would like to
+[6:14] fill in the uh the the right-hand second
+[6:17] box for you.
+[6:19] So, Agent Substrate, and thank you for
+[6:22] mentioning it, um
+[6:23] is a project that we began earlier this
+[6:25] year, um and have open-sourced it. You
+[6:27] can go to this URL, it'll take you to
+[6:28] our GitHub. Um it's uh from a very high
+[6:31] level, the model is pretty
+[6:32] straightforward. We don't want idle
+[6:34] resources. We want to use suspend and
+[6:36] resume and cloud storage to uh multiplex
+[6:40] agents onto pre-warmed runners, um and
+[6:43] aggressively suspend and resume agents
+[6:44] to take those five 10 seconds to 10
+[6:46] minutes of idle and drive it down to a
+[6:48] single second or even less.
+[6:51] So, let's talk about the goals. Um
+[6:53] we're Google, so we tend to see things
+[6:55] from the large-scale point of view. Um
+[6:57] we're shooting for very large
+[6:59] deployments. We're looking at billions
+[7:01] of sessions under management. We're
+[7:02] looking at thousands of tens of
+[7:04] thousands of activations per second, and
+[7:06] we're looking at driving the wake-up
+[7:07] time down into the
+[7:09] low three-digit milliseconds.
+[7:12] Quickly, I'll introduce some terms. Um
+[7:14] we have an actor, which is sort of a
+[7:16] stand-in term for agent or sandbox or
+[7:19] thing that acts like an agent.
+[7:22] We have an actor template. Uh if an
+[7:24] actor is a cookie, the actor template is
+[7:26] the cookie cutter. Uh it includes
+[7:28] details like what kind of sandbox tech,
+[7:29] is it a G Visor or a micro VM? Um
+[7:32] notably, there can be many different
+[7:33] templates inside of a single substrate.
+[7:36] We have a worker, which is usually a pod
+[7:38] running in a Kubernetes cluster. This is
+[7:39] the the that actually consumes
+[7:41] resources. It waits for uh an assignment
+[7:44] of an actor and then it runs that actor.
+[7:46] It can run many of them in serial
+[7:48] and a cluster can have many workers.
+[7:51] And then eight-let is sort of our per
+[7:53] node manager for all of the workers on
+[7:55] that node. We need this for reasons
+[7:57] around networking.
+[7:58] And then lastly eight-net is our
+[8:00] enlightened proxy which will trigger
+[8:02] wake-ups on receipt of traffic. Let's
+[8:04] see how those fit together.
+[8:06] Start with a Kubernetes cluster. Any
+[8:07] modern cluster should work. We support
+[8:09] running in kind so you can run it on
+[8:10] your laptop. The cluster admin deploys
+[8:13] an instance of agent substrate which
+[8:15] includes an API server and storage
+[8:17] layer.
+[8:18] A controller which synchronizes data in
+[8:21] and out of Kubernetes.
+[8:23] One or more worker pools which create
+[8:25] deployments [snorts] which create pods
+[8:27] to run your workloads in.
+[8:30] Eight-lets to manage all those workers.
+[8:32] The eight-net proxy which knows how to
+[8:34] pass traffic from the outside world to
+[8:36] the inside world.
+[8:38] And then the substrate admin can create
+[8:40] one or more actor templates. And the
+[8:41] controller sees these and does some prep
+[8:43] work. Specifically it spins the actor
+[8:45] template up, takes a snapshot of it we
+[8:46] call the golden snapshot, stores that
+[8:48] somewhere so we can use it later.
+[8:51] Now shifting view quickly to the
+[8:53] substrate layer which sits on top of all
+[8:55] this. I'll warn you some of this is
+[8:57] aspirational we're still working on it.
+[8:59] We have our API server, router and
+[9:01] workers.
+[9:02] Someone a higher order system creates an
+[9:04] actor from that template. For example
+[9:08] the same chat agent.
+[9:10] The chat app does whatever front end
+[9:12] work it needs to do authorize or
+[9:14] whatever and then it creates an actor.
+[9:16] Note creating an actor doesn't run the
+[9:19] actor.
+[9:20] In this hypothetical app the user talks
+[9:22] first. So the user sends a prompt which
+[9:25] is received and routed to the eight-net
+[9:27] proxy.
+[9:29] It wakes up the actor, assigns it to a
+[9:31] worker by sending a message through the
+[9:33] router
+[9:34] and and talks to
+[9:36] the um
+[9:38] worker on a on a uh
+[9:40] private connection. Um since this is a
+[9:42] new actor, it wakes it up from the
+[9:44] golden snapshot, the agent proxy
+[9:46] forwards the message on to the now
+[9:48] running actor, um and the cool part is
+[9:50] this happens in a couple hundred
+[9:51] milliseconds, and we're working on that
+[9:53] optimization still. Um as soon as that
+[9:55] turn is done, the actor is probably
+[9:56] idle, so we can uh tell it to go back to
+[9:59] sleep and suspend it. We call it pause.
+[10:01] Uh we pause, take the snapshot, and
+[10:03] shuffle the data off, and now the worker
+[10:05] is unassigned. It's available for use by
+[10:07] another actor. All of that can happen as
+[10:09] fast as your um API operation or your
+[10:12] agent transaction happen. Um again, if
+[10:15] another agent if another prompt comes
+[10:16] in, we'll start the cycle again. Um
+[10:19] and eventually no more messages are
+[10:20] received, and we will shuffle the data
+[10:23] off to cloud storage, and it'll go to
+[10:25] sleep for the night. Um looking at the
+[10:27] whole thing from the highest level, a
+[10:28] Kubernetes cluster can be a one-node
+[10:30] cluster on your laptop, or it could be
+[10:31] 200,000 nodes in the cloud. Each of
+[10:34] those nodes can run multiple workers. Um
+[10:36] each of those agents are idle 99.999%
+[10:40] of the time, so you can do the math and
+[10:42] see we're driving up to those billions
+[10:43] of numbers. Um
+[10:46] Agent Substrate is an open-source
+[10:47] project. Uh it is still pre-production
+[10:50] grade, but we're working really hard to
+[10:51] get it out uh into a workable state by
+[10:53] the end of this uh
+[10:55] fall, and come take a look at it if
+[10:57] you're interested in it. Take a look at
+[10:59] what we've done, bring us your feedback.
+[11:00] The most useful thing that we can get
+[11:02] from people is experience and
+[11:03] requirements and context about what
+[11:05] you're doing with agents. We'd love to
+[11:06] hear from you. Thank you, everybody.

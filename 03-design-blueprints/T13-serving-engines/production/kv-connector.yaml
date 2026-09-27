@@ -1,0 +1,37 @@
+# T13 — KV connector to external storage (REFERENCE-GRADE, NOT EXECUTED HERE)
+#
+# Transcript coverage: primary
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: t13-kv-connector
+  namespace: inference
+  labels: {topic: T13, component: kv-connector}
+data:
+  # The connector is an ABSTRACTION, not a binding to one store. The corpus is explicit
+  # that the same mechanism must work with third-party KV stores and with prefill
+  # disaggregation at the same time [T]. Pinning a vendor here would be a topology
+  # decision disguised as configuration.
+  enabled: "true"
+  implementation: "<your-store>"
+  tiers: "hbm,cpu_memory,disk"
+
+  # ---- what happens when a sequence finishes ---------------------------------
+  # "free" is the default and it is usually wrong for agent workloads. A session that
+  # pauses for a tool call and comes back should find its prefix, not re-prefill it.
+  # The corpus's target is that previous turns are never recomputed while storage
+  # allows. [T]
+  onComplete: "offload"          # free | offload | retain_for_session
+  retainSessionBlocks: "true"
+  attachSessionMetadata: "true"  # blocks must be attributable to their session
+
+  # ---- failure posture -------------------------------------------------------
+  # If the save fails, KEEP THE BLOCKS RESIDENT and count the failure. The safe
+  # failure is to use more memory than planned, not to lose a session's KV.
+  onSaveFailure: "keep_resident"
+  onLoadMiss: "recompute_and_count"
+
+  # Cross-references: the retention LEASE (how long a paused session's KV is protected)
+  # belongs to T12's tier policy, not here. This file only says the KV leaves the engine.
+  retentionPolicyRef: "T12-disaggregation-kv-transfer/production/kv-tier-policy.yaml"

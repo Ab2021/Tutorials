@@ -1,0 +1,386 @@
+Title: Inside vLLM Semantic Router
+
+--- TRANSCRIPT ---
+
+[0:35] If the uh intent we we have suitable
+[0:38] types of headers that headers will
+[0:40] responsible for providing the what's the
+[0:42] model it is being choose what is the
+[0:43] confidence of this so that from that
+[0:45] information we can create a benchmark as
+[0:47] well or where this can be used utilized
+[0:49] as a source of truth like where is your
+[0:51] request went through where is what is
+[0:53] the consequences what will happen if you
+[0:55] choose this model or not. So these are
+[0:57] the multiple headers we are providing
+[0:59] and uh this some kind of we have around
+[1:01] 50 to 60 headers that we have have in
+[1:03] the currently state of semantic router.
+[1:11] Yeah. So this is a perfect use case like
+[1:13] how can you please uh zoom out?
+[1:23] Yeah. Just replay replay.
+[1:28] >> Just replay replay replay.
+[1:35] >> Yeah. So how
+[1:38] so this is a signal detection of the
+[1:39] routing grain can be happen like we have
+[1:41] whenever a model is selected we are
+[1:43] providing suit types of headers that
+[1:45] headers is responsible for like for
+[1:46] source of truth right. So you can
+[1:48] utilize this header for the model
+[1:50] selection and multiple use case. So can
+[1:52] you please scroll?
+[1:55] Yeah. So how the cost is cost is saving
+[1:59] while using the semantic router. For
+[2:00] example, let's suppose the user is using
+[2:02] what is kubernetes at the period of
+[2:04] time. If you don't have semantic router
+[2:05] or auto mode, it will go to the frontier
+[2:07] model like that can be used by a smaller
+[2:09] model. So we are sitting in a
+[2:11] middleware. We are routing the model
+[2:13] request based on the algorithm. So I
+[2:15] will discuss the what are the different
+[2:16] kind of algorithms we are using in a
+[2:17] semantic router to route this. So these
+[2:20] kind of benchmarks we have personally we
+[2:22] have determined using some kind of data
+[2:24] sets. Uh so like 40% of P50 routing
+[2:28] latency we identify and what are the
+[2:30] number of request load we have move to
+[2:32] the using the semantic router before and
+[2:34] after. So this is the accuracy we have
+[2:35] identified.
+[2:38] So yeah so finetuning of router so how
+[2:40] we are we are finetuning the production
+[2:41] for semantic because yeah because is we
+[2:43] are currently using a classifier model
+[2:45] that is ambert 32 model. So we are
+[2:48] regularly basis of fine tune that model
+[2:50] and publishing on the hugging post
+[2:51] hugging face repositories. So uh what we
+[2:54] are doing and so whenever a prompt is
+[2:56] happen we provides multiple
+[2:58] configuration that what is a it is a
+[3:00] simple medium or reasoning uh prompt
+[3:02] that can be determined to particular use
+[3:04] case then we using a synthetic data
+[3:06] generation. How we generation we using
+[3:08] some kind of data sets then we randomize
+[3:10] that data for a semantic meaning and
+[3:11] then then we use and then we pass that
+[3:14] data to the semantic router and create a
+[3:16] benchmarks. So these are the some kind
+[3:18] accuracy we have determined using some
+[3:20] examples and in this way we are on the
+[3:23] continuous basing basis we are improving
+[3:25] the embedded model that you are
+[3:27] currently using in a class semantic
+[3:28] router. So yeah this is the main thing
+[3:31] that I would like to highlight you
+[3:33] because most of the people have the
+[3:34] concern like it is just a semantic
+[3:36] router that help to determine that your
+[3:39] like if some people think this is if
+[3:41] else condition like this prompt is
+[3:43] matching to the model description it
+[3:45] will route but no if you see there are
+[3:47] multiple layers of pipeline happen like
+[3:49] we signal projection this is an
+[3:50] algorithm model every pipeline is
+[3:52] responsible to find out your model
+[3:54] efficiently for example if you see the
+[3:56] signal let's suppose a user provide a
+[3:58] prompt right the signal determine it is
+[4:00] a the prompt can be code health long
+[4:02] prompt and multiple signals. Now that
+[4:04] this signal went to the partition
+[4:06] partition is help to determine which
+[4:09] signal we need to provides based on the
+[4:11] like your benchmark. Then after we
+[4:13] provide a score like which which has a
+[4:14] difficulty score then we have algorithms
+[4:17] multiple semantic router we have numbers
+[4:19] of algorithm that that help to determine
+[4:21] which on what basis we need to
+[4:23] prioritize which particular model of use
+[4:26] case. Then finally we made a decision
+[4:28] that on which model it will be route
+[4:30] right. So this is a complete end to end
+[4:32] pipeline that we have currently in the
+[4:34] van semantic router underneath. If you
+[4:36] dig deep we will more find most of the
+[4:40] something in depth in the decision
+[4:42] layers. So every layer is feel free is
+[4:44] open to contribution and you can able to
+[4:45] contribute right. So yeah can you please
+[4:48] come? So this is a some algorithms I
+[4:51] have written like how's the internally
+[4:53] valance semantic attributes we have a
+[4:55] confidence loop we have a rem loop we
+[4:57] have fusion loop we have workflow loop
+[4:59] so how we can able to ensure your
+[5:02] picking of model is very very accurate
+[5:04] so we determine this kind of algorithm
+[5:06] and also we have published the research
+[5:08] paper before implementing this kind of
+[5:10] algorithm this research paper is
+[5:12] available on the v semantic router
+[5:13] websites you can feel free to reach out
+[5:15] uh understand our use case also we have
+[5:17] provided a benchmark what's the
+[5:19] difference between if you're using the
+[5:20] collection loop before and after the
+[5:21] loop. So we have already had a benchmark
+[5:23] on the main websites.
+[5:25] So yeah now the question is rise can a
+[5:28] router make the model better? So we have
+[5:30] done some kind of benchmark in the uh
+[5:33] 2025 this is bit outdated but uh this is
+[5:37] like uh data on the basis of benchmark
+[5:39] data like live coding batch between the
+[5:41] van semantic router and uh GPT 5.5 these
+[5:45] are and we find a very good result like
+[5:47] 92%.6 6 and 96.0. So it is also present
+[5:51] on the valance material router. You can
+[5:52] feel to reach out what kind of data sets
+[5:54] we have used. What are the things
+[5:56] parameter you have determined for the
+[5:57] benchmark.
+[6:00] So yeah and the most important thing
+[6:02] nowadays anyone can able to create a
+[6:04] product but the thing is how the
+[6:05] visibility of the product is important
+[6:06] right. So we have a good feedbacks among
+[6:09] the largest leaders in the world like
+[6:12] Satan has clearly mentioned our product
+[6:14] the semantic router and face co have
+[6:17] tagged us in multiple times in the
+[6:19] twitter co has g brief talk why we
+[6:23] created semantic router and media co has
+[6:25] also mentioned about us. So just thing
+[6:27] it is not currently using by nowadays
+[6:30] but eventually when the industries grows
+[6:32] when the data so concept is come
+[6:34] definitely we need some kind of
+[6:35] framework that help to determine our
+[6:37] your use case or prompt with where it
+[6:39] goes. So these are the trust that we
+[6:41] have built from our uh company leaders
+[6:44] and you this is completely available on
+[6:47] the internet you are feel free to reach
+[6:49] out and test like how it work. Yeah. So
+[6:52] another thing is like how you can able
+[6:54] to we have provide multiples freehand
+[6:56] integration you can able to connect any
+[6:58] kind of opensource product with semantic
+[7:00] router and you can able to create your
+[7:03] own product from end to end like a
+[7:04] cursor or anything use case for this
+[7:06] right so this is like we have pro we
+[7:09] have also added articles with open code
+[7:12] codeex and provided all the things that
+[7:15] you are necessary for creating a
+[7:16] semantic data from end to end
+[7:20] so how the data
+[7:22] can can be implement or used by the
+[7:25] semantic router. So this is a good
+[7:26] example of a bank financial society. So
+[7:29] let's suppose sensitive information
+[7:30] should be goes should not go between the
+[7:32] cloud provider. So semantic router is
+[7:34] highly applicable for this kind of uh
+[7:36] facilities for this. So this is the
+[7:39] thing that we have covered in this
+[7:40] chapter as well.
+[7:43] Yeah. So how the enterprise guards we
+[7:46] are also helping the semantic router. So
+[7:48] every request we are providing the input
+[7:50] filtering we have providing a semantic
+[7:52] classification we have a policy routing
+[7:53] we have in English guardless. So all
+[7:55] these add-ons make the semantic router a
+[7:58] robust product for the like industry use
+[8:00] case. So every kind of request contains
+[8:02] some kind of keywords based on your
+[8:04] configuration. It will pass to semantic
+[8:05] router and semantic router automatically
+[8:07] judge whether it is a PI detection,
+[8:09] whether it is a jailbreak detection,
+[8:10] whether is a fact check guess any kind
+[8:12] of different kind of signals it will
+[8:14] automatically detect based on the
+[8:15] configuration.
+[8:18] So why agents needs this a main concern
+[8:20] because let's go most of the companies
+[8:22] creating their internal agents right or
+[8:23] internal platforms for example sales
+[8:25] assistants some people are creating for
+[8:26] the sales people and most of the time
+[8:28] sales people ask some kind of general
+[8:30] queries like what is a latest release in
+[8:32] the particular x product right and that
+[8:34] queries should not be passed to the
+[8:36] frontier models or any kind of model
+[8:37] that your company adopted that's can you
+[8:39] pass some small models and your team can
+[8:40] finetune so semantic writer
+[8:42] automatically act as a auto layer that
+[8:45] we have most in our cursor or an GPT
+[8:47] that automatically help your agent
+[8:49] orchestration to manage your save your
+[8:51] post destically. So we have already
+[8:53] tested this and the benchmark everything
+[8:55] is play available on the VM semantic
+[8:58] router website.
+[9:00] So now most of the speakers have already
+[9:03] covered like how we can able to create
+[9:04] end to end pipeline or the semantic
+[9:06] router with BLM LMD. So we can easily
+[9:10] integrate semantic router with LMD to
+[9:12] provide a fullyfledged product for
+[9:14] inferencing and semantic caching. So and
+[9:16] we are and also we are we have only
+[9:19] testing tested on multiple
+[9:22] crowd private we have deployed it open
+[9:25] shift as well multiple uh and I guess I
+[9:28] have already the I have already added
+[9:30] the articles in the symmetry router
+[9:32] channel so you can feel that
+[9:37] so how's the like end to end life cycle
+[9:39] work when we have LMD and VLM present
+[9:43] for when you open so gateway request
+[9:46] User pass the request to the gateway.
+[9:48] Gateway like find out whether is a user
+[9:50] is responsible for passing the request
+[9:52] for next or not based on a rate limiting
+[9:54] multiplex functionality. Then after it
+[9:57] will pass to the semantic router then we
+[9:59] LMD then it is connected with the VM. So
+[10:01] automatically this is a complete end to
+[10:03] end product that we can able to
+[10:05] integrate using the semantic router with
+[10:07] products. So key take. So these
+[10:09] benchmarks we have find out like what is
+[10:12] the benchmarks we have obtained because
+[10:13] benchmark is very necessary because we
+[10:15] can create a product but how we can able
+[10:17] to find the authority or the like trust
+[10:20] of the customers. So these benchmarks we
+[10:22] have find out using the data sets that
+[10:24] we have used by semantic router.
+[10:30] So these are some kind of resource that
+[10:32] I have used for creating the website. So
+[10:34] you are feel free to check and
+[10:37] understands what's the different kind of
+[10:38] data sets we have used for this use case
+[10:41] and what's the different complete end to
+[10:42] end process we use. So AMD is also using
+[10:44] this product in the production. So I
+[10:46] have already added a YouTube video you
+[10:48] can feel to reach out. However AMD is
+[10:50] heavily investing in ve semantic router
+[10:53] for their use case.
+[10:55] This next
+[11:02] questions anyone have any question? If
+[11:04] you want to contribute in valance
+[11:06] semantic router, it is one of the good
+[11:08] chance because we are growing in the
+[11:10] enterprise directions. Let's suppose
+[11:11] from the two or three years back we we
+[11:13] have the VM core projects. It's was open
+[11:15] for the contribution. Now it is very
+[11:17] very difficult to contribute induction
+[11:19] but we are moving in the rapid direction
+[11:22] and we have opened the multiple work
+[11:23] forces. work for is like if you're
+[11:25] interested in the influencering you can
+[11:27] join the influencing channel if you're
+[11:28] interesting in any kind of a developer
+[11:30] experience enterprise adoption you are
+[11:32] feel free to contribute and the team is
+[11:34] very very good the people are coming
+[11:36] from AMD uh uh IBM meta and multiple
+[11:40] research labs also there to help you we
+[11:42] have the team around 17 commters are
+[11:44] there so so that you can feel free to
+[11:46] contribute any kind of research paper
+[11:47] you're interested we have created our uh
+[11:50] academic lab as well so multiple folks
+[11:52] if you are interested in research feel
+[11:53] free to reach out any kind of things
+[11:55] that you implemented and uh happy to
+[11:57] like implement your idea in the valency
+[12:00] router. So apart from that we have a
+[12:02] large number of issues open on the
+[12:03] research sides feature side developer
+[12:05] experience side. If you're interested in
+[12:07] research how you can able to make the
+[12:09] mix of mode mixer of model product as
+[12:12] intelligence layer feel free to reach
+[12:13] out and if you have any questions you
+[12:15] can reach out to me happy to help you on
+[12:17] board in a semantic because I just
+[12:19] contributed before three or four months
+[12:21] back I don't know about most but I
+[12:24] contributed there when it was growing in
+[12:26] the state and I become maintainer so it
+[12:29] is perfect time and one I would say one
+[12:30] of the good time if I contribute now we
+[12:33] don't know if he four year five year
+[12:35] back in what direction do you feel this
+[12:37] project can move because we have good
+[12:40] feedbacks good customer feedback and
+[12:41] multiples companies are coming like in
+[12:43] the recent time velocity.ai AIA is a
+[12:46] company that recently collaborates. So
+[12:49] these are some stuffs if you're
+[12:50] interested feel free to reach out.
+[12:53] >> If you have any questions
+[12:55] >> questions for
+[13:01] >> I can't recall any exact example but I'm
+[13:05] pretty curious about how will it
+[13:07] [clears throat]
+[13:08] cater to the ambiguity in sentences.
+[13:11] basically whatever
+[13:23] >> so ambivity I guess you are want to like
+[13:25] how you are able to distinguish that
+[13:26] whether your accuracy is good or not
+[13:28] while passing the simulator right so
+[13:31] okay so one thing is you need to like
+[13:34] first of all all the thing is config you
+[13:37] have to mention what the algorithm you
+[13:38] need to choose based on the benchmark so
+[13:40] what If you let's are using cemented in
+[13:42] the default state in the config state
+[13:44] and you find there's a gap between your
+[13:46] X state and Y state then you need to
+[13:48] update your config what kind of
+[13:49] algorithm you can choose different kind
+[13:51] of plugins you can add so this is kind
+[13:52] of manually work you need to do for this
+[13:54] stuff at present time but as we are
+[13:56] growing we are trying to more research
+[13:58] how we can able to automate this kind of
+[13:59] stuff so that you can without any kind
+[14:01] of manual efforts you can integrate this
+[14:04] so this is all config use the default
+[14:06] config try to run if you find some kind
+[14:08] of benchmark if you able I can cannot
+[14:11] able to show the demo. The dashboard
+[14:12] contains a data sets. You just ingest
+[14:14] the data sets and find you can able to
+[14:16] find what's your desired answer and
+[14:18] correct answer. Then after you can
+[14:20] update the config we have multiple
+[14:21] algorithm. That's why you have update
+[14:23] algorithms based on the user case and
+[14:24] plugins that you can able to integrate
+[14:26] the external resources as well. So these
+[14:29] are the thing you are can do. So we are
+[14:31] going you can happy to collab share your
+[14:33] ideas and happy to implement it.
+[14:42] Thank you Aish. Thank you.
+[14:44] >> So uh guys Aish is one of the maintainer
+[14:46] of BLM.

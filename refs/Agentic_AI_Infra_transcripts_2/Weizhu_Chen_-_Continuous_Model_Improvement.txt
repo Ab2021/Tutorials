@@ -1,0 +1,333 @@
+Title: Weizhu Chen - Continuous Model Improvement
+
+--- TRANSCRIPT ---
+
+[0:03] Yeah, good afternoon everyone. It's good
+[0:04] to be back here.
+[0:06] So, I think today I'm going to talk
+[0:09] about two very simple thing.
+[0:11] One is the what drive the continuous
+[0:13] model improvement.
+[0:15] And the second one is the what the next
+[0:17] for the continuous model improvement.
+[0:20] So, the first one for the continuous
+[0:22] model improvement, I think everybody
+[0:23] think about okay, it's the it's the
+[0:25] computer, definitely. Computer is the
+[0:27] first very scaling engines. Without
+[0:29] computer, we cannot do anything.
+[0:31] So, basically I think you can think
+[0:32] about a lot of this kind of improvement
+[0:34] basically was driven by the computer.
+[0:36] There's more computer there.
+[0:38] And
+[0:40] so the model will become better
+[0:41] automatically if you train it longer.
+[0:44] So, on the other hand actually, you also
+[0:46] this kind of the more computer, you also
+[0:48] unblock a lot of this kind of
+[0:49] experiment.
+[0:50] And a lot of innovation basically is
+[0:52] also from the experiment and also this
+[0:54] kind of the fast iterations.
+[0:56] So, from the computer,
+[0:57] definitely for today, there's a three
+[0:59] dimension for the computer today. The
+[1:01] first one is the pre-training.
+[1:03] Pre-training when you have the large
+[1:04] model, when you have this kind of the
+[1:06] more data, and for today is also more
+[1:08] exploration. This exploration came from
+[1:10] the model or it came from the human.
+[1:13] When you explore more, definitely you
+[1:14] are going to make the model better. I
+[1:16] think that is the basically a lot of
+[1:18] people call as a pre-training scaling
+[1:19] law.
+[1:20] The second one is the post-training.
+[1:23] So, for the post-training wise, so
+[1:25] definitely I think for post-training
+[1:27] today, a lot of simple problem already
+[1:28] solved.
+[1:29] So, the computer is more focused on how
+[1:31] can we solve the harder problem or how
+[1:34] can we solve the longer problem, long
+[1:36] horizon.
+[1:37] And also how can we solve this kind of
+[1:39] the multiple agent problem in the
+[1:40] training. It's not just in the
+[1:42] inference. So, basically we can also
+[1:44] call this as a post-training scaling
+[1:45] law.
+[1:46] So, the last one definitely is the test
+[1:48] time computer is for the product
+[1:49] serving.
+[1:50] So, basically it's about how can you
+[1:53] make the this kind of the COT, this kind
+[1:54] of the family of model interact
+[1:56] together.
+[1:58] The other one, definitely, is the data.
+[2:01] So, we always say data is the king,
+[2:03] everything else is the queen. And also
+[2:06] data is the oxygen. So, basically, data
+[2:08] you can think about data is a second
+[2:10] engine to make everything happen.
+[2:12] But, basically, there are two kinds of
+[2:14] the effort in the data. One is the
+[2:16] pre-training. Pre-training, so you will
+[2:18] go to see most of the pre-training
+[2:20] making progress is also most of because
+[2:22] of the data. But, every time at
+[2:24] when you are able to clean the data much
+[2:26] better, when you are able to refresh the
+[2:28] data. Because the web data is also
+[2:30] becoming better and better every day.
+[2:32] And also more and more coverage. This
+[2:34] kind of synthetic data is not just about
+[2:35] the quality. The most important is the
+[2:37] coverage. It's able to create a lot of
+[2:39] complementary data than before. So, this
+[2:41] basically is also trying to make this
+[2:44] data much better for the model building.
+[2:48] So, synthetic data we are told is
+[2:50] actually I think it's the most important
+[2:52] thing in the
+[2:53] in the future, one of the most important
+[2:55] thing. The second one is the human data,
+[2:57] probably.
+[2:59] The all the data we create every day
+[3:00] will be the seed for the synthetic data.
+[3:03] That means synthetic data will be the
+[3:05] mainstream in the future. And all the
+[3:07] data we have, actually, it's just to how
+[3:09] can we produce a better synthetic data.
+[3:11] The other The other thing about this
+[3:13] kind of the pre-training, basically, is
+[3:15] about this kind of the RL environment.
+[3:17] How can you make the RL environment to
+[3:19] run as the same as the user used that
+[3:22] during the training.
+[3:23] So, RL environment will So, basically,
+[3:25] make the model to be more useful for the
+[3:27] product scenarios.
+[3:29] And because RL needs kind of the trying
+[3:31] error, so definitely you need to make
+[3:33] this very similar thing in the inference
+[3:35] getting to training. So, basically, the
+[3:37] model is able to learn.
+[3:38] So, and So, this is also very similar as
+[3:42] about how can we build a simulation in
+[3:44] the training. So, you are able to
+[3:46] generate the analytic data. So,
+[3:48] basically, that is the key for this kind
+[3:50] of the RL environment.
+[3:52] The third one
+[3:54] we talk about is the model architecture.
+[3:56] This is very complicated. There's so
+[3:57] many paper about the model architecture
+[3:59] and there's so many detail there.
+[4:00] Basically, I want to summarize basically
+[4:02] is about there are three dimension all
+[4:04] these kind of thing trying to optimize.
+[4:06] First one, I definitely you want to
+[4:07] build a much higher quality model.
+[4:09] Second one is the lower influence cost.
+[4:12] So, a lot of people just ignore the
+[4:13] second one and
+[4:15] and the last one is definitely for the
+[4:16] today is the how can you support much
+[4:18] longer context, make more efficient. So,
+[4:21] the goal is also pretty simple. How can
+[4:23] we make it better and cheaper?
+[4:26] So, and based on the this kind of the I
+[4:28] will try I will try to believe actually
+[4:30] for data is more important than the
+[4:32] model quality. Model architecture
+[4:34] actually we should pay more attention to
+[4:36] the influence cost and influence
+[4:38] efficiency. How can the model be more
+[4:41] popular? Finally, it's going to be
+[4:43] it's going to be decided by how fast
+[4:45] you're able to run and how cheap you're
+[4:47] able to run. I think that's more
+[4:48] important. So, we need to define the
+[4:49] influence at the beginning. The other
+[4:51] one basically is based on the GPU
+[4:53] advancement. We need to put more compute
+[4:56] instead more I I I O to less I O but
+[4:59] more compute. That's also important.
+[5:02] The next one I want to quickly talk
+[5:03] about actually is about a lot of people
+[5:05] are talking about is the distillation.
+[5:07] And distillation basically we think
+[5:09] about
+[5:11] for the machine learning a lot of thing
+[5:13] actually is just about distillation.
+[5:15] It's just about you are just distill
+[5:17] from human or you are distill from
+[5:20] model. We distill from human. For
+[5:22] example, when you learn from all these
+[5:23] kind of the existing data in the web,
+[5:25] you are distill from human. When you
+[5:26] learn from this kind of the product
+[5:28] telemetric data, you also distill from
+[5:30] the human this interaction. You are also
+[5:32] basically when you ask human to label a
+[5:34] data for us, actually you also distill
+[5:36] their knowledge. So, distillation
+[5:38] actually is a very popular things. So,
+[5:40] we distill from model definitely I think
+[5:42] this is very
+[5:44] yeah, it's very popular as well.
+[5:46] And so, yeah, basically I was thinking
+[5:49] about distillation basically you can
+[5:51] think about in the industry is much more
+[5:53] efficient than this kind of RL training.
+[5:55] It's also yeah, very we don't need to
+[5:59] build anything from scratch. So,
+[6:00] basically I I believe the next better
+[6:03] model basically was built from the
+[6:04] existing model.
+[6:06] Instead of trying to build anything from
+[6:07] scratch.
+[6:08] The last one the next one is
+[6:10] distillation is also a very general
+[6:11] pattern. For example, you're able to
+[6:12] build multiple teacher because it is
+[6:15] easier for the RL to learn from one
+[6:16] single specific teacher and it's also
+[6:19] able to run in parallel for this and
+[6:21] distill into the single model.
+[6:23] On the other hand, I want to say
+[6:24] distillation have a lot of this kind of
+[6:26] the research have a lot of new problem
+[6:27] coming. It's not just about a simple
+[6:29] problem. It's a very important problem
+[6:32] for
+[6:32] And for example, there's so many
+[6:34] different kind of distillation just like
+[6:35] you're able to distill from strong model
+[6:37] to another strong model or you're able
+[6:39] to distill from strong model to weak
+[6:40] model. And basically you're also able to
+[6:42] distill from the weak model to the
+[6:43] stronger model. It's also possible.
+[6:46] There's also a lot of research we need
+[6:47] to deal with every day. For example,
+[6:49] just like a more powerful teacher model,
+[6:51] a more powerful model doesn't mean it's
+[6:53] a better teachers. That's very similar
+[6:54] as humans.
+[6:56] And also some weak model sometimes also
+[6:59] can be a very good teacher model. So,
+[7:01] everything is possible for the
+[7:02] distillation.
+[7:03] The next one we want to talk about is uh
+[7:06] RL definitely.
+[7:07] What the RL work pretty well today is
+[7:10] about is very efficient. It's very
+[7:12] effective, not efficient. It's very
+[7:13] effective to solve the problem. No
+[7:15] matter it's a verified problem or
+[7:16] non-verified problem. It's also very
+[7:18] good for us to solve the product
+[7:20] behavior. If there's something wrong, we
+[7:21] just define a grader. We just put some
+[7:23] data and then actually it's much more
+[7:25] efficient than other approach.
+[7:27] And it's also very good to work directly
+[7:29] to the real environment. But there's
+[7:31] also a lot of thing actually we believe
+[7:33] I believe RL distillation and this
+[7:35] synthetic data maybe is good enough for
+[7:37] us to get to the same improvement.
+[7:39] So, but I think there's also a lot of
+[7:41] challenges for the IO as well. Just like
+[7:43] it's very slow.
+[7:45] And I think a lot of breakthroughs need
+[7:46] to happen to make it much faster. And
+[7:48] it's also pretty updates also very
+[7:51] incremental. When you run the
+[7:53] IO chain, you will see the updates very
+[7:54] incremental. Just like maybe sometime
+[7:56] the lower updates already good enough.
+[7:58] So and on the other hand actually is the
+[8:01] data. So what will drive the IO is the
+[8:03] data. Since the data definitely will be
+[8:05] more important for the IO training. And
+[8:08] I also believe maybe 99.9% of the data
+[8:10] actually are coming from synthetic data
+[8:12] in the next step.
+[8:14] So I think we we already talked a lot
+[8:15] about the honeys for today. So I will be
+[8:18] quick. So and one thing I want to say is
+[8:21] about we should try to optimize the
+[8:23] entire system and honeys is a very big
+[8:25] part in the system instead of trying to
+[8:27] optimize the model.
+[8:28] So because there's a lot of builder
+[8:30] here, I want to say. So before we think
+[8:32] about to optimize the model, try to
+[8:34] optimize everything around the model,
+[8:36] not the model itself.
+[8:38] So before we try to optimize the model.
+[8:41] And the other thing is about I want to
+[8:43] say
+[8:44] the honeys you build today, a lot of
+[8:46] thing will be absorbed into the model at
+[8:48] some point.
+[8:49] The honeys will become simple and
+[8:50] simple, simpler and simpler. And we need
+[8:53] to define but definitely at the same
+[8:55] time we are also define more and more
+[8:57] complicated scenario and build more and
+[8:59] more complicated honeys. Model is going
+[9:01] to eat a lot of thing. There's nothing
+[9:03] we are able to change.
+[9:04] So for the last one I want to mention
+[9:06] actually is very important for us is
+[9:08] about is we just not care about the
+[9:10] benchmarking. We also care about the
+[9:12] production this kind of the usabilities.
+[9:15] And usabilities actually this kind of
+[9:17] interaction data actually is very good
+[9:19] for us to build a better model. It's not
+[9:21] just about this kind of the
+[9:22] benchmarking.
+[9:23] So and by by by default actually I think
+[9:27] the continuous model improvement really
+[9:29] require a continuous deployment at
+[9:32] scale.
+[9:33] A lot of people are going to use your
+[9:34] model and actually you are able to
+[9:35] understand what is going wrong and based
+[9:38] on this interactions data and also able
+[9:40] to see what other model do for this
+[9:42] scenario and get the insight and trying
+[9:44] to learn from that. And this is my last
+[9:46] slide and it's about the
+[9:49] a few better offer the next round. I
+[9:51] think first one is the scaling is keep
+[9:53] working and we also don't know what's
+[9:55] the ceiling.
+[9:56] And the other one I definitely the model
+[9:58] should be is already able to optimize
+[10:00] the harness is also able to optimize and
+[10:03] change another model. I think that's
+[10:04] also going to happen.
+[10:06] Because model is better than human for
+[10:07] this.
+[10:08] And the other one definitely want to
+[10:09] optimize the whole system and the
+[10:11] synthetic data will become the
+[10:13] mainstream
+[10:14] for especially for the next model
+[10:16] training. And the last one is also very
+[10:18] important human is there environment is
+[10:20] there very essential. We still need
+[10:22] human to guide the model how to do the
+[10:23] model especially for last one how to
+[10:26] make sure this have improvement align
+[10:28] with the humans value instead of doing
+[10:30] something the model want to do. Thank
+[10:31] you.

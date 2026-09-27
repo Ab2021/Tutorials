@@ -1,0 +1,824 @@
+Title: Scaling Agentic AI: Distributed Inference with llm-d
+
+--- TRANSCRIPT ---
+
+[1:41] the interest in the space has been
+[1:42] exploding for a while. Uh I'm Pravin
+[1:44] from IBM research. Uh so I've been
+[1:46] working on LLMD since uh last year when
+[1:49] we started LLMD around March started
+[1:52] working on uh identifying that this kind
+[1:54] of system is needed the uh it's scaling
+[1:56] up and we need something that can
+[1:58] address uh or scale VLM to a cluster
+[2:00] level and I'll be covering a bit of
+[2:03] overview of LMD how it works the router
+[2:05] works and then going into how sorry
+[2:09] close okay yeah uh and then how we are
+[2:13] uh addressing the recent agent authentic
+[2:15] workloads for LLM.
+[2:18] So a bit of a initial recap of what
+[2:22] everyone has been saying. So VLM is
+[2:24] good. Um when you have few users, you
+[2:28] have continuous batching and then prefix
+[2:30] caching uh everything works fine. But as
+[2:32] your users start growing, okay, your KV
+[2:35] cache gets u u uh I mean sc saturation
+[2:40] happens and the natural thing that you
+[2:42] do is to scale up scale out uh with
+[2:45] deploying VLM across multiple GPUs that
+[2:48] you need and then uh put a load balancer
+[2:50] on top of them. Uh and this is where we
+[2:54] get into this uh picture of distributed
+[2:56] LM serving. So VM becomes more of a
+[2:59] distributed LM serving where load
+[3:01] becomes one of the contributors to why
+[3:03] we need to distribute the stack.
+[3:07] So uh scale out uh putting a load
+[3:10] balancer is easy but uh as was telling
+[3:14] uh we just uh with just putting a simple
+[3:18] load balancer which you do not know
+[3:20] where to send the uh send the particular
+[3:23] uh uh request to you start going to the
+[3:26] uh old pods and you start recomputing
+[3:28] again. So which wastes a lot of GPU
+[3:30] cycles and basically reduces your uh
+[3:34] token throughput and also increases your
+[3:36] TTF.
+[3:38] >> So uh the other reason why we need the
+[3:40] distributed LM serving stack is uh for
+[3:42] frontier models for serving uh models
+[3:45] like GLM ki and all that where u it's
+[3:48] not it cannot be fit into a single uh
+[3:51] GPU or a single node. So you need to
+[3:53] scale out u for uh for accommodating
+[3:56] them across multiple GPUs with tensor
+[3:58] parallelism and data parallelism and of
+[4:01] course for wide expert parallelism where
+[4:03] you need high speeded RDMA between these
+[4:06] uh different nodes to do all to all
+[4:08] communication where the different
+[4:09] experts span across say two nodes or
+[4:12] sometimes four nodes depends on the
+[4:14] hardware that you have
+[4:15] >> and um uh different a single request
+[4:18] goes to goes to multiple experts that
+[4:20] are spread across different nodes. We
+[4:22] are also out of capacity.
+[4:23] >> And the other
+[4:25] reason is the prefill decode
+[4:26] disagregation which is which is being
+[4:28] used by everyone where depending on the
+[4:31] workload you want to scale up your
+[4:34] pre-fill instances or decode instances
+[4:36] identifying based on the bottleneck of
+[4:38] each of the faces in your workload
+[4:40] >> and you need a proper routing mechanism
+[4:44] to uh to decide when a request has to go
+[4:46] to prefill node or a decode node and uh
+[4:49] do the KV cache transfer between there.
+[4:51] So uh at this point with all these
+[4:53] complications it's it starts becoming
+[4:55] more of a cluster level problem. Not a
+[4:56] single node uh single node VLM cannot
+[4:59] handle all these. So there is a high
+[5:01] speeded RDMA involved. There is leader
+[5:03] worker sets involved in wide expert
+[5:05] parallelism. Um I mean autoscaling and
+[5:07] all that. And uh that's where LLMD comes
+[5:10] into the picture where u it's a it's a
+[5:14] native kubernetes stack for uh
+[5:17] distributed lm influencing. It supports
+[5:19] both VLM and ACL and it's built on top
+[5:22] of the gateway API inference extension
+[5:25] of Kubernetes and um now it's u uh we
+[5:29] are building in collaboration with
+[5:31] Google uh Corv, Nvidia, Red Hat and
+[5:34] several other companies have are
+[5:36] contributing to it actively and also
+[5:38] using it in their production systems and
+[5:41] have seen tremendous gains like they
+[5:43] have a blog on Tesla that they claimed
+[5:46] they got about 3x throughput and uh
+[5:48] similarly with AWS, Oracle and Google um
+[5:51] for their Vortex uh infrastructure.
+[5:55] >> So the LMD ecosystem has been growing
+[5:57] with uh with several contributors and
+[5:59] users uh coming in. Uh also we have like
+[6:02] few few banks also starting starting to
+[6:05] use like capital one and uh it's in it's
+[6:07] completely open government so it's in
+[6:09] CNCF. So uh anyone can come in uh uh
+[6:13] join one of your community calls and
+[6:14] then um propose uh propose something
+[6:17] that they want to contribute to LMD uh
+[6:19] and then they can they're free to
+[6:21] contribute uh to the open.
+[6:25] >> So a bit of the architecture u so uh
+[6:30] >> so LLMD sits between the uh the client
+[6:33] uh at the gateway and above the ports.
+[6:38] >> So uh
+[6:39] We hook into the gateway that you have
+[6:41] installed in your cluster. It could be a
+[6:43] GKE or STO gateway. And um the gateway
+[6:47] routes the request influence request to
+[6:49] the router which then decides which pod
+[6:52] this instance has to be or this request
+[6:54] has to be routed to. And uh that is
+[6:57] usually u based on different uh rules
+[7:00] that we specify in the LLMD router to
+[7:02] decide which instance like it could be
+[7:04] based on the load could be based on the
+[7:05] prefix cache affinity could be based on
+[7:07] the concurrency levels and all that. And
+[7:09] uh similarly we
+[7:12] uh there is a KV cache that is being
+[7:14] transferred between the pre-fill and the
+[7:16] decode decode nodes using NVIDIA and
+[7:18] Excel and uh these VM instances send out
+[7:22] metrics to real to the LMD which include
+[7:25] KV events. Uh so whenever a VM pod um
+[7:29] creates a KV cache or evicts a KV cache
+[7:31] the LLMD router gets to know this and it
+[7:35] uses that to know uh to decide which
+[7:38] which particular instance a particular
+[7:40] host has to be routed to
+[7:41] >> directly when we're trying to directly
+[7:43] deploy it's extremely complex.
+[7:44] >> So a bit more into the uh the router
+[7:46] itself. So uh the router or the it's
+[7:49] also called EP that is the end point. So
+[7:52] I might be using uh router and EP uh
+[7:56] [snorts] strategy very honestly speaking
+[7:58] so
+[8:00] >> uh what the router does is uh basically
+[8:02] routing is one of the things that's the
+[8:05] main thing it's named router uh it's
+[8:08] prefix or load aware routing and also
+[8:10] the second part is flow control or fair
+[8:13] like uh when your uh when your cluster
+[8:15] is saturated so which requests have to
+[8:17] be prioritized so you might have
+[8:20] different um your your company would
+[8:22] have uh would have would be using your
+[8:25] inference stack for different purposes.
+[8:26] So there could be a customerf facing
+[8:28] workload, there could be internal team
+[8:29] workloads, there could be batch
+[8:30] processing. So which one do you
+[8:32] prioritize to maintain the SLO? So those
+[8:36] are the those are under the control of
+[8:37] the LMB router. So it attaches to the
+[8:40] proxies XRO that is external proxy
+[8:44] plugin and
+[8:47] first is request handling which is just
+[8:48] converting the request into some
+[8:50] semantic things that the LMD router can
+[8:53] understand and then the flow control
+[8:55] decides which request to be sent out of
+[8:57] it maintains a queue and then the
+[8:59] request scheduling decides which uh
+[9:01] which instance a particular request has
+[9:03] to be routed to and there's of course
+[9:05] the data layer which uh which maintains
+[9:08] all the states that is what all cache is
+[9:10] available in the VM which which pods are
+[9:14] saturated and all that
+[9:16] >> this guy he used it to run his
+[9:19] >> so this is a high level view of how uh
+[9:21] the router actually
+[9:22] >> mentioned here already three or four
+[9:24] times more than I would have thought
+[9:25] about it
+[9:26] >> and it's all it's all next gen because
+[9:27] we have a gi 3 and IBM worked with us
+[9:31] and they published a paper on the gi 3
+[9:33] we tried a lot I tried a lot so you have
+[9:35] a falcomm lab in the US right and we
+[9:38] first connected to that system and I was
+[9:39] trying uh yeah so when we move the KV
+[9:42] cache so uh that's another that's an
+[9:44] entire
+[9:45] >> different
+[9:47] stack that is doing that there's a P2P K
+[9:50] that that transfers the KV cache between
+[9:53] one node to the other node so the EP
+[9:56] maintains that EP knows which all how
+[9:58] much cash is available in all these
+[10:00] nodes so depends let's say one request
+[10:04] comes in um for some reason would decide
+[10:06] to move the cash very easy
+[10:08] >> and then um some some more requests come
+[10:10] in and then the other other part is also
+[10:12] saturated then you can move the request
+[10:14] back to here and do a little bit of
+[10:16] comput and it knows the knows where the
+[10:19] cash is already there to keep enhancing
+[10:22] >> yeah it's an excellent thing because CPU
+[10:25] inferencing will scale up
+[10:26] >> yeah yeah so when the eviction comes the
+[10:28] events are coming here to the uh to the
+[10:30] router so when a KV cache is evicted uh
+[10:33] we maintain um so we get events on when
+[10:37] a KV cache is created and also evicted.
+[10:40] So that that is how it maintains that uh
+[10:45] >> yeah it's it's perh for for every
+[10:47] request we get the K events. Yeah. Uh so
+[10:49] there are there are two ways like this
+[10:51] is the precise prefix cache is also
+[10:53] there routing there is also approximate
+[10:55] which doesn't go there which mainly
+[10:57] based on the hash and then routes and
+[10:59] that has all the consistency problems. I
+[11:01] think I I'll show later how the intern
+[11:04] for the precise we have significant
+[11:06] improvements in
+[11:06] >> people are scared to let go of that
+[11:08] clause code or you know open AI codeex
+[11:11] experience
+[11:12] >> we did something like this so we have an
+[11:14] internal [clears throat] pool of you you
+[11:16] talked about the present in
+[11:18] >> the prior generation the battle match
+[11:20] >> so we did one like project where the
+[11:24] planning stage for the cloud code can
+[11:26] actually go to
+[11:27] >> so you're saving on so many input tokens
+[11:29] the blended tokens you're saving
+[11:30] >> but then all the other stuff.
+[11:33] >> Yeah, for the parallelism I think I
+[11:34] think it is up to the operator. I mean
+[11:36] it's up to the deployer to decide how
+[11:38] you want to parallel. So that is an
+[11:40] entirely different thing because it's
+[11:42] it's based on your requirement
+[11:45] throughput interactivity requirement and
+[11:46] all how you want to paralyze how how
+[11:48] many nodes you want to use and once you
+[11:50] have that tokens the router basically
+[11:53] takes care of let's say you have data
+[11:55] parallelism
+[11:56] and you're deploying with data parallel
+[11:58] load balancer so the load balancing can
+[12:00] be done by the router instead of a
+[12:02] single node that is doing the load
+[12:04] balancing between the let's say two or
+[12:06] four data parallel uh deployment So uh
+[12:09] it is at at that level and the MOE
+[12:11] routing is not done at the level of
+[12:13] LLMD. So it's it's it's more at the LM
+[12:15] level.
+[12:18] Okay.
+[12:22] Uh so the abstract uh picture of how the
+[12:25] um how the LMD router selects which uh
+[12:28] which instance to route to. So first is
+[12:30] uh as I told it it builds a world I mean
+[12:33] a live view of uh where the cache is
+[12:35] located uh with the distributed KV cache
+[12:38] uh mechanism. It has this KV events
+[12:40] metrics to decide uh where where the
+[12:43] particular KV cache is located for a
+[12:44] request and then um um that is the
+[12:48] producer part and then the filter which
+[12:50] filters a particular set of instances
+[12:52] based on the the load or the prefix
+[12:54] cache and then a rank rank rank ranking
+[12:57] mechanism which can decide where to
+[12:59] route to based on the token load or the
+[13:02] active request a particular instance is
+[13:04] serving. So um we can basically compose
+[13:07] a policy. This is this from one of our
+[13:09] guides um which where the router can be
+[13:12] configured to say um prefill filter is
+[13:15] it pref it filters only the prefill
+[13:17] nodes uh and then it sends to a prefix
+[13:20] cache identity filter um and token load
+[13:22] scorer and the decode and usually the
+[13:24] decode request just need active request
+[13:28] scorer because they don't uh they pull
+[13:29] the KV cache from the prefix uh from the
+[13:32] prefill. So uh the B codes are routed
+[13:34] based on the u number of requests they
+[13:36] are serving.
+[13:40] So the um going a bit into the uh the
+[13:42] next uh u main thing that the router
+[13:45] does the flow control um that performs
+[13:48] the admission uh and the placement is
+[13:51] done by the the router I mean the uh the
+[13:54] previous part the routing and the flow
+[13:56] control is mainly take care of the
+[13:58] admission. So uh so the admission could
+[14:01] be like this right you decide which one
+[14:03] to uh to dispatch based on your uh
+[14:06] priority levels. So uh the flow control
+[14:09] mainly comes into the picture when uh
+[14:10] the the your cluster is saturated and
+[14:12] the saturation mechanism is decided by
+[14:14] you like uh let's say uh the operator
+[14:17] says that uh you when the KV cache is
+[14:20] 80% full I declare that the uh the
+[14:22] cluster is saturated or the number of
+[14:24] active request a particular uh uh
+[14:26] cluster is seeing on average is more
+[14:28] than eight um then it's saturation. So
+[14:30] at that point when a saturation is
+[14:32] detected u the EP starts u queuing the
+[14:35] request uh in the flow control and once
+[14:38] the queueing happens in the flow control
+[14:40] we can decide how we want to handle this
+[14:42] uh handle this queue. So a name way of
+[14:44] doing this is first come first serve but
+[14:46] uh that doesn't add anything extra to
+[14:48] your um u to your policies because it's
+[14:51] uh uh it's going to slow down
+[14:53] everything. Uh they are just namely
+[14:55] caching. Um but uh few things that we
+[14:58] can add is uh to to have different
+[15:00] priority bands like uh there's a premium
+[15:03] or a best effort where uh under such
+[15:06] saturation happens only the premium
+[15:07] traffic is uh is dispatched and the rest
+[15:10] are not uh dispatched until they you
+[15:13] have a uh you have capacity. So uh so
+[15:17] this is uh to make sure that your
+[15:19] customerf facing or interactive
+[15:20] workloads don't suffer uh while your
+[15:22] batch processing workloads can uh can
+[15:24] wait and then retry later.
+[15:28] So uh deploying LLMD is just a uh simple
+[15:32] one with kubernetes helm helm charts. Uh
+[15:34] so all these are available in the valid
+[15:37] path that I'll show in the next slide.
+[15:39] But um but usually what happens is uh we
+[15:42] just deploy um LMD inference pool is a
+[15:45] is the VM pods and then the uh LMD
+[15:48] router is a single deployment that sits
+[15:50] sit between the uh the WM pods and
+[15:52] attaches to the gateway and um it's easy
+[15:55] to manage it. It provides the
+[15:57] observability for metrics for the
+[15:59] operators to know the TTL the uh TTFT
+[16:02] ITL uh the saturation of a pod how much
+[16:05] queuing is happening and all that.
+[16:08] Um yeah so uh next I'll go into the u
+[16:11] the agentic part uh so which is uh which
+[16:14] is more um more in trend like about 70%
+[16:17] of the inference traffic these days is
+[16:19] agentic um so um so what is special
+[16:24] about uh agentic workloads uh it's uh
+[16:27] it's it's heavily skewed like u uh
+[16:30] prefill is is occupying like 98% of the
+[16:33] tokens so it's because of our code it's
+[16:36] it's reading our code uh documents all
+[16:38] that and output is uh like very low uh
+[16:42] because output could be consisting of
+[16:43] tool call uh few things few user
+[16:46] permissions and all that. Um so it's
+[16:48] heavily skewed compared to an
+[16:49] interactive uh chat and um and agentic
+[16:53] sessions are are also uh sometimes
+[16:55] bursty. Uh you may invoke sub aents
+[16:58] which will parallely do different tasks
+[17:00] at the same time and then converge onto
+[17:02] one one outcome and also involve several
+[17:05] turns. So a simple uh any any small task
+[17:09] that you give goes through multiple
+[17:10] turns that is uh um turns as in it it
+[17:13] takes multiple requests to the inference
+[17:15] uh uh to the inference stack and then
+[17:17] comes back and then u it uh takes a lot
+[17:20] of time to converge. So um so the unit
+[17:23] of work uh transfers from being a single
+[17:27] request to being a session. So um and
+[17:31] that is what uh we are now looking at
+[17:34] looking in LMD to solve like how do you
+[17:36] optimize the uh the inference for uh
+[17:39] sessions not just small requests but uh
+[17:42] but a session that spans across agents
+[17:44] and um
+[17:47] something okay
+[17:50] yeah I don't know some slide is missing
+[17:53] but but yeah uh so what we what we did
+[17:55] is uh to use GLM 5.2
+[17:58] um on um on several uh H00s and H200s.
+[18:03] So uh it takes several u knobs to to
+[18:07] configure uh the VLM and LLMD for
+[18:09] agentic workloads. Like few things that
+[18:11] we realized are MTP multi token
+[18:13] prediction which u uh which enabled more
+[18:16] interactivity uh which which gained
+[18:18] about 2x uh improvement in throughput.
+[18:20] Other thing is uh other important thing
+[18:22] is CPU KV cache offloading uh because
+[18:24] these agentic workloads sometimes uh
+[18:26] take a pause and come back after some
+[18:28] time. So at that point of time you want
+[18:30] to uh evict the KV cache and then
+[18:32] offload to the CPU and then uh do not do
+[18:34] the recomputee again. So that saved
+[18:36] about 5x in TTF when when agency session
+[18:38] comes back uh after a pause. So um and a
+[18:42] few things like uh the PD disagregation
+[18:45] when we tried 2P 2D versus 3P 1D kind of
+[18:50] ratios we saw that um uh some perform
+[18:53] better than the other. It depends on the
+[18:55] workload. Again it's like uh prefill
+[18:57] heavy. So having more prefill than the
+[18:59] decode definitely helped. So it's it we
+[19:01] we need to identify where the bottleneck
+[19:03] is where the whether your prefill is
+[19:05] bottlenecked or the decoder is
+[19:06] bottlenecked and accordingly um scale up
+[19:09] either of these u uh variants. So um
+[19:13] what we did uh recently we also
+[19:15] published a blog uh in IBM research on
+[19:18] uh on the GLM 5.2 deployment. Uh so it
+[19:22] was all deployed with H00S um and uh we
+[19:25] saw that uh precise KV cache routing
+[19:28] perform much better than the
+[19:30] approximate. So approximate is basically
+[19:32] uh you cache a you hash a particular
+[19:35] request and then know which instance it
+[19:37] goes to and um because of all these
+[19:39] agentic workloads where the KV cache is
+[19:42] saturated there's KV eviction happening
+[19:44] and uh maintaining KV events uh show
+[19:47] that uh precise KV cache um um affinity
+[19:51] uh helps a lot and and also for um um
+[19:56] when we use CPU u offloading and
+[19:59] peer-to-peer KV cache sharing So
+[20:00] peer-to-peer is uh when your your KV
+[20:03] cache is located in one instance and
+[20:05] there is low there is availability of
+[20:06] load in other instance. So instead of
+[20:08] doing the instead of you you can either
+[20:10] choose to queue in one instance or to do
+[20:12] the recomp compute in another instance
+[20:13] but the uh middle ground there is to go
+[20:16] to the other instance and fetch the KB
+[20:17] cache from the uh from the previous
+[20:19] instance and that helps save uh a lot uh
+[20:22] for the uh recomputation. So um I mean
+[20:26] the outcome of this study is like for
+[20:27] frontier models we don't we don't need
+[20:29] nextg accelators. We can we can uh we
+[20:32] can deploy them with H100s and H200s and
+[20:34] uh get good performance um at at a
+[20:37] frontier level.
+[20:42] >> Uh so these are all running at 1 million
+[20:44] context.
+[20:46] >> Yeah.
+[20:47] >> Yeah. We can we can run them at the
+[20:49] native context. Yeah.
+[20:53] >> So
+[20:56] Yeah. So that's where we use tensor
+[20:58] parallelism and data parallelism to
+[21:00] scale up and uh accordingly KV cache
+[21:07] >> uh I think this is uh I need to check
+[21:10] but it's uh I think JLM 5.2 is 16 I
+[21:13] think. Yeah.
+[21:14] >> 16.
+[21:20] Uh so uh I need to check this this one
+[21:22] for H200s we can do 1 million context
+[21:25] length for H00 it's 250k probably for
+[21:29] H200s it's one 1 million yeah
+[21:36] >> yeah I need to check yeah but but yeah I
+[21:38] mean
+[21:46] yeah Okay.
+[21:51] Okay. Uh the other thing about these um
+[21:54] uh these agentic workloads are uh they
+[21:57] are of different sizes. So they are like
+[21:59] large large sessions smaller sessions
+[22:01] where we do smaller tasks. So um the the
+[22:04] previous one talked about how much
+[22:06] throughput that we can get out of these
+[22:08] agents. U but here [clears throat] I'm
+[22:11] talking about different thing. How do
+[22:12] you um how do you give the fairness
+[22:15] across multiple agents? So uh let's say
+[22:18] you are uh you're having three sessions
+[22:20] across different users and there is a
+[22:22] small session and a veil session that
+[22:24] comes in and then takes all takes all
+[22:26] the dispatch cycles. Uh so the shorter
+[22:29] sessions are starving now. So um to
+[22:32] address this we have uh built an agentic
+[22:35] uh program aware fairness in the flow
+[22:36] controller in the in the router that u
+[22:39] puts them in different cues and based on
+[22:41] the at time service of each of these uh
+[22:44] different uh agents um it prioritizes
+[22:47] them uh accordingly and what we saw is
+[22:50] by doing that we could uh reduce the
+[22:53] request latencies by up to 50% um I mean
+[22:56] by up to two 2x or sometimes 3x um with
+[23:00] uh with this least attain service
+[23:01] mechanism and this is because short
+[23:03] sessions finish much faster and leaving
+[23:05] the room for larger sessions to to also
+[23:08] finish uh much faster. So we saw that
+[23:11] the uh overall token throughput
+[23:13] increased a bit but uh the request
+[23:16] latencies uh came down came came down by
+[23:18] a lot
+[23:20] and recently we uh I think last week we
+[23:22] landed another uh strategy that that
+[23:25] does a different kind of an opposite
+[23:27] mechanism which does uh turn priority
+[23:30] like uh let's say you you have multiple
+[23:33] agents your agents it does is at a turn
+[23:35] 100 most probably it is it is likely to
+[23:37] finish uh faster than the other ones cuz
+[23:39] it's almost uh it's going at a going for
+[23:41] a long longer time. So if you prioritize
+[23:43] those agents, those agents will finish
+[23:45] and then evict their KV cache. So that
+[23:47] is the intuition behind uh this strategy
+[23:50] and uh and we saw that this improves the
+[23:53] throughput um when when there is a KV
+[23:55] cache saturation happening and um u I
+[23:59] mean uh overall uh these these two uh
+[24:02] strategies least attained service and
+[24:04] then the um the turn priority we're
+[24:06] looking at how to uh integrate them so
+[24:09] that one one um one addresses the
+[24:12] compute saturation other addresses the
+[24:13] KV cache saturation and um that's
+[24:16] something that we are working on uh how
+[24:18] to address that for the agentic uh
+[24:20] sessions and uh more on the agentic road
+[24:23] map. So uh there is a sig agentic
+[24:26] inference uh under LLMD that looks at uh
+[24:29] all the agentic optimizations um that we
+[24:32] need to uh address across the stack not
+[24:35] just in LLMD it's across VLM sang and
+[24:37] all that. So um there is a session aware
+[24:40] routing like uh where you you're not
+[24:42] just routing requests you're routing
+[24:44] sess routing for sessions. So you need
+[24:46] to decide which sessions are more
+[24:48] active, which sessions are have a tool
+[24:50] call which is coming back after a long
+[24:51] time and then route them accordingly. So
+[24:54] um and this needs more plumbing with the
+[24:56] VLM uh so to know that uh whether this
+[24:59] KV cache needs to be evicted or not.
+[25:01] this for for example a particular uh um
+[25:04] particular request session is going for
+[25:06] a tool call uh which is going to you if
+[25:08] you know that it's going to take a
+[25:09] longer time you can evict the KV cache
+[25:11] and put it to the CPU and then uh come
+[25:13] back to it when it comes back. So all
+[25:16] these things can help in u uh freeing
+[25:19] the KV cache for more active sessions.
+[25:21] So uh that is the KV cache detention
+[25:23] retention API which I think there's a PR
+[25:26] um from Nvidia on that which is look
+[25:29] looking at providing APIs in the VM
+[25:31] layer to to orchestrate um the movement
+[25:34] of KV cache and also uh it also adds a
+[25:38] session metadata to the KV cache so that
+[25:40] we know which session a particular
+[25:43] blocks of KV cache belong to. Um and
+[25:46] then of course the session graph
+[25:47] scheduling where you know that um there
+[25:50] are multiple parallel branches in a
+[25:51] session and how do you deal with that
+[25:53] when it comes to optimization and of
+[25:55] course using the things like agentic
+[25:57] hints um like things like compaction or
+[26:00] uh uh you know that um uh an a
+[26:04] particular agent is coming back after a
+[26:06] long time you know that this agent is um
+[26:09] is going to do tool call and all that.
+[26:11] So things to things like that to um to
+[26:14] optimize for the uh overall scheduling
+[26:16] and routing. So uh overall this unit uh
+[26:20] we are looking at uh at going from
+[26:22] requests to agents to uh multi- aents,
+[26:24] sub agents and all that.
+[26:27] Yeah, I think I think that's mostly
+[26:29] about it. uh uh thank you for listening
+[26:31] to me and um and as I mentioned some of
+[26:34] the links here on the LLMD and the s
+[26:37] agentic influence is uh is about driving
+[26:40] the agentic work and if you're
+[26:41] interested uh please uh join the LLMD
+[26:45] slack and uh tune into one of the
+[26:47] community meetings um I think there's
+[26:50] lot of lot of things interesting things
+[26:51] happening across different companies uh
+[26:53] joining the community and then
+[26:55] contributing to it um yeah UH IT'S
+[27:00] >> [applause]
+[27:09] >> COMPARE.
+[27:11] >> OH UH sorry I yes take sorry comparing
+[27:16] >> oh uh I think I think both are uh
+[27:19] similar uh in the sense that they
+[27:21] address the same uh problem. Um it's
+[27:25] just different ecosystem. uh LLMD is uh
+[27:29] um
+[27:31] I think uh it's uh it's about um it's
+[27:35] it's part of the CNCF LMD. I think a
+[27:37] bricks is part of the uh I think the VLM
+[27:40] ecosystem. I I'm not sure but um it's
+[27:43] it's uh solving the similar problems uh
+[27:46] but at a different uh granularities
+[27:49] that's all.
+[27:52] >> Yeah. Yeah. We we seeing LMD is getting
+[27:54] more traction. Yeah.
+[28:02] Ah, Ker is more for deploying the uh the
+[28:05] models, right? So, LLMD works with KSER.
+[28:08] So, uh it's not something that replaces
+[28:10] KSE. So, um so Tesla in fact uses KSER
+[28:14] with LLMD. So, it's it's more for
+[28:16] managing the models, deploying them, um
+[28:19] accounting them and all that. And then
+[28:20] LMD looks at routing routing across
+[28:22] [clears throat] these uh deployment uh
+[28:26] Yeah, sorry. I've been waiting for
+[28:28] [laughter] it. [cough]
+[28:29] [clears throat]
+[28:29] >> So, I had a question on the Kubernetes
+[28:31] side which you mentioned. So, like you
+[28:33] said, it's similar to deploying
+[28:34] Kubernetes parts. So, is it as
+[28:36] resourceheavy as Kubernetes where I need
+[28:38] to deploy like 2 vcp instances for every
+[28:41] single model even to manage it or like
+[28:43] what I'm trying to ask is is this a
+[28:45] replacement for Kubernetes entirely
+[28:47] where I can control it or you still need
+[28:48] Kubernetes to manage your application?
+[28:51] [clears throat]
+[28:51] >> No, you need Kubernetes. This is on top
+[28:52] of Kubernetes. Uh so it uses Kubernetes
+[28:56] uh uh stack to deploy everything. So uh
+[28:59] for example
+[29:01] the VM comes up as pods.
+[29:03] >> Okay.
+[29:03] >> Um that use uh the GPU and then the
+[29:06] networking comes to host networking and
+[29:08] all that. So it still uses Kubernetes
+[29:10] and uh there's also an work on u on
+[29:13] using slurm and uh and non- kubernetes
+[29:15] for the RL work. So uh but uh but
+[29:18] predominantly right now we deploy in
+[29:20] Kubernetes.
+[29:21] >> Okay. And uh so adding to that so uh who
+[29:26] controls the number of replicas is it
+[29:28] still kubernetes or you decided before?
+[29:29] >> Ah so that is that is a good question.
+[29:31] So there is a work on autoscaling uh in
+[29:34] LLMD. So uh so if we enable that feature
+[29:38] it we can do saturation based
+[29:40] autoscaling of the uh workload. So in in
+[29:44] that case it it deploys uh Kubernetes
+[29:46] pods. It autoscales the Kubernetes uh
+[29:48] pods and then uh scales up and scales
+[29:50] down based on your uh request.
+[29:52] >> So this is real time. So like you get
+[29:54] this real time the usage and then you
+[29:56] >> Yes. Yes. Yeah.
+[29:57] >> Is this already there or is it
+[29:58] >> No, it's there. It's it's already there.
+[29:59] There is a workload variant autoscaler.
+[30:01] Yeah. On in LMD.
+[30:05] >> Yeah. Uh I think
+[30:10] >> yeah. Yeah. It's actually a very simple
+[30:12] question. L is actually another kind
+[30:16] like like influence service kind
+[30:22] of case
+[30:23] >> on top of Vlu
+[30:26] uh we can use it with K.
+[30:27] >> Yeah. Yeah. You can use Yeah.
+[30:29] >> How do you handle the zero to one like
+[30:32] we do autoscaling right? How how do you
+[30:34] handle the zero to one? Actually I'm
+[30:36] using KA that was an issue like we
+[30:39] cannot scale from C 0 to one. only ask
+[30:42] from one to n like we have to get the
+[30:44] matrix sorry we have to get all the
+[30:46] matrix sorry
+[30:47] >> to scale uh like how saturated the
+[30:50] >> yeah that's etc right so I just searched
+[30:53] like supports 02 in scaling and then to
+[30:57] zero
+[30:57] >> okay I'm I'm not very much aware of uh
+[30:59] that path the autoscaling path I can uh
+[31:02] maybe I can discuss uh more on this I'm
+[31:05] I'm not an expert at that so I can't
+[31:07] answer for any
+[31:12] Uh so you mentioned about the LMP
+[31:14] routing based on semantic routing right
+[31:17] like is there any other kind of routings
+[31:19] out there like budget based because we
+[31:21] also doing budgeting and then you having
+[31:23] number of request percentage so there
+[31:25] are many other parameters based on which
+[31:28] the routing
+[31:29] >> right um so that is more of a VM
+[31:32] semantic router uh question right the
+[31:34] budget based so the WM semantic router
+[31:36] sits before LLMD uh and then decides
+[31:39] it's which model to to route to. So uh
+[31:43] LLMD as such is more about efficiency.
+[31:45] Um uh I mean it it covers budget in the
+[31:48] sense that you as you hit more cash your
+[31:51] cost is lower but u but the wheelm
+[31:53] semantic router takes care of uh I think
+[31:56] the uh
+[31:57] >> thresholds of yeah yeah
+[32:02] >> yes
+[32:03] >> and also can it handle like multiple
+[32:05] routings like you routed once and then
+[32:08] again based on the next threshold you
+[32:10] again routed to a different model. So
+[32:13] >> uh I'm not very sure about that. No,
+[32:15] that's again that's more on the
+[32:17] qualitative side. So any rules that you
+[32:18] want to set with regards to where you
+[32:20] want to route that will come in at that
+[32:21] semantic layer.
+[32:23] >> But once you are set
+[32:25] >> semantic semantic
+[32:26] >> no semantic
+[32:27] >> semantic layer.
+[32:27] >> Yeah. Yeah. So elementary is not aware
+[32:30] of this because it just gets
+[32:32] >> just once the model has been picked
+[32:34] that's where all of this
+[32:35] >> so yeah exactly. Yeah.
+[32:39] >> Yeah.
+[32:40] So which of GPU required for this?
+[32:45] uh for for GLM or uh
+[32:51] >> I I think you can deploy in any any GPUs
+[32:53] even the MacBooks or uh the ECPUs it it
+[32:56] supports anything and and to deploy LLMD
+[32:59] you can even if you want to work on LLMD
+[33:01] you can start with inference simulator
+[33:03] as well uh because you don't need a VM
+[33:05] instance as running on the GPU or CPU
+[33:07] you can just start with the CPU I mean a
+[33:09] simulator and then work on uh the LLMD
+[33:12] layer um so So it's uh there's it's
+[33:15] pretty much easy to start with. Yeah.
+[33:22] >> Sorry.
+[33:23] >> How how how to contribute?
+[33:24] >> Oh yeah. Uh so if you if you want to
+[33:27] contribute uh to LLMD uh there is this
+[33:30] community link. Uh so there is uh weekly
+[33:34] weekly or bi-weekly calls happening on
+[33:37] different uh streams. uh there is there
+[33:39] is this router stream there is agentic
+[33:41] inference stream there is PD
+[33:43] disagregation um and then um autoscaling
+[33:47] and all that. So different there are
+[33:49] different streams. So you can join one
+[33:51] of the community calls and then uh u and
+[33:54] then propose something in their comm
+[33:56] their meeting notes to say you want to
+[33:58] discuss about uh some new proposal that
+[34:00] you that you want to bring to LMD and
+[34:03] then uh it gets discussed during the
+[34:04] community call and then uh and then
+[34:06] based on the community feedback uh you
+[34:09] can um you can create a PR in the
+[34:11] relevant repo and then um uh it's yeah
+[34:15] it's easy to contribute they are pretty
+[34:17] welcoming uh all the contributors yeah
+[34:20] should be good.
+[34:22] >> I have a question with respect to
+[34:24] benchmarking.
+[34:24] >> Yeah.
+[34:25] >> Uh so what parameters do you look at
+[34:27] while selecting uh the session like
+[34:30] session or the number of requests?
+[34:31] Right. Uh because this is very token
+[34:34] dependent uh right so what kind of
+[34:38] parameters do you look at while
+[34:41] benchmarking such architectures?
+[34:43] >> Right. Right. So uh for for agentic
+[34:45] sessions we are for agentic workloads we
+[34:48] are looking at uh request latencies
+[34:50] program completion times not not more of
+[34:52] TTFT TTFT becomes more of an
+[34:54] interactivity u uh path right where you
+[34:57] want the multi-turn to be chat to be
+[34:59] more interactive that's where TTFT plays
+[35:01] a role and ITL plays a role we are
+[35:03] looking at request latencies program
+[35:04] completion times that is agentic session
+[35:06] completion time uh those kind of um
+[35:09] highle metrics yeah so that becomes more
+[35:12] important than uh ETF individual TTFTs
+[35:15] and also the KV cash rate how much KV
+[35:17] cash rate you are getting per session uh
+[35:20] overall yeah I think those are those are
+[35:22] important
+[35:27] >> thank you
+[35:27] >> thank you [applause]
+[35:31] >> thank you so not the end we have a
+[35:35] networking break now you can still tr
+[35:37] with all your questions

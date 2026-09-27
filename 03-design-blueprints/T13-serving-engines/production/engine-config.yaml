@@ -1,0 +1,77 @@
+# T13 — serving engine tuning surface (REFERENCE-GRADE, NOT EXECUTED HERE)
+#
+# Not loaded by any engine process in this environment. Every value here is a DESIGN
+# DECISION from the HLD/LLD, not a measured optimum.
+#
+# Transcript coverage: primary
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: t13-engine-config
+  namespace: inference
+  labels: {topic: T13, component: engine}
+data:
+  # ---- memory pooling --------------------------------------------------------
+  # ONE shared pool with an allocator per attention type. Full attention grows linearly
+  # with context; a linear attention keeps a fixed-size state per sequence. Reserving a
+  # percentage for each (static partitioning) is the alternative, and the corpus names
+  # its defect: the optimal split depends on batch size and context length, both dynamic
+  # over time. [T]
+  memoryPoolMode: "dynamic"
+  poolPartitioning: "shared"        # NOT "reserved"; see sim/allocator.py
+  tokensPerBlock: "16"              # finer reuse vs more block-table metadata [D]
+
+  # ---- admission -------------------------------------------------------------
+  # A shared pool still needs an explicit per-sequence cap. Without one, a single long
+  # sequence defines every other request's latency. Tightening it trades long-request
+  # service for aggregate throughput -- run.py section 4 quantifies the trade. [D]
+  maxSeqShareOfPool: "0.50"
+  maxBatchSize: "hardware-derived"
+
+  # ---- scheduling ------------------------------------------------------------
+  # Iteration-level admission. A finished sequence leaves and a waiting one takes its
+  # slot on the next step. Turning this off is a diagnostic, never a production setting.
+  continuousBatching: "true"
+  preemptionPolicy: "largest_least_progress"
+
+  # ---- model-specific --------------------------------------------------------
+  # MUST match the checkpoint. A hybrid model's linear-attention state is fixed-size per
+  # sequence; getting this number wrong is a silent OOM or silent waste, with no error.
+  hybridAttention: "true"
+  linearStateBlocksPerSeq: "24"
+
+  # ---- parallelism -----------------------------------------------------------
+  # Left UNSPECIFIED on purpose. There is no universal winner -- the configuration is
+  # selected for the model architecture, the cluster and the workload shape [T], and
+  # production/benchmark-plan.md is how that selection is made. Shipping a fixed
+  # configuration here would be shipping the naive baseline with confidence.
+  parallelism: "see benchmark-plan.md"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: t13-engine-metrics
+  namespace: inference
+  labels: {topic: T13, component: metrics}
+data:
+  # The engine must export these. Two of them are load-bearing:
+  emit:
+    - pool_free_blocks
+    - batch_slot_utilisation
+    - preemptions_total
+    - recomputed_tokens_total
+    - linear_share
+    - connector_save_failures_total
+    - admissions_refused_total_by_reason     # <-- split by reason, not aggregated
+
+  # Aggregated rejection cannot distinguish "add memory" from "change the admission
+  # policy". Those are different fixes and they look identical from a queue-depth graph.
+  refusalReasons: "fits,pool_full,seq_cap,preempted"
+
+  # The corpus's design goal is that a previous turn is never recomputed while storage
+  # allows [T]. On a session workload this counter must be ZERO. Non-zero means the
+  # connector is not retaining, or session identity is not being propagated -- and the
+  # only user-visible symptom is "it feels slow".
+  alertOn: "recomputed_tokens_total > 0 in session workloads"
+  alertOn2: "preemption_rate sustained above baseline"

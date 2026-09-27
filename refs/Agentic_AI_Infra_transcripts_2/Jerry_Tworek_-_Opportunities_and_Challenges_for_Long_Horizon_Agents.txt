@@ -1,0 +1,339 @@
+Title: Jerry Tworek - Opportunities and Challenges for Long Horizon Agents
+
+--- TRANSCRIPT ---
+
+[0:03] Thank you very much for inviting me.
+[0:05] Very happy to be here.
+[0:08] Uh
+[0:08] long horizon agents are clearly one of
+[0:12] the frontiers
+[0:14] of AI research right now. If I look at
+[0:16] my Codex session, my median is usage is
+[0:20] around 10 minutes. If I look at the
+[0:23] mean, it's around 20. Why is it not
+[0:26] more? Why agents are not working for me
+[0:29] for longer
+[0:31] a very worthwhile question to be asking
+[0:33] today for
+[0:34] AI researchers. But to to start with,
+[0:36] let's start with the obvious, which is
+[0:39] we already live in the era of agents.
+[0:42] Agents are here, but we are very early
+[0:44] in this era. In my mind, 03 was the
+[0:48] first really agentic model, and that
+[0:51] model was only really released in April
+[0:53] last year. So, we are just just barely
+[0:55] more than a year in the era of agents.
+[0:58] That means the models are very early.
+[1:00] They have improved vastly since 03, but
+[1:03] at the same time there's much more
+[1:04] improvements to be had. The products are
+[1:07] improving, the adoption is coming, a lot
+[1:09] of things are still not figured out. And
+[1:12] we live in those beautiful times and a
+[1:13] beautiful opportunity to to figure those
+[1:16] things out for the
+[1:18] for for the future decades of
+[1:21] agent proliferation.
+[1:23] What's even thinking about the
+[1:24] definition? What what makes agent an
+[1:27] agent? I think I think agent is a very
+[1:28] fuzzy term, and it's hard to fully
+[1:32] define what it is. For me, like I I put
+[1:35] some pieces that I think make an agent,
+[1:37] which is agents use tools cuz agents
+[1:39] should be able to act on my behalf.
+[1:42] Agents are most likely async. I tell
+[1:44] agent something to do, and it goes on
+[1:45] and does its work. Agents are usually
+[1:49] goal-oriented, which you specify
+[1:50] something high-level what you want the
+[1:52] agent to do, and the agent fills in the
+[1:53] blanks. And agents are working usually
+[1:56] over long horizons of time. You don't do
+[1:58] back and forth
+[2:00] every every 5 minutes. You let agent do
+[2:03] its work for extended extended periods
+[2:05] of time. And whenever we extend the
+[2:08] length of the time that the agents are
+[2:10] working, there is this pretty obvious
+[2:13] observation that every step the neural
+[2:15] networks that we train are
+[2:17] probabilistic. They make failures. So at
+[2:19] every step there is that there is an
+[2:21] exponentially growing through the length
+[2:23] of your trajectory chance that something
+[2:25] something goes wrong. And that was a
+[2:27] very big reason why we couldn't have
+[2:29] agents for for for many years until
+[2:31] until very recently because because the
+[2:33] neural networks were getting off the
+[2:34] rails. And the the this is
+[2:37] pretty like classical assumption from
+[2:40] the reinforcement learning literature.
+[2:42] And why do we need actually
+[2:44] reinforcement learning? And the moment
+[2:47] happened when when when when when me and
+[2:49] my team were able to scale reinforcement
+[2:51] learning to larger and larger
+[2:54] amounts of compute. We we finally found
+[2:57] a recipe that allowed us
+[2:59] to train models to recover from their
+[3:00] own mistakes, train on their own
+[3:02] trajectories, and that suddenly started
+[3:04] making the models be able to succeed at
+[3:07] harder and harder harder task. And what
+[3:08] do what what what what what did we see?
+[3:10] The first thing is obvious that the more
+[3:11] compute you spend like you you could see
+[3:14] proportionally on a
+[3:16] on a on a logarithmic plot the
+[3:17] capabilities of the models improving.
+[3:19] But we have also seen the other thing
+[3:21] which
+[3:22] um is one of the most like important
+[3:26] shifts in mind in machine learning of
+[3:28] the of the recent years, which is the
+[3:30] more the model thinks the more tokens it
+[3:32] spends on a task its performance
+[3:34] improves. So not only the models trained
+[3:36] with reinforcement learning were not
+[3:37] falling on the trap of exponentially
+[3:40] increasing the chance of failure in a
+[3:42] trajectory, they were able to recover
+[3:44] from that, but but they were able to
+[3:46] even even keep productively thinking for
+[3:48] longer and longer. So essentially the
+[3:49] longer your trajectory, the better the
+[3:51] results you are getting. We have we we
+[3:53] entered the test time compute era and
+[3:55] token maxing. So,
+[3:58] uh
+[3:59] then then we have we we have this now.
+[4:01] This is a plot a lot of people thinking
+[4:02] about agents are very familiar. It's a
+[4:05] plot for how long agents can work from
+[4:07] us. And since we started
+[4:09] uh scaling reinforcement learning, it
+[4:11] reaches new and new heights with the
+[4:14] latest readouts of around 12 hours, 16
+[4:17] hours for for some of the best frontier
+[4:18] models of the of the day today.
+[4:21] So, the question is maybe maybe this is
+[4:23] it. Maybe we have reinforcement learning
+[4:25] and works. We can throw a lot of money
+[4:27] at it. And maybe maybe we just keep
+[4:29] scaling and we'll have agents working
+[4:31] for for whatever amount of time we'd
+[4:32] like. Is that Is that the case?
+[4:35] Is that the solution? Unfortunately,
+[4:37] there are there are problems. There are
+[4:38] there are challenges. I don't think I
+[4:40] don't think we are we are done yet. The
+[4:42] first problem, which is that the the
+[4:45] economics is here kind of unfavorable in
+[4:48] many ways. Uh to sample a trajectory of
+[4:51] length n, you generally your cost is
+[4:53] proportional to the length of
+[4:54] trajectory. For quadratic attention this
+[4:56] really is even even slightly bigger, but
+[4:59] let's think for a second linearly that
+[5:00] the cost of each token is fixed. So, to
+[5:03] sample a trajectory of n tokens is
+[5:05] proportional to the length of it. But
+[5:07] also how our today's reinforcement
+[5:09] learning algorithms work, they assign
+[5:12] single reward for that trajectory, which
+[5:14] is there aren't really any in modern RL
+[5:18] credit assignment methods to assign that
+[5:20] reward to any specific tokens, which
+[5:22] means you have you get one reward to the
+[5:23] trajectory of of of n tokens, which the
+[5:26] information per token you are getting is
+[5:28] roughly one divided by n. And the cost
+[5:31] of that trajectory is is also n, which
+[5:34] means that your learning signal decays
+[5:38] quadratically in the length of your of
+[5:41] your trajectory on the horizon you are
+[5:43] you are you are doing. Which is if if if
+[5:45] it would be if it would be a linear, it
+[5:47] would be like pretty okay to keep
+[5:50] throwing more money and we know if we
+[5:51] want to train agents to work twice as
+[5:53] hard for twice longer time, we need to
+[5:56] spend twice more money. That's a pretty
+[5:58] reasonable thing, but if it's quadratic,
+[6:00] it it it's becoming pretty brutal. The
+[6:02] big labs today are very good at spending
+[6:04] a lot of money training models, but the
+[6:07] quadratic cost makes that make makes the
+[6:08] scaling of that considerably harder than
+[6:11] it would than it would seem at first
+[6:12] sight.
+[6:13] Um the second bit, which is even harder,
+[6:17] is latency because as much as there's
+[6:19] more and more investment coming to
+[6:23] the AI world nowadays, no one has time.
+[6:26] There's there isn't that much time and
+[6:27] the and the the latency problem comes
+[6:29] from the following. Imagine you have
+[6:32] to sample a 12-hour trajectory of an
+[6:34] agent, it takes 12 hours to to sample
+[6:37] it. And then you take a gradient step to
+[6:40] update your model to reinforce the
+[6:42] successful trajectories and then then
+[6:44] then you have updated weights and then
+[6:46] you can you do you sample another
+[6:48] 12-hour trajectory. You you are able to
+[6:50] do full two gradient steps in a day of
+[6:53] your of your reinforcement learning
+[6:54] agent. That means roughly 14 gradient
+[6:57] steps a week. That means like 60
+[6:59] gradient steps a month. It doesn't it is
+[7:02] not a very fast training methods and no
+[7:06] one no one has time in in in in today's
+[7:08] world. So training for very long
+[7:11] trajectories and for long horizon
+[7:13] thinking is meaningfully very very hard.
+[7:16] Harder than than many realize and all
+[7:19] the progress in the field and the reason
+[7:20] we have even any agents that can think
+[7:23] for a long time is usually put some kind
+[7:25] of harness on top of it because
+[7:28] the agents are very good at doing short
+[7:31] horizon things, short horizon tasks and
+[7:34] the truth is a lot of long horizon work
+[7:38] can be glued very successfully together
+[7:41] from doing smaller and smaller things.
+[7:44] And we have this things called slash
+[7:45] goal in in in in Codex and Cloud Coach
+[7:48] is very powerful. We just create a fixed
+[7:50] goal for a model. It runs for however
+[7:52] long long it can. Then it revisits
+[7:54] itself and it continues to do that. We
+[7:56] have we have plan mode. We have we have
+[7:58] many ways we can we have we have we have
+[7:59] sub agents. There are various ways that
+[8:01] are not native to them all. They are not
+[8:03] back propagated through. They are not
+[8:05] trained. But they but to utilize the
+[8:07] models ability to work on shorter term
+[8:10] goals and structure from them being able
+[8:12] to spend more and more. They are they
+[8:13] are very successful. But the history of
+[8:15] machine learning has always been that
+[8:17] whatever we can back propagate through
+[8:20] wins with things that we that we that we
+[8:24] cannot.
+[8:25] Um everyone everyone's probably pretty
+[8:28] familiar with auto research and what
+[8:30] auto research means. And
+[8:34] the story of almost every auto research
+[8:36] rollout is you get a lot of progress
+[8:38] pretty early. But it's if you go further
+[8:41] and further along it kind of it kind of
+[8:42] stall it kind of stops. I haven't seen
+[8:45] yet today with with today's models any
+[8:47] particularly successful auto research
+[8:50] rollout. I I think research is one of
+[8:53] those tasks that is inherently hard,
+[8:56] serial, and long horizon. And today's
+[8:59] models it's not very easy to glue it
+[9:01] from a small horizon thinking to think
+[9:04] about larger scale research projects.
+[9:06] And auto research is one of the places
+[9:07] where we where we can where we can
+[9:08] definitely definitely see it. So all all
+[9:11] of all of the questions that I am asking
+[9:13] myself is how did humans master pursuing
+[9:16] long horizon goals? Very famously Andrew
+[9:18] Wiles spent seven years working on a
+[9:21] single goal of proving Fermat's Last
+[9:23] Theorem. He was successful. It was seven
+[9:24] seven year project. How do we how do we
+[9:26] train our models to do to do seven year
+[9:28] seven year projects? And thinking
+[9:30] thinking about humans even more like I
+[9:33] I've asked ChatGPT at which moment did
+[9:37] humans start developing long-term
+[9:40] planning? And and what's what what
+[9:42] ChatGPT has told me that
+[9:44] we have until today roughly 10,000
+[9:47] generations of humans since the moment
+[9:49] we're able to
+[9:51] uh since the moment we're able to start
+[9:53] doing any any significant long-term
+[9:55] planning. From since that time there was
+[9:56] roughly 120 billion people. So, maybe
+[9:59] maybe this is it. Maybe we need 10,000
+[10:01] gradient steps and 120 trajectories to
+[10:04] sample. And maybe that is what allows us
+[10:07] to optimize for for for long-term long
+[10:09] horizon planning as well as as well as
+[10:11] humans do.
+[10:13] Uh
+[10:13] also gradient descent is more sample
+[10:15] efficient than evolution. So, maybe we
+[10:17] have even more and that's a that's
+[10:19] something for us to to think about and
+[10:21] and revisit. The value functions as a
+[10:24] research direction is one thing that
+[10:26] definitely can help. It's if if we
+[10:28] got good value functions for AI
+[10:30] research, it would be extremely helpful.
+[10:33] I think the the research on value
+[10:36] function has been like at some moment we
+[10:39] we basically threw out value functions
+[10:40] when doing reinforcement learning on
+[10:42] large language models and everyone has
+[10:44] seen that it works as well. Value
+[10:47] functions are very very hard problem. I
+[10:49] have some amount of skepticism in in how
+[10:52] much progress we can do on on really
+[10:54] good really good value functions. Very
+[10:55] often finding a good value function is
+[10:57] much harder than solving the problem we
+[10:59] are we are trying to solve. But, if
+[11:01] someone figures out value functions, we
+[11:02] are we are very very very good. We can
+[11:04] solve as as as as long horizon problems
+[11:07] as we would as you would like. Maybe
+[11:09] maybe continual learning is the answer.
+[11:11] Continual learning tries to solve this
+[11:13] problem from the other side. We try to
+[11:15] update the model for the loop. If we
+[11:17] have long horizon 7-year loop, let's
+[11:19] prove this theorem and we repeat the
+[11:21] same thing every day, but we don't
+[11:22] repeat it with the same model because
+[11:24] the model updates on the new data. Every
+[11:25] day the model learns something. The
+[11:27] model improves and the model the model
+[11:29] gets better. I think continual learning
+[11:30] would be able to get us through that
+[11:32] very very well. The question The
+[11:34] question is how. And this is an unsolved
+[11:37] problem. This is a problem that is worth
+[11:38] solving. And if if someone is looking
+[11:41] for for what do we want to work on right
+[11:43] now right here in this age of machine
+[11:45] learning, I think I think long horizon
+[11:47] agents is is absolutely one of the one
+[11:49] of the valid choices. When we when we
+[11:51] get that technology, we'll be able to
+[11:53] put agent towards working on hard
+[11:55] research problems. We'll be able to have
+[11:57] them to run companies. This is a very
+[11:59] long horizon task that is that is very
+[12:01] very economically valuable. And if I
+[12:04] want to delegate to an agent, I don't
+[12:06] want to be telling it what to do every
+[12:09] 30 minutes. I want to be able to to act
+[12:11] on my behalf for a long periods of time.
+[12:14] And I think this this is extremely
+[12:15] valuable. So,
+[12:16] the research is not done.
+[12:18] There's There's much much work to do.
+[12:20] And the objective is agents that can
+[12:22] keep going for us and keep getting
+[12:24] better over time. Thank you very much.

@@ -1,0 +1,73 @@
+# T11 — llm-d Helm values for an EP-aware, DP-attention deployment
+# REFERENCE-GRADE, NOT EXECUTED HERE. No cluster and no Helm release exist in the
+# environment that produced this blueprint. Values are the design decisions from the HLD;
+# chart key spellings must be re-checked against the chart version you deploy.
+#
+# Transcript coverage: primary
+---
+# Replica group: one "model server" is a set of GPUs that together hold one copy of the
+# model. It is NOT one pod. Getting this wrong is the most common deployment error. [D]
+modelServer:
+  replicas: 4
+  topologyRef: t11-topology      # ConfigMap above; the operator reads tp/pp/dp/ep from it
+
+  parallelism:
+    tensor: 8                    # <= gpusPerNode
+    pipeline: 2
+    data: 16
+    expert: 16
+    enableExpertParallel: true
+    enableDpAttention: true
+
+  # A TP group must land inside one node. The scheduler must not pack a replica's TP
+  # ranks across a node boundary even if it has the free capacity. [T]
+  placement:
+    topologyKey: kubernetes.io/hostname
+    requireTpGroupNodeLocal: true
+    spreadReplicasAcrossNodes: true
+
+  resources:
+    limits:
+      amd.com/gpu: 8             # 8 accelerators per node, matching gpusPerNode
+    requests:
+      amd.com/gpu: 8
+
+  env:
+    GPU_MEMORY_UTILIZATION: "0.85"
+    VLLM_ALL2ALL_BACKEND: deepep_low_latency
+    VLLM_MOE_REDUNDANT_EXPERTS: "0"
+# ---------------------------------------------------------------------------
+# Routing: an EP replica's capacity is expressed in KV slots per GPU, not "requests".
+# A router that balances on request count will pile onto the replica whose requests
+# happen to be short and starve the one holding long contexts. [D]
+routing:
+  strategy: kv-aware
+  weightByKvPressure: 0.7
+  weightByQueueDepth: 0.3
+
+# ---------------------------------------------------------------------------
+# The configurations below are named in the corpus and are flagged there as
+# preliminary. They are listed so the reader recognises them, NOT because this blueprint
+# recommends them. 2P2D is explicitly preliminary; 2P4D is preliminary and not to be
+# trusted for a production decision yet. [T]
+referenceConfigurations:
+  - name: 1P1D
+    note: "prefill/decode disaggregation; in the corpus the 1P1D pair is the scale unit"
+    status: established
+  - name: 2P2D
+    note: "preliminary in the corpus"
+    status: preliminary
+  - name: 2P4D
+    note: "preliminary AND not to be trusted for production sizing"
+    status: do-not-size-on
+
+# ---------------------------------------------------------------------------
+# Degradation ladder (HLD §9). Order matters: narrow the widest dimension first, because
+# it is the one crossing the slowest link.
+degradation:
+  - trigger: "inter_node_fabric_degraded"
+    action: "reduce ep 16 -> 8; accept higher weights/GPU; re-derive kv ceiling"
+  - trigger: "kv_pressure > 0.9 sustained"
+    action: "reduce maxModelLen; shed concurrency; do NOT raise gpuMemoryUtilization"
+  - trigger: "weight_oom_on_start"
+    action: "raise ep or pp; never silently shrink maxModelLen without a config change"

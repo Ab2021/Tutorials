@@ -1,0 +1,228 @@
+# REFERENCE-GRADE -- NOT EXECUTED IN THIS ENVIRONMENT.
+# No Prometheus, no engine. Adapt metric names to your stack.
+#
+# The observability contract for the constraint plane. Every signal here exists
+# because a specific failure is invisible without it. Signals are grouped by the
+# question they answer, not by the component that emits them.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: constraint-observability
+  namespace: inference
+data:
+  metrics.yaml: |
+    # ------------------------------------------------------------------
+    # Q: Is the grammar doing what the schema says?
+    # ------------------------------------------------------------------
+    metrics:
+
+      - name: grammar_compile_total
+        type: counter
+        labels: [schema_id, schema_version, compiler_version, result]
+        # result in {published, rejected_dead_end, rejected_stranded}
+        # A `rejected_*` value is a build failure that got as far as the
+        # registry. It should be zero outside a schema-authoring session.
+
+      - name: grammar_audit_failures_total
+        type: counter
+        labels: [schema_id, reason]
+        # reason in {dead_end, stranded, both}
+        # Any value > 0 pages. The compile-time proof is the whole reason the
+        # runtime GRAMMAR_FAULT path is expected to be unreachable.
+
+      - name: mask_legal_set_size
+        type: histogram
+        labels: [schema_id]
+        buckets: [1, 2, 5, 10, 50, 200, 1000, 10000]
+        # The corpus's sparsity claim, measured rather than assumed: a handful
+        # of legal tokens against a 100k+ vocabulary. A step materially below
+        # the schema's expectation is an unannounced schema change.
+
+      - name: mask_mass_removed
+        type: histogram
+        labels: [schema_id]
+        buckets: [0.001, 0.01, 0.05, 0.1, 0.3, 0.5, 0.9, 1.0]
+        # 1 - sum(raw_prob over legal tokens). Near zero means the model already
+        # agreed with the grammar and the mask was free. Rising median means the
+        # model and the schema are diverging -- and that the output, though
+        # valid, is being chosen by the mask rather than by the model.
+
+    # ------------------------------------------------------------------
+    # Q: Did the structural guarantee hold?
+    # ------------------------------------------------------------------
+      - name: grammar_fault_total
+        type: counter
+        labels: [schema_id, phase]
+        # phase in {lookup, step, accept}
+        # Any value > 0 pages immediately. A runtime grammar fault is a
+        # compiler bug. Falling back silently here would mean records are
+        # shipping without the guarantee the audit was told about.
+
+      - name: validator_decisions_total
+        type: counter
+        labels: [schema_id, result, reason]
+        # result in {accept, reject}; reason in {ok, version_skew, bad_value,
+        # duplicate_key, trailing_tokens, truncated, schema_unknown}
+
+      - name: validator_grammar_disagreement_total
+        type: counter
+        labels: [schema_id]
+        # Derived: validator rejected a record the grammar accepted.
+        # THIS IS NOT A CONTRADICTION, IT IS THE DESIGN WORKING. The mask
+        # guarantees membership in the language; the validator guarantees
+        # membership in the schema version currently in force. A nonzero value
+        # with grammar_fault_total == 0 is a version skew, a tokenizer change,
+        # or a healing edge case -- exactly the class the mask cannot see.
+
+      - name: records_emitted_total
+        type: counter
+        labels: [schema_id, surface, route]
+        # route in {direct, repaired}
+        # direct/emitted is the first-attempt validity rate the capacity model
+        # assumes at 99.5%.
+
+    # ------------------------------------------------------------------
+    # Q: Is healing earning its cost?
+    # ------------------------------------------------------------------
+      - name: healing_trigger_total
+        type: counter
+        labels: [reason]
+        # reason in {offender_list, very_short, no_boundary_whitespace,
+        #            prefix_of_another_token}
+
+      - name: healing_changed_total
+        type: counter
+        labels: [schema_id]
+        # The ratio to healing_trigger_total is the number that decides whether
+        # the triggers are right. A high trigger rate with a low change rate is
+        # pure overhead: the heuristics are firing on steps where healing is a
+        # no-op.
+
+      - name: healing_surface_violation_total
+        type: counter
+        labels: [schema_id]
+        # Healing changed the output string. This must be structurally
+        # impossible -- heal() asserts surface_preserved -- so any value > 0
+        # means the assertion was bypassed. Page.
+
+    # ------------------------------------------------------------------
+    # Q: Is the semantic scorer inside its blind spot?
+    # ------------------------------------------------------------------
+      - name: semantic_truncated_mass
+        type: histogram
+        labels: [schema_id]
+        buckets: [0.5, 0.7, 0.8, 0.9, 0.95, 0.99, 1.0]
+        # Fraction of the model's mass retained inside the top-k candidate set.
+        # Below semantic.minMass the truncation has cut into the body of the
+        # distribution and the truncated-out winner is no longer a tail case.
+
+      - name: semantic_winner_rank_in_lm
+        type: histogram
+        labels: [schema_id]
+        buckets: [1, 2, 3, 5, 10, 50, 200]
+        # Where the constrained winner sat in the unconstrained ranking. A mass
+        # at the top bucket means the reward term is doing the work alone, and
+        # the constraint is overriding the model rather than nudging it.
+
+    # ------------------------------------------------------------------
+    # Q: What is reaching a human?
+    # ------------------------------------------------------------------
+      - name: dlq_depth
+        type: gauge
+        labels: [schema_id, reason]
+
+      - name: repair_attempts
+        type: histogram
+        labels: [schema_id]
+        buckets: [0, 1, 2, 3]
+        # Bimodal at maxAttempts means a schema/template mismatch, not a weak
+        # model. The fix is a schema or template change, not a bigger model.
+
+  alerts.yaml: |
+    groups:
+      - name: constraint-plane
+        rules:
+
+          - alert: GrammarFault
+            expr: increase(grammar_fault_total[5m]) > 0
+            severity: page
+            annotations:
+              summary: "Runtime grammar fault -- the compiler is wrong"
+              runbook: |
+                A request hit a state with no legal token. The compile-time
+                audit should have made this unreachable. Dead-letter the
+                affected requests, pin the schema to its last known good
+                grammar version, and treat this as a compiler defect.
+
+          - alert: ValidatorGrammarDisagreement
+            expr: increase(validator_grammar_disagreement_total[15m]) > 0
+            severity: ticket
+            annotations:
+              summary: "Validator rejected what the grammar accepted"
+              runbook: |
+                Expected class: schema version skew, tokenizer change, healing
+                edge case. Check validator_decisions_total{reason} first -- a
+                concentration in `version_skew` means a schema published while
+                a request was in flight, which is benign and self-correcting.
+                A concentration in `bad_value` means the grammar and the
+                validator disagree about the language, which is not.
+
+          - alert: GrammarAuditFailure
+            expr: increase(grammar_audit_failures_total[1h]) > 0
+            severity: ticket
+            annotations:
+              summary: "A schema failed the compile-time audit"
+              runbook: |
+                The artifact was not published and no request saw it. A schema
+                with a field whose value list is empty, or a branch that cannot
+                reach accept, produced this. Notify the schema author.
+
+          - alert: MaskMassRemovedHigh
+            expr: histogram_quantile(0.5, mask_mass_removed) > 0.5
+            for: 30m
+            severity: ticket
+            annotations:
+              summary: "The model disagrees with the grammar at most steps"
+              runbook: |
+                Output is still valid -- the mask enforces that -- but more than
+                half the model's probability mass is being deleted and
+                renormalised every step, which means the mask is choosing the
+                output rather than the model. Review the prompt and the schema,
+                in that order.
+
+          - alert: HealingNoOpRatio
+            expr: |
+              sum(rate(healing_changed_total[1h]))
+                / sum(rate(healing_trigger_total[1h])) < 0.1
+            for: 1h
+            severity: ticket
+            annotations:
+              summary: "Token healing fires but does not change the token"
+              runbook: |
+                The trigger heuristics are matching steps where the healed
+                argmax equals the masked argmax. That is one wasted forward
+                pass per trigger. Tighten the offender list, or re-evaluate it
+                if the tokenizer changed.
+
+          - alert: SemanticTruncationBlind
+            expr: histogram_quantile(0.9, semantic_truncated_mass) < 0.9
+            severity: ticket
+            annotations:
+              summary: "Top-k truncation is cutting into the mass"
+              runbook: |
+                Raise semantic.k or lower semantic.minMass, but understand
+                which you are doing: raising k costs discriminator passes,
+                lowering minMass accepts the blind spot as normal.
+
+          - alert: DLQGrowth
+            expr: increase(dlq_depth[1h]) > 50
+            severity: page
+            annotations:
+              summary: "Records are reaching human review faster than they clear"
+              runbook: |
+                Check repair_attempts for a bimodal-at-cap shape. That shape is
+                a schema or template mismatch. If repair is succeeding and the
+                DLQ is still growing, the validator is rejecting on a dimension
+                the repair loop cannot see -- check
+                validator_decisions_total{reason}.

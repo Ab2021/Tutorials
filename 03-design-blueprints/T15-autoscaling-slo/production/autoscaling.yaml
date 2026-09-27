@@ -1,0 +1,116 @@
+# T15 — Autoscaling policy, per variant (REFERENCE-GRADE, NOT EXECUTED HERE)
+#
+# The replacement for hpa-antipattern.yaml in this folder. Two differences matter more
+# than all the others combined:
+#   1. the signal is QUEUE / KV, not CPU (LLD section 3);
+#   2. the scale-down cooldown is DERIVED from the observed cold start (LLD section 4).
+#
+# A single replica count for the whole fleet is not offered. Prefill and decode have
+# different bottlenecks and the corpus's instruction is to identify which side is
+# bottlenecked and scale THAT variant [T]. Their ratio is workload-dependent [T].
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: autoscaling-policy
+  namespace: inference
+data:
+  policy.yaml: |
+    # ---------------------------------------------------------------------------
+    # MEASURED, NOT ASSUMED. These two numbers drive the cooldowns below, and they
+    # change whenever the model, the image or the weight store changes. Re-measure on
+    # every one of those events -- a stale boot_p99 silently invalidates the damping.
+    # ---------------------------------------------------------------------------
+    cold_start:
+      boot_p50_s: 18          # corpus best case: 15-20s, down from minutes, from
+      boot_p99_s: 45          # un-quantized base images + weights on a fast mount [R]
+      alert_if_boot_p99_exceeds_s: 120   # past this, autoscaling is NEGATIVE-VALUE
+
+    variants:
+      # -----------------------------------------------------------------------
+      # PREFILL -- compute-bound. Its bottleneck shows up as a growing queue of
+      # un-started requests, so queue depth is the aligned signal.
+      # -----------------------------------------------------------------------
+      - name: prefill
+        min_replicas: 4            # the warm floor, LLD section 7
+        max_replicas: 48
+        signal:
+          name: queue_depth        # NOT cpu. See hpa-antipattern.yaml.
+          window_s: 15
+          saturation: 8            # matches T14's operator-defined saturation
+        policy:
+          kind: queue_predict      # projects across the boot window
+          target_utilisation: 0.75
+          lookahead_s: derived     # = cold_start.boot_p50_s
+          # -----------------------------------------------------------------
+          # The ramp MUST be fitted across several sampled windows, never
+          # differenced from two adjacent samples. A two-point ramp is a pulse:
+          # large for exactly one window during a step change, then gone. A
+          # controller built on it over-scales and then immediately cancels the
+          # replicas it just started booting. (LLD section 5.)
+          # -----------------------------------------------------------------
+          ramp_estimator: sampled_trend
+          ramp_window_s: 10
+          ramp_samples: 6
+
+      # -----------------------------------------------------------------------
+      # DECODE -- memory-bandwidth-bound. Its bottleneck is KV growth, so KV
+      # occupancy is the aligned signal. Different signal, different policy,
+      # same boot time.
+      # -----------------------------------------------------------------------
+      - name: decode
+        min_replicas: 4
+        max_replicas: 64
+        signal:
+          name: kv_used_fraction
+          window_s: 15
+          saturation: 0.80         # corpus's example threshold [T]
+        policy:
+          kind: queue              # reactive is adequate here; see note below
+          target_utilisation: 0.75
+          # Decode is less bursty than prefill in most traces, so the predictive
+          # policy's 53% cost saving (run.py section 3) is smaller than it is for
+          # prefill. Start reactive and measure before adding lookahead.
+
+    damping:
+      up_cooldown_s: 15
+      # ---------------------------------------------------------------------------
+      # DERIVED, NEVER HARD-CODED.
+      #
+      # run.py section 4, policy/signal/workload held fixed and only this varied:
+      #     symmetric (== up)    93.4% SLO, 29.7% of spend on replicas that never served
+      #     derived (2x boot)   100.0% SLO,  8.7%
+      #
+      # WHY: with a down-cooldown shorter than the boot time, the controller cancels
+      # replicas that are STILL BOOTING. They were paid for, they never served, and the
+      # capacity the signal asked for never arrives. The controller eats its own tail.
+      #
+      # WHY DERIVED AND NOT A CONSTANT: a literal like 300s looks conservative and is
+      # correct until the boot time changes -- a bigger model, a colder image cache, a
+      # slower weight store -- at which point it is silently wrong in the expensive
+      # direction. Deriving it means it cannot drift away from the thing it must exceed.
+      # ---------------------------------------------------------------------------
+      down_cooldown_s: derived        # := max(60, 3 * cold_start.boot_p99_s)
+      max_up_step: 2.0                # replicas; the HPA's own geometric limit
+      max_down_step_fraction: 0.25    # down is the dangerous direction; move slowly
+
+    # ---------------------------------------------------------------------------
+    # NO SCALE-TO-ZERO POLICY, DELIBERATELY.
+    #
+    # The corpus raises zero-to-one and the speaker explicitly declines to answer
+    # ("I'm not an expert at that so I can't answer") [T]. The arithmetic says why it
+    # is hard [D]: with a 15-20s cold start, the first request after idle pays 15-20s
+    # before its first token, against interactive TTFT budgets of sub-second to a few
+    # seconds. Scale-to-zero is viable only when the cold start is under the TTFT
+    # budget -- which for interactive traffic it is not.
+    #
+    # The min_replicas floors above ARE the answer. Size them for the p99 of the
+    # idle-period arrival rate, not the mean: the mean floor is exceeded by definition
+    # half the time, and the cost of exceeding it is a full cold start.
+    # ---------------------------------------------------------------------------
+    scale_to_zero:
+      enabled: false
+      reason: "cold start 15-20s >> interactive TTFT budget"
+      batch_tier_exception: >
+        Batch-tier pools with no TTFT promise may scale to zero. Put a queue in front
+        of them and publish a throughput objective, never a latency one.

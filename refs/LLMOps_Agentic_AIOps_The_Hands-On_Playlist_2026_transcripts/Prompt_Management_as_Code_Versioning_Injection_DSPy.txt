@@ -1,0 +1,176 @@
+Title: Prompt Management as Code: Versioning, Injection & DSPy
+
+--- TRANSCRIPT ---
+
+[0:00] How do you manage prompts so that a
+[0:01] single one word edit cannot silently
+[0:03] break production? You already write
+[0:05] prompts every day. The question here is
+[0:07] operational. How do you change them
+[0:08] safely at a team scale without
+[0:10] regression slipping through? The prompt
+[0:12] is your cheapest lever and your most
+[0:14] dangerous one. It ships instantly to
+[0:16] everyone with no compiler and no type
+[0:19] check to catch a mistake.
+[0:21] The core move is to stop thinking of a
+[0:22] prompt as a string and start treating it
+[0:24] as a template plus variables. The
+[0:26] template is code you own and review. The
+[0:28] variables are the context and the user's
+[0:30] question filled in at runtime. Then
+[0:33] every version of that template gets an
+[0:34] ID and you pin it per release. Now you
+[0:37] can always answer the question that
+[0:38] matters during an incident, which exact
+[0:41] prompt produced this bad output? Without
+[0:43] versioning, that question has no answer.
+[0:46] Let us make that concrete with real
+[0:47] numbers. A team adds one friendly
+[0:50] sentence to a system prompt. Harmless,
+[0:52] surely, but the model starts wrapping
+[0:54] its JSON in prose and valid replies drop
+[0:58] from 98% to 71. Because the prompt was
+[1:01] versioned and evaluated, the nightly run
+[1:03] caught it before customers did and a
+[1:05] pinned rollback to version two fixed it
+[1:07] in seconds. That is the whole value in
+[1:09] one story.
+[1:10] In code it is simple, an ID, a text
+[1:13] template, and typed variables for the
+[1:15] data. Notice the ID carries the version
+[1:17] and the context and question are passed
+[1:19] in separately, never concatenated by
+[1:22] hand. Now a normal code review covers
+[1:24] the prompt. Your Git history shows who
+[1:26] changed what and why and rolling back is
+[1:28] just pinning the previous ID.
+[1:31] Here is the subtlety that turns a
+[1:32] formatting habit into a security
+[1:35] control. If you glue raw user text
+[1:37] straight into the instruction block, a
+[1:39] user can write ignore your rules and the
+[1:41] model may obey. The instructions and the
+[1:43] data have blurred together. That is
+[1:45] prompt injection and it tops the OWASP
+[1:47] LLM top 10 for a reason. Keeping data in
+[1:50] its own clearly labeled field is your
+[1:52] first and cheapest defense.
+[1:55] Picture the prompt as four stacked
+[1:56] layers. The top two, the system role and
+[1:58] your curated examples, are code pinned
+[2:01] and reviewed. The bottom two, retrieved
+[2:03] context and the user's question, are
+[2:04] untrusted data. The whole discipline of
+[2:07] prompt management is keeping that line
+[2:08] between code and data sharp, so the red
+[2:10] layers can never rewrite the teal one.
+[2:13] You do not need all of this on day one,
+[2:15] so here is the decision. A weekend
+[2:16] project with one prompt and one author
+[2:18] can leave it as a constant in the code.
+[2:21] That is honest, not lazy. But the moment
+[2:23] a prompt is customer-facing or two
+[2:25] people can touch it, you want a
+[2:26] registry, versions, and evals. That
+[2:29] threshold arrives sooner than most teams
+[2:31] expect. Let us go one level deeper into
+[2:34] how a strong prompt is actually
+[2:36] structured because the order of the
+[2:37] pieces matters more than most people
+[2:39] expect. Put the role and the task first,
+[2:42] then the constraints, then the output
+[2:43] format, then any few-shot examples. Put
+[2:46] the untrusted data dead last, wrapped in
+[2:49] clear delimiters, so it cannot
+[2:50] masquerade as an instruction. This
+[2:53] layout is also your defense against
+[2:54] drift. When each section has exactly one
+[2:56] job, you can change the format without
+[2:58] disturbing the constraints and swap
+[3:00] examples without rewriting the task.
+[3:02] Finish by stating an explicit output
+[3:04] schema, usually JSON, and validate every
+[3:08] response against it. A prompt that
+[3:09] specifies its own contract is one you
+[3:12] can build on.
+[3:13] Here is how a mature team actually runs
+[3:15] this in production. Every prompt lives
+[3:17] in version control and changes only
+[3:20] through a pull request, so there is a
+[3:21] reviewer and a change log. The
+[3:23] evaluation from the next video runs as a
+[3:25] gate, and a drop in the score blocks the
+[3:27] merge automatically. And a genuinely new
+[3:30] prompt is rolled out as a canary on a
+[3:32] small slice of traffic first, watched,
+[3:34] and only then promoted to everyone. That
+[3:36] is the difference between hoping and
+[3:38] knowing.
+[3:39] A few traps show up again and again, so
+[3:41] let us name them. Uploaded system prompt
+[3:43] slows every single call and blurs the
+[3:45] model's focus. A silent version swap
+[3:47] ships a regression straight to real
+[3:49] users. And the moment you paste raw data
+[3:52] back into the instructions, you have
+[3:53] handed the keyboard back to the
+[3:55] attacker. Each of these is invisible
+[3:57] until an evaluation catches it.
+[3:59] You will not build the versioning
+[4:01] machinery yourself. The tools already do
+[4:03] it. LangSmith and LangFuse give you a
+[4:05] registry and a playground. PromptLayer
+[4:07] and Agent add AB testing between
+[4:10] versions. And if you are tired of
+[4:11] tweaking wording by hand, the SPI will
+[4:14] compile a prompt against your metric,
+[4:15] optimizing it the way a compiler
+[4:17] optimizes code.
+[4:19] So, what is LangFuse? It is one of the
+[4:21] most widely used open-source platforms
+[4:23] for LLM engineering. It brings tracing,
+[4:27] prompt versioning, and evaluation
+[4:29] together in a single tool. You can
+[4:31] self-host it or use the cloud, and it
+[4:33] speaks the OpenTelemetry standard, so
+[4:35] your data stays portable. In this video,
+[4:37] we use its prompt registry, but you will
+[4:39] meet it again for tracing.
+[4:41] Here is its prompt registry in practice
+[4:44] in a few lines. You pull the prompt from
+[4:46] the registry by name and label instead
+[4:48] of hard-coding it. Edit and relabel it
+[4:50] in the UI, and your app picks up the new
+[4:52] version with no redeploy. Rollback is
+[4:55] one click back to the previous label.
+[4:57] Your prompts now have the same safety
+[4:58] net as your code.
+[5:00] Before the summary, know what to put on
+[5:02] the dashboard. Log the prompt version on
+[5:04] every request, so you can always tie an
+[5:06] output back to the exact prompt that
+[5:08] produced it. Track the eval score for
+[5:10] each version side by side, and watch the
+[5:12] share of outputs that match your
+[5:14] required format, because that single
+[5:16] number would have caught the 98 to 71
+[5:18] regression from earlier instantly.
+[5:21] Before the one-line summary, let us
+[5:23] gather the four things that actually
+[5:24] matter from this video. First, separate
+[5:26] the template from the data. Second, give
+[5:28] every prompt a version and pin it, so
+[5:30] you always know which prompt produced
+[5:32] which output. Third, evaluate a new
+[5:34] version before it ever replaces the old
+[5:36] one. And fourth, keep untrusted user
+[5:38] input firmly out of your instructions.
+[5:40] Get those four right, and prompts stop
+[5:42] being a source of surprise outages, and
+[5:45] start behaving like the reviewed version
+[5:47] code they really are.
+[5:49] So, the answer in one line, a
+[5:50] well-managed prompt still needs proof
+[5:52] that it works. Measuring that is the
+[5:55] whole next video, evaluation.

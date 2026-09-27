@@ -1,0 +1,166 @@
+Title: How to Evaluate LLM Apps: LLM-as-a-Judge & RAGAS (Without the Bias)
+
+--- TRANSCRIPT ---
+
+[0:00] How do you measure an LLM app when there
+[0:02] is no single correct answer to compare
+[0:04] against? Traditional software has unit
+[0:06] tests with exact expected outputs.
+[0:09] Language models give you fluent, varied
+[0:11] text, so a simple string match tells you
+[0:13] almost nothing. This is the skill that
+[0:15] quietly separates a demo from a product.
+[0:17] Without it, you are shipping on vibes,
+[0:19] and vibes do not survive contact with
+[0:21] real users.
+[0:23] The mechanism has three parts. First,
+[0:25] freeze a representative data set of
+[0:27] inputs, ideally drawn from real traffic.
+[0:29] Second, score every output two ways.
+[0:31] Cheap exact checks like is it valid
+[0:33] JSON, plus an LLM judge for the fuzzy
+[0:36] qualities like faithfulness and tone.
+[0:38] Third, wire the whole thing into your
+[0:40] pipeline, so a regression blocks the
+[0:42] release exactly like a failing test.
+[0:44] Evaluation you do not automate is
+[0:46] evaluation you stop doing.
+[0:48] Let us walk one concrete evaluation. 200
+[0:51] real questions, each with an approved
+[0:53] answer. Every candidate output gets a
+[0:55] cheap format check and a judge score for
+[0:57] faithfulness. Version two averages 3.6
+[1:00] out of five. Add a re-ranker and version
+[1:02] three hits 4.2. You ship version three
+[1:05] because the number moved and you can
+[1:07] prove it.
+[1:08] A judge is just another prompt. You give
+[1:10] it a rubric and ask for a structured
+[1:11] score with a reason. Loop it over the
+[1:13] data set, record each score, and you get
+[1:16] one number you can track release over
+[1:18] release, plus a written reason for every
+[1:20] low score to investigate. Asking for the
+[1:22] why field is not optional. It is what
+[1:24] turns a mysterious low score into an
+[1:27] actionable bug report.
+[1:29] Now the catch, documented by Jung and
+[1:30] colleagues in 2023, the judge itself is
+[1:33] biased. It tends to favor the first
+[1:35] answer it sees. It rewards length even
+[1:38] when length adds nothing, and it
+[1:39] flatters outputs from its own model
+[1:42] family. So, randomize the answer order,
+[1:44] cap or normalize length, and never let a
+[1:47] model be the sole judge of its own
+[1:49] family. Do that, and judges go from a
+[1:52] party trick to a reliable metric.
+[1:54] Plotted over versions, evaluation turns
+[1:56] opinion into a curve you can defend in a
+[1:58] review. Each bar is a release. Instead
+[2:01] of arguing about which prompt feels
+[2:02] better, you point at the chart and ship
+[2:04] the one the numbers support.
+[2:06] There are two kinds of evaluation and
+[2:08] you want both. Offline evals run on a
+[2:11] frozen data set in CI and gate the
+[2:13] release. Online evals score a sample of
+[2:15] real traffic after it ships where the
+[2:17] messy inputs live. Offline tells you a
+[2:19] change is safe to release. Online tells
+[2:21] you the world has shifted under you.
+[2:23] Skip either one and you will be
+[2:25] surprised in production.
+[2:27] There is an important choice hiding
+[2:28] inside have a judge score it. So, let us
+[2:31] look under the hood. Pointwise is
+[2:32] scoring as the judge to rate one answer
+[2:34] from one to five. It is simple but noisy
+[2:37] because absolute scores wander. Pairwise
+[2:39] scoring instead shows the judge two
+[2:41] answers and asks which is better.
+[2:43] Pairwise is far more reliable for close
+[2:45] calls, which is why the chatbot arena
+[2:47] behind the 2023 paper used exactly this
+[2:49] approach and turned the wins into an Elo
+[2:51] style ranking. The practical rule use
+[2:54] pointwise for a quick gate and pairwise
+[2:57] when you are choosing between two
+[2:59] genuinely close candidates.
+[3:01] The hardest part of evaluation is not
+[3:03] the judge, it is the data set. So, here
+[3:05] is how strong teams build one. They mine
+[3:07] real production traffic instead of
+[3:09] inventing toy questions because real
+[3:11] users ask things you would never think
+[3:14] to test. They deliberately label the
+[3:16] edge cases and the failures they have
+[3:17] actually seen. And the set is a living
+[3:19] thing. Every notable production failure
+[3:22] becomes a new test case the following
+[3:24] week. A curated 200 examples often beats
+[3:27] a random 10,000.
+[3:29] A few traps quietly ruin evaluation. So,
+[3:31] let us name them. With 20 examples, one
+[3:33] lucky run looks like real progress. With
+[3:35] a single judge from one family, the
+[3:37] score flatters itself. And a mean of 4.2
+[3:40] can still hide the 5% of answers that
+[3:42] leak data or invent facts. Always
+[3:44] inspect the worst cases, not just the
+[3:46] average.
+[3:48] You will not handwrite judges from
+[3:49] scratch. Frameworks ship them tuned and
+[3:51] tested. Rag As and Deep Eval bring ready
+[3:54] metrics. Like LangSmith, LangFuse, and
+[3:56] BrainTrust host your data sets and run
+[3:58] judges in CI. PromptFoo is a great
+[4:00] starting point. It runs in your pipeline
+[4:02] from a simple YAML file, so evals gate
+[4:04] every pull request from day one.
+[4:07] So, what is Rag As? It is an open-source
+[4:09] library dedicated to evaluating
+[4:11] retrieval augmented generation. Instead
+[4:13] of writing judges yourself, you get
+[4:14] ready-made metrics like faithfulness and
+[4:17] answer relevance. Under the hood, it
+[4:19] uses an LLM as the judge, tuned for RAG.
+[4:23] That saves you from building an
+[4:24] evaluation harness from scratch.
+[4:27] Here it is in practice. For RAG, Rag As
+[4:29] gives you the metrics almost for free.
+[4:31] Hand it a dataset of questions, retrieve
+[4:33] contexts and answers, and it returns
+[4:35] faithfulness and relevance as numbers
+[4:37] you can chart and gate on. From here, it
+[4:39] is a small step to run this in CI and
+[4:41] fail the build whenever faithfulness
+[4:42] drops below your threshold.
+[4:44] Put the right numbers on your evaluation
+[4:47] dashboard. Track the score trend across
+[4:49] releases, so you see direction, not just
+[4:51] a snapshot. And periodically check your
+[4:53] judge against a few human labels to
+[4:55] confirm it still agrees with people.
+[4:57] Most importantly, watch the fifth
+[4:58] percentile, your worst cases. A great
+[5:00] average with an ugly tail is exactly the
+[5:02] profile that produces embarrassing
+[5:04] screenshots.
+[5:06] Let us pull the four essentials of
+[5:07] evaluation together. First, freeze a
+[5:09] golden dataset drawn from real traffic.
+[5:12] Second, score every output with cheap
+[5:14] exact checks plus an LLM judge for the
+[5:16] fuzzy qualities. Third, correct the
+[5:18] judges biases with randomized order and
+[5:20] length control. And fourth, run the
+[5:22] whole thing in CI so a regression fails
+[5:25] the build. Do that, and is it good?
+[5:27] Stops being an argument and becomes a
+[5:29] number you can point at release after
+[5:31] release.
+[5:32] The one-line answer: To evaluate live
+[5:35] traffic, though, you first have to see
+[5:36] it trace by trace. That is
+[5:38] observability, and it is next.

@@ -1,0 +1,165 @@
+Title: LLM Observability: Traces, Spans & OpenTelemetry for AI Apps
+
+--- TRANSCRIPT ---
+
+[0:00] When an answer is wrong in production,
+[0:01] how do you find out exactly why? An LLM
+[0:04] app is not one call. It is retrieval,
+[0:06] prompt assembly, the model, guardrails,
+[0:09] and tools chained together. Any link can
+[0:11] be the culprit. You cannot fix what you
+[0:13] cannot see. Tracing is how you turn a
+[0:15] vague, "The bot said something weird"
+[0:18] into a precise, reproducible record.
+[0:20] The idea comes straight from distributed
+[0:22] systems. A trace is a single request
+[0:24] through your app. Inside it, each step
+[0:26] is a span. One for retrieval, one for
+[0:28] the LLM call, one for each tool. Every
+[0:31] span carries its inputs, outputs,
+[0:33] tokens, latency, and cost. Nest those
+[0:35] spans, and you can replay exactly what
+[0:38] happened in order with the numbers
+[0:39] attached to each step. The mystery
+[0:41] becomes a timeline.
+[0:43] Here's what that buys you on a real bug.
+[0:45] A user says the answer cited the wrong
+[0:47] policy. You open the trace and see the
+[0:49] retrieval span pulled an outdated chunk,
+[0:52] and the model faithfully summarized that
+[0:53] bad chunk. In under a minute, you know
+[0:55] the model behaved correctly, and the
+[0:57] fault is in retrieval. Without the
+[0:59] trace, you would be guessing and
+[1:00] probably blaming the wrong component. In
+[1:03] code, you wrap each step in a span and
+[1:05] tag it with what mattered. Here, the
+[1:08] retrieval span records which document
+[1:09] IDs came back, and the generate span
+[1:11] records the token count. Those two
+[1:13] attributes are exactly what you needed
+[1:15] in the last example. A bad answer is no
+[1:17] longer a mystery. It is a trace you open
+[1:20] and read from top to bottom.
+[1:22] The non-obvious part is that tracing
+[1:24] only pays off when it is connected to
+[1:26] something. On their own, traces are logs
+[1:28] nobody opens. The magic is the feedback
+[1:30] loop. Score live traces with a judge,
+[1:33] alert when the score drops, and sample
+[1:35] the failures into a dataset. That closes
+[1:38] the circle from the evaluation video.
+[1:39] Yesterday's production failure becomes
+[1:41] today's test case, and your eval set
+[1:43] gets stronger every week on its own.
+[1:46] Here is one real request drawn as a
+[1:48] stack of spans. The total was 1.2
+[1:50] seconds. Retrieval took 90 milliseconds.
+[1:53] Generation took over a second. The
+[1:55] bottleneck is obvious the moment you can
+[1:56] see it. That single view tells you
+[1:58] exactly where to spend your optimization
+[2:01] effort, which is the entire subject of a
+[2:03] later video in this playlist.
+[2:05] A quick decision, how much should you
+[2:07] actually trace? In development, trace
+[2:10] everything. The detail is worth it. In
+[2:12] high-traffic production, sample the
+[2:13] successes, but always keep 100% of the
+[2:16] errors. And redact personal data at the
+[2:19] boundary before it is ever written, so
+[2:21] your trace store never becomes a privacy
+[2:23] problem of its own.
+[2:24] Let us open up a span and see what is
+[2:26] actually inside it. Each span carries a
+[2:28] trace ID and a parent ID, which is how
+[2:31] the nested tree gets rebuilt. It records
+[2:33] start and end times, the model used,
+[2:35] token counts, and cost. It also carries
+[2:37] a status, so errors are visible, and a
+[2:40] set of standard gen AI attributes
+[2:42] defined by Open Telemetry, which is why
+[2:44] different tools can read each other's
+[2:46] traces. Because those attributes are
+[2:48] standardized, you can compute cost and
+[2:50] latency the same way regardless of which
+[2:52] back end stores the data.
+[2:54] Here is what observability looks like at
+[2:56] 3:00 in the morning when it earns its
+[2:58] keep. An alert fires because P95 latency
+[3:01] spiked or the live eval score dropped.
+[3:03] The on-call engineer opens a
+[3:04] representative trace and reads it span
+[3:07] by span. Was it the retrieval span or
+[3:09] the generation span? Within minutes,
+[3:11] they know. They file the fix, and they
+[3:13] sample that failing trace into the
+[3:15] evaluation set so it can never quietly
+[3:17] regress again.
+[3:19] Observability has its own failure modes,
+[3:21] and they are common. Store user text
+[3:22] without redaction, and your trace store
+[3:24] becomes an incident. Trace every token
+[3:26] at full volume, and the signal
+[3:28] disappears under the noise. Worst of all
+[3:30] is the dashboard nobody owns. If no
+[3:32] alert fires and no eval reads the
+[3:35] traces, you have paid for storage, not
+[3:37] for insight.
+[3:38] Every major tool now speaks the Open
+[3:41] Telemetry standard, which is the
+[3:42] important part. LangFuse, LangSmith,
+[3:45] Phoenix, and MLflow all read it. Helicon
+[3:47] sits as a proxy and tracks latency and
+[3:49] cost with almost no code change.
+[3:51] Instrument once against OpenTelemetry
+[3:54] and you can swap back ends later without
+[3:56] touching your application code. That
+[3:58] portability is worth protecting.
+[4:01] So, what is OpenLLMetry? It is an
+[4:03] open-source project from Traceloop that
+[4:05] extends OpenTelemetry to language model
+[4:07] apps. Its whole job is to
+[4:09] auto-instrument the libraries you
+[4:11] already use. So, traces appear with
+[4:13] almost no code and ship to any
+[4:15] OpenTelemetry backend you choose.
+[4:17] Because it is standard-based, you never
+[4:19] get locked into one vendor's dashboard.
+[4:22] Here it is in practice. You do not even
+[4:24] have to wrap each call by hand to get
+[4:26] started. One init line from OpenLLMetry
+[4:29] auto-instruments the whole stack.
+[4:31] OpenAI, LangChain, LlamaIndex, and your
+[4:33] vector database shipped to whichever
+[4:36] backend you point it at. Start with
+[4:38] auto-instrumentation for coverage, then
+[4:40] add custom spans by hand for the few
+[4:42] steps you care most about.
+[4:43] A few numbers belong on every LLM
+[4:45] dashboard. Watch median and 95th
+[4:47] percentile latency broken down by span
+[4:50] so you know whether retrieval or
+[4:51] generation is the problem. Track cost
+[4:53] per request and per day to catch spend
+[4:55] creeping up. And keep an eye on your
+[4:57] error and fallback rate and on trace
+[4:59] coverage itself. A blind spot in your
+[5:00] tracing is a blind spot in your whole
+[5:02] system.
+[5:03] Here are the four things to carry out of
+[5:05] this video. First, trace every request
+[5:08] as a tree of nested spans. Second, build
+[5:11] on the OpenTelemetry standard so your
+[5:14] data stays portable across backends.
+[5:16] Third, put P95 latency, cost, and error
+[5:19] rate on a dashboard. And fourth, close
+[5:21] the loop by feeding traces into your
+[5:23] evaluations and alerts. Tracing without
+[5:26] that loop is just storage. Tracing with
+[5:28] it is how a live system teaches you to
+[5:30] improve it.
+[5:31] The one-line answer, now let us make the
+[5:33] step you just watched dominate that
+[5:35] trace retrieval genuinely excellent. Rag
+[5:38] ops is next.

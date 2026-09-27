@@ -1,0 +1,525 @@
+Title: Peter DeSantis - Constraint Driven Innovation: A Look at the AI Systems Problem
+
+--- TRANSCRIPT ---
+
+[0:02] Morning.
+[0:04] Well, chips and quantum computing and
+[0:07] models might be easy stuff, but
+[0:08] PowerPoint is not.
+[0:11] And Don's experience has me a little
+[0:13] nervous because I've been there. Uh,
+[0:15] one time I built a PowerPoint
+[0:17] presentation when I had to present to
+[0:18] 4,000 sales people and I did the whole
+[0:21] thing in template mode, which is
+[0:22] apparently a feature
+[0:23] and that didn't allow it to be used at
+[0:25] all. So, I had to do the whole thing
+[0:26] with the app up and uh, so I feel for
+[0:29] Don and I hope it doesn't happen to me.
+[0:31] Uh,
+[0:32] with that, I'm Peter. I'm delighted to
+[0:34] be here on uh, day one of the uh,
+[0:38] Agentech AI conference here at Berkeley.
+[0:41] Thank you all for getting up early uh,
+[0:42] to be with us this morning and
+[0:44] uh, looking forward to an exciting
+[0:46] weekend.
+[0:47] Uh, day one's got a special meaning to
+[0:49] me being at Amazon for 28 years.
+[0:53] We talk a lot about day one and this
+[0:55] made a lot of sense when I joined uh, 28
+[0:57] years ago. We were a small little retail
+[0:59] startup and we all fit in a conference
+[1:01] room. Um, but you know, as we kept
+[1:03] talking about it being day one, it it
+[1:06] started feeling a little silly as we
+[1:07] became a huge retailer. Uh, but every
+[1:10] day we talked about it being day one and
+[1:12] it meant something to us. And then we
+[1:14] started AWS 20 years ago and it did
+[1:16] indeed feel like uh, day one again
+[1:19] because everybody inside the company was
+[1:20] kind of laughing at this AWS cloud thing
+[1:24] inside of uh, Amazon, but we were very
+[1:26] convicted and uh, that turned out pretty
+[1:29] well. Uh, and we kept growing uh, AWS
+[1:32] and we kept talking about uh,
+[1:34] day it being day one. It's always day
+[1:36] one. And and why do we talk about it
+[1:38] always being day one? Because
+[1:39] day one culture is is something that you
+[1:42] uh, that you believe and will into
+[1:44] existence. It's a it's a culture, it's a
+[1:46] behavior, it's an attitude and it's an
+[1:48] important attitude. It it's it's an
+[1:50] understanding that despite whatever
+[1:53] innovations and success you've had,
+[1:55] there's more success ahead. And uh, and
+[1:58] I think it's an interesting way
+[2:00] to think about AI.
+[2:02] Because
+[2:03] I think there's a potential to think
+[2:05] that we're like on the cusp of being
+[2:06] done with AI, but that's not the way I
+[2:08] see it. I see this is the very early
+[2:11] days of innovation. And and what's
+[2:14] happening today, while it seems frenetic
+[2:16] and exciting and things are literally
+[2:18] changing and becoming more capable every
+[2:20] day,
+[2:21] we're just at the very very beginning.
+[2:25] In fact, I'm an AI optimist. Like I very
+[2:29] much believe
+[2:31] I'm on the far side of the distribution
+[2:33] thinking that AI is really going to help
+[2:35] us solve some of the most fundamental
+[2:37] problems that humanity faces.
+[2:40] Things like energy and health and
+[2:43] medicine and
+[2:45] all of it has so much potential to
+[2:47] transform the way we live. And I think
+[2:49] we're just just seeing the very tip of
+[2:51] that iceberg. But in order to get to
+[2:55] that future, we fundamentally have to
+[2:57] solve
+[2:58] a number of problems. In fact, we have
+[3:00] to deliver order of magnitude
+[3:02] improvement in what's there today. And
+[3:04] that's why I say we're very much in day
+[3:07] one of this journey.
+[3:09] And so really the most fundamentally
+[3:11] important problem that I see is that in
+[3:13] order to realize what we all want AI to
+[3:16] be, we need to figure out how to make AI
+[3:18] much much more efficient.
+[3:21] And that is a fundamentally interesting
+[3:24] and exciting problem to me and I I
+[3:26] suspect to many people in this room. And
+[3:30] it's a it's a problem that that
+[3:32] stretches so many of the the the pieces
+[3:36] of the stack that we're innovating on.
+[3:38] And when I when I was asked to to speak
+[3:41] this morning, I kind of had this like
+[3:44] you know, what should I talk about? We
+[3:45] want to talk about agentic AI, but what
+[3:46] is agentic AI? Well, agentic AI is a ton
+[3:50] of things and uh
+[3:52] I am uh blessed to work at Amazon, where
+[3:54] we're working on many of the pieces, uh
+[3:57] in fact all of the pieces of the AI
+[3:59] stack, everything from the applications
+[4:01] on the top to uh the the platforms and
+[4:04] software and agentic uh frameworks that
+[4:07] allow us to build and secure agents and
+[4:10] models.
+[4:12] Uh to the models themselves, uh to the
+[4:14] infrastructure uh and chips that power
+[4:18] the AI models and and agents that run.
+[4:21] Um but when I when I thought about what
+[4:24] I wanted to talk about this morning and
+[4:25] and if I look across the next couple
+[4:27] days, there's people talking about each
+[4:28] and every part of this stack and each
+[4:30] and every part of this uh puzzle and all
+[4:33] the innovation happening. But, you know,
+[4:34] what do I want to talk about? Well, I I
+[4:36] thought maybe I would start by talking
+[4:37] about what I'm
+[4:39] most passionate about, which is the
+[4:40] infrastructure. And the reason I'm most
+[4:42] passionate about the infrastructure is
+[4:44] because again, I fundamentally believe
+[4:46] that in order for us to
+[4:48] achieve this vision that I think all of
+[4:50] us share for what AI can be, we're going
+[4:53] to have to make the infrastructure
+[4:55] fundamentally uh
+[4:57] more
+[4:58] efficient and and not just
+[4:59] incrementally.
+[5:01] And so uh
+[5:02] Amazon is making some of the deepest
+[5:04] investments and innovating at every
+[5:05] level of the AI infrastructure stack.
+[5:07] And I I thought I might start this
+[5:09] morning off sharing with you a few of
+[5:11] the ways uh that that we're thinking
+[5:13] about uh
+[5:15] this problem space.
+[5:18] So, the the first observation uh that
+[5:21] I'll mention is uh that there's not
+[5:24] going to be a single chip or server type
+[5:28] that that's going to power the AI
+[5:30] workloads of the next decade. Uh this is
+[5:32] an interesting trend that's I think
+[5:34] really been emerging. If I look back a
+[5:36] decade, uh
+[5:38] everything ran
+[5:40] on uh you know, sort of a
+[5:42] uh a CPU. Uh most every workload ran on,
+[5:44] you know, a CPU, maybe one one faster,
+[5:46] one more core, one one slower, but it
+[5:48] was pretty pretty standard selection of
+[5:50] server types out there. And I think
+[5:51] there were a number of reasons for that.
+[5:53] You know, one is Moore's law was
+[5:55] allowing us to produce better and better
+[5:57] general purpose processors, and so
+[5:59] having one tool chain made a made a lot
+[6:01] of sense, gave us a lot of leverage.
+[6:03] Uh another reason for it was it it you
+[6:05] know, while
+[6:07] it was super complex to build the
+[6:09] servers in the infrastructure, and if
+[6:11] you needed to support lots of different
+[6:12] kinds of servers and lots of different
+[6:14] kinds of uh hardware, uh
+[6:16] that that just didn't make a lot of
+[6:17] sense when you were trying to focus on
+[6:19] your business. Um but the cloud started
+[6:21] to change all that, and we got excited
+[6:22] about that
+[6:24] about 12 years ago, and we you know, the
+[6:26] cloud takes away a lot of the problems
+[6:28] that come with custom hardware. And so,
+[6:31] way before AI started growing as quickly
+[6:33] as we see today, AWS was innovating to
+[6:36] provide more bespoke and custom hardware
+[6:38] solutions for all sorts of applications.
+[6:41] But then AI came along, and AI is is
+[6:44] really
+[6:46] there's an ecosystem of workload types
+[6:48] inside of what we call AI today, and
+[6:50] agentic AI is pushing this even faster.
+[6:53] And so, my excitement is that this now
+[6:55] opens up the scale and diversity of
+[6:58] workloads that really is going to push
+[7:02] innovation
+[7:03] all the way down. Uh of course,
+[7:05] we all
+[7:07] we all are here today because of the the
+[7:09] GPU, uh which is a a phenomenal chip
+[7:13] that really
+[7:14] changed the game when it came to doing
+[7:16] the sorts of floating point and and
+[7:18] matrix operations that underlie most of
+[7:22] the AI models that we're building.
+[7:24] And and you know, it was really a
+[7:26] somewhat happy accident that that this
+[7:27] happened, but it was
+[7:29] really a critical part of the origin
+[7:31] story of of the AI models that we're all
+[7:33] so excited about today. But the GPU is a
+[7:37] fairly general purpose architecture. It
+[7:39] was built in fact for what it's named
+[7:41] after, graphics, and it may not be uh
+[7:45] the most optimal. In fact, it's
+[7:47] not the most optimal hardware
+[7:49] architecture to power a lot of the
+[7:51] models that we're running today.
+[7:53] And you know, we we noticed this
+[7:57] a
+[7:57] better part of a decade ago when we
+[8:00] started seeing some of the emerging
+[8:01] patterns in AI models. And and the
+[8:03] interesting thing about the AI models is
+[8:05] yeah, they do a lot of
+[8:07] matrix operations and floating-point
+[8:09] math, but they do them in a fairly
+[8:11] predictable way. And so that means that
+[8:13] rather than having to have a bunch of
+[8:15] cores with a bunch of
+[8:16] registers accessing random memory, you
+[8:19] can predict the flow of memory and
+[8:21] compute through a chip. And and the type
+[8:23] of chip that that is most optimal for
+[8:26] that kind of workload is actually
+[8:27] something called a systolic array.
+[8:30] And so we started building our Trainium
+[8:33] processor,
+[8:35] which we originally called Inferentia,
+[8:37] but but grew into a larger variant which
+[8:39] we now call Trainium,
+[8:40] better part of a decade ago based on a
+[8:42] systolic array architecture. And that
+[8:45] architecture has allowed us to achieve
+[8:47] efficiency by removing a lot of the
+[8:50] flexibility that we don't need for these
+[8:52] workloads, while still preserving a lot
+[8:55] of important flexibility to allow it to
+[8:57] run a broad range of different types of
+[9:01] ML
+[9:02] models. It's not an ASIC customized for
+[9:05] one application, it's an AI accelerator
+[9:08] that's been built specifically to to
+[9:12] optimally run the biggest and broadest
+[9:15] range of AI models.
+[9:18] But you know, even though we think
+[9:21] Trainium is the optimal architecture for
+[9:23] AI model building and inference today,
+[9:26] it's very unlikely that one one chip
+[9:30] is going to be the solution as we look
+[9:32] at how AI workloads are evolving.
+[9:35] And and that's exciting. You know, we
+[9:36] think there's another, uh,
+[9:38] decade or two of novel innovations that
+[9:40] we can put into training and pushing the
+[9:41] limits of what's possible there. Uh, but
+[9:44] we also think we're going to invest in
+[9:46] other chips and others are going to
+[9:48] invest in other chips. And and I think
+[9:49] that's going to make the, uh, hardware
+[9:51] ecosystem that we're all building to,
+[9:54] uh, much more interesting and exciting.
+[9:57] Uh, you know, one quick example I'll
+[9:59] give there, uh, that most
+[10:01] folks in the room might be, uh, familiar
+[10:03] with is the inference pipeline. When you
+[10:04] look at, uh, the transformer models, uh,
+[10:07] that we're running, uh, today, the
+[10:09] auto-regressive transformer models that
+[10:10] are the vast majority of the models that
+[10:12] are underpinning, uh, the agents that we
+[10:15] all are talking about, uh,
+[10:18] these the there's really a there's two
+[10:20] workloads underneath that inference.
+[10:22] There's the prefill or, uh, encoding,
+[10:25] uh, workflow, which is extremely
+[10:26] compute-intensive.
+[10:28] And then there's the the auto-regressive
+[10:30] token generation workload, uh, which
+[10:32] actually happens to be extremely
+[10:34] memory-bandwidth because each subsequent
+[10:36] token requires us to access every model
+[10:39] weight. And so that the profile of those
+[10:41] two workloads is is radically different
+[10:43] if you look at it at a hardware level.
+[10:45] And training them is actually designed
+[10:47] very well to run both of these workloads
+[10:49] today. Uh, that that efficient memory
+[10:51] flow that I talked about, uh, benefits
+[10:53] the decode workload and the the large
+[10:56] floating-point performance is great for
+[10:58] the prefill part of the workload. But
+[11:00] there are other patterns emerging, uh,
+[11:03] that might allow for optimization of one
+[11:07] or both of those, uh, parts of the
+[11:09] pipeline. And and the one that's getting
+[11:10] the most attention right now is is the
+[11:13] the, uh,
+[11:14] the token generation, uh, portion with
+[11:17] with S so-called S RAM chips or chips
+[11:19] where we we put a lot more memory on
+[11:22] the, uh, compute chip, uh, at the
+[11:24] expense of compute compute capacity
+[11:27] itself. It's all a trade-off. And and
+[11:29] the result is that you can run the, uh,
+[11:31] token generation part of the workload
+[11:33] significantly faster. But that comes
+[11:35] with tradeoffs and constraints. If you
+[11:37] want to run something that needs a lot
+[11:38] more compute, well, you traded those
+[11:40] transistors for memory. And if you need
+[11:42] a lot more memory, you probably can't
+[11:44] fit it on the chip in the first place.
+[11:46] Uh and if you're running a gentic AI,
+[11:49] you probably need really, really long
+[11:51] context windows. And it's hard to move
+[11:53] that context in and out of an SRAM chip,
+[11:56] much more expensive than it would be
+[11:57] with something like training. And so,
+[12:00] I happen to believe that SRAM and and
+[12:02] memory intensive chips are going to play
+[12:04] an important part of our inference
+[12:06] systems, but in the context of many
+[12:09] other chips, not as a replacement for
+[12:11] the chips that we're using today.
+[12:18] All right, I'll move to the second
+[12:19] observation I want to talk about, which
+[12:21] is that models and chips must be
+[12:24] designed in tandem. And this may seem uh
+[12:27] fairly obvious, but I we're not it's not
+[12:30] exactly how we've been doing it uh up
+[12:32] till now.
+[12:33] Uh at least not broadly. Uh I mean, and
+[12:36] the fundamental observation I'll give
+[12:38] you here is that when you're building
+[12:41] uh an AI model, you're making up a
+[12:43] multi-year
+[12:45] investment in building to a certain
+[12:47] model architecture. And that could be an
+[12:50] extremely expensive investment, hundreds
+[12:53] of millions of dollars that I I suspect
+[12:54] in the not-too-distant future some of
+[12:56] the model families will be investing
+[12:58] billions of dollars in order to
+[12:59] progress. And so, when you're making
+[13:01] that lot sort of long-term investment,
+[13:04] uh you want to be efficient at every
+[13:06] step of the process. And a chip
+[13:08] investment uh is is very similar. The
+[13:11] lead time on
+[13:13] building a new chip and bringing it to
+[13:15] scale in a data center it could easily
+[13:17] be 2 to 3 years with the complexity of
+[13:19] leading AI processors. And so, now if
+[13:21] you have two
+[13:23] long arc investment uh pieces like that
+[13:27] that fundamentally need to, uh, be
+[13:30] co-developed, it would be a a mistake to
+[13:33] to sort of, you know, develop models in
+[13:36] isolation of understanding what's going
+[13:38] to happen in hardware a year from now,
+[13:40] or to be building hardware for 2 years
+[13:42] from now without understanding the needs
+[13:44] of models. And so, bringing together the
+[13:46] design of the model and the system
+[13:48] around the model and the hardware chip
+[13:50] is fundamental.
+[13:52] Um, you know, one quick way to think
+[13:54] about this is just think about the
+[13:55] capabilities that you put on the chip. I
+[13:57] again, I said it could be 2 to 3 years
+[14:00] from when you're designing a chip to
+[14:01] when you're putting it into production.
+[14:03] And one of the place that you look, uh,
+[14:05] of course, for new ideas for what you
+[14:07] might want to put in your chip, in your
+[14:10] hardware, is in academia. And and here I
+[14:12] have, I I believe, uh,
+[14:15] um, I can't see it on my screen, but I
+[14:16] think there's a bunch of, uh, very
+[14:18] important Berkeley papers in here. And
+[14:19] there's a lot of good ideas in these
+[14:21] papers. But not every one of them is
+[14:22] going to be, uh, something that makes
+[14:24] its way to production, not because it
+[14:25] was a good idea, but because, uh, when
+[14:28] you make design choices, you can only
+[14:29] make so many design choices. And so, the
+[14:31] art of building great hardware is
+[14:34] understanding which of the great ideas
+[14:36] ultimately need to be put into hardware
+[14:38] so that by the time the hardware is in
+[14:40] market, uh, the science and the
+[14:43] technology is ready to take advantage of
+[14:44] that chip. And that's exactly what we've
+[14:46] been doing with Cerebras.
+[14:48] Uh, you can see on the board, uh, some
+[14:50] of the features that we've been adding,
+[14:52] uh, to the latest generation. And these
+[14:53] were very much inspired by work in
+[14:55] academia, but also research, uh, in in,
+[14:59] uh, our customers and our internal
+[15:00] teams. And so, we're really excited, uh,
+[15:03] about 6 months ago, we brought our
+[15:04] internal foundational model, uh,
+[15:07] closer together with our chip
+[15:08] development. That's a big part of my,
+[15:10] uh, purview now, and it's it's going to
+[15:12] help us continue to bring, uh, some of
+[15:14] the most capable, uh, hardware
+[15:16] innovations and models, uh, to our
+[15:18] customers.
+[15:20] The third, uh, and final observation
+[15:23] I'll make for the morning is that, uh,
+[15:25] and I've already kind of touched on
+[15:26] this, AI infrastructure is not a model
+[15:28] problem, it's not a chip problem, it's a
+[15:31] systems problem. And this makes it like
+[15:33] one of the most interesting problems,
+[15:34] uh, I think that that you get to work on
+[15:36] as a as an engineer or as a scientist
+[15:38] cuz literally these systems are so
+[15:41] interconnected that if you want to get
+[15:43] performance, and we can define
+[15:44] performance as, uh, you know, better,
+[15:47] uh, accuracy, we can define performance
+[15:50] as lower latency, we can define
+[15:51] performance as, uh,
+[15:53] better better throughput and cost, but
+[15:56] any of those, uh, betters requires a
+[15:59] complete understanding of every level of
+[16:02] the stack. And it it, you know, when
+[16:04] done well, it brings in almost every,
+[16:07] uh, every part of computer science, uh,
+[16:10] engineering, which which just makes it
+[16:12] an incredibly fun, uh, place to play as
+[16:15] an engineer and as a builder.
+[16:19] So, ultimately, uh, and and I I would
+[16:22] say, you know, we we've had a real focus
+[16:25] because because we believe that in order
+[16:26] to get the best performance out of our
+[16:28] system, we've had a real focus with our
+[16:30] chips programs at Amazon,
+[16:32] uh, making sure that we give customers
+[16:34] the deepest access to our hardware. And
+[16:37] and that's because when you're trying to
+[16:38] optimize performance, you don't want
+[16:40] abstractions between you and other
+[16:41] things. Uh, as a as a computer
+[16:43] scientist, uh, and spending many years
+[16:45] in software engineering, uh, I have an
+[16:47] instinctual desire to put a layer of
+[16:50] indirection between things to scale. Uh,
+[16:52] and that is usually the right way to
+[16:54] build software, uh, particularly if you
+[16:56] have a large organization like Amazon,
+[16:58] but it's not the right way to build an
+[17:00] AI system if you want to achieve
+[17:02] absolute best performance. There you
+[17:05] need to lay hands on the whole stack,
+[17:07] you need to understand the network, you
+[17:08] need to understand the chip, you need to
+[17:10] get to the the hardware instruction
+[17:12] level,
+[17:13] uh, capabilities of your chip and your
+[17:15] network. Uh, and so, that's exactly what
+[17:18] we've done with Tranium. We've we've
+[17:19] we've exposed our complete instruction
+[17:21] set. Uh there's many students here at uh
+[17:24] Berkeley that have helped us push the
+[17:25] limits of what's possible there. Uh
+[17:27] we've also open-sourced our uh our um
+[17:31] tool chain uh so that uh under folks can
+[17:33] understand how uh our compiler's working
+[17:36] and how other parts of our software
+[17:37] stack work. Uh and of course, we've
+[17:39] integrated with uh things like PyTorch
+[17:42] and
+[17:43] vLLM, which are key parts of the the the
+[17:45] the building uh ecosystem.
+[17:48] Um and so, you know, I'll end by just
+[17:50] saying like uh the fact that we have
+[17:52] this amazing opportunity, but the world
+[17:54] is full of constraints, capacity
+[17:57] constraints, performance constraints,
+[17:59] power constraints, uh that that's what
+[18:01] makes this whole thing so interesting.
+[18:03] And and that's why I'm excited to be
+[18:05] involved in technology and AI at this
+[18:07] very moment. I hope it's why this uh
+[18:10] audience is uh also excited. Uh the
+[18:12] future is bright, and we need to build
+[18:15] it together. And I'll echo something
+[18:16] that was said already earlier this
+[18:17] morning, which is events like this that
+[18:20] bring together experts uh
+[18:22] and uh
+[18:24] visionaries from all parts of the stack
+[18:26] are critical to unlocking the potentials
+[18:29] that that come from understanding the
+[18:31] whole system. And so, there's never been
+[18:33] a better time to be at an event like
+[18:34] this, and I hope that this uh
+[18:36] I hope this uh weekend is fun for
+[18:38] everybody. So, I'll leave you with my
+[18:40] thought that I started with, which is
+[18:42] this is the very beginning of this
+[18:44] journey, and what lies ahead is going to
+[18:46] be far more exciting than what we've
+[18:47] seen to this date. And so, you know, be
+[18:50] motivated, be excited, and uh and build.
+[18:53] Thank you.
+[18:55] >> [applause]

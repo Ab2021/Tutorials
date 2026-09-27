@@ -1,0 +1,1223 @@
+Title: CMU LLM Inference (10): Incorporating Tools
+
+--- TRANSCRIPT ---
+
+[0:01] Hello everyone. Um so we had a few
+[0:05] questions about the assignment. Um the
+[0:07] first question about the assignment was
+[0:09] um were people having trouble with the
+[0:11] inference on the like graph problem uh
+[0:15] where it was taking a really long time
+[0:16] with your models?
+[0:19] Yes.
+[0:20] Um did I see some people nodding
+[0:25] that? Um yes. Okay. Um, did you have uh
+[0:30] like the thinking token on for Gwen 3?
+[0:33] No,
+[0:34] >> you explicitly turned it off. Okay. Um,
+[0:37] we will uh need to look into that
+[0:40] because I didn't uh I didn't see that
+[0:42] when we ran it ourselves, but um we'll
+[0:45] uh we'll see. Um and then uh the other
+[0:50] thing is I had a question about when the
+[0:52] homework the next homework's going to be
+[0:54] out. Um, I'll let the TAs answer that
+[0:57] when they get here. They are running a
+[0:59] little bit late. I don't know if they
+[1:00] stayed up late for the deadline. Uh, I
+[1:02] cleared a line last night or something,
+[1:05] but
+[1:06] >> yeah, I I know at least uh at least some
+[1:08] of them did.
+[1:10] Um,
+[1:13] cool. But um yeah, I I don't want to
+[1:16] waste time. How many people do we have
+[1:17] presenting today? One, two, three. Okay,
+[1:20] I have a lot of content today. So I will
+[1:23] get started and try to go quickly. Um
+[1:27] cool.
+[1:37] Okay. Um so this time I'm going to talk
+[1:39] about tool use. Um and
+[1:42] the basic idea is that um we we want to
+[1:47] provide the agent with tools that it can
+[1:49] use. And in terms of the definition of
+[1:52] tools, uh, we're talking about things
+[1:54] that are external to the LM. Um, and
+[1:57] they're part of an environment that the
+[2:00] LM is kind of placed in. And they have a
+[2:04] functional interface. And so we we think
+[2:06] of them as uh functions in a programming
+[2:09] language uh callable with input,
+[2:11] parameters, and output uh that you get
+[2:13] from them. uh and they're generally you
+[2:17] know executable as uh programs
+[2:23] and uh there's a survey paper that I did
+[2:28] uh together with one of the um one of my
+[2:30] students Sora called what are tools
+[2:32] anyway it's on the the site uh and you
+[2:35] can go in and read a lot of the slides
+[2:36] here are kind of based on that to some
+[2:38] extent but in coming up with that survey
+[2:41] we tried to think of like the categories
+[2:42] of tools that you use um and there's
+[2:46] basically three different categories of
+[2:48] tools that you might use. So the first
+[2:49] one is um perception and what we mean by
+[2:52] perception is basically giving the
+[2:55] language model the ability to access
+[2:58] information that is not included in its
+[3:00] parameters. So um they can collect
+[3:04] information from the web or they can
+[3:06] read a file system or uh you know
+[3:09] interact with the user uh in some way or
+[3:12] something like that.
+[3:14] Uh the second thing is uh taking actions
+[3:17] and so actions are things that can
+[3:20] directly affect change on the
+[3:22] environment. So perception is basically
+[3:24] you know just gathering information from
+[3:26] the environment where action is actually
+[3:28] you know making some sort of change to
+[3:29] the environment. And then the final one
+[3:31] is computation and what this is is this
+[3:34] is not necessarily interacting with an
+[3:36] external environment. So you're not
+[3:38] providing the agent with or the the LM
+[3:41] with any more information than it has
+[3:43] originally. Um but it can do sorts of
+[3:46] computations that like aren't easy to do
+[3:49] uh within a language model.
+[3:53] Here are some examples of them. Um and
+[3:55] so uh you can have things that provide
+[3:58] additional knowledge. So you can like
+[4:00] call a search engine uh make database
+[4:03] queries. uh you can do computation
+[4:06] either using like just a calculator or a
+[4:08] Python interpreter. Um you can get
+[4:11] information about the world like getting
+[4:13] the weather or fetching events from a
+[4:14] calendar. And you can also do other
+[4:17] things like calling uh you know tools
+[4:20] that allow you to interact with other
+[4:21] modalities that the LM can't interact
+[4:23] with immediately. So um like doing
+[4:25] visual QA over an image uh converting a
+[4:29] video to its transcript uh playing music
+[4:32] on Spotify uh you know other stuff like
+[4:34] that.
+[4:37] Uh any questions about that?
+[4:41] Okay cool. So
+[4:45] the basic uh tool use paradigm uh this
+[4:49] is not the only way to call tools but
+[4:50] this is one of the common ways to call
+[4:52] tools in language models is uh you have
+[4:54] a user query and then before um you
+[5:00] actually
+[5:01] generate the output you have some way of
+[5:05] calling a function and typically what
+[5:07] this means is you have a tag that's like
+[5:10] something like start tool call or uh
+[5:13] something like this which indicates that
+[5:14] you're starting to call a tool. You
+[5:17] write the tool call and then you uh you
+[5:20] finish. And so uh here this actually
+[5:24] this figure might
+[5:27] not be the best. It should be like tool
+[5:29] uh you should have a tool tag and then
+[5:30] check weather and then like a closed
+[5:32] tool tag um or or something like that.
+[5:35] But this is uh you know the example of
+[5:37] how it it works. And so then you get the
+[5:39] tool call, you call the remote server
+[5:41] and you return the API output. And you
+[5:43] can either like concatenate it directly
+[5:45] into the stream that the agent is
+[5:47] generating or you can give it to the
+[5:49] agent as an observation. And then based
+[5:51] on that observation uh it can go back
+[5:54] and uh like
+[5:56] you know generate the response to you.
+[6:02] Cool. Everything good? Um so the first
+[6:08] uh example of this kind of in the large
+[6:10] uh modern large language model era
+[6:13] actually one thing I I should mention is
+[6:15] um before the modern large language
+[6:17] model era this existed in lots and lots
+[6:20] of cases like Siri and uh you know Alexa
+[6:24] and all of your personal assistants. Um
+[6:26] but they did it in a different way. The
+[6:27] way they did it is they had classifiers
+[6:30] and they would have a classifier that
+[6:32] says I need this API call. So like the
+[6:35] user says something you classify into
+[6:37] over all of the APIs that you are
+[6:39] calling and then after that for each API
+[6:42] you would then fill in the arguments. So
+[6:44] you would have like an argument filling
+[6:45] model. So that's the way you would do it
+[6:47] now. Um previously now you usually do it
+[6:51] by just having the language model
+[6:53] directly generate the code uh to call
+[6:55] the tool.
+[6:56] So the first example of this that I'm
+[6:59] aware of in the modern LM era is web GPT
+[7:03] and this was uh basically uh taking the
+[7:06] GPT models and giving them a tool to uh
+[7:09] do web search. Uh so if it sounds
+[7:12] familiar because every large language
+[7:15] model provider chatbot does this
+[7:16] nowadays uh it actually was a research
+[7:19] paper four years ago. So um it came from
+[7:22] this and uh so the the issue is uh
+[7:27] language models lack access to current
+[7:29] information. So they do text based web
+[7:31] browsing as a tool.
+[7:33] Um, they had a textbased interface that
+[7:36] allowed the GPT model at the time, which
+[7:38] I think was uh maybe GPT2, to uh search,
+[7:42] click, uh, scroll and quote. And so, you
+[7:47] know, they could search for a web page,
+[7:48] click on, uh, click on links, scroll,
+[7:51] and then extract quotes from them. And,
+[7:54] um, they actually trained it uh, using
+[7:57] reinforcement learning from human
+[7:59] feedback. So not from verifiable rewards
+[8:01] but directly uh from a feedback model.
+[8:04] And I'm not going to cover RLHF a whole
+[8:07] lot in this uh class. Hopefully most of
+[8:09] you have seen it somewhere before. But
+[8:11] the basic idea behind it is they started
+[8:14] out with behavior cloning. So they
+[8:16] created a web interface where humans
+[8:18] could actually like search for things
+[8:21] and uh and click on links and scroll and
+[8:24] gather information and information
+[8:26] gathering tasks. They instrumented it so
+[8:28] they could gather all the data of how
+[8:30] humans were doing it and then train GPT
+[8:31] with the that data. Uh they then did
+[8:35] reward modeling. So they um had uh the
+[8:39] behavior clone model uh you know
+[8:41] generate two outputs and then humans
+[8:44] would pick which one they like the best
+[8:46] and so that would give you preference
+[8:47] data and then based on that they would
+[8:50] train the reward model and then the
+[8:51] reward model would be used to grade uh
+[8:55] like essentially web GPT generations.
+[8:59] So, um, you know, every time you're in
+[9:01] chat GPT and you get the two things side
+[9:03] by side and you press, uh, you know, I
+[9:05] like this one better or I like this one
+[9:07] better, you're basically, uh, doing
+[9:08] number two for them. So, thank you for
+[9:10] your service.
+[9:13] Um,
+[9:14] so
+[9:16] here here were the results. Uh and one
+[9:20] interesting thing that they showed was
+[9:22] they compared the small models with each
+[9:26] other and then they also compared uh
+[9:28] small models with medium models with
+[9:30] with big models and then they also
+[9:32] compared uh models without search and
+[9:34] with search. But they finally compared
+[9:37] with uh like human demonstrations uh
+[9:40] that they got from their annotators and
+[9:42] the best answer on Reddit. So here their
+[9:45] baseline was a random Redditor who got
+[9:47] upvoted. So which in 2021 was pretty
+[9:52] impressive that they could uh they could
+[9:54] beat the random Redditor that got
+[9:55] upvoted. But they uh evaluated it I
+[9:58] think manually evaluated it based on
+[10:00] overall usefulness uh coherence and
+[10:02] factual accuracy and demonstrated that
+[10:04] their uh 175B model so maybe this was
+[10:07] GPD3 actually sorry GPD3 um it was able
+[10:11] to do better than these
+[10:14] Um, another important thing of using a
+[10:17] tool for this is that you can get
+[10:18] citations. So you can look up uh um you
+[10:23] can look up uh outputs
+[10:26] and uh provide links so people can look
+[10:29] and of course you know you see this all
+[10:30] the time in your uh interfaces nowadays.
+[10:34] Um so any any questions about this? I
+[10:38] have one question which is um
+[10:41] does this sound like retrieval augmented
+[10:43] generation to anybody?
+[10:46] Like have have you built a rag system or
+[10:49] done something like this? Does it seem
+[10:50] like that? Yeah. Uh so like yes people
+[10:54] were nodding. Um any any idea what makes
+[10:58] this a little bit different than many
+[11:00] rag systems?
+[11:03] >> Yes.
+[11:08] Uh the index is not static. Um yeah,
+[11:12] good good point. The web is constantly
+[11:13] evolving. Uh that's not what I was
+[11:15] thinking about, but it's it's pretty
+[11:16] close. Yeah.
+[11:19] >> Yeah, exactly. Retrieval is a tool call.
+[11:21] So typically when you build a rag
+[11:23] system, the most typical way to do it is
+[11:24] to take in the query, do a lookup, get
+[11:26] all the relevant documents, and
+[11:27] generate. But here they gave the LM the
+[11:30] ability to do tools. So So that was kind
+[11:32] of the innovation in this
+[11:35] Um
+[11:37] so mo moving a little bit ahead in time
+[11:40] uh we have tool formers. So this was
+[11:41] like the the paper that really uh kicked
+[11:44] off the interest in tools and I think
+[11:47] the reason why was um because for a
+[11:51] couple reasons. Number one, previous
+[11:53] approaches required manual annotation
+[11:55] like behavior cloning. Um the second uh
+[11:58] reason was that this was actually done
+[12:00] on like a decently sized model that
+[12:03] other people would be able to train
+[12:05] GPTJ.
+[12:07] And so uh the idea was that they want to
+[12:10] generate um uh they wanted to teach the
+[12:13] model to learn when how to use tools. Um
+[12:17] and the way they did this was through
+[12:20] self-supervised learning from unlabelled
+[12:22] text. And I think this is a really
+[12:24] clever method. I I like it a lot. Um,
+[12:28] and part of the reason why it's clever
+[12:30] is that it worked really well with the
+[12:31] weaker models that we had then. So, it
+[12:34] would certainly work with the smaller
+[12:35] models that we have now. Um, now you
+[12:37] might be able to do something that's a
+[12:39] little bit less uh, you know, complex
+[12:41] than this and still get good results.
+[12:43] But, uh, let's take a look at what they
+[12:44] did first. So, the basic way it works is
+[12:48] they would have a language model data
+[12:50] set. Um, surprisingly this is not a CMU
+[12:53] paper, but their example is still about
+[12:55] Pittsburgh. Uh, it's actually from Meta
+[12:58] in in uh in London, but uh you know uh
+[13:01] thank you thank you for that. And then
+[13:04] um so they have the LM data set and the
+[13:06] query was like Pittsburgh is known as uh
+[13:09] they they turned it into like what uh
+[13:12] what other name is Pittsburgh known by?
+[13:14] Uh and things like this. They sampled
+[13:18] API calls. In this case, this was an API
+[13:21] call to an external question answering
+[13:23] system. And then uh they would execute
+[13:27] the API calls and they would check if
+[13:30] the API call um generated an output
+[13:35] where uh conditioning on this output
+[13:39] from the API call increased the
+[13:41] probability of the correct answer being
+[13:45] output compared to if you had no uh no
+[13:48] API call. So, um
+[13:52] the uh the way they added this is they
+[13:55] basically had um Pittsburgh is known as
+[13:59] they had an open bracket where the open
+[14:02] bracket and the tool name was an
+[14:05] indicator that they should be starting a
+[14:06] tool call. They would add like what
+[14:10] other names is Pittsburgh known by. Um
+[14:13] and then they would generate the uh the
+[14:17] arrow
+[14:19] and after they generated the arrow it
+[14:21] would actually make the tool call return
+[14:24] the tool call answer um close the
+[14:27] bracket and close uh sorry close the
+[14:29] parenthesis and close the bracket and
+[14:32] you would append this to the context and
+[14:35] then calculate the probability of the
+[14:37] steel city after um after appending this
+[14:41] and uh after not appending this and make
+[14:44] sure that the probability after you
+[14:46] appended it is higher. So that would
+[14:48] mean that the tool call was useful. Um
+[14:50] yeah,
+[14:55] this is an existing question answering
+[14:57] tool and the reason why they did this
+[14:58] was back then GPGA could not answer
+[15:00] questions very well. Um so this would be
+[15:02] like a kind of out of the box QA system.
+[15:05] Um I can actually talk a little bit more
+[15:07] about like which tools you should be
+[15:08] using uh now but yeah
+[15:15] >> the question
+[15:17] oh what was the question
+[15:20] other
+[15:23] >> oh yeah so we we have some other tools
+[15:25] in this paper and then I'm going to talk
+[15:26] a little bit more about tools in general
+[15:28] yeah
+[15:29] >> it can be wrong even if the probability
+[15:34] >> even if the prob probability improves
+[15:35] doesn't necessarily mean that the answer
+[15:37] is correct. Uh but their their only
+[15:39] criterion for choosing tools is whether
+[15:41] the output was useful. Um the output of
+[15:44] the tool call was useful.
+[15:48] Cool.
+[15:48] >> Wow.
+[15:49] >> Any others? Yeah,
+[15:52] that's great. I'm glad you like it. Um
+[15:54] it's not my not my paper, but I'll
+[15:56] convey it to the paper author if you if
+[15:58] you'd like. Um so uh basically the um
+[16:03] they learned tool use without human
+[16:05] supervision uh through a process of self
+[16:07] annotation uh generating potential tool
+[16:09] calls automatically filtering and
+[16:11] keeping only the ones that improve
+[16:13] prediction and fine-tuning on the
+[16:14] successful ones. So this is kind of like
+[16:16] um quasi RL it's just like filtered uh
+[16:21] filtered behavior coding basically. Um,
+[16:23] one other thing I forgot to mention is
+[16:25] they had a prompt uh that just said
+[16:27] these are all of the tools that you have
+[16:29] access to and train the model uh started
+[16:32] the model using that prompt. Now
+[16:35] language models would probably just
+[16:36] follow that prompt. Uh back when they
+[16:39] started this uh language models would
+[16:41] not necessarily follow this prompt. So
+[16:43] they really need this process of like
+[16:44] bootstrapping and gradual improvement to
+[16:46] make this work.
+[16:48] Um and they demonstrated that uh they
+[16:51] got better and better as the model uh
+[16:54] model parameters increased all the way
+[16:56] up to a uh 6.5 billion which was a large
+[17:01] model for them training uh two years ago
+[17:05] and um interestingly the improvement
+[17:08] from using tools actually increased as
+[17:11] uh the model size got better got larger
+[17:14] and I think the reason why is just
+[17:16] because the models were was too poor at
+[17:18] generating good tool calls when they
+[17:20] were smaller. Uh that you needed a
+[17:22] certain level of accuracy before um
+[17:24] before it got better. But actually like
+[17:27] probably if you got bigger bigger and
+[17:28] bigger, you know, the benefit of having
+[17:30] a tool would decrease because the base
+[17:31] model was able to do things well. So I
+[17:33] don't think this would continue forever.
+[17:37] Um so one one limitation of this is they
+[17:40] really only added four tools. Um I I
+[17:43] thought I added the four tools on the
+[17:44] slides but um maybe uh condensed them
+[17:47] for uh for space. But um this was things
+[17:51] like um actually maybe I can just open
+[17:54] the paper uh to make sure I get all
+[17:56] these right.
+[18:06] Yeah, it was these ones. A question
+[18:07] answering tool, a calculator tool, a
+[18:10] machine translation tool, and a wiki
+[18:12] search tool were the the tools that
+[18:14] they're used to.
+[18:20] Cool.
+[18:23] >> One question.
+[18:23] >> Yes. So like did they change the model
+[18:26] to include the like within the braces
+[18:29] curly braces did they change the model
+[18:31] to
+[18:34] modify the prompt to use the tool or
+[18:35] like was it done manually through?
+[18:38] >> It was done through prompting. So they
+[18:40] got like examples of each of the tools
+[18:42] in the prompt originally. Um but that's
+[18:44] like not enough to get it to learn how
+[18:46] to like when and how to use tools. Well
+[18:48] uh so you need the like kind of RL style
+[18:51] training after that.
+[18:54] Cool. Um,
+[18:56] question
+[18:58] >> software perspective. Is there a way to
+[18:59] quantify the increase in computational
+[19:02] ability per token to the user?
+[19:06] >> Um, the increase in computational
+[19:09] ability per token. Um, I mean you can
+[19:12] quantify the
+[19:16] improvement in modeling the next token
+[19:18] through perplexity or something like
+[19:20] this. But yeah, I guess the the question
+[19:23] would be like how do you define
+[19:24] computational ability if not for
+[19:26] something like perplexity?
+[19:28] Um yeah, good good question though. Um
+[19:32] so now fast forwarding into maybe 2024
+[19:36] or at least the present uh what we do
+[19:39] for the present. Um
+[19:43] around 2024, OpenAI uh released their uh
+[19:48] function calling uh standard where their
+[19:51] function calling standard basically you
+[19:54] can
+[19:55] specify tools um in a format like this.
+[20:00] And so each tool
+[20:03] is uh essentially like get weather. Um
+[20:06] and then it will have like a name like
+[20:09] get weather, a description like get the
+[20:11] current weather for a location and then
+[20:13] you have parameters like type object uh
+[20:16] you know then or sorry this is the
+[20:20] parameters and then each parameter is
+[20:22] something like you have a string uh that
+[20:24] is location string which is a city name
+[20:28] and then unit which is a string Celsius
+[20:31] and Fahrenheit and then location is
+[20:33] required. So this basically like looks
+[20:35] like you know a Python definition with a
+[20:38] dock string or something like that
+[20:39] right? Um they chose a JSON schema uh is
+[20:44] the way to like express this because
+[20:47] JSON schema was a thing around. I would
+[20:49] have preferred Python but because I find
+[20:52] it a lot easier to read than JSON schema
+[20:54] but this is what they decided. So um
+[20:56] that's what we're uh what we use. And
+[20:59] then um the function skull uh calling
+[21:02] response is that the when an LM makes a
+[21:06] function call um it will generate a like
+[21:12] a call like this and then um it will
+[21:15] generate a response that matches the
+[21:16] profile of the response.
+[21:22] uh sorry the LM the LM will generate a
+[21:26] structured function call that matches
+[21:27] the profile of the function and it it
+[21:30] will look a bit like this. Um
+[21:33] the content might be null. So this is
+[21:35] typically like the output of the text
+[21:38] that the language model generates but
+[21:40] the function call is not null and so
+[21:42] what that means is you should like your
+[21:44] system should take the function call and
+[21:46] execute it essentially.
+[21:49] Um and the good thing about this is uh
+[21:52] you can do like type safety, you can do
+[21:54] validation, consistent parsing. Another
+[21:57] advantage is all of the language models
+[21:58] have been trained on tons and tons of
+[22:00] function calling data. So basically like
+[22:03] if you specify it in this format, the LM
+[22:07] sure it will make mistakes some of the
+[22:09] time, but it's been trained so heavily
+[22:10] and some of the API providers are
+[22:13] certainly like enforcing this function
+[22:14] calling format behind the scenes too.
+[22:16] >> Um yeah.
+[22:22] will be text. So like what
+[22:24] >> right your system is responsible for
+[22:27] hand handling the function call. So the
+[22:29] lm will just return this function call
+[22:31] and then after that it's your
+[22:33] responsibility to actually execute the
+[22:34] code corresponding to this.
+[22:36] >> Why am I using the call in the first I
+[22:39] can directly use the instead of asking
+[22:42] the LM to just return the
+[22:45] function I can to call on myself right
+[22:49] >> well but the input to the LM is like um
+[22:51] what is the weather in Pittsburgh today
+[22:54] and the output of the LM or what is the
+[22:56] weather in Boston and Celsius today.
+[23:00] all the functions with this parameters.
+[23:02] >> Correct. Yeah.
+[23:03] >> It just passes the question and gives it
+[23:07] as like the input.
+[23:08] >> Correct. But taking in natural language
+[23:11] and turning it into a function call is
+[23:12] not an easy thing to do. Let me let me
+[23:14] put it that way. Yeah.
+[23:16] >> So the language is only responsible for
+[23:18] converting it from natural language to
+[23:20] >> uh correct. Yeah. Yeah. Yeah. Um for for
+[23:24] like modern LM systems, do they always
+[23:26] output like a giant JSON object include
+[23:29] all the free form content inside of this
+[23:31] JSON object or
+[23:33] >> um basically uh so the the question was
+[23:36] like do they always uh output this JSON
+[23:39] object and contain all the text as free
+[23:41] form fields? Basically yes. Um, it
+[23:44] sounds kind of crazy uh in in some cases
+[23:47] like it's especially crazy when it's
+[23:49] code. Um, because
+[23:53] JSON you need to escape quotes, right?
+[23:56] So, if your code has a doc string, it's
+[23:59] like you're escaping
+[24:02] each thing of the doc each quote in the
+[24:04] dock string. So, you have a ton of
+[24:05] backslashes and stuff. And that's
+[24:07] actually why coding agents didn't work
+[24:09] very well originally because they
+[24:11] couldn't like make these function calls
+[24:13] with all these backslashes. They'd like
+[24:14] miss a backslash somewhere or they'd
+[24:16] miss a tab somewhere and like uh things
+[24:19] would break. Now all of them are trained
+[24:20] on so much data that it just works. But
+[24:24] uh but yeah,
+[24:28] there might be better ways to do this
+[24:29] though. You know, you could uh you could
+[24:30] think about that. Um, another another
+[24:34] thing that just I should mention that
+[24:35] it's a thing is parallel function
+[24:38] calling. And so you might think that you
+[24:40] would make one uh one call and get one
+[24:44] response to a function call, but you can
+[24:45] actually execute multiple um things
+[24:48] simultaneously. So the the response is
+[24:51] like tool calls and then you could get
+[24:53] like these multiple tool calls. So you
+[24:55] could actually like look up the weather
+[24:57] in like both Boston and New York in a
+[25:00] single tool call or in a single
+[25:04] conversation turn with multiple tools.
+[25:09] So one um one thing that I should
+[25:12] mention uh and probably a lot of people
+[25:15] have heard about this is um the model
+[25:17] context protocol and the model context
+[25:20] protocol is a standard protocol for
+[25:22] connecting AI applications to external
+[25:24] systems and
+[25:27] it's basically the easy way to think
+[25:29] about it is it's like APIs for agents or
+[25:33] APIs for language models to use and the
+[25:37] way it works is um number one you have a
+[25:40] standardized format and it adopts a
+[25:43] client server protocol where each server
+[25:46] has a set of tools that it provides to
+[25:48] the agent. So like you know if you have
+[25:51] a file system server the file system
+[25:53] server might have like list files list
+[25:56] files read file and edit files. So it
+[25:58] could have like multiple tools
+[26:00] associated with it. Um, and then you
+[26:04] have like the MCP host, which is your AI
+[26:06] application, like your language model,
+[26:08] uh, you know, your language model
+[26:10] client, and then it connects to all of
+[26:13] these MCP servers. Um,
+[26:18] you may wonder why this is why they
+[26:20] needed to reinvent APIs uh to give
+[26:24] access to agents. Um I I think the
+[26:27] reason was uh
+[26:30] mostly
+[26:33] mostly onefold which is like a lot of um
+[26:37] APIs
+[26:39] require an API key. Um and if you
+[26:43] require an API key like you would have
+[26:46] to give the agent access to the API key
+[26:49] um in order for it to use the API. What
+[26:52] they do with the MCP server is they hide
+[26:54] the API key behind the MCP server and
+[26:56] then give the agent access to the MCP
+[26:58] server. So it's like a special way of
+[27:00] authenticating to the tools. Um so
+[27:02] that's kind of like the the reason why
+[27:05] it was originally developed by like
+[27:07] anthropic uh because they had cloud and
+[27:11] they wanted it to be secure and they
+[27:12] didn't want to expose API keys to the
+[27:13] agents. Um, so they wanted this like
+[27:17] middle essentially middleware between
+[27:18] the agent and like external APIs or
+[27:20] something else like that. But
+[27:23] what happened was everybody wanted APIs
+[27:27] for agents so much that they were just
+[27:28] like, "Okay, Anthropic made APIs for
+[27:30] agents. Let's use that." And so now MCP
+[27:33] is everywhere and there's no escaping
+[27:34] it. So now you need to bring up a node
+[27:37] server for every service you want to uh
+[27:39] communicate with. And it's all web's
+[27:40] fault basically. Um but uh yeah, so this
+[27:45] is what um this is what MCP is. And uh
+[27:48] in the second assignment, we're probably
+[27:50] going to ask you to connect to an MCP
+[27:52] server uh in your influence engine.
+[27:55] >> Cool. Yeah.
+[27:56] >> But in in practice, is an MCP
+[27:59] essentially just a tool where there is a
+[28:01] prompt section detailing about the tool,
+[28:03] how to use it, and all?
+[28:05] >> Yep. The the the easiest way to think
+[28:06] about it is it's a server. Um it's a
+[28:10] server that has two jobs. Um the first
+[28:13] job is to
+[28:16] like when queried like what tools do you
+[28:19] have to return this. So it will return
+[28:21] the set of tools that the agent that the
+[28:23] MCP server provides to the agent and
+[28:25] then when you call the tool
+[28:28] um when you call the tool with this
+[28:31] payload it will actually return the
+[28:33] response. So the MCP server will like
+[28:36] handle the um the function call for you.
+[28:39] >> But how does the model know what the MCP
+[28:42] tool is? It's just loaded into the
+[28:44] >> So every MCP server has an endpoint that
+[28:47] returns the the specification of all the
+[28:49] tools it provides.
+[28:51] >> Oh, I see.
+[28:53] >> So that that is useful, right? But like
+[28:56] an open API server would do that as
+[28:58] well. It's not like specific to MCP.
+[29:03] Um, cool.
+[29:05] So, um, with respect to MCP, I I think
+[29:09] right now there's at least 17,000 uh
+[29:12] different MCP servers. Um, as I said,
+[29:15] this was like very very became very very
+[29:17] popular uh very very quickly. I think it
+[29:20] started like February or something like
+[29:22] that and it's already very much an
+[29:24] industry standard. Um very recently the
+[29:28] MCP organization which includes people
+[29:30] in anthropic and uh and other places um
+[29:34] created a centralized MCP registry
+[29:36] that's supposed to be like the main MCP
+[29:38] registry um and it has a whole bunch of
+[29:40] things but like this will a whole bunch
+[29:43] of MCPs but it provides MCPs for things
+[29:46] like empowering AI agents to access uh
+[29:49] real-time web data or crawl websites or
+[29:51] generate speech or um mod generate
+[29:56] modern UI components, uh, browse the
+[29:58] web, things like that. So, it gives you
+[30:00] a lot of, uh, a lot of things.
+[30:02] >> These are basically functional API
+[30:05] >> wrapped inside an MCP server. Yeah,
+[30:07] that's the best way to think about it.
+[30:08] >> You're empowered to generate a new web
+[30:10] component. What does that mean?
+[30:12] >> Um, so, so this is basically a more
+[30:16] structured way of generating like
+[30:18] JavaScript web components
+[30:21] like th this is just one example of MTV.
+[30:24] It's not really that important.
+[30:26] >> Yeah, you can you can look it up if
+[30:27] you're uh if you're interested.
+[30:29] >> Yeah.
+[30:30] >> Seems like a very business.
+[30:31] >> Yeah. Yeah. Well, so this is a very um
+[30:35] this is a very like industry centric
+[30:39] thing, but it it is also the industry
+[30:41] standard for how agents interact with
+[30:42] tools. So it's important to know.
+[30:46] >> Yeah.
+[30:51] So A to A, you're talking about A to A.
+[30:55] Um I'll I'll maybe talk about that a
+[30:56] little bit next time. Actually, I should
+[30:58] take a note to talk about that next
+[30:59] time, but um basically A to A is for
+[31:01] agents to talk to agents and MCP is for
+[31:04] agents to talk to tools. You could have
+[31:06] an agent behind the tool, but most of
+[31:08] the time you don't. Most of the time the
+[31:10] the tool is like something more
+[31:12] deterministic.
+[31:13] And also it won't like talk back with
+[31:15] you. it won't convert. It's not a
+[31:17] two-way conversation. It's basically a
+[31:19] do this and I did this. Yeah. Um,
+[31:24] also if you want to build an MCP server,
+[31:27] it's uh very easy. Uh, this is an MCP
+[31:30] server. Uh, and has anybody used fast
+[31:33] API before? It's a easy way to make a
+[31:36] API server. Replace fast API with fast
+[31:39] MCP and you can get an MCP server. So,
+[31:42] uh, I've used this a little bit recently
+[31:44] and it's very nice. you just put a
+[31:46] decorator on your Python functions.
+[31:51] Um, okay. So, now I've been talking
+[31:55] about tool calls. Um, separately from
+[31:59] individual tool calls which are more
+[32:00] like Python functions, individual Python
+[32:03] functions, there's also programmated
+[32:05] language models, uh, which is a paper
+[32:07] that we did at CMU, uh, but now is has
+[32:09] become pretty standard where you
+[32:11] actually write Python code, uh, with a a
+[32:14] language model and then execute that
+[32:16] Python code and get the answers.
+[32:18] Um and so
+[32:20] uh basically chain of thought helps in
+[32:24] things like numerical reasoning but you
+[32:26] still make errors. Uh natural language
+[32:29] arithmetic is errorprone. Um so instead
+[32:33] we can use code execution as a
+[32:34] calculator tool. And the way we did this
+[32:36] in program aided language models is we
+[32:39] um we let it generate blocks of Python
+[32:42] and we gave it an example chain of
+[32:43] thought where we interspersed Python
+[32:45] with the chain of thought um and just
+[32:48] gave a few few shot examples and then
+[32:50] when it generated this we would then
+[32:52] execute the Python code and get the
+[32:54] output and this is now used in most
+[32:58] chatbots including uh chat GPT it's um
+[33:02] uh it's called like the code interpreter
+[33:04] in uh in OpenAI and code execution in
+[33:07] Gemini or like other stuff like that.
+[33:10] Um but basically what we showed is uh
+[33:13] that we have a um on mathematical
+[33:17] reasoning data sets
+[33:19] with a simple uh like direct way of
+[33:22] solving it. Back then linguish models
+[33:24] got like 19.7 on GSM8K but if you added
+[33:28] chain of thought you would get 65.6 six,
+[33:30] but if you let it execute it with a
+[33:32] program, it would get a much higher
+[33:33] higher score on all of these math data
+[33:35] sets.
+[33:38] Um,
+[33:41] so when you're running arbitrary Python
+[33:43] code, uh, one thing that you don't want
+[33:46] your program to do is uh, rmrf your home
+[33:49] directory.
+[33:51] And, uh, it probably won't do it if
+[33:53] you're asking it to solve math problems.
+[33:55] But if you're asking it to write code or
+[33:57] something like that, uh it might say,
+[33:59] "Oh, I made a mistake. I should delete
+[34:01] delete my work and start again." And it
+[34:03] will delete uh your work. Um so uh one
+[34:07] important thing is sandbox code
+[34:09] execution. Um so
+[34:13] uh it can do things like you know
+[34:16] unintentional harmful commands. Um it
+[34:18] could also like install a compromised
+[34:19] library and install malware on your
+[34:21] computer. Um,
+[34:24] you know, if it browses the web, it
+[34:25] might download stuff from the web that
+[34:27] says, uh, please upload uh your your
+[34:30] information to this URL for more uh for
+[34:33] more help. And it will upload all of
+[34:35] your information to a a fishing site.
+[34:38] Um, and so there's different uh
+[34:42] sandboxing approaches that you can use.
+[34:45] Um, in your assignment two, I think
+[34:48] we're going to uh ask you to do number
+[34:51] one. And basically what this is is this
+[34:54] is a local uh basically wrapper around
+[34:59] the Python interpreter that tries to
+[35:01] strip out the uh like quote unquote
+[35:04] dangerous commands before it runs them.
+[35:07] And um I'll talk a little bit about
+[35:10] this. This can sandbox you importing
+[35:12] certain code a dangerous function uh
+[35:16] dangerous functions and other stuff like
+[35:18] this but it still runs in the same
+[35:20] process as the rest of your code. It can
+[35:22] access memory. Um also it's near
+[35:25] impossible to like get rid of all
+[35:28] dangerous codes. So if there's some like
+[35:30] code engulfed like malware uh you know
+[35:33] somewhere online it's going to be really
+[35:35] hard to prevent like all security
+[35:37] things. Another thing is um
+[35:39] containerbased isolation. So this is
+[35:41] like running things in docker. Um this
+[35:44] gives you complete uh OS level isolation
+[35:47] and network restrictions. Um so but it
+[35:52] can consume resources. It's also a lot
+[35:55] harder to set up and run and it takes
+[35:58] time to get stuff started. So you know
+[36:00] running stuff in Docker is just a bit of
+[36:02] a pain. Um so uh so that's an issue. Um
+[36:07] then there's also things like running
+[36:09] within web assembly. So if you're
+[36:11] running an agent like on uh in a web uh
+[36:15] you can you can do that as well on a in
+[36:17] a web browser you can do that as well.
+[36:19] Um that being said if you want to do
+[36:21] this seriously I do recommend these uh
+[36:24] options. So like if you actually want to
+[36:25] build like an agent that's doing coding
+[36:29] uh tasks or things like this um
+[36:32] definitely uh consider these. There's a
+[36:34] lot of services that support this. Um
+[36:36] like E2B is a good open source one uh
+[36:38] where you can basically spin up
+[36:40] sandboxes on your computer um or or
+[36:42] their cloud. Um and then there's also
+[36:44] other ones like Daytona.
+[36:47] Um so just to give an example of what
+[36:49] like sandboxing looks like if you're
+[36:51] doing an abbased method um you can do
+[36:54] things like uh say okay these modules
+[36:58] are okay modules to use
+[37:01] um and then you can block other modules.
+[37:03] So you can block things like OS,
+[37:04] subprocess, socket and CIS and not allow
+[37:07] them to be used. Um and you can uh you
+[37:11] know also look for like double underbars
+[37:14] uh that allow you to access particular
+[37:17] types of methods like uh you know the
+[37:20] built-in methods in Python.
+[37:23] Um so this is uh the implementation
+[37:25] within the hugging face small agents uh
+[37:29] repository for instance.
+[37:32] So you can um use tools within programs
+[37:38] and uh so I I talked about parallel tool
+[37:41] calling. So you could like do parallel
+[37:43] tool calls normally but that doesn't
+[37:46] give you things like control flow or you
+[37:48] know composition of tool calls in
+[37:50] interesting ways or things. And so um
+[37:54] you can when performing more complex
+[37:57] tasks sometimes it's better to
+[37:59] incorporate tools by just like providing
+[38:00] the agent with the ability to run Python
+[38:02] and say these are the tools that you're
+[38:04] allowed to use. Um and then you can use
+[38:06] things like pandas mapplot lab um or
+[38:10] even task specific expert crafted tools.
+[38:14] Um so the most famous work on uh doing
+[38:18] this is uh gorilla and basically um it
+[38:23] creates data sets uh with thousands of
+[38:25] APIs with different interfaces and tries
+[38:27] to get the uh model to be able to call
+[38:30] them. Um
+[38:33] sorry I'm going to go a little bit
+[38:34] quickly because we have lots of student
+[38:36] presentations and I want to make sure we
+[38:37] get to them. But um uh so the the way it
+[38:40] works is they curated a data set um
+[38:44] where they downloaded a whole bunch of
+[38:45] API calls. I think people didn't notice
+[38:47] this but in the original uh like gorilla
+[38:51] paper they're all like torch uh torch
+[38:54] and tensorflow and hugging face. So
+[38:56] they're all like uh machine learning
+[38:58] related stuff but they create a uh a
+[39:02] corpus where basically they uh do
+[39:05] self-instruct and they generate
+[39:06] synthetic data um given uh like APIs
+[39:11] where it says come up with an
+[39:12] instruction that would require you to
+[39:14] use this API to solve it. And so um they
+[39:17] create training data for this and then
+[39:18] they train their gorilla model and um
+[39:22] then you can uh retrieve uh the
+[39:25] potential APIs from the API database and
+[39:29] uh generate generate the output.
+[39:34] So um there's a number of things going
+[39:36] on here. The first thing is like this is
+[39:38] a good way to create training data if
+[39:40] you want to create training data but
+[39:41] also at during inference time you need
+[39:44] to do retrieval of the APIs that you
+[39:46] have access to um and then uh provide
+[39:50] them as function calls as potential
+[39:53] functions that you could call um and
+[39:55] then uh have the model actually call the
+[39:58] functions. Yeah,
+[39:59] >> you basically retrieve API const
+[40:03] >> um you can retrieve potential APIs by
+[40:07] training a retriever essentially. Um so
+[40:10] you uh like in this self- instruct
+[40:14] instant like in these um instruction API
+[40:17] pairs you know the gold standard API
+[40:19] because you generated the instruction
+[40:21] from the API. So you can train a
+[40:23] retriever that tries to retrieve the
+[40:26] gold standard API out of all the other
+[40:28] APIs. And um like training retrievers is
+[40:31] kind of like out of the scope of the
+[40:32] class, but basically you you try to do
+[40:34] embedding matching between the like
+[40:36] encoded instruction encoded API ducks.
+[40:39] >> Yes.
+[40:41] >> Um so
+[40:44] I guess it works. Um and then the uh the
+[40:50] other thing uh to note here is um for
+[40:53] tool use the data set that came out of
+[40:56] Guerilla became kind of like the
+[40:57] standard benchmark for benchmarking tool
+[41:00] use uh in language models and I think
+[41:03] people look at it maybe a little bit
+[41:05] less nowadays but still use it but it's
+[41:07] called the Berkeley function calling
+[41:08] leaderboard and you can go and search
+[41:11] for this and look at like which language
+[41:13] models are the best ones for um like
+[41:16] calling APIs appropriately um based on
+[41:20] API descriptions
+[41:24] and one important thing here is this is
+[41:25] not a fixed set of APIs like tool former
+[41:28] this is like you provide the APIs that
+[41:30] the agent has access to and then you
+[41:32] check whether um it's able to predict
+[41:34] based on the uh like APIs that are
+[41:36] provided in context.
+[41:41] So um recently of course uh 2020 fast
+[41:45] forward to 2025 and uh re reasoning and
+[41:49] reinforcement learning is popular. So of
+[41:52] course we have reinforcement learning
+[41:53] for tool use and um the motivation is
+[41:57] that uh SFT struggles with complex tool
+[42:00] use and they basically do a
+[42:02] comprehensive study on reward design for
+[42:05] um uh doing reasoning models that have
+[42:08] the ability to use tools and they follow
+[42:11] the deepseek R1 paper in providing both
+[42:13] format rewards and uh correctness
+[42:16] rewards. So the format reward is like
+[42:18] the tool the tool call is in the correct
+[42:21] format. Sure, that's easy to check,
+[42:23] right? We just validated against the
+[42:25] JSON schema and and we're done. Um the
+[42:28] correctness reward here is kind of
+[42:29] interesting because it allows them to
+[42:31] gradually push towards a completely
+[42:34] correct tool call and give partial
+[42:35] credit. So basically um they checked if
+[42:39] the uh
+[42:41] the tool names in the generated output
+[42:44] overlap with the tool names in the gold
+[42:46] standard uh tools. Um and so then also
+[42:50] if you're generating too many tool calls
+[42:53] you get penalized for that. Um and then
+[42:55] they also measure the overlap for each
+[42:58] of the tool calls um among the parameter
+[43:02] names and the parameter content. So um
+[43:06] you know like this uh gradually and like
+[43:09] if in order to get the completely
+[43:11] correct tool call you need to get all of
+[43:12] these at 100%.
+[43:16] And uh the the range is between minus3
+[43:19] if you get like all of these uh if you
+[43:22] get all of them wrong in in plus4.
+[43:24] >> So what's G&P again?
+[43:26] >> Uh this is gold standard and predicted I
+[43:29] think. Yeah.
+[43:31] Um and basically uh they have some
+[43:34] interesting results here. I'm just going
+[43:35] to very quickly say the main one and the
+[43:37] main one is they actually found better
+[43:39] results with cold start uh reasoning
+[43:42] than they did with SFTbased reasoning.
+[43:45] So um they did a little bit of
+[43:47] supervised fine-tuning and then they did
+[43:49] uh re just training the reasoning model
+[43:51] from scratch and they actually got the
+[43:53] best results from training from scratch.
+[43:55] Um I haven't looked super deeply into
+[43:56] the paper to see if they have a like
+[43:59] better uh you know explanation of why
+[44:02] that is but it's also a trend that we
+[44:04] see in deepcar one and other stuff like
+[44:05] that as well.
+[44:08] >> Warm start exactly stand
+[44:10] >> it means no SFT beforehand. Yeah.
+[44:14] >> Um so like if you had SFT you can call
+[44:16] it a warm start because you've kind of
+[44:17] warmed up the model to be good at it
+[44:19] before you you start doing RL.
+[44:23] And so we talked about reasoning for
+[44:25] tool use. And so of course we have tool
+[44:27] use for reasoning as well.
+[44:29] So this is the the opposite one. And so
+[44:32] basically it's leveraging uh external
+[44:34] tools within uh LM reasoning. Um they do
+[44:37] RL directly from base models um and add
+[44:40] code interpreters within the RL training
+[44:42] loop. And uh they demonstrate that if
+[44:45] they uh if they do this they get much
+[44:47] higher results uh much better results
+[44:50] and the model is able to learn to like
+[44:52] maintain those results even after you
+[44:54] train a reseting model.
+[45:02] Yeah, you have some contrast here but
+[45:03] maybe I'll skip it in the um uh in the
+[45:07] interest of time. And then a final thing
+[45:10] uh that we need to think about in
+[45:12] addition to safety and sandboxing and
+[45:13] stuff is robustness. Um this is a
+[45:16] problem from the point of view of
+[45:17] benchmarking and a problem from the
+[45:19] point of view of language models being
+[45:21] able to use tools effectively. And uh
+[45:24] the issue is uh APIs go out of date or
+[45:28] um you might run
+[45:31] a file editing tool and the file editing
+[45:35] tool will fail because you have the
+[45:37] parameters a little bit wrong and
+[45:39] language models need to be good at being
+[45:41] able to deal with this. Um and so this
+[45:45] is a paper that uh we did on
+[45:47] benchmarking failures in tool augmented
+[45:50] language models. And what we did is we
+[45:52] essentially like broke some of the APIs
+[45:54] uh to make make it so that they didn't
+[45:56] work. And often they and we measured a
+[46:00] few things.
+[46:02] Um the first thing that we measured is
+[46:06] um that we
+[46:10] uh measured the awareness of models um
+[46:14] to uh like we measured the awareness of
+[46:19] models
+[46:21] that the tool was broken. So we tried to
+[46:23] check whether the model said oh this
+[46:25] tool is broken I I won't be able to use
+[46:27] it. Um, and that's kind of important um,
+[46:31] because like the agent uh, if the agent
+[46:35] sees a tool is broken, it should be able
+[46:37] to try to come up with something else
+[46:38] instead of just like calling the tool
+[46:40] over and over and over again. They
+[46:42] actually surprisingly low few models
+[46:44] were able to tell that like the the
+[46:46] results were wrong or uh, that you know
+[46:48] wasn't returning something. And then um
+[46:52] we also tested the case where some of
+[46:55] the tools were replaceable across
+[46:57] different uh like tasks. So for example
+[47:01] um for uh
+[47:05] me
+[47:07] um or like
+[47:10] uh yeah let's say um let's say language
+[47:13] like this if this was a language related
+[47:15] tool there were like other tools in the
+[47:17] toolbox that could be used and so they
+[47:19] would be able to uh replace it with
+[47:20] another tool and then they would try to
+[47:22] we'd see if they'd be able to use the
+[47:24] other tool. Um but like one thing we
+[47:26] noticed is uh the awareness was not
+[47:29] always equal to task success. So just
+[47:31] because it could recognize that the tool
+[47:33] was broken didn't necessarily mean that
+[47:34] it would be able to you know fix it or
+[47:36] figure it out. So basically this is a at
+[47:39] least when we benchmarked the models
+[47:40] about a year ago this was a major issue.
+[47:45] And then uh one final thing that I will
+[47:47] talk about in the like maybe one uh one
+[47:49] minute that I have before we switch over
+[47:51] to the uh the student presentations is
+[47:54] uh creating tools. So language models
+[47:56] actually are able to create tools. And
+[47:59] the way we did this is um we started out
+[48:02] with primitive functions which are
+[48:03] things like uh basic mathematical
+[48:05] primitives or um you know uh individual
+[48:10] pandas functions and we ran models that
+[48:15] basically um we ran models and we
+[48:19] prompted the model to either um import
+[48:22] existing tools uh create new tools or
+[48:25] don't use any tool at all to try to
+[48:27] solve the problem.
+[48:28] And we ran these three different methods
+[48:32] and we did each of them K times and the
+[48:35] like K equals five. And what that meant
+[48:38] was we essentially were doing 15
+[48:40] different rollouts with different
+[48:41] varieties of tools. And
+[48:45] then we did self-consistency and
+[48:48] based on the self-consistency we decided
+[48:50] which answer was correct. And then we
+[48:53] found if creating a tool resulted in a
+[48:56] higher level of correctness, this is
+[48:58] maybe an example where it would be good
+[49:00] to have a tool that would help us out
+[49:02] with this. And so we added this to our
+[49:03] toolbox. And so we gradually like
+[49:06] increased the size of our toolbox. And
+[49:09] um then if we had tools that weren't
+[49:11] used very often, we prune them out of
+[49:13] our toolbox. And so this is a test time
+[49:15] thing that we can do where we like
+[49:18] continually process test time instances.
+[49:20] we see if it seems like creating a tool
+[49:23] would result in you know more consistent
+[49:25] outputs or better accuracy or something
+[49:27] like that and uh gradually add to the
+[49:29] toolbox.
+[49:31] Um, and basically what we were able to
+[49:34] find was this gave us uh significant
+[49:36] accuracy improvements and it was also
+[49:38] able to um
+[49:41] create uh toolboxes that had uh
+[49:44] relatively small uh sizes but uh
+[49:48] significantly outperformed uh just using
+[49:51] no uh induction at all.
+[49:54] Cool. Um yeah, that's what I have about
+[49:56] tools. Uh are there any uh any questions
+[49:59] here?
+[50:01] Yeah,
+[50:02] >> the MCP thing like how usable is the MCP
+[50:06] server without changing your application
+[50:08] like you still have to change all the
+[50:09] prompts so that the model knows
+[50:12] >> how usable is an MCP server without
+[50:15] changing your uh like core application
+[50:17] code.
+[50:19] I would say that if you have a
+[50:20] sufficiently good
+[50:23] tool calling language model, it should
+[50:26] be okay because the tool calling
+[50:28] language models have been
+[50:30] basically primed to
+[50:33] be able to um like
+[50:38] look at the function descriptions and
+[50:40] the tool description and call uh if it's
+[50:44] appropriate. Um, and just to give an
+[50:46] example, like we're developing like the
+[50:48] open hands uh agent and like if it has
+[50:52] access to a search tool and I ask it to
+[50:54] search for something, it will search for
+[50:56] something. Otherwise, it will try to use
+[50:58] its web browser tool and go to Google
+[51:00] and search. So like it's able to
+[51:03] recognize that if it has a search tool,
+[51:04] it should use that. If it doesn't have a
+[51:06] search tool, it should take some other,
+[51:07] you know, means. Yeah.
+[51:17] Uh,
+[51:20] if there's multiple tools available, how
+[51:22] does it pick the best one?
+[51:25] >> How good is it at picking the best one?
+[51:28] That's a good question. I don't think
+[51:32] they are particularly good at this. Um,
+[51:35] if you give it a policy about what it
+[51:37] should do, then um, like I I think it
+[51:40] will
+[51:42] it will be better but you'll need to
+[51:43] like explicitly instruct it or train it.
+[51:46] Um and if you train it then sure you
+[51:48] know through RL it can decide which one
+[51:50] to use but um and just to give one
+[51:53] example of this uh it's usually a good
+[51:55] idea to prompt the model to use a tool
+[51:58] if you have a relevant tool um because
+[52:01] uh like it's usually better to use a
+[52:03] tool to do like for example calculation
+[52:05] than
+[52:06] uh doing it yourself although recently
+[52:10] it's maybe not as clear because all the
+[52:11] models have been trained super hard to
+[52:13] do like lots of math but
+[52:25] Um, yeah, if you're presenting, it'd be
+[52:27] great to get one person up here. I'll
+[52:29] maybe continue. Um, so, uh, who who's
+[52:32] presenting
+[52:34] cohorts? Um, so
+[52:38] you definitely don't want to provide
+[52:40] lots of duplicate tools because it'll
+[52:42] blow up your context window and you know
+[52:44] confuse the um confuse the model. But
+[52:48] like I think overall uh having the
+[52:51] necessary tools is probably better than
+[52:52] not having them. Yeah,
+[52:54] >> I saw another hand.

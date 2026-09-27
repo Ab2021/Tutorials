@@ -1,0 +1,357 @@
+Title: Opening Note | vLLM Inference Meetup Bengaluru – September 19, 2026
+
+--- TRANSCRIPT ---
+
+[0:02] Okay.
+[0:03] That's nice.
+[0:04] How many of you are running LLM
+[0:06] workloads in production already?
+[0:11] Okay. Nice.
+[0:13] And how many of you
+[0:15] are here to see or understand the
+[0:18] uh internals that happens underneath
+[0:20] inference?
+[0:24] Okay, now I see a lot of hands.
+[0:26] Nice. So, see, I have a request.
+[0:30] Talk to the speakers. We keep it
+[0:32] interactive, right? And talk to each
+[0:34] other,
+[0:35] uh your fellow community members who are
+[0:36] in the meetup. Um and let's make sure,
+[0:40] you know, we all learn together as a
+[0:41] community.
+[0:42] Um there's a good speaker.
+[0:45] Um I'm not telling his name right now,
+[0:47] but yeah, when he's on stage, make use
+[0:50] of his time and you can ask a lot of
+[0:52] questions.
+[0:53] So,
+[0:54] yeah. Am I audible?
+[0:55] >> Yes.
+[0:56] >> Awesome.
+[0:57] And um
+[0:59] yeah, I don't know if you have any other
+[1:00] questions. Just waiting for folks to
+[1:02] settle down and welcome in.
+[1:04] Um
+[1:05] maybe uh
+[1:06] if you have any questions or why are you
+[1:09] here, let's pick one to three people and
+[1:12] share your expectation of what you're
+[1:13] looking in this meetup.
+[1:15] >> You can introduce yourself.
+[1:17] >> Myself? Oh, okay. So, I'm Om Prakash. Uh
+[1:20] I'm ex-Red Hat engineer and now I'm part
+[1:22] of Farmers. It's a startup uh CI/CD
+[1:25] platform similar to how GitHub Actions
+[1:27] are
+[1:28] uh sure uh uh
+[1:29] uh platforms.
+[1:31] So, I mean, I don't want to say much
+[1:33] about me right now, but um
+[1:36] yeah, we'll start with the
+[1:36] self-introduction.
+[1:40] >> Hi.
+[1:41] Uh I'm Devadathan. I'm an AI engineer
+[1:44] working at DevRev AI.
+[1:46] So, you can say we started uh
+[1:48] coaching. It's not startup. It's an
+[1:49] employer only here.
+[1:51] So, I'm here for like looking into like
+[1:53] learning more into the internals of the
+[1:55] LLM.
+[1:56] We have been using LLM for production in
+[1:58] this area.
+[1:59] Uh
+[2:00] A staff
+[2:02] on case 1 K and
+[2:04] I'm looking forward to the L&D.
+[2:07] >> Nice.
+[2:09] Thank you. Yeah.
+[2:11] >> I hope so. Chris this side.
+[2:14] Okay, so I run this startup called
+[2:15] Tensor Works and we are backed by EF and
+[2:19] Nvidia.
+[2:21] I'm here to
+[2:23] We are to talk about We are to talk with
+[2:25] folks who you know work with kernels,
+[2:27] work on inference optimization because
+[2:29] we ourselves do do it and we are working
+[2:32] on the reliability inference reliability
+[2:34] thing
+[2:35] and would love to chat with folks who
+[2:36] are working around kernels and
+[2:39] inference optimization.
+[2:41] >> Yes, that's the spirit.
+[2:44] Thank you. Anyone else?
+[2:46] Anyone at the back?
+[2:56] >> Hi folks.
+[2:58] Good afternoon. So myself Sachin. I work
+[3:00] at Sarvam. So I'm here basically to
+[3:03] understand about the
+[3:05] internals of LLMs and talk with folks
+[3:07] who work on and I work mostly on the
+[3:10] speech LLMs and we use LLMs
+[3:14] in general
+[3:15] for booster models and then inference
+[3:16] optimization. Lot of things we still
+[3:19] learn in this space. So yeah, excited to
+[3:21] be
+[3:22] part of this conversation.
+[3:23] >> Yeah.
+[3:32] >> Hey hi everyone. Myself Sudhir. I'm from
+[3:35] my granny labs. We are building GPUs in
+[3:37] India and
+[3:39] we So I'm in the inference team there
+[3:41] and I'm working on the out of three
+[3:43] plugin of the LLM. So my I'm looking for
+[3:46] folks to discuss how you know there are
+[3:47] some
+[3:48] So we are LLM is highly optimized for
+[3:50] Nvidia Nvidia and we
+[3:52] for out of three plugin the support is
+[3:54] not like that. there. So we are you know
+[3:56] not good at that.
+[3:57] >> Nice.
+[4:03] >> All right. I think
+[4:04] we can start now.
+[4:07] Yeah, I mean see we have folks from
+[4:08] Server
+[4:09] and folks you know who want to discuss.
+[4:12] So make use this opportunity.
+[4:14] Even you know if you are looking for a
+[4:16] career growth why not right? Talk with
+[4:18] them see if there's opening.
+[4:20] In fact show your skill then let's make
+[4:22] use of this opportunity. And over to
+[4:24] Prasad he's going to start with welcome
+[4:26] note and he'll walk you through what all
+[4:29] talks we have, who are the speakers and
+[4:31] why we have you here and next year and
+[4:32] all those things.
+[4:33] And yeah.
+[4:46] >> All right.
+[4:51] So very good afternoon all. My name is
+[4:53] Prasad Mukhedkar. I'm a AI architect
+[4:55] with Myra.
+[4:56] First of all I would like to welcome all
+[4:58] of you. Thank you for joining in person
+[5:00] and virtually. We have a lot of people
+[5:02] who are joining us on virtual.
+[5:04] So we started I mean these meetups we
+[5:07] started with a very simple idea. We
+[5:09] wanted to bring the people who are
+[5:11] passionate about this one. We just talk
+[5:13] about this one.
+[5:14] Throughout this agenda you will not hear
+[5:16] anything about the training, fine
+[5:19] tuning, any reinforcement learning
+[5:21] our focus is very sharp on that because
+[5:24] and that's where we started this
+[5:25] community to bring the people together
+[5:29] so that we can learn
+[5:31] or share and build.
+[5:33] We started this meetups from Pune last
+[5:36] year is what we started and I would like
+[5:38] to tell you when we started this meetup
+[5:40] that time people were not aware. I mean
+[5:41] I used to tell them whenever we used to
+[5:43] introduce VR and all people used to
+[5:45] compare that with Ola.
+[5:47] They used to ask me, "Olama, why do you
+[5:48] use Olama?" Okay, for us I use Olama.
+[5:50] Then I have to explain that, "See, Olama
+[5:52] is a great, okay, I also love Olama, but
+[5:55] Olama is meant for desktops."
+[5:58] Okay, if you want to do something on
+[6:00] desktop, where your batch size is equal
+[6:02] to zero or one, that time Olama is
+[6:05] great. Okay, on my laptop I use Olama, I
+[6:08] don't use
+[6:09] VLM. VLM is not meant for my laptop.
+[6:12] It is meant for high-end GPUs. GPUs
+[6:15] which are coming from Nvidia, which are
+[6:17] coming from AMD, which are coming from
+[6:19] IBM IBM IBM got something called
+[6:22] AIU.
+[6:23] Okay, so that is their spire.
+[6:26] AI accelerator, and VLM does support
+[6:28] that. But the story is that we started
+[6:29] with the fully at that time people were
+[6:31] not aware about VLM. They just were
+[6:33] looking at the inference Olama then we
+[6:36] started talking about decoding,
+[6:39] speculative decoding, we started with
+[6:40] the page attention, we talked about all
+[6:42] those. Now we see there is a lot of
+[6:44] interest about VLM.
+[6:45] When we published this event, we got
+[6:48] 1,300 plus registrations
+[6:51] on day two. Okay, and then we had to
+[6:53] close the registration. There is a
+[6:55] growing interest, I'm really happy to
+[6:57] see this growing interest for the
+[6:59] inference, and this meetup what we are
+[7:01] doing together.
+[7:03] Uh this is not working out.
+[7:11] We are doing the live streaming first
+[7:12] time, so
+[7:17] All right.
+[7:19] I am here, and we have we are going to
+[7:21] start with the two very powerful
+[7:23] freedom. First we'll talk about the
+[7:24] server here.
+[7:26] And why inference in server here is
+[7:28] particularly important, then talk about
+[7:30] this, okay?
+[7:31] I talked with a lot of customers, I mean
+[7:33] my day job is to work with the customer,
+[7:37] help them to optimize their investment
+[7:39] in AI infrastructure, and this is where
+[7:40] we talk about the company itself. I
+[7:43] mean, initially, it's very easy to start
+[7:45] with the cloud-provided APIs, but when
+[7:47] it comes to the scale, I mean, there is
+[7:49] lot
+[7:51] uh related to governance, so we talk
+[7:53] about that. We have Action talking
+[7:56] talking about how they are using the
+[7:57] vLLM,
+[7:58] how they are scaling using the vLLM,
+[8:00] then we have a lot of other things that
+[8:02] we are going to cover. We also have one
+[8:03] vLLM
+[8:05] SRI mentor here, so he's going to talk
+[8:08] about the semantic routing.
+[8:10] That is also a very hot topic. Instead
+[8:11] of
+[8:12] using one single model for all, you have
+[8:15] different models, and there is a router
+[8:17] sitting in front of that that will route
+[8:19] the query to the appropriate appropriate
+[8:21] one. So, we are going to cover all these
+[8:23] things, but let me set the stage up
+[8:25] soon. So, we are going to talk about two
+[8:27] main projects. The first one is the
+[8:29] vLLM, and second one is the LLM D. When
+[8:32] it comes to the vLLM, I would like to
+[8:34] use the terminology that we are very
+[8:36] familiar in terms of what it is,
+[8:38] container. Docker, okay? If you compare
+[8:41] vLLM with Docker, they are same.
+[8:44] Docker is to run the workload, you can
+[8:46] run the container. vLLM is also
+[8:48] something that you can run your
+[8:49] workload.
+[8:50] But when you want to scale, okay,
+[8:52] from one system to 10 system to 100
+[8:54] system, that time you will require the
+[8:56] orchestration.
+[8:57] Okay, to route your traffic to the right
+[9:00] pod or right GPU where you have the key
+[9:03] indication
+[9:04] already done. So, that's what the LLM D
+[9:07] does. It turns many inference servers
+[9:09] into the one.
+[9:10] So, we are going to cover We will start
+[9:12] with the vLLM, but we'll get into that.
+[9:15] And vLLM, if you look at the project,
+[9:17] there's a growing project and there is a
+[9:19] diverse project ecosystem within the
+[9:21] vLLM. The first thing, vLLM is a part of
+[9:24] PyTorch Foundation.
+[9:26] And the other that we are talking, LLM
+[9:28] D, is a part of CNC.
+[9:30] Large foundation which are supporting
+[9:32] this one
+[9:33] uh project. Under the vLLM, there are so
+[9:36] many other projects, side projects that
+[9:38] I would of it. The first one that I
+[9:39] would call out is the
+[9:43] VLM Omni.
+[9:44] So,
+[9:45] most of the time we talk about the
+[9:46] transformer based model, but now we also
+[9:49] need to think about the diffusion model.
+[9:51] We need to get into the multi-modality.
+[9:53] So, this is where we have the Omni
+[9:55] project. VLM semantic routing is what we
+[9:58] are going to cover in a deep today, but
+[10:00] there is a production stack, there is a
+[10:02] specifier, there is a
+[10:05] specifier. There are a lot of things
+[10:07] within. And if you look at the release
+[10:08] of
+[10:09] VLM, so right now it is somewhere around
+[10:12] 90K GitHub stars on the
+[10:15] So, it's a large project. The third
+[10:17] largest growing project when it comes to
+[10:19] the market.
+[10:20] Okay. There are some other projects also
+[10:23] similar to the VLM which does the
+[10:26] server grade and currency. One is the
+[10:29] The other one is the
+[10:31] uh TensorRT. But if you look at the
+[10:33] contribution that is going to the VLM,
+[10:35] VLM is really leading the
+[10:37] Why it is leading the race, it's not
+[10:39] about the performance. Performance is
+[10:41] always there with the VLM, but ease of
+[10:43] use. If you look at the other inference
+[10:45] engine, they are very difficult to
+[10:47] configure. Okay. When you install them,
+[10:49] configure, if you want to add some more
+[10:52] context into anything, it is very
+[10:54] difficult with the other. With VLM, it
+[10:57] is very easy. Ease of use is what
+[11:01] that is making our VLM project so
+[11:02] successful other than the performance
+[11:05] It is supported by large uh and when it
+[11:08] comes to the VLM, another thing that we
+[11:10] added to everyone is that it is it acts
+[11:12] as a middleman.
+[11:14] So, you have GPU provider, AI
+[11:16] accelerator provider, Nvidia is there,
+[11:18] AMD is there, and Google TPUs are there.
+[11:21] There are others like the Intel Gaudi,
+[11:23] there's the Spire. There are a lot of AI
+[11:25] architectures on the TPUs available.
+[11:28] VLM acts as the middleman where it
+[11:31] connects with the model provider with
+[11:32] the react
+[11:34] and it does have the zero day support
+[11:36] for most of the leading open rate open
+[11:40] source model. I'm going to talk a lot I
+[11:41] will not take much time but I would like
+[11:43] you to bookmark two URLs. This are
+[11:46] really going to help you in the long
+[11:48] run. The first one is VNNI recipe.
+[11:51] Okay, if you want to run some model,
+[11:53] this is the place where you can go and
+[11:55] get the parameters. Like I want to run
+[11:57] the GLM 5.2 how I can optimize my VNNI
+[12:00] 5.2
+[12:01] and 5.3. This is the repository. This is
+[12:04] part of VNNI but if you are looking for
+[12:06] a
+[12:07] similar repository
+[12:09] you can on auto scale. Okay, so you
+[12:11] start with the model deployment but when
+[12:13] you want to scale there are well laid
+[12:15] paths out there.
+[12:17] Those are available with VNNI.
+[12:18] This are going to be really helpful and
+[12:20] this is where there are lot of
+[12:23] Red Hat contribution going on. Pre- pre-
+[12:26] decode disaggregation is something that
+[12:30] every large organization is adopting
+[12:32] when it comes to the model deployment.
+[12:34] All right, so with this I will take a
+[12:36] stop and I will
+[12:39] say that enjoy your rest of the
+[12:41] conference.
+[12:42] There is a lot that we are going to
+[12:43] cover. Thank you everyone.
+[12:47] Now we call
+[12:48] Souvik to
+[12:49] talk about the software and

@@ -1,0 +1,1405 @@
+Title: CMU LLM Inference (11): Agents and Multi-Agent Communication
+
+--- TRANSCRIPT ---
+
+[0:01] Okay. Um,
+[0:03] hi everyone. I have two uh homework
+[0:06] related announcements before we get
+[0:08] started. So, uh, the first one is
+[0:11] homework 2 is probably going to be
+[0:12] released today. Um, and by today I mean
+[0:15] uh today anywhere on Earth. So,
+[0:20] it will uh it will be out by hopefully
+[0:23] the time you wake up tomorrow. Um and
+[0:25] then uh
+[0:28] number number two is that we would love
+[0:31] to have feedback on homework one. Like
+[0:33] some people said it was taking a long
+[0:35] time or like certain parts were
+[0:37] difficult and we'd like to make sure
+[0:38] that we're trying to make the um you
+[0:41] know the homeworks,
+[0:44] you know, not easy but like informative
+[0:46] and and helpful uh to learn about the
+[0:49] things we talked about in class. And so
+[0:51] we have a feedback forum. Uh we're
+[0:53] trying to incorporate some game theory
+[0:55] in how we're grading the feedback form,
+[0:57] which is if 50% of the people in the
+[0:59] class uh fill in the feedback form,
+[1:01] everyone gets a free quiz. Um so it's an
+[1:04] anonymous feedback. It's an anonymous
+[1:06] feedback form. Um and if everybody fills
+[1:09] it in, you will get an extra three out
+[1:11] of three on your quiz grade. So that
+[1:14] will make it a little bit easier to get
+[1:15] a good quiz grade. But that only happens
+[1:17] if half the people in the class fill it
+[1:19] out. So, um you can bug your friends uh
+[1:22] to try to get them to fill it out. So,
+[1:25] um and the reason why we're doing this
+[1:27] is we want to get it uh get anonymous
+[1:29] feedback, but we um we want to get
+[1:32] anonymous feedback, but we don't uh we
+[1:35] want people to give us feedback. So,
+[1:37] this is our way to encourage uh people
+[1:39] to give feedback while still being
+[1:40] anonymous. Um cool. Any questions?
+[1:47] Okay. If not, I'll get started. We have
+[1:49] two presentations today. I think you're
+[1:51] here. Who else was presenting? Okay,
+[1:54] great. Um,
+[1:56] sounds good.
+[1:59] So I would like to talk about agents and
+[2:02] um I'm not going to talk much about
+[2:04] training or designing uh agents uh in
+[2:07] order to improve uh accuracy through
+[2:10] architectural changes or language model
+[2:12] changes but rather focus mostly on the
+[2:15] things that are related to doing
+[2:17] inference in agents because this is an
+[2:19] inference class but there's kind of like
+[2:21] no way around some of the you know uh
+[2:23] the architecture stuff. So I'll be
+[2:25] talking a bit about that as well. Um but
+[2:28] basically an agent is a system that
+[2:30] iteratively uses tools to achieve a
+[2:32] task. Um so it's not just a one-shot
+[2:36] tool use but it's uh using tools over
+[2:38] and over again. Um almost all agents
+[2:42] nowadays are powered by large language
+[2:44] models. Um there are possibly some
+[2:47] agents uh that are not powered by large
+[2:50] language models still. Anybody have an
+[2:52] idea of what those might be?
+[2:57] What what was an example of an agent
+[2:59] that was uh that existed like
+[3:03] three years ago or five years ago?
+[3:06] Siri and Cortana are good examples.
+[3:08] Yeah. And they're maybe mostly not
+[3:10] powered by uh
+[3:13] by large language models now. Any other
+[3:15] ideas?
+[3:20] What about the ones you use to uh get
+[3:22] customer service when you call your
+[3:24] favorite airline or something? Those are
+[3:26] other ones that are basically based on
+[3:28] on trees. Uh you know like if uh if this
+[3:31] and classifiers and stuff and those you
+[3:33] know you still use but now all the all
+[3:36] the newly developed agents mostly people
+[3:38] are using LLM. Um agents are interesting
+[3:42] because they pose unique inference
+[3:44] challenges in a number of ways. Uh the
+[3:46] first one is reasoning and planning. Um
+[3:50] and because of this uh you know you have
+[3:53] to uh do extra steps that require
+[3:57] inference over them. Um environment
+[3:59] representation uh so like how do you uh
+[4:03] represent all of the output from the
+[4:05] tool calls that you get? Uh long context
+[4:08] modeling. So agents are probably one of
+[4:11] the biggest long context use cases
+[4:12] nowadays in addition to things like
+[4:14] summarization or or question answering
+[4:17] evaluation. I'm going to talk a little
+[4:19] bit about this in case people want to uh
+[4:22] you know use agents and evaluate them.
+[4:24] Uh another thing that we've been working
+[4:26] on uh you know kind of more uh from my
+[4:30] personal experience is uh critic models
+[4:33] and uh critic models are models that are
+[4:36] essentially similar to the reward models
+[4:38] that we're going to talk about later but
+[4:39] I'd like to talk about them now because
+[4:41] this is only agent class uh and then you
+[4:44] can remember them when we uh we cover
+[4:46] reward models later and also multi- aent
+[4:49] delegation. And I'm I'm not really going
+[4:51] to uh cover this in that much detail,
+[4:53] but I'll I'll talk about it a little.
+[4:58] >> Cool. Um, so the first thing is uh some
+[5:01] use cases for agents. Has anybody like
+[5:03] built an agent to do something?
+[5:06] >> Yeah.
+[5:09] >> Sim users on a search engine
+[5:14] will user click and what's the next
+[5:16] action users will take.
+[5:17] >> Okay. simulate users on a search engine.
+[5:19] That sounds good. Any other interesting
+[5:22] use cases?
+[5:28] Okay. Well, thank you for uh
+[5:29] accidentally volunteering
+[5:32] to talk about your agent. Um we have uh
+[5:36] a bunch of different use cases. One of
+[5:37] the biggest ones nowadays is software
+[5:39] development. Uh so code generation,
+[5:41] debugging and testing. Um there's uh
+[5:45] kind of popular examples like claude
+[5:47] code by enthropic codecs and also
+[5:49] openhands which is an open-source uh
+[5:52] agent that I'm developing that I'll talk
+[5:53] about a little bit. Um also web
+[5:56] automation so things like data
+[5:57] extraction form filling uh testing and
+[6:01] things like this and um there's uh
+[6:05] closed source things like open AI agent
+[6:07] mode if anybody has used this and then
+[6:10] there's open source ones that you can
+[6:11] download and use in research like
+[6:13] browser use uh is a very popular example
+[6:15] of this
+[6:17] uh things for research and analysis so
+[6:20] kind of by default a lot of the uh you
+[6:23] know chatbot interfaces like uh chat or
+[6:26] claude now support things like
+[6:28] information gathering and report
+[6:29] generation. Um there's also things like
+[6:32] perplexity pro. There's open source uh
+[6:35] versions of things like this like open
+[6:36] deep research and there's like seven
+[6:38] different open researches. So um you can
+[6:41] find one and pick your favorite one. Um
+[6:44] and then there's also uh interactive
+[6:46] environments like games uh simulations
+[6:49] and uh robotics. So you know things to
+[6:53] play games like Minecraft and and work
+[6:56] on robots.
+[6:58] So I I have been actually building um an
+[7:02] open source agent called open hands is
+[7:04] uh kind of originally is an open- source
+[7:08] uh tool and then is uh part of a startup
+[7:10] uh that I work with and uh because of
+[7:13] this a lot of my best examples are from
+[7:16] my experience with this. Uh basically
+[7:18] it's a software development agent that
+[7:20] also supports web browsing and other uh
+[7:22] other varieties of tools. Um it's
+[7:24] available here. I'd like to show a
+[7:26] little example. Um so you can like click
+[7:29] through and create a conversation.
+[7:32] Um
+[7:36] anybody have something interesting I can
+[7:37] do? I usually try to pick something that
+[7:39] I uh
+[7:42] that I want to do recently.
+[7:45] Um,
+[7:50] okay. Here, here's one. Find
+[7:54] the
+[7:56] find the website for CMU inference
+[7:59] algorithms class in fall uh 2025.
+[8:03] Download the homework assignment and
+[8:05] guess how long it will take to finish
+[8:06] homework assignment one.
+[8:20] Okay. So, let let's see how accurate
+[8:22] this is. Um,
+[8:26] oh, uh, sorry. This is using GPT5 and
+[8:30] inference on GPT5 is really slow. So,
+[8:32] I'm going to stop doing that and, uh,
+[8:34] and use, uh, Claude because I'd like it
+[8:36] to finish before the class finishes.
+[8:41] 4.5 came up nice.
+[8:44] >> Yeah, we we just haven't updated the
+[8:46] interface yet. So, um
+[8:53] so like G G G G G G G G G G G G G G G G
+[8:54] G G G G GPD5 uh has we we run it with
+[8:57] the like reasoning effort high and the
+[9:00] high reasoning effort takes a long time
+[9:02] but it's really good so it doesn't uh
+[9:04] doesn't make as many mistakes. Uh but
+[9:06] yeah,
+[9:07] >> you specify whether it's like a person
+[9:09] or itself finishing
+[9:12] >> that that's a good point. If I ask it to
+[9:15] guess how long software engineering
+[9:17] tasks will take, it usually says like
+[9:20] much longer than it actually takes. So
+[9:23] um it'll probably say like two to three
+[9:25] weeks or something.
+[9:27] But anyway, like because this is a demo,
+[9:31] I'd like to just show you what it's
+[9:32] doing. So here it's calling a search
+[9:34] engine tool. Um it's calling a search
+[9:37] engine tool uh to try to like find um
+[9:42] like search for this class. It found it
+[9:44] taught by me and Amanda. And then it
+[9:47] sees there's an assignments page. It's
+[9:49] going to that extracting the information
+[9:51] from the page. Um and uh then it's
+[9:55] cloning uh
+[9:58] cloning the code uh to see where the
+[10:00] code is. Um,
+[10:04] it's reading the PDF. So, you can see
+[10:06] that it it opened the PDF and it's
+[10:08] reading through the assignment and stuff
+[10:09] like this. Um, scrolling down to read
+[10:13] more of it to get gather more
+[10:15] information and stuff. Um, I won't make
+[10:17] you watch all of this. I'll I'll like go
+[10:18] back to this um uh like
+[10:23] uh to check on it when it's done because
+[10:25] I don't want to spend too much time
+[10:26] watching the agent work. It's kind of a
+[10:29] failure mode of agents. You shouldn't
+[10:30] watch your agent work. you should let it
+[10:31] go do things and go back and check on it
+[10:33] because it's too like fun to watch the
+[10:35] agent do what it's doing. Um but uh that
+[10:38] that wastes a lot of your time. So cool.
+[10:41] Um any any questions so far?
+[10:45] >> Yeah.
+[10:47] >> What do you use like lang?
+[10:50] >> Yeah. So great great question. Um
+[10:52] langraph and lang chain are like tools
+[10:54] to build agents. We actually decided not
+[10:56] to use anything like this. And I can I
+[10:59] can talk a little bit about uh the
+[11:01] design decisions, but we have our own um
+[11:04] agent SDK
+[11:08] that we designed um specifically for
+[11:11] this.
+[11:13] And
+[11:16] the reason why we did this is um ling
+[11:19] graph and link chain basically my
+[11:23] description of them and other things
+[11:24] like autogen is they're kind of more
+[11:27] fixed agent workflows. So it's like I I
+[11:31] want to do this and then I want to send
+[11:33] the information to this and do that and
+[11:35] then send the information to this and
+[11:36] then do that. Um, and so they're
+[11:38] particularly good when you have like a
+[11:40] more fixed workflow, but in software
+[11:43] engineering or like the workflow is very
+[11:46] various, right? Like I did a um I I did
+[11:49] something here that's like a workflow
+[11:51] that I've never really done before, like
+[11:52] you know, look look at homework and
+[11:54] estimate the time. And so in order to
+[11:56] make things uh kind of more diverse, we
+[12:01] um we basically just wanted to create a
+[12:03] single uh agent that could do lots of
+[12:05] different things. So we didn't use that
+[12:06] sort of scaffolding ourselves. So
+[12:08] basically what you do is um you add
+[12:11] tools uh the tools that you wanted to
+[12:13] have available to it and then uh the
+[12:16] like framework that we created has all
+[12:17] the like inference or all the methods
+[12:20] that I basically will talk about slides
+[12:22] implemented in it but it's mostly not
+[12:24] like doing delegation between multiple
+[12:27] agents which is what lang graph and
+[12:28] autogen are good at. Yeah. Cool. Um
+[12:33] okay sounds good. Let's uh let's move
+[12:37] actually may maybe it's done
+[12:44] 25 to 35 hours total. So we'll see if
+[12:47] that is uh we also we're going to have
+[12:52] the um the feedback survey that
+[12:54] hopefully everybody will fill out so you
+[12:56] can see uh how how correct this
+[12:58] estimation was.
+[13:00] Um cool. Let's go. So um first I'd like
+[13:06] to talk about reasoning and planning and
+[13:08] the basic idea is that um
+[13:11] we talked about reasoning from the point
+[13:13] of view of mathematical reasoning. Um
+[13:16] and the mathematical reasoning uh there
+[13:19] it's mostly kind of like deductive
+[13:23] reasoning where it's like okay I have
+[13:25] this math problem I want to apply my
+[13:27] principles to perform uh you know to
+[13:32] solve the math problem. Um here it's a
+[13:36] little bit different. It's like not this
+[13:39] is the information I have and I want to
+[13:41] combine it together to solve a problem
+[13:42] in a kind of like fixed way but rather I
+[13:46] would like to come up with the best idea
+[13:48] of what to do next given my overall
+[13:50] objective. So this is more uh
+[13:52] open-ended. Uh the standard way of doing
+[13:56] reasoning within uh language models is
+[13:58] based on uh a paper called react uh
+[14:02] which is um a framework where you
+[14:05] basically do reasoning and then uh
+[14:08] perform actions.
+[14:10] And so this is in contrast to only
+[14:12] acting. So um you you're given a task
+[14:15] and then you have an action which is go
+[14:18] to draw one and then the door is closed.
+[14:20] open door one, uh, you know, you open
+[14:23] the door, etc., but you actually add
+[14:25] the, um, uh, add the thoughts here. And
+[14:29] there's two reasons why you would want
+[14:30] to do this. Um, the first reason why you
+[14:33] would want to do this is we've all seen
+[14:34] that chain of thought like improves
+[14:35] accuracy and agents are no uh, you know,
+[14:39] exception to that. The second reason is
+[14:42] um, it actually gives you updates of
+[14:45] like what the what it's doing in natural
+[14:47] language. Um, so you can see that it's
+[14:51] saying here, I'll help you find the the
+[14:53] website. Great. I found the website.
+[14:56] Let's access the uh let's access it. I
+[14:59] can see there's an assignments page. You
+[15:01] can kind of like follow along what the
+[15:02] agent is doing without looking at its
+[15:04] actual actions uh here. So that's kind
+[15:07] of like a major uh a major advantage of
+[15:10] doing things like that.
+[15:13] So um you know accuracy uh accuracy and
+[15:18] uh kind of legibility.
+[15:23] Um so React is a um a method for
+[15:31] basically multi-step agents that use
+[15:35] reasoning. There's another method uh
+[15:38] called Kodact. And basically the idea of
+[15:40] codeact is um instead of calling
+[15:46] uh individual tools with an agent, you
+[15:49] have the agent write code that executes
+[15:51] the actions for you. And the the basic
+[15:55] idea was um like let's say you wanted to
+[16:00] uh extract you wanted to check the price
+[16:03] of 10 different uh items and find the
+[16:07] maximum the most expensive item or the
+[16:10] least expensive item or something like
+[16:11] that. Um the
+[16:15] original way you would do this is you
+[16:16] would make a bunch of individual tool
+[16:19] calls. you would get the results of all
+[16:20] of those tool calls and then you might
+[16:22] make another tool call or use the LLM to
+[16:26] pick, you know, the like highest price
+[16:29] or lowest price item. But what you can
+[16:31] do instead is you can just write a
+[16:33] Python program that calls all the tools
+[16:34] for you. Um, and that was the basic idea
+[16:37] behind the uh the Kodak framework. And
+[16:40] uh what codeact does is it uh simplifies
+[16:42] your action space because now all of
+[16:44] your work is basically writing uh you
+[16:47] know writing programs in a language like
+[16:49] Python and it also makes you be able to
+[16:51] solve tasks a lot more efficiently. So
+[16:54] this is um this is pretty popular
+[16:56] nowadays and so now a lot of agents have
+[16:59] kind of a um like coding style action
+[17:02] space uh where they can run Python
+[17:04] programs or they can run bash programs
+[17:05] or other things like that.
+[17:08] And this is important for inference of
+[17:10] course because it's the difference
+[17:12] between
+[17:13] one action that generates a very large
+[17:17] output versus many many individual
+[17:20] actions that generate a small and less
+[17:22] complex output. So you could even like
+[17:25] trade-off between the two, right? you
+[17:26] could have um an even if you're using
+[17:29] codec, you can have an agent that
+[17:31] prefers to write small chunks of code um
+[17:34] and where it's more certain about the
+[17:36] result or write very large chunks of
+[17:38] code where it's less certain about the
+[17:39] result. So you need to think about
+[17:40] trading off between those.
+[17:45] Cool. Um any any questions about that?
+[17:49] Okay, so another thing about planning
+[17:52] with agents. So re react is a very uh
+[17:55] reactive way of doing planning. Um so uh
+[17:59] kind kind of pun intended kind of not
+[18:01] but like basically the idea is it plans
+[18:04] in very small chunks um in that it is
+[18:08] usually reasoning about the best next
+[18:10] action to be performing. Um, another
+[18:13] thing that we did uh
+[18:16] in uh open hands and you know other
+[18:18] libraries also uh other libraries and
+[18:21] methods have similar ideas is we have a
+[18:24] planning system that utilizes tools and
+[18:28] um that can set out a plan and then
+[18:30] update that plan as you start executing
+[18:32] the plan. So this is something that we
+[18:35] introduced relatively recently but it's
+[18:38] a um it's been very useful and effective
+[18:41] is um you have a task tracker tool and
+[18:45] um this gives you structured task
+[18:48] management where it basically will um
+[18:53] uh like come up with a task where
+[18:57] you have different uh individual steps
+[19:01] in that task and then it can update the
+[19:03] status every time. So, it will like
+[19:05] recall the tool every time a step in the
+[19:08] plan changes. So, let me see if I can
+[19:10] get it to do this. Um, check all of the
+[19:14] classes and see if there are any missing
+[19:18] references.
+[19:20] References create a plan and check off
+[19:25] each item
+[19:27] of the plan. And I actually don't need
+[19:29] to write the second sentence here. it
+[19:31] will usually do it spontaneously but
+[19:33] because this is a demo I want to make
+[19:35] like extra
+[19:39] um extra sure that it will actually call
+[19:40] that tool. Let's see if that works.
+[19:42] Yeah. So here it created a plan and it
+[19:45] says like examine all starter code
+[19:47] files, check the shared task example
+[19:49] code, uh verify the requirements and
+[19:51] then it it updated this to in progress.
+[19:54] So now it's working on this part and it
+[19:56] knows that this is in progress. So it
+[19:58] will continue working on that. When it
+[20:00] finishes, it will write done. And then
+[20:02] when it writes done, it will make sure
+[20:05] to include all of the other elements of
+[20:07] the plan. And because of that, it kind
+[20:09] of like refreshes the more recent
+[20:11] context window to include all elements
+[20:14] of the plan in the context window. And
+[20:15] this lets it like not lose track of its
+[20:18] plan.
+[20:20] And this actually gets stored on the
+[20:21] disk, too. So it gets stored in like
+[20:23] tasks.md. So like the it can't just
+[20:26] disappear from the context window.
+[20:31] Um, another tool is a thinking tool. Um,
+[20:35] and the thinking tool basically gives
+[20:38] the model uh permission to take another
+[20:42] step to write a really long chain of
+[20:44] thought. And so, um, this was introduced
+[20:47] by Claude when they introduced Claude
+[20:49] code. And the basic idea is um like you
+[20:54] you tell the agent if you need to think
+[20:56] really carefully about something write a
+[20:58] like long explanation of what you need
+[21:00] to do in this uh in this tool. Um and
+[21:03] that that tool has no effect whatsoever.
+[21:05] It just like um is there for thinking
+[21:08] and so it outputs this thought and then
+[21:11] in the next step based on that thought
+[21:12] it can actually take the action. This
+[21:14] probably technically isn't necessary if
+[21:16] you have a reasoning model, but um it's
+[21:18] a way to turn a like moderately
+[21:21] uh like maybe a shorter chain of thought
+[21:23] model that wasn't explicitly trained for
+[21:25] this into a model that can do this. So
+[21:27] it's kind of like an inference time
+[21:28] trick even because you're not changing
+[21:30] the model, but you're giving it
+[21:31] increased capacity to think.
+[21:35] >> Cool. Um any questions?
+[21:38] >> Yeah. like the ide
+[21:49] consistent with what you are doing in
+[21:52] that case like these don't really they
+[21:55] break down for those models.
+[21:58] >> So the the question was if you have like
+[21:59] a reasoning model with a really long
+[22:01] chain of thought do these frameworks
+[22:02] break down for the models? I I think um
+[22:06] essentially everybody is doing React.
+[22:09] there's like no no agents without any
+[22:12] reasoning whatsoever. So your choice is
+[22:13] either to use a short chain of thought
+[22:16] um or a long chain of thought that was
+[22:18] like explicitly trained for reasoning.
+[22:21] And so in a way the framework isn't
+[22:23] breaking down. It's just like constantly
+[22:26] present. I think um the extra thought
+[22:29] tool I think honestly may not be
+[22:30] necessary if you do training. It's like
+[22:32] a way to retrofit,
+[22:34] you know, extra thought into a model
+[22:36] that was not initially trained for it.
+[22:39] Um the task planning I think is still
+[22:41] useful probably. Um unless you trained a
+[22:44] model to do that natively, but even if
+[22:46] you trained a model to do that natively,
+[22:48] um it's not quite as effective as having
+[22:50] like the plan stored on disk and you
+[22:53] know being able to recall it without it
+[22:55] being in your context window. Um, so it
+[22:59] might not be necessary, but I I think it
+[23:01] still could be helpful and it's at the
+[23:02] very least it's helpful for vis
+[23:04] visualization to people who are watching
+[23:05] your plans. Yeah, great question though.
+[23:09] Um, cool. So the next thing I'd like to
+[23:13] talk about is environment
+[23:14] representation. Um, so like as we
+[23:16] learned from the tools class uh the
+[23:18] previous time um the tools have actions
+[23:22] and they get observations. So then the
+[23:25] question is how do you represent these
+[23:27] observations in your model? Um as I
+[23:30] mentioned I want to talk about inference
+[23:32] related things and this is important
+[23:34] because uh these can be very large and
+[23:37] because it they can be very large this
+[23:40] impacts how you do inference when you're
+[23:42] working with agents.
+[23:44] So um the the first type of environment
+[23:48] representation I'm going to maybe
+[23:50] specifically talk about representing
+[23:52] websites because I work with a lot of
+[23:54] web agents uh but I'll talk a little bit
+[23:56] about representing code in files also.
+[23:59] Um so the first type of uh environment
+[24:02] representation for websites is um uh
+[24:05] textbased. And so what this does is this
+[24:09] basically takes a website or um or maybe
+[24:12] a PowerPoint presentation or some other
+[24:14] thing that's not natively text and just
+[24:17] converts it into markdown. And so this
+[24:19] is an example of um what something like
+[24:22] this would look like for uh the LTI
+[24:26] homepage. Um and so instead of you know
+[24:29] the beautiful uh LTI homepage that we've
+[24:31] newly updated uh and you know everybody
+[24:35] uh knows and loves uh we uh get this
+[24:37] markdown representation and it's very
+[24:39] concise very easy to to use. Um I
+[24:43] uh got I actually maybe didn't get this
+[24:46] directly from the Tavi extract function
+[24:49] but um we we use a search engine called
+[24:51] Tavly when we uh in open hands but
+[24:54] there's a whole bunch of other uh search
+[24:56] engines uh that could be used for this
+[24:59] that like kind of create these
+[25:00] representations that are specifically
+[25:02] for agents.
+[25:04] Um,
+[25:06] one problem with representing it in text
+[25:08] though is you can actually perform
+[25:10] actions on websites uh like clicking and
+[25:12] scrolling and stuff like this. And
+[25:17] it's not like
+[25:20] in this markdown representation, we
+[25:22] don't have a specific
+[25:26] um representation of the interactable
+[25:29] elements on the site. So like let's say
+[25:32] I wanted to click on natural language
+[25:34] processing um and there was a link here.
+[25:37] There's no link um or let's say I wanted
+[25:40] to enter something in a text box or
+[25:43] something like that. There's no text no
+[25:45] way to represent a text box natively in
+[25:46] markdown. So you'd either need to come
+[25:48] up with a representation of markdown or
+[25:51] you would need to do something like um a
+[25:54] textbased uh representation of the HTML
+[25:57] DOM tree. Uh and this is the standard
+[25:59] way of doing this for web agents. Um
+[26:01] it's called the accessibility tree and
+[26:03] it was originally created for um screen
+[26:05] readers for vision impaired people. Uh
+[26:08] so you know if you uh are not able to
+[26:11] like actually see the site you can put
+[26:12] it into a screen reader and it will read
+[26:14] the site for you. And so this is
+[26:16] basically just reusing the uh the method
+[26:19] that was used there. Um and so this is
+[26:22] what it looks like. And importantly, it
+[26:24] gives you a uh ID for each of the
+[26:27] elements. And if the element is
+[26:29] clickable, you can then click on that
+[26:31] element by selecting this ID uh by
+[26:34] calling a tool that basically clicks on
+[26:36] this ID. Um so that's another thing you
+[26:39] can do.
+[26:41] So this is the original way that agents
+[26:43] represented websites. Um now it's
+[26:45] becoming more and more common to uh
+[26:48] represent websites through vision. Um,
+[26:51] and this is an example uh from a paper
+[26:56] visual web arena. And the way it works
+[26:59] is you take a screenshot of the website
+[27:03] and then around every element in this
+[27:05] screenshot you put a box and then you
+[27:09] put a number next to the box. So this is
+[27:11] like the ID that I showed before, but
+[27:13] this number um you can then like click
+[27:16] on this number and you also uh get a
+[27:20] like kind of summarization of all of the
+[27:22] elements with their numbers in text as
+[27:24] well just to like reinforce that these
+[27:27] are the elements that you have uh access
+[27:29] to. So this is called set of marks. Um
+[27:32] and uh this paper applied set of marks
+[27:35] to uh kind of vision-based web agents.
+[27:42] Um
+[27:45] this is uh actually and sorry um one one
+[27:49] thing I should mention is when we're
+[27:51] representing code I think maybe I I
+[27:53] forgot to add the slide to this uh slide
+[27:55] deck but when we're representing code
+[27:57] another problem or files on your file
+[28:00] system you don't want to read a like 10
+[28:02] million line file by accident and
+[28:04] completely destroy your context window.
+[28:07] Um, so another thing that uh people do
+[28:10] is they um either train models or
+[28:15] explicitly give models tools that only
+[28:17] select like a subset of the um like
+[28:20] lines of the file and uh like there are
+[28:24] file editing tools that allow you to do
+[28:25] that. Um
+[28:28] so
+[28:32] that that's about environment
+[28:34] representation. Uh any questions here?
+[28:37] >> Yeah.
+[28:38] >> In like visual environments like
+[28:40] environment with
+[28:42] >> when you couple this image with text,
+[28:44] won't the level the VM just tend to pay
+[28:47] a lot more attention to the to the
+[28:49] textual data as opposed to the image?
+[28:52] >> Um yeah, great question. Won't won't it
+[28:54] pay more attention to the textual data
+[28:56] than it will to the image? I
+[29:00] it depends on the LLM. Um, one thing I
+[29:03] will say is that LLMs are not natively
+[29:06] good at using at understanding web
+[29:08] pages. Um, this is this was a major
+[29:12] problem 9 months ago or 12 months ago.
+[29:15] Uh, where certainly most of the open LMS
+[29:19] could not understand web pages at all.
+[29:21] Um, and so, you know, they would not be
+[29:23] able to do OCR. Uh, they would not be
+[29:25] able to do uh character recognition.
+[29:27] They would not be able to identify like
+[29:29] which elements meant what. And so I
+[29:32] think basically the good news is you can
+[29:36] generate infinite sets of marks by
+[29:40] essentially taking the web page and
+[29:42] automatically writing the set of marks
+[29:44] on it and then you can say okay what is
+[29:47] the 41st element on this web page um and
+[29:50] then the you'll train the model to be
+[29:53] able to do this and we actually have a
+[29:54] paper called um where we created a data
+[29:56] set called multiUI that explains like 10
+[30:00] uh different auxiliary training tasks
+[30:02] that you can use to improve web page
+[30:04] understanding and so once you start
+[30:07] doing that the models start to be like
+[30:09] very good at understanding web pages and
+[30:10] I think most of the kind of like
+[30:12] foundation model companies are doing
+[30:13] that sort of thing now
+[30:17] >> marks like caption marks are really
+[30:19] really close to each other's
+[30:21] overlapping
+[30:23] like doesn't that
+[30:28] >> um
+[30:30] It does not hurt more than it helps. So
+[30:33] people have have tried doing this
+[30:34] without set of marks and doing it with
+[30:36] set of marks is definitely more
+[30:38] effective. So that's why people do it.
+[30:40] But um is this the optimal way of doing
+[30:43] things? Maybe no. Um one one other thing
+[30:45] I should mention actually which is uh
+[30:51] actually maybe I'll mention it in the
+[30:52] next section but um yeah that's a great
+[30:55] question and there's certainly more that
+[30:57] could be done there I think. Cool. Um,
+[31:01] I'd also like to talk about efficiency
+[31:02] optimizations. So, like one really big
+[31:04] challenge with agents is context length.
+[31:07] Um, so we have long conversation
+[31:09] histories. Uh,
+[31:12] in a typical evaluation of something
+[31:15] like Sweetbench or Web Arena, which are
+[31:20] some of the the like benchmarks I'm
+[31:22] going to talk about in a bit. I would
+[31:24] say the conversation history can go up
+[31:27] to as much as like a hundred steps. Um
+[31:31] for instance, so like uh you know
+[31:35] a hundred
+[31:37] uh like maybe 50 tool calls, 100 actions
+[31:40] and observations. Uh this is can be very
+[31:43] long. This can get over uh hundreds of
+[31:45] thousands of tokens. Um,
+[31:49] in practical usage, I I have used agents
+[31:52] for up to 2,000 steps. And so that's
+[31:54] like tens of millions of tokens in your
+[31:57] context length. And so most language
+[32:00] models cannot handle this. Even if they
+[32:01] can handle this, it get becomes very
+[32:03] expensive. Um, it's particularly bad if
+[32:07] you're doing something like web because
+[32:08] web pages can be very big. Um, and so
+[32:12] you need efficient context management
+[32:14] strategies.
+[32:16] Um,
+[32:17] number one, which is really, really
+[32:20] important, we're not going to talk about
+[32:21] this until later in the class, it um is
+[32:24] prompt caching or KV caching. And
+[32:26] basically the way this works is when you
+[32:31] send a first output um you
+[32:35] or when you send the first prompt, you
+[32:38] can send the uh system prompt, the
+[32:41] observation, and get an action. And then
+[32:45] here you need to calculate the
+[32:47] representations for all of them. But the
+[32:50] next time you calculate the
+[32:51] representations, you have the system
+[32:53] prompt, the observation in the action.
+[32:55] And you've already calculated the auto
+[32:57] reggressive representations for these.
+[32:59] And so then you just need to feed in the
+[33:02] next observation and action. And um then
+[33:05] the next time you have all of these
+[33:07] premputed and then you you calculate the
+[33:09] next observation in action. Um and so
+[33:12] what this means is you can basically
+[33:13] save all the compute that you use to
+[33:14] calculate these and that saves you a lot
+[33:17] of money um and time uh when you're
+[33:19] running these. Um in reality a lot of
+[33:23] services will only uh cache the things
+[33:25] that you had in your prompt. So some of
+[33:26] them will only cache the system uh the
+[33:29] system message and the observation. But
+[33:31] in reality you can also cach the action
+[33:33] as well if you're clever about it.
+[33:37] Um and we're going to talk about more
+[33:39] details about this. So I'm not going to
+[33:40] talk about all the details this time.
+[33:44] Um,
+[33:46] another thing I'll talk about a little
+[33:48] bit is context condensation. And this is
+[33:51] a way of taking in the previous context
+[33:56] and removing some of it. Basically
+[33:58] summarizing it or removing it um so that
+[34:01] you can uh get uh better results. Um
+[34:05] within open hands we have a number of
+[34:07] different ways that we do this uh that
+[34:09] are kind of representative ways that are
+[34:11] used pretty broadly including in other
+[34:12] like coding CLI like gemini and cloud
+[34:15] code. Um but uh I'll I'll just cover
+[34:18] cover both of them here. So the first
+[34:21] one is uh summarization. And so the way
+[34:25] we do this is we
+[34:28] after we have done a certain number of
+[34:30] steps, we take a previous like a portion
+[34:34] of the previous steps and we feed it
+[34:37] into an LLM and we summarize what
+[34:39] happened in the previous steps. And what
+[34:42] this allows us to do is this allows us
+[34:44] to basically remove um you know half of
+[34:47] the context while still keeping most of
+[34:49] the relevant information. It's not
+[34:51] perfect. uh sometimes you lose
+[34:52] information that would be useful later
+[34:54] but um after a certain amount of prompt
+[34:57] engineering we have been able to you
+[34:58] know do this successfully and you can
+[35:00] see like our prompt uh uh within the the
+[35:04] codebase if you're interested in the the
+[35:05] details about this. Um
+[35:09] so uh from the
+[35:13] from the kind of uh experimental results
+[35:16] we did uh we were able to see like 2x or
+[35:18] even more cost reductions uh while
+[35:20] maintaining performance on swbench. Uh
+[35:23] we actually have a few um kind of like
+[35:25] war stories about this. So we did like
+[35:27] experiments on um we did experiments on
+[35:33] Swebench which is you know the very
+[35:35] common benchmark uh that people use for
+[35:38] evaluating uh coding agents and then we
+[35:42] like actually started using it and it
+[35:45] worked pretty well but it did some
+[35:47] really stupid things. So like for
+[35:48] example um it would send a pull request
+[35:51] uh to like update code on GitHub. It
+[35:54] would forget that it had sent a pull
+[35:55] request and then it would send another
+[35:57] pull request over and over and over
+[35:59] again. So we needed to modify the prompt
+[36:01] to say okay remember if you've sent a
+[36:03] pull request before and like other stuff
+[36:05] like this. So it's not as simple like it
+[36:09] demonstrates the difficulty of like
+[36:11] benchmarking in real use but you know
+[36:13] basically this overall idea works. Um,
+[36:16] another thing that's really common in
+[36:18] agents, this uh started out in the
+[36:20] agents for web arena, which is uh the
+[36:22] benchmark that I'm going to talk about
+[36:23] in a bit, um, but is web context
+[36:26] condensation. So, web pages are large
+[36:28] and noisy. Um, there's actually two
+[36:30] methods that I'd like to talk about. I
+[36:31] only have one on the slide but um one
+[36:34] one method is after you have already
+[36:37] processed the web page after you've
+[36:39] already sent it to the agent once you
+[36:42] can keep only the most recent um
+[36:45] accessibility tree or image. And so what
+[36:48] that means is um like after you've
+[36:50] looked at it once then you basically
+[36:53] just remove it uh entirely from the
+[36:55] history. Um
+[36:59] uh so on the challenge here I wrote
+[37:01] prompt caching is less effective. You
+[37:03] lose one of your um you lose one of your
+[37:06] inputs uh when you're doing prompt
+[37:07] caching. Uh another problem with this
+[37:10] though is like you um you still need to
+[37:13] process the big web pages and the big
+[37:15] web pages can be pretty expensive. So
+[37:18] there's another method um in a paper
+[37:22] called mind to web
+[37:24] which isn't in the references like most
+[37:27] of these references are on the web page
+[37:28] but this this particular one is not um
+[37:33] and this is only a minor part of the
+[37:35] paper but they have an interesting
+[37:37] inference time technique there where
+[37:39] basically what they do is they try to
+[37:41] guess which parts of the web page are
+[37:42] going to be useful first. Um and so what
+[37:45] they do
+[37:48] is they get this accessibility tree.
+[37:51] They try to guess which elements in the
+[37:53] accessibility tree are the most
+[37:55] important ones to be looking at uh using
+[37:57] a very lightweight cheap model and then
+[38:00] they take all of those and all of the
+[38:03] parents of those elements and feed only
+[38:05] that into the language model. So, um,
+[38:08] that might also be a method that could
+[38:10] be used to keep around more history, uh,
+[38:13] while like not, uh, you know, not
+[38:16] hurting performance. So, I've not heard
+[38:18] of, um, I've not heard of a lot of
+[38:20] people using it from in this context,
+[38:22] but it might be an interesting thing to
+[38:24] try if you're uh, if you're interested
+[38:25] in web agents.
+[38:29] Cool. Um, any questions here?
+[38:35] as well like per action environment
+[38:38] changes and I suppose a lot of elements
+[38:40] would change like and some for example
+[38:44] the coffee example I have in my for a
+[38:46] search query there are two search
+[38:47] queries that are similar the top six
+[38:50] shown would be very similar so the
+[38:52] environment representation you created
+[38:54] at point A will be very similar to the
+[38:56] next environment representation so do
+[39:00] you completely
+[39:02] refresh the representation at every time
+[39:04] and what is the frequency in which this
+[39:06] environment represented?
+[39:08] >> Yeah. Um that's a good question. So like
+[39:10] the question was do the environment
+[39:12] representations change? Like if you
+[39:14] retrieve the same web page over and over
+[39:16] again, do you like reprocess that web
+[39:19] page every time? As far as I know, the
+[39:21] answer is yes. You reprocess it every
+[39:23] time. Um, but
+[39:28] I think there might be situations where
+[39:32] you could save compute by not doing it
+[39:34] every time. Like especially like if you
+[39:37] were running a really high volume search
+[39:39] engine like Perplexity or Chat GPD or
+[39:42] something like that. I could I could
+[39:43] definitely
+[39:45] think of wanting to premputee the
+[39:47] representations for those web pages and
+[39:49] getting them to work. So that seems like
+[39:50] an interesting like thing to try. Yeah.
+[39:54] Cool. Any others?
+[39:57] Okay. Um so the next thing uh I'd like
+[40:02] to talk about is evaluation. Um there's
+[40:05] many um agentic evaluation benchmarks.
+[40:09] Um I actually
+[40:12] I I'll talk about a few specific ones
+[40:14] first and then I'll talk about a place
+[40:16] where like many benchmarks are kind of
+[40:17] aggregated together. So um the the first
+[40:22] benchmark uh that I personally pay a lot
+[40:26] of attention to is uh Swebench and I
+[40:29] think a lot of other people pay
+[40:30] attention to this as well. This is
+[40:32] basically a benchmark for fixing issues
+[40:34] on uh GitHub. So the input is a GitHub
+[40:38] issue and
+[40:40] a codebase and so it's like there's a
+[40:43] data leak. This is the codebase and then
+[40:46] the agent needs to generate
+[40:48] modifications to the codebase uh in
+[40:51] order to fix the issue. And then the way
+[40:54] this is evaluated is um with together
+[40:58] with this issue there were some unit
+[41:00] tests that were introduced to check the
+[41:02] correctness of the fix. And all of the
+[41:07] unit tests that were introduced together
+[41:09] with the issue must pass in order for
+[41:11] you to get full credit. and um a select
+[41:14] number of unit tests from the testing
+[41:16] harness that existed before uh the PR
+[41:20] also must pass. So basically you need to
+[41:22] fix the issue while not breaking things.
+[41:25] Um so that's how it's evaluated. Um
+[41:29] so there's uh 2,000 uh GitHub issues
+[41:32] from 12 popular Python repositories.
+[41:35] Um and
+[41:37] there's because this is very popular
+[41:40] there have been a number of extensions.
+[41:41] Uh there's an extension called Swebench
+[41:43] verified which is 500 issues that were
+[41:47] specifically verified to be like
+[41:48] solvable based on the input to the issue
+[41:51] uh sorry based on the issue description.
+[41:53] And the the reason why is because a lot
+[41:56] of issue descriptions are kind of vague
+[41:58] and you wouldn't necessarily be able to
+[41:59] come up with the uh like cor quote
+[42:02] unquote correct answer um from the vague
+[42:05] issue description. And so Sweetbench
+[42:07] verified is an attempt to make like all
+[42:08] of them solvable. This is what everybody
+[42:10] evaluates on nowadays because it's just
+[42:12] like this we don't really know what the
+[42:15] upper bound on performance is but on
+[42:17] sweet bench verified we think the upper
+[42:18] bound is close to 100. So um that's what
+[42:21] people use. On the other hand it takes a
+[42:23] lot of the fun out of uh like trying to
+[42:24] resolve ambiguous issues and stuff like
+[42:26] that. So um you know uh just because you
+[42:30] get a good score on Sweetbench verified
+[42:32] doesn't mean you've solved all uh all
+[42:33] GitHub issues which would require like
+[42:35] interacting with a human uh you know to
+[42:38] clarify ask clarifying questions or
+[42:40] something but uh there's that another
+[42:43] thing this is this is all in Python and
+[42:46] so there's also things like multis
+[42:48] bunchen which have different programming
+[42:50] languages and swbench multimodal which
+[42:52] has multimodal uh data where you need to
+[42:54] like fix a front end and stuff like
+[42:56] that. So a lot of different examples
+[42:59] also su rebench which is updated every
+[43:03] month with new issues. Uh so uh a lot of
+[43:06] examples here.
+[43:09] Um a second one is web arena and web
+[43:12] arena was actually one that we created
+[43:15] here but um in my lab at CMU but a lot
+[43:18] of people uh use it to evaluate web
+[43:20] agents. And basically the way it works
+[43:23] is um you set up uh you know a bunch of
+[43:27] different uh websites and these are all
+[43:31] open-source versions of something you
+[43:33] might think are like popular websites.
+[43:35] So um there's one-stop shop which is an
+[43:38] open- source version of uh basically
+[43:41] Amazon. It's you know a shopping site.
+[43:43] You have a content management system. So
+[43:45] this is the content management system
+[43:47] for one-stop shop. So basically you go
+[43:50] in and like add uh you know
+[43:54] like items uh items to a store and other
+[43:56] stuff like that. Um we also have a open
+[43:59] source version of Reddit called
+[44:00] Postmill, an open source version of
+[44:02] GitHub called GitLab. Um so uh like
+[44:06] these are kind of like production grade
+[44:09] uh open source sites and then we have a
+[44:10] lot of other information sources like
+[44:12] Wikipedia and stuff and then the agent
+[44:14] goes through and tries to uh answer
+[44:18] questions like um tell me how much I
+[44:21] spent on food purchases in March 2023 or
+[44:24] uh create um a Nolan fans repo listing
+[44:27] Nolan's Oscar winning films in a readme
+[44:29] file. um and uh there are lots of tasks
+[44:35] complex multi-step web interactions. So
+[44:37] this is kind of a standard web agent uh
+[44:39] evaluation benchmark.
+[44:42] Um another area where people use agents
+[44:45] like I I talked about before is
+[44:47] research. And so a kind of standard uh
+[44:50] version of this is Gaia. Um and Gaia is
+[44:55] uh basically a research benchmark where
+[44:58] you need to find things like uh or it's
+[45:01] kind of a general assistance benchmark
+[45:03] with like leaning towards research. And
+[45:05] so it's like what is the enrollment
+[45:07] count of clinical tri of this clinical
+[45:09] trial um you know read this uh label and
+[45:13] tell me tell me about it. Um read about
+[45:17] NASA's astronomy picture of the day. Um
+[45:20] and so uh a lot of uh you know the idea
+[45:24] is that this allows you to do research.
+[45:26] Um this was created by HuggingFace and
+[45:29] Meta and they actually just released
+[45:32] about last week Gaia 2. Um which I
+[45:34] haven't tried out yet but it's supposed
+[45:36] to be kind of a modernized version of
+[45:37] this. So you can also check that out.
+[45:41] Um
+[45:42] there's a lot of other evaluation
+[45:44] benchmarks that you can use and I would
+[45:47] maybe like to highlight
+[45:50] a few of those. Um so in the in the open
+[45:56] hands repo
+[45:58] we have an evaluation
+[46:01] um benchmarks
+[46:03] directory which has like 25 25 different
+[46:07] benchmarks which are all implemented um
+[46:10] and these cover things like coding all
+[46:13] the way to um like general assistance to
+[46:17] web navigation other stuff like this. So
+[46:20] this is one example. Also recently um a
+[46:23] company called Prime Intellect
+[46:26] um released
+[46:28] uh a environment hub
+[46:33] which has a bunch of uh environments.
+[46:38] The environments could be used for
+[46:40] training or evaluation but I I would say
+[46:42] that most of these are more like
+[46:44] evaluation environments. They're not
+[46:45] like training environments. But um this
+[46:47] is another uh another place that you
+[46:49] could look to find lots of environments.
+[46:51] The ones in the open hands hub will skew
+[46:53] towards being like practical ones that
+[46:55] like immediately you could see the
+[46:57] usability of uh the ones in the
+[47:00] environments hub for prime intellect
+[47:01] will be more on the ones that are like
+[47:03] more sandboxed and like simpler to run.
+[47:06] So um if you want to do like a research
+[47:09] project, I think the ones on the
+[47:10] environments hub might be a good place
+[47:12] to start and then when you want to
+[47:13] graduate to things that are more complex
+[47:15] or uh kind of real world usage, the ones
+[47:18] on the open ends are um are probably
+[47:21] better and uh they kind of like overlap
+[47:24] to some extent. There are some that are
+[47:25] included in both.
+[47:32] Cool. Um any any questions here? Another
+[47:40] thing is this is very expensive to
+[47:42] evaluate. So um if you want to uh work
+[47:46] on uh work on inference and make this
+[47:48] faster for me, I would be very happy.
+[47:51] Um the the next thing is uh critic
+[47:55] models and I'd like to talk a little bit
+[47:57] about this. Um so critic models for
+[47:59] agents the motivation here is it can
+[48:02] help to have a second opinion about um
+[48:06] how well your agent is doing. And
+[48:09] there's a a couple use cases for this.
+[48:12] Um the first use case is to rerank
+[48:14] multiple candidates to increase
+[48:16] accuracy. Um another is to audit to
+[48:21] ensure safety. Um and so uh safety or or
+[48:26] maybe just like performance.
+[48:28] And so to give an example of a paper on
+[48:32] reranking uh this is a paper that uh we
+[48:36] did with uh people uh in collaboration
+[48:38] with people at UC Berkeley. It's called
+[48:40] Sweden. And basically there were two
+[48:42] parts to this paper. The first part of
+[48:44] this paper was just training software
+[48:46] engineering models through reinforcement
+[48:48] learning or software engineering agent
+[48:50] models through reinforcement learning.
+[48:51] But the second part was uh training a
+[48:53] critic model to rerank multiple
+[48:56] candidate uh trajectories agent
+[48:59] trajectories. And the basic idea is that
+[49:02] you want to perform inference where you
+[49:04] roll out end times and then pick the
+[49:07] best output.
+[49:10] And basically what we showed is that if
+[49:13] you started out with a model that had uh
+[49:16] 20 uh about 20% accuracy at the time, um
+[49:20] every time you double the number of
+[49:23] rollouts you do, you see an
+[49:26] approximately constant gain in the
+[49:29] amount that the score increases on
+[49:32] Sweetbench. And we were able to get uh
+[49:35] from, you know, around 20 to uh up to 32
+[49:38] here. Um, and so basically if you really
+[49:42] want the best benchmark score, this is
+[49:44] super effective at getting the best
+[49:45] benchmark score at the cost of having to
+[49:49] run inference like 16 times uh which is
+[49:51] very expensive because running agents is
+[49:53] expensive already. Um, and if I haven't
+[49:56] convinced you that this is something,
+[49:59] uh, like important,
+[50:01] um, we were just talking about, uh,
+[50:05] Claude Sonnet 4.5 coming out.
+[50:10] Um,
+[50:12] and if you look at their results here,
+[50:15] um, the dark bar is single instance
+[50:18] inference and the light bar is where
+[50:21] they did lots of rollouts and then they
+[50:22] reranked them. Um, and so this is uh
+[50:25] this is what everybody does when they
+[50:27] want to uh when Anthropic wants to beat
+[50:29] OpenAI and then OpenAI wants to beat
+[50:31] Anthropic or uh you know we want we want
+[50:34] to beat uh you know whoever else. So,
+[50:37] um, in reality, I don't know if there's
+[50:39] that many people, uh, that many people
+[50:41] who use this in like a production
+[50:42] setting, but like let's say, um, let's
+[50:46] say you were working on a agent to run
+[50:48] like a machine learning experiment or
+[50:50] something like this and you, um, you
+[50:54] really wanted it to succeed and you
+[50:56] could spend um, $10,000 on making sure
+[50:58] that it succeeded, then this could be a
+[51:00] viable option for something like that.
+[51:06] Um and then the way it is the way it's
+[51:10] trained actually sorry I I totally um
+[51:14] this is the first time I made the slides
+[51:16] so I I forgot a few slides but basically
+[51:18] the way the way it's trained is pretty
+[51:20] simple um what you do is you do a roll
+[51:22] out uh of the trajectory you evaluate
+[51:26] the roll out using the like unit tests
+[51:29] on that you have to evaluate the output
+[51:32] and um Then after you've evaluated the
+[51:35] output, you uh you train a model to
+[51:38] predict whether the output was correct
+[51:40] or not. So this is the simplest way to
+[51:42] do this. When we talk about reward
+[51:44] models, um in the future classes, this
+[51:46] is an outcome reward model. Um another
+[51:49] way you can do this is uh an outcome
+[51:52] reward model predicts only the out the
+[51:54] final outcome. So you basically predict
+[51:56] the final outcome. Another way you can
+[51:58] do this is um come up with some sort of
+[52:00] intermediate reward uh step by step and
+[52:03] try to predict how successful each step
+[52:05] is. Uh this is called a process reward
+[52:08] model, but coming up with a supervision
+[52:10] for this is much more uh complex and
+[52:13] we'll probably talk about that in the
+[52:14] reward models class.
+[52:18] Cool. Um any questions here?
+[52:22] >> Yeah,
+[52:24] >> we can also like just to verify if the
+[52:27] agent solved an issue or not. We can
+[52:29] also use tests.
+[52:31] >> Yeah.
+[52:31] >> Then like why do we want to like why
+[52:34] don't we generally train models that can
+[52:36] predict tests instead of training a
+[52:38] models that can like predict from a
+[52:41] trajectory because that will be system
+[52:43] agnostic.
+[52:44] >> Yeah, that's a great question. So um we
+[52:47] can
+[52:49] um we can tell success from whether unit
+[52:53] tests pass or not. So why don't we just
+[52:55] train a model that's really good at
+[52:56] generating unit tests and then use the
+[52:58] unit test to decide whether it passed or
+[52:59] not. Um I think we should do that
+[53:03] honestly. I I think that would be uh
+[53:05] that would be great but unfortunately
+[53:07] models are not all that great at
+[53:09] generating unit tests. And then like
+[53:12] let's say some unit tests didn't pass
+[53:14] you might still be successful. Um there
+[53:16] are some tasks that are not necessarily
+[53:20] easily
+[53:21] unit testable like a research task or
+[53:24] something like that. So like there are
+[53:25] situations where this would not be an
+[53:28] appropriate solution but I think overall
+[53:30] for software engineering it is a very
+[53:32] appropriate solution and we should work
+[53:33] more on it. Um there's a benchmark that
+[53:36] I didn't talk about um called SWTB which
+[53:39] is software testing bench um that tests
+[53:42] and also test Genov. There's other
+[53:45] benchmarks like this and I really wish
+[53:47] that these benchmarks get more love.
+[53:48] Like I I think software testing sounds
+[53:52] boring until you realize that if you can
+[53:54] write a really good unit test the agent
+[53:55] can usually solve the problem for you.
+[53:57] And so I think uh we can focus more on
+[53:59] on that sort of stuff.
+[54:02] Cool. any other
+[54:05] Okay, great. I'd like to talk a little
+[54:07] bit about multi- aent systems. Um,
+[54:10] and so there's a number of reasons why
+[54:12] you'd want to use multiple agents. Um,
+[54:15] the first reason, uh, which
+[54:19] at least until about
+[54:22] 6 to 12 months ago was a very popular
+[54:25] reason to use multiple agents is
+[54:26] specialization. Um and the idea is you
+[54:30] can have different agents use uh solve
+[54:32] different tasks. Um and
+[54:36] there's a usually an analogy which is
+[54:39] like um
+[54:42] in a software company you don't have one
+[54:44] person who is
+[54:47] planning and implementing and doing
+[54:50] quality assurance and other stuff like
+[54:51] that. So we should have different agents
+[54:53] to do these things. Um, I kind of agree
+[54:56] that this is uh true in a software
+[54:59] company or I definitely agree that it's
+[55:00] true in a software company. But on the
+[55:02] other hand, we have an LLM that can do
+[55:04] all of these things well and LLM kind of
+[55:08] like absorb all the specialized
+[55:10] knowledge and can memorize like things
+[55:12] that far beyond what humans can
+[55:14] memorize. So I'm a little bit less
+[55:16] convinced that this is a good motivation
+[55:18] for doing multi- aent systems. uh you
+[55:21] know especially now that we have
+[55:23] language models that are pretty good at
+[55:25] um at doing individual tasks.
+[55:28] On the other hand, there is a really
+[55:30] strong um argument for doing multi- aent
+[55:34] systems when you have complex tasks uh
+[55:38] that can be easily parallelized because
+[55:40] you can have one agent do one part of
+[55:42] the task, another agent do another part
+[55:43] of the task, another agent do another
+[55:44] part of the task. So I think this is um
+[55:47] a strong argument to use multiple
+[55:48] agents. Um,
+[55:51] one uh comparison you can make if you
+[55:55] subscribe to both chat GPT and claude is
+[55:58] try to do a research task for um open on
+[56:02] the open AAI chat deep research and then
+[56:05] also do it on the claude deep research
+[56:07] and the cla research does this sort of
+[56:10] task parallelization. will have a kind
+[56:12] of like master agent delegate a whole
+[56:14] bunch of different research tasks to
+[56:16] different agents and you'll then open AI
+[56:20] will be doing everything in serial and
+[56:22] you'll see open AAI will look up like 30
+[56:23] references and claude will look up like
+[56:25] 300 references or something like this
+[56:27] and you can see the results from claude
+[56:29] are much more comprehensive so this is a
+[56:32] good example this is hard for software
+[56:34] engineering tasks for instance because
+[56:36] like very often it's hard to decompose
+[56:38] the task together without having like
+[56:40] conflicts between the code you write and
+[56:42] other stuff like that. But it is it's
+[56:44] still possible there, it's just harder.
+[56:47] Um,
+[56:48] another reason could be for robustness.
+[56:52] And so like for example, you might
+[56:54] delegate um you might delegate four
+[56:57] different tasks to four different agents
+[56:59] and then have another agent like double
+[57:00] check. So it's kind of like the agent is
+[57:03] um doing uh like
+[57:09] the agent is uh acting as a critic
+[57:12] model. So after one agent has finished
+[57:14] the task, you go back and and double
+[57:15] check its work. So there are benefits
+[57:17] there as well. Um and so why not use
+[57:22] multiple agents? There's more components
+[57:23] to manage and integrate. Um task
+[57:26] composition can be tricky. Um, another
+[57:29] issue is communication difficulties. And
+[57:31] what I mean by this is, um, when you're
+[57:34] implementing a system with multiple
+[57:36] agents talking to each other, um, you
+[57:39] want to make sure that exactly the
+[57:40] correct context is passed. So you don't
+[57:43] necessarily want to pass too much
+[57:44] context because there's kind of an
+[57:46] advantage of an agent like
+[57:49] um, solving a task and then kind of that
+[57:53] task summary just being passed back to
+[57:55] the main agent. But on the other hand,
+[57:57] um a very common failure case that we
+[57:59] saw is one like we used to have a web
+[58:02] browsing agent within open hands that
+[58:04] was separate. Now we just have one agent
+[58:06] that does web browsing and um the web
+[58:09] browsing agent would do a whole bunch of
+[58:10] information gathering and then it would
+[58:12] give a very brief report back that
+[58:14] wasn't like sufficient and like the
+[58:16] coding agent would be like missing
+[58:19] information that the web browsing agent
+[58:21] actually discovered during its process
+[58:22] of web browsing. So you need a really
+[58:24] good uh effective way of passing context
+[58:27] together. Ah yes
+[58:30] >> context pass always informed like you
+[58:32] know tokens and not saves like logits or
+[58:36] even even deeperations.
+[58:38] >> Why is the so good question why is the
+[58:41] context not passed in the form of logets
+[58:43] or deeper representations?
+[58:45] Um I there
+[58:48] I think that would be possible. I think
+[58:51] probably the biggest reason why is
+[58:53] because um many of the best models for
+[58:57] being agents are proprietary models and
+[59:00] you're not able to easily do that with
+[59:02] proprietary models uh through an API. Um
+[59:05] but I think if you could demonstrate
+[59:07] that that was very useful with open
+[59:08] models uh that you could use for
+[59:10] something like that then that could be
+[59:12] valuable and that might convince people
+[59:14] who are building proprietary models to
+[59:16] support that
+[59:19] >> feedback output into the state is always
+[59:22] good to feed the head state of one state
+[59:25] next one and that's because of this
+[59:27] information
+[59:30] loss. So
+[59:31] >> yeah. Yeah, I I agree. Good idea.
+[59:35] Um, so there's a bunch of frameworks. We
+[59:38] talked a little bit about Ling Graph.
+[59:40] Um, I'm going to talk a little bit about
+[59:41] autogen. Um, but basically there are
+[59:44] frameworks for building multi-agent
+[59:45] systems. Um, and usually what they do is
+[59:48] they kind of give you the scaffolding to
+[59:50] do this sort of context passing um,
+[59:52] implementation of tools uh, and other
+[59:55] stuff like this. Um so I I think for
+[59:58] quickly bootstrapping a system
+[1:00:00] especially an agentic system with a very
+[1:00:04] fixed workflow um not something more
+[1:00:06] complex like you know research or um
+[1:00:10] like arbitrary research or coding but
+[1:00:12] something more like I want to process
+[1:00:15] um
+[1:00:17] I want to process this file that a user
+[1:00:21] has uploaded extract this fixed set of
+[1:00:23] information from it and then upload it
+[1:00:26] to a database. Um then these sorts of
+[1:00:30] fixed workflows are are quite helpful.
+[1:00:32] Um and so they they give you things like
+[1:00:34] customizable agents, flexible
+[1:00:36] conversation patterns. Um they can also
+[1:00:38] pass things to humans if you want.

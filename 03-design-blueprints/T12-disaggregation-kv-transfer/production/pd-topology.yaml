@@ -1,0 +1,80 @@
+# T12 — prefill/decode pool topology (REFERENCE-GRADE, NOT EXECUTED HERE)
+#
+# No cluster exists in the environment that produced this blueprint. These manifests are
+# the shape a platform team would commit; they have not been applied anywhere.
+#
+# Transcript coverage: primary
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: t12-prefill
+  namespace: inference
+  labels: {topic: T12, pool: prefill}
+spec:
+  # Prefill is compute-bound: it processes the whole prompt in one pass. It holds no
+  # persistent KV -- the blocks it produces leave for the decode pool. [T]
+  replicas: 3
+  selector: {matchLabels: {app: t12-prefill}}
+  template:
+    metadata: {labels: {app: t12-prefill, pool: prefill}}
+    spec:
+      containers:
+        - name: server
+          image: <your-vllm-build>
+          args:
+            - --model=/models/<checkpoint>
+            - --tensor-parallel-size=8
+            - --kv-transfer-config={"kv_connector":"<nixl-or-equivalent>","kv_role":"kv_producer"}
+          env:
+            - {name: POOL_ROLE, value: "prefill"}
+            # The prefill pool has no reason to hold a large KV cache; its memory goes
+            # to weights and activations. This is the tuning the split buys you. [T]
+            - {name: GPU_MEMORY_UTILIZATION, value: "0.90"}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: t12-decode
+  namespace: inference
+  labels: {topic: T12, pool: decode}
+spec:
+  # Decode is memory-bandwidth-bound and KV-resident. The corpus is explicit that the
+  # right P:D ratio depends on the workload -- 2P2D versus 3P1D performed differently
+  # and prefill-heavy work wanted more prefill -- so this count is derived, not fixed. [T]
+  replicas: 5
+  selector: {matchLabels: {app: t12-decode}}
+  template:
+    metadata: {labels: {app: t12-decode, pool: decode}}
+    spec:
+      containers:
+        - name: server
+          image: <your-vllm-build>
+          args:
+            - --model=/models/<checkpoint>
+            - --tensor-parallel-size=8
+            - --kv-transfer-config={"kv_connector":"<nixl-or-equivalent>","kv_role":"kv_consumer"}
+          env:
+            - {name: POOL_ROLE, value: "decode"}
+            - {name: GPU_MEMORY_UTILIZATION, value: "0.85"}
+          resources:
+            limits: {amd.com/gpu: 8}
+---
+# The KV transfer path itself. It is NOT a topology: the connector is swappable, because
+# the corpus describes one library among several supported on ROCm rather than the design
+# itself. [T]
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: t12-kv-transfer
+  namespace: inference
+  labels: {topic: T12}
+data:
+  connectorLibrary: "nixl"          # swappable seam -- see production/transfer-engine.md
+  transferRole: "producer-consumer"
+  transport: "rdma"
+  metricsEnabled: "true"
+  # The two event kinds the router MUST receive. Emitting only one is the failure mode
+  # that produces a silently stale router. [T]
+  emittedEvents: "kv_created,kv_evicted"
+  eventSchemaVersion: "1"

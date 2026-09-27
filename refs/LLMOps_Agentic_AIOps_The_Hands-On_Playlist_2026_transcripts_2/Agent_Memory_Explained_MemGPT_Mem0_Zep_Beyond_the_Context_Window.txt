@@ -1,0 +1,176 @@
+Title: Agent Memory Explained: MemGPT, Mem0 & Zep (Beyond the Context Window)
+
+--- TRANSCRIPT ---
+
+[0:00] An agent's context window fills up and
+[0:02] old facts fall out. How does it actually
+[0:04] remember? A bigger context window feels
+[0:06] like the answer, but it is not memory.
+[0:08] It is just a larger disk. Everything
+[0:10] still gets swept off when the
+[0:11] conversation grows. Real agents need to
+[0:13] carry facts across sessions, days, and
+[0:15] restarts. That requires memory as a
+[0:17] deliberate system, not a side effect of
+[0:19] a long prompt.
+[0:21] The mechanism separates two tiers
+[0:22] borrowed straight from how an operating
+[0:24] system manages memory. Working memory is
+[0:27] what fits in the prompt right now.
+[0:29] Long-term memory lives in an external
+[0:30] store, usually a vector database, that
+[0:33] the agent searches on demand. Between
+[0:35] turns, the agent decides which facts are
+[0:38] worth keeping and writes them back to
+[0:39] the store so it can retrieve them long
+[0:41] after they have left the prompt.
+[0:43] Here is why that matters in one small
+[0:45] story. On the first turn, the user
+[0:47] mentions they are vegetarian and
+[0:49] allergic to peanuts. The agent extracts
+[0:52] those two facts and writes them to
+[0:54] long-term memory scoped to that user.
+[0:56] Two weeks and many conversations later,
+[0:58] they ask for a recipe. The agent
+[1:00] retrieves those facts and quietly avoids
+[1:02] meat and peanuts. That continuity is
+[1:04] what makes an assistant feel like it
+[1:06] actually knows you.
+[1:08] Each turn has a read half and a write
+[1:10] half. First, search memory for facts
+[1:12] relevant to this message and build them
+[1:14] into the prompt. Then, after replying,
+[1:16] extract new salient facts and write them
+[1:18] back. The important word is upsert, not
+[1:21] append. Good memory tools add, update,
+[1:24] or delete so the store stays a clean set
+[1:26] of current facts, not an ever-growing
+[1:28] transcript.
+[1:29] The subtle risk is that memory you never
+[1:31] curate becomes a liability, not an
+[1:33] asset. If you write facts back without
+[1:36] checking them, one wrong or outdated
+[1:38] statement can persist and mislead the
+[1:39] agent for months long after it stopped
+[1:41] being true. Systems like Zep add a time
+[1:44] dimension with a temporal knowledge
+[1:45] graph, tracking when a fact was true so
+[1:48] it can expire instead of haunting every
+[1:51] future conversation.
+[1:53] Picture memory as nested tiers. The
+[1:55] small hot core is the working context in
+[1:57] the prompt. Around it sits the session
+[1:59] and around that the large durable
+[2:01] long-term store. The agent's real job is
+[2:04] moving the right facts inward from the
+[2:06] big cold store into the small hot prompt
+[2:08] at exactly the right moment.
+[2:11] Not every agent needs a memory system,
+[2:13] so match it to the job. A one-shot task
+[2:15] is best left stateless. Memory would
+[2:17] only add risk. A single multi-turn
+[2:19] session is fine with the conversation
+[2:21] history itself as memory. You only need
+[2:23] a real long-term store when the agent
+[2:25] must remember a person across days and
+[2:27] sessions. Reach for it deliberately
+[2:29] because it brings the poisoning risks we
+[2:31] just discussed.
+[2:33] The ecosystem converged on three kinds
+[2:35] of memory borrowed from cognitive
+[2:37] science and they are stored differently.
+[2:39] Episodic memory holds specific events
+[2:41] like what happened in a past
+[2:42] conversation. Semantic memory holds
+[2:44] durable facts like a user's preferences
+[2:47] or a company's policies. Procedural
+[2:49] memory holds learned skills, the how-to
+[2:51] steps an agent has figured out and
+[2:53] should reuse. Most systems lean heavily
+[2:56] on semantic, retrieving facts, but the
+[2:58] richest agents use all three. Naming
+[3:00] which type you need clarifies the
+[3:02] design. A fact goes in semantic memory
+[3:04] and can be updated, while an event goes
+[3:06] in episodic memory and is usually kept
+[3:08] immutable. Let us see the three types
+[3:10] working together in a real product. A
+[3:12] customer support co-pilot keeps a
+[3:14] semantic profile for each customer,
+[3:16] their plan, their preferences, their
+[3:18] known issues, and an episodic log of
+[3:20] past tickets it can pull up when a
+[3:22] related problem returns. Every memory is
+[3:25] strictly scoped to one customer, so
+[3:27] nothing bleeds across accounts, and
+[3:29] time-sensitive facts expire on their
+[3:31] own. That combination is what makes the
+[3:33] co-pilot feel informed instead of creepy
+[3:36] or wrong.
+[3:37] Memory is powerful and it fails quietly,
+[3:40] so treat it with care. Append every
+[3:42] message forever and search soon returns
+[3:44] mostly junk. Never expire anything and a
+[3:47] fact that was true last year keeps
+[3:48] steering answers today. The most
+[3:50] dangerous bug is unscoped memory where
+[3:53] one person's data surfaces in another's
+[3:55] chat. Always scope by user, curate on
+[3:57] right, and give facts a shelf life.
+[4:00] You do not have to invent a memory
+[4:02] layer. Several good ones exist. Mem0,
+[4:04] Zep, and LlamaIndex give you managed
+[4:06] long-term memory. Underneath, they sit
+[4:08] on a vector store like PGVector, Qdrant,
+[4:11] or Redis that you may already run. And
+[4:13] if you are already in LangGraph or
+[4:15] LlamaIndex, both ship memory modules you
+[4:18] can adopt without adding a new service.
+[4:21] So, what is Mem0? It is an open-source
+[4:23] memory layer that gives agents
+[4:24] persistent long-term memory. Rather than
+[4:27] appending forever, it intelligently
+[4:29] adds, updates, and deletes facts, and it
+[4:31] stores them in a vector database behind
+[4:33] a very small API. Zep and LlamaIndex are
+[4:35] the main alternatives, with Zep adding a
+[4:37] temporal graph for fact expiry.
+[4:40] Mem0 turns long-term memory into
+[4:42] essentially a two-method API. Add a fact
+[4:45] scoped to a user, then search it later.
+[4:46] The library handles the extraction, the
+[4:48] updates, and the deduplication under the
+[4:50] hood, so you avoid the append-forever
+[4:52] trap. Notice the user ID on both calls.
+[4:55] That scoping is your first line of
+[4:56] defense against memory bleeding between
+[4:58] people.
+[4:59] Memory quality is measurable, too, so
+[5:02] keep it on a dashboard. The retrieval
+[5:03] hit rate tells you whether the right
+[5:05] fact is actually recalled when it
+[5:06] matters. The stale fact rate and the raw
+[5:09] growth of the store warn you when
+[5:11] curation is falling behind. And one
+[5:13] metric is non-negotiable. Cross-user
+[5:15] leakage must be exactly zero. If it is
+[5:17] ever not, that is a stop-the-line
+[5:19] incident, not a tuning opportunity.
+[5:22] Let us gather the four essentials of
+[5:23] agent memory. First, separate the
+[5:25] working memory in the prompt from a
+[5:27] long-term store you search. Second,
+[5:29] curate on right, adding, updating, and
+[5:31] deleting instead of appending forever.
+[5:34] Third, scope every memory to a user and
+[5:36] let stale facts expire. And fourth, use
+[5:38] the three memory types together:
+[5:39] episodic events, semantic facts, and
+[5:41] procedural skills. Memory is what makes
+[5:44] an agent feel like it knows you. Curated
+[5:45] carelessly, it is also how an agent
+[5:47] quietly starts getting you wrong.
+[5:50] The one-line answer? Finally, how do
+[5:52] agents and tools talk to each other
+[5:54] safely across vendors? Protocols and
+[5:56] governance are next.

@@ -1,0 +1,1688 @@
+Title: CMU LLM Inference (6): Other Controlled Generation Methods
+
+--- TRANSCRIPT ---
+
+[0:01] I'll give everyone kind of a sec. Great.
+[0:04] So, today we're going to be talking
+[0:05] about kind of a continuation of what we
+[0:08] started talking about at the very end of
+[0:10] uh Tuesday's lecture, which is various
+[0:11] ways to control or to constrain
+[0:13] generation. Um, and I'll use these more
+[0:16] or less interchangeably uh throughout.
+[0:18] Um, also just as a note, I'm sure almost
+[0:21] everyone saw, but homework one came out
+[0:23] at the end of last week. Um, we've seen
+[0:25] a number of questions on Piaza about it.
+[0:27] Um, so that's great. Um, feel free also
+[0:29] to come to office hours and in
+[0:31] particular there's been kind of a number
+[0:33] of questions about the question of the
+[0:35] beam search puzzle. Um, and there will
+[0:37] be I think a little bit of a hint for
+[0:38] that in one of the things we'll talk
+[0:39] about today. Um, so keep an eye out for
+[0:41] that. Um, and with that uh in mind um
+[0:46] today we're going to talk kind of about
+[0:48] two different broad sets of constraints.
+[0:50] We're going to talk about these
+[0:51] syntactic constraints. constraints that
+[0:53] are very easy to write down as sort of a
+[0:55] list of allowable or unallowable tokens.
+[0:58] Um, and then we'll talk about some more
+[0:59] semantic constraints that are a little
+[1:00] bit harder to define in that way. Um,
+[1:02] and we'll make a connection between that
+[1:04] and between like a token level notion of
+[1:06] alignment. Um, which will sort of bring
+[1:08] us a little bit close to talking about
+[1:10] RHF.
+[1:12] So over the last two lectures in both
+[1:16] beam search and AAR and rest for search,
+[1:18] we've kind of talked about ways of
+[1:20] constraining output already. Um and this
+[1:22] comes in the form of taking a search
+[1:24] score that is not exactly the log
+[1:25] probabilities out of the model. So we
+[1:28] adjust our search scores for length when
+[1:30] we apply a length penalty. We adjust our
+[1:33] search scores to be diff to penalize
+[1:35] similarity to or encourage different
+[1:37] from difference from other partial
+[1:39] outputs in diverse beam search. and we
+[1:43] can factor in some additional heruristic
+[1:45] for expected reward which is kind of
+[1:46] where we left things off on Tuesday with
+[1:48] neurologic aar ask.
+[1:51] Um we are going to continue on this
+[1:53] theme today talking about constraints
+[1:55] that aim to produce an output that is
+[1:57] high probability and satisfies some
+[1:59] additional criteria on X. Um and what X
+[2:01] is will change kind of over the course
+[2:03] of the lecture. But in here we're no
+[2:05] longer assuming that the best way to do
+[2:06] this is through some kind of search
+[2:09] although that might certainly be the
+[2:10] answer. We're also going to consider
+[2:12] first just modifying the probability
+[2:14] distribution and then resampling from
+[2:15] it.
+[2:17] Um so in that process we'll talk about
+[2:20] kind of a couple of different types of
+[2:22] constraints. We're going to start with
+[2:24] constraints that are uh what I'm saying
+[2:27] in kind of a maybe sort of loose sense
+[2:29] of the term verifiable which here I'm
+[2:32] defining for the purposes of today that
+[2:34] you can write some deterministic
+[2:36] function to check if the constraint was
+[2:38] satisfied at the end of generation. you
+[2:39] can sort of make a list of all of the
+[2:40] things that are allowable. Um, and we
+[2:44] also care not just about if something is
+[2:46] verifiable at the end of generation, but
+[2:48] about whether it is verifiable at each
+[2:50] individual token. Um, so you could
+[2:54] imagine something like the output must
+[2:56] be exactly 10 tokens long. That's
+[2:58] obviously verifiable. It's very easy to
+[3:00] check if that is true at the end of
+[3:02] generation. But if in the course of
+[3:05] generating that output, you're not you
+[3:07] don't have confidence at each step that
+[3:08] the choice you're making is going to
+[3:11] lead to that output being that
+[3:12] constraint being satisfied. It's sort of
+[3:14] not token-wise verifiable. Whereas if
+[3:16] your constraint was something like every
+[3:18] token needs to start with a space or
+[3:21] every um thing I output needs to be in
+[3:24] Chinese or everything I am writing needs
+[3:27] to be for instance valid JSON. this is
+[3:30] something that you can determine if
+[3:31] you're diverging from that constraint at
+[3:33] any individual step of generation. Um
+[3:37] and so of of course this is like a
+[3:39] little bit easier to measure. So to kind
+[3:41] of tie back to the last lecture um I've
+[3:43] taken this constraint directly from the
+[3:45] neurologic asteresque paper. Um the
+[3:47] constraint is to write a sentence with
+[3:49] these concepts car drive and snow. Um
+[3:52] and in the context of this work this
+[3:54] functionally means write a sentence that
+[3:56] includes these three words. Um the this
+[3:59] is clearly verifiable. The final output
+[4:02] is a success if we have these words in
+[4:04] it, but it's not token-wise verifiable.
+[4:06] Right? If you start from the token
+[4:07] 'the', there's no guarantee that you're
+[4:09] going to wind up generating car or drive
+[4:11] or snow. Um the intuition that we kind
+[4:15] of talked about on Tuesday is that as um
+[4:18] tries to estimate this huristic
+[4:20] likelihood of satisfying the constraint
+[4:22] by the end of the by the end of the uh
+[4:26] generation. Um, and so if we have the
+[4:30] start of our completion, I drive my car
+[4:32] during the, um, we've already satisfied
+[4:34] two of our three constraints. Um, maybe
+[4:37] we have a couple of options for our next
+[4:39] token. If we generate the next token,
+[4:41] summer, um, that's a reasonably high
+[4:43] probability completion. I drive my car
+[4:45] during the summer is a valid sentence,
+[4:47] but that might make it a little bit
+[4:48] harder for us to get to the concept snow
+[4:50] by the end of the generation. Whereas
+[4:52] winter, maybe slightly lower
+[4:54] probability. I don't like driving in the
+[4:55] winter. um but much more likely to wind
+[4:58] up with generating the token snow at
+[5:00] some point. Right? So we have this
+[5:01] intuition that maybe the probability of
+[5:04] summer is slightly higher than the
+[5:06] probability of of winter conditioned on
+[5:08] this prefix. But if we do some type of
+[5:10] look ahead um and here we're doing look
+[5:13] ahead with a star. We can see that one
+[5:16] of these is much more likely to lead to
+[5:18] satisfying our constraint than the
+[5:19] other. And so we apply some kind of
+[5:21] reshaping or we choose the path that is
+[5:23] more likely to satisfy our constraint.
+[5:26] Right? And this is um this is like the
+[5:29] idea behind a lot of these methods.
+[5:32] Um so we're going to set that aside for
+[5:35] a second and start with a easier case
+[5:38] which is a case where we can tokenwise
+[5:41] verify if we've satisfied our
+[5:42] constraint. Um and this is a sort of
+[5:44] like templatic generation. So you could
+[5:47] imagine you have some requirement for
+[5:49] the outputs of your language model like
+[5:51] every time you talk to the user you
+[5:52] should start your message with hello or
+[5:54] you should always end every output with
+[5:56] thanks for chatting with me or something
+[5:58] like you should always output valid
+[6:00] JSON. Um could you train a model to
+[6:04] satisfy this constraint?
+[6:06] You see some nas yeah like you could do
+[6:08] some kind of you could give it a ton of
+[6:10] training data that always has this um at
+[6:12] the beginning of everything. If you give
+[6:14] a training data that always ends with
+[6:15] this, um would you be guaranteed that it
+[6:17] would always do that though?
+[6:21] No. Right? There's always some chance um
+[6:23] especially if you're sampling that you
+[6:25] wind up in a space of the probability
+[6:26] distribution where your output ends
+[6:28] strangely or maybe it's too long and it
+[6:30] gets cut off. Um and particularly
+[6:34] there's a wide space of valid JSON and
+[6:35] it could write something really weird.
+[6:37] Also, what if you wanted to change um
+[6:40] your your uh constraint over time? If
+[6:43] you wanted to change hello to bonjour
+[6:46] for a week, uh maybe the Olympics are in
+[6:48] Paris or something. Um you would you
+[6:51] want to retrain your model entirely to
+[6:52] do that? Probably not, right? So these
+[6:55] are things that are possible to
+[6:56] fine-tune the model to do, but because
+[6:58] they are so relatively
+[7:00] simple to enforce at inference time. Um
+[7:03] these are things that are probably
+[7:05] better to do as like an inference time
+[7:07] modification or as a constraint on
+[7:09] generation. Um we're going to spend some
+[7:11] time on valid JSON, but for these first
+[7:13] two, does anyone have a sense of how you
+[7:15] would enforce these at inference time?
+[7:19] Maybe just maybe for hello. Yeah.
+[7:24] Sorry, what was that?
+[7:29] >> Yeah, just like append hello at the very
+[7:31] beginning of the Exactly. Yeah. And for
+[7:34] um thanks for chatting with me at the
+[7:36] end.
+[7:38] >> Exactly. You could just you just append
+[7:40] the output at the end. Um even outside
+[7:42] of your sampling from the model. Um
+[7:46] these are the kinds of things that are
+[7:47] relatively easy to do if you have
+[7:48] control over like a system, right? if
+[7:50] you're like receiving inputs for an API.
+[7:53] Um how however are we going to get the
+[7:55] model to always output valid JSON? I
+[7:58] think the reasonable um thing in 2025 to
+[8:01] ask first is can you just ask the model
+[8:02] to do this? Um and so I I passed to GPD5
+[8:06] this morning just convert this to a JSON
+[8:08] for me. Um and of course GPD5 knows what
+[8:11] JSON format looks like. Um but the sort
+[8:13] of default here is that it also gives
+[8:15] you a lot of little additional text on
+[8:17] the sides. you know, it says, "Hi, I've
+[8:19] done this thing for you. I made this
+[8:21] change, which is probably reasonable. Do
+[8:22] you want me to keep this format?" Um, so
+[8:24] if you were calling this as like an API
+[8:26] call, um, and you were expecting valid
+[8:28] JSON as a result, um, this would be
+[8:30] maybe not not the output you were
+[8:33] looking for. Of course, but if we give
+[8:35] our models more clear instructions,
+[8:37] they're um, generally capable of
+[8:38] following them. So then asked for just
+[8:40] the object with no additional commentary
+[8:42] or text. Um and
+[8:46] uh Frontier model is perfectly capable
+[8:47] of doing this. Um why are we then going
+[8:50] to spend so much time today talking
+[8:51] about JSON? Um I think for two reasons.
+[8:54] So first these are kind of reasonable
+[8:58] default choices, right? ID, name, and
+[9:00] birthday. Maybe this is a format that
+[9:02] looks kind of reasonable to me. But if
+[9:04] I'm working in some kind of production
+[9:05] environment and I have a specific format
+[9:07] that all of my data is is formatted in
+[9:10] and I'm not going to go like rename a
+[9:12] key in my database because GPD5 decided
+[9:15] that birth day sounded better than like
+[9:17] um date of birth or something, right? So
+[9:20] the ability to to interplay neatly with
+[9:23] another format um it would be nice to
+[9:26] have some kind of guarantee. And then
+[9:28] similarly, while I think you're unlikely
+[9:31] to ever get an output from GPD5 that
+[9:33] asks for valid JSON that's like
+[9:34] catastrophically bad, um if you're maybe
+[9:37] doing a million of these generations,
+[9:39] you could get an output that looks a
+[9:41] little weird or you could get an output
+[9:42] that is like, I'm sorry, you've exceeded
+[9:44] your rate limit. You want some kind of
+[9:46] like validation if you're especially if
+[9:48] you're using this in a larger um scale
+[9:50] operation that you're going to actually
+[9:51] get valid JSON out every time. um
+[9:53] because the alternative is to get an
+[9:55] output and then send it through a JSON
+[9:56] checker anyway. So how do we enforce
+[9:59] that our model is giving us something
+[10:01] like valid JSON?
+[10:04] Um the kind of key here is that this is
+[10:07] a really narrow constraint at any
+[10:08] individual decoding step. We have over
+[10:11] 100,000 choices but only like maybe 10
+[10:14] of them that will give us valid JSON at
+[10:16] the end. Um so can we just write down
+[10:18] all of the rules?
+[10:21] Um, so here we're gonna uh talk through
+[10:23] this with this example um from my friend
+[10:26] Matt at USC. Taylor Swift was born
+[10:29] December 13th, 1989. So we have these
+[10:31] two keys and we've decided we want to
+[10:33] name them name and birth year.
+[10:36] Uh the idea here is that we're going to
+[10:38] represent this schema as a state machine
+[10:40] that kind of tracks our progress through
+[10:42] the generation. So when we start our
+[10:44] generation,
+[10:46] there's only one valid token to start
+[10:48] the JSON, which is the opening curly
+[10:51] brace. So if we are in this state here,
+[10:55] um, state zero in blue, we have a number
+[10:58] of tokens that the model thinks might be
+[10:59] more or less likely, um, but we're
+[11:01] functionally going to cross out or
+[11:02] ignore everything that isn't a valid
+[11:05] sort of path to the next state. Um, once
+[11:08] we get to state one, we have a number we
+[11:11] have two options, right? We could emit
+[11:13] name um colon uh quotes or birth year
+[11:17] colon quotes. Um and if we emit name
+[11:21] then we have we wind up in this state
+[11:23] too where we can only output valid
+[11:25] letters. Um this makes sense. Names are
+[11:28] usually letters. Um if we emit birth
+[11:31] year we get to this state where we can
+[11:32] only output digits. Um and this is using
+[11:34] like a reax specification of each of
+[11:36] these. Um once we finish the name we
+[11:40] need to end the quote. Once we finish a
+[11:43] year, we can just end with a comma and
+[11:45] then we can optionally generate the
+[11:46] other key. And then in
+[11:49] automa like this, it's traditional to
+[11:51] draw sort of a second concentric circle
+[11:53] to indicate the end or the accept state.
+[11:55] So when you've finished, you output your
+[11:57] final curly brace and you end the
+[12:00] generation.
+[12:02] Right? Does this kind of make sense?
+[12:04] Yes. Um this is actually a little bit
+[12:08] tricky in practice. um especially as
+[12:09] these get a little more complicated. Um
+[12:12] so in particular this uh finance data
+[12:16] has at least two problems with it. Um I
+[12:18] wonder if anyone can see what they are.
+[12:22] Um this will output
+[12:25] generally valid JSON but will it output
+[12:27] kind of exactly what we were looking to
+[12:28] specify?
+[12:31] >> Yeah.
+[12:32] >> No uh limit.
+[12:34] >> No length limit. uh say a little more
+[12:37] about that.
+[12:38] >> Like I guess you can like just do say
+[12:41] two like forever like name or something.
+[12:44] >> That's true. Yeah. So we could have like
+[12:45] an infinite length name which is maybe
+[12:47] like not what we want. Um I would we
+[12:51] normally in JSON though like impose a
+[12:53] limit on the length of the name.
+[12:55] >> Probably not in JSON but like
+[12:58] >> yeah maybe this is something like an
+[12:59] additional criteria we'd want to add.
+[13:04] keys.
+[13:05] >> The repetitive what?
+[13:06] >> Keys.
+[13:10] >> Yeah, repetitive keys. Yeah, exactly.
+[13:12] So, you could um you could start at
+[13:14] state one, you could generate birth year
+[13:17] and you could stay in state four, you
+[13:18] could generate a year, you could go
+[13:20] back, you could generate birth year, you
+[13:22] could generate a year, you could go
+[13:23] back. Um, so you could wind up with an
+[13:25] output here that is technically valid
+[13:27] JSON, but has like a thousand birth
+[13:29] years in it, which is probably not true
+[13:31] for a single person.
+[13:33] Yeah.
+[13:34] >> Possible that birth year is never outed
+[13:36] because like in the first state if it
+[13:38] goes and takes name
+[13:41] after that the birth year come.
+[13:44] >> Yeah. You could output name you could
+[13:46] output a name go to state six and then
+[13:48] end without ever outputting the birth
+[13:49] year. So if you wanted to impose a
+[13:51] criteria that they both need to be
+[13:52] output then you need to Exactly. Yeah.
+[13:55] >> What about nested JSON? Can you do that
+[13:57] here?
+[13:58] >> That's a great question. What about
+[13:59] nested JSON? um we can't do that here.
+[14:02] Um and in fact we cannot do that in this
+[14:04] type of construction at all. Um and we
+[14:07] will talk about that in just a few
+[14:10] minutes. I think there's a we need like
+[14:11] a slightly more um expressive
+[14:15] construction to do nested JSON.
+[14:19] Um so yeah so this is um kind of a
+[14:22] couple of issues with this. Maybe one
+[14:23] more is that there's no real constraint
+[14:25] here. A birth year could be one number
+[14:27] could be a thousand. a name could be it
+[14:30] can't have any spaces in it. So these
+[14:32] are sort of maybe non-trivial to write
+[14:34] ourselves. Um the but also kind of fun
+[14:38] puzzles if if this is the sort of thing
+[14:40] that uh you enjoy. I think these are
+[14:41] really neat. Um the good news is that
+[14:44] for pretty much any kind of enforcing of
+[14:47] a templatic constraint, you're actually
+[14:49] not going to write these yourself. if
+[14:50] you're going to provide some kind of set
+[14:51] of rules or in the case of JSON in
+[14:53] particular um actual like keys and types
+[14:57] and uh some various libraries will
+[15:00] enforce these for you.
+[15:03] Um, but there's one more problem with
+[15:05] these that wasn't really possible to see
+[15:07] there. And before we talk about things
+[15:09] like nested parenthesis, we're going to
+[15:10] spend just a little bit of time here,
+[15:12] which is that the when you do this kind
+[15:14] of templated generation, um, you're
+[15:17] putting these little like punctuation
+[15:19] tokens kind of on their individual um,
+[15:21] edges. And this can wind up with token
+[15:23] boundaries that are quote unquote
+[15:25] unnatural. And what I mean by that is
+[15:27] that if you your model was generating in
+[15:29] an unconstrained way, it might generate
+[15:31] something like the URL is http
+[15:35] slash. Um, but if you were following
+[15:36] this like path along an auto uh along an
+[15:39] automa to generate this, you might wind
+[15:41] up with the URL is http you go along an
+[15:45] edge and the edge gives you the colon
+[15:47] and then you need to generate without a
+[15:49] space in front two slashes. And this is
+[15:51] certainly possible. This is probably a
+[15:52] token in the vocabulary. But if the
+[15:55] model in when the uh pre-training data
+[15:58] was tokenized always tokenized this as
+[16:01] this single token dot slash in uh URLs
+[16:04] which is sort of a reasonable choice to
+[16:06] make. Um this could be a relatively
+[16:08] difficult token to predict. There could
+[16:09] be like sort of not a lot of probability
+[16:11] mass on it. Um we don't have to just
+[16:14] sort of accept this as a consequence
+[16:16] though. Um there's a way to correct this
+[16:18] which is kind of inventively called
+[16:19] token healing. So the idea here is we've
+[16:22] already generated this colon. We know
+[16:25] the colon has to be the start of the
+[16:26] next token, but it doesn't necessarily
+[16:28] have to be the full next token. So we'll
+[16:31] roll back a token or very rarely to of
+[16:33] generation and we'll just require that
+[16:35] the next token starts with that token
+[16:37] that we would have predicted before. So
+[16:39] we know we want a token that at least
+[16:41] begins with colon. So we'll look at all
+[16:44] of our candidates for the next token and
+[16:45] we'll eliminate everything that doesn't
+[16:47] start with colon. So colon is still a
+[16:48] valid next token, but so is colon slash,
+[16:51] which has a lot higher probability um
+[16:53] and so is more likely to be selected.
+[16:58] >> Yes.
+[16:58] >> So what is the cue to actually?
+[17:03] >> That's a great question. Um there's no
+[17:05] like I think single accepted um like
+[17:11] trigger to do this. Um, generally if
+[17:14] you're doing some kind of templatic
+[17:15] generation or if you're enforcing some
+[17:18] kind of schema, it's a good idea to
+[17:21] allow for the possibility of token
+[17:22] healing and then to trigger it according
+[17:24] to some like some heruristic rules. Um,
+[17:27] does anyone actually have a sense of
+[17:28] like what those what a heristic for that
+[17:30] might be? It's kind of a couple that
+[17:32] people use
+[17:35] >> for when you should do token healing.
+[17:42] Keep a list of bad characters. Keep a
+[17:44] list of
+[17:47] like for example
+[17:49] colon space slash
+[17:52] >> would be a bad character.
+[17:54] >> Yeah, you can keep like a list of like
+[17:56] common offenders like things like this
+[17:59] um colon on its own that is likely to be
+[18:01] something you might want to heal. Um you
+[18:05] see you're preempting me just a little
+[18:06] here. Um, so you could also do this when
+[18:10] the last token is very short. Um, so
+[18:12] this would catch the colon case as well.
+[18:14] But if you have a sense that most of the
+[18:15] tokens in your vocabulary are more than
+[18:17] one character long, maybe if you get
+[18:19] generate a token that is a single
+[18:20] character, you might want to um, apply
+[18:23] token healing. Um, another heruristic is
+[18:27] that when the last token doesn't start
+[18:29] or end with whites space or punctuation.
+[18:31] So a lot of tokens will start with
+[18:32] whites spaced and that indicates they're
+[18:34] generally the start of a word. Um, a lot
+[18:36] of tokens will end with punctuation or
+[18:38] will end with a whites space. Um, of
+[18:41] course it's possible for a token to be
+[18:42] like the end of a word and then there to
+[18:44] be like a whites space start of a new
+[18:45] token after. So that's not a perfect
+[18:47] heristic, but for something like code,
+[18:49] this is a reasonable choice to make. Um,
+[18:52] and when the last token predicted was a
+[18:55] exact prefix of another likely token. So
+[18:57] if you looked at that like step where
+[18:59] you were generating colon instead of
+[19:01] colon slash and you saw that there were
+[19:03] two tokens that had both had relatively
+[19:05] high probability and both started with
+[19:07] this prefix. Um that might be a sign
+[19:09] that you might need to go back and do
+[19:10] token healing or that you should sort of
+[19:14] rewrite your automa rewrite your
+[19:16] structure such that you don't have to
+[19:17] make that choice.
+[19:19] >> Yes. Can token be done outside of like
+[19:23] these sort of structured
+[19:25] state machine
+[19:28] because like it seems to me as if you're
+[19:30] discovering something in the future
+[19:32] which indicates you went down the wrong
+[19:34] path like why can't that be done
+[19:36] generally for say reasoning or problem
+[19:39] solving and other things when you
+[19:40] discover that you're at dead end perhaps
+[19:43] the last tokens need to be
+[19:46] >> yeah um that was a great question so I'm
+[19:49] going to repeat it was why can't you
+[19:51] just token heal like all the time for
+[19:54] things like making a long for and also
+[19:56] for sort of longer sets of tokens like
+[19:58] to go back and backtrack. Um, I think
+[20:01] the
+[20:03] the answer on the the longer paths is
+[20:06] that this in particular won't work for a
+[20:08] longer path because you won't have a
+[20:10] token that's big enough to sort of
+[20:12] capture like if you had a um like I
+[20:16] don't know
+[20:19] it's not working. uh the cat went south
+[20:25] and you wanted to like you decided at
+[20:27] this point this was maybe a mistake and
+[20:29] you wanted the token healed cat went
+[20:30] south. Cat went south is probably not
+[20:33] the prefix to any token in your
+[20:34] vocabulary. So you couldn't do this
+[20:36] particular trick of looking for
+[20:37] prefixes. You could at some point decide
+[20:41] this is actually a bad completion and I
+[20:43] want to like start over from the and
+[20:45] reample again. Um, and there are
+[20:48] inference algorithms that do that kind
+[20:49] of thing to say like you've made a
+[20:50] mistake, you need to go further back.
+[20:53] Um, or I've hit like a dead end in my
+[20:55] reasoning. I need to go through another
+[20:57] path of reasoning. Um, and I think that
+[21:00] we will talk in a week or two about tree
+[21:03] of thoughts, which is you can think of
+[21:05] as sort of like a branching of multiple
+[21:07] sentences instead of a branching of
+[21:09] individual tokens.
+[21:12] >> In this case, aren't we just saying that
+[21:14] defects of like the
+[21:17] But the when we do token healing, we're
+[21:19] assuming that what we've generated is
+[21:21] not incorrect. It's just like not the
+[21:24] most efficient way to express that in
+[21:25] the tokenizer. So we're saying like we
+[21:29] still want to maintain whatever um
+[21:31] output representation we had. We just
+[21:33] maybe need to tokenize it a different
+[21:35] way. Um because you could have like uh
+[21:40] something like like our HTTPS.
+[21:52] You could tokenize this as two tokens or
+[21:56] you could tokenize this as three tokens
+[21:58] and you would get the same output
+[21:59] representation. So we're not actually
+[22:01] when we heal this back into this, we're
+[22:03] not actually changing our output string.
+[22:05] We're just changing the tokens of the
+[22:07] output to get there.
+[22:14] >> Yeah.
+[22:21] [Music]
+[22:25] some of which are not even white space
+[22:27] separated.
+[22:29] >> So does this work there?
+[22:31] >> Yeah, does this work for other
+[22:32] languages? Um the like particular
+[22:34] heristic of starting or ending with
+[22:36] whites space doesn't um for a lot of
+[22:38] languages, but the notion of like
+[22:41] healing a token by keeping the surface
+[22:43] form the same but changing the token
+[22:44] does. And I think in particular it can
+[22:47] be useful if you have like kind of weird
+[22:50] uh unic code characters where you have
+[22:51] like a a diiocritic or something that's
+[22:53] actually treated as a separate token um
+[22:56] in some but is also like if you have
+[22:58] like um
+[23:03] this is a token but also like this plus
+[23:06] the unic code to add that on top two
+[23:08] separate tokens. You could heal this
+[23:11] into this representation.
+[23:15] And so especially if your tokenizer is
+[23:18] like not too clever about unic code
+[23:20] things that are actually multiple bytes
+[23:22] then this is a reasonable thing to do.
+[23:25] Um and yeah so I kind of I don't know if
+[23:27] I ever quite answered the original part
+[23:28] of your question which was can you do
+[23:30] token healing if you're not generating
+[23:31] like a templatic generation and you
+[23:33] could turn this on at any time. Um, it's
+[23:35] probably most helpful if you're doing
+[23:37] something that will mess with like the
+[23:38] natural output because absence of any
+[23:41] other constraint, it's much more likely
+[23:43] for it to generate the sort of heals
+[23:45] token than the than the non-healed
+[23:47] version. But you could do this otherwise
+[23:49] and it would just if the if you try to
+[23:52] heal and the the prefix you're trying to
+[23:54] heal is just the most likely next token,
+[23:56] then nothing has changed.
+[23:58] Um, the reason we don't just like
+[24:00] automatically do this at every step is
+[24:02] it's it's just expensive. you have to go
+[24:03] back and recomputee.
+[24:07] >> Yeah, of course.
+[24:09] Um, so what does this look like? Um, in
+[24:12] hugging face, u, hugging face doesn't
+[24:15] have a nice native way of doing the
+[24:16] templatic constraints. Um, but luckily
+[24:19] there are a lot of other good options
+[24:20] out there that do. Um, hugging face does
+[24:22] have a a token healing implementation
+[24:24] and so you can just pass token healing
+[24:26] equal true. Um, if you are interested in
+[24:30] in generating valid JSON, this is
+[24:32] available almost everywhere that you can
+[24:35] generate text. Um, uh, in llama CPP,
+[24:39] there's like a really nice, um,
+[24:40] explanation of their, uh,
+[24:42] conceptualization of grammarss to
+[24:43] enforce, uh, JSON. Um, which I think is
+[24:46] one of the things linked on the website
+[24:47] is an optional reading for this if
+[24:48] you're interested in sort of like what
+[24:50] types of things can be expressed in this
+[24:52] way. Um but they have just so you can
+[24:54] pass a response format as a JSON object.
+[24:57] And the way that this works under the
+[24:58] hood is kind of exactly what we
+[24:59] described before. Um like a lot of
+[25:03] libraries they also allow you to impose
+[25:04] a particular schema. So if you had um
+[25:07] some properties like you wanted your
+[25:09] output to have exactly one name and one
+[25:11] birthday but maybe not a thousand
+[25:12] birthdays. Um you could pass a schema
+[25:15] and enforce that uh for your generation.
+[25:18] Um this is sort of yes.
+[25:22] Can we discuss the state implementation
+[25:26] drawback? So what is like way to enforce
+[25:29] a schema?
+[25:30] >> Yeah. So what is the like way to enforce
+[25:32] a schema? Um you could actually have
+[25:35] great personal risk room all the way
+[25:37] back. You could actually redraw this in
+[25:39] such a way that fixes those issues. Um
+[25:41] so you could say like you have a state
+[25:42] where you have output the name but no
+[25:45] birthday and you have a state where
+[25:46] you've output the birthday but no name.
+[25:48] And then if you've output the birthday
+[25:49] but no name, you can only output a name
+[25:51] and then you can end. If you've output
+[25:53] the name but no birthday, you can only
+[25:55] output a birthday and then end.
+[26:03] >> Yeah, for a really bigger complex
+[26:04] schema, wouldn't this become impossible
+[26:05] to manage? If you were drawing it out by
+[26:08] hand, definitely. Um but if you have
+[26:10] just like a a set of states sort of
+[26:13] programmatically somewhere where it's
+[26:14] like the valid next tokens are all sort
+[26:17] of outputs from that state um this can
+[26:20] be kind of compiled down into a pretty
+[26:22] like efficient just like check against a
+[26:24] list and and mask out the logits.
+[26:27] >> Yes. So does the production system use
+[26:31] state mach
+[26:38] for example still use state machines?
+[26:41] >> They do models like yeah do models like
+[26:43] llama or GBD4 still use state machines?
+[26:46] Um I mean they don't tell us. I would be
+[26:48] surprised if they were doing something
+[26:50] different. Um because this is like an
+[26:52] exact solution to the problem.
+[26:55] Um the caveat here is that this I think
+[26:57] as someone pointed out won't generate
+[26:58] arbitrary JSON because it can't do
+[27:00] nesting. Um but there's a way to design
+[27:02] a variant of a of a state machine that
+[27:04] will
+[27:07] >> talk about open AI but we can talk about
+[27:08] like BLM or SG link and it is supported.
+[27:12] >> Yeah.
+[27:14] >> Yes. Just to be sure to understand this
+[27:17] like suppose I provide a like you
+[27:19] provide your example a GP file three uh
+[27:23] keys to it like suppose I do provide a
+[27:25] very
+[27:27] 500 key JSON like what is that how
+[27:30] exactly is this graph generated do I
+[27:32] specify it does
+[27:36] come how does this graph come to be
+[27:39] >> how does this graph come to be I think
+[27:40] that's a great question um I will
+[27:44] at great risk We're going to try to go
+[27:46] to
+[27:47] the schedule. I think the best reference
+[27:50] that I have seen for how this works is
+[27:52] the one in llama CPP
+[27:55] which is um they have they use a variant
+[28:00] like a particular type of formal
+[28:02] grammar. Um so this like what can you
+[28:04] produce given these rules? Um the way of
+[28:06] specifying this in like theory of
+[28:08] computation terms is writing a grammar
+[28:10] for that language. Um where the language
+[28:12] could be all JSON that meets the schema.
+[28:14] And so this is a particular format for
+[28:16] writing grammarss. Um and it will um so
+[28:21] it will start from like a root. If
+[28:23] you've done like um any kind of theory
+[28:25] of computation class, this would look
+[28:27] this would be more like a a letter to an
+[28:29] arrow to to some output. Um but this is
+[28:32] their version of specifying that. And
+[28:34] then you define like terminals being
+[28:37] like actual strings that can be output
+[28:39] or character ranges like this like this
+[28:41] could be text. Um, most of the I think
+[28:44] pretty much all of these will have a
+[28:46] helper for JSON because it's the most
+[28:48] common version of this where if you just
+[28:50] pass like a JSON schema or you pass like
+[28:53] some Python like typed uh dictionaries,
+[28:57] it will convert it into a format like
+[28:59] this and then once it's in a format like
+[29:00] this, these can be um sort of
+[29:05] transpiled down into like a parser. This
+[29:07] is adjacent to um how parsing works. So
+[29:10] if I understand correctly, we're able to
+[29:12] specify a grammar and that is used to
+[29:15] construct this graph. In the event that
+[29:16] I do not specify grammar and I arbitrary
+[29:20] arbitrary log JSON
+[29:22] task, then it will derive a grammar on
+[29:26] its own.
+[29:26] >> Yeah, if you've given a if you have a
+[29:29] library that has like helpers like this,
+[29:31] they will take the JSON you write and
+[29:33] they will convert it into a
+[29:34] representation like this grammar and
+[29:36] then enforce it as a con a set of
+[29:38] constraints.
+[29:41] Yeah, I think uh this is a really nice
+[29:43] little connection with uh theory of
+[29:45] computation.
+[29:48] So,
+[29:49] as we're going to wait a sec for this to
+[29:52] load. Um so, as Graeme mentioned, this
+[29:56] is sort of available most places. So,
+[29:58] this you can do this in Langchain. You
+[30:00] can do this in OpenAI. This used to be
+[30:02] called JSON mode and they've kind of
+[30:03] changed the name recently to structured
+[30:05] outputs. Um it's a little more general.
+[30:08] You can do this in Gemini and here
+[30:10] you're passing um a schema which is
+[30:14] actually like of Python type. So you're
+[30:15] saying it needs to be a recipe name and
+[30:18] ingredients and it will look like this
+[30:19] format. Um one of the possibly I think
+[30:23] the original way of doing this was from
+[30:24] this Willard and Lo paper and they wrote
+[30:27] this library and I think founded a
+[30:29] startup around this. Um, so this is uh
+[30:32] specifying outputs using like Python
+[30:34] typing syntax. Um, much in the same way
+[30:36] that Gemini is doing here now. Um, and
+[30:39] any one of these is kind of an option
+[30:41] for doing that. I think I don't actually
+[30:43] know if I have the VLM one in here, but
+[30:45] VLM also you can pass like a JSON
+[30:47] schema.
+[30:50] >> Um,
+[30:52] yeah. And I feel like a a valid question
+[30:54] at this point is could you do this for
+[30:55] like an arbitrary task? Like could you
+[30:58] write ballots? Could you say I need to
+[31:00] write valid C? Um, and this gets into a
+[31:04] a kind of like tricky corner which I
+[31:07] think we we hinted at earlier. We talked
+[31:09] about things that can or cannot be
+[31:10] expressed in a grammar. Um, so who here
+[31:15] I think Graham asked this last class but
+[31:17] ask it again just for my own sanity. Who
+[31:20] here has taken like a theory of
+[31:21] computation or an automa class?
+[31:25] >> Okay.
+[31:26] >> Or programming languages or compilers.
+[31:28] Yes. Great. Okay. So, we've got like
+[31:29] some subsection of the room. Um, and if
+[31:32] you haven't taken a class in this area
+[31:34] and this kind of all sounds like a
+[31:35] little bit of um like insider baseball
+[31:39] from a from a corner that you're not in,
+[31:41] that's okay. Um, this is just sort of
+[31:42] for a little bit of extra context. Um,
+[31:45] so we asked earlier, can we write down
+[31:47] all the rules that will produce JSON?
+[31:49] Um, and this is kind of an interesting
+[31:51] question from a computational
+[31:52] perspective. Um the immediate thing that
+[31:56] somebody noted is that we we have this
+[31:58] like notion of nesting parenthesis. Um
+[32:01] and so we'll we would need to if you
+[32:03] were writing a schema to or a set of
+[32:05] rules to produce all valid JSON be able
+[32:07] to say you can start with an arbitrary
+[32:09] number of parentheses as long as you end
+[32:10] with exactly the same number. Um but
+[32:14] this uh like automagraph we drew um or
+[32:17] finite automa doesn't have any way of
+[32:19] keeping track of how many times it's
+[32:21] been in a state before, right? um it
+[32:24] sort of it just kind of moves through um
+[32:27] without any record of where it's been
+[32:28] before. Um and so finance automa express
+[32:31] a sort of class of languages that we
+[32:33] call regular languages. Um if you're
+[32:36] enforcing a very particular schema um
+[32:38] unless that schema allows for some kind
+[32:40] of arbitrary nesting, generally you can
+[32:42] write it out in this format where you
+[32:44] know exactly how deep your nesting will
+[32:46] go. So you can define like a really long
+[32:48] automa that captures like exactly every
+[32:50] level of nesting by just defining a set
+[32:52] of different states like this is the
+[32:53] state for parenthes for brackets nested
+[32:56] five times versus six versus seven. Um
+[32:59] if you want to do an arbitrary number of
+[33:01] course that's not possible. Um and so
+[33:03] you need to use a slightly more
+[33:05] expressive class of languages called
+[33:06] contextf free um but not regular. And uh
+[33:09] the variation here um or the re the way
+[33:12] that you would see this represented on
+[33:14] that graph is you get sort of one extra
+[33:16] piece of information which is you can
+[33:18] keep track of a stack of prior values or
+[33:20] a stack of prior information you've
+[33:21] seen. So you could track like the number
+[33:23] of opening versus closing closing
+[33:25] parenthesis. Um and this is a set of
+[33:28] languages called contextf free. Um that
+[33:32] is a what would be a push down automa.
+[33:34] So you would write um something that
+[33:36] looks very much like this uh uh diagram
+[33:39] that we drew out before, but that tracks
+[33:41] like a little bit of extra information
+[33:43] that gives you a little more expressive
+[33:44] power. Um and in general, anything that
+[33:46] supports uh JSON schemas is actually
+[33:49] writing push down automa to enforce its
+[33:51] constraints, not FSAs.
+[33:53] Um, if you wanted to impose any more
+[33:56] complicated things than that, like if
+[33:58] you wanted to say uh you can have any
+[34:00] arbitrary set of keys as long as they're
+[34:02] all unique or if you in C maybe you can
+[34:07] use any variable name you want that
+[34:08] meets like these criteria as long as
+[34:10] it's been defined earlier up in the same
+[34:12] function or you can use numpy as long as
+[34:16] you imported numpy further up. um if you
+[34:19] need to impose constraints that are more
+[34:20] complicated than this, you need
+[34:22] something a little bit more powerful
+[34:23] than contextf free grammarss. And so
+[34:25] that's sort of the the line where the
+[34:28] ability to enforce this really
+[34:30] efficiently in this really nice way for
+[34:31] generation ends. So you can do this um
+[34:35] you can enforce like a particular JSON
+[34:38] schema. You can enforce that like it is
+[34:41] generically valid JSON. But if you want
+[34:43] to enforce other kind of more complex
+[34:45] constraints like you want like
+[34:47] particular keys to all have different um
+[34:49] you want all of your keys to be unique
+[34:51] but you don't want to define what all
+[34:53] the keys could possibly be. Um that gets
+[34:56] into a class of languages that is not
+[34:58] contextf free. And so this is like not
+[35:00] possible to represent in this format.
+[35:02] Um, and maybe that was a little
+[35:03] handwavy. Um, if you haven't taken a
+[35:06] theory of computation class, I think
+[35:07] there's like so many cool comput
+[35:09] connections here. Um, this is also like
+[35:11] deeply connected to parsing. Yeah.
+[35:14] >> Have a oneline definition for each of
+[35:16] these three terms. Context,
+[35:20] >> yeah. Yeah. Uh, like a oneline
+[35:21] definition for each of these. Um,
+[35:25] >> that's a tall order, but uh,
+[35:26] >> yeah.
+[35:28] Is is church sharing in the room with us
+[35:30] right now? Um I think the uh the big I
+[35:34] think yeah
+[35:35] >> it's not a line, it's a shape. That's
+[35:37] okay. Uh so there's a class of things
+[35:40] that you can express with um
+[35:44] uh regular language which is sort of
+[35:47] things that don't require any
+[35:50] extra bookkeeping uh outside of like
+[35:53] what you're currently standing. That's
+[35:55] really handy. Um but this is things like
+[36:00] any number
+[36:03] where you can write this as a reax that
+[36:05] is like you know 0 to 9 possibly
+[36:10] infinite amounts.
+[36:12] Um things that are a little more
+[36:13] complicated than that where you need to
+[36:16] like you don't need like a broad set of
+[36:18] information but you need to keep track
+[36:20] of like some additional
+[36:22] symmetry or connection between two parts
+[36:25] of your input are kind of free. Um
+[36:29] and so this is
+[36:33] really regular languages. This is
+[36:34] context free languages. Um things that
+[36:37] are and so this could be things like a
+[36:41] to the n b to the n is kind of like a
+[36:43] classic example. This like match numbers
+[36:45] of a's and b's or match numbers of
+[36:46] parentheses
+[36:49] um or json max numbers of curly braces.
+[36:53] Um there's a whole broad world outside
+[36:55] of these two things. Um the regular
+[36:57] languages are what can be expressed by
+[36:59] the kind of finite state automa we drew
+[37:01] on the board. Um which is something like
+[37:04] this is like our start state. We can do
+[37:07] like 0 to 9 infinitely on that start
+[37:11] state and this would be like any number.
+[37:13] Um if you want to draw something that is
+[37:16] a little more complicated that can keep
+[37:17] track of some degree of state like this
+[37:21] you would have something that would look
+[37:22] a little more like uh not actually
+[37:26] memory, but the you would keep track of
+[37:29] some amount of state.
+[37:35] And so you'll see something that has
+[37:37] like these um like little arrows to
+[37:41] indicate adding state is usually how
+[37:42] they're represented and that's a push
+[37:44] down.
+[37:45] So regular languages small set of things
+[37:48] that are really easy to specify. This is
+[37:50] also the original meaning of the term
+[37:52] regular expression. Although regular
+[37:54] expression syntax in some languages,
+[37:56] programming languages is actually more
+[37:58] expressive than this. Um, so this is
+[38:01] like easy to specify context free a
+[38:04] little harder to specify but still
+[38:05] possible. Um, and so this would be where
+[38:07] you see Automa. This is where you'd see
+[38:10] a push down. This is where you would see
+[38:12] like um the world of compilers is
+[38:15] usually a little like one step further
+[38:17] up.
+[38:17] >> Yeah. Um, I'll just add if the term like
+[38:20] express is like new to you, um, it's
+[38:22] helpful to think of it as just like um,
+[38:26] uh, if you look back at like the figure
+[38:29] from a few slides ago with like the
+[38:32] states instant.
+[38:33] um you just think about all of the
+[38:35] possible things you could generate from
+[38:39] that kind of diagram or like the sets of
+[38:44] diagrams that are similar to that
+[38:47] diagram um following certain rules as in
+[38:50] like no state tracking right sorry no
+[38:53] yes state tracking no additional
+[38:55] information yes express is just like
+[38:57] what can you possibly generate um with
+[39:01] like the combination of like all of the
+[39:04] possible little
+[39:07] automa that you
+[39:09] >> Yeah.
+[39:09] >> can make.
+[39:10] >> Yes.
+[39:11] >> Yeah. Another way to think about it is a
+[39:13] language model like a typical language
+[39:15] model that we think about can uh
+[39:17] generate anything with some probability
+[39:19] like it never gives zero probability to
+[39:22] anything. These give uniform probability
+[39:26] to everything. So uh everything that's
+[39:29] accepted by the thumb and give zero
+[39:33] probability to everything else. Um and
+[39:38] so because of this like these are not
+[39:40] saying anything about whether that's a
+[39:42] good string or not or a likely string or
+[39:44] not. It's just telling you yes this is
+[39:45] an okay string. No this is not an okay
+[39:48] string. Another way you can think about
+[39:50] it actually is you can multiply this
+[39:53] language model by our other language
+[39:55] model. So because this language model
+[39:58] gives uniform probability to everything,
+[40:00] if you multiply this probability by the
+[40:02] other probability, it will give zero to
+[40:05] anything that's not accepted and like
+[40:07] uniform probability to everything else.
+[40:09] So it won't change the probability of
+[40:11] the things that are okay or it won't
+[40:13] change the relative probability of the
+[40:14] things that are are okay but it will set
+[40:16] the probability of other people's
+[40:19] >> and when Graham was drawing like
+[40:20] weighted finite state automa um last
+[40:23] lecture that's kind of exactly what you
+[40:25] could think about as happening is it's
+[40:26] the same level of expressivity that you
+[40:28] can you can get the same set of things
+[40:30] out of it but now you've like attached
+[40:32] probabilities to going like to two
+[40:34] versus four and those you generally got
+[40:36] from your language model.
+[40:41] >> You don't need a theory of class.
+[40:44] >> Yeah. No, no, take theory of comp.
+[40:51] But uh but my question is uh like I how
+[40:56] is this like putside in Netherland? So
+[40:59] like after soft max we have a token.
+[41:11] Yeah. Like how do you map from like the
+[41:13] the softmax over your whole vocabulary
+[41:15] into like enforcing constraints like
+[41:17] this? Um you do a kind of like silly
+[41:20] simple thing u which I think I didn't
+[41:22] say too clearly which is that you just
+[41:24] sort of set the probabilities to
+[41:25] everything that isn't a valid transition
+[41:27] in this graph to be like arbitrarily
+[41:30] low. Um, and you do that by adding like
+[41:32] a large negative right before softmax.
+[41:35] >> So that's the kind of notion of like
+[41:36] crossing things out in here is you've
+[41:38] just like you've zeroed out the
+[41:39] probability of everything that's not in
+[41:41] this graph.
+[41:42] >> Yeah. In another way to think about it
+[41:44] actually um since we were talking about
+[41:46] multiplying the probabilities together.
+[41:48] Let's say we have the probability of the
+[41:50] ln
+[41:52] and then we have the probability of the
+[41:54] auto automaton. Mhm.
+[41:58] >> And we always express these in um in one
+[42:02] probabilities when we do or like
+[42:03] negative one probabilities, right? And
+[42:06] so what's a negative what's the log
+[42:08] probability of zero
+[42:12] >> minus infinity, right? So what you
+[42:14] actually do when you calculate these um
+[42:17] in your in pietorch or something like
+[42:18] that is you set the probab and you know
+[42:21] if it's uniform we can just like set it
+[42:23] to one um uh and so that means all the
+[42:28] things that are allowed is the next
+[42:29] token are zero all the things that are
+[42:31] not allowed to the next token we add
+[42:33] minus infinity and then we take the soft
+[42:36] backs again to reormalize into our
+[42:37] probability
+[42:38] >> and so that's how we mask out the next
+[42:41] mechanistically but also like it
+[42:43] directly,
+[42:50] >> right? So, all this to say um you should
+[42:53] take theory of computation and we've
+[42:55] kind of gotten to a set of things that
+[42:57] are like there's a number of things that
+[42:59] are possible to do with this kind of
+[43:01] like um automa inspired setup, but
+[43:04] there's also a number of things that are
+[43:06] not possible to do. So something like
+[43:07] enforcing that it generates valid C for
+[43:10] instance is not um contextf free because
+[43:13] you have these requirements like
+[43:14] variables must be defined before they
+[43:16] are used and so you could not do that
+[43:18] with this type of um method. So yes, go
+[43:23] ahead or sorry I thought you were
+[43:25] raising your hand
+[43:29] like the reason it's context the reason
+[43:32] context is a voice because they have a
+[43:34] notion of some sort of memory adjacent
+[43:37] concepts are like the number of
+[43:38] connections to the nodes.
+[43:40] >> Yeah, you can think of them as they have
+[43:42] a stack um like a a stack memory you can
+[43:45] write and read from.
+[43:46] >> Why can't that be added?
+[43:49] Uh why can't that be added to the like
+[43:52] regular? So that can so you can do
+[43:55] anything kind of up to a contextfree
+[43:57] parameter um with this type of uh like
+[44:02] schema enforcing. Um what you can't do
+[44:05] is add things like keep a list of all of
+[44:07] the variables that have been defined
+[44:09] before and check if the thing I'm
+[44:10] generating is from that list because you
+[44:12] couldn't do that with just reading
+[44:14] writing from a single stack.
+[44:19] If you have if you can write to multiple
+[44:21] stacks or if you have sort of like a
+[44:23] long line of um
+[44:26] I in these terms tape like a long line
+[44:28] of places you can read and write then
+[44:31] you could do that but that would be a
+[44:32] more a strictly more expressive thing
+[44:34] than a contextfree language that would
+[44:36] be a touring machine. Um, and so then we
+[44:39] get into a whole another can of words,
+[44:42] but that's not possible to enforce in
+[44:44] this kind of like token by token um,
+[44:46] checking way that we did here.
+[44:49] >> So we'll move now into a
+[44:53] >> Yeah. Yeah. totally
+[44:54] >> sorry. Can you alter right now all
+[44:57] you've done is that you things
+[45:00] distribution and let everything that's
+[45:02] unchanged except by normal
+[45:06] >> now to introduce any notions of like you
+[45:08] know
+[45:11] can you augment the probability
+[45:12] distribution after you've done this sort
+[45:14] of filteration
+[45:15] >> yeah could you like augment the
+[45:16] probability distribution after you've
+[45:17] done this sort of cut off um you can and
+[45:21] you could not do so in such a way that
+[45:23] would give you like the ability ility to
+[45:25] to simulate like an arbitrary language
+[45:28] like C. Um you what you could do is you
+[45:31] could set aside the idea of automa
+[45:32] entirely and apply some constraints to
+[45:35] your probability distribution to reshape
+[45:36] it to make it more likely that you'd
+[45:38] wind up with valid C and that's what
+[45:40] we're going to do next.
+[45:41] >> I think
+[45:42] >> yeah
+[45:44] um I I think this stuff is really cool.
+[45:45] I used to if you ever want to talk about
+[45:48] it more I'm happy to
+[45:50] >> Yeah. Um so now we have these kind of
+[45:54] constraints um for JSON that are they
+[45:56] have this nice property that token by
+[45:58] token we know whether we're are
+[45:59] satisfying our constraint or not. Um if
+[46:02] our constraint isn't doesn't have this
+[46:04] sort of nice property we need to do some
+[46:06] sort of estimation of whether we're
+[46:08] going to satisfy the constraint instead.
+[46:10] Um and here this is sort of a much
+[46:13] broader class of constraints that
+[46:14] includes things that can be a little
+[46:16] more handwavy maybe than than the sort
+[46:19] of strict format checking. So for
+[46:21] instance, if I say this semantic
+[46:24] constraint, I want to describe like a
+[46:25] hobby I could try to stay in shape, but
+[46:27] I do not want the model to tell me to go
+[46:29] climbing. Like I've decided I don't want
+[46:30] to go climbing. I'm looking at Clara
+[46:32] directly in the eyes. Please don't take
+[46:33] me climbing. Um this is not like
+[46:37] possible to enforce through like a
+[46:39] nitro, right? How do we prevent the
+[46:41] model from suggesting this? Um and a
+[46:45] year ago when I when I first made this
+[46:47] slide, I asked I think this is Gemini
+[46:48] 1.5 at the time. Um, and true to form,
+[46:52] it got it got sort of a couple a couple
+[46:54] lines into this generation. It suggested
+[46:56] some great ideas and then it cycled back
+[46:58] around to climbing. Um, this has changed
+[47:00] in the last uh like 10 months or so. So,
+[47:03] GPD5 no longer suggests climbing too if
+[47:05] you say you don't want to um go
+[47:07] climbing, which officially means
+[47:09] language models have beat my friends on
+[47:11] the Amanda Hobby benchmark. Um, but even
+[47:15] so, say say you have a model that's
+[47:17] maybe slightly less performant than
+[47:19] that. Is there is there something you
+[47:20] can do to get it from to no longer
+[47:22] suggest this to you? Um maybe if we were
+[47:25] just talking about templates, the
+[47:26] reasonable thing to do is just set the
+[47:28] probability of the token climbing to be
+[47:30] zero. Um this is like a a kind of
+[47:34] hardline approach. It's very easy to
+[47:36] implement. We know how to do this,
+[47:37] right? We just add a giant negative to
+[47:39] the logit and softmax again. Um but it's
+[47:42] bad if there are sort of synonyms. Maybe
+[47:44] if I don't want to go climbing, I also
+[47:46] don't want to go bouldering. Um, and
+[47:48] it's bad if the tokens we restrict could
+[47:50] be used in sort of allowed ways. Like
+[47:52] maybe I want to um talk about like
+[47:55] hiking where you have to sort of go
+[47:58] climbing up this mountain to see a good
+[48:00] view. That's a valid way of talking
+[48:02] about hiking. Um, but it doesn't
+[48:04] actually sort of convey this meaning
+[48:06] we're trying to restrict. Um, and it's
+[48:08] also bad if we generate other related
+[48:10] terms before the term we're trying to
+[48:12] restrict. So if the model says a great
+[48:14] activity you could do with your friends
+[48:16] is rock and then we are not allowed to
+[48:18] produce the term climbing, you could
+[48:20] wind up with some like really
+[48:22] non-naturalistic or nonfluent
+[48:24] generation. Um so this we're not going
+[48:27] to get out of this problem by just sort
+[48:28] of hitting it with a big softmax like
+[48:30] hammer. Um we always sort of have this
+[48:33] option that we talked about um in
+[48:36] diverse beam search as well where we
+[48:38] could just generate a set and filter.
+[48:40] Um, this could be extremely
+[48:41] computationally expensive if the thing
+[48:43] we're trying to restrict is a relatively
+[48:44] common output. Um, but it's has this
+[48:47] advantage that it's easier for us to
+[48:48] check that full sequences violate the
+[48:50] constraint than subsequences because we
+[48:52] no longer have this like token-wise
+[48:53] verifiability.
+[48:56] Um, we could do something like
+[48:57] neurologic a which we talked about
+[48:59] before. Um, it does allow us to look
+[49:01] ahead which is nice, but this is a
+[49:03] constraint that's a little harder to
+[49:05] verify. um where I couldn't just sort of
+[49:08] write a list of unallowable terms. You
+[49:10] know, if I tried to write like a rule
+[49:11] that indicates whether an output is
+[49:13] about timing or not, I could maybe write
+[49:15] like a very long set of huristics, you
+[49:17] could check. Um but this isn't really
+[49:19] something I could specify with a reax,
+[49:21] right? So, we need to think about how we
+[49:23] calculate this huristic a little bit
+[49:25] differently.
+[49:27] Uh we'll talk about sort of one uh
+[49:30] method in this category, which is a
+[49:32] method called fudge. Um the idea here is
+[49:35] that we started with this probability
+[49:37] distribution which is sort of our
+[49:39] standard distribution over the next
+[49:41] token given our our inputs and our
+[49:43] outputs so far. We want to impose this
+[49:46] additional constraint or condition on
+[49:48] this additional factor a and this could
+[49:50] be we want the topic to be not climbing
+[49:53] which could be we want the in in sort of
+[49:55] the example we'll do here is could be we
+[49:57] want the text to be formal or informal.
+[50:00] Um it could be we want the text to it
+[50:03] could even be we want the text to be
+[50:04] valid JSON just some kind of constraint
+[50:06] that we want to modify the probability
+[50:08] distribution according to the insight of
+[50:11] fudge and of methods like fudge is that
+[50:13] this is a relatively hard um thing to do
+[50:15] this middle equation if we we sort of
+[50:18] need to train a model maybe that
+[50:19] conditions on a separate thing and this
+[50:22] is certainly something you can do this a
+[50:23] class conditioned language model so you
+[50:25] could say like I trained a model that
+[50:27] takes an input that is the style of text
+[50:30] as well as the text that I just trained
+[50:32] on and it will always if you give it the
+[50:34] input formal it will give you formal if
+[50:35] you give it the input informal it will
+[50:37] give you informal but if you want to
+[50:38] take a model that wasn't trained in this
+[50:39] manner this is a relatively hard thing
+[50:42] to solve but by base rule you can just
+[50:44] rewrite this um or with to within a
+[50:48] constant you can write this as
+[50:50] proportional to um p of the constraint
+[50:55] being satisfied given where we are so
+[50:57] far plus the probability of predicting
+[50:59] that thing. Um, and here this is P of
+[51:02] the constraint being satisfied given the
+[51:03] substring up to the token we're about to
+[51:05] produce. Um, and the probability of
+[51:08] producing that token. And this is a
+[51:11] proportional, which is okay because
+[51:12] we're going to softmax everything
+[51:13] anyway. So, we don't care about sort of
+[51:15] exact value. So, how do we compute the
+[51:18] probability that we're going to satisfy
+[51:20] a constraint given just like sort of the
+[51:22] string up to the decision we're about to
+[51:24] make? Um
+[51:26] the idea here is that this is a much
+[51:28] easier task than actually predicting the
+[51:30] whole string. And so we can take a bunch
+[51:32] of data we already have if we have any
+[51:34] kind of labeled data for this task and
+[51:36] turn it into data for this. So if we
+[51:39] have this formal and informal data and
+[51:42] we want to um predict how likely it is
+[51:44] that an output will meet the constraint
+[51:46] of formality by the end, we could
+[51:48] tokenize each of our things in formal
+[51:49] and tokenize each of our things in
+[51:51] informal and take every substring
+[51:53] starting from the the start as an input
+[51:56] example. So I um would get the label
+[51:59] formal. I would would get the label
+[52:01] formal. I would appreciate we get the
+[52:03] label formal in this data. And if you do
+[52:05] this over a really large corpus, you'll
+[52:07] wind up with a bunch of examples and
+[52:08] you'll get some kind of notion like
+[52:10] maybe starting with I has relatively
+[52:12] equal probability of coming from formal
+[52:14] or informal. But starting with I would
+[52:16] appreciate is almost always only seen in
+[52:19] the formal data and not the informal
+[52:20] data. And so you could train a
+[52:22] classifier given some one of these
+[52:24] substrings to predict whether the whole
+[52:26] output that was sampled from is formal
+[52:27] or informal. Um and this data is
+[52:30] relatively easy to get.
+[52:32] Once you have that data, you can take
+[52:35] your language model maybe with some
+[52:38] input do you and you you can pass things
+[52:41] through the model as you would have
+[52:42] before. So here you pass through the
+[52:44] model itself and you get some sort of
+[52:46] distribution over some candidate output
+[52:48] tokens. But then you can also pass each
+[52:51] of the input plus each of those
+[52:54] candidate tokens through this scoring
+[52:56] thing you've just trained. So you say
+[52:57] what's the probability that my output
+[52:59] will be formal given do you want or do
+[53:02] you prefer or do you thus and it will
+[53:05] give you an out sort of formality
+[53:07] prediction a prediction that you're
+[53:08] going to wind up with a formal text. Um
+[53:10] so you can see here thus is a really low
+[53:12] probability output in general because
+[53:14] it's not maybe like the most uh standard
+[53:17] way of saying this but thus is a do thus
+[53:19] is a very formal like phrase and so it
+[53:21] gets a high formality score but a low
+[53:23] overall score. Then you simply uh
+[53:27] multiply these together or in log space
+[53:29] add and you wind up with scores that
+[53:31] factor in both the overall probability
+[53:33] and this sort of formality probability.
+[53:36] So the thing that sort of we'd like to
+[53:38] happen happens which is want and prefer
+[53:40] were relatively even probability but
+[53:42] prefer is more formal so it gets
+[53:43] updated. Um, and so you wind up with the
+[53:46] output, do you prefer? And this idea of
+[53:49] sort of looking one token into the
+[53:50] future and trying to make a a binary
+[53:53] decision is where the name fudge comes
+[53:55] from. This is future discriminators.
+[53:57] So you're discriminating formal or
+[54:00] informal based on this next token.
+[54:03] Um, and there's a kind of a few
+[54:06] limitations to this. So this is
+[54:07] generally a really nice idea. The first
+[54:09] is that you have to pass the future
+[54:11] discriminator over sort of all of the
+[54:12] tokens you're going to decide between at
+[54:14] the next step, right? You the future
+[54:16] discriminator takes one more token than
+[54:18] you've actually predicted. Um so you
+[54:20] need to pass do you want, do you prefer,
+[54:22] do you thus each of these through your
+[54:24] your decision your discriminator. Um the
+[54:28] solution to this that they propose is
+[54:29] sort of twofold. They only run the
+[54:31] future discriminator on a small subset.
+[54:33] So if you take for instance in their
+[54:35] case they take the top 200 most likely
+[54:37] next tokens um and you run on just those
+[54:39] 200 instead of all 100,000 and some um
+[54:42] because you know that even if something
+[54:44] is really formal if it's the you know
+[54:46] 100,000 most likely token it's not going
+[54:48] to get predicted anyway. Um and then the
+[54:51] other thing they do is they use a very
+[54:52] small model and because this sort of
+[54:54] zero one choice is a relatively easy
+[54:56] thing to learn. This is this is possible
+[54:58] to do.
+[54:59] Um the other limitation is that this is
+[55:02] not guaranteed to satisfy the
+[55:04] constraint. Um this is true sort of in
+[55:06] general of any method that's trying to
+[55:07] predict the future. Um so you could you
+[55:11] could sort of in practice if you're
+[55:13] doing something like formality you could
+[55:14] say this is probably good enough. It's
+[55:16] okay if it occasionally sounds a little
+[55:18] informal. If you have a constraint that
+[55:20] it's really important to you, you could
+[55:21] couple this with something like
+[55:22] rejection sampling over a set of outputs
+[55:24] where you can then once you've seen the
+[55:25] full output rescore and reject anything
+[55:28] that doesn't seem um like appropriate.
+[55:31] Um and this requires access to logits
+[55:33] which is sort of a fundamental
+[55:35] requirement of of this method and of a
+[55:37] number of methods like it.
+[55:39] Um there's a kind of interesting
+[55:41] connection here which um I think we're
+[55:43] not going to spend too much time on but
+[55:46] that is explored in detail in a paper a
+[55:49] very good paper called control decoding
+[55:51] and also a very good paper called I
+[55:53] think RHF as Beijian inference
+[55:56] um which is the corbecol that this these
+[55:59] figures are from and the connection here
+[56:01] is that you can frame RLHF and they
+[56:04] actually prove you can frame RHF as this
+[56:06] sort of manipulation in like a a Beijian
+[56:09] inference sense where your prior is the
+[56:11] original language model before um any
+[56:14] kind of alignment. Your evidence um that
+[56:17] you're using to update your prior is the
+[56:19] reward model or the score that the
+[56:20] reward model gives over each output. And
+[56:23] when you do sort of a KL divergence um
+[56:27] like minimization, you're producing an
+[56:29] aligned model that is sampling from this
+[56:32] posterior um this prior um informed by
+[56:35] this evidence. Um this is sort of an
+[56:39] interpretation that um lines up really
+[56:42] nicely with our sort of Beijian
+[56:43] interpretation of fudge as well. Um and
+[56:46] so the connection that people have drawn
+[56:49] between these is that you could do
+[56:50] something like fudge but rather than
+[56:52] trying to predict something that maybe
+[56:53] seems a little toy now like formality
+[56:56] you could predict something like is this
+[56:58] going to have a high reward according to
+[57:00] my reward model at the end of decoding
+[57:02] and maybe rather than doing RHF you
+[57:04] could just sort of predict this
+[57:05] token-wise. Um and this is the idea
+[57:08] behind reward augmented decoding which I
+[57:10] believe we're going to have someone talk
+[57:11] about at the end of class.
+[57:14] Yes, perfect. So I will just leave it at
+[57:16] that for now. Um what does this look
+[57:19] like in hugging face? Um so I kind of
+[57:22] kept this in here just to say that most
+[57:24] of these methods are not sort of
+[57:26] natively implemented in hugging face um
+[57:28] or in a number of these providers. If
+[57:30] you want to do something that's kind of
+[57:31] this level of logits manipulation, you
+[57:34] do kind of have to play around with it
+[57:36] yourself. Um and we have I think a
+[57:38] little something in the homework that's
+[57:40] uh involves a logit processor. So you
+[57:41] will have at least seen this before.
+[57:44] Um there's one last method I want to
+[57:46] talk about and for that we have to go
+[57:49] back and mention uh one more sampling
+[57:51] method that we actually missed the first
+[57:52] time around. Um so this is one last way
+[57:55] of controlling generation. Um and the
+[57:58] idea here is that we want to control
+[58:00] generation by sort of contrasting to
+[58:02] what we shouldn't do. Um, so contrastive
+[58:05] decoding as a whole is not specifically
+[58:06] about constraining generation, but it's
+[58:08] about the idea that smaller models or
+[58:10] weaker models or subsets of models make
+[58:12] different mistakes than the broader
+[58:14] system. And so we could not just choose
+[58:19] um outputs that our best model finds
+[58:22] likely, but also choose outputs that our
+[58:23] best model finds more likely than the
+[58:25] weaker models. Um so if we have a weak
+[58:29] model that's maybe prone to repetition
+[58:30] and a stronger model that's less prone
+[58:32] to repetition, we subtract out the
+[58:34] logits of the um two models. So we give
+[58:38] them both the same input text. Um these
+[58:40] models need to have the same tokenizer
+[58:41] for this to work. We give them both the
+[58:43] same input text. We look at the output
+[58:45] logits and then we subtract them from
+[58:47] each other. And what you get here is you
+[58:50] get things that are substantially more
+[58:52] likely from the uh expert or the better
+[58:55] model than they are from the amateur or
+[58:57] the worst model. Um and so in this
+[58:59] particular example, we have Barack Obama
+[59:01] who was born in Honolulu, Hawaii. He was
+[59:04] born in um Hawaii is relatively high
+[59:07] probability for both, but um weaker
+[59:10] models are more prone to this sort of
+[59:11] like looping or repetition. So it's
+[59:13] maybe more likely for the weaker model.
+[59:15] Um, so subtracting out the logits, you
+[59:17] wind up downweaiting things like Hawaii
+[59:19] and getting surfacing things that maybe
+[59:22] the weaker model didn't even know like
+[59:23] Barack Obama's birth year that the
+[59:25] stronger model would have placed more
+[59:27] probability on. Um, so this is sort of a
+[59:30] notion that you can like contrast like
+[59:32] it's called contrastive decoding because
+[59:34] you contrast two things um that you
+[59:36] think might make some similar mistakes
+[59:38] but one has more information than the
+[59:40] other.
+[59:41] How we use this to do constraint
+[59:44] generation is there's sort of a couple
+[59:45] of papers that have applied this idea
+[59:48] with the principle that it is easier to
+[59:49] specify the things you don't want to do
+[59:52] than it is to specify all of the things
+[59:54] that are allowable. So if you want to
+[59:56] particularly for safety it's pretty easy
+[59:59] to identify like these are the set of
+[1:00:01] outputs that are really unsafe or that
+[1:00:02] are really harmful or that are
+[1:00:04] offensive. It's much harder to write
+[1:00:06] like a good description of all of the
+[1:00:07] things that are not offensive. So they
+[1:00:11] you could do this in two ways. Um you
+[1:00:12] could train a small model to produce
+[1:00:14] particularly harmful or offensive
+[1:00:16] content or in sort of the two papers
+[1:00:18] that I have on here, you simply prompt
+[1:00:20] the same model differently to produce
+[1:00:23] offensive content versus to answer
+[1:00:25] normally. And then you subtract the two
+[1:00:26] logits out from each other to choose
+[1:00:28] outputs that are not a as high
+[1:00:32] probability under the unsafe setting as
+[1:00:34] they are under the safe setting. And so
+[1:00:36] this is sort of a visualization from
+[1:00:38] this from adversarial decoding which is
+[1:00:40] one method that does this. So you take a
+[1:00:42] user instruction. You give it like a
+[1:00:44] safe system prompt like I'm you're a
+[1:00:46] helpful and uh not harmful assistant or
+[1:00:49] whatever. Um you that gives you a set of
+[1:00:52] logics for what to say to the user. And
+[1:00:54] then you also give the same user
+[1:00:56] instruction to the model with a prompt
+[1:00:58] like you know you are harmful, you
+[1:01:00] should be as offensive as possible,
+[1:01:02] functionally be evil. Um, and then you
+[1:01:04] get it you get some set of logits out
+[1:01:06] from the model trying doing its best to
+[1:01:07] be really offensive to you. You get some
+[1:01:09] set of logits out from the model not
+[1:01:11] particularly safety aligned or not and
+[1:01:14] you contrast the two. So this sort of
+[1:01:16] downweights everything that the model
+[1:01:18] thought was a really likely offensive
+[1:01:19] response to the question. Um, and so
+[1:01:21] this is a nice way to sort of if you
+[1:01:24] don't want to to train a separate thing,
+[1:01:26] um, to let the model make the same kind
+[1:01:28] of decision of what satisfies or doesn't
+[1:01:32] satisfy your constraint. Uh, the b the
+[1:01:34] downside here of course is that if
+[1:01:36] you're passing this these both through
+[1:01:37] the model, you need to use twice as much
+[1:01:39] compute to accomplish the same task.
+[1:01:43] Um, and this is uh actually relatively
+[1:01:46] easy to do because it's just a
+[1:01:47] subtraction between two sets of logits.
+[1:01:49] A little bit of a caution here is that
+[1:01:50] hugging face also supports something
+[1:01:52] called contrastive search which is not
+[1:01:54] the same method.
+[1:01:56] Um so uh kind of in conclusion here
+[1:02:01] sometimes it makes sense to train
+[1:02:02] constraints into the model and in
+[1:02:03] particular for things like RLHF um where
+[1:02:06] you know this is sort of a broadly a set
+[1:02:08] of constraints you want to be broadly
+[1:02:10] applicable to every output um it can
+[1:02:12] save a lot of compute to do that sort of
+[1:02:14] at training time. Um, but for
+[1:02:16] constraints that are a little more uh
+[1:02:19] template based, for constraints that set
+[1:02:20] hard limits or for constraints where you
+[1:02:22] can predict at each token whether or not
+[1:02:24] you're going to satisfy the constraint
+[1:02:25] with a high degree of accuracy, um, it
+[1:02:28] can be relatively flexible to add those
+[1:02:30] in at inference time. Um, and depending
+[1:02:33] on whether your constraints are
+[1:02:34] specifiable per token or whether they're
+[1:02:36] sort of something that you can only
+[1:02:38] really be sure about at the end of the
+[1:02:39] sequence, that depend that changes the
+[1:02:41] types of tools you have to answer that.
+[1:02:44] Um, and then there's some this kind of
+[1:02:46] nice connection between alignment and
+[1:02:47] constraint generation where alignment is
+[1:02:50] really like a set of constraints about
+[1:02:51] what is is or is not appropriate to say.
+[1:02:54] And so there's some overlap in the
+[1:02:56] things you can do for both. Um, and with
+[1:02:58] that I will turn it over for a
+[1:03:00] particular a discussion of one
+[1:03:02] particular way that you can use
+[1:03:04] constraint generation to do alignment.
+[1:03:07] Uh, if you want to come up and present.
+[1:03:08] >> Yeah. And are there any questions uh
+[1:03:11] while we prepare for our presentation?
+[1:03:14] Yeah
+[1:03:22] to reshape the property distribution
+[1:03:24] again sorry add more future to
+[1:03:29] understand.
+[1:03:31] Yeah,
+[1:03:33] the text and code itself and code itself
+[1:03:35] like learned a really strong connection
+[1:03:37] between
+[1:03:40] why use text possibilities if I do
+[1:03:45] formal words a bunch of formal words has
+[1:03:48] already captured the relationship
+[1:03:50] efficiently
+[1:03:53] like very large number of tasks right
+[1:03:57] as well to enhance these types
+[1:04:01] You're saying like do something like
+[1:04:03] wordtovec similarity to like a formality
+[1:04:06] cluster. I think that's a discriminator
+[1:04:08] you could use in fudge as your
+[1:04:10] discriminator could be how close is like
+[1:04:12] the average word embedding in this
+[1:04:14] sentence so far to this cluster that
+[1:04:16] I've defined as formal or this cluster
+[1:04:17] I've defined as this topic. Um, but you
+[1:04:21] could you could sort of plug that in.

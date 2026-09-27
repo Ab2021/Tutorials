@@ -1,0 +1,102 @@
+Title: Jongryool Kim - Disaggregated LLM Serving with Shared Memory KV Cache at Rack Scale
+
+--- TRANSCRIPT ---
+
+[0:02] Hello everyone, my name is Junior Kim as
+[0:04] from SKH highix as I'm senior director
+[0:08] and I also working for the SRC as a
+[0:10] cell.
+[0:12] So today I want to talk about the new
+[0:15] memory as a disegregated physically
+[0:17] disegregated pool memory. So this is a
+[0:20] memory pool disagregated with from the
+[0:23] servers. So in this diagram so node main
+[0:27] server and this is a memory pool box is
+[0:30] a really a diseated memory pool. So
+[0:32] multiple server can use this memory pool
+[0:35] at the same time with the two mode. The
+[0:38] first one is a memory pooling. So each
+[0:40] node can dynamically allocate the
+[0:42] additional memory but that memory region
+[0:45] is isolated between node but is a
+[0:48] sharing mode. Sharing mode is a multiple
+[0:50] node can share can see the same memory
+[0:53] address space. So each node can access
+[0:56] the same data. So uh we are very
+[0:59] interested in this this sharing feature.
+[1:01] So we quickly uh integrated this memory
+[1:05] pool with the realm serving system. So
+[1:08] we successfully deployed this system and
+[1:11] we demonstrated at the last year so many
+[1:14] event. So uh in this diagram so there
+[1:18] are four servers and four server can uh
+[1:21] can work with the so many uh random
+[1:23] serving component and the middle of
+[1:26] middle of a server middle of a rack that
+[1:28] is a niagara that is a real physical as
+[1:30] a pulled memory
+[1:33] uh in this scenario in this uh demo
+[1:35] scenario so uh there is a we use that
+[1:39] memory pool for transferring the kario
+[1:42] cache the at first the prepare After
+[1:45] prepare we need to deliver the key cache
+[1:47] to the decoding side. So by using the
+[1:50] two memory copy uh store and load we can
+[1:53] deliver the key cache to the decoding so
+[1:55] decoding node but uh is in we can find
+[1:59] that in this system the old key cache
+[2:02] can be stored in the memory pool. So we
+[2:05] can reuse it for the next request
+[2:07] without any some additional storing
+[2:09] operation for reusing.
+[2:12] So as a result we can improve the system
+[2:14] performance compared with the uh all rec
+[2:16] computation. This is nxl and nm cache is
+[2:20] in server DM based cable cash stoing.
+[2:24] But uh important part is why we can have
+[2:27] this kind of benefit. The first one is a
+[2:29] faster uh fast interer is a data
+[2:32] movement by using the pulled memory.
+[2:34] Yeah instead of using the TCP IP we
+[2:37] generally use RDMA. This is a fast but
+[2:40] this pulled the memory based data
+[2:42] sharing is a faster than RDMA. So we can
+[2:45] have a performance improvement for the
+[2:46] RM serving system. Second one is by
+[2:49] using the pulled memory based data
+[2:52] sharing. So we can have some another
+[2:54] benefit we can reliably
+[2:58] by uploading the key cache to the pool
+[3:00] memory. So if there is a okay it's if
+[3:03] there is out of memory at the decoding
+[3:05] side and prepare side but we can
+[3:08] continuously do the prepare because we
+[3:10] already uploaded that keeper cache to
+[3:12] the pool to memory side and as to store
+[3:16] the keeper cache and for reuse the cubic
+[3:18] cache there are many contention can be
+[3:20] happened in the GPU side GPU side the
+[3:23] PCI bandwidth and network side PCI
+[3:25] bandwidth there are many contention but
+[3:28] by using the our pool memory based data
+[3:30] sharing transports we can remove this
+[3:33] kind of additional uh contention. So we
+[3:36] deployed as in the agentic AI serving
+[3:39] system. So we should reuse the many
+[3:41] amount of large amount of key cache. So
+[3:44] we applied this system uh we applied the
+[3:47] agent AI serving system uh to the pool
+[3:50] memory environment and we can find this
+[3:53] kind of performance improvement compared
+[3:54] with the moonake and Adam cache. that is
+[3:57] a very initial performance number but uh
+[4:00] by end of this year I'm working with the
+[4:02] many uh collaboration parties 25 around
+[4:05] the 25 parties so we are preparing the
+[4:07] five more system PC such as multimord
+[4:12] serving and long-term memory management
+[4:14] and we are trying to build the rear
+[4:16] system with the pool memory uh for the
+[4:18] HPC US-based national system so yeah
+[4:23] let's see so how how the pool memory can
+[4:25] change the AI system. That's it.

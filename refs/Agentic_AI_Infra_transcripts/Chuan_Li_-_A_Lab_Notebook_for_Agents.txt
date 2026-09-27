@@ -1,0 +1,274 @@
+Title: Chuan Li - A Lab Notebook for Agents
+
+--- TRANSCRIPT ---
+
+[0:03] Hi everyone.
+[0:04] So, this is not a mistake. This is
+[0:06] actually my first slide.
+[0:08] So,
+[0:10] uh what are you are watching is Gemma
+[0:11] for play on the game of Tetris.
+[0:15] On on the beginning, as you can see,
+[0:17] Gemma does not know how to play and the
+[0:18] score zero.
+[0:20] Then we had the cloud watching how Gemma
+[0:23] play the game and then try to teach it
+[0:24] to play better.
+[0:26] Um before we get into details,
+[0:28] um here are some of the rules.
+[0:31] Uh you cannot touch the weights of
+[0:32] Gemma. So, this is not a fine-tuning.
+[0:34] This is supposed to be a auto research
+[0:36] project. So, uh no human instruction is
+[0:38] allowed.
+[0:39] However, cloud is allowed to do certain
+[0:41] things. For example, uh model settings,
+[0:45] um prompt optimization. Sorry, there's a
+[0:47] big gap between
+[0:48] and two letters. Um inference speed up.
+[0:51] So, these are the things cloud can do.
+[0:53] Also, for each games, there's a
+[0:54] 30-minutes time out. So, Gemma has to
+[0:57] think fast.
+[0:59] So, over a period of 2 and 1/2 days,
+[1:02] Gemma was able to improve from scoring
+[1:04] zero to scoring 16 points.
+[1:07] And uh the rest of the talk, I'm going
+[1:08] to share some of the lessons we learned.
+[1:12] And what do you make it all work is not
+[1:14] um so much about cloud is smart. We all
+[1:17] know cloud is smart.
+[1:18] But it is more of how we force cloud to
+[1:21] write things down systematically.
+[1:24] Just imagine how human scientists would
+[1:26] write things down when they do
+[1:27] experiment. We have notebook.
+[1:30] We have whiteboard. We have um
+[1:32] uh sticky notes. We have sign-up sheet
+[1:34] for sharing lab resource.
+[1:37] Research agent needs these tools as well
+[1:39] and they can get these tools via APIs.
+[1:42] For example, a notebook can become a
+[1:44] note-taking API.
+[1:46] The whiteboard can be your leaderboard
+[1:48] where the agent can query results from.
+[1:51] The sticky notes become the message that
+[1:53] can be passed between agents and your
+[1:54] sign-up sheet becomes your job queue.
+[1:58] Our own version of this implementation
+[2:00] is uh a piece of software called the lab
+[2:03] API. It's open source experiment tracker
+[2:05] we built for auto research.
+[2:09] Let's zoom out a little bit here.
+[2:11] Um imagine human has to do all this
+[2:13] bookkeeping by hand. Each one of us will
+[2:15] do it slightly differently and
+[2:17] inconsistently.
+[2:18] On the other hand, when we have this
+[2:20] standardized API,
+[2:22] research agent can do all of these in
+[2:24] the same correct way every single time.
+[2:28] So, the question we ask is what happened
+[2:30] when we give Claude code a good
+[2:32] experiment tracker?
+[2:35] Uh we ran this study with this Tetris
+[2:37] game for 2 and 1/2 days, and I'm going
+[2:39] to share some of the lessons we learned.
+[2:43] Um
+[2:44] the first lesson, not a surprise, uh
+[2:46] agent cheat.
+[2:49] Um you define the rules, you set up your
+[2:51] environment, you press the start button,
+[2:54] and they cheat.
+[2:55] Uh apparently, Gemma was able to score
+[2:57] 15 million points.
+[2:59] And then what really happened is the
+[3:01] Claude completely bypassed Gemma,
+[3:03] stopped coaching it, and then write this
+[3:05] simulation into the game source code. It
+[3:07] even
+[3:09] uh left a comment saying uh completely
+[3:12] skip this iron block and write your own
+[3:14] simulation. I think it's pretty funny.
+[3:18] So, what do we can do? Yes, we can build
+[3:19] a cage.
+[3:20] Um for example, we can make the game
+[3:22] source code and bunch of other files
+[3:24] read only.
+[3:25] However, this does not solve the
+[3:27] problem.
+[3:28] Um apparently, Gemma still was able to
+[3:30] achieve a thousands of points.
+[3:32] And this time, the way in is the chat
+[3:34] template, which is written in Ginger,
+[3:37] where you can put a for loop, you can
+[3:39] put things like if else, and then update
+[3:41] the variable uh value. Basically, the
+[3:44] chat template is Turing complete.
+[3:46] Then uh Claude was able to put in this
+[3:48] like big for loop to go through all the
+[3:50] rotational location and then find the
+[3:52] optimal solution. And the agent just
+[3:54] need to read the result out.
+[3:56] And the way we prevent this from
+[3:57] happening is to replace this
+[3:59] um Turing complete template by something
+[4:01] much simpler or or restricted.
+[4:05] And the lesson here is if there's ever a
+[4:07] way for agent to cheat, they will do it.
+[4:09] So, build a strong cage, otherwise you
+[4:11] are not measuring the problem-solving
+[4:13] skill.
+[4:15] Another lesson we learned is if you run
+[4:17] the same idea multiple times, the result
+[4:19] may not be always consistent.
+[4:21] And just think about all the knobs you
+[4:23] can tune for each idea, and the things
+[4:25] like the temperature of the model will
+[4:26] make a difference.
+[4:28] Example here, we run the same idea
+[4:30] twice. The first time it scored three
+[4:31] points, the second time it scored four
+[4:33] points, only because we changed the max
+[4:35] token setting.
+[4:36] A naive agent will run idea once and
+[4:38] then see the score and make a decision.
+[4:40] A more sophisticated agent would run
+[4:42] idea multiple times with different
+[4:44] settings before making conclusion.
+[4:47] And then in order to have that, you
+[4:48] really need to have a good experiment
+[4:50] tracker. This is where we commit every
+[4:53] single idea to its own Git branch, keep
+[4:55] all the code changes and the settings,
+[4:56] so you can you always go back and
+[4:58] reproduce. This also allowed us to try
+[5:00] different things from the same idea, and
+[5:03] then take the average score for example
+[5:05] instead of a lucky high or unlucky low.
+[5:09] Of course, this comes with a cost.
+[5:11] Nobody complains about the cost until
+[5:13] the bill gets too high. In this case, it
+[5:15] was really expensive because we run
+[5:17] frontier model around the clock, and
+[5:19] every single experiment used to take $30
+[5:22] to run, but we were able to reduce the
+[5:24] cost by tenfold.
+[5:26] And the way we reduce the cost is also
+[5:27] very interesting. Because the lab was
+[5:30] designed to
+[5:31] designed to be a general tool. So, we
+[5:33] actually used the lab to optimize its
+[5:36] own cost.
+[5:37] The way we did this is to set up a
+[5:38] separate separate goal and current
+[5:41] standard as a kernel optimization.
+[5:43] And the goal there is not actually to
+[5:45] make the kernel faster, is to generate
+[5:47] enough API traces so lab can look its
+[5:49] own trace and design decide of where I
+[5:52] can optimize my own API design. So every
+[5:55] single experiment becomes a lab optimize
+[5:57] its own cost.
+[6:00] As an example of the organization, what
+[6:01] the lab find out is there's an API
+[6:03] called the get experiment. It returns a
+[6:06] tons of information about the
+[6:07] infrastructure. For example, Slurm, Git.
+[6:10] And nowadays this needed for kernel
+[6:12] optimization or playing Tetris game.
+[6:15] By removing all these informations, the
+[6:16] cost of this particular API got 50 times
+[6:18] cheaper.
+[6:21] So those are some of the lessons we
+[6:23] learned. Um
+[6:25] but how did Gemma actually get from zero
+[6:28] to 16?
+[6:29] The improvement didn't comes smoothly,
+[6:31] it comes in jumps.
+[6:33] The first jump is from zero to four
+[6:35] where the lab find out the first thing
+[6:38] to do is to let Gemma survive longer in
+[6:40] the game. So it invented this time out
+[6:43] movement. Basically slide the piece to
+[6:45] the left or right on the game board.
+[6:47] Totally makes sense.
+[6:50] In order to get it from four to seven,
+[6:52] what the lab find out is a cheat sheet.
+[6:54] Basically
+[6:55] a set of best practice for individual
+[6:57] pieces. So Gemma does not need to figure
+[7:00] out all these movement completely from
+[7:01] scratch on the fly. They have a
+[7:04] reference book.
+[7:07] Apparently this is also a strategy used
+[7:09] by the England goalie in the World Cup
+[7:11] game.
+[7:14] A day into the study, the score
+[7:16] flattened.
+[7:18] Then the lab look into its entire
+[7:20] history in the in the past and they find
+[7:22] out there are certain pieces that are
+[7:24] harder
+[7:25] to place than the others. And these are
+[7:27] the pieces that need rotation. So it
+[7:29] tried to prompt Gemma to be more
+[7:31] proactive about rotating those pieces.
+[7:34] And that brings the score to nine.
+[7:38] Up to this point, all the prompt changes
+[7:41] are made it the system prompt, which is
+[7:43] a thousand word long context, and the
+[7:46] the agenda has to read all these before
+[7:48] even seeing the game board.
+[7:50] Then the lab realized it has never
+[7:52] touched
+[7:53] the user prompt. So, it put this single
+[7:56] sentence basically says,
+[7:57] "Don't overthink. Make clear decision."
+[7:59] Right in front of
+[8:01] the moment that
+[8:03] Gemma is going to see the game board.
+[8:05] And this increased the score of almost
+[8:07] double the score. And the funny thing
+[8:08] here is this is a single line of a
+[8:11] change took about a hundred experiment
+[8:13] to find out.
+[8:14] And this shows the power of auto
+[8:16] research where the agent can try a lot
+[8:18] of different things until something
+[8:19] sticks.
+[8:22] Obviously, there's a lot of things that
+[8:23] didn't stick stick.
+[8:25] Overall, the lab tried 90 different
+[8:27] ideas over 400 experiment. Most of them
+[8:30] didn't work. And for the sake of time,
+[8:32] I'm going to skip
+[8:34] the things that didn't work.
+[8:36] But we do have a um
+[8:38] walk-through in this this afternoon, not
+[8:40] tomorrow, if you are interested.
+[8:43] And uh this is a link to get the
+[8:44] software. Again, this is complete open
+[8:46] source under MIT license. You can pip
+[8:49] install it. We also have a tutorial
+[8:51] about how to reproduce the touchstone.
+[8:56] Um before I end the talk, I just want to
+[8:59] call out that's actually a human behind
+[9:00] the study. His name is David Harman. He
+[9:03] and his friend Jan and Daniel won the
+[9:05] second place in the Arc Prize last year.
+[9:08] Some of you may heard about the Arc
+[9:09] Prize. It's It's a cargo competition
+[9:12] built on top of François Chollet's
+[9:14] definition of how to measure
+[9:15] intelligence.
+[9:16] Uh where
+[9:17] I That's one of my favorite thing I want
+[9:19] to call out here. It says, "Solely
+[9:21] measuring skill
+[9:23] fall short of measuring intelligence."
+[9:25] I think my point here is the opposite is
+[9:27] also true. Solely measuring intelligence
+[9:30] will fall short of measuring skill. You
+[9:33] need both to make scientific progress.
+[9:35] Thank you.

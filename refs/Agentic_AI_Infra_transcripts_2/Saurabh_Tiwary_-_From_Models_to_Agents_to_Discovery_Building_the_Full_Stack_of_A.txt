@@ -1,0 +1,282 @@
+Title: Saurabh Tiwary - From Models to Agents to Discovery: Building the Full Stack of Agentic AI
+
+--- TRANSCRIPT ---
+
+[0:03] Thank you.
+[0:04] >> [applause]
+[0:06] >> So, it is very good to be here. I used
+[0:08] to study here at Berkeley, so good to be
+[0:10] back.
+[0:11] Uh,
+[0:12] I'm going to talk about the evolution of
+[0:14] AI from models to agents to discovery
+[0:17] and the related infrastructure
+[0:19] implications that that it has.
+[0:22] So, obviously, almost everyone is
+[0:23] familiar with the huge expanse or
+[0:25] adoption of AI
+[0:27] from singleton chatbots about 3-4 years
+[0:29] back to now almost semi-autonomous or
+[0:32] autonomous agents.
+[0:34] The numbers at the bottom show you some
+[0:37] reflection of the scale of adoption and
+[0:39] the impact that it has had.
+[0:42] So, Kaggle has this
+[0:44] 5 days of agents course, and last fall
+[0:47] when they ran it, it's an online course,
+[0:49] 1.5 million users
+[0:51] registered for it.
+[0:54] If you look at the
+[0:56] cost of agentic task,
+[0:58] it is 10 to 100 x more expensive in
+[1:01] terms of inference compute, which is
+[1:04] which is needed compared to non-agentic
+[1:06] workload. So, adoption is going is
+[1:09] increasing
+[1:10] as well as the complexity of compute per
+[1:13] interaction is also increasing.
+[1:15] And what it is leading to is from a
+[1:16] Google perspective, we process 3.2
+[1:19] quadrillion tokens every month. Now,
+[1:22] quadrillion is a very large number with
+[1:24] lots of zeros in it. The way to think
+[1:25] about it is one quadrillion is one novel
+[1:30] per person on this earth.
+[1:33] So, in a way, Google generated tokens,
+[1:36] which are equivalent to three novels for
+[1:38] every person in this world. So, the
+[1:40] scale is just massive.
+[1:42] And so, how do we build for this new
+[1:44] opportunity which which is coming up?
+[1:47] And this needs different pieces in the
+[1:49] stack.
+[1:50] Uh, so I will like if you start from the
+[1:52] bottom, we have the AI hypercomputer,
+[1:53] which includes GPUs and TPUs. On top of
+[1:57] that, we have uh world-class research
+[1:59] and frontier models.
+[2:00] Then, we need data for these models or
+[2:04] agents to do meaningful things.
+[2:06] As these agents are starting to do
+[2:08] meaningful things, there's a huge
+[2:10] opportunity or risk as well for security
+[2:12] and defense. So, we need agentic
+[2:14] security and agentic defense.
+[2:17] On top of that, we need a platform so
+[2:19] that people can reuse all these
+[2:21] capabilities in a cheap, efficient, and
+[2:24] effective manner. And that's where the
+[2:26] platform piece comes in. And then,
+[2:28] finally, we have final end-to-end
+[2:30] agentic uh task force, which can
+[2:32] actually do things for you.
+[2:34] Now, a co-optimization across this
+[2:37] entire stack is really needed to extract
+[2:39] maximum value from AI.
+[2:42] And in the interest of time, I won't go
+[2:43] through all of them, but I will kind of
+[2:45] quickly give you a snapshot on some of
+[2:47] these layers as we go along.
+[2:49] So, Google has had a huge investment
+[2:51] into TPU. 10-plus years of investment,
+[2:53] some of the innovations relating to
+[2:56] liquid cooling and shared memory have
+[2:59] been there. The latest generation of
+[3:01] TPUs is TPU V8, and it has It comes in
+[3:05] This is the first time we are splitting
+[3:06] the the main line, as Peter was saying
+[3:08] in the previous talk, that there is one
+[3:12] uh version which is 8T, which is for
+[3:14] training, and 8I, which is for uh which
+[3:16] is for inference.
+[3:19] In terms of just to give you a a
+[3:21] comparative number of like how the
+[3:23] improvements on TPUs are happening,
+[3:25] this the the table over here is
+[3:27] comparing the current generation TPUs,
+[3:29] the V8s,
+[3:31] with the previous generation, which was
+[3:33] just released a year back, last year.
+[3:34] And these are the main workhorse today,
+[3:36] uh which is the Ironwood TPU.
+[3:38] And you can see, for example, on the
+[3:39] table on the left-hand side, you can see
+[3:41] that the number of FP4 exaflops
+[3:44] available in a pod is 121 exaflop.
+[3:46] That's a massive, massive number of
+[3:48] amount amount of compute per second that
+[3:50] we are offering. And the jump is about
+[3:52] 3x from just the previous generation.
+[3:54] Similarly, on the memory bandwidth side
+[3:56] you can see significant jumps like 2x
+[3:58] and 4x between one generation to the
+[4:00] next. On the training I'm sorry, on the
+[4:02] inference you can see on the right hand
+[4:04] side
+[4:05] because the inference needs are are
+[4:07] increasing very very rapidly.
+[4:09] A single pod can offer 11.6 exaflops and
+[4:13] it's a 10x jump from the previous
+[4:15] generation. And similarly significant
+[4:18] jumps on on the memory side.
+[4:21] So, what do we do with all these TPUs?
+[4:24] Google obviously invest and there are
+[4:25] now a lot of other companies who also
+[4:28] leverage TPUs for their model. Google is
+[4:30] training the Gemini family of models
+[4:31] which comes with Pro, Flash and
+[4:33] Flashlight. The image and video
+[4:35] generation models like VIO and Imagine,
+[4:37] they are trained as well. The world
+[4:39] model which is a new and completely
+[4:40] exciting space for us with the Genie
+[4:43] model is also trained over there.
+[4:45] The the AlphaFold which is a protein
+[4:48] folding it predicts protein folding
+[4:49] structures
+[4:51] as well as AlphaGo and AlphaChip which
+[4:54] is used to
+[4:55] train and build the next generation of
+[4:57] TPUs as well. These are all being so
+[4:59] it's effectively TPUs designing for TPUs
+[5:02] in in some sense. So, all of these are
+[5:05] heavily leveraging our TPU
+[5:07] infrastructure structure both for the
+[5:08] training as well as on the inference
+[5:09] side.
+[5:10] Now, once we have the hardware
+[5:13] and the models, then we need a platform
+[5:16] through which people can build agents
+[5:18] relatively easily. And and building
+[5:20] agents is not just like writing a prompt
+[5:22] etc. There are lots of complexities in
+[5:24] it and so there are four key problems.
+[5:27] One of them is building building it. So,
+[5:29] we have capabilities like access to all
+[5:31] different types of models, agent
+[5:33] development kit
+[5:34] and AI studio to build agents. Then you
+[5:37] need to scale them, govern them and
+[5:39] optimize them. So, so start with
+[5:41] building, scaling, governing and
+[5:43] optimizing. On the scale side the other
+[5:46] capabilities are a managed runtime so
+[5:48] that you can scale from a single
+[5:49] instance of that agent to millions of
+[5:51] agents.
+[5:52] Governance becomes a really key or or
+[5:54] important factor because as these agents
+[5:57] are starting to do meaningful things,
+[6:00] you want things like agent identity,
+[6:02] agent registry, and agent gateway to
+[6:04] make sure that the agents are working
+[6:07] within the right confines, the identity
+[6:09] systems that they are using are separate
+[6:11] from the user because they can do things
+[6:13] beyond what the user is is able to do.
+[6:16] And finally, once you deploy an agent
+[6:17] into production, you want to optimize
+[6:19] them. So, things like tracing,
+[6:21] simulation, evaluation, observability,
+[6:23] all these capabilities need to be there
+[6:25] so that you can keep on improving the
+[6:27] agents once you land into production.
+[6:29] So, these become key pieces.
+[6:31] Now, one additional thing that we do is
+[6:33] across this stack,
+[6:35] Google itself builds on top of it. So,
+[6:38] there are agentic solutions that Google
+[6:40] is building across on top of this stack.
+[6:44] So, for example, there are areas in
+[6:45] biology.
+[6:46] For example, there is AlphaFold or
+[6:48] AlphaGenome,
+[6:50] which is there. On mathematics side, we
+[6:52] have AlphaEvolve and AlphaProof.
+[6:55] In on the physics and chemistry side, we
+[6:57] have Genome Fusion, etc. And on climate
+[7:00] and sustainability side, we have Alpha
+[7:02] Earth as well as Weather Next, which is
+[7:05] world-class leading weather prediction
+[7:06] model. And these are all built on the
+[7:08] stack that we are talking about.
+[7:11] Here are some examples of the impact
+[7:13] that these finally agentic solutions are
+[7:15] are having. So, for example, AlphaFold
+[7:17] is being used in a wide variety of
+[7:19] applications. So, in plastic pollution,
+[7:22] so identifying or designing plastic
+[7:24] resistant eating enzymes, for antibiotic
+[7:28] resistance structured biology,
+[7:31] one key area is neglected diseases. So,
+[7:33] there are a lot of diseases out in the
+[7:34] world where the pharma companies don't
+[7:36] invest enough because there isn't enough
+[7:37] economic incentive for that.
+[7:39] And what AlphaFold is doing is lowering
+[7:42] down the cost and the ease of exploring
+[7:44] these these drug designs which is which
+[7:47] has material impact. Uh then malaria
+[7:50] vaccine as well as drug
+[7:51] drug delivery.
+[7:54] Alpha Evolve, this is a general purpose
+[7:56] optimizer which is there. It is used
+[7:59] heavily inside Google for data center
+[8:02] optimization across along with a whole
+[8:04] host of other applications. But also it
+[8:06] is used by other customers. So for
+[8:09] example, it is used for route
+[8:10] optimization. It is used for quantum
+[8:13] error correction.
+[8:14] As well as by e-commerce companies for
+[8:17] improving the forecasting demand model
+[8:19] and has significantly if you think about
+[8:21] it like these are very different types
+[8:23] of application and has huge improvements
+[8:27] across each one of them.
+[8:29] So what does this all mean? As we go
+[8:31] through this stack and as the models
+[8:33] keep improving, what is this all leading
+[8:36] to? And and this is this is what we
+[8:38] believe that
+[8:40] where we are heading towards is this
+[8:42] autonomous discovery loop.
+[8:44] So and and the example on this
+[8:46] particular slide is about biology, but
+[8:49] this is much more generic.
+[8:51] What we are having is we are having all
+[8:54] these building blocks coming together.
+[8:56] So for example, for data ingestion, we
+[8:59] now have agents which can digest large
+[9:01] amounts of literature. There is
+[9:02] AlphaFold has a has a very large protein
+[9:04] database which is which is available as
+[9:07] well as experimental logs.
+[9:09] Then you can do hypothesis generation on
+[9:11] top of it. So there is AI co-scientist
+[9:13] which can debate different hypotheses,
+[9:16] pro
+[9:17] generate novel solutions.
+[9:19] And you can use them from a modeling
+[9:22] perspective using Alpha Genome and
+[9:24] AlphaFold to simulate these hypotheses
+[9:27] and see the effects of that in seconds.
+[9:30] And then finally, you can execute on it
+[9:32] through Alpha Evolve and Gemini
+[9:34] Robotics to run wet lab tests.
+[9:37] And see and what the what the data is
+[9:40] and also feed it inside this particular
+[9:42] loop. And so what can happen is a
+[9:44] research cycle which used to take years
+[9:47] from beginning like input of like data
+[9:50] to outcome of the product can now be
+[9:52] done in hours and days and this is just
+[9:55] one segment like biology is one example
+[9:57] but this is going to impact almost all
+[9:59] facets of like human discovery which is
+[10:02] there and this is super super exciting
+[10:04] phase uh
+[10:05] that we have. And with this I will end
+[10:08] my talk and thank you for your
+[10:09] attention.
+[10:11] >> [applause]

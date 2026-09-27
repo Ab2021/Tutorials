@@ -1,0 +1,514 @@
+Title: The Token Raj: Rethinking the AI Inference Stack
+
+--- TRANSCRIPT ---
+
+[1:19] Whose hands are these?
+[1:21] [laughter]
+[1:24] >> So, it's pretty much a trillion dollar
+[1:26] hands of two different people. So, uh
+[1:29] yeah. And uh most and how many of you
+[1:32] have seen your cloud bills, especially
+[1:34] AI inference bills over the last two
+[1:36] quarters? Hey, uh those hands are
+[1:39] responsible for that,
+[1:40] >> right? So, uh yeah. So, why are we here,
+[1:44] right? Um
+[1:46] so, how many of you have heard about the
+[1:47] British Raj. [laughter] So now what
+[1:50] we're staying is something called uh you
+[1:52] know token ro and one of the major
+[1:56] things is it's not because of the
+[1:58] technology access it's also perceived
+[2:00] laziness of developers of uh you know
+[2:03] just throw a problem at any prompt we
+[2:05] have right so what has this thing
+[2:07] happened is uh the subsidy time is over
+[2:11] so if you have seen your cloud bills
+[2:13] over the last two quarters uh or if you
+[2:16] I mean who who over here is responsible
+[2:18] for your team's or your company's cloud
+[2:20] budgets and you're actively looking at
+[2:22] that. Okay. How many of you are
+[2:24] accessing models from the frontier AI
+[2:26] companies?
+[2:29] Okay. So, so this is something which has
+[2:32] happened like one of the researchers
+[2:33] called Toms, he was uh looking at how
+[2:37] these companies pricing and how many of
+[2:38] you really understand the pricing
+[2:40] patterns behind how each of these
+[2:42] companies are billing.
+[2:45] It's not clear, right? It's not not many
+[2:47] understand this thing. And in many of
+[2:49] the cases like say most of the companies
+[2:51] which come from a traditional capex kind
+[2:54] of a model whether it was private cloud
+[2:56] public cloud coloss their own p I mean
+[2:59] private data centers the billing models
+[3:01] were pretty much linear and and one of
+[3:03] the common things were you were
+[3:05] overprovisioning it and you were
+[3:06] underutilizing it right so one of the
+[3:08] things which we can't control in most of
+[3:10] the cases unless you're a silicon
+[3:12] accelerator
+[3:15] >> yeah unless you're a silicon accelerator
+[3:17] is uh you can't your own hardware. I
+[3:19] mean at least as of now. Okay. At least
+[3:21] in in in in the global south countries
+[3:24] uh there are reference to do that. But
+[3:26] uh what you can absolutely control is
+[3:30] your software right whether it is
+[3:32] software like BLM whe whether it is your
+[3:34] agent harnesses you have absolute
+[3:36] control over there right. Uh but what
+[3:39] has happened is uh I mean the the mantra
+[3:41] for most of the frontier AI lab
+[3:43] companies were simple. give people
+[3:45] tokens. Uh give u uh give enterprise uh
+[3:49] easier ways to access tokens whether it
+[3:51] is from their own enterprise offerings
+[3:54] or from every cloud out there and most
+[3:56] of the clouds did serve all the major
+[3:58] models and let the companies and the
+[4:00] developers within these companies get uh
+[4:02] get used to these more like a behavioral
+[4:05] pattern to use these models for every
+[4:07] task they do. So this is the pattern
+[4:09] which we which we are used to. But what
+[4:11] has happened over this year is uh that
+[4:14] subsidy is over right right they have
+[4:16] the market uh they have the market share
+[4:18] uh especially like say uh even if you
+[4:20] take certain task with coding finance
+[4:23] any of these things the large language
+[4:24] models are the ones which are doing it.
+[4:26] Even though even though every company
+[4:28] CTO CIOS are pretty much aware that
+[4:31] there are small language models high
+[4:33] precision small language models which
+[4:35] can solve that the initial burden of
+[4:38] getting those things up and running or
+[4:40] even let's say in many of the cases it
+[4:42] could be that the GPUs are not available
+[4:45] from the vendors itself because they've
+[4:46] been booked out by major companies and
+[4:49] things. So that's the reason many of us
+[4:51] have been using the subscription models
+[4:53] both from our personal accounts and the
+[4:55] token accounts. So what I mean this
+[4:58] pattern is like when when cuts uh the
+[5:00] hidden cuts when the cash is plentiful
+[5:02] when the when the sharing has mattered
+[5:04] and they increase the margins when you
+[5:07] know the the cash is tight. So right now
+[5:09] if you see many companies uh publicly
+[5:12] few of the companies are telling that we
+[5:13] are putting budgets on our engineers for
+[5:15] the number of tokens you can use in a
+[5:17] month or in a year and many of the
+[5:19] companies uh they they have been pretty
+[5:22] transparent saying that we have
+[5:23] exhausted all our token budgets the
+[5:25] first 3 four months uh in the year so
+[5:27] what exactly changed between February
+[5:29] and April anybody wants to take a guess?
+[5:35] So there's this research lab called big
+[5:37] spin a few Stanford researchers and
+[5:39] think uh what is the price purchasing
+[5:43] parity of each token what could a token
+[5:45] do something in February and what
+[5:47] happened in in March is a thinking model
+[5:50] started coming right so what happened
+[5:52] with this thing is if you're doing a
+[5:53] certain task if you have 10,000 tokens
+[5:55] for certain metrics they call these
+[5:57] knowledge artifacts uh within their
+[5:59] research how much did it actually cost
+[6:01] them right in in in February it was
+[6:03] costing 30 cents in April it was costing
+[6:05] 16 cents. The number of code lines
+[6:07] drafted was 630 but by April it became
+[6:10] 91 and these are across general patterns
+[6:13] across all the popular ones. Here I
+[6:15] think pretty much the study was done on
+[6:17] opus 4.6 for the same kind of task and
+[6:20] the files touched like 8.2 went to 3.6.
+[6:23] So if you look at the if you look at the
+[6:25] decline in the amount of tasks the same
+[6:27] model could do by April but then it it
+[6:29] was not directly proportionate to the
+[6:31] billing amounts which came in what
+[6:33] increased was thinking tokens
+[6:37] right most of you are engineers here
+[6:39] like uh whenever you get access to
+[6:41] tokens the first few months you'll start
+[6:43] you know you'll start writing your code
+[6:45] and you'll start building out many of
+[6:47] your tools but if you take a look at if
+[6:49] you self-reflect [laughter]
+[6:50] about how your own teams are using this
+[6:52] code or your own teams consuming these
+[6:54] tokens you can see a clear pattern most
+[6:57] of the tokens which are being spent
+[6:58] right now is for explaining what you
+[7:00] have written right now that is a tang I
+[7:03] mean it's a tangible cost for companies
+[7:05] right it's pretty much like the uh the
+[7:08] MBAs at all the frontier language
+[7:10] companies have launched a surgical
+[7:12] strike with all the CFOs and CTOs and
+[7:14] CIOS across all the countries throughout
+[7:16] the world it's like that right you can
+[7:18] see your token consumption you can see
+[7:20] your output in number of lines of code
+[7:22] or number OPRS push or the number of
+[7:24] merge requests accepted but you're not
+[7:26] seeing tangible business outcomes both
+[7:28] are not uh correlated at all right few
+[7:31] of the companies yes initially you'll
+[7:33] see a lot of productivity gains but then
+[7:35] many of you have moved from the $20 plan
+[7:38] to 10x plan or 20 to 20x plan it's there
+[7:42] is no substantial uh benefit you're
+[7:44] getting from that because the backend
+[7:46] pricing models are very uh uh I mean uh
+[7:50] predatory in in a in a way because it's
+[7:52] not even tokens the number of hours
+[7:54] they'll give you those lost number of
+[7:56] hours within a week and if you open
+[7:58] Reddit and most of these uh frontier
+[8:00] language model companies Reddit pages
+[8:03] it's like crazy they'll be like I have
+[8:05] taken the 20x plan but have run it out
+[8:07] within three 3 days or 4 days or things
+[8:09] like that so it's a very relatable
+[8:11] problem
+[8:13] so uh and companies which are doing to
+[8:16] tokens per output as one of the metrics
+[8:18] you you need to change the metrics you
+[8:20] need to start looking at it as a
+[8:22] business outcome rather than the token
+[8:23] spend because there are things which you
+[8:25] can't see like the amount of uh amount
+[8:27] of collective knowledge your team is uh
+[8:29] getting from like say thinking models is
+[8:31] something which you can't measure right
+[8:33] so these are a few of the things which
+[8:35] are happening so what happens is uh the
+[8:38] way most of these tokens are written is
+[8:41] is the same way right most of the cloud
+[8:43] uh uh you buy a SAS offering or you buy
+[8:46] an offering from any of the larger
+[8:47] clouds so one way in which you in which
+[8:50] their billing systems are set up is They
+[8:51] give you default options and most of the
+[8:54] default options in many of the cloud
+[8:56] providers are for their better revenue
+[8:58] generation. It's not for the most
+[9:00] optimal settings even in this way. Okay.
+[9:03] The vendor revenue skills only the
+[9:04] tokens are burned. Right? So it's a
+[9:06] structural in uh incentive for the
+[9:09] vendors. The more time you're spending
+[9:10] with models, the more time it is
+[9:12] thinking or reasoning. that's the output
+[9:14] which is uh uh which is generating more
+[9:17] revenue for them or which is also
+[9:19] reducing your uh you reducing the time
+[9:21] slots in which you can uh which you can
+[9:24] use those models uh then I keep seeing
+[9:26] these memes people run out of tokens and
+[9:28] then they put what are you doing uh
+[9:29] they'll show the meme from show that I
+[9:31] don't have any hands or things like that
+[9:33] to write any more code so so so things
+[9:36] like that right so but one of the things
+[9:38] is you really need to be smart there are
+[9:40] various techniques like two days back
+[9:42] one of the models called jeves was uh uh
+[9:45] was published where uh it is kind of
+[9:47] gating the amount of time you can think
+[9:49] and uh sure shot short the kind of
+[9:51] answers you want to get. So right now
+[9:54] the the hottest piece in the market is
+[9:55] how you can save the tokens and what
+[9:57] kind of techniques or what kind of
+[9:59] reinforcement learnings or any other ML
+[10:01] techniques which are used in combination
+[10:03] with genai models they are getting more
+[10:05] hype over this over this period of time.
+[10:08] Uh and uh another thing is total
+[10:11] leverage like start building uh this is
+[10:13] one of the uh takeaways if you can from
+[10:15] here many of the companies especially
+[10:17] the Chinese AI companies they are
+[10:19] serving their their their audience with
+[10:22] small language models with high accuracy
+[10:25] on affordable hardware affordable
+[10:27] enterprisegrade hardware. So this is one
+[10:30] of the ways just don't look at uh token
+[10:32] burn as one of the aspects of it. And
+[10:35] the other thing uh here is it's just not
+[10:37] the tokens and the token burns. There's
+[10:39] also this illusion about sovereignity,
+[10:41] right? We spent the whole decade uh
+[10:43] coming out with uh uh you know
+[10:45] encryption I mean uh data trust and in
+[10:48] transit and we have built interfaces but
+[10:50] what happens is uh one of those illusion
+[10:52] of sovereignty even though your models
+[10:54] are uh uh are your own your your data is
+[10:58] your own the cloud company is within
+[11:01] your own geographic uh conditions but if
+[11:03] they're running on any hyperscaler
+[11:05] because of the US cloud app they can
+[11:07] actually see that data and technically
+[11:10] this is one of the bigger gap is there
+[11:12] is a three-way trust problem between the
+[11:14] model owners, the inference uh the
+[11:15] infrastructure providers and us as
+[11:17] consumers. So what is a trust dilemma?
+[11:20] Right? Everything is sitting in plain
+[11:21] text in memory on the GPUs and the CPUs
+[11:24] what you're serving, right? Yes.
+[11:32] >> Right.
+[11:32] >> So they can have back doors, right? All
+[11:34] the silicon companies they have their uh
+[11:37] signatures signed and these signatures
+[11:39] can easily have back doors unless you're
+[11:41] building. So I keep joking who is a full
+[11:43] stack engineer is a person who can
+[11:44] design his own chip on VSLI get it in a
+[11:47] foundry write it and put the whole stack
+[11:49] I I'll come to this there are techniques
+[11:51] in which you can uh you can uh block
+[11:54] that right so right now the only
+[11:56] frameworks which are protecting uh
+[11:58] sovereignty are the legal frameworks
+[12:00] saying like frameworks like JDPR DPDP
+[12:02] other regional frameworks which are
+[12:04] saying that that's a legal agreement how
+[12:06] can you prove cryptographically that
+[12:07] none of the data which is stored in your
+[12:09] CPUs GPUs can be stolen, cannot be
+[12:12] stolen, right? You need a cryptographic
+[12:14] attachment. So you can't see it's it's
+[12:16] like you can't legislate a memory dump,
+[12:18] right? We have seen over the last
+[12:19] decade, we have seen many hardware bugs
+[12:21] also come out. Spectre uh spectre is one
+[12:24] of those things and there was another
+[12:25] one uh it was called some bleed. Uh I I
+[12:28] I keep forgetting that. So where it was
+[12:30] loading onto the kernel's memory in
+[12:32] plain text and it was uh there was a
+[12:34] back door within all the CISK based
+[12:36] systems which were deployed throughout
+[12:37] the world, right? Um and [clears throat]
+[12:41] another thing is I mean it is very sure
+[12:43] that the signing keys of most of the
+[12:45] let's say the Intel signing keys or the
+[12:46] AMD signing keys or the Nvidia signing
+[12:48] keys more because most of these
+[12:50] companies are predominantly uh US-based
+[12:52] companies they do have their signing
+[12:54] keys and if if the government requires
+[12:56] they can many companies wouldn't but you
+[12:59] never know where there's a back door we
+[13:01] have seen systems like prism and all of
+[13:03] those things right so this is one of the
+[13:06] ways but right now most of the modern
+[13:07] silicon which is coming Nvidia, AMD,
+[13:10] Intel everything have clustered
+[13:11] execution environments over there where
+[13:13] you can uh you can have a single rooted
+[13:15] encryption and a stationation only you
+[13:17] as the data owner can see that in plain
+[13:20] text but you can attest that and put it
+[13:22] in a cryptographic attestation. So I
+[13:25] just want to come back. So what is a
+[13:27] three-way dilemma test right? The model
+[13:28] owners they fear that when they put
+[13:30] their models on infra providers and it
+[13:33] is sitting there in plain text all their
+[13:36] years of training their models and the
+[13:38] millions of dollars they're spending the
+[13:39] silicon owner can see that right this
+[13:41] the infrastructure owners have a problem
+[13:43] where all the the models could be
+[13:47] shipping malicious code along with uh uh
+[13:50] along with the model weights over there.
+[13:52] Right? So that is the thing because the
+[13:54] whole purpose of a open-source model is
+[13:57] not a clear definition. What do you mean
+[13:59] by open source model? Is it that is it
+[14:01] just that your model is freely available
+[14:02] and you can run it or are you going to
+[14:04] share the training data along with the
+[14:06] model the actual code which you have
+[14:09] used along with the training data to get
+[14:11] that model and also are you publishing
+[14:13] the weights. In most of the cases when
+[14:15] people say open source model they'll
+[14:16] just publish open weights. They don't
+[14:18] show the source code which was used to
+[14:20] train and they don't showcase the kind
+[14:22] of silicon they used to train that so
+[14:24] that you can replicate it and reproduce
+[14:26] it. Right? So that that's a problem. So
+[14:28] the definition of open-source models
+[14:30] itself is very big. A true open source
+[14:32] model you'll even be sharing what
+[14:34] training data sets how did they source
+[14:35] the training data sets? What are the
+[14:37] license of those training data sets? So
+[14:39] others can build upon those models and
+[14:41] use. So so these two are the problems.
+[14:43] So the infrastructure providers have
+[14:45] this problem saying that what happens if
+[14:47] uh my open source model uh uh is is
+[14:51] opening a back door. So many of them
+[14:52] have seen it. The first time Quen came
+[14:54] out, they installed it, it was trying to
+[14:55] do a netcon back to the servers over
+[14:58] there, right? You need to isolate those
+[15:00] environments. Just because it's open
+[15:01] source, just don't take it and put it
+[15:02] out there. Right? So because like most
+[15:05] of us should be pragmatic all software
+[15:08] which you're writing is always a
+[15:10] liability. It is never an asset for your
+[15:12] company. Right? When people say when
+[15:13] when you generally ask is software a
+[15:15] asset or it's a liability in most of the
+[15:18] cases it's a liability. and and the way
+[15:20] you measure software right now is also
+[15:22] totally different. Right? So one of the
+[15:24] unique ways I heard about measuring
+[15:26] software is the number of days it sits
+[15:27] in the repository without being changed.
+[15:30] Right? Not the PRs or not not the number
+[15:32] of lines of code which can be measured
+[15:34] because the large language models have
+[15:37] fundamentally changed how the software
+[15:39] is tracked and uh uh let's say for
+[15:41] example it tends to make a shallow copy
+[15:43] of the whole file and make a new file.
+[15:45] Like usually when you did merge requests
+[15:47] traditionally you could change that four
+[15:48] lines of code there two lines of code
+[15:50] here that whole thing is changing. So
+[15:52] how are you going to measure that whole
+[15:54] thing right? So those those are one of
+[15:55] the things and you as a consumer are
+[15:59] worried whether the model provider is
+[16:00] going to use your data and train train
+[16:02] the model and infrastructure provider
+[16:05] can also build a particular service out
+[16:07] of that model and your company has a
+[16:09] platform thread like say we have seen
+[16:11] many many uh companies which have uh
+[16:13] like you know payment companies which
+[16:15] have been replicated into the large
+[16:17] service providers own uh payment
+[16:19] companies right so this is one of the
+[16:21] things so uh So uh one of the things
+[16:26] which you need to start working is the
+[16:27] old way is like you know your token your
+[16:29] tokens are burning in blind fate you are
+[16:32] seeing uh sovereignity from a compliance
+[16:34] angle that yeah we have signed a data
+[16:36] protection agreement with the vendor and
+[16:38] they should not be doing uh any
+[16:39] malicious thing uh and also like in many
+[16:42] of the cases the compliance is just a
+[16:44] legal checkbox in any CIOS ATO's
+[16:47] organization the new way is you can cry
+[16:49] because you have uh you you have
+[16:52] cryptographic proofs which can attested
+[16:54] both at the memory layer. The
+[16:56] infrastructure vendors can't see what
+[16:58] your model does and the model providers
+[17:00] can't see what your data does. So you
+[17:02] can cryptographically prove that at
+[17:03] least the signing is not is not happen
+[17:06] even here. Uh of course if you have your
+[17:08] own uh own hardware it actually helps.
+[17:11] So how many of you heard of the GLM
+[17:13] model? Quite a few right? Recently the
+[17:16] new models which they launched was their
+[17:18] on their own infrastructure using
+[17:19] Chinese accelerators. Right? So this is
+[17:21] the kind of control you need to have.
+[17:23] Even silicon is one of the more more uh
+[17:25] important things. So most of the
+[17:27] software engineers are now dabbling into
+[17:29] underlying hardware architectures and
+[17:31] newer architectures to get more control
+[17:33] over the sovereignity right. So yeah I
+[17:36] just wanted to stop here like you know
+[17:38] stop asking your vendors the contracts
+[17:40] of sovereignity ask them to prove you
+[17:42] can cryptographically prove the
+[17:43] attestation of these models. So
+[17:45] confidential computing and inferencing
+[17:47] are going to go hand in hand because
+[17:49] right now in any RFP which you're
+[17:51] writing digital sovereignity is one of
+[17:52] the uh aspects which you need to fill up
+[17:56] for and uh confidential computing model
+[17:58] securely inferencing your models and
+[18:00] attesting your uh uh data is one of the
+[18:03] areas which is going to become one of
+[18:05] the critical skills any architect or
+[18:07] engineer needs to keep writing for.
+[18:09] Okay. Thank you. Uh so that's it.
+[18:11] [applause]
+[18:16] Yeah.
+[18:20] >> So yeah, so your question is if you're
+[18:22] running open source model what's one is
+[18:24] first secure your network isolation,
+[18:27] right? Uh that is one of the basic
+[18:29] things that if the model can't connect
+[18:30] to the thing and the second thing is
+[18:32] look at in isolated environments what
+[18:34] kind of connections they're trying to do
+[18:35] and what kind of data it is trying to
+[18:38] trying to access. Right? So one of the
+[18:41] things is uh if you can
+[18:42] cryptographically attach your data. So
+[18:45] they only see a crypto sign. They don't
+[18:47] see anything in plain text. So that
+[18:48] cryptic signatures is the one. So what's
+[18:50] going to happen? It's a trade-off. It's
+[18:52] not going to run as fast as what it was
+[18:54] running before. But it is going to run
+[18:55] more securely than what it is running
+[18:57] before. Because right now look at all
+[18:59] the digital sovereignity kind of
+[19:01] projects. Our healthcare data is on
+[19:03] them. Our insurance datas are on them.
+[19:05] Our financial datas are going to be on
+[19:07] these clouds. So cryptographically
+[19:09] attesting these so that both the compute
+[19:12] can take place but not the data
+[19:14] proliferation into each layer. So the
+[19:18] there are like uh yeah uh there are
+[19:21] various uh thing like confidential
+[19:23] computing like you have kata containers
+[19:25] which are available. So this was started
+[19:27] with Intel and Red Hat and other
+[19:29] companies uh did that. So you can if
+[19:31] you're running like agents run it in
+[19:32] kata containers in isolated sandbox to
+[19:35] know what it is doing because even if
+[19:37] there's a malicious code it is contained
+[19:39] to that particular layer.
+[19:40] >> Do we have any vm?
+[19:43] >> Yes. Yes. There are vlm and confidential
+[19:46] computing both the communities are
+[19:48] speaking with each other to see how it
+[19:50] can be done right we can take the thing
+[19:53] off. So next is abishek right. Yeah.
+[19:56] [laughter]

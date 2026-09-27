@@ -1,0 +1,76 @@
+# T14 — SLO classes and the shed accounting that goes with them
+# (REFERENCE-GRADE, NOT EXECUTED HERE)
+#
+# Why this is a separate file from router-config.yaml: the SLO class is attached at the
+# ROUTE, not inferred at the router. The router cannot tell a premium request from a
+# best-effort one by looking at it -- the corpus's flow control reads a priority that
+# something upstream has to have set [T].
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: slo-classes
+  namespace: inference
+data:
+  # ---------------------------------------------------------------------------
+  # The two classes, and what protects each one.
+  # ---------------------------------------------------------------------------
+  classes.yaml: |
+    classes:
+      - name: premium
+        objective_ref: premium
+        ttft_p99_ms: 800
+        itl_p99_ms: 50
+        protection: dispatch_first_under_saturation
+
+      - name: best_effort
+        objective_ref: best-effort
+        ttft_p99_ms: 5000        # deliberately loose; this class is the shock absorber
+        itl_p99_ms: 250
+        protection: shed_when_bound_exceeded
+
+    # The default for traffic matching no objective. Best-effort, never premium:
+    # an unlabelled request must not silently inherit the protected class.
+    default_class: best_effort
+
+  # ---------------------------------------------------------------------------
+  # Shed accounting. THE POINT OF THIS FILE.
+  #
+  # run.py §5, priority bands against no flow control:
+  #   premium SLO attainment   2.9% -> 99.3%
+  #   best-effort attainment  11.1% -> 12.5%   (barely moves)
+  #   shed                        0 -> 1324
+  #   best-effort MEAN WAIT   98.42 -> 27.34   (IMPROVES)
+  #
+  # The mean wait improves because the requests that would have waited longest were
+  # dropped rather than queued. A dashboard showing latency and not sheds would report
+  # a starvation event as a performance win. This block is the counterweight, and it is
+  # not optional: it is the difference between a policy and an accident.
+  # ---------------------------------------------------------------------------
+  shed_accounting.yaml: |
+    required_counters:
+      - name: shed_total
+        labels: [priority, reason]
+        reasons: [queue_bound, saturated, admission_refused]
+
+    # Never aggregate these into one series. T13 makes the identical argument about
+    # admissions_refused_total{reason}: aggregation destroys the distinction at the
+    # worst possible moment, which is during an incident.
+    never_aggregate: [priority, reason]
+
+    # Any dashboard panel showing a latency percentile for a class that can be shed
+    # MUST show the shed rate beside it. Encode that as a lint rule rather than a
+    # convention -- conventions do not survive the first incident.
+    dashboard_rule: latency_panel_requires_shed_panel
+
+  # ---------------------------------------------------------------------------
+  # Latency targets are stated per class because a single fleet-wide SLO under a
+  # shedding policy is meaningless: the surviving requests are not a random sample.
+  # Survivorship bias is the default, not the exception.
+  # ---------------------------------------------------------------------------
+  notes.yaml: |
+    - Under priority bands, best-effort latency percentiles describe only the requests
+      that were NOT shed. The percentile is computed over a biased sample.
+    - Report attainment and shed rate together, always.
+    - A falling best-effort p99 under saturation is a signal to check the shed rate
+      before celebrating.

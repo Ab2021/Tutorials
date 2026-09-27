@@ -1,0 +1,68 @@
+# REFERENCE-GRADE -- NOT EXECUTED IN THIS ENVIRONMENT.
+# No GPU is present here. This file is a well-informed starting point to adapt,
+# not validated configuration. Verify every flag against your engine version's
+# own --help before use; sampling flag names have churned across releases.
+#
+# The design decision this file encodes: the engine's *own* defaults are not
+# the source of truth. The policy service is. This file therefore sets the
+# engine up to be policy-driven and pins nothing that the resolver is supposed
+# to own -- except the hard ceiling and the ordering, which are safety
+# properties rather than tuning parameters.
+#
+# Corpus anchor: HuggingFace's fallbacks are top_p=0.95, top_k=50, and a model's
+# generation_config usually overrides them; Llama's reads temperature=0.6,
+# top_p=0.9 [T]. The operational rule is "check what the defaults are, check
+# what the model config says they are, and then override everything that you
+# care about" [T].
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sampling-engine-config
+  namespace: inference
+data:
+  # Hard ceiling on exposed temperature. Above 1 the output "just kind of goes
+  # off the rails" [T], and the speaker's own ceiling is that one is "usually
+  # the upper limit" [T]. 1.2 leaves Copy Studio its eval-gated band and
+  # refuses anything further.
+  max-exposed-temperature: "1.2"
+
+  # The processor chain order is a safety property, not a tuning knob:
+  #   mask -> penalties -> temperature -> truncation -> draw
+  # With ~10 grammar-valid tokens out of ~100k at a JSON step [T], truncating
+  # first spends the probability budget on tokens the schema will reject and
+  # can leave an empty candidate set. This is asserted in tests, not configured.
+  processor-order: "mask_first"
+
+  # The quality dashboard needs the model, not a truncated version of it.
+  # Research surfaces get their own route with truncation disabled.
+  dashboard-truncation: "none"
+---
+# Launch shape. Comments give the *reason*, not the syntax.
+#
+#   --generation-config vllm        do NOT silently adopt the model's shipped
+#                                   generation_config as a global default; the
+#                                   policy service owns sampling parameters.
+#   --enable-prefix-caching         a decoding policy changes output length,
+#                                   which changes KV pressure and therefore
+#                                   router placement -- prefix caching is what
+#                                   keeps that coupling from being pure loss.
+#   --max-num-seqs                  bounds worst-case KV; the policy plane's
+#                                   max_tokens is the other half of that bound.
+#   --disable-log-requests          on the hot path; sampler diagnostics come
+#                                   from the metrics pipeline, not from logs.
+#
+# For the Underwriting Extractor's pinned-stack reproducibility path the shape
+# differs: batch-invariant kernels and continuous batching OFF. That is the
+# 2.4x cost priced in HLD.md section 10, and it is why completion replay is the
+# default audit mechanism rather than regeneration.
+#
+#   pinned-stack (Extractor only):
+#     --enforce-eager                       # no CUDA-graph capture variance
+#     --no-enable-chunked-prefill
+#     --max-num-seqs 1                      # batching perturbs the reduction
+#     (plus: same driver, same engine version, same GPU model, fixed seed)
+#
+# Do not enable the pinned-stack shape for interactive surfaces. It removes the
+# continuous-batching win entirely; the corpus's cost ladder runs 100 -> 42 for
+# that rung [T].

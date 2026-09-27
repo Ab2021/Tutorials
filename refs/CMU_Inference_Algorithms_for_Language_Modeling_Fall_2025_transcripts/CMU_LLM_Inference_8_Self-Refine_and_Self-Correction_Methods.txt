@@ -1,0 +1,930 @@
+Title: CMU LLM Inference (8): Self-Refine and Self-Correction Methods
+
+--- TRANSCRIPT ---
+
+[0:00] I think I saw that we have three student
+[0:02] presentations today. Are is everyone
+[0:04] here for that?
+[0:06] One, two.
+[0:09] Okay, maybe the other person isn't yet.
+[0:14] Okay. Um but uh that that's a lot of
+[0:17] presentations and I actually have a fair
+[0:19] number of slides. So uh maybe I will get
+[0:22] started. Um and I I think more people
+[0:25] will come in as they walk over. Um,
+[0:30] so this time I want to talk about
+[0:31] self-refinement and self-correction
+[0:33] methods. And these are kind of like the
+[0:36] more explicit self-refinement and
+[0:38] self-correction methods. Um, and uh,
+[0:43] last time we talked about chain of
+[0:45] thought. Next time we're going to talk
+[0:46] about reasoning models. And I kind of
+[0:47] view reasoning models as like sticking
+[0:50] self-refinement and self-correction and
+[0:52] chain of thought like together.
+[0:54] uh but these are more explicit ways of
+[0:56] doing things and they still can be very
+[0:57] useful uh in a number of scenarios.
+[1:01] So LM generation is typically done in a
+[1:05] single pass from left to right and it's
+[1:07] susceptible to errors in long or complex
+[1:10] outputs. Um and then if we contrast this
+[1:12] to human iterative writing uh you know
+[1:15] very often you will write your essay or
+[1:18] your code or whatever uh like that and
+[1:20] then go in and you know refine and and
+[1:23] fix the details and so the these methods
+[1:26] are methods to help you do that. Um and
+[1:30] in general uh with some nuances the
+[1:35] selfcorrection process looks a little
+[1:37] bit like this. So it's basically um you
+[1:42] you have a self-correction loop uh and
+[1:45] you have a certain number of maximum
+[1:47] iterations and you have a stopping
+[1:49] criterion and you generate your initial
+[1:53] generation. Um you step over the maximum
+[1:57] number of iterations and you'll usually
+[1:59] have a hard stop here so that you don't
+[2:02] you know do this forever. um you have
+[2:04] some evaluation of uh the input with you
+[2:07] know some nuances about exactly how you
+[2:09] do this or sorry of the output and you
+[2:11] have some nuances with exactly how you
+[2:13] do this. Then you have your stopping
+[2:15] criterion where you basically judge
+[2:17] whether your critique said the output
+[2:19] was satisfactory or not and uh then if
+[2:22] you didn't say it was satisfactory you
+[2:24] refine the output like this. So
+[2:29] nothing nothing you know that complex
+[2:32] but uh of course the details matter here
+[2:35] and most of the methods I'm going to
+[2:38] introduce in this class are details of
+[2:40] how you can get this to work.
+[2:43] So in particular what I want to talk
+[2:46] about is several design decisions. Um
+[2:48] the first is uh for your critique
+[2:51] whether it's an explicit critique or an
+[2:53] implicit critique. And by explicit
+[2:56] critique I mean you explicitly prompt
+[2:59] the model or explicitly train the model
+[3:02] to decide whether the output is good or
+[3:05] not. Um implicit means that this isn't
+[3:09] done explicitly. It's only done by uh
+[3:12] having the language model itself you
+[3:14] know maybe not generate any changes. Um
+[3:17] and when the language model doesn't
+[3:19] generate any changes then we judge that
+[3:21] the output is already good enough and we
+[3:22] don't need to to make any more changes.
+[3:25] uh in the refinement set.
+[3:28] Um another thing is training. So uh
+[3:31] whether we explicitly train the model to
+[3:33] be good at self-refinement or uh we
+[3:36] don't uh don't do this.
+[3:39] Um another thing is what we condition
+[3:41] the refinement step on. So we can get
+[3:44] condition this on the input, we can
+[3:46] condition this on the output and we can
+[3:48] condition this on the critique uh
+[3:50] itself. And different methods use uh
+[3:53] different uh varieties of this.
+[3:56] And finally um you can use external
+[3:59] tools. And so some of the critique
+[4:01] methods just rely on the language model.
+[4:03] Some of the critique methods uh rely on
+[4:05] external tools to judge whether the
+[4:07] output is good or not.
+[4:10] And I'm going to be introducing seven uh
+[4:13] different papers today. Um six of them
+[4:15] are are kind of self-refinement methods.
+[4:17] Another one is maybe related but not
+[4:19] exactly the same. Um and they are uh
+[4:24] they are these papers. Um the for and we
+[4:30] have this table here. I might come back
+[4:31] to this table at the end but basically
+[4:33] you can see that some of them don't
+[4:35] explicitly critique some of them do uh
+[4:38] some of them train the models some of
+[4:39] them don't. Uh they condition on various
+[4:42] different things they either use tools
+[4:43] or do not uh etc etc.
+[4:49] So the first one I want to talk about um
+[4:51] is uh very simple. Uh this is a paper
+[4:54] that was done in 2017. So this was you
+[4:56] know back when uh like neural neural
+[5:00] models for language generation were very
+[5:02] uh fresh and new basically. But the
+[5:04] basic idea here is that you don't want
+[5:06] to uh generate a single uh output but
+[5:09] you want to generate an output and then
+[5:11] you want to go in and refine it. And
+[5:14] what they did here is they did two pass
+[5:16] decoding um with uh quote unquote
+[5:19] deliberation and refinement.
+[5:22] And so the first pass uh output uh first
+[5:25] pass generation generates an initial
+[5:27] draft sequence and then the second pass
+[5:30] refineses uh with global context of what
+[5:32] the output may look like. And so the
+[5:35] algorithm is uh as simple as this. It's
+[5:40] not not very interesting. there's not
+[5:41] even a for loop in it. But um the
+[5:44] important thing is uh they demonstrated
+[5:46] that you can actually train models to be
+[5:48] good at self-refinement.
+[5:50] And uh the way they did this is they had
+[5:53] a training objective where uh basically
+[5:56] they expressed their objective as being
+[6:00] the log probability of the final output
+[6:05] conditioned on the intermediate output.
+[6:07] So y prime is the uh is the intermediate
+[6:10] output and y is the final output
+[6:16] and um they sorry they have theta e
+[6:20] here. This is the theta for the like
+[6:22] encoder model because they were using
+[6:24] encoder decoder models back then. You
+[6:26] can kind of just ignore this for now. Um
+[6:29] uh but uh so then you have uh parameters
+[6:32] for the first model and parameters for
+[6:33] the second model. Um, you could also
+[6:36] like nowadays I think you wouldn't
+[6:38] actually train two different models. I
+[6:40] think you train a single model to be
+[6:41] good at both of these tasks. But um that
+[6:43] that's what they did in 2017.
+[6:46] So uh anybody have an idea what's wrong
+[6:48] with this training objective here?
+[7:02] Why why would this not be feasible?
+[7:03] Yeah,
+[7:08] it conditions on the intermediate input.
+[7:10] Well, this is actually conditioning on
+[7:12] the initial input and the intermediate
+[7:14] input when it's calculating this here.
+[7:18] Any any other ideas?
+[7:30] >> Uh good good point. Can you compute the
+[7:33] gradient is a good question to be
+[7:35] asking. Can you compute this function?
+[7:41] What what is the space of y prime?
+[7:47] It it is discreet. Um this is uh oh yeah
+[7:51] actually here maybe I should say x is
+[7:53] your input sequence and y is your output
+[7:55] sequence.
+[7:59] So how how big would be the space of y
+[8:01] prime?
+[8:06] large
+[8:07] >> infinitely large. Yeah. So you don't
+[8:08] want to be solving this sum, right? So
+[8:11] uh that that is a big problem and so we
+[8:14] need to find an alternative way of doing
+[8:16] this. The reason why it's infinitely
+[8:17] large is it's the space of all
+[8:19] sequences. Yeah.
+[8:22] >> Oh yeah, sure. So um this is a model
+[8:25] that takes in an input sequence and
+[8:27] generates an output sequence and you
+[8:30] could have an infinite number of
+[8:31] possible output sequences right
+[8:35] um and so uh or at least like let's say
+[8:39] your sequences could be of length up to
+[8:41] 100 it would be v to 100 v to the 100 so
+[8:44] you could can't enumerate over that
+[8:46] >> so what what's our uh standard way of
+[8:49] solving this problem
+[8:51] >> yeah
+[8:52] Yeah, exactly. Sampling. So you sample a
+[8:55] smaller model, a smaller number of
+[8:58] outputs and um basically the way they
+[9:01] did this is they um they reformulated
+[9:04] this. They sampled over the um over the
+[9:07] inputs here and then they generated the
+[9:10] outputs. And if you sample a number
+[9:13] greater than one here, you can actually
+[9:16] see which intermediate state results in
+[9:18] a higher probability here or a lower
+[9:20] probability here. and you can bias the
+[9:23] the states. Um to to do this in uh 2025
+[9:28] terms, this is basically gpo. Um if
+[9:31] people have heard of gpo, it's a you
+[9:33] know uh way it's not exactly the same as
+[9:36] gpo, but it's uh it's an idea where you
+[9:39] sample multiple outputs and you upweight
+[9:40] the ones that give you a better reward
+[9:42] or a worse reward where your reward is
+[9:45] essentially this um uh this log
+[9:47] probability here. Yeah. What did you
+[9:49] say? Sample over the inputs.
+[9:52] >> So you sample you sample several
+[9:55] intermediate states and then uh several
+[9:59] intermediate sequences and then after
+[10:01] you've sampled several intermediate
+[10:03] sequences, you calculate the log
+[10:04] probability of the output given these
+[10:08] several intermediate sequences.
+[10:11] >> Also be like
+[10:14] intermediate sequence.
+[10:16] >> The output sequence is always the same.
+[10:18] So you're you have a supervised output
+[10:21] sequence and so this this you know that
+[10:24] could be whatever your uh target answer
+[10:26] is. Yeah.
+[10:28] >> So we just like aperture something and
+[10:31] then we just s
+[10:32] >> Yeah. And and specifically they did this
+[10:34] for machine translation. So their input
+[10:36] was a German sentence, their output was
+[10:38] an English sentence. But if you wanted
+[10:40] this to be uh sampling, you know, an
+[10:43] output uh to that was an answer to a
+[10:46] question, it could be the answer to the
+[10:47] question also.
+[10:48] >> Yeah.
+[10:48] >> Thanks.
+[10:49] >> Yeah.
+[10:50] >> Cool.
+[10:51] Um so yeah they they use sampling to
+[10:54] approximate gradients and um both were
+[10:57] trained with a shared decoder and so
+[10:59] they got they got good results with this
+[11:02] uh demonstrated a pretty large
+[11:03] improvement over a very strong baseline
+[11:05] model back in 2017 which we don't care
+[11:07] about anymore because it's not strong
+[11:09] anymore. Um uh but yeah so so that's a
+[11:13] demonstration for how we can train
+[11:15] these. Um of course we can also train
+[11:18] with multiple steps. So we could do this
+[11:20] you know multiple um multiple steps at
+[11:22] once. Uh you could do that in a heristic
+[11:25] way and we're also going to talk about
+[11:26] diffusion models which do something like
+[11:28] this over and over again in an efficient
+[11:30] way but not in this class.
+[11:34] Um the second thing I'd like to talk
+[11:36] about is uh learning to model editing
+[11:38] processes. And this is a um a paper that
+[11:43] I did uh and the basic idea is that we
+[11:49] have a multi-step editing processes and
+[11:52] I think there's two interesting things
+[11:56] in this paper. Um the first interesting
+[11:59] thing in this paper is uh that we were
+[12:02] able to get data for editing processes
+[12:05] uh that naturally occurs online and use
+[12:07] that to train models. So the first
+[12:08] interesting thing is the data. Um the
+[12:11] second interesting thing is the way we
+[12:13] um the way we expressed editing
+[12:15] processes. And uh the way we did this
+[12:18] was not by just uh not by just training
+[12:23] a model to edit output text but to train
+[12:27] a model that actually identified like
+[12:29] where should be edited and then uh based
+[12:32] on identifying where should be edited
+[12:34] and how um like actually going in and
+[12:36] doing the editing.
+[12:40] So uh the way the algorithm works is a
+[12:42] bit like this. Um it's closer to the
+[12:44] self-refinement uh
+[12:47] algorithm that we had before uh with two
+[12:50] major differences. So the first thing is
+[12:51] we have our input um we have our editing
+[12:54] history uh we can we can start from a
+[12:57] blank state or we can start from a null
+[12:59] state where we have like something that
+[13:01] we want to go in and edit. Um but while
+[13:04] we have not finished um which could be
+[13:08] you know uh predicting a null edit or
+[13:11] running out of um running out of
+[13:14] iterations or something like this. The
+[13:16] first thing we did was we predict edit
+[13:17] operations uh where these edit
+[13:20] operations are insert, delete, keep or
+[13:22] replace. Um, and then we generate
+[13:27] content based on the edit operations and
+[13:31] the history of the edits we've made so
+[13:33] far. And um then we have uh we apply the
+[13:40] edits uh based on the generated content.
+[13:43] This is a deterministic operation. And
+[13:44] then we uh add the edit history uh add
+[13:48] to the edit history so it can be
+[13:50] referenced before
+[13:54] Yeah question. So does content uh only
+[14:00] give out editive changes or does it give
+[14:02] out like final state? So I mean I don't
+[14:04] understand the reason for applying the
+[14:07] new content.
+[14:08] >> Yep. I'll I'll have a a diagram in the
+[14:10] next slide. Yeah.
+[14:12] So um
+[14:15] this is the core uh the core way we
+[14:17] decompose. So we have um a prediction uh
+[14:21] from
+[14:23] uh the the previous states and the edit
+[14:24] sequences corresponding to the previous
+[14:26] states and we predict the edits and then
+[14:29] given the edits we predict the uh the
+[14:31] output content and um
+[14:36] this is uh
+[14:40] so so the first thing we do is uh we
+[14:43] have a predictor where the predictor
+[14:46] basically for each of the tokens uh
+[14:50] predicts whether we want to insert
+[14:52] something there. So uh here uh it would
+[14:55] be like uh after the we want to insert a
+[15:00] word. The other thing would be replace.
+[15:03] So we want to replace this token
+[15:05] sequence. We want to delete words or we
+[15:09] want to replace. And so these are um
+[15:12] these are just it's like a tokening uh
+[15:14] sorry tagging task that we apply to each
+[15:17] uh token in the input sequence. And then
+[15:21] for delete uh delete is just
+[15:23] deterministic right we just remove the
+[15:25] content there for insert or replace we
+[15:28] need to generate new content. And so we
+[15:31] were able to generate uh this content
+[15:34] and we actually did it in a parallel
+[15:37] manner. So um for every insert sequence
+[15:41] or replace sequence we then uh you know
+[15:45] conditioned on the representation here
+[15:47] and generated like domestic or uh or
+[15:50] domesticated descendant of. And so once
+[15:53] we have the insert uh replace and delete
+[15:55] sequences um and the outputs from the
+[15:59] decoder for each of the inserts or
+[16:01] replace sequences, we can
+[16:02] deterministically generate the domestic
+[16:05] dog is a
+[16:08] domesticated descendant of the wolf like
+[16:11] that, right?
+[16:14] And so this is also really um really
+[16:16] nice if you want to edit a really long
+[16:19] document over and over again because you
+[16:22] don't need to actually generate each uh
+[16:24] token here. You can just do a single
+[16:27] pass uh to predict all of these tokens
+[16:29] using a tagging model which is a lot
+[16:31] faster because you're just doing
+[16:32] encoding and then you can generate
+[16:34] shorter shorter sequences.
+[16:37] >> Yeah. E1 are the actions edit actions.
+[16:42] >> Uh the E are the edit actions. Yeah.
+[16:44] >> If E also contains for inserted replace
+[16:48] the token that you're supposed to
+[16:50] replace it with.
+[16:52] Do we need the extra condition of X I
+[16:55] given EI? Like if edits are defined then
+[16:59] we know what the XI would be given X and
+[17:03] E. So, oh, so the edits are just these
+[17:06] tags. So, you don't yet know um you
+[17:10] don't yet know the these words up here
+[17:12] when you predict E. Yeah, cool.
+[17:15] >> Um yeah,
+[17:17] >> when generating or
+[17:21] >> uh just end of sequence token,
+[17:24] >> so we we generate like domestic and then
+[17:27] end of sequence. So, it can uh generate
+[17:29] as many tokens as it wants. Yeah.
+[17:32] Um so
+[17:36] we um the other thing I mentioned about
+[17:39] this is we created two data sets. Uh the
+[17:41] first is wiki revisions and code
+[17:43] revisions. So wiki revisions was a data
+[17:45] set um from Wikipedia data and
+[17:50] interestingly Wikipedia has all of the
+[17:52] revision history right so you can go and
+[17:54] actually see how Wikipedia was edited um
+[17:57] for code revisions uh this was from
+[18:00] GitHub and similarly you can see how the
+[18:02] code was edited on GitHub. So uh we we
+[18:05] got this and we also um did experiments
+[18:08] where basically we just tried to predict
+[18:11] the edits given the current um given the
+[18:15] current
+[18:17] state of the text or code and an editing
+[18:21] in intent. So the editing intent comes
+[18:23] from the um the commit uh like the text
+[18:28] that was along with the commit or the
+[18:30] description of the change on Wikipedia.
+[18:33] And so that's the single order thing and
+[18:36] this was our overall perplexity for
+[18:38] making the edit. Um the we also tried a
+[18:42] thing where you looked at past edits and
+[18:45] you tried to um you tried to predict
+[18:48] based on past edits. And interestingly
+[18:50] this demonstrated that if you reference
+[18:52] past edits you can also um you know
+[18:55] predict future edits. So you can see
+[18:57] that if this part was edited before now
+[18:59] this part will be likely edited again.
+[19:01] And you know, it kind of makes sense
+[19:03] because um on Wikipedia, one one thing
+[19:06] we found a lot was um like basically uh
+[19:10] it edit wars like spam spam wars where
+[19:14] people like added spam and then the spam
+[19:16] got deleted. So you could actually
+[19:18] predict that that spam was going to be
+[19:19] deleted uh afterwards. So um it allows
+[19:22] you to predict future edits more uh more
+[19:24] easily.
+[19:29] Cool. Um so this just demonstrates that
+[19:32] there's you know like alternative ways
+[19:33] to do uh modeling of editing processes
+[19:36] and I also wanted to uh introduce that
+[19:38] like data create creation methodology in
+[19:41] case it's like interesting or insightful
+[19:43] for uh for any of your work.
+[19:46] Um another uh thing that I'd like to
+[19:50] talk about is uh learning to represent
+[19:52] edits. And this is another uh paper that
+[19:55] I I did uh together with uh a student
+[19:59] here at CMU. And the basic idea is that
+[20:02] you can learn to represent the types of
+[20:05] changes that are made uh when changing
+[20:09] between uh different sequences.
+[20:12] And
+[20:13] uh that's a little small. Let me make
+[20:15] that bigger. But the basic idea is that
+[20:19] we have a um we have two
+[20:25] uh like an input and an output and based
+[20:28] on the input and output we get a single
+[20:32] like vector representation of what type
+[20:34] of edit it is. And then we have another
+[20:37] similar input and output and we feed in
+[20:41] the input and that edit representation
+[20:44] uh to try to generate uh the output. And
+[20:48] so this can be trained.
+[20:52] Um so this is essentially what it looks
+[20:54] like. You know we have a source and a
+[20:56] target. We have an uh
+[21:00] we have an edit vector uh edit encoder.
+[21:02] And then um if you have a new source,
+[21:05] you can then apply uh apply this edit to
+[21:08] a new a new source if you want to.
+[21:11] Um but the details are pretty simple.
+[21:14] You can ignore the you know particular
+[21:17] type of uh edit encoder we used. It
+[21:19] could be um you know any uh any variety
+[21:23] of edit encoder. But um I now I'd
+[21:27] probably just use a a large language
+[21:29] model uh with the two things fed in and
+[21:31] fine-tune it. Um but uh the important
+[21:35] thing is the edit representation is
+[21:36] limited to 512 dimensions and the reason
+[21:39] why is we actually want to learn a good
+[21:42] representation of what type of edit this
+[21:44] is as opposed to like memorizing
+[21:46] everything that was done. So we
+[21:47] basically like limited the size of the
+[21:50] dimensions here so that we would
+[21:51] actually be able to learn um you know a
+[21:54] representation of the edit as opposed to
+[21:57] um as opposed to just like memorizing
+[21:59] everything.
+[22:01] And the training objective is pretty
+[22:03] simple. um what it's a kind of like
+[22:07] autoenccoder style objective where we
+[22:08] learn the um edit representation from
+[22:11] before and after and then conditioned on
+[22:13] this edit representation we calculate
+[22:15] the probability uh the log probability
+[22:17] of the after token here.
+[22:20] Does that make sense?
+[22:23] >> Yeah, sure. Um so we have a encoder that
+[22:27] encodes before and after into an edit
+[22:30] representation and that edit
+[22:32] representation is basically a
+[22:34] 512dimensional vector and then based on
+[22:37] that 512dimensional vector we feed in
+[22:41] the before token and that 512th
+[22:44] dimensional vector and we calculate the
+[22:46] log probability of after. And so what
+[22:49] that means is we need to like smoosh as
+[22:52] much information as possible into that
+[22:54] 512 dimensional vector to tell uh like
+[22:58] the model what sorts of edits it should
+[23:00] be doing.
+[23:01] >> Yeah.
+[23:03] Yeah.
+[23:04] >> Is the encoder and diameter trained
+[23:06] jointly or
+[23:08] >> uh they are trained jointly because you
+[23:10] can see that um both of them will affect
+[23:13] affect the likelihood. um this will
+[23:15] affect the likelihood uh because it's uh
+[23:18] this the output of this is conditioned
+[23:20] on this and it's all different. Yeah.
+[23:25] >> Cool. Um and so the way we
+[23:30] primarily evaluated this was not based
+[23:32] on um was not based on whether it was a
+[23:36] good editor or not, but rather based on
+[23:38] whether it was good at picking up
+[23:40] similar edits that were made. Um and we
+[23:45] uh we compared this with a bag of words
+[23:47] model and we got much higher accuracy on
+[23:50] like a data set of similar edits and we
+[23:53] had some you know tricky stuff in the
+[23:55] paper. Um for some context, this was
+[23:58] done by the Microsoft like code analysis
+[24:01] uh is an internship with the Microsoft
+[24:03] code analysis team and they wanted to
+[24:06] pick up like similar kinds of edits that
+[24:08] people were doing on GitHub so that they
+[24:10] could say oh like these are all the like
+[24:14] fixes of a security a particular
+[24:17] security vulnerability or something like
+[24:18] that. So we um we came up with a pseudo
+[24:21] data set where we applied different um
+[24:24] kind of like code transformation tools
+[24:26] and then tried to see whether it did a
+[24:28] good job of identifying similar code
+[24:30] transformations that were created by
+[24:32] these tools.
+[24:36] But yeah, it's not limited to that
+[24:38] application, of course.
+[24:42] Cool. Um any any questions about that?
+[24:48] Okay. So, sounds good. Um, in
+[24:51] particular, I would, um, if you're
+[24:53] interested in,
+[24:55] uh, for instance, reasoning, reasoning
+[24:58] strategies or something like this, like
+[25:00] the the stuff that's, you know, very
+[25:02] popular nowadays. I could definitely
+[25:04] view this as being a a tool to analyze
+[25:08] the types of reasoning strategies that
+[25:09] are are performed for instance by
+[25:12] encoding uh encoding each step and then
+[25:15] predicting the next step for instance.
+[25:19] Cool. Um okay so next I'd like to talk
+[25:21] about self-refin. So this was one of the
+[25:23] first papers uh
+[25:27] on kind of self-refinement with large
+[25:29] language models in uh in a training free
+[25:33] context. And basically what it
+[25:35] demonstrated was um that you can use
+[25:39] large language models to essentially
+[25:41] critique their own inputs and um
+[25:45] critique their own inputs and generate
+[25:48] better outputs as a result.
+[25:50] And the idea is very simple. You know,
+[25:53] you generate an output uh refine it and
+[25:56] get feedback. So the algorithm is is
+[25:58] essentially exactly the self-correction
+[26:00] algorithm that I showed you before. Uh
+[26:02] nothing uh nothing particularly uh like
+[26:07] fancy here. Um but uh they they did this
+[26:11] all in a prompting fashion. So they uh
+[26:14] generated uh the output uh standard
+[26:16] fshot prompting uh with a few task
+[26:19] specific examples. Um they generated
+[26:22] feedback. So um their prompt template
+[26:26] for this was why is this uh out why is
+[26:29] this output not you know correct or not
+[26:33] fluent or whatever quality you wanted.
+[26:37] Um and that would identify like specific
+[26:39] areas of improvement
+[26:42] and uh then they had the refine step uh
+[26:46] where they essentially uh combined the
+[26:48] original input, the current output and
+[26:50] the feedback and um said you know
+[26:54] improve this output based on the
+[26:55] feedback and then it would generate the
+[26:56] output. And the stopping criterion was
+[26:59] uh they had a simple heristic checking
+[27:01] for uh for positive feedback or a fixed
+[27:03] number of iterations.
+[27:06] And uh this this was all done through a
+[27:08] single L1.
+[27:12] So the results um were interesting I
+[27:17] would say. Uh the there's a few good
+[27:21] results. Um the first result is that it
+[27:24] helps uh a lot in some particular uh
+[27:29] cases. So it it helped in like for
+[27:32] instance improving the readability of
+[27:34] code uh improving the um you know I I
+[27:39] forget dialogue response was like
+[27:40] friendliness friendliness or sentiment
+[27:43] of the dialogue response um changing
+[27:46] changing the sentiment of outputs and
+[27:48] other uh other things like this. Um it
+[27:51] notably did not help uh as much on
+[27:53] mathematical reasoning which is
+[27:54] something that people are very
+[27:56] interested in uh nowadays. Um so I I
+[28:00] would say that uh one one thing to note
+[28:02] a little bit here is that all of these
+[28:04] tasks are not super major tasks uh that
+[28:08] were really hard for language models.
+[28:10] They're kind of like tricky uh tricky
+[28:13] tasks. And I I think the reason why is
+[28:15] because um there's certain varieties of
+[28:18] tasks which we'll talk about like in a
+[28:20] little bit. Um where models uh they're
+[28:25] not like numeric tasks but they're
+[28:27] models where they're tasks where the
+[28:28] model has not been like trained to be
+[28:30] really good at them. And those are
+[28:31] places where self-improvement without
+[28:33] any external tools tends to be uh the
+[28:36] most helpful.
+[28:39] Um
+[28:41] so this this is very very
+[28:42] straightforward. Um oh another thing is
+[28:45] uh they demonstrated that there were
+[28:47] greater improvements for stronger
+[28:49] models. So like GPD4 got better results
+[28:52] from self-refinement. Um so this was
+[28:55] interesting. Uh in the paper they said
+[28:58] uh bigger models do better. I think in
+[29:00] reality it's just like stronger models
+[29:02] do better at this. But um yeah that's
+[29:05] another uh interesting finding.
+[29:11] Cool. So, another one that I would like
+[29:13] to show is uh self-debugging. And again,
+[29:16] this uh fits the general pattern uh this
+[29:18] is teaching large language models to
+[29:20] self-debug.
+[29:21] And the basic idea is that unlike self
+[29:26] refine where they and like actually all
+[29:29] of the others that I talked about before
+[29:30] where they solely relied on the language
+[29:32] model to improve the outputs. Here they
+[29:35] started introducing uh external tools
+[29:38] and specifically they uh introduced code
+[29:42] execution where you can do code
+[29:45] generation. You actually execute the
+[29:46] code to see if it passes unit tests or
+[29:49] or something like that. You get an
+[29:50] explanation and feedback. You get an
+[29:52] explanation from the unit tests. You get
+[29:54] uh create feedback and then based on
+[29:57] that you feed that back to the model to
+[29:59] improve the outputs.
+[30:02] Um and so it looks a little bit like
+[30:04] this. You get um you actually add a code
+[30:06] execution loop in here. Um if all the
+[30:10] unit tests you have pass, then you
+[30:12] you're done and uh you're happy. If not,
+[30:15] you ask the language model to explain
+[30:17] the error and then based on that you
+[30:18] refine the critique. So this is in
+[30:20] introducing an external signal.
+[30:26] So um
+[30:28] yeah.
+[30:30] For
+[30:31] example, passing the stack trace to the
+[30:33] model.
+[30:36] Why not just pass the stack?
+[30:40] >> Why not just pass the stack trace back
+[30:42] to the model? Um, that's a good
+[30:45] question. I I think maybe they wanted to
+[30:47] condense it down to be smaller. Um,
+[30:50] again, this this was uh like a paper in
+[30:53] 2023, and it might be the case that
+[30:55] models now have seen enough stack traces
+[30:57] in their training data that you wouldn't
+[30:58] need to do this anymore. But that's what
+[31:00] they decided to do here.
+[31:07] >> Uh yeah, I think so.
+[31:09] >> Cool.
+[31:11] Um so if we look at the results, um
+[31:15] basically this was able to improve over
+[31:17] the baseline
+[31:19] um by anywhere from a little bit to a
+[31:22] lot. And um this may not be you know
+[31:26] super surprising now if you've used like
+[31:29] language models to generate code for you
+[31:31] but uh this this was the first result uh
+[31:35] in in that sort of uh area.
+[31:40] Um and they also found that execution
+[31:42] feedback was really critical here um and
+[31:45] uh gave significant results on
+[31:47] especially the harder tasks.
+[31:52] Another interesting finding um is this
+[31:55] was one of the uh one of the first
+[31:59] papers that I know of where they
+[32:01] compared
+[32:03] um various varieties of inference time
+[32:06] algorithms. And so basically
+[32:09] um they also compared with
+[32:11] self-consistency.
+[32:13] uh and when they compared with
+[32:14] self-consistency, self-consistency they
+[32:17] had to sample 16 samples and then uh in
+[32:20] contrast to that they did self-debugging
+[32:22] and with self-debugging they only need
+[32:24] needed one sample from the model and so
+[32:27] this demonstrates that you know if you
+[32:29] pull in external signals or have other
+[32:32] uh you know methods of spending
+[32:33] inference time compute that can compete
+[32:35] with the more brute force thing of
+[32:37] expanding lots of hypothesis
+[32:42] which may be a very nice comparison for
+[32:44] you to do in your homework for instance.
+[32:49] Cool. Um so the next two papers are kind
+[32:54] of just generally in the in a similar
+[32:56] direction. um reflection
+[32:59] uh I I would almost say this is uh a
+[33:03] combination of self-debugging
+[33:07] and self refined self-debugging and uh
+[33:12] something similar to what we did in the
+[33:13] learning to represent or um learning to
+[33:16] model editing processes paper but they
+[33:18] basically have um a a
+[33:23] process where they uh evaluate And then
+[33:27] they have they get external feedback.
+[33:29] They have self-reflection and they
+[33:31] generate experience which turns into um
+[33:35] memory and that that can be used to uh
+[33:37] further improve uh the LM on f future
+[33:42] iterations. And so this is an example.
+[33:44] Um you can see that like we were doing
+[33:46] in the learning to model editing
+[33:48] processes, we are appending the critique
+[33:50] to our memory and then uh you know doing
+[33:53] loops uh where we continue where we
+[33:57] consider all the memory of the past
+[33:58] critiques as opposed to just uh just the
+[34:01] current step.
+[34:06] and uh they evaluate this on a whole
+[34:08] bunch of different domains and and
+[34:09] demonstrate that it's quite effective.
+[34:16] So
+[34:18] this is another um paper where
+[34:21] essentially they
+[34:24] um
+[34:25] instead of having a fixed
+[34:30] uh code execution
+[34:33] pipeline like we had in uh the selfdebug
+[34:36] paper. We have a pipeline where the
+[34:39] critic itself is allowed to use tools.
+[34:42] Um, and so I think this is kind of
+[34:45] interesting. Um, the critic when it does
+[34:49] verification, it can look up things in a
+[34:51] knowledge base or run a code interpreter
+[34:54] or uh use uh the perspective API to
+[34:57] check whether it's positive sentiment or
+[34:59] use a search engine or something like
+[35:00] this. So the uh general idea is that um
+[35:06] you add tools at during the critiquing
+[35:08] process
+[35:10] and uh
+[35:13] they uh added different tools depending
+[35:15] on the uh type of task that they wanted
+[35:17] to be handling.
+[35:21] Um and so they got uh quite significant
+[35:24] improvements over uh you know all of the
+[35:27] tasks that they evaluated on by
+[35:28] incorporating tools in this way. So this
+[35:30] is another uh another thing that you can
+[35:33] uh think about as you uh build inference
+[35:36] time algorithms. Do you want to add
+[35:38] tools during your generation process? Uh
+[35:41] would you like to add tools during a
+[35:42] critique process or uh you know some
+[35:45] other uh some other way of incorporating
+[35:47] tools uh once we get to the tool use
+[35:49] part.
+[35:53] >> Cool.
+[35:55] Um any any questions?
+[35:58] >> Yeah.
+[35:59] These workflows are simple only because
+[36:02] the background model
+[36:04] if you want to make some smaller models
+[36:06] work for this you don't have demon
+[36:12] >> yeah it's a great question um just to
+[36:15] repeat it it's like all of these
+[36:17] workflows work only because of the
+[36:18] backbone model is very strong I would
+[36:21] say that's not the case for the first
+[36:22] several that I introduced because those
+[36:24] are much older papers when the backbone
+[36:26] model was a lot weaker um but notably
+[36:28] all of those methods had training
+[36:31] involved in some way. So I think um it's
+[36:35] definitely not the case. I I would say
+[36:38] that GPD4 is probably the first model
+[36:40] that kind of like spontaneously had this
+[36:42] ability to self-correct without any
+[36:44] explicit training. And now uh you know
+[36:47] as we're going to talk about next class,
+[36:48] we're training reasoning models so that
+[36:50] they have this ability. Um and compared
+[36:53] to things like GPT4, they're m much
+[36:57] better at self-correcting. So I I think
+[37:00] um yeah you you'll need training in the
+[37:03] process somewhere if the models are less
+[37:05] uh powerful spontaneously.
+[37:08] Cool.
+[37:10] Okay. Um so just to uh demonstrate that
+[37:15] uh you know when people write papers
+[37:18] they tend to write papers about positive
+[37:20] results. Um and then every once in a
+[37:23] while somebody comes in and writes a
+[37:24] paper about negative results. And so I I
+[37:26] want to present those as well. Um so
+[37:29] there there was this paper large
+[37:30] language models cannot self-correct
+[37:32] reasoning yet. And um their key findings
+[37:36] were intrinsic self-correction often
+[37:38] fails without external feedback. And um
+[37:41] performance can even degrade uh quite
+[37:43] frequently if you're just asking it to
+[37:45] self-correct itself. Um and
+[37:50] uh you know many models struggle to
+[37:51] identify their own errors. So things
+[37:53] that are difficult for the model to
+[37:57] check are also difficult things for it
+[37:59] to uh sorry things that the models are
+[38:01] difficult uh things that are difficult
+[38:03] for the models to do are things for that
+[38:05] are also difficult for them to check. So
+[38:08] um and there's also a confirmation bias
+[38:11] which uh for a tendency to reinforce
+[38:13] initial uh reasoning.
+[38:15] Um so
+[38:18] they kind of lay out a number of
+[38:20] successful scenarios where models tend
+[38:22] to do well and these are things like
+[38:23] grammar, style, formatting. Um with
+[38:27] external feedback uh things like code
+[38:29] execution and factchecking you can get
+[38:31] significant improvements and it works
+[38:34] significantly better with stronger base
+[38:36] models. Um like we just talked about of
+[38:38] course um and then in challenging
+[38:40] scenarios uh there are deep reasoning
+[38:43] errors like mathematical proofs in
+[38:44] logic. So these um experiments were run
+[38:47] with you know models that were not
+[38:48] specifically trained to be good at these
+[38:50] tasks. Um also knowledge gaps. So if the
+[38:53] model doesn't know uh you know a
+[38:55] particular fact, you can't really have
+[38:57] it self-correct. Um and also complex uh
+[39:00] multi-step reasoning.
+[39:05] Um and here here are a few examples. Um
+[39:09] so
+[39:10] for very simple math problems it's able
+[39:14] to do better but on the other hand for
+[39:16] very simple math problems it can go in
+[39:18] and break itself. So it's like um it's
+[39:22] not entirely
+[39:25] like there there's also not particularly
+[39:28] uh a hard and fast rule that you should
+[39:31] use it in this case and not use it in
+[39:32] this case.
+[39:35] Great. So yeah, I I mentioned a few
+[39:38] dimensions. Um hopefully these
+[39:40] dimensions and these examples will be
+[39:42] good for thinking about self-correction
+[39:46] methods on a higher level. So if you
+[39:48] want to use these in your you know class
+[39:51] projects or your homeworks or something
+[39:52] like this, you can think um do I want to
+[39:55] be adding explicit critiques or implicit
+[39:57] critiques? Um do I want to be training
+[39:59] my model to be good at these things? Um
+[40:01] what do I want to condition it on? Do I
+[40:03] want to condition it on, you know, um, a
+[40:06] chain of thought? Do I want to be doing
+[40:08] it on, you know, multiple steps? And do
+[40:11] I want to be incorporating, uh, tools
+[40:12] to, you know, clarify the outputs in
+[40:14] some way?
+[40:16] >> Cool. Um, any any questions before we
+[40:19] move on to the student uh student
+[40:21] presentations? Yeah.
+[40:22] >> Why are the answer to all of these
+[40:24] things just like yes?
+[40:27] Uh why why don't we pick uh explicit
+[40:31] with
+[40:33] >> as much as you can
+[40:34] >> as much as you can.
+[40:36] >> Um I would say maybe uh computational
+[40:39] cost. Uh so remember this is an
+[40:42] inference class and we're going to want
+[40:44] to
+[40:46] infer on large amounts of data and in
+[40:48] fact your uh your final score on the
+[40:51] leaderboard will depend on it. So uh
+[40:54] like you might not want to incorporate
+[40:55] tools if they're not necessary for
+[40:57] instance. Um also kind of if you think
+[41:00] more on the industry side operational
+[41:02] complexity so like spinning up a code uh
+[41:06] sandbox is much much more operationally
+[41:09] complex than just hitting a language
+[41:11] model API um because it's another moving
+[41:14] part in your system and it might break
+[41:16] or something. So I'd say that's maybe
+[41:18] another reason.
+[41:19] >> Thanks.
+[41:20] >> Cool. Great question though. These are
+[41:22] like exactly the questions we should be
+[41:23] asking for this class.
+[41:26] Cool. Um, and we I think we have three
+[41:28] presentations. Uh, is everyone here?
+[41:31] Okay, cool. If you could come up.

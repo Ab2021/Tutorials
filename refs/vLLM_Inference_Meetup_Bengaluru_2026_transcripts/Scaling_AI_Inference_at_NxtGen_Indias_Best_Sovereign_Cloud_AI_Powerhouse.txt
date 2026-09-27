@@ -1,0 +1,868 @@
+Title: Scaling AI Inference at NxtGen: India's Best Sovereign Cloud & AI Powerhouse
+
+--- TRANSCRIPT ---
+
+[0:02] Great. Very good afternoon everyone. Uh
+[0:05] I think we have a very exciting agenda
+[0:06] today because if you if you look at what
+[0:08] Prasad showed us from an agenda
+[0:10] viewpoint, uh we have a lot of
+[0:12] perspectives revolving around uh
+[0:14] inference, right? So there's a lot of I
+[0:16] think the best of technology teams are
+[0:18] are here today and their perspectives
+[0:21] matter when it comes to inferencing
+[0:22] because it's giving you a small insight
+[0:24] on how uh the biggest technology
+[0:26] companies are approaching inference as a
+[0:28] problem.
+[0:30] >> [snorts]
+[0:30] >> I'm Abhishek Singh. I'm a principal FDE
+[0:33] at uh NextGen Cloud and NextGen is
+[0:35] India's uh largest sovereign cloud
+[0:38] service provider. So what that means
+[0:39] from a services portfolio viewpoint is
+[0:42] we have data centers across the country.
+[0:44] We have several edge pops across the
+[0:46] country as well. Uh and we essentially
+[0:49] offer services that start from
+[0:51] infrastructure you know go one level
+[0:53] above virtualization bare metal
+[0:55] orchestration go one level above uh to
+[0:58] you know serving platforms like
+[1:00] kubernetes vanilla k8s could be open
+[1:02] shift uh could be slurm for hpc jobs and
+[1:06] then one layer above where we're talking
+[1:08] about open shift AI class cubeflow class
+[1:10] of services uh perhaps model as a
+[1:13] service as a catalog and then even the
+[1:15] layer on top of that which is to with
+[1:17] building that end end application for a
+[1:20] customer because customers are
+[1:22] essentially oriented to the outcome,
+[1:24] right? And that's going to be a theme
+[1:25] for today. The focus is on the outcome
+[1:28] for your organization. The focus is not
+[1:30] just how much throughput we're able to
+[1:32] get out of the underlying hardware. It's
+[1:34] about the outcome, right? And that's
+[1:36] what you're ultimately going to solve
+[1:38] for, right? Is irrespective of which
+[1:40] layer you operate on, you're ultimately
+[1:43] solving for the outcome. So all that
+[1:45] context is essentially to tell you that
+[1:48] you know it becomes a responsibility for
+[1:49] us at NextG to make sure that we are
+[1:52] working in a very agile manner and we're
+[1:54] absorbing the latest and the greatest
+[1:56] from the community. Uh and we have a
+[1:58] practice of doing that. We do that by
+[2:00] working very closely with uh the teams
+[2:02] that are here working very closely with
+[2:04] Red Hat with IBM with Nvidia with AMD
+[2:07] with Intel uh and and and all the others
+[2:09] that are doing creative work in the
+[2:11] space. uh and besides that we also make
+[2:13] it a point to attend these fun events
+[2:15] right so uh what we gather from the
+[2:18] events is we we basically have a very
+[2:20] fun mechanism of taking our team and in
+[2:22] a breath first manner right taking uh
+[2:25] sessions on systems engineering learning
+[2:27] in AI engineering what's the latest
+[2:29] that's happening from a devops viewpoint
+[2:31] what's happening from kernel
+[2:32] optimization you know if it's scuda
+[2:34] inside the Nvidia ecosystem what's
+[2:36] happening with hip in the AMD ecosystem
+[2:38] and what's happening with one API in
+[2:40] Intel's ecosystem right so you need to
+[2:41] make sure that you span out breath first
+[2:44] and you build as much intuition as
+[2:45] possible so you can you know essentially
+[2:48] offer the best to your customers. uh and
+[2:51] then we have a nice sort of you know
+[2:53] what we do internally at nextgen is we
+[2:55] take photos now we don't even note down
+[2:57] what's happening in these sessions and
+[2:58] then we pass it on to uh you know a
+[3:00] langraph deep agent internally that does
+[3:03] the deep research and populates a GitHub
+[3:05] repository so that you know we can put
+[3:07] that into codeex and I can learn a
+[3:09] script and I can come and you tell you
+[3:10] guys so I don't have to read it myself
+[3:11] but uh the point I'm trying to make is
+[3:14] that we were at the summit uh this year
+[3:17] at Red Hat summit and we did the same
+[3:19] and we try to understand what the world
+[3:22] is focusing on uh and it's exactly what
+[3:24] today's agenda looks like right so
+[3:27] starting with VLM I think the focus here
+[3:30] is you know getting the most out of that
+[3:32] single replica that single instance
+[3:34] deployment with LLMD how we scale out
+[3:37] and then of course sovereign operations
+[3:40] [snorts]
+[3:41] okay
+[3:44] it's not the best resolution but what
+[3:46] I've tried to do is I'm trying to show
+[3:47] you two archetypes on the left If you
+[3:50] have a typical government customer,
+[3:52] right, when when it comes to sovereign
+[3:54] compute, uh government customers are
+[3:56] extremely finicky. We have about 700
+[3:58] controls that we need to take into
+[4:00] account. I think Ram Krishna just
+[4:01] mentioned that, right? You you need to
+[4:03] take into account a lot of legal aspects
+[4:05] for you to even build infrastructure for
+[4:07] the government. And then you have a
+[4:09] typical enterprise customer on the right
+[4:11] hand side, right? Relatively simpler,
+[4:13] quicker transition times, turnaround
+[4:15] times are quicker. You can have them on
+[4:16] public cloud, right? they don't have as
+[4:19] many checks. So a government customer on
+[4:21] the left, you could think of this as a
+[4:23] virtual private cloud setup or maybe
+[4:25] even an on-remise setup and an
+[4:27] enterprise customer on the right. Uh the
+[4:30] key point that I wanted to make here is
+[4:33] that inference is a subsystem in a very
+[4:35] large complex problem. Right? Wherever
+[4:38] you have inference systems, it's going
+[4:40] to be working alongside applications,
+[4:43] alongside databases and sharing some
+[4:46] form of a network fabric. We have Pravin
+[4:48] from IBM who will be taking a session in
+[4:50] some time. He's an expert with when it
+[4:52] comes to networks. But if you are
+[4:54] offering a solution across the stack,
+[4:56] then you need to ensure that your
+[4:59] inference scales at the same rate as
+[5:01] your applications scales at the same
+[5:03] rate as your databases. Right? So if you
+[5:06] are planning to build a system for
+[5:08] government right that does let's say
+[5:10] document intelligence or maybe helps you
+[5:13] know give the best L1 bidder in a RFP
+[5:16] right let's say government wants a
+[5:18] solution for that and you are building a
+[5:20] system that's supposed to process 256
+[5:22] pages per second that would mean your
+[5:25] application server needs to handle that
+[5:28] 256 requests per second it would mean
+[5:30] you need to write into your databases at
+[5:32] 256 requests per second and inference
+[5:35] will need to happen at 256 requests per
+[5:38] second. So your network bandwidth needs
+[5:39] to support 256 requests per second. So
+[5:42] we need to take all of these items into
+[5:44] account. Make sure that our storage is
+[5:46] compatible. Make sure that our network
+[5:47] fabric is compatible. And of course
+[5:50] inference which is technically the most
+[5:52] challenging is able to scale at the same
+[5:54] rate. When it comes to the typical
+[5:57] enterprise customer, it's it's a maybe a
+[5:59] relatively simpler landscape but the
+[6:01] same problem statement there as well. We
+[6:03] have lesser accelerators on average when
+[6:05] it comes to an enterprise customer, but
+[6:07] we have to solve the same problem. If
+[6:09] I'm committing that I'm going to use
+[6:11] half a Nvidia H100 or half a AMD MI325X
+[6:15] to run maybe a Quen 3.6 uh and I'm
+[6:18] telling the customer, look, this
+[6:19] deployment is rated for 16
+[6:22] requests per second sustained. I need to
+[6:25] make sure that it does that day in day
+[6:27] out otherwise I breach ASLA. Right? just
+[6:29] to give you some context on what a
+[6:31] typical government layout looks like and
+[6:34] a typical enterprise customer looks like
+[6:36] and I'll tag back to it. [snorts]
+[6:40] So there's going to be a lot of talk
+[6:41] about the internal mechanics of VLM
+[6:43] today. Uh the fundamentals are here on
+[6:45] the slide, right? Essentially you're
+[6:47] trying to do the right kind of caching.
+[6:49] you're trying to do the right kind of
+[6:50] batching and all the optimizations that
+[6:53] are coming in now are also trying to
+[6:55] bring in some form of intelligence in
+[6:57] producing the first token right so can
+[6:59] we use prefix to be you know to
+[7:02] efficiently predict that first token
+[7:04] because decode is is a solve problem so
+[7:06] we look at making the the single replica
+[7:09] extremely efficient in terms of
+[7:11] producing the maximum number of tokens
+[7:13] per second uh getting the best time to
+[7:16] first token which is the toughest
+[7:17] problem it's a compute heavy problem uh
+[7:20] and then essentially you know producing
+[7:23] tokens after that. So I'm not going to
+[7:25] get into the specifics too much right
+[7:27] now. The focus on this slide is VLLM for
+[7:30] one replica. Right? So tag back to my
+[7:34] enterprise customer. My enterprise
+[7:35] customer does not have several GPUs to
+[7:38] run his models. My enterprise customer
+[7:39] perhaps has given me the leeway to use
+[7:41] half a GPU. Maybe I I have a MIG on
+[7:45] Nvidia or maybe I just share the GPU
+[7:47] VRAMm and therefore VLM comes in and
+[7:49] solves that problem for me. My average
+[7:51] AI engineer is not going to be concerned
+[7:53] with, you know, spending a lot of time
+[7:55] because the customer is not paying for
+[7:56] that R&D time. He's looking for the
+[7:59] quickest way to get the most out of that
+[8:01] single instance deployment.
+[8:04] Now, let's say the customer gives me
+[8:06] some leeway. He gives me some leeway.
+[8:08] tells me look on the MI325X you have 256
+[8:12] GB of GPU VRAM we were using 128 before
+[8:16] I'm allowing you to use the other 128 as
+[8:19] well right so in 2024 what we do is uh
+[8:22] we would run one instance on port 8000
+[8:25] we would run another instance on port
+[8:27] 801 and my DevOps team would be very
+[8:30] happy to put one conventional load
+[8:31] balancer on top of that and I believe
+[8:34] that my throughput has doubled right and
+[8:36] we'd all be very happy we're able to
+[8:38] adhere to a SLA and even the customer is
+[8:40] not really concerned. But what are the
+[8:42] flaws with a system like that? What
+[8:43] happens when I apply traditional
+[8:45] application scaling principles to
+[8:48] running a model, right? I have some form
+[8:51] of an agentic system. So there's some
+[8:53] system prompt that we put in and then
+[8:55] the first query comes in and the first
+[8:57] query graciously goes to you could think
+[8:59] of this as a port or you could think of
+[9:01] this as a pod, right? So great, I get a
+[9:03] response. Now the same user sends in
+[9:05] that second query, right? he's
+[9:07] expecting, you know, it's a follow-up
+[9:09] question. So, you know, it's the next
+[9:11] thing that he's going to put in. And I
+[9:13] have this amazing cache populated by
+[9:15] that single replica of VLM. It's it's
+[9:17] handled everything waiting for me to use
+[9:19] it so that I can save on prefill time
+[9:21] and get into T decode directly. But it
+[9:24] doesn't happen because my conventional
+[9:25] load balancer has just sent it to the
+[9:27] second pod or sent it to that second
+[9:29] port. And then I have one more turn and
+[9:32] it's going to the next. So essentially
+[9:33] I've in just three conversations I've
+[9:35] recomputed the the prefix uh three times
+[9:39] right the pre-fill work has happened
+[9:40] three times the useful cache is
+[9:42] unutilized so the cache hit rate will be
+[9:44] low if you export your VLNM metrics and
+[9:46] see it inside Prometheus you see your
+[9:48] cash hit rate is you know atrocious and
+[9:51] there's so much room for us to do more
+[9:56] and that's exactly where LLMD comes in
+[9:59] right so if if if that's not already
+[10:01] clear I hope This helps make it clear
+[10:04] but essentially you have something some
+[10:06] magical black box that's taking care of
+[10:10] which instance of the same model which
+[10:13] instance of the same model should
+[10:15] address that query right it could be
+[10:17] because the prefix is already populated
+[10:19] in that specific instance right it's as
+[10:21] simple as that and again we'll we
+[10:23] through the day we'll get into the
+[10:25] internal functionality or the mechanics
+[10:27] behind LLMD u but yeah essentially We've
+[10:32] we've done a lot of routing based
+[10:33] activities. Traditionally in engineering
+[10:35] before we had body based routing etc
+[10:37] etc. uh but now with with prefix aware
+[10:40] routing there's an element of semantic
+[10:42] or you know intelligence per se you know
+[10:44] wherein we can see if the necessary
+[10:48] prefix or you know is available in a
+[10:51] specific pod in runtime if I can have a
+[10:54] very lightweight middleware that can go
+[10:56] and check that and see some other
+[10:58] metrics as well the health of the pod
+[11:00] right whether it's available for us to
+[11:01] answer that request etc uh if it's the
+[11:04] right instance uh to be doing it so uh
+[11:07] just Just to summarize on the two
+[11:09] threads, if I have an enterprise
+[11:12] customer who's extremely finicky and is
+[11:14] just starting out, we're perhaps looking
+[11:16] at VLM and that is sufficient because
+[11:18] you're looking at a single instance and
+[11:20] you're trying to juice the maximum
+[11:22] throughput out of that single instance.
+[11:24] The moment you scale out, the moment
+[11:26] you're looking at uh a setup wherein
+[11:28] some form of high availability is needed
+[11:31] or you know you have some leeway perhaps
+[11:33] more than one card or maybe more than
+[11:35] one node uh LLMD starts playing a very
+[11:37] big role and the world is headed in that
+[11:39] direction.
+[11:42] Adding to that entire ecosystem is just
+[11:45] just to make things interesting. Let's
+[11:47] continue with our AMD MI325X example
+[11:50] where I have 256 GB of GPU VRAM and
+[11:53] suddenly everyone's happy with the
+[11:55] progress we've been making. So we have a
+[11:57] second MI325X. [clears throat]
+[11:59] So now what I'm going to do is perhaps I
+[12:01] want to use the first MI325X to run a
+[12:04] mixture of expert model maybe the Quen
+[12:05] 3.8 update right just came out great
+[12:07] model great tokconomics the second one I
+[12:10] want to run multiple instances like of a
+[12:13] very small quen 4B class model right so
+[12:17] now I have one small but fast model that
+[12:20] can help with simple tasks maybe rewrite
+[12:22] your query query enhancement query
+[12:24] decomposition query rephrasing etc and I
+[12:27] have another which is quen 3.8 great
+[12:31] mixture of expert model that you know we
+[12:32] can have maybe two instances of that so
+[12:34] now I have two model classes right now
+[12:37] LLMD is not concerned with the
+[12:39] difference in the qualitative
+[12:40] performance of these models no it's it's
+[12:42] a performanceoriented
+[12:43] router and semantic routing VLM semantic
+[12:47] router can perhaps help with picking the
+[12:50] right model for the right task right so
+[12:54] in in in 2025 we started off with simple
+[12:58] rule-based or reg based routing. I'm
+[13:01] sure a lot of you have tried that out.
+[13:02] If the query contains date, go to a date
+[13:05] tool, right? So that's that's a
+[13:06] rule-based router. Uh I've even built
+[13:09] solutions wherein we've used very
+[13:11] expensive mixture of expert models
+[13:13] because they're so smart and so capable,
+[13:16] but they are expensive to run from, you
+[13:18] know, a sort of performance viewpoint. I
+[13:20] would still use them to do some form of
+[13:22] routing. So I would use the same quen
+[13:24] 3.8 date to decide which is the right
+[13:26] model to address but that that's not the
+[13:28] right thing to do because if you solve
+[13:30] that problem efficiently uh you are
+[13:33] going to address the query significantly
+[13:34] faster and you're going to meet that SLA
+[13:36] that that customer or that government uh
+[13:38] customer has set right [snorts]
+[13:41] so this is an encapsulation slide
+[13:45] first of all did we pick the right model
+[13:48] right qualitatively did it go to that
+[13:51] quen 4B or did it go to the quen 3.8 28
+[13:54] 27b
+[13:55] we need to solve that. This is a
+[13:57] qualitative task. It's a qualitative
+[13:59] task. So we're looking at which model is
+[14:01] the right model. It's it's something
+[14:02] that we can discuss in English. It it
+[14:04] doesn't need numeric and performance
+[14:06] metrics.
+[14:08] When we went to that right model, right
+[14:10] 4B or 3.8 8 27B. uh did we actually
+[14:15] leverage the cash that was cooked up and
+[14:17] were we able to produce the first token
+[14:19] in the most effective uh in the best
+[14:22] possible time and finally uh what
+[14:25] matters to the customer right the time
+[14:28] per output token or essentially how
+[14:30] quickly did we address that customer's
+[14:31] concern you're building an agentic
+[14:33] system it needs to answer the question
+[14:35] so all these mechanics aside the final
+[14:37] aspect is to satisfy your customer and
+[14:39] tell them look we did A B and C I build
+[14:42] you so many engineering hours to get
+[14:44] this thing in place and now it solves uh
+[14:47] our problem the problem that we were
+[14:48] trying to solve. So it's important to
+[14:50] look at all three aspects uh for us at
+[14:52] nextgen.
+[14:56] So I think praine has uh Pravin are you
+[14:59] here? Excellent. Okay. So I'm not going
+[15:02] to uh take this away from you. You're
+[15:05] the
+[15:05] >> I skipped this.
+[15:06] >> Okay. You skipped this part.
+[15:07] >> Okay. So Pravin is from IBM and he's you
+[15:10] know an expert with networks. I I had a
+[15:13] brief opportunity to work with him and
+[15:14] NextGen team worked with him very
+[15:16] closely in essentially materializing
+[15:18] this entire dialogue right so uh at
+[15:21] NextGen we're lucky we're fortunate to
+[15:23] have hardware across different vendors
+[15:25] so we work closely with Intel we work
+[15:27] closely with Nvidia with AMD uh and then
+[15:31] we also work with a lot of model
+[15:32] manufacturers so we've done some work
+[15:33] with Saram as well I'm excited to see
+[15:35] Saram over here and what we wanted to
+[15:38] see is all this theory aside do we see
+[15:42] some gains, right? So what if I have
+[15:45] multiple models and multiple types of
+[15:48] accelerators and I actually put LLMD to
+[15:50] the task and we ensure that the
+[15:52] networking fabric is as it should be,
+[15:55] right? So that we can so that LLMD can
+[15:57] thrive and shine. So if everything is in
+[15:59] place, if everything is in place, can we
+[16:02] do better than we would if we weren't
+[16:04] using LLMD?
+[16:06] And the results are staggering. I mean,
+[16:09] it's not supposed to be so out there.
+[16:11] It's not supposed to be such a drastic
+[16:13] improvement, but it is. What you're
+[16:15] seeing is about at at about 85 queries
+[16:19] per second, you're seeing double the
+[16:20] throughput. Now, this is an underrated
+[16:23] aspect, right? So, this this is a very
+[16:25] important point to make. It looks fine
+[16:27] on a graph, but what this means is if I
+[16:30] have a customer who's extremely
+[16:32] sensitive on price and he wants to
+[16:34] address 200 users, let's say,
+[16:38] and for addressing 200 users, he would
+[16:41] need two cards. Before the monthly
+[16:42] billing would be let's say 10 lakh
+[16:44] rupees. Now he can do that at five lakh
+[16:46] rupees, right?
+[16:48] The other way to look at it is and from
+[16:50] a government viewpoint because
+[16:51] government is not really concerned with
+[16:53] cost, right? especially the ones that we
+[16:54] work with about 200 ministries. They're
+[16:56] not concerned with cost. They're
+[16:58] concerned with serving citizens and
+[16:59] there's there's a lot of strict
+[17:00] legislation behind that. But let's say
+[17:02] we're running a pipeline for the
+[17:03] government and everything is population
+[17:06] scale. So if I'm able to solve 100 cr
+[17:09] data items, uh I was able to do it in
+[17:11] three months before now I could do it in
+[17:13] one. And that means citizen services are
+[17:16] working at you know double the rate. So
+[17:18] I want I want you to look at this slide
+[17:20] as not just a metric, not just a graph,
+[17:22] but think of the implication that can
+[17:24] have when a public services company or
+[17:28] an enterprise uses this internally for
+[17:30] the enterprise half the bill for the
+[17:32] government half the time right whichever
+[17:34] way you want to look at it
+[17:37] and the same sort of metrics like I said
+[17:39] right two model classes so we use Saran
+[17:41] 30b and this is all pra's work I hope he
+[17:44] speaks about a little bit but uh
+[17:47] multiple multiple accelerators. I think
+[17:48] there was MI325X,
+[17:50] there was Nvidia H100 SXM maybe and uh
+[17:54] there was also the Intel Gaudi 3, right?
+[17:56] So serving these models across different
+[17:58] types of accelerators, right? And
+[18:00] different models and then we're able to
+[18:02] see with LLMD, we're able to see
+[18:04] significantly higher throughput and
+[18:06] significantly better TTFD because that's
+[18:08] where LLMD comes in, right? And this is
+[18:10] all real. uh there is published study I
+[18:12] hope talks about it a bit more
+[18:17] now the best part is all of these things
+[18:18] that we're talking about are
+[18:20] significantly active projects in the
+[18:22] open source community thousands of stars
+[18:25] you know all that aside again I'm going
+[18:27] to circle back the comfort that I give
+[18:29] to my customers and my government
+[18:31] ministries is that everything is
+[18:34] thriving right starting from the gateway
+[18:36] API which is essentially you know you
+[18:39] could think of this as light LLM for
+[18:40] those of you guys who you know are in
+[18:42] the space but amazing support for
+[18:45] gateway API now there's a Kubernetes
+[18:47] sort of uh run container runtime for
+[18:49] inference pool that allows you to point
+[18:51] it towards the different endpoints that
+[18:52] you can have inside your organization
+[18:55] semantic router I think now the with the
+[18:57] latest version uh there's there's
+[18:59] significant improvements in the
+[19:01] observability from a decision-m
+[19:03] viewpoint right so if the semantic
+[19:05] router is deciding it should go with
+[19:06] model A instead of model B it was not
+[19:08] justifiable before because there was no
+[19:10] observability with the latest version
+[19:12] there's significant observability so
+[19:14] that you can see how that semantic
+[19:15] routing is happening with the latest
+[19:17] version of LLMD there are kada signals
+[19:20] for autoscaling autoscaling when it
+[19:22] comes to models is a little touchy sus
+[19:25] uh you know subject uh because for you
+[19:26] to autoscale you need to have available
+[19:28] GPU capacity which is again very
+[19:30] expensive but it's good that the
+[19:32] community is heading in that direction
+[19:34] and you know giving that support for
+[19:35] whoever wants it and of course we have a
+[19:38] new engine under VLM under the hood V2
+[19:40] engine is now becoming a default for
+[19:42] serving that one replica like I was
+[19:44] talking about right so the enterprise
+[19:46] customers have something that they're
+[19:47] winning from as well so across the board
+[19:50] uh we have amazing contributions
+[19:52] happening
+[19:54] this is a great summary side I've named
+[19:56] the vendors that we work with uh but we
+[20:00] have amazing reference architectures
+[20:02] when it comes to hardware right if you
+[20:04] look at Nvidia's reference architecture
+[20:06] on how you should set up GPUs inside a
+[20:08] data center it's excellent right there.
+[20:10] Everything that you need is there. The
+[20:11] same with AMD as well. The east west
+[20:13] fabric between the GPUs, the north south
+[20:15] fabric for traffic that's coming from
+[20:17] outside to inside. Uh and there's
+[20:20] amazing sort of reference architectures
+[20:21] with trusted execution environments and
+[20:23] confidential computing. But there was
+[20:25] nothing for inference engineering that
+[20:27] there's no standard platform which told
+[20:30] you you want to do engineer uh inference
+[20:32] engineering you do it like this. But I
+[20:34] think we're working our way towards the
+[20:36] ideal reference architecture on what you
+[20:38] must recommend to your organization
+[20:41] and this is a great starting point right
+[20:43] you need to have some form of routing
+[20:45] capability you need to have some form of
+[20:47] intelligence in terms of you know prefix
+[20:50] aware routing etc and perhaps have some
+[20:53] internal capacity you know we spoke
+[20:55] about tokconomics I think it's an
+[20:57] excellent time to begin investing in
+[20:59] that one you know endpoint that's
+[21:02] running on a GPU that uh your your
+[21:05] organization has procured right because
+[21:06] these models are very capable the agent
+[21:09] harnesses are very capable like you know
+[21:11] lang graph deep agents u you know I
+[21:13] think will talk about one of his
+[21:15] projects if if I give him time but he's
+[21:17] also working on an excellent coding
+[21:18] harness everything that's expensive and
+[21:21] tough outside there's there's a lot of
+[21:23] work happening from a lot of people to
+[21:24] give you an alternative that is
+[21:26] significantly cheaper and fully in your
+[21:27] control there is so we should leverage
+[21:29] it and this becomes an ideal uh
+[21:31] reference architecture and I've put in
+[21:33] CPU as well because in this entire mix
+[21:35] we actually work on the Xeon 6 as well.
+[21:38] It's a CPU with matrix acceleration
+[21:40] capability. So again significantly
+[21:43] better uh tokconomics for at least the
+[21:45] small models right now up to GPTOSS20B
+[21:49] class of models do great. [snorts]
+[21:52] This is my last slide. Um
+[21:55] so at NextGen when we offer sort of
+[21:58] solutions to customers we do it via our
+[22:00] patent pending framework called
+[22:02] standardized AI solutions framework and
+[22:04] I've tried to sort of extremely compact
+[22:07] it down to these five stages. So every
+[22:09] time I have to get something done it
+[22:12] would of course start with a
+[22:13] conversation. So there's some
+[22:15] conversation around something custom
+[22:16] that we need to build. We would talk
+[22:18] about data. We would talk about the
+[22:20] actual engineering pipeline. We would
+[22:22] talk about the quality assurance
+[22:24] guardrails etc. And we would talk about
+[22:26] deployment.
+[22:28] And the point I'm trying to make here is
+[22:30] each one of these tenants right which
+[22:32] existed before as well when it come came
+[22:34] to standard SDLC minus the AI
+[22:37] engineering part just replace it with
+[22:39] software engineering. Each one of these
+[22:41] tenants is stacked to inference right
+[22:43] now. So when you have that first
+[22:44] conversation with a customer or it can
+[22:46] be an internal discussion because not
+[22:47] all of you might be in services that
+[22:50] first conversation is now about okay
+[22:52] what is the problem statement how many
+[22:54] users must I support every day every
+[22:57] minute every second what's the modality
+[23:00] of data I'm dealing with right and if
+[23:02] you notice all of these things are
+[23:03] either tagging to the qualitative spread
+[23:05] of models you might need to have or the
+[23:07] performance metrics associated with the
+[23:09] model so if if someone says you need to
+[23:11] you know there's 16 documents douments
+[23:13] being submitted by an insurer every
+[23:15] second. Now you need to think about
+[23:17] processing 16 documents per second via
+[23:20] your inference deployment. And if they
+[23:22] say that the data inside these files
+[23:24] contains images, flowcharts etc. So now
+[23:26] you need to think about an OCR strategy
+[23:29] and the models for that might also run
+[23:30] on your GPUs itself. So now you need to
+[23:32] think about inference when it comes to
+[23:34] you know the data that you have
+[23:37] when it comes to data itself and you're
+[23:39] actually engineering for your customer.
+[23:40] Is it a batch pipeline? Is it a live
+[23:42] pipeline batch pipeline? Maybe someone
+[23:44] has a S3 or object storage somewhere
+[23:47] with 15 million documents and they
+[23:49] expect you to finish it in a week. So
+[23:51] maybe you need eight cards. But if they
+[23:53] say it's okay if you do it in two weeks,
+[23:55] now you need four cards, right? So your
+[23:57] infrastructure is dependent on your
+[23:59] data. And that again is dependent on a
+[24:01] customer conversation somewhere. And
+[24:03] it's tagging back to one of these three
+[24:05] tenants inside the inferencing layer.
+[24:07] the modality, the capacity or the
+[24:10] throughput at which you need to generate
+[24:11] tokens. AI engineering itself when
+[24:13] you're building a solution, how do you
+[24:15] test it, right? Let's say I I task any
+[24:17] one of you to use let's say clot code
+[24:19] etc or whatever and build an agent that
+[24:22] you know perhaps is connected to your HR
+[24:25] tool. Engineering it is simple but what
+[24:28] if you have to connect it to an internal
+[24:29] endpoint and ensure it runs with a
+[24:31] GPOSS20B or a Quen 3.6 deployment. how
+[24:34] you need that model running for you to
+[24:36] even test what you're building. So very
+[24:39] critical tenant in engineering
+[24:41] guardrails and QA it's so funny is also
+[24:44] now LLM driven. So Nemo guardrails or
+[24:46] ragas I mean rag assessment Red Hat is
+[24:49] an advocate of rag assessment. If you
+[24:51] look at rag assessments standard
+[24:52] blueprint to how to evaluate a rag uh
+[24:55] you have an abstract query generator and
+[24:57] a you know simple query generator. These
+[24:59] are SDG pipelines that again use
+[25:01] inference. The same model that you were
+[25:03] planning on using for your AI
+[25:05] engineering is now being consumed by
+[25:06] your guardrails pipeline as well. And of
+[25:09] course, deployment is associated with
+[25:11] inference. Right? So this is where you
+[25:13] actually deploy your model for
+[25:14] production. Uh we do observability with
+[25:17] langfuse and we track the usage with
+[25:20] light LLM. But like I said, the
+[25:22] community is taking care of that and
+[25:24] baking that into LLMD inference gateway
+[25:27] or BLM. So if you look at the entire
+[25:30] stack, anything and everything you can
+[25:32] do as an engineer is stacked to
+[25:34] inference.
+[25:35] Everything you do is stack to inference,
+[25:37] right? And that that's what I'll leave
+[25:38] you with. Uh that's the role uh that
+[25:41] inference plays in the modern day. Uh
+[25:43] and that's why it's very important for
+[25:45] you to look at the latest that's
+[25:46] happening in this space and you know
+[25:48] sort of work cohesively in that
+[25:50] direction. Thank you.
+[25:53] >> [applause]
+[25:56] >> So yeah, happy to take any questions.
+[25:59] Yeah.
+[26:16] >> Sure.
+[26:17] >> Absolutely. Absolutely. So
+[26:20] think of this [snorts] uh VLM right is
+[26:25] running inside its runtime let's say
+[26:28] let's say you write a system dcript and
+[26:29] you do a VLM serve for a model inside a
+[26:32] GPU uh when your application needs to
+[26:35] run inference to that model it has only
+[26:37] one endpoint right like let's say you
+[26:39] have a GPU virtual machine we give it an
+[26:42] IP 1025 38 123 and we do a VLM serve on
+[26:47] that now VLM will start serving on port
+[26:49] 8,000 inside that virtual machine. So my
+[26:51] application is it's very simple. I'll
+[26:54] tell my application team guys uh quen
+[26:56] 3.8 is running on port 8000. So if you
+[26:59] do 1025 381 123 8,000 v1 chat
+[27:04] completions you're not going to get a
+[27:06] response right now internally via its
+[27:09] hyperparameters is going to take care of
+[27:11] how much KV cache is there inside that
+[27:14] single GPU instance. uh this is
+[27:16] excellent actually like this is pretty
+[27:18] capable if you're able to get the
+[27:20] desired throughput that you want or
+[27:22] handle the number of requests per second
+[27:24] VLM is internally taking care of that KV
+[27:26] cache and saturating it to the limit
+[27:28] that you have set when you deployed the
+[27:30] model right so let's say you say the KV
+[27:32] cache utilization percentage is around
+[27:34] 90% of the available GPU vramm uh it
+[27:37] will scale the KV cache till it utilizes
+[27:39] 90% of the available GPU VM the
+[27:42] application team is also happy right
+[27:43] they're getting the performance that
+[27:45] they on LLMD comes into the mix when we
+[27:48] need to do a little bit more. Maybe you
+[27:50] have to do a tensor parallelism 2 deploy
+[27:51] now and now you need more than one
+[27:53] instance of that model. So now I have a
+[27:55] second GPU that's also serving the same
+[27:58] model on port 8,000. I tell my team to
+[28:02] let's say I don't use LLMD. What would I
+[28:04] do? I'd put a load balancer on top and I
+[28:06] tell my team to contact the load
+[28:07] balancer. The load balancer via whatever
+[28:09] it algorithm is first come first serve
+[28:11] round robin will send the request here
+[28:13] or send the request there. Now each GPU
+[28:16] believes its KV cache utilization is
+[28:17] getting saturated nicely but the request
+[28:21] came in and it was supposed to go here
+[28:23] might have actually addressed the first
+[28:24] query in a multi-turn conversation via
+[28:26] the first deployment. The KV cache is
+[28:29] ready here but the you know the sort of
+[28:31] I would call it dumb the dumb uh HA high
+[28:35] uh load balancer send the request to the
+[28:37] second deployment. So both these
+[28:39] instances are not talking to each other.
+[28:41] The LB is not smart enough to know which
+[28:44] has better KV cache because it's relying
+[28:45] on standard old metrics the health of
+[28:48] the machine uh you know the uptime of
+[28:50] the machine how many requests are
+[28:51] saturating in its queue right lmd comes
+[28:54] in here LLMD in runtime is able to
+[28:57] identify based on the cache that's
+[28:59] available here and the cache that's
+[29:01] available there which card to send it
+[29:03] to. So if it's a long horizon multi-turn
+[29:07] conversation that you're doing with an
+[29:08] endpoint deployed on this, it will try
+[29:10] to address all the queries from that
+[29:12] first one on. And then there's a lot of
+[29:14] other advanced concepts. Uh you know
+[29:16] this is with two GPUs. If you want you
+[29:18] could do a node. So four GPUs run let's
+[29:21] say prefill and four GPUs run decode. So
+[29:24] you can write a routing strategy wherein
+[29:26] LLMD will send the task of generating
+[29:29] the first token for every query on four
+[29:31] cards. So these are extremely cach
+[29:34] because generating the first token is a
+[29:35] cash heavy activity and then you have
+[29:37] four cards that are you know dedicated
+[29:39] just to do decode generating the token
+[29:42] after the first token which is a sort of
+[29:44] it's it's not a compute heavy task it's
+[29:46] a it's a memory heavy task. So this can
+[29:49] also be done. That's that's the
+[29:51] difference between single instance and
+[29:52] LM.
+[29:54] Yeah.
+[29:56] So
+[30:07] basically when
+[30:16] >> uh okay that's a fully different uh
+[30:18] problem statement. Uh so what you're
+[30:21] saying is
+[30:22] so okay from that's an application
+[30:24] engineering problem right? So let's say
+[30:26] we write a coding agent together. We
+[30:29] both develop a coding agent that is
+[30:30] responsible for using a Quen 3.8
+[30:33] deployment to do coding tasks and we set
+[30:37] the limit the maximum sort of context
+[30:39] length limit while we're deploying that
+[30:40] VLM model to 16,000 tokens or maybe
+[30:43] 32,000 tokens depending on the GPU VRAM
+[30:46] we have. Now it's an application
+[30:48] engineering challenge to see what is the
+[30:51] best 32,000 tokens we can send to the
+[30:53] model. Now our compaction strategies. So
+[30:56] what clot does compact? I mean everyone
+[30:58] does compact. Even open codeex does
+[31:01] compact. Compaction strategies. There's
+[31:03] many strategies and there's so much
+[31:04] research happening in the space. Take
+[31:06] the first 50% of the tokens. Summarize
+[31:09] them. Take the next 25%.
+[31:12] >> Yeah. So that that's not that's not
+[31:14] addressed here. Uh neither is semantic
+[31:16] router addressing that. Neither is a
+[31:18] single replica addressing that. Neither
+[31:19] is LLMD. That's an application
+[31:21] engineering challenge. uh your harness
+[31:23] needs to address that. So the
+[31:24] application on top, right?
+[31:30] >> Yeah. Yeah.
+[31:31] >> In between, right? So that it knows what
+[31:33] you started with and it knows what
+[31:35] you're trying to solve.
+[31:38] There's many ways to do that. There's
+[31:39] skills, to-do lists. I mean there's so
+[31:41] many things that are happening inside
+[31:42] harnesses.
+[31:45] >> So I have tensing
+[31:49] the actual model. Uh uh yeah. Okay.
+[31:52] >> Yeah.
+[31:57] Multiple CPUs separated out
+[31:59] >> full fully fully full copies like data
+[32:01] parallel.
+[32:02] >> So how
+[32:05] actually the prefix like the cache once
+[32:08] you fill up the first instance cache
+[32:11] >> then how is it like filling up the next
+[32:13] next next instance cache.
+[32:15] >> So if it's a fresh
+[32:16] >> we need a duplicate cache for each
+[32:19] instance. Right.
+[32:20] >> Right. So the parallelism strategy will
+[32:21] determine that how cash is getting
+[32:23] saturated. I think there is one session
+[32:25] on expert parallelism today as well. But
+[32:27] let's say we're talking about a very
+[32:29] simple scenario data parallel where
+[32:30] there's an exact replica of the model on
+[32:33] each card. In that case, it will try to
+[32:35] saturate based on the session.

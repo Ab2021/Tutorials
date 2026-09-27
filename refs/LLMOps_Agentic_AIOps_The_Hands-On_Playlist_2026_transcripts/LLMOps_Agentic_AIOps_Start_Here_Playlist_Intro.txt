@@ -1,0 +1,99 @@
+Title: LLMOps → Agentic AIOps: Start Here (Playlist Intro)
+
+--- TRANSCRIPT ---
+
+[0:00] Building a demo with a large language
+[0:01] model takes an afternoon. You wire up an
+[0:03] API call, paste in a prompt, and it
+[0:05] works. Running that same thing reliably
+[0:08] in production for real users at real
+[0:10] scale is a completely different
+[0:11] discipline. That gap between a demo that
+[0:14] works once and a system you can trust
+[0:15] every day is exactly what this playlist
+[0:18] is about.
+[0:19] You have probably lived some version of
+[0:21] this story already. On Friday, the demo
+[0:23] wows the whole team. It ships. Then on
+[0:25] live traffic, it confidently invents a
+[0:28] refund policy, the monthly bill triples,
+[0:30] and nobody can explain a single bad
+[0:32] answer. Each of those is an operations
+[0:34] failure, not a model failure. The model
+[0:36] was fine. The system around it was
+[0:38] missing. And here is the good news.
+[0:40] Every one of those failures has a known
+[0:43] practical fix. Teaching those fixes is
+[0:45] the entire job of this playlist. A quick
+[0:48] note on who this is for. We assume you
+[0:50] already know the basics, what an LLM is,
+[0:53] what retrieval augmented generation
+[0:55] does, what an agent is. So, we skip the
+[0:57] 101 and go straight to the operational
+[1:00] layer, the part that turns a clever
+[1:01] prototype into something dependable.
+[1:04] Where a concept genuinely needs a
+[1:05] refresher, you will get a single recap
+[1:08] slide, not a whole video of it.
+[1:10] Here is the mindset the whole playlist
+[1:12] is built on. The model call itself is
+[1:14] maybe 5% of the work. The other 95 is
+[1:17] the system around it. The prompts, the
+[1:20] retrieval, the evaluation, the
+[1:22] guardrails, the serving, and the
+[1:24] observability. Teams that ignore that
+[1:26] 95% ship impressive demos that quietly
+[1:29] fall apart. This playlist is about the
+[1:31] 95%.
+[1:32] The videos group into four themes.
+[1:34] Deliver covers getting a trustworthy
+[1:36] answer out, prompts, evaluation, and
+[1:38] observability. Retrieve is production
+[1:40] RAG. Protect and scale is guardrails and
+[1:43] inference cost. And the final theme is
+[1:45] agents, how they are designed,
+[1:47] orchestrated, given memory, and
+[1:48] connected through the new protocols MCP
+[1:51] and A2A.
+[1:52] Concretely, that is 10 focused videos
+[1:54] plus this intro. We start with prompt
+[1:56] management, evaluation, and
+[1:58] observability, then production RAG,
+[2:00] guardrails, and cutting inference cost.
+[2:02] And we finish with the agentic half,
+[2:05] agent design, multi-agent orchestration,
+[2:07] memory, and interoperability. Each video
+[2:10] stands on its own, so watch in any order
+[2:12] you like.
+[2:14] Every video follows the same rhythm, so
+[2:16] you always know what is coming. We
+[2:18] derive the mechanism, walk a worked
+[2:19] example with real numbers, introduce the
+[2:21] main tool, and then show hands-on
+[2:23] runnable code. Then, a deeper insight
+[2:25] most tutorials skip, the common
+[2:27] pitfalls, the metrics worth putting on a
+[2:29] dashboard, and a one-line takeaway.
+[2:32] One promise about the content itself.
+[2:34] Every claim is tied to a named paper
+[2:36] with authors and a year, or to a real
+[2:37] company deployment, not to hand-waving.
+[2:39] You will hear names like REACT, HNSW,
+[2:42] and VLLM, and real case studies
+[2:45] including Klarna, Uber, and LinkedIn
+[2:47] with the honest lessons, not just the
+[2:49] headlines. Sources are in every
+[2:51] description.
+[2:52] To follow along, treat this as a
+[2:54] reference as much as a course. Jump to
+[2:56] the topic you need, run the snippets,
+[2:58] and lean on the companion tool guide and
+[3:00] the reference config that ship with the
+[3:02] series.
+[3:03] If you remember one idea from this
+[3:05] intro, make it this one. The model is
+[3:07] the easy part. Operating it well is the
+[3:09] job, and it is a job you can absolutely
+[3:11] learn. Let us start with the cheapest,
+[3:13] most dangerous lever you have, your
+[3:15] prompts. That is video one.

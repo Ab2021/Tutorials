@@ -1,0 +1,120 @@
+# T14 — Endpoint picker configuration (REFERENCE-GRADE, NOT EXECUTED HERE)
+#
+# The router is ONE deployment sitting between the pods and the gateway, not a sidecar
+# per pod. It cannot be a sidecar: the filter step needs the whole fleet's residency map.
+#
+# Shapes follow the Gateway API Inference Extension as the corpus describes it, with the
+# policy surface from LLD §10. Field names are illustrative where the corpus does not fix
+# them; the COMMENTS carry the design decisions, which is the part that transfers.
+apiVersion: inference.networking.x-k8s.io/v1alpha2
+kind: EndpointPickerConfig
+metadata:
+  name: router
+  namespace: inference
+
+view:
+  # ---------------------------------------------------------------------------
+  # THE LINE THAT MATTERS. Dropping "evict" is the approximate policy the corpus
+  # warns about ("hash-based ... has all the consistency problems" [T]).
+  #
+  # Measured consequence in run.py §2/§6:
+  #   create+evict  -> hit 77.3%, usable cluster 5.48 of 8 instances
+  #   create only   -> hit 81.8%, usable cluster 3.61 of 8 instances
+  # It buys 4.5 points of hit rate and costs 34% of the usable fleet.
+  # ---------------------------------------------------------------------------
+  consume: [create, evict, offload]
+
+  # "offload" is separate from "evict" on purpose: a block parked in CPU memory or
+  # on disk has LEFT HBM but has NOT ceased to exist (T12's tiering). Treating
+  # offload as eviction makes a peer fetch impossible and forces a recompute.
+  offload_is_eviction: false
+
+  staleness_alert_seconds: 30
+  gap_detection: strict          # per-instance seq must be gapless
+
+# ---------------------------------------------------------------------------
+# Policy composition. The corpus's worked example: prefill filter, then
+# prefix-cache-identity filter, then token-load scorer [T].
+# Ordering rules enforced by the schema: filters precede ranks, and every filter
+# must declare on_empty.
+# ---------------------------------------------------------------------------
+policies:
+  - name: prefill-affinity
+    phase: prefill
+    kind: filter
+    on_empty: pass_through      # a cache miss must never fail a request
+    selector: any_block_match
+
+  - name: prefix-identity
+    phase: prefill
+    kind: filter
+    on_empty: pass_through
+    selector: prefix_identity
+
+  - name: token-load
+    phase: prefill
+    kind: rank
+    weight: 1.0
+
+  # Decode is routed by ACTIVE REQUESTS, not by prefix identity [T]. A decode that
+  # pulls KV from a prefill worker has different needs from one that does not.
+  # Applying the prefill scorer here is a design error that presents as a tuning
+  # problem -- it shows up as decode ITL variance nobody can attribute.
+  - name: active-requests
+    phase: decode
+    kind: rank
+    weight: 1.0
+
+flow_control:
+  enabled: true
+  policy: priority_bands        # NOT fcfs -- see the note below
+
+  saturation:
+    # Both thresholds are OPERATOR-DEFINED [T]. The corpus's examples: KV cache 80%
+    # full, or average active requests above eight.
+    kv_used_fraction: 0.80
+    mean_active: 8
+    window_seconds: 15
+
+    # The threshold is a constant; the capacity it guards is a variable the routing
+    # policy above changes (run.py §6). This field is documentation-with-teeth: if
+    # the observed effective capacity drifts far from it, the threshold is answering
+    # a question about a different cluster.
+    assumed_fleet_size: 8
+
+  queue:
+    max_depth_per_instance: 32
+    on_overflow: shed            # shed, never queue without bound
+
+  # ---------------------------------------------------------------------------
+  # WHY NOT fcfs: run.py §5 models it against priority bands and the two rows are
+  #   fcfs           premium SLO  2.9%   shed    0
+  #   priority_bands premium SLO 99.3%   shed 1324
+  # The corpus's judgement -- that first-come-first-serve "doesn't add anything
+  # extra to your policies because it's going to slow down everything" [T] -- is,
+  # in this model, exactly literal: fcfs and no-flow-control produce IDENTICAL rows.
+  #
+  # But read the shed column. Priority bands buy premium attainment by STARVING
+  # best-effort, and best-effort's MEAN WAIT IMPROVES (98.42 -> 27.34) because the
+  # requests that would have waited longest were dropped rather than queued.
+  # This is a legitimate trade. It is not one to make by accident.
+  # ---------------------------------------------------------------------------
+  shed_accounting:
+    enabled: true
+    emit: shed_total_by_priority   # if this is off, the trade is invisible
+
+metrics:
+  # The corpus's list for this layer [T]:
+  standard: [ttft_seconds, itl_seconds, pod_saturation, queue_depth]
+
+  # The four this model needs and the standard set cannot see (LLD §11):
+  required:
+    - misroutes_total             # cost of a stale view; invisible per-instance
+    - shed_total_by_priority      # the hidden half of priority bands
+    - view_staleness_seconds      # the feed degrading before anything else does
+    - effective_capacity          # n / (peak/mean) -- fleet believed vs fleet reached
+
+  # Do not aggregate refusals into one counter. T13 makes the same point about
+  # admissions_refused_total{reason}: the distinction is destroyed at the worst
+  # possible moment, which is during an incident.
+  unaggregated: [shed_total_by_priority, misroutes_total]

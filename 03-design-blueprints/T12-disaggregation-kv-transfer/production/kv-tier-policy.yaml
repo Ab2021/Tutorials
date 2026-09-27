@@ -1,0 +1,63 @@
+# T12 — KV placement, retention and eviction policy (REFERENCE-GRADE, NOT EXECUTED HERE)
+#
+# Not loaded by any process in this environment. Values are the design decisions from the
+# HLD §10-11 and the LLD §5-9.
+#
+# Transcript coverage: primary
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: t12-kv-tier-policy
+  namespace: inference
+  labels: {topic: T12, tier: policy}
+data:
+  # ---- tiers, ordered by cost to read back -----------------------------------
+  # Ordering only. The absolute bandwidths are model parameters (sim/transfer.py), not
+  # measurements. The pooled tier is ordered on a VENDOR REPORT that sharing beat RDMA;
+  # that was not measured here. [T]
+  tiers: "hbm,peer_hbm,pooled_memory,cpu_dram"
+
+  # ---- the offload decision --------------------------------------------------
+  # Offload beats recompute when 16 x kv_bytes_per_token / bandwidth > 1/prefill_tps.
+  # That crossover is a BANDWIDTH, not a prompt length -- both sides scale linearly with
+  # tokens. sim/transfer.py prints it; re-run `python run.py` and paste the result.
+  crossoverBandwidthGbps: "32.0"
+  offloadEnabled: "true"           # turn OFF to measure recompute cost directly
+
+  # ---- block granularity -----------------------------------------------------
+  # Larger blocks amortise the fixed per-transfer latency; smaller blocks reuse at finer
+  # granularity. This is a real trade, not a default to accept blindly. [D]
+  blockTokens: "16"
+  maxBlocksPerTransfer: "64"
+
+  # ---- retention -------------------------------------------------------------
+  # A pin is a BOUNDED LEASE, not a lock. An unbounded pin set is a memory leak with
+  # extra steps, and it starves the active traffic the cache exists to serve. [D]
+  pinFraction: "0.30"
+  pinTtlDefaultSeconds: "300"      # must exceed the median tool-call pause
+  pinTtlMaxSeconds: "1800"
+
+  # ---- eviction --------------------------------------------------------------
+  highWatermark: "0.90"
+  evictionOrder: "expired_lease,never_reused_lru,pinned_lru"
+  # Evicting a never-reused block is the policy WORKING. The alarm is on thrash:
+  # evictions of blocks that had already proven reusable. A counter that includes
+  # never-reused evictions is pure noise. [D]
+  thrashDefinition: "evictions_of_blocks_with_uses_gte_2"
+
+  # ---- the retention API -----------------------------------------------------
+  # The upstream KV retention API (session metadata on blocks, orchestrated movement)
+  # is an NVIDIA PR in the corpus and is NOT SHIPPED. [T] Until it lands, the pin
+  # mechanism above is this blueprint's internal contract, written so that the upstream
+  # API can satisfy it later without changing callers.
+  retentionApiSource: "internal-contract"
+  retentionApiUpstreamStatus: "PR, not shipped"
+  attachSessionMetadata: "true"
+
+  # ---- explicitly not configured here ----------------------------------------
+  # 2P4D is NOT a sizing input. The corpus presents it as preliminary and the speaker
+  # says explicitly not to read performance from it. Sizing on it is the exact error
+  # that disclaimer exists to prevent. [T]
+  sizingTopology: "derived-from-workload-mix"
+  prohibitedSizingInputs: "2P4D"

@@ -1,0 +1,1574 @@
+Title: CMU LLM Inference (3): Common Sampling Methods
+
+--- TRANSCRIPT ---
+
+[0:00] Cool. Um, hey folks, welcome back. Um,
+[0:03] just as a reminder, I'm Amanda. I'll be
+[0:05] giving the next couple of lectures. Um,
+[0:08] and today we're going to be talking
+[0:10] about um, sort of the first class of
+[0:12] algorithms for sampling from a model. So
+[0:15] we're going to start um with this week
+[0:17] with sampling and some other sort of
+[0:19] classical decoding methods and then
+[0:20] we'll move past there into um more
+[0:23] modern inference algorithms that require
+[0:25] reasoning over multiple um decoded
+[0:28] tokens at once instead of sort of these
+[0:30] token by token decoding. Um and just as
+[0:33] a heads up, I know the website says that
+[0:35] homework one is coming out today. Um
+[0:37] that will actually be out probably
+[0:39] Thursday. Um and we'll sort of adjust
+[0:41] the deadlines to reflect that.
+[0:44] Um so today we're going to be talking um
+[0:46] kind of exclusively about sampling. Um
+[0:49] we'll talk a little bit about models as
+[0:51] probability distributions and some
+[0:53] metrics we can use to reason about that
+[0:54] and then we'll use that to talk about
+[0:56] sort of two different groups of uh
+[0:58] sampling methods. The first sort of
+[1:01] simple and truncation or temperature-
+[1:02] based ones and then a more um sort of
+[1:06] complex or nuance method using some of
+[1:08] these metrics of probability
+[1:09] distributions that we'll talk about
+[1:11] first.
+[1:12] So um as we talked about in the very
+[1:15] first class, we could think about a
+[1:16] model in a couple of different framings.
+[1:17] Um but the framing that we're sticking
+[1:19] with, at least for today, is that a
+[1:21] model is just a conditional probability
+[1:23] distribution. We're not particularly
+[1:24] concerned today with how we arrived at
+[1:26] that distribution. Um we just know given
+[1:29] some input and the prior output tokens,
+[1:31] at each step, we have a distribution
+[1:33] over the vocabulary space for the next
+[1:35] token.
+[1:37] Um and under this definition we um can
+[1:41] say a couple of different things about
+[1:42] this distribution.
+[1:44] Um the first is that the models that
+[1:46] we'll be talking about today are locally
+[1:48] normalized. Um what this means is that
+[1:49] at each step we are going to get a
+[1:51] distribution over tokens for that
+[1:53] individual step rather than getting
+[1:55] something at each individual step that
+[1:56] may or may not be a distribution and
+[1:58] then having to sort of normalize at the
+[2:00] end of decoding. Um so one way to think
+[2:03] about this is that our scores will be
+[2:05] monotonically non-increasing. Uh right
+[2:07] we talked about this in the first class
+[2:08] where if you're multiplying by a number
+[2:10] between zero and one your probability
+[2:12] will decrease with each additional
+[2:13] token. Um this also means that if you
+[2:16] start with a prefix that maybe doesn't
+[2:17] look that good. There's no way to add
+[2:20] probability mass back in later. Um, so
+[2:23] in this example, if you were decoding
+[2:25] the US president in 2023 was, and you
+[2:28] sort of get the start of this um,
+[2:30] continuation, does the top or the bottom
+[2:31] look like a better output so far?
+[2:38] The bottom. I see people pointing down.
+[2:39] Excellent. Yeah. So, the US president in
+[2:41] 2023 was Joseph Biden. Looks like a
+[2:44] reasonable output. Um, but then maybe if
+[2:46] you like the sentence sort of wrapped
+[2:48] back around Barack Obama's former VP,
+[2:51] we'd want to have sort of a higher total
+[2:53] probability than Joseph Biden's
+[2:55] daughter. Um, does this mean that in a
+[2:58] locally normalized model, the top could
+[3:00] never have higher probability than the
+[3:02] bottom? No. Right? Um, models learn a
+[3:05] distribution over all kinds of
+[3:06] sentences. It's entirely possible that
+[3:08] this sort of construction is a pretty
+[3:10] common way to talk about Joe Biden. And
+[3:12] so it's possible that this actually
+[3:14] winds up with a higher score, especially
+[3:16] because daughter might have a very low
+[3:17] weight. Um, but there's no way once you
+[3:20] ascribe a relatively low probability
+[3:22] mass here for this to end up with high
+[3:24] probability mass later. It might be
+[3:26] higher than this other relatively low
+[3:28] probability output, but there's no way
+[3:29] to sort of backtrack and say, actually,
+[3:31] I think this should have more
+[3:32] probability mass. Maybe the beginning
+[3:34] was a little misleading. Um and we can
+[3:36] see that as well uh with this
+[3:38] visualization where the top here is how
+[3:41] um our models uh our locally normalized
+[3:44] models work where these two outputs A
+[3:47] and B um and each beam are getting
+[3:49] assigned probabilities that will sum to
+[3:50] one. In a globally normalized model um
+[3:54] you get a score at each step instead and
+[3:56] these scores can be much greater than
+[3:58] one. So here A gets a score of 3.1. Um
+[4:01] so this like uplifts A over the other
+[4:03] candidates in a way that is sort of not
+[4:05] possible with a locally normalized
+[4:07] model. Um it's we do local normalization
+[4:10] for a number of reasons. For one, it's
+[4:12] very easy and fast to train. Um you sort
+[4:14] of don't have to worry about these
+[4:15] constraints on a sequence level. Um but
+[4:18] the sort of flip side of that is that
+[4:20] when you want to impose global
+[4:21] constraints at inference time, you need
+[4:22] to do a little more thinking about how
+[4:23] to do that. Um and in fact a lot of the
+[4:25] methods that we'll talk about for the
+[4:27] rest of the semester will be ways of
+[4:28] trying to impose global constraints on a
+[4:30] model that was only trained sort of with
+[4:32] these local normalization. Um if you're
+[4:35] interested in globally normalized models
+[4:37] um this figure is from a paper that I've
+[4:39] linked at the bottom of the slide um
+[4:40] which is a good if a little bit older
+[4:43] reference um on how to do this for
+[4:45] sequence models. Uh you can also take uh
+[4:48] PGMs which has a lot of information
+[4:50] about how to do this for graphical
+[4:51] models where this is a sort of more
+[4:53] common setting.
+[4:55] Um what else can we say about a
+[4:57] probability distribution? Um we also
+[4:59] care about some other features of the
+[5:01] distribution and one that we'll touch on
+[5:03] a little bit here is calibration. Um so
+[5:06] you may have seen a plot kind of like
+[5:08] this before. We say a model is
+[5:10] calibrated if the model's confidence
+[5:12] score is well correlated with the
+[5:14] probability of correctness. So if we
+[5:15] have a multiple choice question, the
+[5:17] model puts 50% of the probability mass
+[5:19] on outputting B. We would like that B to
+[5:22] be the correct answer about 50% of the
+[5:24] time. Um, and this is useful because
+[5:25] then you can take the look at the logits
+[5:28] and use that as sort of a direct measure
+[5:29] of confidence. Um, is this a property
+[5:32] that our models normally have? Does
+[5:34] anyone know?
+[5:38] They're pretty reasonable I think now,
+[5:40] but I think makes it worse or I think it
+[5:44] makes it better and then it used to be
+[5:46] pretty bad like the earlier models like
+[5:48] it could be scorious like the confidence
+[5:50] of model could be spurious but the
+[5:51] actual performance and correctness.
+[5:53] >> Yeah. So they they used to be um worse
+[5:56] they're better now but Rohf does
+[5:57] something to the calibration. Yeah.
+[5:59] Exactly. So this is actually um this
+[6:01] graph is BERT um and you can see this is
+[6:03] sort of this is reasonable calibration.
+[6:05] Um this is GPD4
+[6:08] um on MMLU in particular. Um and this is
+[6:12] a really nice calibration curve. Um this
+[6:14] is the model before RLHF.
+[6:17] This is the model after RLHF.
+[6:19] Um so yeah, so uh our pre-trained models
+[6:23] if they're relatively strong, if they're
+[6:25] trained over a good data set, the
+[6:27] likelihood corresponds reasonably well
+[6:29] um with uh the the truth or the
+[6:32] likelihood of that being the true
+[6:33] answer. um when we do these
+[6:36] post-training steps which are super
+[6:37] useful and which generally give us
+[6:38] better outputs um they mess with this
+[6:40] property of the distribution. So if
+[6:42] you're looking at a model that is
+[6:43] post-trained um you don't have really a
+[6:45] lot of guarantee of calibration.
+[6:49] Um another feature of probability
+[6:51] distributions is that we're generally
+[6:53] putting nonzero mass um on a pretty wide
+[6:57] variety of things. um in particular in
+[6:59] these sort of situations where we have a
+[7:02] semi-obvious ground truth, we're putting
+[7:04] at least some probability mass on
+[7:05] incorrect outputs. Um so your model is
+[7:08] not putting 100% probability on 2 plus 2
+[7:11] equals 4. Um this is this can be good,
+[7:15] this can be bad. Um there's some
+[7:18] interesting um ML theory work on whether
+[7:20] this is possible to eliminate entirely.
+[7:22] Um and the answer here is that if you
+[7:24] want your model to also have this
+[7:25] property of being calibrated, it is not
+[7:27] possible to also uh to eliminate this
+[7:30] sort of putting some mass on things that
+[7:32] are not act that are not factual. Um and
+[7:35] this is a there's a sort of like
+[7:37] detailed theory result behind this. Um
+[7:40] which I'll just sort of point you at the
+[7:41] paper for here.
+[7:44] Um so those are a couple of properties
+[7:47] of our distribution. We'd now like to
+[7:49] compute maybe some statistics about the
+[7:51] distribution. Um, and these will be
+[7:52] useful for the methods that we talk
+[7:54] about later. Um, so the first and one
+[7:57] that I think you've probably likely seen
+[7:58] before, um, is the entropy of a
+[8:01] distribution. Um, which we're just going
+[8:03] to do generally at a single, um, step in
+[8:06] decoding. So over the vocabulary space
+[8:08] at a single time step by computing the
+[8:11] sum of the probability multiplied by the
+[8:13] log probability. Um, if this is
+[8:17] relatively high, does anyone know if if
+[8:20] if we have a sort of perfectly uniform
+[8:23] model distribution, would we expect
+[8:24] entropy to be relatively high or
+[8:25] relatively low?
+[8:31] >> All right, we got both answers. Um, high
+[8:34] entropy means that we need um, this is
+[8:36] entropy in sort of the information
+[8:38] theory sense, u, Shannon's entropy. And
+[8:40] so high entropy means that we need more
+[8:41] bits to encode the information that
+[8:43] there's sort of less um of a of a prior
+[8:46] or a bias towards what the most likely
+[8:48] outcome would be. So if the distribution
+[8:50] is perfectly uniform, we would need a
+[8:52] lot of bits to sort of specify any
+[8:53] individual thing in the distribution. So
+[8:55] entropy would be high. Um if entropy is
+[8:57] really low, it means that there's um the
+[9:00] distribution is really peaky. So for
+[9:02] instance, if the distribution was 100%
+[9:04] of the probability mass on one token and
+[9:06] 0% on anything else, um you could
+[9:08] specify sort of your outputs of that
+[9:11] distribution very short in like a very
+[9:13] brief representation because you would
+[9:15] say it's it's always token X. And so
+[9:18] that would be very low entropy.
+[9:21] Um we care sort of not about entropy
+[9:23] just in the abstract. We also care about
+[9:25] entropy relative to some ground truth.
+[9:28] Um, and here when we say truth, we
+[9:30] usually mean we're looking at some kind
+[9:31] of self-supervised um, objective or
+[9:34] semi-supervised objective, excuse me.
+[9:36] Um, and so here we calculate something
+[9:38] called cross entropy, which is entropy
+[9:40] relative to some true distribution. Um,
+[9:44] what do we mean by the true
+[9:45] distribution? Um, in language models,
+[9:48] we're usually looking at uh, next token
+[9:50] prediction. And so we look at what the
+[9:52] actual next token was in whatever
+[9:54] document that we're training on. Um and
+[9:56] we look at the um we sort of set our a
+[10:00] vector where it's one if that is the
+[10:02] actual next token and zero otherwise. Um
+[10:05] there's also variants of this where you
+[10:06] could sort of smooth that probability
+[10:08] mass out. Um so if you have ever trained
+[10:13] a model, you've probably seen the cross
+[10:14] entropy loss. Um and this is um exactly
+[10:18] this computed over a large set of tokens
+[10:21] in a batch. Um so we multiply a one hot
+[10:24] probability vector with um the log
+[10:26] probability which means that this is
+[10:28] functionally the negative log likelihood
+[10:30] of the correct next token.
+[10:32] Um and if you've ever read a paper about
+[10:35] somebody else training a model you've
+[10:36] certainly seen perplexity which is just
+[10:38] two to the power of the cross entropy.
+[10:41] Um this is exactly that. uh there's a
+[10:45] sort of interesting connection between
+[10:46] perplexity cross entropy um and the kale
+[10:49] divergence um between the true
+[10:51] distribution and the model distribution
+[10:53] which is something that you guys will
+[10:54] see on your first homework.
+[10:57] Um there's a
+[10:59] interpretation of perplexity which is
+[11:02] presented as intuitive and may may or
+[11:04] may not be intuitive to you. Um which is
+[11:07] that perplexity represents the odds of
+[11:09] correctly predicting the next token. If
+[11:11] you had a a die or a coin that has as
+[11:14] many sides as your perplexity number. So
+[11:16] if you have your perplexity over some
+[11:17] corpus is six, that means that when the
+[11:19] model is predicting the next token, you
+[11:21] could roll like a six-sided die and
+[11:23] every time it rolled a one, it would get
+[11:24] the token right. Every time it rolled
+[11:26] another number, it would predict some
+[11:27] other token.
+[11:31] Um, so that's a couple of different sort
+[11:32] of properties of models we'll be working
+[11:34] with today. Um, I will pause there for a
+[11:37] quick second. Does anyone have any
+[11:38] questions so far?
+[11:42] Sweet. Uh feel free to interrupt me if
+[11:44] you do. Um so now we have this
+[11:48] distribution. We know a few things about
+[11:49] it. We would like to get some output. Um
+[11:53] and the easiest thing to do here, we
+[11:56] have a probability distribution. We know
+[11:57] how to sample from distributions. Um and
+[12:00] this is called ancestral sampling. Um
+[12:02] and specifically here we're sampling
+[12:04] from the unmodified model distribution.
+[12:07] we are just going to draw a sample um
+[12:09] according to this distribution
+[12:10] parameterized by our model. Um this is
+[12:13] great. This is the property that we're
+[12:15] recovering the model distribution
+[12:16] exactly. And if this is a model we
+[12:19] trained, we likely went into quite a bit
+[12:20] of effort to get that distribution. So
+[12:22] this seems like a kind of reasonable
+[12:23] thing to do. Um and so we're done for
+[12:26] the day and we can leave, right? But
+[12:28] unfortunately there's a number of
+[12:30] pathologies of sampling directly from
+[12:32] the model distribution. Um, the one that
+[12:34] we're going to spend probably the most
+[12:36] time thinking about today is the
+[12:37] longtail. So, I originally made a
+[12:40] variant of this slide in 2022 or 2023,
+[12:44] um, where it started by saying Llama has
+[12:46] 32,000 vocabulary tokens. That's so many
+[12:49] there's so many tokens in this space.
+[12:51] There's so many things that have like
+[12:52] small probability mass. Um, and since
+[12:54] then, this has only gotten um to be sort
+[12:57] of more of a problem. So, now the slide
+[12:59] starts at Llama 3 has 128k vocabulary
+[13:02] tokens. And this is sort of um an I
+[13:05] think a relatively reasonable median for
+[13:08] like the vocabulary space of a modern
+[13:10] model. Um if every individual token that
+[13:13] is sort of not in the reasonable 100 or
+[13:16] 500 tokens to predict next has a tiny
+[13:19] amount of probability, these small
+[13:21] probabilities add up really really
+[13:22] quickly. Um and so this is a
+[13:24] visualization of that. um where if you
+[13:27] can see this little thin line here that
+[13:30] represents the 50% point in the
+[13:32] probability mass distribution. So the
+[13:34] the tail from that point onwards is half
+[13:37] of the probability mass. So if you're
+[13:39] sampling at every step and maybe you're
+[13:41] sampling 100 or 200 times to get a
+[13:44] decent little bit of text, um the odds
+[13:46] of pulling something really really weird
+[13:48] from this really long tail um can be
+[13:51] pretty nasty.
+[13:53] So what do we do to get around that? Um
+[13:55] we saw one option on Thursday which is
+[13:58] to just make the tail sort of flatter,
+[14:00] narrower. Um and so this is the idea of
+[14:02] using a temperature to reshape the
+[14:04] distribution. Um so temperature one is
+[14:07] the the original distribution.
+[14:09] Temperatures less than one sharpen the
+[14:11] distribution. So now we have a a higher
+[14:13] peak and a sort of flatter tail or less
+[14:16] probability mass in the long tail.
+[14:18] Temperatures greater than one flatten
+[14:19] the distribution back out. So if you're
+[14:21] looking for sort of more diverse outputs
+[14:23] um or if uh yeah I mean if you're
+[14:26] looking for more diverse outputs um you
+[14:28] can flatten the distribution to increase
+[14:29] the odds of pulling something that would
+[14:31] otherwise slightly less likely.
+[14:34] Um the other sort of broad class of
+[14:37] approaches is if we think the longtail
+[14:39] is a problem we should just cut it off.
+[14:41] Um and so there's a variety of ways of
+[14:43] doing this. I know most of you have
+[14:45] probably seen a number of these before
+[14:48] so we'll move through them relatively
+[14:50] quickly. Um the first is top k sampling.
+[14:53] So we only sample from the k most
+[14:56] probable tokens. Um depending on how
+[14:59] peaky your probability distribution is.
+[15:01] This could be quite a few tokens or or
+[15:03] this could be quite a bit of the
+[15:04] probability mass or just a little. So
+[15:07] here um this sort of running example
+[15:10] we're decoding the first token is the
+[15:13] and we're decoding the next token. Um
+[15:15] there's a variety of things that could
+[15:17] go reasonably after the and so the
+[15:19] probability mass in the top six is only
+[15:22] 68. Um if we then decode car and then
+[15:26] we're looking for the next token after
+[15:28] that. Um the space of things that could
+[15:30] reasonably come after the car is a
+[15:32] little smaller and so the top six tokens
+[15:34] captures 99% of the probability mass.
+[15:37] Um, this is a little bit weird that the
+[15:40] amount of probability is sort of
+[15:42] shifting over time that sometimes we're
+[15:43] capturing just a tiny set of the
+[15:45] reasonable options and sometimes we're
+[15:47] capturing even some tokens that have
+[15:49] relatively small probability. Um, and so
+[15:52] an alternative to this is to um define
+[15:55] an amount of probability mass you want
+[15:57] to capture in your sample instead. So we
+[15:59] could say we want uh 94% of the
+[16:02] probability mass. And so for this
+[16:04] particular for the first token here,
+[16:06] that's almost all of the tokens in this
+[16:07] little graph. For the second token, this
+[16:10] is only the first three. Um, and this is
+[16:12] called top p sampling or this is also
+[16:14] sometimes called nucleus sampling. And
+[16:16] the intuition is that you start by sort
+[16:18] of seeding with the most probable token
+[16:20] and then you add on more and more tokens
+[16:22] into your sample until you've hit that
+[16:24] much probability mass. Um, and for any
+[16:26] one of these, once we've cut off a good
+[16:29] chunk of our probability distribution,
+[16:31] we no longer have a normalized
+[16:32] probability distribution. So, you
+[16:34] renormalize and then sample from within
+[16:35] your subset.
+[16:38] Um, the other another intuition is that
+[16:40] maybe we don't care about having just
+[16:43] the highest probability things. Maybe
+[16:45] what we're really worried about is only
+[16:46] not having the very low probability
+[16:48] things. And so this is the concept
+[16:50] behind epsilon sampling which is only
+[16:53] cutting which is cutting off the
+[16:54] proportion of the tail that has a
+[16:56] probability less than or equal to some
+[16:58] small epsilon. Um so here if everything
+[17:01] is at least
+[17:03] uh some reasonable amount of probability
+[17:06] mass you could sample from the full
+[17:07] distribution.
+[17:08] Here if there's a number of things that
+[17:10] don't have that sort of reasonable
+[17:12] amount of probability mass you would cut
+[17:14] those out of the distribution.
+[17:16] Um, of course this is not exactly
+[17:19] uh a language model here because we have
+[17:21] a distribution over just like five
+[17:23] tokens and the tokens we have
+[17:24] distributions over change but um just
+[17:26] for intuition
+[17:29] and uh so I figured we could take a look
+[17:31] at what this looks like um in hugging
+[17:34] face which is probably one of the first
+[17:36] places that you would go to experiment
+[17:37] with a model. Um and this is these are
+[17:40] all pretty intuitive parameters. Um, you
+[17:43] set sampling to true. You set the number
+[17:45] of beams to one. You set top K or top P
+[17:48] or epsilon or temperature. Um, there's a
+[17:52] little bit of a caveat to this. Um, does
+[17:54] anyone know what the default values of
+[17:56] these settings are in
+[17:57] >> head?
+[18:02] Top 95.
+[18:04] >> Top P is often 95.
+[18:05] >> Top K is 50.
+[18:07] >> Top K is often 50. Yep. Um,
+[18:11] there's a this is kind of a this is 50%
+[18:13] a trick question and that like I think
+[18:15] these are actually the the defaults if
+[18:17] you don't specify a parameter, but most
+[18:20] models will also specify. Um, so I have
+[18:23] here Llama 3.1 and Quen 3. Um, and if
+[18:28] you go into the model, um, the model
+[18:32] files and you look at the generation
+[18:33] config
+[18:36] and you wait a couple minutes to load.
+[18:39] Um, models will give you a sort of uh,
+[18:43] model provider defined version of these
+[18:46] decoding parameters. So, llama's
+[18:47] temperature is 6, top p is 0.9. Um, Quen
+[18:51] I think sets a top P and a top K
+[18:57] and sets do sample to true. So if you're
+[19:01] specifying some generation parameters,
+[19:03] um, it's a good idea to check what the
+[19:04] defaults are are, check what the model
+[19:07] config says they are, um, and then
+[19:09] override everything that you care about.
+[19:11] um model model providers do this because
+[19:14] different models work best with slightly
+[19:16] different settings and they've done some
+[19:17] kind of exhaustive hyperparameter sweep
+[19:19] at some point to figure out what looks
+[19:21] best for their evaluation. Um so this
+[19:24] gives you a sense of what is like
+[19:25] commonly used um and also what might
+[19:28] work well with that particular model.
+[19:34] So that was a couple of um more
+[19:38] classical decoding algorithms. I want to
+[19:40] talk about um one example of an
+[19:43] algorithm that is a little more complex
+[19:46] and maybe a little less widely used
+[19:47] because I think it has a nice intuition
+[19:49] on sort of a different way to think
+[19:50] about sampling. Um and to do this I want
+[19:54] to frame a question. So say I have a
+[19:58] um unfair coin, right? I I flip it and
+[20:01] it's 60% of the time it lands on heads.
+[20:04] Um I flip my coin a 100 times in a row
+[20:06] and I sort of write down the sequence of
+[20:09] results. Does anyone know what the
+[20:12] single most likely sequence of results
+[20:14] is from from this flipping the coin a
+[20:16] 100 times?
+[20:23] What would be the single most likely
+[20:25] result of flipping the coin once?
+[20:28] heads.
+[20:30] What would be the single most likely
+[20:31] sequence of flipping it twice?
+[20:38] >> Yep. Two heads. Uh, what about the
+[20:40] single most likely sequence of flipping
+[20:41] it three times?
+[20:44] Three heads. So, if I flip it a 100
+[20:46] times, the single most likely sequence
+[20:47] out of all the sequences you could
+[20:48] enumerate
+[20:51] is a 100 heads in a row. Yeah. Would
+[20:53] this be a surprising output if you if
+[20:55] you flip this coin?
+[20:57] >> Yes. Why? It's the most probable output.
+[21:02] >> Yeah. Right. So, this is a little bit
+[21:04] counterintuitive. Um the thing that is
+[21:07] most likely to happen is not sort of the
+[21:10] the expected or in a very non-rigorous
+[21:13] sense the typical output. Um what would
+[21:16] sort of the typical output look like
+[21:18] here? What would you expect to get from
+[21:21] this coin?
+[21:24] 60
+[21:25] >> 40s like some
+[21:28] >> yeah like some combination that is
+[21:29] roughly 60% heads roughly 40% tails. Um
+[21:33] so this is the notion that the the thing
+[21:36] that is most likely in our probability
+[21:37] distribution is maybe not actually
+[21:40] somehow typical of that distribution. Um
+[21:43] to define what typical is uh requires a
+[21:46] little bit more work.
+[21:48] Um so to do this we're going to draw in
+[21:51] a notion of typicality um as it's
+[21:53] defined in the literature studying
+[21:55] stochastic processes. Um so to do this
+[21:58] in we're going to think about our
+[21:59] language model as a process that at each
+[22:02] step emits a um token according to the
+[22:05] probability distribution at that step
+[22:07] and then it is now parameterized um
+[22:10] excuse me it's now um
+[22:14] it's now conditioned on an additional
+[22:15] token and the process sort of continues.
+[22:18] So we're taking some kind of walk
+[22:19] through the space of vocabulary by
+[22:21] sampling at each step according to our
+[22:23] language model. Um so to define a notion
+[22:27] of typicality and to have it be well
+[22:29] defined um according to this literature
+[22:31] we need a couple of properties from this
+[22:33] uh process. We need the process to be
+[22:36] discreet which means the output space is
+[22:38] finite. Um, we need the process to be
+[22:41] stationary, which means that the
+[22:43] probabilities output by the distribution
+[22:46] don't change based on some notion of
+[22:48] absolute position. Um, it's okay if they
+[22:51] change based on some conditioning from
+[22:53] prior tokens, but they shouldn't change
+[22:55] based on whether we're like 300 steps
+[22:56] into the process versus zero steps into
+[22:59] the process. And we need it to satisfy
+[23:01] this property um called being erotic
+[23:04] which means functionally that you can
+[23:06] infer the prop the properties of the
+[23:08] distribution based on a single long
+[23:11] sample instead of a number of small
+[23:13] samples that you've aggregated.
+[23:14] Functionally if I if I took this process
+[23:16] and I took a very long random walk just
+[23:19] continuing to sample from it. I would at
+[23:21] the end of that know sort of all of the
+[23:23] properties of this distribution that I
+[23:25] care about. Um, for this to be the case,
+[23:27] there's one particular thing that has to
+[23:29] happen, which is that you must be able
+[23:31] to get to any emission or any output
+[23:33] from any state. If I want to know the
+[23:35] properties of the distribution, I need
+[23:37] to be able to sort of look at
+[23:38] everything.
+[23:40] Um,
+[23:41] once we have these three properties, if
+[23:44] we assume that we meet these criteria,
+[23:46] um, you can define a couple of things
+[23:48] and get to this notion of typicality.
+[23:50] Um, so we want to know something called
+[23:53] the entropy rate of this process. Um
+[23:55] what this means is rather than looking
+[23:57] at the entropy at each individual time
+[23:58] step, we'll take a limit as we sort of
+[24:01] generate from this process infinitely um
+[24:04] and average over it. So if your process
+[24:07] has the same entropy at every time step,
+[24:09] if you're drawing iid samples from the
+[24:12] same distribution, um this would be the
+[24:14] same as the entropy of that
+[24:15] distribution. Um because we have
+[24:17] something like a language model where
+[24:18] our conditioning is changing at each
+[24:19] time step. This would not actually be
+[24:21] that. Yeah.
+[24:24] >> Yeah. Yeah. So if we
+[24:27] at every time step um in this process we
+[24:30] have a distribution and we can calculate
+[24:32] the entropy of that distribution. Um we
+[24:36] so that's like the notion of entropy we
+[24:37] talked about before. What we care about
+[24:39] here is not the entropy at any
+[24:41] individual step but sort of the average
+[24:43] entropy over time. Um, so if our
+[24:45] distribution stayed the same at every
+[24:47] step, um, like that coin that we were
+[24:49] flipping, right, that's always 60%
+[24:51] heads, then the entropy over time would
+[24:53] be exactly the same as the entropy at
+[24:55] any step. But because our language
+[24:57] model, the entropy of the distribution
+[24:58] changes at every step because we've now
+[25:00] conditioned on some different text. Um,
+[25:02] this is like a measure of entropy over
+[25:05] the course of decoding.
+[25:10] this with the definition of stationity
+[25:12] that you have that is probably doesn't
+[25:14] change based on position.
+[25:16] >> Yeah, that's a really good question. Um,
+[25:18] sorry. So, the question was um how does
+[25:20] this reconcile with like the definition
+[25:22] of stationary if the entropy could
+[25:24] change over time? Um, and this is a
+[25:26] little bit harder to see with a a
+[25:28] language model because we assume that
+[25:30] they're sort of conditioned on
+[25:31] everything that's been generated before
+[25:33] and with a modern model, but you can
+[25:35] think about this is with something like
+[25:36] a sliding window or say a bagram
+[25:39] language model. Um, like you have you
+[25:44] care about the maybe the X things that
+[25:46] came before. Um, and so at step
+[25:51] 20, you're conditioned on like maybe the
+[25:53] X things that came before. At step
+[25:55] 2,000, you're conditioned on the X
+[25:57] things that came before. Um, but if you
+[26:01] but it doesn't matter to the model
+[26:02] whether like past the sort of window of
+[26:05] things we care about, like maybe past
+[26:07] the the 20 things if we're a 20 gram
+[26:09] model, it doesn't matter how many things
+[26:11] happened before that point. So you could
+[26:13] think about this as like if you
+[26:14] truncated the context for a sliding
+[26:16] window or something.
+[26:18] >> It makes sense under that definition.
+[26:20] But like I'm struggling to see like
+[26:21] under the like if you take a model
+[26:23] language model how we can have both
+[26:25] station and
+[26:27] I I can't see how both of them can
+[26:29] coexist.
+[26:31] >> Um how both stationary station being
+[26:34] stationary and being erotic can coexist.
+[26:36] >> Yes. something like in a practical sense
+[26:38] unless you're assuming
+[26:41] certain sequences become functionally
+[26:43] impossible once you reach a certain
+[26:48] >> um hold on to the stop for like 20
+[26:50] seconds. This is a really good point. Um
+[26:55] so
+[26:56] when if we're so if we assume we meet
+[26:58] these criteria and we'll come back to
+[27:00] them in just a second. Um we can say we
+[27:02] can define something called the typical
+[27:04] set for a length and some cutoff
+[27:07] epsilon. Um and the typical set for some
+[27:10] length of sequence is all sequences that
+[27:12] are exactly that length and that have an
+[27:15] average per symbol or per emission
+[27:18] negative log probability close to the
+[27:20] entropy rate of the process. Um what
+[27:23] that means if you kind of stare at this
+[27:25] a little is we're going to calculate the
+[27:28] log probability. we're going to average
+[27:29] it over all um symbols and we want that
+[27:32] average to be close to the entropy of
+[27:34] the distribution or to the entropy rate
+[27:36] of the process.
+[27:38] Um and here close just means less than
+[27:40] epsilon.
+[27:42] So this definition of typicality um is
+[27:47] well maybe like a little weird to wrap
+[27:49] your head around captures this notion
+[27:51] that we had from the coin flip that some
+[27:53] things that are very probable are maybe
+[27:55] not typical. So if you think about the
+[27:58] uh 100 heads in a row, 100 heads in a
+[28:02] row is um like a very sort of
+[28:06] uh the negative the log prop of that is
+[28:09] actually like fairly high, right? This
+[28:10] is fairly probable. Um but in the uh
+[28:14] it's sort of not close to the entropy of
+[28:16] the distribution where the entropy in
+[28:17] the distribution would suggest that we
+[28:18] get something that is a little more like
+[28:21] 60% 40%.
+[28:25] Um, this is a really nice definition of
+[28:28] typicality. Yeah.
+[28:33] >> Oh, sorry. My head is in the way.
+[28:40] >> Yeah, of course. Um, this is a really
+[28:43] nice definition. Um, it's got like a
+[28:45] really clear uh formalism. It's got um
+[28:48] some guarantees as we as the length of
+[28:50] our sequence goes to infinity. Um, can
+[28:53] we apply it to language models? Um, and
+[28:57] so to apply to language models, we need
+[28:59] to meet a couple of criteria. I think we
+[29:01] can agree that a language model you can
+[29:03] treat as a stochcastic process. Um,
+[29:04] we're sampling at every step from a
+[29:06] distribution. So that seems pretty
+[29:08] reasonable. Um, is a language model
+[29:11] discrete? Um, right. We have an output
+[29:14] space that's finite, um, which is our
+[29:16] vocabulary space. So that seems good. Is
+[29:19] a language model stationary? Um we we
+[29:22] kind of just talked about this. Um maybe
+[29:24] it's a little bit complicated if you're
+[29:25] assuming you can condition on infinite
+[29:27] context. Um but if you think about a
+[29:30] wind a model that has sort of a finite
+[29:32] context window um at some point you're
+[29:34] going to get hit something where there's
+[29:35] some past context that is outside of
+[29:37] your finite window and it doesn't matter
+[29:39] to your model whether that past context
+[29:42] um exists or not. It's only caring about
+[29:44] the things within sort of its finite
+[29:45] space. Um so we'll say sure maybe it's
+[29:48] stationary. you know the pos the
+[29:49] probabilities don't really matter based
+[29:50] on position they just matter based on
+[29:52] what you've conditioned on. Um is the
+[29:55] language model erotic? Um so we said
+[29:58] that the requirement for this was that
+[30:01] you have to be able to get to any
+[30:03] emission from any state. Um and you seem
+[30:05] to think that this is maybe not
+[30:07] possible.
+[30:07] >> I mean it's technically true because
+[30:09] everything has a nonzero probability
+[30:11] mass attached to it.
+[30:12] >> Right? So anything has a non-zero
+[30:13] probability mass attached to it. So that
+[30:15] seems reasonable, right? Maybe you could
+[30:16] babble forever. Does anyone see a
+[30:19] problem with this though?
+[30:24] It could be like it's a really low
+[30:26] probability, but if if we've got
+[30:27] infinite amount of time, eventually
+[30:29] we'll wrap back around, right? What
+[30:31] happens if we generate an end of
+[30:33] sequence token?
+[30:38] So, at least the way that we generally
+[30:39] decode from models, if you generate an
+[30:41] end of sequence token, you stop, right?
+[30:43] Um and so in the language of a
+[30:45] stochastic process, we would say that
+[30:47] this is an absorbing state. Um
+[30:48] probability mass falls into end of
+[30:50] sequence and it can't get back out. Um
+[30:53] so if we have an absorbing state, if we
+[30:55] have a place that the distribution kind
+[30:57] of stops and you can't get anywhere else
+[30:58] from there, then you can't get to
+[31:00] anywhere from anywhere. Um you have you
+[31:02] hit the end of sequence open and you
+[31:04] need to stop. Um so this seems like
+[31:07] maybe we just went through kind of a lot
+[31:08] of math for nothing if we can't use this
+[31:10] definition. Um and so the the really
+[31:14] nice um intuition or method from this
+[31:16] paper called locally typical sampling is
+[31:19] that maybe if we have this sort of like
+[31:23] global typicality as as this like north
+[31:25] star that we would like to reach um but
+[31:27] if we can't define this in a principled
+[31:29] way maybe we can make like a less
+[31:30] principled local approximation and try
+[31:32] to get there over time. Um, and so the
+[31:35] idea here is that rather than saying
+[31:37] that everything um over the full
+[31:40] sequence needs to be close to the
+[31:42] entropy rate, we're just going to say
+[31:43] that each new token should be close to
+[31:45] some kind of expected amount of
+[31:46] information that we thought we'd get out
+[31:47] of that token. Um, what's the how do we
+[31:50] tell the expected amount of information
+[31:52] we wanted to get out of a token? Um, we
+[31:54] look at the entropy of the distribution.
+[31:57] So at every individual time step, we'll
+[31:59] look at the per token entropy. Um, and
+[32:01] we'll use that to determine what we
+[32:03] sample. Um the other advantage of
+[32:05] looking at this locally is we sample
+[32:07] from our models one token at a time. Um
+[32:09] so a global constraint would have been a
+[32:11] little bit hard to satisfy. Anyway,
+[32:14] how do we achieve local typicality? We
+[32:16] follow this um algorithm that looks
+[32:19] something like this. So you start by
+[32:22] calculating the conditional entropy um h
+[32:25] which is the entropy of the logit
+[32:26] distribution at whatever time step we're
+[32:28] at.
+[32:29] Once you have H, you resort the logits
+[32:33] distribution by closeness to H. Um, and
+[32:36] when we're working with outputs
+[32:37] generated from a language model, we're
+[32:38] usually looking at a log probabilities.
+[32:40] So this is sort of implicitly we sort
+[32:43] the log props by closeness to H. Um,
+[32:48] then we use top P to truncate this new
+[32:50] ordering of the distribution. So um
+[32:54] before top P we started with our most
+[32:56] probable token and we added probability
+[32:57] on here we're starting with our token
+[32:59] that has a log prob closest to H and
+[33:01] adding probability on until we hit some
+[33:04] value. Yeah
+[33:06] >> we're calculating H and how close is to
+[33:09] H like
+[33:11] I the symbols.
+[33:14] >> Yeah. So H is our entropy. So we're
+[33:16] calculating how close the log
+[33:18] probabilities are to the entropy. um and
+[33:21] on a per token basis. And the reason
+[33:23] that we want to do this is because we're
+[33:25] trying to get something implicitly that
+[33:27] is close to this, which is um the log
+[33:31] probabilities
+[33:32] on average are to the entropy rate of
+[33:35] the process.
+[33:36] >> So this is sort of like entropy rate is
+[33:38] over time. This is log props over time.
+[33:40] We're setting both of those aside and
+[33:42] we're just trying to look at an
+[33:44] individual time step. And the idea is
+[33:46] like if we're close to the entropy of
+[33:49] that individual time step um then you
+[33:52] know as we average this over time steps
+[33:54] we should get close to the entropy rate.
+[33:55] >> So if I understand that correctly we
+[33:57] calcate the average entropy over the
+[33:59] distribution at a particular time step.
+[34:01] Let me calculate the individual
+[34:02] condition entropies of each logic sort
+[34:04] them in terms of how close they are to
+[34:06] this average entropy and
+[34:10] >> um close but I think not quite. So at an
+[34:13] individual time step we can only get one
+[34:15] entropy value and because entropy is a
+[34:17] distribution of level property. Um and
+[34:20] so we get that entropy by summing over
+[34:23] all individual tokens in the vocabulary
+[34:25] space the probability of that token
+[34:27] times the log probability of that token.
+[34:28] So this is what we're getting from the
+[34:30] logits. Um once we have that single
+[34:32] value we'll resort the um log
+[34:36] probabilities by how close they are to
+[34:38] that entropy. Um yeah, sorry it's a
+[34:41] little confusing because we have this
+[34:42] notion of entropy at every individual
+[34:44] step and then we also have the notion of
+[34:45] entropy rate which is like a single
+[34:47] value over the whole process. Um but
+[34:49] because we don't satisfy these
+[34:52] properties um that you need to define
+[34:54] typicality, we actually won't worry
+[34:56] about entropy rate at all. We'll just
+[34:57] worry about individual local entropies.
+[35:01] Um once we have this new distribution
+[35:03] truncated by order uh closeness to h um
+[35:07] we'll sample from that new distribution.
+[35:09] Um and the kind of strange thing about
+[35:12] this is that we might wind up actually
+[35:14] cutting off uh we're no longer sort of
+[35:16] cutting off the long tail. We could
+[35:18] actually be cutting off things that are
+[35:19] relatively high probability. Um so if we
+[35:23] you can think about this in terms of if
+[35:25] the conditional entropy is high or low.
+[35:27] So if we say have a if we like want to
+[35:33] make sure the highest probability token
+[35:35] is in the locally typical set is that
+[35:36] more likely to happen if we have like
+[35:38] really high or really low entropy? So
+[35:40] anyone have an intuition for this?
+[35:46] So if we have really high entropy
+[35:49] um is our distribution peaky or flat?
+[35:55] If we have high entropy, then our
+[35:57] distribution is flat. Yeah.
+[35:59] >> Um, if our distribution is relatively
+[36:02] flat, um, would and maybe, you know,
+[36:05] just kind of like at a slight angle
+[36:06] here, would we be more likely to sample
+[36:09] from sort of like the the center of this
+[36:11] distribution or from like one of the
+[36:12] edges like the the peak or the tail?
+[36:17] Uh if sorry if we're doing locally
+[36:19] typical sampling would be more likely to
+[36:21] sample from the center of the edges.
+[36:25] I hear whisperings of center sort of
+[36:28] vaguely hissing in the back. Um and that
+[36:30] is correct. So if we if our distribution
+[36:34] has high entropy and it's relatively
+[36:36] uniform, we'd want to sample something
+[36:37] that's sort of in the middle of it um
+[36:39] for a locally typical sampling. If our
+[36:41] distribution has low entropy um and it's
+[36:44] really peaky, then we want to sample
+[36:46] something that's kind of close to the
+[36:48] edge because then the log probabilities
+[36:50] of the high the log probabilities of the
+[36:52] most probable token will be quite low
+[36:53] because it's a relatively high
+[36:55] probability token.
+[36:56] >> Yeah.
+[36:57] >> Once again,
+[36:58] >> yes, let me draw this out.
+[37:00] >> Um
+[37:15] So we have two distributions
+[37:17] um over the next token. This
+[37:19] distribution is peaky.
+[37:26] Uh is the entropy high or low?
+[37:29] [Music]
+[37:32] Uh and this distribution is latter
+[37:39] and h is I
+[37:43] um let's say let's say these are the
+[37:46] same tokens in the same order.
+[37:53] Um
+[37:58] Uh is the probability of a relatively
+[38:01] high higher or lower in the top?
+[38:05] Probability is
+[38:08] >> is the
+[38:21] is the log probability
+[38:24] of a relatively higher or lower in the
+[38:28] topic?
+[38:31] >> It's remember a lot of probabilities
+[38:33] we're taking a log of something that's
+[38:34] less than one. So we're going to be
+[38:35] negative. Um so is it relatively closer
+[38:38] or further from zero? I guess
+[38:43] >> closer. Yeah. So it's closer to zero.
+[38:45] Um, which is actually gonna be
+[39:04] >> there.
+[39:09] So here it's going to be closer to zero.
+[39:11] So the log probability here is going to
+[39:13] be higher or lower than
+[39:16] Um
+[39:18] higher
+[39:18] >> higher because it's closer to zero.
+[39:27] So if the um entropy of this
+[39:29] distribution is relatively low um it's
+[39:32] going to bias us towards sampling things
+[39:34] in locally typical sampling that have
+[39:37] relatively low entropy which means it's
+[39:38] going to bias us towards sampling things
+[39:40] that are relatively close to the top of
+[39:41] the distribution.
+[39:44] Um, if the entropy here is relatively
+[39:46] high, it's going to bias us towards um,
+[39:49] sorry, it's going to bias us towards
+[39:50] sampling things that have relatively
+[39:52] high probability. Um, which could be
+[39:54] sort of here because we're not at the
+[39:55] peak of the distribution, but it's also
+[39:57] going to be include a bunch of things
+[39:58] kind of in the middle of the
+[39:59] distribution
+[40:04] like why is it?
+[40:11] >> Why is it moving towards the middle?
+[40:12] >> Yeah. Yeah. So it's gonna we're going to
+[40:15] be looking at like a um
+[40:18] the you can think of the entropy as
+[40:20] defining kind of like a mark on this
+[40:22] curve. And so here if the entropy is
+[40:24] quite high that mark on the curve is
+[40:26] going to be relatively high up. And so
+[40:27] it's going to be likely to be something
+[40:28] close to the peak. Here if the entropy
+[40:30] is relatively low um that mark on the
+[40:34] curve is likely going to actually
+[40:35] intersect the curve somewhere in like
+[40:36] kind of the middle.
+[40:41] >> Yeah. Thank you for asking. I think it
+[40:42] it's helpful to draw this out
+[40:45] um covered in Jaka.
+[40:49] So the reason I keep asking about this
+[40:51] is because I think that um like entropy
+[40:54] when entropy is high and when entropy is
+[40:56] low is really counterintuitive in my
+[40:58] brain because it doesn't line up with
+[40:59] like when probability is high and low.
+[41:01] Um and so I think it's helpful to like
+[41:03] continue reminding yourself of this
+[41:04] intuition.
+[41:06] So
+[41:08] this is the notion of how we achieve
+[41:10] local typicality. Um maybe we should
+[41:13] take a step back and decide if this is
+[41:14] actually something we wanted in the
+[41:15] first place. Um and the argument that
+[41:18] they make for why this is something that
+[41:20] we want to optimize for um is sort of
+[41:23] like a a cognitive science flavored
+[41:25] information theory argument. Um and the
+[41:27] argument here is that this is somewhat
+[41:29] close to what human language is doing.
+[41:32] So the um to do this they take a bunch
+[41:36] of human language and they calculate um
+[41:38] these two characteristics. Yeah.
+[41:56] is closer to
+[42:05] lost
+[42:13] >> this question. If the log probability of
+[42:16] a is higher or if the probability of a
+[42:19] is higher isn't the log closer to zero.
+[42:23] No log probability because if a is
+[42:25] higher then like one by p is
+[42:29] >> the probability is one.
+[42:32] >> Yeah.
+[42:35] >> Yes.
+[42:37] >> So I had this backwards.
+[42:39] >> Let's go back.
+[42:54] Okay. So let's go back to what we just
+[42:57] said. So
+[42:59] here if the entropy is relatively low
+[43:02] probability to zero
+[43:05] um are we going to get into the
+[43:07] population?
+[43:13] >> I think in this case
+[43:22] >> I think only the last line was was
+[43:25] >> wrong. I think everything else was
+[43:26] right.
+[43:27] Yeah, just kind of just explain the last
+[43:30] part with this logic.
+[43:32] >> Yeah.
+[43:32] >> Yeah.
+[43:33] >> Because then this H line is going to be
+[43:35] a little bit further down
+[43:37] >> which means that you are going to sample
+[43:38] from um possibly not the top of the
+[43:41] distribution.
+[43:48] >> Is that true?
+[43:53] >> If the probability is always one, you're
+[43:55] always going to sample from that one.
+[43:56] Yeah,
+[43:57] >> because that's typical.
+[43:59] >> So if the probability is close to one,
+[44:03] you're still I think likely to get the
+[44:05] top of the distribution.
+[44:08] >> Um but there is more of a chance of
+[44:10] cutting off
+[44:13] >> doesn't reduce to exactly top
+[44:15] distribution.
+[44:16] >> Does this reduce to exactly top? Yeah,
+[44:18] because um I mean
+[44:20] >> um you
+[44:23] the logic function is like a mon you
+[44:26] take the log of it doesn't change
+[44:28] anything for the relative ordering the
+[44:29] logic
+[44:31] right and using top key to trulate it
+[44:34] you do the same thing anyways like the
+[44:36] full log
+[44:38] it's the same delution
+[44:40] >> yeah so the key um the reason this isn't
+[44:42] just top key is because of this step two
+[44:45] sorry um where you're going to take h
+[44:47] wherever it in the graph. Um, and you're
+[44:50] going to like resort your logs by
+[44:52] closeness to h instead of by absolute
+[44:55] value.
+[44:56] >> And h will always be less than the
+[44:58] maximum log.
+[45:00] >> H will always be less than the maximum
+[45:02] log.
+[45:04] >> I believe that's true, but I don't it
+[45:06] will it won't make a difference to the
+[45:08] algorithm because you're asserting by
+[45:09] closest h,
+[45:10] >> right?
+[45:11] >> If you if it was if H was like at top P,
+[45:14] then you're right to be exactly the same
+[45:16] as top B. And I think that's the case
+[45:18] scram is describing where your entropy
+[45:19] is going.
+[45:25] >> Yeah, thank you for touching me on that.
+[45:30] >> Um, so is this actually how human
+[45:31] language works? Um,
+[45:34] the um so in this work they measure the
+[45:39] entropy of a of a bunch of human text um
+[45:42] and then score it um
+[45:46] So they measure sort of entropy um over
+[45:49] time and then entropy at individual time
+[45:51] steps and they graph sort of how well
+[45:53] this lines up. Like you can calculate
+[45:55] given a relatively strong language model
+[45:57] the entropy um of the logic distribution
+[46:00] and then the log props of every
+[46:02] individual token. And they calculate for
+[46:04] actual human written text how often is
+[46:07] the um human written next token sort of
+[46:11] close to the entropy of the logits
+[46:14] distribution at that step. Um, and the
+[46:16] answer is
+[46:18] almost always. Um, so there's some
+[46:19] variance here by domain, but generally
+[46:22] human written text has the next token
+[46:24] relatively close to this like entropy of
+[46:26] the token distribution. Um, and the
+[46:28] argument that they make here is that
+[46:30] this is actually like a way of um,
+[46:32] communicating information effectively
+[46:34] where you don't necessarily always want
+[46:36] to say something that is like really um,
+[46:39] unexpected um, because then you would
+[46:41] just be blabbering nonsense. But you
+[46:43] also don't want to say always like maybe
+[46:44] the most obvious next thing because then
+[46:46] you wouldn't be conveying any
+[46:47] information to your audience at all. Uh
+[46:50] yeah,
+[46:51] >> it seems very intuitive for like actual
+[46:53] language text but isn't this
+[46:55] counterintuitive for actual outputs like
+[46:59] a factual output should I would not
+[47:03] set like the highs were already broken.
+[47:07] Is that something
+[47:09] theory? would yeah like would a factual
+[47:11] output still line up with this theory?
+[47:13] Um like would a um if there's a single
+[47:16] like really high probability
+[47:17] continuation would this be true? Um I
+[47:20] think this is a really good question. I
+[47:22] this might be
+[47:23] >> guess.
+[47:24] >> Yeah, this might be some of the
+[47:26] distinction. I think that another part
+[47:27] of this is that there's very rarely
+[47:30] actually like a single valid next thing.
+[47:33] Um maybe in maybe in something like math
+[47:35] or code this might look different. Um
+[47:38] but in any like sort of natural language
+[47:40] description of a fact, there'll be a
+[47:42] variety of ways to say it um that are
+[47:44] more or less typical. Um the does anyone
+[47:49] have a sense of whether
+[47:52] um sort of like ancestral sampling from
+[47:54] a model gives you outputs that are
+[47:57] higher or lower perplexity than outputs
+[47:59] from something like locally typ like
+[48:01] locally typical sampling. If you think
+[48:03] about this sort of like reshaping that
+[48:04] we're doing here,
+[48:07] do your outputs wind up being higher or
+[48:08] lower perplexity with locally typical?
+[48:14] >> You think higher? Yeah, I see a few
+[48:16] notes. That's exactly right. Yeah. So,
+[48:17] what we're doing here is we're reshaping
+[48:19] to be closer to the entropy, which is
+[48:21] generally um not going to be like the
+[48:23] the very end of this distribution. And
+[48:26] so you wind up with outputs that are
+[48:27] slightly higher complexity um because of
+[48:30] this notion that they're carrying
+[48:31] slightly higher information content. Um
+[48:34] and so this is when we're training a
+[48:36] model, we want complexity to be really
+[48:37] low because it shows we've learned the
+[48:39] distribution well, but sometimes when
+[48:40] we're decoding for a model, we want
+[48:42] complexity to be slightly higher. Um
+[48:44] there's a method in sort of the same
+[48:47] family of entropy manipulation of models
+[48:50] um that we won't talk very much about
+[48:52] called murat decoding which is based on
+[48:54] the same principle but kind of in the
+[48:56] opposite direction that you should
+[48:57] specify a perplexity you want your text
+[49:00] to be and then use a continuously
+[49:02] updating update to try to generate
+[49:05] tokens that you think will result in
+[49:07] that final perplexity being close to
+[49:09] that value. Um and so these both come
+[49:11] from the notion that what we want to
+[49:13] optimize is actually some measure of
+[49:14] information over time rather than
+[49:16] perplexity itself.
+[49:18] Um there's also to go back to our
+[49:21] truncation sampling for a moment a
+[49:22] truncation sampling method that uses
+[49:24] this principle. So this is something
+[49:26] called ADA sampling. Um and the idea is
+[49:29] to impose both epsilon sampling and then
+[49:31] some like approximation of locally
+[49:33] typical sampling at the same time. So
+[49:35] you'll define one threshold based on
+[49:37] epsilon just like a as you did in
+[49:39] epsilon sampling and then you'll also
+[49:41] define a threshold that moves around
+[49:43] with the probability. Um so this
+[49:45] threshold is ADA this is um within ADA
+[49:49] distance from the entropy of the
+[49:51] distribution calculated at that step. Um
+[49:54] and so this is in practice not often
+[49:57] terribly different from uh either
+[49:59] locally typical or epsilon sampling but
+[50:01] it's a little bit faster to compute.
+[50:04] Um,
+[50:05] so this is a whole lot of different ways
+[50:07] to sample from the same model. How do
+[50:10] you choose? Um, and I really wish that I
+[50:13] could just give you an answer here like
+[50:15] always use this and never use this. But
+[50:17] of course, um, we wouldn't be here if
+[50:19] things were so easy. Um, so there's a
+[50:22] number of different ways to think about
+[50:23] this. Um, the first is I think uh,
+[50:26] pretty intuitive to think about how
+[50:28] open-ended the problem is. Um, if you
+[50:31] have a problem like write a creative
+[50:34] story about a frog, maybe there's a a
+[50:37] huge range of correct answers to that.
+[50:39] Um, and what you care about is maybe
+[50:40] diversity um of your outputs more than
+[50:44] the having like the single absolute best
+[50:46] story about frog. Um, if you have
+[50:49] something that's like explain the solar
+[50:51] system to a 5-year-old, maybe this is um
+[50:54] in the relatively same boat where
+[50:55] there's some range of correct answers
+[50:56] that is really really variable. Um, if
+[50:58] your question is like, uh, what's the
+[51:00] capital of Massachusetts? Maybe your
+[51:02] options are a little bit more well
+[51:04] scoped. Um, I think there's also a lot
+[51:08] of value in anything in inference time
+[51:09] algorithms and just trying it. These are
+[51:12] super super simple manipulations.
+[51:14] They're literally like eight characters
+[51:16] of code um to change. And so you can
+[51:19] generate a bunch from a small model and
+[51:21] try. Um, the caveat here is that smaller
+[51:24] and larger models behave very
+[51:25] differently. Um, in particular, if you
+[51:27] think about model versus search errors,
+[51:30] um, your search errors will be the same
+[51:32] for the same decoding method, but your
+[51:33] model errors will change radically
+[51:35] depending on how well fit your model is
+[51:36] to training data that looks like the
+[51:38] problem you're trying to solve. Um, so
+[51:40] in particular, like smaller models will
+[51:42] display a lot of pathologies of sampling
+[51:44] that you might not see in a larger
+[51:46] model. Um, so try these on the model
+[51:48] that you're interested in studying. Um,
+[51:50] and then look at the outputs. If you see
+[51:52] outputs that look particularly
+[51:54] repetitive or degenerate, if you see
+[51:56] outputs that start going in a very weird
+[51:59] direction, maybe you're sampling from
+[52:00] the long tail. Um if you see outputs
+[52:03] that are degenerating into sort of
+[52:04] absolute nonsense, um you're definitely
+[52:06] sampling from the long tail. Um, and if
+[52:09] you see outputs that um, maybe if you
+[52:11] sample a hundred things and you get the
+[52:13] same thing a h 100 times or you get very
+[52:15] similar things, uh, maybe you want to
+[52:17] prioritize diversity and then you would
+[52:19] look at um, expanding the amount of the
+[52:20] tail you're sampling from or something
+[52:22] like this.
+[52:24] Um, and this is kind of as I said
+[52:26] before, um, as models have gotten better
+[52:28] over time, it's become less crucial
+[52:31] where you can sort of take the defaults,
+[52:34] um, either specified by that model or
+[52:36] specified, um, uh, by a library like
+[52:39] HuggingFace and generally get sort of
+[52:41] reasonable outputs. Um, if you're
+[52:43] working with smaller models or older
+[52:44] models, it's like more important to
+[52:46] spend some time here.
+[52:49] Um, and then the last caveat here is to
+[52:51] be very careful what you evaluate your
+[52:52] model with. um because performance can
+[52:54] look very different um with different
+[52:57] characteristics. Here I talked to um
+[53:00] some friends of mine who work on model
+[53:01] evaluation to try to find like a a nice
+[53:04] uniform answer here. Um and what they
+[53:07] said was essentially what my guess would
+[53:09] have been anyway, which is that you
+[53:10] should just try a bunch and see. Um in
+[53:13] particular, um I have some friends that
+[53:15] are working on training a language model
+[53:17] who went and sort of swept through a
+[53:19] number of parameters for their val
+[53:20] suite. um settled on a sort of range in
+[53:24] which the the performance of the model
+[53:26] was relatively stable across checkpoints
+[53:28] and then set that as the range for all
+[53:30] of the evaluations. Um so it could be
+[53:34] like there's often like a region of
+[53:36] performance in which um these parameters
+[53:38] are relative like performance is
+[53:41] relatively stable with respect to these
+[53:42] parameters. for them in particular I
+[53:44] think it was like temperature under
+[53:46] seven top P or temperature under 7 um
+[53:50] top P under like above 7 or something.
+[53:54] Um but if you find a range where your
+[53:56] model behaves relatively predictably
+[53:59] um you pick one strategy you standardize
+[54:01] it across all of your evaluations um
+[54:03] because if you overfit to the best
+[54:05] decoding strategy for each evaluation um
+[54:07] the users who then pick up your model
+[54:09] are unlikely to do you the same favor.
+[54:12] Um,
+[54:14] so this is sort of a caveat for both if
+[54:16] you're picking up somebody else's model,
+[54:18] but especially if you're evaluating your
+[54:19] own to kind of think a little bit about
+[54:21] how you do this setup. Um, because those
+[54:23] numbers in those generation configs did
+[54:24] not come from GX.
+[54:26] So um sort of the overarching message
+[54:30] here um we can think about decisions um
+[54:34] on each step of decoding as ways of
+[54:36] manipulating or reshaping or resampling
+[54:38] from a probability distribution over the
+[54:41] vocabulary space. Um it's really easy to
+[54:43] sample directly from this distribution.
+[54:45] Um but reshaping it in various ways kind
+[54:48] of avoids undesirable or degenerate
+[54:50] outputs. Um, and then do we have any
+[54:54] questions before we turn over to student
+[54:56] presentations? Yes.
+[54:58] >> Is it possible
+[55:09] parameters
+[55:11] of basic
+[55:18] open question
+[55:22] that by more random.
+[55:25] >> Yeah. So is it possible that the
+[55:27] language model can like choose a
+[55:28] decoding strategy like um for itself
+[55:31] based on like the type of problem? Um I
+[55:34] have two answers to this I think which
+[55:36] is I think implicitly language models
+[55:38] kind of do this. So if you think about
+[55:39] like what the probability distribution
+[55:42] looks like for over next tokens for 2
+[55:44] plus two equals blank versus like
+[55:47] Graham's favorite color is blank. Um one
+[55:49] of those distributions is going to be
+[55:50] really really sharply peaked at a single
+[55:53] output and the other is going to be
+[55:54] flatter. Um and so this is like in some
+[55:57] sense the model has learned a
+[55:58] distribution that is like adjusted
+[56:00] differently to the open-endedness of the
+[56:02] problem. Um the other answer is that
+[56:05] this is absolutely something you can
+[56:06] decide on like a system level. um like
+[56:08] if you're receiving prompts from users
+[56:10] and then you're passing them to the
+[56:11] model, you can change the um like
+[56:13] generation settings under the hood in
+[56:15] between like serving each request. Um
+[56:17] and I think that's like a really
+[56:18] reasonable thing to do. I don't know
+[56:20] actually of any
+[56:23] work or system that does that, but I
+[56:26] wouldn't be surprised if like some of
+[56:27] the model APIs do.
+[56:32] >> Yeah. How is the curious about the shape
+[56:35] of the distribution of the assets for
+[56:38] public disting?
+[56:51] I'm curious about like you know if there
+[56:52] are any
+[56:54] extremely sharply curved in certain sub
+[56:56] regions but are there any specific
+[56:58] properties which we can which we can
+[57:00] study about this solution itself? Yeah,
+[57:03] like are there any
+[57:04] >> very quickly while you answer um for the
+[57:06] people who are presenting could you come
+[57:07] up uh and like start setting up your
+[57:10] computer and we'll continue.
+[57:11] >> Yeah, I think it's just one. So the the
+[57:14] person who is
+[57:15] >> Yeah. Um yeah so this is the question
+[57:18] was are there any properties like that
+[57:19] we know of ancestral of like the
+[57:22] unmodified model distribution. Um I
+[57:25] think the the immediate one that stands
+[57:26] out is is calibration. Um, so we expect
+[57:29] the distribution to be peakier um, if
+[57:32] the model is sort of more likely to get
+[57:34] that answer correct. Um, because then
+[57:37] that would mean that there's like more
+[57:38] probability placed on the single correct
+[57:40] answer. Um, it's in terms of like which
+[57:43] portion portions of like the space are
+[57:45] more or less likely to be peaky. I would
+[57:48] place a personal bet that like if you're
+[57:50] doing something related to math or code
+[57:51] where there's maybe like a more
+[57:53] constrained space of answers that you
+[57:55] would see a distribution that's peakier.
+[57:57] Um, but that would just be like a
+[58:00] property of how the model learned the
+[58:01] data. That's not necessarily guaranteed.
+[58:04] >> Quantify the jaggedness of
+[58:07] no matter what you prompt this model,
+[58:09] there's going to be some jaggedness in
+[58:10] the distribution. There's a way to
+[58:12] measure that and probably mitigate that
+[58:14] through some sort of decoding structure.
+[58:16] >> There's going to be some jaggedness in
+[58:17] the distribution. What by no matter
+[58:19] what, what do you mean by jaggedness?
+[58:21] >> It's a distribution. Bunch of
+[58:23] histograms. These histograms are all
+[58:25] pretty crooked and jagged. There will be
+[58:28] there will also be peaks which you don't
+[58:29] expect and some pretty interesting
+[58:32] behaviors which I'm just curious about
+[58:34] like how you quantify various peaks and
+[58:36] if you make a measure of like howy the
+[58:39] tail is how
+[58:40] >> yeah like measure this distribution
+[58:43] >> um I think entropy is going to give you
+[58:45] at least some measure of this where
+[58:46] entropy will give you some kind of hint
+[58:48] as to like how jagged the distribution
+[58:49] is. Um you could also like certainly
+[58:52] look at any other statistical property
+[58:54] of a distribution. So you could look at
+[58:55] things like the mean or median
+[58:58] probability mass to a random token. Um
+[59:01] in practice I think people are usually
+[59:03] looking at these um distributions sort
+[59:05] of like several steps of like
+[59:08] granularity further up where you're
+[59:10] looking at something like a measure of
+[59:11] perplexity over a corpus um or a measure
+[59:14] of like cross entropy over an entire
+[59:16] batch. And so you're not necessarily
+[59:18] like looking at individual
+[59:20] distributions. uh but particularly if
+[59:22] you're doing some kind of task like
+[59:25] constrained decoding of like a label in
+[59:26] ICL where you care about like the
+[59:28] distribution um over a single set of
+[59:30] outputs like or maybe like you know you
+[59:32] care about the distribution over like a
+[59:34] b and c and d for like some multiple
+[59:36] choice question then you can certainly
+[59:38] like try to think about properties of
+[59:39] that distribution. Thank you so much.
+[59:41] >> Of course.
+[59:43] Um,
+[59:44] >> yeah. One one thing I'll mention in
+[59:45] addition to this is like jaggedness is
+[59:48] not necessarily a problem. So like when
+[59:51] you have a reasoning chain, there's like
+[59:53] many correct ways to reason about
+[59:56] something. And so just because something
+[1:00:00] is jagged doesn't necessarily mean it's
+[1:00:02] bad. Um, and so like because of this
+[1:00:08] you would think that oh like maybe the
+[1:00:10] places with high entropy are like the
+[1:00:12] dangerous places where you might make a
+[1:00:14] mistake, but that's not necessarily the
+[1:00:16] case. Like sometimes the dangerous like
+[1:00:19] the the places with high entropy are the
+[1:00:22] places where you just have many
+[1:00:23] different ways of saying a particular
+[1:00:25] like word or like forming a sentence
+[1:00:27] structure. And then um the the places
+[1:00:31] where you make a mistake, there's
+[1:00:32] actually just two options. It's like 533
+[1:00:35] and 534 or something like that. And then
+[1:00:37] that actually doesn't have super high
+[1:00:39] entropy. It's just, you know, log two.
+[1:00:41] >> Um but uh it's still a problem, right?
+[1:00:45] So
+[1:00:46] >> uh yeah,
+[1:00:47] >> you can actually get kind of a notion of
+[1:00:49] this if you um compute perplexity over
+[1:00:52] like a document and you and you graph it
+[1:00:54] over time. You'll see the perplexity for
+[1:00:56] the very first couple of tokens will be
+[1:00:57] extremely high to the point where most
+[1:00:59] graphs of perplexity kind of cut off the
+[1:01:01] first hundred tokens or so or the first
+[1:01:03] 10 or 20 because the the options in like
+[1:01:06] starting from nothing are are so vast
+[1:01:08] and then perplexity kind of declines
+[1:01:10] over time and then flattens out. Um, but
+[1:01:12] that certainly doesn't mean that the
+[1:01:13] most mistakes that language models make
+[1:01:15] are in the very first few tokens, right?
+[1:01:16] It just means that there's more valid
+[1:01:18] options in that space.
+[1:01:22] >> Sounds great. And yeah, starting this
+[1:01:23] time, we'll have a presentation. Thank
+[1:01:24] you for being brave and being the person
+[1:01:26] who does it the first time. Uh, and
+[1:01:29] everybody, please sign up uh on the
+[1:01:30] signup sheet. It's

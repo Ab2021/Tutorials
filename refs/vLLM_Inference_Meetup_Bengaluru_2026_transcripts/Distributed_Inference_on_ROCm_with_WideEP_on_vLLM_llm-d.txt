@@ -1,0 +1,713 @@
+Title: Distributed Inference on ROCm with WideEP on vLLM & llm-d
+
+--- TRANSCRIPT ---
+
+[2:08] uh he's part of um our uh software
+[2:12] development team as well and he takes
+[2:14] care of model performance. So if you
+[2:16] ever see uh a semi analysis blog post
+[2:19] saying hey AMD GPUs are really good
+[2:22] they're beating the crap out of the
+[2:23] green guys. So he's one of the guys
+[2:25] who's responsible for that post right.
+[2:27] So he's actually doing the performance
+[2:29] improvements under the hood for VLM
+[2:31] along with Chaitanya. So right so he's
+[2:33] the guy who you can talk to if you see a
+[2:34] post like that uh from semi analysis
+[2:36] right and I'm Adita I work uh in the
+[2:39] developer relations team. So if you ever
+[2:41] want to get introduced to AMD platforms,
+[2:44] want to work on AMD GPUs, uh if you want
+[2:47] to, you know, get a feel of how
+[2:48] inference looks like on our platforms,
+[2:50] feel free to reach out to me and I can
+[2:53] get you started on AMD platforms. And
+[2:55] how do we do that? I think there was a
+[2:57] question. The clicker doesn't seem to
+[2:59] work. Um there was a question on um
+[3:06] let's see if we can get this to work.
+[3:11] Okay. So, I need some help here.
+[3:15] >> Yeah.
+[3:17] So, there was a question uh before this
+[3:19] like you know how many of you want
+[3:20] goodies? Uh there was also a question
+[3:23] which said do you want uh do you want um
+[3:28] uh did I break something?
+[3:32] >> No, still doesn't work.
+[3:35] >> Okay. Yeah. So there was a question uh
+[3:37] whether do you want access to GPUs right
+[3:40] some of you said yes uh and the answer
+[3:43] is here I'll show you a QR code of how
+[3:45] to get GPUs right of course we are not
+[3:47] handing physical GPU boxes these GPUs
+[3:50] are uh in the cloud and you can access
+[3:53] these GPUs through our developer program
+[3:55] so what do you get uh when you sign up
+[3:57] to this developer program we give you
+[3:59] $100 worth of GPU credits to start with
+[4:02] and I'll teach you I'll I'll talk about
+[4:04] how you can u get more of these credits
+[4:07] and what exactly these credits can be
+[4:08] used for like what GPUs these are like
+[4:11] Instinct series enterprise class GPUs
+[4:13] like MI300 GPUs and also uh fireworks
+[4:17] API credits which are also based on AMD
+[4:19] GPUs right so you can get access to
+[4:21] these via our developer cloud um uh
+[4:24] cluster right and you also have learning
+[4:27] resources so you have AI academy which
+[4:29] I'll talk about there are lots of
+[4:31] courses starting from like beginner
+[4:33] level all the way like things like VLM M
+[4:36] uh advanced courses in EI Academy as
+[4:38] well agentic flow whatnot on the EI
+[4:41] Academy and there's also like uh
+[4:43] opportunity to showcase so we have like
+[4:45] gamified uh some of these aspects so you
+[4:48] do get points and you do get credits and
+[4:50] some goodies if you join this program uh
+[4:52] that will be given to you right so it's
+[4:54] a very interesting uh program so today
+[4:56] for all of you who are planning to do
+[4:58] the workshop uh there is a way to sign
+[5:00] up so please do take a picture of this
+[5:03] QR code and Please uh do sign up because
+[5:07] uh once you sign up you will be able to
+[5:09] access the workshop uh cluster that
+[5:12] we're going to do use right now. Okay.
+[5:14] So you would have to sign up uh before
+[5:16] you use that. Maybe in the break or
+[5:18] something you can take some time to sign
+[5:19] up and and get yourself uh logged in and
+[5:22] signed in. If you have some troubles uh
+[5:25] signing in, please reach out to me or uh
+[5:27] some of the folks that will be around
+[5:29] walking around during the workshop
+[5:31] itself. We'll help you. Don't uh fret
+[5:33] too much if it's something's not
+[5:34] working. We'll find a workar around if
+[5:36] you're not able to sign up. Uh most
+[5:38] people of most people should be able to
+[5:40] sign up easily.
+[5:42] Okay. Um AI Academy. So a lot of courses
+[5:45] here join if you look at the developer
+[5:47] program these are all based on AMD GPUs
+[5:50] uh and CPUs. uh they're not just like
+[5:54] video lectures that you just look at and
+[5:56] then you know you forget after a year a
+[5:58] day or so like there's also practical
+[6:00] labs uh which actually runs on a real
+[6:02] GPU cluster right so you can do these uh
+[6:05] labs and you know uh learn about uh
+[6:08] building like foundation models all the
+[6:10] way like to agentic flows uh a lot of
+[6:12] stuff there and um there's also a new
+[6:16] program called as a rockom certification
+[6:18] program so this is for folks who are not
+[6:20] familiar with our opensource software
+[6:22] stack roum. Uh what how do you get
+[6:25] started on this? So we just launched
+[6:27] this certification course. So if you
+[6:29] want to get certified uh industry
+[6:31] certified on rock, this is a great place
+[6:33] to start and this is also part of the AI
+[6:36] academy. Okay.
+[6:39] And um also we have like a lot of skills
+[6:43] that we uh AMD skills that we recently
+[6:45] launched as part of advancing AI event.
+[6:47] So these are also available for like
+[6:49] various hardwares. So it's not just
+[6:51] GPUs, we also have CPUs, FPGAAS, SOC's.
+[6:55] So various platforms that we can run
+[6:57] inference workloads on, right? U so if
+[6:59] you are able to get hardware from your
+[7:02] side or if you're able to access any of
+[7:04] these clusters that have these
+[7:05] hardwares, you can also run use these
+[7:07] developer playbooks which have like
+[7:09] readymade applications uh already
+[7:12] running and you can uh you can enable
+[7:14] that on your hardware, right? So this is
+[7:16] another sort of skills um repository
+[7:19] that you can access.
+[7:22] So um without taking too much time from
+[7:24] Chaitana, please make sure that you can
+[7:26] access the developer portal. You're able
+[7:29] to log in and uh you're able to look at
+[7:31] all of this cool stuff that I just spoke
+[7:33] about and then we'll again look at this
+[7:36] uh in the workshop session. Now I'll
+[7:37] pass it on to Chaitana to talk about uh
+[7:40] distributed inference. Thank you.
+[7:46] Thank you Adita for the introduction. Uh
+[7:49] good afternoon everyone.
+[7:52] >> I think it's good evening right now. I'm
+[7:53] just checking whether you guys are
+[7:54] charged up after the coffee or not.
+[7:57] Okay, let's get started. Uh let me
+[8:00] introduce myself. My name is Chaita Sri
+[8:02] Krishna. I'm from AMD. I'm currently
+[8:05] managing a team in India. uh I majorly
+[8:07] focus on a model performance and
+[8:11] >> uh I majorly uh focus on a model
+[8:14] performance and like distributed
+[8:15] inference mostly from the framework
+[8:17] side. So let's discuss about like
+[8:20] something distributed inference on rocom
+[8:23] specifically with YDP technique on VLM
+[8:26] and LLM. Okay. Uh before starting I
+[8:30] would like to highlight like few
+[8:31] contributions. This is completely team
+[8:33] effort. So I would like to highlight
+[8:35] like few few contributions from the team
+[8:36] here. All right, let's get started. So
+[8:40] it's going to be a bit of theory. Uh I
+[8:42] hope like some I mean like you know
+[8:44] Pravin already covered few things but
+[8:45] like uh I I'll I'll recap few things. So
+[8:49] in the recent days like the more modern
+[8:53] like you know models at the moment like
+[8:55] Kim3 for example it has 896 experts
+[8:59] meaning 896 weight sits on one single
+[9:01] node. So it it is going to be very
+[9:04] difficult. So that's why like you know
+[9:05] we have to have like for agentic kind of
+[9:08] input sequence length we have to use
+[9:10] more nodes at the moment as because like
+[9:12] you know memory is not sufficient and
+[9:15] also like you know performance is
+[9:17] dropped due to like you know single node
+[9:20] and more memory of the models. So that
+[9:23] arises to new techniques called
+[9:25] distributed inference. And uh one of the
+[9:29] technique I'm going to discuss here is
+[9:30] PD disagregation. So prefill is compute
+[9:34] bound, decode is memory bound. And while
+[9:37] scaling it has lot of problems. So we
+[9:40] separate them out. Prefill into separate
+[9:42] PD mode. Uh prefill into separate pool
+[9:45] and decode into separate pool. And we
+[9:46] tune them independently basically. And
+[9:50] between these two there is a KVcast
+[9:52] transfer that happens here
+[9:55] when it's on multiode it trans I mean it
+[9:59] transfers over an RDMA RDMA network
+[10:01] interface card and when models are
+[10:04] coming into picture there is an new uh
+[10:07] communication called alltoall
+[10:09] communication I'm going to discuss more
+[10:11] about that one in the next coming slides
+[10:14] so this is how the moa communication
+[10:17] happens at the moment so At any point of
+[10:20] time in ane there are tokens on GPUs and
+[10:24] the initial phase is topk routing and
+[10:26] after top k routing it picks few experts
+[10:30] based on the k value for a specific
+[10:32] model. So it dispatches all those tokens
+[10:37] to experts and it is completely random.
+[10:39] It's not a fixed size. So that happens
+[10:42] using a communication called alltoall
+[10:44] dispatch communication. And once the
+[10:46] expert once the expert computation is
+[10:49] done there is uh there is another
+[10:52] communication pattern happens that's a
+[10:54] combine operation. So we have like all
+[10:57] to all dispatch and all to all combine.
+[10:59] So these are two communication protocols
+[11:02] that happen in a full layer.
+[11:05] Now let's go a little bit differently.
+[11:08] How does
+[11:10] come into picture when we scale into PD
+[11:13] disagregation mode? So we use a
+[11:15] technique called there are like various
+[11:17] techniques like you know we can you can
+[11:18] scale using tensor parallelism you can
+[11:20] scale with like various kinds of
+[11:21] parallelisms in a single node and p but
+[11:24] like I'm very much focused on one
+[11:26] technique called yp so technically like
+[11:30] what it does is uh just give me one
+[11:32] second
+[11:34] so what it does is on the llms attention
+[11:37] runs on data parallel meaning each rank
+[11:41] has its own kv cache and each requ Each
+[11:44] rank has its own kind of requests that
+[11:46] they are trying to handle. And on
+[11:49] experts, we have something called expert
+[11:51] parallelism where experts are spread
+[11:54] across like various GPUs.
+[11:56] So on VLM, it's like very high level
+[11:59] thing like data just data parallel size
+[12:02] and enable expert parallel size and
+[12:03] that's it. You don't know what happens
+[12:05] underneath. But these two techniques
+[12:07] combined together we call it as wideb.
+[12:10] So why is it called wide?
+[12:12] So why do we need to span across
+[12:14] multiple nodes or multiple GPUs at the
+[12:17] moment? So let's take an example. Let's
+[12:19] say we have 256 experts. For example,
+[12:22] Deepsec V3 has 256 experts. So I want to
+[12:25] put expert parallelism as 8. So 256
+[12:28] divided by 8 there are 32 experts. So on
+[12:30] single node sorry single GPU you have 32
+[12:33] experts of weights that are sitting on
+[12:35] single GPU. Similarly like when you want
+[12:37] to expand it to like multiple GPUs or
+[12:40] multiple nodes let's say let's pick like
+[12:43] EP32 that is like four nodes each each
+[12:46] node is 8 GPUs so your uh number of
+[12:50] experts per GPU decreases and it's eight
+[12:52] right now so as a result what happens is
+[12:54] you have more bandwidth memory like uh
+[12:57] more GPU vramm and that can be used for
+[13:00] KV cache or more batching or like you
+[13:03] can use it for long context luckily
+[13:05] MI300 has like 192GB of memory. MI355
+[13:09] has like 288 GB of memory on a single
+[13:11] GPU.
+[13:13] So let's discuss how we build the whole
+[13:16] thing on ROM.
+[13:19] So let's start from bottom to top. This
+[13:21] is a distributed inference framework
+[13:23] stack software stack. Uh you can see the
+[13:27] hardware here. We support various kinds
+[13:29] of instinct GPUs. On top of it, it it
+[13:32] has a network interface card. uh we have
+[13:36] our own AMD AIC network interface card
+[13:39] but we also support other other vendors
+[13:41] as well like to thor.com to 2 and CX7 on
+[13:45] top of it there is a shared memory
+[13:46] library uh more specifically our speed
+[13:49] of flight library Morishim and then
+[13:51] there are like other libraries like
+[13:52] roxman on top of it fore communication
+[13:56] we have Mori expert parallelism as well
+[13:58] as DPP we support both but our speed of
+[14:01] flight is more EP here again coming to
+[14:04] Kcast transfer we support like again
+[14:06] like MOI IO that's again our speed of
+[14:08] light thing but we do also support like
+[14:11] other open source libraries as well on
+[14:13] rocker now let's discuss about like some
+[14:16] kernel operators and like libraries that
+[14:19] we have so we have something called aer
+[14:22] which I'm going to discuss in the next
+[14:23] slide more detail uh which has like our
+[14:27] optimized kernels on AMD GPUs and we
+[14:30] have a domain specific language library
+[14:32] also similar to QDSL It's called fly DSL
+[14:35] and everything is properly and like
+[14:38] fully integrated into the uh standard
+[14:40] frameworks like VLM, HLAN and Atom is
+[14:44] our homegrown inference solution that is
+[14:46] optimized on AER and on top of it for
+[14:50] production level serving we have LLMD uh
+[14:54] which we discussed like multiple times
+[14:55] here and we have something called
+[14:57] atomish that's built on top of atom that
+[14:59] also is supported by VLM as well as SLM
+[15:04] So now let's go to
+[15:08] Oh, I think this is not working.
+[15:14] Uh can someone
+[15:18] >> Okay. Yeah.
+[15:20] Okay. Thank you. Uh so let's discuss
+[15:23] about soder is nothing but our AMD's
+[15:27] kernel libraries uh optimized kernel
+[15:29] library. We have all the LLM ops very
+[15:31] well optimized on AMD GPUs especially
+[15:34] the instant GPUs. So we have like
+[15:36] various operators like gem various kind
+[15:38] of quantization techniques uh fused RMS
+[15:41] norms like fusede and a couple of other
+[15:44] things. It's built on top of four kernel
+[15:46] layers. You can use like standard HIP
+[15:48] C++ programming similar to CUDA or you
+[15:51] can use Triton or you can use domain
+[15:53] specific language like FDSL or we and we
+[15:56] also have like handtuned assembly level
+[15:58] kernels in this library and it all is
+[16:01] fully integrated into VLM and HLAN. All
+[16:03] you have to do is add one environment
+[16:06] variable VLM use rocom equal to 1.
+[16:08] That's it. It does the full magic for
+[16:10] you guys. Uh let's discuss about like
+[16:13] something here specifically kernel. So
+[16:16] this is the standard MOE kernel that we
+[16:18] have in like uh distributed inference
+[16:20] setting like this is the expert expert
+[16:23] computation that happens. So it has six
+[16:25] stages here top K permute and two group
+[16:28] gems and like unpermute and reduction
+[16:31] scale. So we combined everything into
+[16:33] one operator. It's an ATF fuse kernel.
+[16:36] It's all there are like various variants
+[16:38] for fusede here. um handwritten kernels
+[16:42] for a specific GPUs and like also um
+[16:46] like Triton and like few other
+[16:47] operations as well but what it adv
+[16:49] what's the advantage is these six
+[16:52] kernels are converted into one kernel
+[16:55] and we we uh we we don't have GPU launch
+[17:00] overhead in this case similarly same
+[17:02] story for other attention operators QKV
+[17:04] ropes etc.
+[17:08] Now let's discuss about like a the core
+[17:11] of like distributed inference called MI.
+[17:14] Mori stands for modeler RDMA interface.
+[17:18] It's not like four different layers.
+[17:20] It's all one one stack. But the core
+[17:24] here is Moish shared memory library.
+[17:26] This is the foundation which has
+[17:29] symmetric memory and GPU side uh put and
+[17:33] get operations basically. And on top of
+[17:36] it like we built three three different
+[17:38] libraries. Mori expert paralysism uh
+[17:40] specifically fore kernels. We have inter
+[17:44] node and intra node for xmi for rdmma as
+[17:48] well as xtmi like meaning it can run on
+[17:50] single node. It can run on multiode as
+[17:52] well at the same time and everything is
+[17:55] uh transferred via RDMA. It's a GPU RDMA
+[17:58] direct uh like kernels basically. And we
+[18:02] have like something called MOI. It's a
+[18:03] KV cache transfer uh engine that's again
+[18:06] like a GPU to GPU uh GPU initiated KV
+[18:09] transfer. It has both support mode like
+[18:12] write mode as well as read mode here. Uh
+[18:14] similarly we have some lightweight
+[18:16] collectives like you know all gather all
+[18:17] all scatter etc. Uh it's part of like
+[18:20] more. We are not going to discuss much
+[18:22] about this one. So what how do how did
+[18:26] we combine these two things together in
+[18:28] VLM. So this is this is one
+[18:34] layer that we have. So one MOA layer
+[18:36] like if you see the nave version you
+[18:38] have two all to all communications and
+[18:41] six kernels. So that got converted into
+[18:44] three kernels here. One dispatch all to
+[18:46] all kernel and one combine all to all
+[18:48] kernel and there is a fused MOE kernel
+[18:50] here. So uh this improves the
+[18:53] performance for us and at the same time
+[18:55] we have other overlap solutions and
+[18:57] asynchronous kernel solution support as
+[18:59] well in the same time which actually it
+[19:01] saves some time like in few cases.
+[19:06] Now uh I'm going to discuss about some
+[19:08] of our recent works that we are doing in
+[19:10] upstream. Uh let's start with some
+[19:13] lessons on like we scaled like GLM 5.1
+[19:16] on 64 GPUs. So the setup is very simple.
+[19:20] uh we did a full PD disagregation mode
+[19:22] with YDP on MI300's on AMD Mori and
+[19:28] let's discuss a little bit about the
+[19:30] models what the model what the model
+[19:32] exactly contains so model contains 78
+[19:35] layers and out of 78 layers we have 256
+[19:38] experts with topk equal to 8 and it has
+[19:41] like both sparse attention as well as an
+[19:43] MLA so we scaled it from EPA to EP32
+[19:47] using mori library using all toall
+[19:49] communication
+[19:50] So as a result like we had to do some
+[19:53] kind of enablement pieces inside like
+[19:55] Vlm one of the enablement one of the
+[19:58] enablement activity that we had to do is
+[20:01] uh fixing the attention metadata that we
+[20:03] have especially for sparse MLA on router
+[20:06] and the second uh enablement activity is
+[20:10] the main thing sparse MLA has to cross
+[20:13] across GPUs using more. So we had to
+[20:16] enable few uh we had to enable like few
+[20:19] operations in VLM to actually go through
+[20:21] the whole thing. We ran like multiple
+[20:24] experiments but I would like to
+[20:25] highlight only two of those experiments
+[20:27] here. Uh you guys can like feel free to
+[20:29] like use this blog. Uh I I'll post it in
+[20:31] the like you can you can take in the
+[20:33] slides later but like uh yeah you can
+[20:35] you can look into the log for more
+[20:36] details on how to set up etc and like
+[20:39] what's the what's the whole idea here.
+[20:42] So the first one I would like first
+[20:44] experiment I would like to highlight is
+[20:46] NIA benchmarks. Have you heard of NIA
+[20:48] benchmarks before or accuracy benchmarks
+[20:50] before?
+[20:52] No. Okay. Only one that's good. So NIA
+[20:56] stands for needle in a hast stack. Okay.
+[20:58] So what does it mean? Uh you put a
+[21:02] factual information in a long context.
+[21:06] You can keep it anywhere. Uh you can
+[21:08] keep it on the start, you can keep it in
+[21:09] the middle, you can keep it in the end.
+[21:10] anywhere and we ask the model or a
+[21:12] specific configuration to find that
+[21:14] factual information and return the
+[21:15] factual information. It's just a pass or
+[21:18] fail kind of situation and we pick like
+[21:20] 10 needles here for each configuration
+[21:23] various kinds of concurrencies and we
+[21:25] tried on three different shapes. So
+[21:26] there are like 72 combinations that we
+[21:28] experimented here. So out of 72
+[21:30] configurations we all uh we had we had
+[21:33] put a threshold of seven needles at
+[21:35] least it has to find for each topology.
+[21:37] We found all the seven uh we found all
+[21:40] the all properly uh everything properly
+[21:43] for 7272 benchmarks configurations. Uh
+[21:47] these are all the lower scoring cells
+[21:49] but if you average out everything it's
+[21:50] all like uh good.
+[21:53] Now let's go to a different lesson that
+[21:55] we learned. So we tried to identify
+[21:58] what's the maximum context length a
+[22:01] specific topology actually has. So we
+[22:05] experimented with input sequence length
+[22:07] 28k and 1k and if you see there is a
+[22:10] drop here on concurrency 256. So when we
+[22:14] analyze the situation here uh what we
+[22:17] noticed is for one p1d case just one
+[22:21] single decode and one single prefill
+[22:23] what we noticed is the maximum
+[22:25] concurrency that it can support is 20k.
+[22:28] So when we tested 28k there is a KV
+[22:31] cache recomputation happening every
+[22:32] single time and due to that like we had
+[22:34] a drop in performance. So that's what we
+[22:37] learned about it and like uh this is
+[22:39] just a uh the main driver for it like
+[22:42] what we try to understand for it is for
+[22:45] this particular configuration 28k and 1k
+[22:48] there are around 7.34 million tokens and
+[22:51] decode itself takes around 5 million
+[22:53] tokens for this one and uh what we did
+[22:57] is like we try to add like more decode
+[22:59] instances here now and like we tried
+[23:01] various kinds of like topologies like I
+[23:03] mentioned before so we see like for 2p P
+[23:06] 4D we have the best performance and
+[23:07] these are all preliminary results. These
+[23:09] are like very initial results. So don't
+[23:11] look into the performance here. Uh so
+[23:15] what we understand right now is
+[23:18] distributed inference is becoming more
+[23:20] of communication and like memory problem
+[23:24] and a systems problem but it's not
+[23:28] really related to computation anymore.
+[23:30] So that is what especially for when long
+[23:33] context are coming into picture. So that
+[23:36] is that is a highlight of this
+[23:37] particular scenario.
+[23:39] We are also going to discuss a second
+[23:42] topic uh on rocom support like we have
+[23:45] something called distributed inference
+[23:47] CI. So on public upstream it's a public
+[23:51] upstream CI where we run nightly like
+[23:53] you know nightly every single like end
+[23:56] to end test. So for example these are
+[23:58] the models that we currently support on
+[23:59] like nightly tests. uh and like these
+[24:02] are the two policies that we currently
+[24:03] test like 1P 1D and 2P2D and also like
+[24:07] VLM we use VLM router as well as like u
+[24:10] proxy like mori we call it as mory proxy
+[24:13] it's just a orchestration layer that
+[24:15] that is available in like VLM uh we try
+[24:18] to use like three different parallelisms
+[24:21] at the moment TP8 that is like a wide
+[24:24] tensor parallelism you can scale it up
+[24:25] to 2p2d expert parallelism 8 that's just
+[24:28] an intra node intra node communic
+[24:30] application or a shallow EP and for wide
+[24:32] AP DP16 and DP16 that's what we are
+[24:35] targeting at the moment and every
+[24:37] nightly like we run all these models and
+[24:39] try to see if there are any breakages or
+[24:41] something. So right now the current
+[24:44] current status is like we are fully on
+[24:45] like TP8 and DP8 fully supported with
+[24:48] all 30 by 30 tests passing every nightly
+[24:52] and YTP coverage is already there. YDP
+[24:55] enablement is still in progress for AMD
+[24:58] GPUs for few models. We have a lot of
+[24:59] PRs open. We are just waiting for the PR
+[25:02] to be merged from VLM community at the
+[25:04] moment. Uh and every nightly we see some
+[25:07] kind of an issue. We try to try them and
+[25:09] try to fix them like in the next one
+[25:10] single day itself.
+[25:12] Now let's discuss about what we did on
+[25:14] LLMD with YDP as well. So very recently
+[25:17] we we got like YDP fully integrated into
+[25:20] LLMD with more support.
+[25:22] uh the enablers are already merged like
+[25:25] very recently and uh we have all the
+[25:27] guides and everything set up properly
+[25:30] now and if you see this is just an LLMD
+[25:33] like uh simple diagram which has all the
+[25:37] routing techniques and everything. So
+[25:39] Mori IO sits in between like refill
+[25:42] deployment and decode deployment. People
+[25:43] might not be aware that like there is
+[25:45] Mori IO coming into picture here. uh and
+[25:48] like everything is running on like M355
+[25:50] plus AMDIC uh network interface card. Um
+[25:54] we I put like some references in each
+[25:56] side. Feel free to go through all the
+[25:58] PRs and try to learn things. Coming to
+[26:01] what what we have today on LMD or what
+[26:04] we are focusing on LLMD. We have various
+[26:07] kinds of features like YDP is already
+[26:09] done like an initial YDP is already
+[26:11] done. We are trying to do autoscaling
+[26:13] feature. Uh there are like some couple
+[26:15] of PRs in review which uh which we are
+[26:17] like currently working with folks. Um
+[26:20] there is something called KV capacity
+[26:21] especially KV cache offloading. One of
+[26:23] my teammate is working here on KV cache
+[26:25] offloading part and we already have like
+[26:28] smart routing techniques like uh preven
+[26:30] already highlighted like prefix cache
+[26:32] aware and like dedicated latency stuff
+[26:34] and like we try to use all with AMD AMD
+[26:37] GPUs and trying to build some nightly CI
+[26:40] so that we have a good coverage on AMD
+[26:41] GPUs at the moment.
+[26:44] So lastly I would like to highlight like
+[26:46] few resources here feel free to take a
+[26:48] photo or like we'll you can you can get
+[26:50] the slides later but uh if you want to
+[26:52] get started something really on AMD GPUs
+[26:55] with distributed inference I would
+[26:56] suggest like read this blog for uh what
+[26:59] is distributed inference and some of the
+[27:01] concepts of distributed inference and
+[27:03] you can quickly try some recipes from
+[27:05] our framework map it's a model and
+[27:08] automation dashboarding uh platform uh
+[27:11] there are like readym made recipes there
+[27:12] are like lot of models supported on each
+[27:15] uh each site like both both VLM or HLANG
+[27:18] or uh like other other recipes also feel
+[27:22] free to use it and try to use it. And
+[27:24] lastly, I would like to highlight like
+[27:26] again like reiterate like what Adita
+[27:28] said. Uh just try use AMD developer
+[27:32] cloud. Uh take a screenshot of it, try
+[27:34] to use it and start contributing to AMD
+[27:36] hardware open source. Right. Thank you.
+[27:41] [applause]
+[27:42] Uh any questions so far? Any questions?
+[27:46] [clears throat]
+[27:49] Yeah. Hi.
+[27:53] Okay.
+[28:05] >> Question regarding the
+[28:08] >> Okay.
+[28:10] >> Sure.
+[28:17] >> That experiment depends on the model and
+[28:19] not on the network of arthropology. So
+[28:23] >> that is correct. Yes.
+[28:24] >> Please explain how
+[28:25] >> okay
+[28:26] >> the accuracy was changing the network.
+[28:28] >> Sure. Sure. Definitely definitely. So
+[28:30] let me go back to the slide again.
+[28:34] >> This one right? This is the slide right?
+[28:36] Okay. So for each topology here like
+[28:39] first what happens is we run the
+[28:41] distributed inference VLM serve engine
+[28:43] with each topology. Say we scale it with
+[28:46] 1p 1d and we run with like multiple
+[28:48] concurrences here like starting from 8
+[28:52] 16 20 like you know 86uh 32 and so on
+[28:55] basically uh and we try to run on each
+[28:59] shape like for example 2k 28k and 35k.
+[29:03] So for each topology there are like at
+[29:06] least uh
+[29:08] uh like there are like at least 18 18
+[29:11] tests that are running. So we try to see
+[29:14] each uh yeah basically we try to see
+[29:17] each uh each top like each each run
+[29:20] basically whether it passes or fails. So
+[29:22] that's how it executes the specific
+[29:26] uh topology.
+[29:29] Yeah. So you can consider like this has
+[29:31] like a client which ask for you an
+[29:33] accuracy out like once you build server.
+[29:38] >> Okay. Please come to
+[29:39] >> uh any more questions?
+[29:42] Uh hi
+[29:44] matrix.
+[29:48] >> Uh could you repeat?
+[29:51] >> What kind of matrix?
+[29:54] >> Right. Right.
+[29:58] >> Uh you can actually see in this blog uh
+[30:00] I posted in the bottom here. So you can
+[30:02] actually see go through the blog and
+[30:04] like you know try to read through whole
+[30:06] thing like you know how we started the
+[30:08] experiment, what's the setup and
+[30:09] everything. So it it has clear detailed
+[30:12] instructions on that one.
+[30:16] >> Sure.
+[30:20] >> Yes.
+[30:23] >> Okay. Sure. So KV cache offloading like
+[30:27] uh I mean like you know as you as the
+[30:29] request size grows right uh your your KV
+[30:32] cache also grows basically. So we try to
+[30:35] offload some of it on CPU or like you
+[30:37] know like GPU initiated RDM GPU
+[30:39] initiated like memory etc. And we try to
+[30:42] like you know offload some of it which
+[30:44] are unused and you know use it whenever
+[30:46] we need. So that's how
+[30:50] >> Yes.
+[30:59] >> Okay. Like
+[31:02] >> I am not aware of that uh blog but uh I
+[31:05] mean like uh if you can elaborate more
+[31:08] like I probably I can answer what you
+[31:10] >> basically.
+[31:14] Okay.
+[31:16] >> Okay. We we haven't explored that one.
+[31:24] [clears throat]
+[31:26] >> Sure.
+[31:30] >> There is [clears throat] something
+[31:30] called KVA store, right? I don't know if
+[31:32] you are aware. So we do support such uh
+[31:34] open source KVA stores as well for a
+[31:37] distributed offloading.
+[31:43] Okay.
+[31:45] All right. Any more questions? Oh,
+[31:49] >> you mentioned that for YDP you setting
+[31:51] DP8 and DPA.
+[31:53] >> Yes.
+[31:54] >> So that you're using two of GPU.
+[31:57] >> No, no, no. So let's say if you are
+[32:00] thinking in this way uh you have eight
+[32:03] GPUs on a single node. Okay. Data
+[32:07] parallelism comes only on the attention
+[32:09] layer.
+[32:10] >> Okay. Expert parallelism comes in the MO
+[32:13] layer. Okay. and your tensor parallelism
+[32:15] is one.
+[32:17] >> Okay, that's how it works.
+[32:19] >> So how does it scale for like maybe
+[32:21] more?
+[32:23] >> Okay, so if you want to use 16 GPUs or
+[32:26] let's say EP16 here,
+[32:29] >> okay, EP 72 for your sake. Okay, so your
+[32:32] expert parallelism is 72 GPUs. Your data
+[32:36] attention is again 72 GPUs for every
+[32:39] case tensor parallelism is one.
+[32:42] So we are not touching tensor palism
+[32:44] here,
+[32:49] right?
+[32:52] All right, then I'll
+[32:54] Yeah.

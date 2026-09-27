@@ -1,0 +1,82 @@
+# T15 — SLO definitions, with stage ownership (REFERENCE-GRADE, NOT EXECUTED HERE)
+#
+# Every SLO here names WHICH STAGE owns its budget. An end-to-end number alone cannot be
+# acted on: TTFT is queueing + prefill + KV transfer + scheduling, and the fix differs by
+# stage while the number does not say which stage is failing.
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: slo-definitions
+  namespace: inference
+data:
+  slos.yaml: |
+    classes:
+      - name: premium
+        ttft_p99_ms: 800
+        itl_p99_ms: 50
+        goodput_target_rps: 40
+        stages:                       # who owns which slice of the budget
+          queue:     100              # T14's flow control admits it
+          prefill:   400              # T13's engine + T11's parallelism
+          transfer:   50              # T12's KV transfer, when disaggregated
+          decode:    250              # T13's scheduler
+
+      - name: best_effort
+        ttft_p99_ms: 5000
+        itl_p99_ms: 250
+        goodput_target_rps: 120
+        stages:
+          queue:    2000              # this class is the shock absorber
+          prefill:  2000
+          transfer:  200
+          decode:    800
+
+    # ---------------------------------------------------------------------------
+    # GOODPUT, NOT THROUGHPUT, IS THE CAPACITY UNIT.
+    #
+    # Throughput without a latency constraint is trivially maximised by never admitting
+    # anything. The literature the corpus points at frames capacity exactly this way --
+    # requests meeting their latency constraint per unit time (Etalon, DistServe) [R].
+    #
+    # This is also the number the autoscaler should be tuned against, not replica count
+    # and not raw throughput.
+    # ---------------------------------------------------------------------------
+    capacity_unit: goodput_rps_meeting_ttft_and_itl
+
+    # ---------------------------------------------------------------------------
+    # SURVIVORSHIP BIAS IS THE DEFAULT, NOT THE EXCEPTION.
+    #
+    # Under a shedding policy (T14 section 5) the surviving requests are not a random
+    # sample. run.py for T14 measures best-effort's MEAN WAIT IMPROVING from 98.42 to
+    # 27.34 during a period in which 1,324 requests were shed -- because the requests
+    # that would have waited longest were dropped rather than queued.
+    #
+    # Any percentile reported for a class that can be shed is a percentile over a biased
+    # population. Lint rule, not convention: conventions do not survive an incident.
+    # ---------------------------------------------------------------------------
+    reporting:
+      required_pairs:
+        - [ttft_p99_ms, shed_total{priority}]
+        - [itl_p99_ms, shed_total{priority}]
+        - [slo_attainment, cost_per_served_request]
+      lint_rule: latency_panel_without_shed_panel_is_invalid
+
+    # ---------------------------------------------------------------------------
+    # NOTHING BELOW IS AN SLO. These are recorded here so they are not mistaken for one.
+    # ---------------------------------------------------------------------------
+    explicitly_not_slo:
+      - name: gpu_utilisation
+        why: >
+          Pins at 100% under any load that queues, so it cannot distinguish healthy-and-
+          busy from collapsing. A utilisation target is a capacity-planning input, never
+          a promise to a user.
+      - name: mean_latency
+        why: >
+          Hides the tail, and under shedding it moves in the WRONG DIRECTION -- dropping
+          the slowest requests lowers the mean. Report percentiles with shed counts.
+      - name: replica_count
+        why: >
+          An input to the loop, not an outcome of it. A fleet that is five times too
+          large is indistinguishable from a correctly sized one on every latency panel,
+          and differs only on cost per served request.

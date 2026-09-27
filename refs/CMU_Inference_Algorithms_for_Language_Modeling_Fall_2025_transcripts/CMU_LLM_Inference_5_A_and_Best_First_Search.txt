@@ -1,0 +1,1280 @@
+Title: CMU LLM Inference (5): A* and Best First Search
+
+--- TRANSCRIPT ---
+
+[0:00] Okay, so uh welcome back everyone. Um I
+[0:03] will be talking about best first search
+[0:05] for language models. And um one one
+[0:09] thing before I do that uh that I'd like
+[0:12] to talk about a little bit is just kind
+[0:13] of in general um on the way over here I
+[0:16] was talking to Amanda about uh like the
+[0:20] relative importance of the stuff we're
+[0:22] talking about now um compared to like
+[0:26] the stuff that's used more frequently
+[0:28] now. Uh so like uh to give an example
+[0:31] the stuff that's used frequently now is
+[0:33] like sampling
+[0:35] um greedy search maybe to a lesser
+[0:38] extent some beam search and then the
+[0:40] stuff that we're doing uh that I'm going
+[0:42] to talk about today is probably used the
+[0:44] least out of all the stuff we have but I
+[0:46] actually think there's a reason for that
+[0:48] um which is
+[0:55] we have kind of like a GPT P
+[1:02] GPD like one
+[1:05] two uh things like this. These were like
+[1:10] I don't know really
+[1:12] really broken models. Um and so they had
+[1:15] lots of problems and so if you like
+[1:18] tried to find the highest probability
+[1:20] output from them they would give you
+[1:22] things that repeated over and over
+[1:23] again. Uh so like you did green search
+[1:25] or you did beam search it would give you
+[1:27] like an output of length of zero uh and
+[1:31] that would be completely useless. Um so
+[1:34] in order to fix this basically what we
+[1:37] did is we went in and we like broke
+[1:41] inference. So we use sampling strategies
+[1:44] where we didn't sample like directly
+[1:46] from the distribution. We didn't use
+[1:48] greedy search. We didn't use all of
+[1:49] these other things. And so
+[1:52] this was kind of like the era of let's
+[1:57] um this was the era of like break break
+[2:01] search
+[2:04] to get better results. Um now we get to
+[2:08] like GPT
+[2:11] um three and four. We're starting to get
+[2:14] like much better models. Like three
+[2:16] still wasn't good enough. like four was
+[2:19] uh was kind of like getting to be good
+[2:22] enough uh where it's like okay now
+[2:24] search actually works so let's just do
+[2:26] greedy uh let's just do greedy uh
+[2:29] outputs
+[2:32] um and then we also have models like um
+[2:37] you know I'll just stick with the open
+[2:39] AI models so I'll say like 0 01 to04
+[2:44] um now open AI like doesn't even allow
+[2:48] you to do things other than temperature
+[2:49] equals to one. It like forces you to
+[2:51] sample from the model. Um and so this is
+[2:54] like they give you no choice. Um I think
+[2:58] a lot of other people have just been
+[3:00] following this and just sampling from
+[3:01] the model with temperature one. And so
+[3:03] the idea is like okay um we will
+[3:09] just sample directly from the model's
+[3:11] distribution because the model has been
+[3:12] trained to be reasonably good when we
+[3:13] sample directly from the distribution.
+[3:16] Um,
+[3:17] but like greedy search actually kind of
+[3:20] works with like our best models. Um, and
+[3:24] it actually works better than sampling
+[3:25] with temperature one. And so that kind
+[3:28] of makes me think that it's like now is
+[3:30] the time to go back to like actually
+[3:32] searching better. And like one way that
+[3:34] people search better is they, you know,
+[3:37] do really long rollouts of reasoning
+[3:39] models and um and sample lots of outputs
+[3:42] and and things like this. And you know,
+[3:44] maybe maybe that's good. We're going to
+[3:46] be talking a lot about that, but maybe
+[3:48] also we really want to be looking for
+[3:50] the things where we get the highest
+[3:51] model score. Um, and so maybe maybe now
+[3:55] is the time to reconsider these methods
+[3:57] that search efficiently for the things
+[3:59] that have very high model scores. So,
+[4:01] um, that's kind of on a high level my
+[4:04] thinking about this before we go into
+[4:05] the details. Um
+[4:08] any any
+[4:10] comments or or thoughts?
+[4:14] Okay, cool. Um
+[4:17] so just to go back to what we were
+[4:21] talking about before uh last time we
+[4:23] talked about like things like greedy
+[4:24] search and beam search and um to give a
+[4:28] kind of outline, let's see if I can make
+[4:29] that bigger. Okay, there we go. Um so
+[4:33] greedy search basically selected the
+[4:35] highest uh probability token at each
+[4:37] step and um it's you know very fast but
+[4:42] it's myopic. It can make uh very bad
+[4:44] local decisions uh when a better global
+[4:48] decision would be possible. Um no no
+[4:50] backtracking of any variety is possible.
+[4:53] Uh no cons consideration of multiple
+[4:55] hypotheses. Um in contrast to this beam
+[4:58] search uh maintained top K hypotheses
+[5:01] um explored multiple paths
+[5:03] simultaneously and gave uh if you have a
+[5:06] good model it will give you better
+[5:07] quality than greedy search. Um what's
+[5:10] just to make sure that everybody's awake
+[5:12] and paying attention. What's the
+[5:14] relationship between these two?
+[5:18] >> Yeah,
+[5:18] >> you have a beam one.
+[5:20] >> Yeah, exactly. So beam search with a a
+[5:22] beam width of one is greedy search.
+[5:25] Cool.
+[5:26] So um
+[5:28] I'm going to uh talk about search spaces
+[5:32] as graphs here. Um because a lot of the
+[5:35] algorithms that I will be talking about
+[5:39] today were originally created for search
+[5:42] over graphs. Um
+[5:44] and we can represent it specifically as
+[5:48] a weighted uh finite state automaton.
+[5:52] And how many people have done this in
+[5:54] some class?
+[5:59] That's like 10 to 20% of people. Okay,
+[6:02] that that's great. This is another place
+[6:04] where I get to feel the 2025 because
+[6:06] this used to be like a staple of
+[6:08] computer science curriculum, but it's
+[6:09] not anymore. So, um Okay, cool. So um
+[6:13] basically s is a finite set of states
+[6:17] and um so the these are all the states
+[6:20] that we have in our graph. Um sigma is a
+[6:24] finite alphabet. So alphabet is another
+[6:26] term for vocabulary. So we could also
+[6:29] say it's the vocabulary of our language
+[6:31] model. Um we have transitions uh where
+[6:35] basically you take a take in a state um
+[6:39] you take a element from the vocabulary
+[6:42] and transition to a next state. Uh s0 is
+[6:44] the initial state. Um we also have a
+[6:46] sync state where things uh things end or
+[6:50] a set of sync states. um yeah a set of
+[6:53] final states and we call that f and w is
+[6:57] uh a weight where we assign real weights
+[7:00] to transitions and in particular uh
+[7:03] things are a lot easier if you limit
+[7:05] yourselves to purely positive or purely
+[7:07] negative uh outputs here.
+[7:11] Um so this is an example graph uh maybe
+[7:14] a little bit small. Okay, there we go.
+[7:16] Um and so uh here s0 is the initial
+[7:19] state uh and uh or I guess you could
+[7:22] call it S10 is the final state and then
+[7:25] we have um
+[7:28] essentially uh elements of the
+[7:31] vocabulary here. Our vocabulary is ABC
+[7:34] end of sentence and we have uh each one
+[7:37] of them is weighted. So here each one of
+[7:40] them is weighted with a probability.
+[7:44] Um and because this is a probability all
+[7:46] of these need to add to one uh coming
+[7:48] out of the out of the like node here.
+[7:53] All good.
+[7:56] Okay. Cool.
+[8:00] So there's a number of different ways to
+[8:01] express edge weights. Um,
+[8:05] and I'll I'll just talk about these kind
+[8:08] of in the abstract, but like if you're
+[8:10] interested in math, there's actually a
+[8:11] concept called a semi- ring uh that
+[8:14] allows you to do all kinds of crazy
+[8:15] things uh to express uh edge weights.
+[8:19] So, um if you're bored of hearing me
+[8:20] talk, you can look up what a semi- ring
+[8:22] is and and try to figure out uh what's
+[8:24] going on here. But basically um some of
+[8:27] the things you define when you want to
+[8:29] define edge weights are you define the
+[8:30] range in which the edge weight is valid.
+[8:32] So this uh for a probability this would
+[8:34] be between zero and one. Um then you
+[8:38] define a addition function.
+[8:45] What was that?
+[8:47] Um you define an addition function and
+[8:50] actually when you define a semi- ring
+[8:52] the addition function is uh written like
+[8:54] this. Um and what that means is it's
+[8:58] abstracted away addition. uh and it's
+[9:01] what happens when you combine together
+[9:03] two uh edges. So um in the case of a
+[9:07] probability this function is uh is a
+[9:11] multiplication function or no actually
+[9:14] sorry this is like abstracted away
+[9:17] multip so this is a multiplication um a
+[9:20] multiplication function and so here um
+[9:22] you multiply weights together um the way
+[9:26] you you do the best path is you take the
+[9:29] argamax
+[9:31] um and uh The example of uh an example
+[9:37] path would be like 0.5 time 0.3 time
+[9:39] 0.2.
+[9:41] Um another thing we can express is log
+[9:45] probabilities. And so um the range for
+[9:48] log probabilities is obviously minus
+[9:50] infinity to zero. Um we add the weights
+[9:54] together. uh when we're doing path
+[9:56] scoring um the best path would be the
+[9:59] arg max which is the highest sum and
+[10:01] then we can take uh log p uh log path
+[10:06] like that and then negative log
+[10:08] probabilities of course we do this. So
+[10:13] typically when we're doing um uh search
+[10:16] we usually do uh shortest uh path
+[10:20] searches and so because uh we we
+[10:24] typically do shortest paths where we
+[10:26] start with zero um then uh it's typical
+[10:30] to use like negative log probabilities
+[10:31] to express paths. So I'll be doing that
+[10:33] for the rest of the time.
+[10:37] There's also um if if you go all the way
+[10:39] to the semi- ring form uh formulation
+[10:41] you can have like also um instead of
+[10:44] doing this like best path uh you you do
+[10:48] like
+[10:51] you replace the um so when you're
+[10:55] searching for a best path you you do
+[10:57] this as the argmax and when you're
+[10:58] searching for the sum of the
+[10:59] probabilities over all the paths you
+[11:01] like add the probabilities together and
+[11:02] other stuff like that. There's lots of
+[11:04] uh lots of fancy stuff you can do there,
+[11:06] but I'll I'll skip over that because we
+[11:08] don't use it very much for uh for
+[11:09] language models. Cool. Um so this is our
+[11:13] graph with negative log probabilities in
+[11:15] it.
+[11:18] So greedy search um I I think everybody
+[11:21] knows what greedy search looks like
+[11:22] already, but I want to give the example
+[11:24] of greedy search here so I can contrast
+[11:26] it with um like uh you know the other
+[11:29] varieties of search that we're going to
+[11:31] use. But
+[11:35] what uh every time what we do is we
+[11:38] essentially find the uh you know best
+[11:41] edge. So in this case that would be the
+[11:43] lowest scoring edge and we uh we follow
+[11:46] it and so over here we have a priority Q
+[11:51] and this is like the next hypothesis
+[11:53] that we want to expand.
+[11:56] So um previously our priority Q was S0.
+[12:00] It had a score of zero. Um, it had a
+[12:04] score of zero, an overall score of zero.
+[12:07] And this h is going to be uh a huristic
+[12:10] function that I'll talk about uh a
+[12:12] little bit later.
+[12:14] So then we uh add the edge weight which
+[12:17] was 0.69 and then we get the score of
+[12:20] 0.69 total score of 0.69 and we have a
+[12:22] priority Q of size one. And the reason
+[12:24] why the priority Q is of size one is
+[12:26] because we're doing greedy search. So
+[12:28] our Q size is limited to one. So it will
+[12:32] never be uh never be larger than this.
+[12:35] And so then we just expand the next one
+[12:36] on the que. Um and so that happens to be
+[12:40] this one. Add the scores together.
+[12:42] Expand the next one on the queue and
+[12:44] then uh finally get to our end state and
+[12:46] terminate.
+[12:48] So pretty okay or
+[12:54] so um f is equal to g plus h. And right
+[12:57] now we're defining h to always be zero.
+[12:59] So we'll we'll uh change that in a
+[13:02] second.
+[13:05] Okay,
+[13:07] cool.
+[13:08] So
+[13:10] next I'd like to go to beam search. And
+[13:12] uh beam search looks very similar. The
+[13:15] only difference is that um after we
+[13:17] expand now our priority Q size is not
+[13:20] one but it's two.
+[13:22] Um and so we now have two things on the
+[13:26] priority queue. Um these are ordered in
+[13:31] a particular order. Uh so for beam
+[13:35] search the
+[13:38] there's two conditions about which
+[13:40] hypothesis we expand next. Does anybody
+[13:43] have an idea what those two conditions
+[13:44] might be?
+[13:50] Which ones uh which ones do we expand
+[13:53] first and which ones or so actually let
+[13:56] me put it this way. Why why is S1 not uh
+[14:00] S0 to S1 not on here?
+[14:07] >> Yeah,
+[14:08] >> we want it to have the lowest.
+[14:10] >> Yeah, it's the one that has the lowest
+[14:11] score. So we pruned it off. So when we
+[14:13] choose the priority, we consider the
+[14:15] score, right? and we consider better
+[14:16] scoring ones more than the other ones.
+[14:19] Um maybe I'll expand the next one. So um
+[14:22] we had S0 to S2 and we expanded some
+[14:25] hypotheses here. Um so there's one other
+[14:29] thing we consider when deciding which
+[14:31] one to expand next. Um what's the other
+[14:34] thing we consider when deciding which
+[14:35] one to expand next?
+[14:36] >> Yeah, the length. Yeah, exactly. So
+[14:39] basically what we do for beam surge is
+[14:42] we expand the shorter ones first and
+[14:44] then um we make sure that the size of
+[14:48] the elements on the queue is always uh
+[14:51] no larger than the beam size for each
+[14:53] length. So right now we have one of
+[14:56] length uh one of length two and two of
+[14:59] length three. And then when we expand
+[15:01] this one, now we only have uh two of
+[15:04] length three here. Um because our beam
+[15:07] uh sorry, our beam size is two in this
+[15:09] example.
+[15:12] Say that uh that clear.
+[15:16] Cool.
+[15:17] Okay. So um then we keep on expanding.
+[15:21] We expand S0, S2, S4. Um and we uh so
+[15:27] then we expand s3 s5 because that's a
+[15:30] shorter one. And now we have uh our best
+[15:34] uh output which is uh negative log
+[15:37] probability of 2.43.
+[15:39] And notably this is different than the
+[15:42] one we found using greedy search. The
+[15:44] one we found using greedy search was s0
+[15:46] s2 s4 s8. Um, one other thing I'd like
+[15:50] everybody to pay attention to is how
+[15:51] many steps it took me to uh finish the
+[15:54] search. So here we finished the search
+[15:57] with uh six steps.
+[16:01] In the previous one we finished it with
+[16:02] four steps. So like greedy search is
+[16:05] more efficient, right? Um we we were
+[16:07] able to see this. Um,
+[16:10] so for beam search, uh, is beam search
+[16:13] guaranteed to get the correct answer?
+[16:15] Uh, will it get the shortest path
+[16:16] through this graph?
+[16:20] No. I see people saying no. Um, yeah,
+[16:23] that's correct. It's an approximate
+[16:24] search algorithm. And uh, it can be a
+[16:28] very efficient approximate search
+[16:29] algorithm. It can be better than greedy
+[16:31] search, but it it will not be guaranteed
+[16:32] to get the best answer.
+[16:37] Cool. So now I'd like to talk about um
+[16:40] optimal search algorithms. Um and
+[16:43] optimal search algorithms are uh
+[16:46] algorithms that can search through a
+[16:47] graph and uh and find the best output.
+[16:52] So I'm going to call this depth first
+[16:54] search. It's very similar to Dixra's
+[16:57] algorithm. uh if anybody has uh used
+[16:59] Dextra's algorithm before um but I I'm
+[17:04] not going to talk about Dextra's
+[17:05] algorithm because it requires an
+[17:06] additional step of backtracking which
+[17:08] I'm not going to uh not going to be
+[17:09] doing here but basically what it does is
+[17:12] it systematically explores all paths um
+[17:16] it's guaranteed to find the optimal
+[17:17] solution um and sorry Dickstra is uh
+[17:20] does backtracking
+[17:22] um it will eventually find the path with
+[17:25] minimum cost and the The reason why it's
+[17:28] optimal is because it does an exhaustive
+[17:31] search of the entire space and there's
+[17:34] no pruning of potentially optimal paths.
+[17:36] So you're always expanding the path that
+[17:38] has the best score. And because of that
+[17:41] um you will always find the path with
+[17:43] the best score that ends up in the
+[17:45] terminal uh node uh before any other one
+[17:50] because you're kind of by definition
+[17:52] you're searching them in the best uh in
+[17:54] the order of the best score.
+[17:56] So let's take a look at what that looks
+[17:58] like in our our previous example. So the
+[18:01] first thing we do is we expand all of
+[18:03] them. Like notably we're not pruning any
+[18:05] of out of our priority queue. Um so we
+[18:09] are additionally expanding S1 which we
+[18:11] didn't do when we were doing beam
+[18:12] search. So um we have this uh here. Uh
+[18:18] so we expand uh the best oops we expand
+[18:22] the best one first. So that's test two.
+[18:25] Uh then we do S0 to S3. Then we do S0 to
+[18:28] S1.
+[18:30] Uh S0 S2 S4 S0 S3 S5. Uh S0 S2 S5 S0 S2
+[18:38] S6 S0 S3 S5 S7. And then we uh we
+[18:43] finally hit the end uh after nine steps.
+[18:46] And so this is still manageable because
+[18:49] we have a vocabulary size of three and
+[18:53] uh we have uh because we have a
+[18:55] vocabulary size of three. But imagine uh
+[18:59] what would happen if we had a larger
+[19:00] vocabulary size or a longer graph or
+[19:03] something like that. Basically we would
+[19:04] spend our entire time sitting right at
+[19:07] the very beginning and searching around
+[19:08] the various things at the very beginning
+[19:10] unless we had a very very peaky
+[19:12] probability distribution over the
+[19:13] outputs.
+[19:16] Cool. Um
+[19:19] any uh
+[19:22] any questions? Yeah.
+[19:28] >> Yeah. So um G uh F equals G plus H which
+[19:33] is not very helpful for you because you
+[19:35] don't know what H is yet. But um G is
+[19:38] the the actual score and H is a heristic
+[19:41] function which I'm about to introduce I
+[19:43] think in the next slide. So I'll I'll
+[19:44] talk about that.
+[19:48] And uh F is the the thing you actually
+[19:50] use to prioritize search.
+[19:54] Um so the next thing I'd like to talk
+[19:56] about is AAR search. And AAR search is
+[19:59] basically um a search method that is
+[20:03] more efficient than a regular depth for
+[20:05] search but still optimal. Um and so it
+[20:10] doesn't have any of the optimality uh
+[20:13] like issues or it it's guaranteed to
+[20:16] find the best output. Um but it is not
+[20:20] uh not quite as bad as a uh as um depth
+[20:24] for search. And so basically we define
+[20:26] the function that we use for scoring
+[20:28] hypothesis as fals plus h
+[20:32] um where uh g is the actual cost h is a
+[20:36] heristic cost from n to the goal
+[20:39] um and h is a heristic cost from n to
+[20:41] the goal. So I don't know if I actually
+[20:46] have a good example of this on the
+[20:48] slide. So, um,
+[20:53] let me see if I can write it here.
+[21:18] So if I gave you this prefix,
+[21:21] um,
+[21:23] how much more uncertainty do you think
+[21:27] there is in this sentence?
+[21:30] Like how much more probability do you
+[21:32] think it needs to spend to get to the
+[21:33] end of the sentence?
+[21:35] Any ideas? basically
+[21:39] >> basically none. Right? So
+[21:41] >> I I would say the log
+[21:45] um the log probability of
+[21:49] the rest of y
+[21:51] um greater than uh where we are right
+[21:54] now
+[21:57] is is basically zero right or the we're
+[22:00] using negative log probability so this
+[22:01] is basically zero but if I said um like
+[22:05] the
+[22:08] um solution
+[22:10] [Music]
+[22:13] to
+[22:16] the
+[22:18] first
+[22:21] 11 664
+[22:24] 763 homework
+[22:29] for
+[22:31] kids.
+[22:33] I would hope that a language model would
+[22:35] spend a lot more probability thinking
+[22:36] about the correct answer here. um uh if
+[22:39] not we did a a bad job of uh writing the
+[22:41] homework. So um so there you would
+[22:45] expect that you need to spend a lot more
+[22:48] probability to finish this completion
+[22:50] and so basically
+[22:52] um hn is attemp attempts to be a
+[22:57] prediction of how much more probability
+[22:58] you're going to need to spend to uh to
+[23:00] get to the end in the optimal path. Um
+[23:05] so AAR search is optimal when a heristic
+[23:09] is admissible and an admissible heristic
+[23:12] is basically it never overestimates the
+[23:15] true cost of the goal. It can
+[23:17] underestimate the true cost of the goal
+[23:19] but it can't overestimate the true cost
+[23:20] of the goal.
+[23:24] And so this provides a lower bound on
+[23:27] the remaining cost.
+[23:29] So let me give an example of this. So
+[23:31] here
+[23:38] a um a heristic function is typically
+[23:42] designed to be something that you can um
+[23:45] very quickly calculate but um never
+[23:49] overestimates. So I can look at all of
+[23:52] these
+[23:53] um I can look at all of these uh inputs
+[23:56] here and say okay well 0.693 693 is the
+[24:00] like lowest number in this row. So like
+[24:04] maybe everything in this row should be
+[24:06] like 0 uh like the heristic would be
+[24:10] 0.5. So it's never going to be it's
+[24:12] never going to cost less than 0.5 to go
+[24:16] from this row to the end state. Um here
+[24:21] again 0.5 is the lowest one in this row
+[24:25] and I know that 0.5 is the heristic
+[24:27] function for this row. So maybe 0 uh or
+[24:31] maybe 1.0
+[24:33] is a good heristic function for this
+[24:35] row. So, I'm just going to assign h um
+[24:40] h
+[24:41] equals 0.5 for everything that ends in
+[24:46] s4 to s6 and h equals 1.0 for everything
+[24:51] that ends in s1 to s3.
+[24:55] Um and there are you can be creative
+[24:58] with a heristic function and come up
+[25:00] with something that you know is able to
+[25:02] search for this efficiently. The one
+[25:04] thing you can't have with a heristic
+[25:05] function is have something that takes
+[25:06] just as much time as the search
+[25:07] algorithm itself. So like um you you
+[25:11] need to come up with something that's
+[25:12] like an approximation but not uh not
+[25:14] good. So let let's try to do a search
+[25:17] with this. And basically for s0 um uh s0
+[25:22] to s2 we have a heristic function of
+[25:24] one. So now we have like 0.69 + 1 is
+[25:29] equal to 1.69. Um, so all of these we
+[25:32] basically boosted their score by one and
+[25:35] remember when I boost their score by one
+[25:37] that makes the score worse because like
+[25:39] lower scores are better.
+[25:41] So now I will um
+[25:45] expand uh S2.
+[25:48] And
+[25:50] despite the fact that I expanded S2, I
+[25:53] still have a better um I still have a
+[25:57] better score for S0, S2, S4 because
+[26:01] essentially its heristic function went
+[26:02] down. And so now the heristic function
+[26:06] is lower because I've made more progress
+[26:08] with this uh with this output. And that
+[26:11] um means it's still better than s0 s3
+[26:14] which had made less progress. So we can
+[26:16] see it's f is 2.11. So I'm not expanding
+[26:20] all of the ones at the very beginning
+[26:21] first. I'm expanding like one that has
+[26:23] made more progress. And so let me
+[26:26] continue doing that. Um however when I
+[26:29] expanded this next one now um the actual
+[26:32] cost of doing doing this took over. And
+[26:35] so now I started expanding the S0 s3. Um
+[26:40] so I will go through I'll continue like
+[26:42] sorting these by f
+[26:45] and uh and expanding
+[26:48] and I finally get to this uh this thing
+[26:51] here and that reaches the end. And so
+[26:53] you'll notice that I've reached the end
+[26:55] and found the optimal output but I never
+[26:58] expanded the first one. Um, I never
+[27:02] expanded the S0 to S1 thing because the
+[27:04] heristic function plus the actual score
+[27:07] never got like low enough that I would
+[27:10] expand that. Um, and you can also take a
+[27:14] look notice I finished on step eight
+[27:16] here. So, um, that is faster than last
+[27:21] time.
+[27:24] That is faster than last time when I
+[27:26] finished on step nine because I didn't
+[27:28] have to expand that extra hypothesis
+[27:29] that I expanded maybe a six.
+[27:35] Cool. So, um this is the basic idea fals
+[27:39] plus hn where hn is some prediction of
+[27:42] how much probability you're going to
+[27:43] spend going all the way to the end. Um
+[27:45] is this clear? Any questions? Yeah.
+[27:47] >> Where that we never overestimate the
+[27:49] true cost.
+[27:52] Um, where do you use the fact that you
+[27:54] never overestimate the true cost? So,
+[27:56] that's a great question. Um, what would
+[27:59] happen if you had the ability to
+[28:01] overestimate the true cost? Like what
+[28:03] what if you didn't have an admissible
+[28:05] heristic? Yeah,
+[28:08] >> you might deviate from the optimal
+[28:10] solution. You're not guaranteed to
+[28:11] deviate from the optimal solution, but
+[28:12] you might. Yeah,
+[28:14] >> we have the same question. Then how is
+[28:16] it possible when uh the
+[28:19] hypothetical cost is lower than the true
+[28:21] cost then it might select the wrong part
+[28:26] from your existing problem.
+[28:31] >> Uh
+[28:33] sorry could you say that again?
+[28:34] >> So basically it's not possible to
+[28:36] overestimate that but how is it possible
+[28:39] to run this algorithm when we can
+[28:41] underestimate the results? How is it
+[28:44] possible to run this algorithm when you
+[28:45] can underestimate the true cost? Um
+[28:48] well, if you can underestimate the um
+[28:53] wait so it should never overestimate the
+[28:56] true cost. It can underestimate the true
+[28:59] cost. In fact, depth for a search is
+[29:01] when you always when the heristic
+[29:05] function is zero and will always be less
+[29:08] than or equal to the true cost, right?
+[29:10] So like it's okay to underestimate. It's
+[29:13] just not okay to overestimate. Yeah.
+[29:16] >> I see how like
+[29:22] a more perhaps extreme scenario
+[29:25] everything was overestimated
+[29:26] consistently by the same amount.
+[29:28] >> That's I mean that's that's that's
+[29:30] equivalent underestimating by
+[29:33] corresponding amount. So these two
+[29:35] scenarios become functionally the same.
+[29:37] >> Yeah. So um great great points. um
+[29:42] the heristic function here
+[29:44] underestimates the true cost. So like
+[29:46] when I used the heristic function going
+[29:48] from uh s0 to s3 my heristic function
+[29:52] was 1.0 and the true cost was 2.43. So I
+[29:57] I underestimated it. But the the reason
+[29:59] why that's not a problem is because you
+[30:01] always follow the shortest path. And so
+[30:04] the shortest path will um
+[30:07] you might have to expand more paths. So
+[30:09] if you have a bad heristic you might
+[30:11] have to expand more but it won't cause
+[30:13] you to fail.
+[30:15] >> What Martin found is that like that
+[30:17] strong
+[30:19] state there that it must never
+[30:21] overestimate the true cost of because
+[30:23] every example which you get if I was to
+[30:26] take this underestimate heristic and add
+[30:28] 10 units to whatever predicted for every
+[30:30] single node
+[30:31] >> then it is consistently overestimated
+[30:33] but it has the same net impact as well
+[30:35] underestimate.
+[30:36] >> Okay. So then your um ju just to
+[30:40] rephrase in case people couldn't hear
+[30:42] like what what if it was a perfect
+[30:43] heristic function and it could always um
+[30:47] you know exactly predict the future
+[30:49] cost. That would be great. You know you
+[30:51] would only have to take one step through
+[30:54] the graph and you would always get it
+[30:55] right every time. Um but you added 10 to
+[31:00] every co uh
+[31:03] you you added 10 to every cost.
+[31:05] >> Every cost. Yeah. Um so that would be a
+[31:09] good heristic function that would help
+[31:11] you out. But um the that would help you
+[31:16] be successful at searching. But that is
+[31:19] an example where you overestimate but
+[31:21] are successful despite the fact that
+[31:22] you're overestimating. So if you ever if
+[31:25] you overestimate and you can't say like
+[31:27] oh the relative order is the same then
+[31:29] uh like the relative order of the cost
+[31:32] is the same then you might make
+[31:33] mistakes.
+[31:34] So it um yeah being an admissible
+[31:38] heristic is not a necessary condition to
+[31:40] do good search but it is it is a
+[31:43] sufficient condition to do good search.
+[31:44] Yeah
+[31:46] >> I'm not convinced about the sufficiency
+[31:48] of it.
+[31:49] >> You're not convinced about the
+[31:50] efficiency
+[31:52] >> or sufficiency.
+[31:53] >> Never mind. I think like
+[31:57] >> yeah I mean it's okay if you have
+[31:59] questions.
+[32:00] >> I'm just like not convinced but
+[32:02] >> Okay.
+[32:04] never since I don't see like how
+[32:08] >> from what I understand you want to add
+[32:11] 10 to every as like that's a very
+[32:14] pathological example
+[32:17] >> but I'm just not convinced about using
+[32:19] the hypothesis
+[32:21] >> well so the reason so the reason why let
+[32:23] me let me put it this way um we're
+[32:25] sorting by f
+[32:29] let me go back
+[32:45] So we're searching we're searching for
+[32:48] arg
+[32:50] min
+[32:51] uh f
+[32:53] of the path um what we call path.
+[32:57] So, we're we're trying to find the thing
+[32:59] with the lowest uh the lowest in here.
+[33:02] So, the
+[33:27] Um so this is the definition right um
+[33:32] when you have finished when you have
+[33:33] terminated search um h uh hy will become
+[33:38] zero because there's no more cost left
+[33:41] and you're done in the fin in your in
+[33:43] the final set. So um fy
+[33:48] equals
+[33:50] um let's say fyt
+[33:54] uh which is like when it has reached the
+[33:55] terminal state is equal to g y
+[34:00] and so any intermediate state going to
+[34:05] gy
+[34:06] if hy
+[34:09] is um guaranteed to be less than h star
+[34:14] YT key. In other words, it doesn't it
+[34:16] never overestimates cost. Then this is
+[34:19] guaranteed to be less than uh what this
+[34:23] would be in the final state. And so that
+[34:25] means you will never rank um you will
+[34:28] never rank that hypothesis
+[34:30] better than the one uh that you get in
+[34:33] the final state. And so uh that that
+[34:37] means that
+[34:40] once you reach a final state, you know
+[34:42] that's better than all of the other
+[34:44] final states that you have for the
+[34:45] partial hypothesis.
+[34:46] >> I see. Now there's an implicit
+[34:49] assumption that h is like a well behaved
+[34:51] function because otherwise I could just
+[34:53] make a discrete function. So this is
+[34:55] satisfied pointwise but uh I can still
+[34:58] construct those pathological examples.
+[35:01] >> Right? So as I said before an admissible
+[35:04] heristic is a sufficient condition but
+[35:06] it's not a necessary condition. So you
+[35:07] can come up with another function that
+[35:09] still will give you a good result but
+[35:10] this will like if you satisfy this you
+[35:14] will get a good result that's
+[35:15] guaranteed. Yeah.
+[35:16] >> Okay. Yeah and thank you for the
+[35:18] question that wasn't you know super
+[35:20] clear in my exposition but happy to
+[35:22] happy to clarify. Cool. Um so
+[35:28] why don't we use uh AAR search in uh
+[35:32] transformer language models or RNN
+[35:34] language models or basically any strong
+[35:36] language model we have now um the reason
+[35:41] is this um this is
+[35:45] a uh kind of like what the graph for a
+[35:48] transformer language model looks like.
+[35:50] If you have a vocabulary size of ABC,
+[35:54] basically every token you generate um
+[35:58] you exponentially grow your graph and
+[36:03] um
+[36:06] your if your vocabulary is very large,
+[36:08] this graph, you know, very quickly
+[36:10] becomes very large and you will be stuck
+[36:15] at the beginning of the graph. And
+[36:17] what's even worse is uh like this is one
+[36:20] thing
+[36:24] the everex expanding uh search graph
+[36:26] exponential um exp uh exponential
+[36:29] growth. The second thing is there's no
+[36:32] it it it's very very difficult to come
+[36:34] up with an admissible heristic. Um and
+[36:36] the reason why is because a
+[36:38] transformer-based language model is you
+[36:41] know huge uh very hard to comprehend and
+[36:45] it is quite possible that you could
+[36:47] suddenly hit a sweet spot and pay like
+[36:50] zero cost for the rest of the time like
+[36:53] um if I if I told you um please
+[36:58] uh please say hello and then recite the
+[37:01] US Constitution
+[37:03] um a transformer language model by you
+[37:06] or please give a greeting and then
+[37:07] recite the the US Constitution might be
+[37:10] like greetings. It's it's nice to hear
+[37:13] that you're interested in the
+[37:14] constitution. The uh US constitution is
+[37:17] and then it would generate like
+[37:19] thousands of tokens with like
+[37:20] probability of one because it's exactly
+[37:22] memorized the US constitution, right? So
+[37:25] it's hard to come up with this sort of
+[37:26] admissible heristic.
+[37:29] Um so what do we do? Um there there's
+[37:33] two things that we can do. One thing is
+[37:35] maybe necessary, maybe not necessary.
+[37:38] Um, another thing is uh is certainly
+[37:42] necessary if you want to use an AAR uh
+[37:44] style algorithm with this. So the first
+[37:48] thing that may or may not be necessary
+[37:50] is hypothesis recombination. And we kind
+[37:53] of touched on this a bit in diverse beam
+[37:55] search. So this may sound a little bit
+[37:58] like diverse beam search. Um but the
+[38:00] basic idea is that we want to group uh
+[38:03] similar states together um to reduce the
+[38:07] number of hypotheses that we're dealing
+[38:09] with to allow us to more efficiently
+[38:10] search um over outputs.
+[38:13] And um the way we do this is we can
+[38:18] cluster hypotheses together with similar
+[38:21] um
+[38:22] representations of some variety and keep
+[38:26] the best of each for each cluster.
+[38:29] And so the benefits of this is this
+[38:31] reduces exponential growth while
+[38:33] maintaining quality um and enables
+[38:36] practical uh you know varieties of
+[38:39] algorithms. So if we um if we do this
+[38:42] basically we would expand um and then
+[38:46] combine together uh like similar
+[38:48] hypotheses
+[38:50] um and uh do this over and over again.
+[38:53] Here it went from A to A and B to B and
+[38:55] B to C. that's like obviously not uh not
+[38:58] necessary but um you can uh combine
+[39:01] things together uh to like reduce the
+[39:03] search space
+[39:05] and there's a number of criteria that
+[39:07] you can use for doing this. Um the first
+[39:11] one is uh engram based clustering and so
+[39:14] the basic idea is if you look at shared
+[39:16] recent word contexts um you cluster if
+[39:20] the recent words are the same.
+[39:23] Um so this uh you can look at surface
+[39:27] form simplity. It's very easy to
+[39:28] implement in cache. Um it can work
+[39:31] together with beam search
+[39:33] and the uh truncation length controls
+[39:35] precision. So if you um
+[39:40] set the length of n to be infinity then
+[39:44] this is equal to no hypothesis
+[39:46] recombination. If you said the length of
+[39:48] n to be short like two or three, you
+[39:51] would recombine all things where the
+[39:52] most recent words were, you know, a
+[39:54] particular two or three words.
+[39:57] Um, however,
+[39:59] this might not be the best because, you
+[40:01] know, you could uh get something that
+[40:03] was very different previously but
+[40:05] similar for the most recent uh words.
+[40:08] And so another way you can do this is
+[40:09] through um hidden vector distance. And
+[40:13] basically if you have uh the
+[40:15] representations of your current state uh
+[40:18] you can cluster things together. So you
+[40:20] can use like uklidian similarity cosine
+[40:22] similarity um or things like the kale
+[40:25] divergence between the distributions um
+[40:28] uh induced over the next token. Um
+[40:33] and
+[40:36] there's um an actually kind of old paper
+[40:40] that discusses all of these and compares
+[40:42] them uh using older models. I haven't
+[40:44] seen that much uh doing this with newer
+[40:47] models um other than outside of the
+[40:49] context of or inside the context of
+[40:51] diverse beam search. Uh but this is
+[40:53] certainly like if you want to move in
+[40:55] the direction of using these kind of
+[40:57] like more uh optimality oriented search
+[41:01] algorithms. I think this is certainly
+[41:02] something you could consider because you
+[41:03] don't want to sacrifice the diversity uh
+[41:06] of the uh the space that you're
+[41:08] searching over. So uh this is one uh one
+[41:12] thing any questions about this? Yeah.
+[41:15] >> So visualize the how you compute the
+[41:18] dynamic.
+[41:20] >> Yeah.
+[41:20] >> You have multiple different
+[41:23] threads gen branches these things then
+[41:28] so what are you doing like are you
+[41:29] taking the entire set of logs and
+[41:31] they're like computing K dions and how
+[41:34] we maintain these logs in memory.
+[41:36] >> Yeah. So basically it would be like next
+[41:40] So you only use this for clustering. So
+[41:42] what you would do is you would calculate
+[41:44] the probability over the next token for
+[41:47] each of the um like each of the
+[41:53] hidden states that you're searching
+[41:54] over. So like let's say you had you know
+[41:57] um
+[41:59] 16 if you had a beam size of 16 or
+[42:01] something like that. If you calculated
+[42:04] the probability over the next token,
+[42:06] which you probably want to do anyway if
+[42:07] you're doing beam search, then you
+[42:09] calculate the kale divergence between
+[42:12] each of those 16. So you'd have like a
+[42:15] 16x5 matrix of kale divergences or I
+[42:18] guess 16 by 16 if you're doing it like
+[42:21] birectionally. And then you would prune
+[42:23] out the ones where the kale divergence
+[42:25] is like relatively low.
+[42:29] So um like let's say
+[42:35] You have um
+[43:10] So you have all of your histories here,
+[43:12] right? And so then um for all of them
+[43:15] you calculate
+[43:17] P Y of T given Y of P uh Y of less than
+[43:22] T. And so this is the probability
+[43:25] distribution over all the words in the
+[43:27] vocabulary. And so that gives you a
+[43:30] whole bunch of probability vectors.
+[43:34] you can concatenate them into a matrix
+[43:36] of probabilities and then you can
+[43:38] calculate the um like kale divergence
+[43:40] between all of the columns in that
+[43:42] matrix
+[43:44] >> in this case like the hidden state
+[43:45] you're refering to is just the logic
+[43:48] >> the yeah yeah it's essentially the logit
+[43:51] so um I actually maybe uh similarity in
+[43:55] neural representations is not the
+[43:58] correct term here so I I should actually
+[44:01] probably fix that it this would be more
+[44:03] like similarity between the probability
+[44:05] distribution.
+[44:07] >> No.
+[44:08] >> Okay. Yeah. Thank you. Yes.
+[44:16] >> Together.
+[44:20] >> Um,
+[44:22] good question. It seems like a good
+[44:24] research uh, you know, a good research
+[44:27] uh, topic. Like I think even just like
+[44:29] looking into
+[44:31] when things temporarily look similar and
+[44:34] then end up looking different later. Uh
+[44:36] I don't know of any like work that looks
+[44:38] into that.
+[44:41] Cool. Um
+[44:46] so the next thing I'd like to talk about
+[44:47] is future cost. Um and future cost is an
+[44:50] inadmissible but useful heristic. So
+[44:52] this is exactly uh the case when we
+[44:55] don't have a heristic that satisfies um
+[44:59] uh you know admissibility but still
+[45:01] could be useful. Um and this has been
+[45:03] around for actually a long time. Um but
+[45:06] the uh this paper modeling future cost
+[45:09] in neural machine translation talks
+[45:10] about it from a you know kind of neural
+[45:13] model perspective and
+[45:17] what you do is you learn to predict the
+[45:18] cost of completing a partial sequence.
+[45:21] Um the future cost uh prediction
+[45:24] basically is just um given all of the
+[45:28] information that you have now predict
+[45:29] the cost of the completion
+[45:33] uh according to whatever search
+[45:34] algorithm you use. And
+[45:38] the way you integrate this into search
+[45:40] is you can have um this multiplied by
+[45:44] some discount. Uh so you uh use the log
+[45:48] probability of what you've done up until
+[45:50] this point and then you multiply uh
+[45:52] multiply this in. And so what this is
+[45:55] doing is this is essentially making this
+[45:57] more admissible, right? It's making it
+[45:59] closer to admissible. Um because if we
+[46:03] set this to zero, it is admissible,
+[46:05] right? It's guaranteed to be admissible
+[46:06] because it's zero and zero is uh never
+[46:08] going to underestimate.
+[46:11] Um and the way we train this is we have
+[46:14] a loss to uh essentially try to fit this
+[46:18] function.
+[46:21] Um there's a couple ways we can use the
+[46:23] future cost. Um uh the first way is that
+[46:27] we can actually take the model um take
+[46:32] the model that we were trying to train
+[46:34] and we can try to get it to fit the uh
+[46:38] fit the score of not the
+[46:43] current cost but the current cost plus
+[46:46] the cost that we're going to pay in the
+[46:48] future. Um
+[46:51] and the second thing is we can train a
+[46:55] future cost predictor after the main
+[46:57] model and um use completed sequences to
+[47:00] learn uh the cost patterns. Um
+[47:05] and so uh both approaches uh try to
+[47:09] estimate uh this heristic function. But
+[47:14] um the actually maybe I should write
+[47:17] here but basically um the auxiliary loss
+[47:22] during training is you uh try to p
+[47:25] predict um you try to train essentially
+[47:28] the same model that uh is able to
+[47:31] predict the auxiliary loss while you're
+[47:33] training the um uh while you're training
+[47:36] the uh representations. This is also
+[47:38] faster because you can train them both
+[47:40] at the same time. So uh like uh this can
+[47:44] be helpful as well. Um
+[47:47] if you have done reinforcement learning,
+[47:50] this is very similar to like a value
+[47:52] function you learn in reinforcement
+[47:53] learning. Um where the reward for the
+[47:57] value function is the overall like log
+[48:00] probability of the entire sequence. So
+[48:02] it's uh it's similar in that way as
+[48:05] well.
+[48:07] Cool. Any questions?
+[48:13] Okay. And um now now I'm getting into
+[48:15] some papers. Um so
+[48:20] here um in this uh in this experiment,
+[48:24] this is like 2020, so take it with a
+[48:26] grain of salt. It's not, you know, the
+[48:27] same as what we have for LOMs now. Um
+[48:29] but they were able to demonstrate some
+[48:31] pretty uh you know good gains on uh
+[48:35] machine translation performance using uh
+[48:38] pretty strong baselines. So this is a a
+[48:41] nice uh paper about that.
+[48:45] Cool. Um any any questions here? This is
+[48:48] actually not that hard uh to to
+[48:51] implement. So basically you just need to
+[48:54] um have a se separate prediction head
+[48:56] that in addition to predict predicting
+[48:58] the probability regresses to the full
+[49:01] sequence probability that you calculate
+[49:03] during trading.
+[49:04] >> Yeah. So in fact in a nutshell what's
+[49:06] going on is that we modify the training
+[49:08] loop to uh to sort of create that
+[49:11] heristic function for us to estimate how
+[49:13] much further the completions are and
+[49:16] that helps us when we decide if that has
+[49:19] also been like you know beam
+[49:20] recombination and just a decoding part.
+[49:24] >> Yeah. So um yeah and it's not it's not a
+[49:28] star decoding because it's now a not an
+[49:31] admissible heristic but you still add
+[49:33] that heristic in anyway. So it might
+[49:36] make mistakes but those mistakes are um
+[49:40] those mistakes are mistakes that are
+[49:42] like
+[49:44] hopefully less bad than setting your
+[49:47] heristic function to zero essentially.
+[49:50] >> Yeah. A star with a asterisk you know
+[49:53] it's not actually a star. Um, yeah.
+[49:58] >> So, the data, um, yeah, actually I I
+[50:01] realized maybe I shouldn't have had that
+[50:02] on my slide. Um,
+[50:06] but
+[50:15] your um, your loss function
+[50:34] your loss function is basically this,
+[50:36] right? Um this is the data you traded
+[50:39] off of. So you you at every time step
+[50:43] you try to predict the final score that
+[50:45] you're going to get um uh by summing up
+[50:48] all the losses over the entire No. So
+[50:50] what is the ground truth score?
+[50:53] >> This is the ground truth score.
+[50:55] >> Okay.
+[50:55] >> But the thing is like you can you can
+[50:58] calculate this um by summing up all the
+[51:02] log probabilities of all the tokens. But
+[51:04] you want to predict this after you've
+[51:06] predicted the first.
+[51:08] >> Um and that's really hard, right? You
+[51:10] don't know what tokens are going to come
+[51:11] next. So like your regression is going
+[51:13] to be hard at the very beginning and
+[51:14] it's going to get easier and easier. And
+[51:16] so that's kind of like the whole point
+[51:18] of the heristic function. Yeah. And then
+[51:21] um but actually because it's a heristic
+[51:23] function, you're going to be
+[51:25] um it actually sorry, it's probably not
+[51:29] this. It is probably T
+[51:34] if I is your current um
+[51:39] if I is your current state, it's going
+[51:41] to be um
+[51:44] this. So you're going to add up all the
+[51:46] um all the ones you get in the future.
+[51:48] So at time step one at time step zero or
+[51:52] at time step one it's going to be like
+[51:54] all the ones from one to you know the
+[51:56] end. At time step two it's going to be
+[51:57] all the ones from time step two to the
+[51:59] end.
+[52:02] >> Yeah.
+[52:07] >> Yeah.
+[52:09] It it's basically whether you train um
+[52:11] train it together with the model that
+[52:13] you're training or whether you you train
+[52:14] it uh afterwards. Um so like if you
+[52:17] train it together uh while you're
+[52:19] training your you know LLM or whatever
+[52:23] or if you have an LLM already and then
+[52:25] you train a model to predict that
+[52:27] afterwards.
+[52:33] >> Yeah, exactly. Yeah.
+[52:38] Yeah,
+[52:38] >> why not specific patterns? I trained on
+[52:42] the sequences the model generates.
+[52:49] Um,
+[52:50] so
+[52:54] this is particularly
+[52:57] in the case where you're using like a
+[52:59] different model or
+[53:02] um where you're using a different base
+[53:05] model or something like that uh to train
+[53:07] the future cost predictor. um it might
+[53:12] be
+[53:13] the case that you would actually want to
+[53:17] update the model's parameters
+[53:20] uh to make this prediction without
+[53:22] training the full model. So like to give
+[53:25] another example like let's say you have
+[53:27] a deepseek
+[53:30] v3 or something like that and you want
+[53:31] to train a future cost for it but you
+[53:34] don't want to train deepseek with v3
+[53:35] because it has too many parameters for
+[53:38] you to train. Um and so if that's the
+[53:40] case then you know training deepseek v3
+[53:43] itself like deepseek might have its you
+[53:46] know idea of what's going to be coming
+[53:49] next but your small quen model doesn't
+[53:52] have as good an idea of like what
+[53:54] deepseek is going to predict next. So
+[53:58] >> why you train it on other model
+[54:01] sequences you're trying to improve that
+[54:03] specific model itself. Yeah, I mean have
+[54:06] you tried to train a 400 billion
+[54:08] parameter model before?
+[54:12] So you might want to use a smaller model
+[54:14] for your homework assignment is kind of
+[54:16] mainly the the main motivation I guess.
+[54:18] Yeah. Yeah. Um cool. Okay.
+[54:23] So um yeah, next I would like to talk
+[54:27] about best first uh beam search. Um, so
+[54:30] best for beam search. This
+[54:33] paper is a little bit of a methods
+[54:35] paper, but I actually like it better as
+[54:37] a survey paper that kind of organizes
+[54:39] some of the other methods. And um so the
+[54:43] problem with standard beam search uh
+[54:46] that they're trying to overcome is
+[54:48] number one um it's uh kind of like
+[54:54] practically it always expands all of the
+[54:57] inputs um within your beam. And so like
+[55:02] let's say you have a 16 a beam size of
+[55:05] 16 or 32 or something like that. It
+[55:07] could be the case that like most of
+[55:09] those 16 are just not good like kind of
+[55:11] obviously really low probability
+[55:13] solutions and it's not worth initially
+[55:16] exploring uh and expanding them. Um so
+[55:21] what they uh use is they use score-based
+[55:24] prioritization like a star while
+[55:26] maintaining beam constraints and
+[55:28] demonstrate that they get um in a 10x
+[55:31] speed up over standard beam search with
+[55:33] identical results. So this algorithm is
+[55:36] like the most important part of the
+[55:37] paper. Um it's based on a lot of the
+[55:41] stuff that I've talked about so far. Uh
+[55:43] but it has a pretty elegant formulation
+[55:45] of how you like parameterize the
+[55:47] comparator, the stopping criterion, the
+[55:50] maximum beam size in the heristic
+[55:51] function. And so um
+[55:55] basically uh scores can um there's a few
+[55:58] things. Um scores can only decrease uh
+[56:02] when extended. So um
+[56:06] basically the uh score here I I guess in
+[56:09] this case uh they they focused on
+[56:12] decreasing scores. So like log
+[56:13] probabilities getting worse. Um so the
+[56:16] log probability of a new uh output is
+[56:19] going to be worse than log probability
+[56:21] of a current output. Um and they do
+[56:25] early pruning to remove hypotheses
+[56:27] guaranteed to fall off the beam and
+[56:28] early termination. So they stop when a
+[56:30] complete hypothesis is found. And this
+[56:32] is my favorite part of the paper which
+[56:35] is basically like they demonstrate that
+[56:38] all of these algorithms like some of the
+[56:40] algorithms that we talked about so far
+[56:43] um including uh beam search uh best
+[56:47] first search um aar search and breath
+[56:50] first search all um kind of can be
+[56:53] parameterized by looking at a
+[56:55] comparator. Um and so like as we talked
+[56:58] about beam search always prioritizes
+[57:00] things that are shorter. Um so uh in
+[57:04] this case it first looks at whether the
+[57:07] output is short. Um and then it uh looks
+[57:10] at if the output is the same length it
+[57:12] prioritizes based on score. So this is
+[57:15] beam search like I talked about before.
+[57:17] Um best for a search on the other hand
+[57:19] always prioritizes based on score. Uh
+[57:22] but if the score is the same then it
+[57:24] prioritizes based on length. So um you
+[57:27] can uh you can do this and then um you
+[57:31] also have K. So K is either equal to the
+[57:34] beam size or um for best first search
+[57:36] it's infinite. And so you can um uh best
+[57:41] first search needs to be infinite if you
+[57:43] want uh accuracy guarantees. And then
+[57:45] the final thing they have is a heristic
+[57:47] function. So beam search doesn't have
+[57:49] one. Best search doesn't have one but a
+[57:52] star search does have one. So that's
+[57:54] like the only difference between best
+[57:56] first and AAR search. Um so they also
+[57:59] add some interesting new things here
+[58:01] like AAR beam search. Um I would say
+[58:03] this is beam search with a future cost
+[58:05] where the future cost is an admissible
+[58:07] heristic. So um what they don't list in
+[58:10] here is what if the heristic is not
+[58:12] admissible? Well uh you can still do it.
+[58:15] It you just might lose your accuracy
+[58:18] guarantees. Um and then for best first
+[58:20] beam search uh basically um what they
+[58:24] did is they
+[58:26] uh they sort on score as opposed to
+[58:29] sorting on length. Um but they set the
+[58:31] beam size equal to K. Um so they allow
+[58:34] this pruning to make sure that it
+[58:36] doesn't get out of uh get out of hand.
+[58:39] So I I I really like this paper a lot
+[58:42] because it kind of like organizes all
+[58:43] these ideas and demonstrates how they're
+[58:45] conceptually similar. It also could be a
+[58:47] good starting point if you want to work
+[58:48] on any of the methods that we talked
+[58:50] about today.
+[58:52] And their results are um are nice.
+[58:56] Basically, they demonstrate that you can
+[58:58] u maintain uh you can maintain the score
+[59:02] that you get from beam search with uh
+[59:05] great accuracy improvements or um that
+[59:08] also allows you to increase beam sizes.
+[59:10] So if you increase the beam size,
+[59:11] typically you'll do a better job at
+[59:13] search.
+[59:16] Um some issues are are memory overhead
+[59:18] and implementation complexity, but it's
+[59:20] actually not that bad, I guess.
+[59:24] Cool. Uh any any questions about this
+[59:26] part?
+[59:31] Okay. Um so actually our paper
+[59:34] presentation is about the next paper
+[59:36] that I was going to talk about. So, I
+[59:37] might uh turn it over to our paper
+[59:39] presentation to do the paper
+[59:40] presentation today and I'll add any uh
+[59:43] commentary that I have about

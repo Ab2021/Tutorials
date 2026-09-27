@@ -1,0 +1,1807 @@
+Title: CMU LLM Inference (2): Probability Review and Code Examples
+
+--- TRANSCRIPT ---
+
+[0:01] Okay,
+[0:02] hello everyone. I'd like to get started.
+[0:05] So, I the first thing I'd like to point
+[0:07] out is on the class schedule.
+[0:10] Until 2 minutes ago, there was nothing
+[0:12] for this lecture. Now there is something
+[0:14] for this lecture. So,
+[0:17] you can you can go here. It has the code
+[0:20] link here. And this time I'm not going
+[0:23] to be going through slides. I'm going to
+[0:24] be going through like demonstrating some
+[0:26] stuff and I do put a notebook. So,
+[0:28] there's no no slides link but you can
+[0:31] click through and run it yourself.
+[0:34] The reason why I want to do this is I
+[0:36] want to show like a very minimal example
+[0:38] of some of the like algorithms that
+[0:41] we're going to be using this time to set
+[0:44] everything up
+[0:45] so that you can use it properly.
+[0:49] So, I Oh, yeah. And actually before
+[0:51] that, let me do some logistics
+[0:52] announcements, which is number one
+[0:54] starting next week, we will have office
+[0:56] hours.
+[0:58] The TAs are already and I are arranging
+[1:01] everything,
+[1:02] but
+[1:03] that will be posted on Piazza.
+[1:05] All of the class videos will try to post
+[1:08] on Piazza as soon as we can.
+[1:11] Um,
+[1:13] the homework is not out yet, but it will
+[1:15] homework one will be out soon. Any any
+[1:17] other questions that people had about
+[1:19] general logistics things?
+[1:23] Are we all set?
+[1:26] Okay.
+[1:27] Cool. So, let me go ahead with this.
+[1:34] And so, some of this may be
+[1:52] Some of this may be relatively
+[1:54] elementary to everyone, but
+[1:56] to some people, but one thing I've
+[1:58] noticed is that actually a lot of these
+[2:00] concepts are not, you know, as
+[2:02] universally held as I may originally
+[2:04] thought. So, I just want to make sure
+[2:06] that we get everybody on the same page.
+[2:08] Um, and so today is a four-part
+[2:12] is in four parts. The first thing I want
+[2:14] to talk about is some probability
+[2:15] fundamentals.
+[2:17] And these are going to go into like
+[2:20] basically everything we do. So, we'll
+[2:23] talk about that first. The second thing
+[2:25] I'm going to do is just going to show
+[2:27] very basic implementation of a
+[2:29] transformer model. Again, I assume that
+[2:31] most people have dealt with this before,
+[2:33] but um,
+[2:35] this implementation may also be useful
+[2:37] if you want to try it out in future
+[2:39] work. So, I'll just go through it
+[2:40] quickly.
+[2:42] And then after that, I want to show some
+[2:45] generation algorithms and how we can
+[2:47] evaluate models using language models as
+[2:50] a judge. And then finally, I want to
+[2:52] talk a little bit about meta generation
+[2:53] algorithms, which are like re-ranking
+[2:55] algorithms that allow you to pick the
+[2:57] best output.
+[2:58] And not everything is in the code. I'm
+[3:00] going to go off
+[3:02] off track a little bit some of the time
+[3:04] and also please feel free to ask any
+[3:05] questions.
+[3:06] Um,
+[3:08] So, yeah, let's get started.
+[3:10] Um, so the first thing that I want to
+[3:12] talk about is probability fundamentals.
+[3:15] And so, I'm going to go through some
+[3:17] basic concepts and I would definitely
+[3:19] encourage you to go walk along with the
+[3:21] code.
+[3:22] You can run it locally if you click open
+[3:25] in collab, you can run it on collab, but
+[3:26] you'll have to like copy paste in the
+[3:28] library files. So, it might not be
+[3:30] might not be super convenient.
+[3:32] Um, the first thing we do is just set up
+[3:35] our environment with torch and numpy and
+[3:37] and matplotlib and import everything.
+[3:39] So, this is not interesting.
+[3:41] Um,
+[3:43] So, the first thing I want to talk about
+[3:44] is conditional probabilities. And the
+[3:47] reason why I want to talk about
+[3:48] conditional probabilities is because we
+[3:50] are
+[3:51] dealing with
+[3:53] auto regressive language models mostly
+[3:55] and auto regressive language models are
+[3:57] based on conditional probabilities where
+[3:58] we predict the probability of the next
+[4:00] token.
+[4:01] Um,
+[4:03] Have people learned of any variety of
+[4:05] language models other than transformers?
+[4:09] Yes.
+[4:11] Okay.
+[4:12] Word embeddings.
+[4:13] Word embeddings.
+[4:14] So, that's a good point. Is a word
+[4:16] embedding a language model?
+[4:19] According to our definition last week.
+[4:23] Anyone remember what the definition of a
+[4:24] language model last week was?
+[4:31] It's not a not a trick question, yeah.
+[4:35] It's actually predict one specific token
+[4:37] given like the
+[4:40] previous tokens that you already have.
+[4:42] Yeah, model that predicts the next token
+[4:44] given the previous token. Yes, that's
+[4:46] specifically an auto regressive language
+[4:48] model. So, if we go even broader,
+[4:53] it's a a model that
+[4:58] Yeah. Generates text.
+[5:01] That generates text. Um, yes.
+[5:06] It should have the ability to generate
+[5:07] text. That's actually not how I defined
+[5:10] it on Tuesday though.
+[5:12] Yeah. It generates sequences of tokens.
+[5:15] Sequences of tokens.
+[5:17] Yes, but that's also not how I defined
+[5:19] it last
+[5:20] Tuesday. It assigns probabilities to
+[5:23] sequences. Yeah, assigning probabilities
+[5:25] to sequences. So,
+[5:26] and then specifically auto regressive
+[5:28] models assign probabilities to sequences
+[5:30] by predicting the next token.
+[5:32] Um, and so, when we predict the next
+[5:36] token, that's a conditional probability.
+[5:38] It's the probability of the next the
+[5:41] next token given all of the previous
+[5:44] tokens.
+[5:45] Um, or you know, the probability of Y
+[5:47] given X where X is
+[5:49] X is the previous tokens.
+[5:51] Um,
+[5:53] So, now going back to the the question,
+[5:56] is word2vec a language model?
+[6:00] If if so, yes. If not, why not?
+[6:08] Any ideas? Who knows word2vec by the
+[6:10] way?
+[6:13] Maybe not everybody. It's yeah.
+[6:15] I think it is
+[6:16] assigning probability which is a
+[6:18] definite
+[6:19] generation of
+[6:21] like embeddings
+[6:23] Yeah, so word2vec for people who aren't
+[6:26] familiar, I can draw it quickly on the
+[6:28] board.
+[6:29] Basically, it's a way of learning
+[6:30] embeddings for for tokens, but
+[6:37] Um, what it does is word2vec is actually
+[6:40] a software toolkit. It's not
+[6:42] any individual method. It's
+[6:45] either of two methods where
+[6:47] basically,
+[6:48] um, based on the surrounding tokens,
+[6:56] you're predicting the tokens in the
+[6:57] center or based on the token in the
+[6:58] center, you're predicting the
+[6:59] surrounding tokens and then you use that
+[7:01] to learn
+[7:02] you use that to learn embeddings. But
+[7:05] this actually violates the principle of
+[7:06] going from left to right and so, it
+[7:08] can't be an auto regressive model. And
+[7:11] if you work really really hard, you can
+[7:13] kind of turn it into a language model
+[7:15] that actually predicts the probability
+[7:16] of sequences, but it's
+[7:19] like
+[7:20] not designed for that purpose.
+[7:23] Um,
+[7:24] so,
+[7:25] any other ideas? BERT is also similar by
+[7:28] the way. BERT is a masked it's called a
+[7:30] masked language model, but it's actually
+[7:31] really hard to get it to assign it
+[7:33] probabilities sequences.
+[7:35] Um, any others? Yeah.
+[7:38] Diffusion models. Yes, very good. But
+[7:41] that's not the one I'm looking for.
+[7:45] Recurrent neural networks. Yeah, that's
+[7:47] a very good one. Did anyone take a kind
+[7:49] of old school NLP class?
+[7:52] What did you learn as language models
+[7:53] there?
+[7:56] BM25. BM25 is more of a a waiting a
+[7:59] waiting thing.
+[8:02] Yeah. Grammar. N-gram models. Yeah,
+[8:04] there we go.
+[8:05] So, n-gram models are maybe not
+[8:09] not taught so widely anymore, but
+[8:11] they're a good illustrative
+[8:13] model that we can we can work with. An
+[8:15] n-gram model basically what it is is it
+[8:17] predicts the next
+[8:19] the next word based on the previous n-1
+[8:23] words.
+[8:24] And
+[8:25] um, the
+[8:27] in this particular case, I set up a
+[8:30] bigram model, which is a 2-gram. So, it
+[8:33] predicts the next word based on the
+[8:34] previous one word. The next word based
+[8:36] on the previous one word. So,
+[8:38] um, I came up with a a fake
+[8:42] n-gram model where I just kind of
+[8:44] assigned probabilities to this very
+[8:46] small vocab of
+[8:48] beginning of sentence the cat dog park
+[8:50] mat sat ran walked played on in too
+[8:53] quickly slowly.
+[8:55] Um, and end of sentence symbol.
+[8:57] And
+[8:59] uh,
+[9:00] I or more accurately Claude came up with
+[9:03] these probabilities for each of the each
+[9:06] of the tokens here. So, given the
+[9:08] beginning of the sentence,
+[9:10] um,
+[9:11] what what is the next possible word?
+[9:13] Like the cat dog park.
+[9:16] Given the, what is the next possible
+[9:18] word? Cat dog park, etc. etc. And so,
+[9:21] this definitely satisfies this
+[9:25] this
+[9:27] equation here, but it
+[9:30] also additionally
+[9:32] Who mentioned the Markov assumption last
+[9:35] time? Yeah. So, this this has a Markov
+[9:37] assumption, which means that we are only
+[9:40] paying attention to a certain number of
+[9:42] previous words and so, we're basically
+[9:44] lopping off everything except the the
+[9:47] immediately previous word and just
+[9:49] ignoring it and only conditioning on
+[9:51] previous word.
+[9:54] So, um,
+[9:56] what this gives us is this gives us a
+[9:59] set of conditional probabilities that
+[10:01] look a bit like this. And so given S
+[10:05] given the previous word was S, you know,
+[10:07] we can predict any of these words. Given
+[10:10] that the previous word was the, we can
+[10:11] predict any of these words, any of these
+[10:13] nouns. Uh given uh that the previous
+[10:16] word was cat, we could predict things
+[10:18] like sat, ran, walked, played, etc.,
+[10:19] etc.
+[10:21] So um we're not actually going to use
+[10:23] any of these models. I'm just using them
+[10:24] here because they're, you know, very
+[10:25] fast to calculate and uh easy for
+[10:27] illustrative purposes.
+[10:29] But um uh there we are.
+[10:32] Any questions there?
+[10:37] Who's actually like implemented or used
+[10:39] an n-gram model
+[10:41] in a class?
+[10:43] Wow, I feel 2025. That's uh
+[10:46] exciting exciting to see the change. The
+[10:48] this was like the staple uh 5 years ago,
+[10:50] I think. So.
+[10:51] Um
+[10:53] cool. Okay. So now I want to talk about
+[10:55] sampling from language models, and this
+[10:57] is the most simple inference algorithm
+[11:00] that we're going to use. It's also a
+[11:01] very um
+[11:03] a very special inference algorithm,
+[11:05] which I'm going to talk about in a
+[11:06] second.
+[11:07] And so basically the way we sample from
+[11:10] a language model
+[11:11] is we start
+[11:13] from the uh beginning token and use the
+[11:17] conditional probabilities to sample the
+[11:18] next word.
+[11:20] Um update the current context and
+[11:23] repeat.
+[11:24] And uh then we continue until we reach
+[11:26] an end token or maximum length.
+[11:28] And so this is like what we do in every
+[11:31] auto-regressive language model. Uh it's
+[11:33] the same for transformers. The only
+[11:35] difference is
+[11:36] here for updating the current context,
+[11:38] we're just remembering the previous
+[11:40] word. In a transformer model, we run it
+[11:42] through many, many layers of the
+[11:43] transformer model and like append the uh
+[11:47] the embeddings to the KB cache and all
+[11:49] the other things. So um but the overall
+[11:52] uh you know, way of implementing this is
+[11:53] the same. So
+[11:55] um what we do is we take our vocabulary.
+[11:58] Um we uh
+[12:00] get a list of all of the he's in the
+[12:02] vocabulary
+[12:04] and uh we start our sequence with just
+[12:07] the beginning of sentence. So uh
+[12:11] set that as our our current index.
+[12:13] And then we step through until we get to
+[12:16] a max length. And actually this max
+[12:17] length is important uh when you're
+[12:19] using, you know, any sort of uh
+[12:22] like
+[12:24] neural network or deep learning-based
+[12:26] model because it may go on forever if
+[12:28] you're not careful. So you you kind of
+[12:30] need to set this so you don't run out of
+[12:31] memory.
+[12:33] Um
+[12:34] so I'll I'll get to temperature um
+[12:38] or no, I'll I'll explain temperature
+[12:40] now. So um
+[12:41] we're going to talk about a lot of
+[12:42] different sampling algorithms.
+[12:44] Temperature sampling is a very common
+[12:46] one that we use. And basically the idea
+[12:50] behind temperature sampling is that we
+[12:53] want to um
+[12:56] we might want to make the distribution
+[13:00] more peaky or less peaky so that we get
+[13:02] more higher probability outputs or lower
+[13:04] probability outputs.
+[13:07] And so
+[13:09] in a mathematical equation
+[13:14] um in a mathematical equation, what we
+[13:16] do is
+[13:19] we take the probability
+[13:22] of I.
+[13:24] And so typically
+[13:34] Um
+[13:35] typically if we have a probability, um
+[13:39] the all all of this will add up to one
+[13:41] uh because it's a probability and
+[13:43] probabilities need to add up to one.
+[13:45] And so this sum is just one, so we don't
+[13:48] need to worry about it. So the
+[13:49] probability of I is the probability of
+[13:51] I, right? So um
+[13:53] typically you could just cancel this
+[13:55] out. But what we do what we do when we
+[13:57] have a temperature
+[13:59] is we
+[14:01] make an adjustment
+[14:04] where we take
+[14:06] E
+[14:08] to the log probability
+[14:11] of I.
+[14:13] E to the log probability of J.
+[14:20] And um
+[14:21] then we multiply it by 1 divided by the
+[14:24] temperature.
+[14:29] And so what does this mean
+[14:32] when the temperature is one?
+[14:35] Any ideas?
+[14:38] Yeah, nothing happens. It's a no-op
+[14:39] because you you get one over one, this
+[14:42] is one, and then E and log cancel out
+[14:44] and we get uh you get the same thing we
+[14:46] had before.
+[14:47] Um what does this mean when we set the
+[14:50] temperature to uh
+[14:52] be
+[14:54] infinity?
+[15:02] Uh
+[15:03] the all of the values will become one.
+[15:05] And so what that means is what if our
+[15:08] vocabulary size is 1,000?
+[15:12] Yeah, each of the each of them will have
+[15:13] one by 1,000. So it gives us a uniform
+[15:15] probability distribution.
+[15:17] Um what if we set this to zero?
+[15:28] For the prob for the probability.
+[15:31] Um it it might be it might be undefined
+[15:34] at infinity, but what's the limit as it
+[15:35] approaches infinity?
+[15:45] There's only one single probable word.
+[15:47] So basically what happens is the largest
+[15:51] uh the largest token becomes infinitely
+[15:53] larger than all of the other tokens.
+[15:55] Um because uh it's exponent um because
+[15:59] it's multiplied and then exponentiated.
+[16:01] So basically like what that means is you
+[16:03] get a one-hot vector.
+[16:06] Um
+[16:07] where a single word
+[16:11] a single uh actually I mean basically
+[16:13] word is a token, but let's just say
+[16:14] token. Where a single token gets a
+[16:16] probability of one and all of the other
+[16:18] ones get a probability of zero. So
+[16:19] you'll always pick the most probable
+[16:21] token.
+[16:22] Um slight caveat, if two tokens have
+[16:24] exactly the same probability, then um
+[16:27] you would get a uniform distribution
+[16:28] over all of the most probable tokens,
+[16:30] but basically it is um
+[16:32] uh
+[16:33] you pick the most probable token.
+[16:36] So um that's what we're doing here.
+[16:39] Uh we're basically um
+[16:41] taking the log of uh of the
+[16:44] probabilities.
+[16:45] Uh we're dividing it by the temperature,
+[16:48] and then we're taking the softmax. And
+[16:50] the softmax is basically exponentiating
+[16:51] and then normalizing. So um that's what
+[16:54] we do here.
+[16:56] Um so once we've done this, uh we then
+[16:59] sample the next token. So if we're not
+[17:01] taking the temperature, we sample it
+[17:03] according to the original probability
+[17:04] distribution. If we um
+[17:08] if we do take the temperature, we sample
+[17:10] it according to the adjusted probability
+[17:12] distribution.
+[17:13] Uh we append this as the next word to
+[17:15] the sequence, and we continue until we
+[17:19] hit the end of uh end of sequence token.
+[17:24] Okay?
+[17:26] Great. So um let's let's try it out.
+[17:31] Um I'm just sampling uh some outputs
+[17:34] from the model.
+[17:39] And my model gave us uh the dog played,
+[17:42] the cat played quickly, uh the dog
+[17:44] played in the park walked. Um so I I
+[17:47] don't know if anybody's heard of a
+[17:48] garden path sentence, but this feels
+[17:50] like a garden path sentence here. It's
+[17:52] uh one of those sentences that kind of
+[17:53] seems to make sense until you hear the
+[17:54] last word and then it doesn't make any
+[17:56] sense at all.
+[17:57] Um but basically the reason why we use
+[17:59] big transformers is because bigram
+[18:01] models like this are really bad models
+[18:03] of language, so they give you lots of
+[18:04] like very unnatural things. Uh so um but
+[18:07] anyway, like this is uh we can generate
+[18:10] something that vaguely looks like
+[18:11] English in this way.
+[18:14] So anyway, we're not going to use this
+[18:15] model. Um we're not going to use this
+[18:17] model to do anything. It's mainly for
+[18:18] demonstration purposes.
+[18:20] And the the next demonstration that I
+[18:23] would like to make is um how we estimate
+[18:26] quantities through sampling.
+[18:28] Um
+[18:29] and
+[18:31] the basic idea is here we have a true
+[18:35] conditional probability of the next word
+[18:37] given the current word. So we know we
+[18:39] know this according to our bigram model.
+[18:42] Um
+[18:43] but what if I said I wanted the joint
+[18:45] probability of two words co-occurring
+[18:48] here?
+[18:49] And so the joint probability would be um
+[18:52] not
+[18:53] uh
+[19:14] not the conditional probability where we
+[19:16] divided by uh P of X, but just the thing
+[19:20] on top of this. So just like what's the
+[19:21] probability that these two words, if you
+[19:24] looked at any two arbitrary words, that
+[19:26] the first word would be X and the next
+[19:28] word
+[19:30] So does anyone have a a good way to
+[19:31] calculate this? Um
+[19:33] like
+[19:35] could you uh could you write a program
+[19:37] that like
+[19:39] solves for this value by taking in this
+[19:41] big uh this big matrix?
+[19:45] Yeah.
+[19:54] Uh
+[19:55] the probability of both words not
+[19:56] occurring together. Yeah, I mean, if you
+[19:58] could get that, you could get uh
+[20:00] you could maybe use that to find this.
+[20:04] But basically, long story short, coming
+[20:05] up with an analytical solution to this
+[20:08] is maybe possible, but it's hard. Like
+[20:10] there's it's not very easy to
+[20:13] take these conditional probabilities and
+[20:15] come up with a system of equations that
+[20:17] would allow you to come up with this
+[20:18] joint probability.
+[20:20] Um and it becomes even more impossible
+[20:22] when you start talking about like
+[20:24] finding this joint probability for a
+[20:25] transformer-based model. You just
+[20:27] wouldn't be able to do it, right?
+[20:29] So, um what we do instead is we um we
+[20:33] can actually estimate quantities through
+[20:35] sampling.
+[20:36] And so, what we can do is we can
+[20:38] generate a whole bunch of uh sentences
+[20:41] with the model using our sampling
+[20:44] algorithm and estimate this uh
+[20:47] like estimate this unknown quantity,
+[20:50] this joint probability of the two.
+[20:52] So,
+[20:54] um why is why is this useful? Um this is
+[20:58] useful for a very large number of
+[21:00] reasons. Um it can be useful for,
+[21:04] for example,
+[21:06] let's say you have a transformer-based
+[21:07] model where you can calculate
+[21:09] conditional probabilities and you want
+[21:11] to know what percentage of the time it
+[21:12] generates toxic content.
+[21:15] So, there's no analytical solution where
+[21:17] you throw in your, you know, transformer
+[21:20] and uh where you throw in your
+[21:22] transformer and like say, "Okay,
+[21:25] now uh run the system of equations and
+[21:27] tell me how much toxic content there
+[21:28] is." But what you can do is you can
+[21:30] sample a million outputs and see what
+[21:32] percentage of them are toxic. And so,
+[21:33] that gives you the expectate expected
+[21:36] number of like toxic outputs that it
+[21:38] would generate given a particular prompt
+[21:40] or something like this.
+[21:41] Um but I'm going to we're going to do
+[21:43] something a little bit more boring,
+[21:44] which is just uh
+[21:46] you know, estimating the joint
+[21:47] probability of any two tokens in a
+[21:49] sequence. And so, um what we have here
+[21:52] is we have our our bigram count. Um
+[21:55] we have the total bigrams. We sample a
+[21:57] certain number of sequences and based on
+[22:00] this, we find the current index and the
+[22:02] next index and we just add to the bigram
+[22:04] count and the total number of bigrams.
+[22:06] And uh then we're when we're done, uh we
+[22:09] divide the bigram counts by the total
+[22:10] number of bigrams and that gives us the
+[22:12] joint probability of having these two in
+[22:14] a sequence.
+[22:15] Um
+[22:17] and
+[22:20] so,
+[22:22] uh let's run that. I also have a
+[22:25] function to estimate conditional
+[22:27] probabilities from sequences, but this
+[22:28] is a little bit
+[22:30] like uninteresting at this point because
+[22:33] we already know the conditional
+[22:34] probabilities, so why do we need to, you
+[22:36] know, estimate them from sequences? So,
+[22:38] we'll uh we'll do that later.
+[22:40] Um
+[22:41] So, what I want to do now
+[22:44] Oh, actually, sorry. No, I I am going to
+[22:46] demonstrate that we're going to estimate
+[22:48] conditional probabilities from
+[22:49] sequences. And the reason why is because
+[22:52] um the more we sample, the better our
+[22:54] estimates become.
+[22:56] Um and so, if we sample more and more
+[22:59] outputs, our estimates are going to
+[23:00] become more and more accurate. And I
+[23:02] want to demonstrate this by looking at
+[23:03] the um
+[23:05] at the conditional probabilities that we
+[23:06] estimate by counting up all of the
+[23:09] bigrams and then dividing by the number
+[23:11] of times we saw a previous word and
+[23:13] comparing that with the true conditional
+[23:15] probabilities that we know because we
+[23:17] know this is a bigram model. So, um
+[23:20] yeah, sorry. Actually, maybe just to to
+[23:22] rewind a little bit. The way we can
+[23:24] estimate a conditional probability from
+[23:26] a sequence is we look at the current ID,
+[23:28] we look at the next ID, we calculate the
+[23:30] bigram count, we count calculate the
+[23:33] count of the first word in that bigram,
+[23:36] and then we can calculate the
+[23:38] conditional probability by dividing the
+[23:40] bigram count with the um
+[23:42] with the current word count. So,
+[23:44] basically, calculate um this without the
+[23:47] like X in the bottom.
+[23:50] So, um let's do this and we're going to
+[23:52] calculate the bigram counts uh or the
+[23:55] conditional uh probabilities for cat
+[23:57] given the, sat given cat, the given on,
+[24:01] and on given sat.
+[24:03] And um I I won't go through like all of
+[24:06] this code here cuz it's a little bit um
+[24:08] uh a little bit involved, but
+[24:12] let's run this.
+[24:16] And what we can see is if we sample a
+[24:19] hundred outputs, um the actual condition
+[24:23] conditional probability of uh on given
+[24:26] the is 0.5 and we happen to get it like
+[24:29] exactly right uh
+[24:31] uh when we sampled only a hundred
+[24:33] outputs, but all of the other ones, we
+[24:35] actually got zero. Um we got zero
+[24:38] percent probability for like sat given
+[24:41] on, for instance. So, uh basically, if
+[24:44] we only sampled a hundred examples, we
+[24:47] got a really bad estimate of many of
+[24:49] these uh
+[24:50] of many of these. But then if we scaled
+[24:52] up to like 500 or a thousand or 5,000,
+[24:55] uh
+[24:57] 10,000 uh 50,000,
+[25:00] uh sorry. Uh
+[25:01] wait.
+[25:02] Uh a hundred,
+[25:04] uh or sorry, 10, 50, a hundred, 500, a
+[25:08] thousand, 5,000, and 10,000. We can see
+[25:10] that gradually like our estimates are
+[25:12] converging to the actual value that we
+[25:15] know is correct. And so, like the more
+[25:17] we sample, uh the better estimates we
+[25:19] get.
+[25:21] Um and this is like looking at all of
+[25:23] the outputs, how much does our error
+[25:25] converge after we sampled that many
+[25:27] times. Yeah.
+[25:29] Does it somehow
+[25:32] Great question. So, the question was,
+[25:33] does this somehow depend on the
+[25:35] temperature? Um
+[25:36] Does anyone have an idea about whether
+[25:38] this depends on the temperature?
+[25:41] I'm going to show you a a plot, but um
+[25:44] yeah.
+[25:48] That's the one that modifies
+[25:50] Yeah, it does and the answer is it
+[25:52] depends on uh the temperature because
+[25:54] the temperature modifies the
+[25:55] probability. So, um yes, that's
+[25:58] absolutely correct. And
+[26:02] the actual answer is one is a very
+[26:04] special temperature. It's the only
+[26:06] temperature that can see the true
+[26:07] probability distribution. Um and it's
+[26:10] actually the only temperature where you
+[26:12] can um
+[26:13] like
+[26:14] uh where where you can accurately sample
+[26:17] from the joint distribution according to
+[26:19] that temperature, all all kinds of other
+[26:20] things. So, um if you sample with a
+[26:23] probability of one, you're actually
+[26:25] guaranteed to get an unbiased uh
+[26:28] if you sample from the conditional pro
+[26:31] probabilities or or sorry, from the
+[26:32] joint probability distribution that you
+[26:34] can get from the conditional probability
+[26:36] distribution. So, I don't have the
+[26:38] autoregressive
+[26:40] uh equation up here, but basically like
+[26:42] if you multiply all of these together,
+[26:44] you get the joint distribution of all of
+[26:45] the tokens of the sequence, right? So,
+[26:47] um
+[26:49] yeah. If you don't use one, uh
+[26:52] if you don't use one, you get it uh
+[26:53] incorrect.
+[26:56] Cool. And then these are the um the
+[26:59] final estimated conditional
+[27:00] probabilities. Uh we'd have to scroll up
+[27:02] to compare them to the the real uh
+[27:04] conditional probabilities, but like as
+[27:07] you sample more, you're going to get
+[27:08] this closer and closer to the um to the
+[27:11] actual distribution.
+[27:13] So,
+[27:14] um this is important for a number of
+[27:16] reasons. Uh any any questions here?
+[27:24] This is also important for model
+[27:25] training. Anyone know why this is
+[27:27] important for model training?
+[27:38] Any ideas?
+[27:41] Prevent like
+[27:44] evil content speaking.
+[27:47] Prevent evil contents. Um It's not the
+[27:50] answer I was looking for, but uh maybe.
+[27:52] Um
+[27:54] Yeah. I guess
+[28:09] Yeah. So, basically, if we want to So,
+[28:12] the the answer was if we want to match
+[28:14] the true probability distribution of
+[28:17] like text on the internet, we just need
+[28:19] to sample an infinite amount of text on
+[28:21] the internet and we'll get a unbiased
+[28:23] sample of uh
+[28:26] you know, of the text. I mean, what what
+[28:27] does unbiased mean here? You know,
+[28:29] depending on what sites you download and
+[28:31] stuff like that, you might not be able
+[28:32] to get like all of the words that people
+[28:35] have ever said, but you know, you can
+[28:36] get pretty close with the internet. But
+[28:38] the other implication is if you have a
+[28:40] small sample, it is it's not going to be
+[28:43] able to give you a good estimate of what
+[28:44] all the text on the internet looks like.
+[28:46] So, when you train on only a small
+[28:48] sample of data, uh you're going to risk
+[28:50] overfitting and other stuff like that.
+[28:51] So, it all boils down to to basically
+[28:53] this.
+[28:55] So, um
+[28:57] yeah. So, then the next thing I want to
+[28:59] talk about is marginalization, which is
+[29:02] uh summing over variables. And
+[29:05] this is also uh important and we're
+[29:08] going to be talking about it a lot in
+[29:09] our meta generation uh section,
+[29:12] but um
+[29:14] so, can somebody
+[29:17] uh I kind of actually already said the
+[29:19] answer. So, marginalization is basically
+[29:21] taking the sum, uh for example, taking
+[29:23] the sum over Y and predicting the the
+[29:25] probability of X or taking the sum over
+[29:27] X and predicting the probability of Y.
+[29:30] Does anyone know why it's called
+[29:31] marginalization, by the way?
+[29:38] Anyone heard of this before? Yeah.
+[29:43] Yeah, exactly. You write the sum in the
+[29:44] margin of the table. So, what if this is
+[29:47] a table of all of the probabilities?
+[29:50] Actually, this is a conditional
+[29:51] probability, so it's not not as
+[29:53] interesting. But, if you have the joint
+[29:55] the table of the joint probabilities,
+[29:57] you would write
+[29:59] the sum in the margin over here because
+[30:01] it would be the sum of all of the
+[30:04] like values in the row or all of the
+[30:06] values in the column. So, that's where
+[30:07] the where the word came from.
+[30:11] Great. Okay. So, um the way we do this
+[30:15] is is not uh that tricky. Uh basically,
+[30:19] um in PyTorch, it's a single call. Um we
+[30:22] just sum over the dimension uh like
+[30:25] dimension one or dimension zero.
+[30:27] And um we estimated the joint
+[30:30] probabilities from the sequence, so
+[30:31] we're going to base this on the joint
+[30:32] probabilities. And actually, I have the
+[30:35] joint probabilities here.
+[30:36] And you can see that the marginal
+[30:38] probability of uh this being the current
+[30:40] word is uh
+[30:43] is this. So, the highest um
+[30:45] the highest probability current word is
+[30:47] the start of sentence symbol. Uh
+[30:49] the start of sentence symbol can never
+[30:51] be the next word, so its probability is
+[30:53] zero.
+[30:54] And um and then we have like different
+[30:56] values. And we got all of this without
+[30:58] me not, you know, ever being able to
+[31:00] calculate this directly or analytically
+[31:03] um
+[31:03] because we can sample and we can
+[31:05] calculate these things.
+[31:10] Okay. So, um
+[31:13] in particular, why I wanted to talk
+[31:15] about um
+[31:16] uh marginalization is I want to talk
+[31:18] about latent Uh yeah, sorry.
+[31:25] Sure.
+[31:48] So, this this should go to zero. Um
+[31:50] like if you sample infinitely uh cuz
+[31:52] we're sampling in an unbiased manner and
+[31:54] we're just calculating counts. So, this
+[31:56] error should should go to zero if I do
+[31:58] more. Like you you want to you want to
+[32:00] try?
+[32:01] Let's uh
+[32:03] let's make my laptop a little bit
+[32:05] hotter.
+[32:10] I might need to change.
+[32:22] Okay.
+[32:27] Maybe this will just work.
+[32:37] My sampling is also not optimized. I I'm
+[32:40] using very inefficient inference
+[32:41] algorithms of Python for loops. So,
+[32:45] this uh this this
+[32:47] I would suggest you use an optimized
+[32:49] implementation if you try this actually
+[32:51] try this.
+[32:53] So, yeah, while while that's working,
+[32:56] maybe I will I will go on to the next
+[32:58] part. So, um
+[33:01] Latent variables. So, this is hidden
+[33:03] structure.
+[33:04] Um
+[33:05] uh like hidden variables that are not
+[33:07] maybe necessarily the input that you
+[33:09] have or the output that you care about,
+[33:12] uh but somehow uh you know, have an
+[33:15] effect on uh
+[33:17] on the final output. So, you you like to
+[33:19] include them.
+[33:20] So, there's a really um common variety
+[33:24] of latent variable that we use in uh
+[33:26] language models nowadays.
+[33:28] Um anybody
+[33:31] have an idea of uh what this might be
+[33:33] off the top of your head? And this needs
+[33:34] to be a probabilistic variable, so it's
+[33:36] not like the hidden embeddings or
+[33:37] something like
+[33:41] It's uh very very popular as of about uh
+[33:45] uh
+[33:46] 12 months ago or
+[33:49] 9 months ago.
+[33:53] What's a big trend in language models
+[33:55] nowadays?
+[33:57] Is it reasoning? Yes, reasoning. So, um
+[34:01] re- recently, a big trend in language
+[34:03] models is reasoning models. And
+[34:05] basically, what reasoning models do is
+[34:07] they have a long they have a chain of
+[34:10] thought or a long chain of thought that
+[34:12] they use before giving you the final
+[34:14] answer with the hope that adding this
+[34:16] chain of thought will improve the
+[34:17] overall quality of the final answer.
+[34:19] And so,
+[34:21] here X is uh the first word uh sorry, X
+[34:26] would be like your input prompt.
+[34:28] Uh Z would be the reasoning trace of a
+[34:32] reasoning model, and Y would be the
+[34:33] final answer that you would be
+[34:34] providing. Um
+[34:36] and so,
+[34:37] um that that's one example. There are
+[34:39] other examples, but this is definitely
+[34:41] the most prominent example nowadays.
+[34:43] Um and so, the idea is um
+[34:48] if you calculate
+[35:01] So, let's say we have a model that has
+[35:03] no chain of thought or no reasoning
+[35:05] whatsoever.
+[35:06] Um it would be calculating
+[35:10] the um just the conditional probability
+[35:12] of the answer.
+[35:16] A model with chain of thought
+[35:22] might generate um might generate
+[35:26] the chain of thought and then generate
+[35:28] the answer. So, this is calculating the
+[35:30] joint probability of
+[35:32] uh the chain of thought and then the
+[35:34] answer.
+[35:35] And let's say we don't care about the
+[35:37] chain of thought and we just throw it
+[35:38] away, but we can actually sample lots
+[35:40] and lots of them. So, this is a method
+[35:41] called self-consistency that's used
+[35:43] pretty widely.
+[35:45] Um and we're also going to talk about
+[35:46] minimum base risk, which is kind of
+[35:48] similar to self-consistency in a way.
+[35:51] And what that means is you do
+[36:18] So, you sample you sample the chain of
+[36:20] thought and you um and you actually like
+[36:22] I could have just used that as well. Um
+[36:24] and then you sum over uh
+[36:26] sum over all of the samples that you
+[36:28] got.
+[36:29] And this gives you an estimate of P of Y
+[36:33] given X.
+[36:37] And um or it's an estimate of P of Y P
+[36:40] of Y given X.
+[36:41] And this um
+[36:43] this is, you know, similar to predicting
+[36:45] directly, but because the probability of
+[36:48] Y gets more accurate by adding this
+[36:50] reasoning, um you actually get a better
+[36:52] estimate and you get better uh better
+[36:54] results when you do this. So, we're
+[36:55] going to talk a lot more about this, but
+[36:56] this is like the connection to modern
+[36:59] language models. Um
+[37:01] but here I'm uh going to focus on kind
+[37:04] of the uh
+[37:06] like
+[37:07] I I'm I'm just focusing on uh like the
+[37:10] the basic idea of this.
+[37:12] And actually, this just finished.
+[37:17] It's not converging as fast as I thought
+[37:19] it would be, but you can see it
+[37:20] definitely went down from uh from where
+[37:22] it was was before. So,
+[37:28] yeah, I'm I'm almost a little bit
+[37:30] worried I have a bug in my code. So, I
+[37:31] need to go back and and double-check
+[37:33] that, but this should uh eventually
+[37:34] approach zero.
+[37:37] Um
+[37:39] so, yeah.
+[37:41] And so, like in this uh particular
+[37:45] example, um
+[37:47] you know, we could we could generate and
+[37:49] we could say the first word is X, the
+[37:52] last word is Y, and then all the words
+[37:55] in the middle are the latent variables.
+[37:56] So, that's kind of like what we do with
+[37:58] uh with chain of thought.
+[38:00] Um just in the interest of of uh
+[38:03] finishing everything. So, um
+[38:06] just to go back to the point about
+[38:07] temperature and biased estimates,
+[38:10] um
+[38:11] so, uh this is what, you know,
+[38:13] temperature sampling looks like.
+[38:16] Um and so, like let's run with
+[38:18] temperature sampling
+[38:20] uh the same experiment that I ran
+[38:21] before.
+[38:23] And basically, what we can see is that
+[38:26] if we sample from a model where
+[38:28] temperature is one,
+[38:30] um this gives us an unbiased estimate of
+[38:32] what the actual conditional
+[38:34] probabilities are. And so, our error
+[38:36] goes down and down and down and down.
+[38:38] But, if we're sampling from an
+[38:41] uh from a biased estimate of what the
+[38:43] probability is, then this indeed will
+[38:45] plateau and this will not give us a, you
+[38:47] know, correct estimate of what uh what
+[38:49] the output of the model would look like.
+[38:53] So,
+[38:55] why is this important? Um this is
+[38:57] important because almost nobody does
+[39:00] this uh this temperature sampling of
+[39:02] one. Uh like you some language models
+[39:06] enforce it. Like I think uh 01 uh
+[39:09] like the the OpenAI reasoning models
+[39:12] enforce temperature of one, and you're
+[39:13] not allowed to do uh other temperatures,
+[39:15] but um a lot of uh models for various
+[39:18] reasons, which I'm going to talk about
+[39:19] in a second, use um
+[39:22] like
+[39:25] uh use this. And actually,
+[39:27] if we go even more extreme
+[39:29] and we say we're going to set the
+[39:30] temperature to zero, we're going to do
+[39:32] greedy um
+[39:38] we're going to do this greedy. Let's
+[39:39] see.
+[40:02] >> But
+[40:04] my my code was not robust to sample from
+[40:06] uh
+[40:07] from zero. But like if you did greedy it
+[40:09] would be even more biased. So, um like
+[40:12] what does this
+[40:13] uh
+[40:14] what this means is um unless we're
+[40:18] sampling with a temperature of one we're
+[40:19] not getting like the actual language
+[40:21] models like model of language, right?
+[40:23] We're getting something that's like a
+[40:25] biased distribution that the the model
+[40:27] isn't actually
+[40:28] uh generating.
+[40:30] Um
+[40:32] cool. So, like let's say um
+[40:35] then the question is like why do we want
+[40:37] to do inference? Uh we actually had a
+[40:39] question about this uh last time, but uh
+[40:43] one reason why we might want to do
+[40:45] inference is to get good outputs in
+[40:46] which case, you know, we want to use any
+[40:49] inference algorithm that will give us
+[40:50] the best outputs by whatever definition
+[40:52] of good we have.
+[40:54] Um the other reason could be we actually
+[40:55] want to understand the qualities of the
+[40:58] language model and if we do then
+[41:00] um
+[41:01] basically sampling with the temperature
+[41:03] of one is the only way to get the true
+[41:05] distribution of the model. So, that's a
+[41:06] good a good thing to remember.
+[41:10] Okay. Um that that's the first part. Are
+[41:12] there any um any questions about that?
+[41:15] Yeah.
+[41:23] Is there any use case where you set the
+[41:25] temperature to greater than one? Um
+[41:28] I have
+[41:30] almost never seen this. I've seen this
+[41:31] like a little bit, but almost never. Um
+[41:34] and actually I think you'll you might
+[41:35] see the reason why in the
+[41:38] uh in the slide or in the notebook after
+[41:41] the one that I'm going to talk about,
+[41:42] but usually one is kind of the upper
+[41:43] limit of what people said.
+[41:46] Yes.
+[41:54] Yeah, um I'll that's great. Why don't I
+[41:57] uh show the next notebook and then uh I
+[41:59] get there. Cool. Um so,
+[42:04] I actually don't know if I'll really go
+[42:06] through this. I'm kind of assuming, you
+[42:07] know, everybody has either taken NLP or
+[42:09] deep learning or something. So, this is
+[42:11] just a transformer model. The nice thing
+[42:13] about this transformer model is that
+[42:15] it's a very, very simple. Um there's
+[42:17] like 2,000 uh
+[42:19] 2,000 lines of code in the hugging face
+[42:21] transformers implementation of GPT-2 and
+[42:23] this one has like a a couple hundred. Um
+[42:27] but uh yeah, it's basically um the GPT-2
+[42:31] model. Um the the few things that I
+[42:33] think would be like particularly
+[42:35] interesting to take a look at are how
+[42:38] big is this model. Um so, GPT-2 small um
+[42:43] basically it had a vocab of uh 5,000. It
+[42:47] had 12 layers, uh 12 heads, and an
+[42:50] embedding size of 768. Um this had 24
+[42:54] layers, 16 heads, embedding size of
+[42:56] 1024. Um
+[42:59] and then large had 36 layers, 20 heads,
+[43:01] embedding size of 1280. So, um this is
+[43:04] approximately like 10x smaller than the
+[43:08] the models that we use nowadays for most
+[43:10] of these dimensions.
+[43:12] Um except maybe layers. The the size
+[43:15] here is.
+[43:17] Cool. Um so, let's go on to the
+[43:19] generation part.
+[43:24] And so, here in the generation um what I
+[43:27] want to do is I want to do two things. I
+[43:29] want to get like a qualitative idea of
+[43:33] what the output looks like when we
+[43:35] sample at different temperatures uh to
+[43:37] answer like some of the questions that
+[43:39] we just had now. And then separately
+[43:41] from there I want to demonstrate how we
+[43:43] can do like some very rudimentary
+[43:45] evaluation. And it's this is not like,
+[43:49] you know, the gold standard way of doing
+[43:51] evaluation of language model outputs,
+[43:52] but it'll give you an idea and like a
+[43:54] starting place where you can start until
+[43:56] we get to the gold standard ways. So,
+[43:58] um here are temperature values. Uh
+[44:02] so, zero is greedy sampling. Um it's
+[44:04] deterministic. It should always give you
+[44:06] the same result.
+[44:08] Um a temperature of 0.5 is kind of a
+[44:11] more conservative variety of sampling
+[44:13] and it will pick
+[44:15] uh focus on things that kind of have
+[44:17] high probabilities.
+[44:18] Uh one is, you know, the only true
+[44:21] sampling number and then 1.5 is creative
+[44:24] sampling, uh
+[44:26] more more diverse outputs. So, let's go
+[44:29] ahead and initialize that.
+[44:32] Um one thing I will notice is um
+[44:36] I kind of cheated here and uh
+[44:39] I'm using an API key. Uh so, I'm like
+[44:42] actually asking Claude to uh evaluate my
+[44:45] results for me, but all the generations
+[44:46] are going to be from from my model.
+[44:53] Oh, and by the way, I'm going to try to
+[44:54] get everybody um number one, I'm going
+[44:56] to try to get everybody like credits
+[44:58] that you can use on API based language
+[45:00] models. Everybody will get $50, so it's
+[45:03] not it's not a lot, but it should be
+[45:04] enough for like these language models to
+[45:06] judge sell things and we want everybody
+[45:09] to sign up for AWS if you haven't
+[45:12] already with your Andrew ID and tell us
+[45:13] your AWS number and we have a quiz that
+[45:17] you created already.
+[45:22] Okay. Um the quiz will be with the one
+[45:24] uh today. So, please uh try to add your
+[45:28] add your number there and I'll try to
+[45:29] get you AWS credits as soon as possible.
+[45:30] But back to the normally scheduled
+[45:32] programming, um I'll I'll do temperature
+[45:35] sampling and this time we're doing it
+[45:37] with GPT-2, so it'll give us like actual
+[45:39] like somewhat uh reasonable looking
+[45:42] results.
+[45:46] Oh, uh one one other one small thing
+[45:48] that I probably should mention um
+[45:52] is within this
+[46:00] Oh, actually maybe maybe it's not here.
+[46:02] Um but uh
+[46:03] if you're using a Mac, I would
+[46:05] definitely recommend that you use the
+[46:07] Mac uh Mac accelerator. I think like
+[46:09] most people have Macs here and if you
+[46:11] have Apple silicon that makes it a lot
+[46:12] faster. So, um there's an example of
+[46:15] that uh
+[46:16] in this uh in this notebook.
+[46:19] Um cool.
+[46:23] So, here are the
+[46:27] here are the texts and I'm going to
+[46:30] generate
+[46:33] uh based on a prompt the future of
+[46:35] artificial intelligence is
+[46:37] and I'm generating three from each of
+[46:39] these uh outputs. So, basically doing
+[46:42] inference three times for each.
+[46:44] So, if we look at greedy uh
+[46:47] greedy here,
+[46:48] um
+[46:49] it gives us the same answer always. And
+[46:52] it says the future of artificial
+[46:54] intelligence is uncertain period. We're
+[46:56] not sure what the future will look like,
+[46:58] said Dr. Michael S. Schweinfeld.
+[47:01] Um who I don't know if that's a real
+[47:03] person or not, but
+[47:05] given
+[47:06] I think it might I think it might be
+[47:08] given that this is greedy decoding and
+[47:10] it's probably not going to be too
+[47:11] creative, but uh but yeah.
+[47:14] Um
+[47:15] then for this one down here,
+[47:17] oh actually um
+[47:19] one one piece of
+[47:22] uh
+[47:23] knowledge about greedy decoding uh that
+[47:26] I should say here before it drives you
+[47:27] crazy um is when you do greedy decoding,
+[47:31] will you always get the same result?
+[47:34] I got the same result three times.
+[47:38] Yes?
+[47:42] Yeah, um no. Sorry.
+[47:45] You will not always get the same result.
+[47:47] Uh
+[47:47] and there's a reason for it. Um
+[47:52] Does anyone know the reason for why you
+[47:54] you might call uh
+[47:56] like
+[47:57] um GPT-4 or Claude or something like
+[48:01] that with a temperature of zero and get
+[48:02] different results?
+[48:04] So, so kind of uh yeah.
+[48:13] Cuz you're still sampling for the
+[48:14] probabilities and not the not the actual
+[48:17] values. What do you mean by the
+[48:18] probabilities?
+[48:27] We said So, actually when when you
+[48:29] switch it to zero, it's mostly just
+[48:31] picking the the highest scoring ones.
+[48:33] So, um
+[48:34] uh
+[48:35] specifically in the case of zero, you'll
+[48:37] be picking the the argmax.
+[48:39] Yeah.
+[48:43] Floating point errors can propagate.
+[48:44] Yes. Uh so, this is uh very, very, very,
+[48:48] very tricky, but it has to do with the
+[48:50] hardware that all of these models are
+[48:52] running on.
+[48:53] Um and basically all of these models are
+[48:55] running on GPUs. And what's the
+[48:57] characteristic of GPUs?
+[48:59] They have lots of
+[49:01] lots of threads, right? That are all
+[49:03] running at the same time.
+[49:04] And so, there there's two ways you can
+[49:07] do um a sum on a GPU. One way you can do
+[49:11] a sum
+[49:13] is
+[49:16] you say
+[49:20] okay, thread one, let's say we have 16
+[49:23] threads. Um thread one, you calculated
+[49:26] one, so you get to go first. Thread two,
+[49:28] you calculated two, so you get to go
+[49:29] first. Thread three, you calculated
+[49:31] three, so you get to go first. And then
+[49:33] you just add them all in order.
+[49:35] Uh but the problem is if you do this,
+[49:37] you you have a whole lot of locks and um
+[49:40] like some threads might finish a little
+[49:42] bit faster than others just due to how
+[49:45] hot the GPU was or whether it had a good
+[49:47] day yesterday or
+[49:49] things like this. And so um
+[49:53] the if you add all these locks, it hurts
+[49:56] your efficiency a whole lot. So
+[49:58] theoretically you could turn on uh
+[50:01] determinism on GPUs and make things go
+[50:03] all in order, but um in reality none of
+[50:05] the people serving things on GPUs does
+[50:07] this. So what happens instead is
+[50:12] thread thread seven finishes a little
+[50:14] bit faster. Uh so thread seven gets to
+[50:17] go first and then thread two finishes.
+[50:19] And so thread two gets to go next and
+[50:21] then thread one finishes and then thread
+[50:23] three finishes. And so the addition
+[50:25] happens in a different order every time
+[50:28] uh just based on like
+[50:30] well, nothing is random, but mostly uh
+[50:32] mostly random factors. And so because of
+[50:35] this, if you combine this with the fact
+[50:37] that
+[50:38] the very small
+[50:41] um floating point numbers depending on
+[50:43] the order you add them will round
+[50:45] differently.
+[50:46] Uh this can cause very small differences
+[50:48] uh when you run.
+[50:49] And so these differences are are really
+[50:51] really tiny. Um but you have something
+[50:54] like an argmax um when you select a
+[50:58] vocabulary item. So if the maximum
+[51:00] vocabulary item changes just once in
+[51:03] your like 1,000 token generated
+[51:05] sequence, then it will change everything
+[51:07] that happened after that. So uh you only
+[51:09] need a very tiny difference uh caused by
+[51:12] these floating point errors to throw
+[51:13] things off. Um and so you'll notice if
+[51:16] you run like something with Claude,
+[51:19] you'll you'll get it the same like five
+[51:22] times, but then you'll get a different
+[51:23] one or something like this. Um
+[51:26] This is compounded further by two
+[51:28] things. Uh the first thing is a mixture
+[51:31] of experts. And so mixture of experts
+[51:33] are very popular thing. We'll talk about
+[51:35] them a little bit, but basically you're
+[51:36] choosing which parts of the network to
+[51:38] use. So now instead of having an argmax
+[51:40] over just the token, you also have an
+[51:41] argmax over the experts. So you have
+[51:43] like many many more argmaxes.
+[51:45] And then let's say you're running an
+[51:47] agent or something like that, like a
+[51:49] coding agent. Now you don't just have
+[51:51] one prediction, you have many many
+[51:52] predictions. So um like when we were
+[51:54] trying to reproduce our coding agent
+[51:56] results with Claude, we would never be
+[51:57] able to get the same results on the same
+[51:59] even on the same instance with like
+[52:01] greedy sampling, yeah. I was wondering
+[52:03] if there's
+[52:04] because there's still this uh
+[52:07] randomness, you know, it's very small,
+[52:09] whether or not that
+[52:11] uh corresponds to
+[52:13] uh what temperature exactly like
+[52:16] empirically whether or not it's
+[52:18] it's set to zero, but because of these
+[52:20] hardware um quirks, it's actually more
+[52:22] closer to like a number that's 0.01 or
+[52:25] something. Has anyone that has ever
+[52:27] tried to measure that? That's a great
+[52:28] idea. Just to repeat, it's like what is
+[52:30] the empirical temperature uh
+[52:32] despite despite the fact that your set
+[52:34] temperature is zero, what's the actual
+[52:36] temperature that you're getting? And I I
+[52:37] don't know the answer to that.
+[52:39] Yeah, good question.
+[52:41] Does it get Does it get
+[52:43] compounded by also using multiple
+[52:45] instances of GPUs?
+[52:47] Uh does it get compounded by using
+[52:49] multiple instances of GPUs? Yeah, it it
+[52:51] depends where you aggregate, but like if
+[52:54] you know, one GPU is more likely to have
+[52:56] a larger difference than the threads
+[52:57] within the GPU, so it certainly would.
+[52:59] Yeah.
+[53:00] Does it
+[53:01] I think you should make this whole
+[53:04] Does quantization make the problem
+[53:05] worse? Yeah, it will because you'll have
+[53:06] more rounding errors.
+[53:08] Can you
+[53:09] use this behavior to infer what kind of
+[53:12] quantization
+[53:13] Open AI is using or something like that?
+[53:14] Then you use this behavior to infer what
+[53:16] kind of quantization it's using. So
+[53:18] basically you want to uh
+[53:20] like uncover uh what quantization uh
+[53:24] Open AI is using or something like that.
+[53:26] Good uh good idea. Please please do
+[53:28] that. Uh I'll give you I'll give you an
+[53:30] A+ on the project if you can uh can
+[53:32] demonstrate that. Um
+[53:35] Uh
+[53:36] or prove prove that. Uh I'll I'll give a
+[53:39] high a high bar, but
+[53:41] um
+[53:42] Cool. Okay, so now let's go to the um
+[53:45] temperature 0.5.
+[53:46] So um the future of artificial
+[53:49] intelligence is
+[53:51] um in question if you are a software
+[53:52] developer and you are looking for a new
+[53:54] way to create and deploy applications.
+[53:56] Uh clear in the future of the world is
+[53:58] bright. The future is bright. The future
+[53:59] is bright.
+[54:00] Um very bright. It's a lot like the
+[54:03] future of computers. I'm not sure about
+[54:05] the word intelligence.
+[54:06] Um
+[54:08] And then uh for one, you have like
+[54:10] largely up in the air many eagerly await
+[54:12] it and think seen
+[54:15] Jokowi's creation. I expect to see
+[54:17] everyone around be
+[54:19] um clear Watamakan to 2017. The future
+[54:23] of artificial intelligence is clear.
+[54:25] Facebook just hopped out.
+[54:27] Um
+[54:28] going to be very interesting. It will
+[54:29] change the way we think and treat
+[54:30] people.
+[54:31] Um the future of artificial and then
+[54:33] going up above temperature of one,
+[54:36] the future of artificial intelligence
+[54:38] clashing across the league allies and
+[54:40] designer gangs. So you can fear the
+[54:43] wildling bastard Bengal ear.
+[54:46] So um
+[54:47] maybe this is kind of your answer why we
+[54:49] don't use a temperature larger than one.
+[54:50] Uh it just kind of goes off the rails.
+[54:52] So um
+[54:54] So then the question is we looked at
+[54:56] this and we kind of like had an idea uh
+[54:58] what was going on here from our, you
+[55:00] know, own qualitative qualitative
+[55:03] analysis, but we can't do this all the
+[55:05] time, right? Like I couldn't do this
+[55:06] very well in Chinese for sure. Um
+[55:09] uh
+[55:10] and you know, I couldn't look at
+[55:12] thousands uh thousands of examples.
+[55:15] Um and so you can run this.
+[55:18] Um
+[55:19] And so what I want to do next is I want
+[55:21] to actually like evaluate the outputs
+[55:23] and see how good they are.
+[55:25] And
+[55:27] there's a number of ways to do this like
+[55:29] I mentioned before uh on Tuesday. So the
+[55:31] first way you can do this is you can um
+[55:34] use some sort of deterministic metrics
+[55:36] that you can calculate, you know,
+[55:37] directly from uh the generated text. And
+[55:40] for this I'm going to use a diversity
+[55:42] metric.
+[55:44] And um
+[55:46] so the diversity metric
+[55:49] is um
+[55:51] that I'm going to use here is the ratio
+[55:54] of unique words um in the set
+[55:57] uh compared to the total number of
+[55:59] words.
+[56:01] Um oh so sorry, this is the diversity
+[56:03] within uh within a single example. And
+[56:05] then um for the cross-generation
+[56:07] diversity, um what I'm going to try to
+[56:10] do is uh
+[56:12] find the overlap of uh
+[56:15] words or bigrams uh between the uh the
+[56:19] two outputs. And if there there's less
+[56:21] overlap, then it will be more diverse.
+[56:25] So these are kind of like this is just
+[56:27] an example of a deterministic metric you
+[56:29] could do. You could could also measure
+[56:30] the length. You could measure um
+[56:33] you know, uh other uh other varieties of
+[56:35] things like this.
+[56:37] Um but a another uh popular way of
+[56:39] evaluating things is using a language
+[56:41] model as a judge. And so this is
+[56:44] the reason why this is nice is it's like
+[56:46] super easy to do super powerful things
+[56:50] uh
+[56:50] with this by just asking a language
+[56:52] model a question about the output. Um
+[56:55] there's a lot of caveats that go into
+[56:57] this um which I I can talk about a
+[56:59] little bit, but um here I'm just going
+[57:01] to show a very simple example, which is
+[57:04] uh rate the fluency and coherence of
+[57:05] this text on a scale of zero to 10. Uh
+[57:08] 10 equals perfect. Only respond with a
+[57:10] number. Um
+[57:13] So uh I'll do this. I'll give it my API
+[57:16] key um
+[57:18] and then generate.
+[57:24] Cool. And then um to run the evaluation,
+[57:26] I'll take all the things that I
+[57:27] generated before and and run them to
+[57:29] calculate this fluency score in the um
+[57:32] in the evaluation score.
+[57:48] So it's uh evaluating each of these.
+[57:54] I didn't uh for the purpose of
+[57:56] simplicity, I didn't speed up my LM
+[57:58] calls. Like in reality, if I did this,
+[58:00] I'd uh
+[58:01] I'd use uh
+[58:02] kind of
+[58:04] many calls in parallel, but I didn't do
+[58:06] that this time.
+[58:07] So
+[58:10] this for me throwing this together in
+[58:12] like a few minutes, I think the results
+[58:14] actually were were pretty interesting um
+[58:17] which was uh we measured fluency of the
+[58:21] greedy decoded text and the fluency of
+[58:23] the greedy decoded text got a score of
+[58:25] 5.3, which I think is uh
+[58:27] is not that bad.
+[58:29] Um but the diversity was relatively low
+[58:32] because basically um it uh
+[58:35] it all all done were the same. And then
+[58:38] uh the diversity uh got higher and
+[58:40] higher as we had more uh more and more
+[58:43] outputs, but the fluency went down.
+[58:45] So this is a very uh common issue, which
+[58:48] is like as you sample more diverse
+[58:51] things, um
+[58:53] the the quality goes down.
+[58:55] And temperature sampling is particularly
+[58:58] well known for this. There's a lot of
+[58:59] other methods uh that we're going to
+[59:02] talk about next class that are
+[59:05] kind of Pareto optimal with respect to
+[59:07] diversity and quality. So you can get
+[59:09] like better diversity and better
+[59:10] quality. Um
+[59:13] better diversity and better quality than
+[59:14] temperature sampling.
+[59:18] Cool.
+[59:20] Um any any questions here?
+[59:27] Okay. Um one caveat I'd like to give
+[59:29] about language models as judges is don't
+[59:31] trust them blindly. Um
+[59:34] Language models are very bad judges for
+[59:36] a lot of things and they're particularly
+[59:38] bad at things
+[59:40] judging things where they themselves are
+[59:43] not good at them. So if a language model
+[59:45] is not good at solving math problems,
+[59:47] it'll also be a bad generally be a bad
+[59:49] judge
+[59:50] for math problems.
+[59:54] And another thing that people have
+[59:56] reported is language model judges like
+[59:58] like their own generations more than
+[1:00:00] they like other language models. So
+[1:00:01] Claude will like really like Claude, GPT
+[1:00:03] will really like GPT. Um this is not
+[1:00:06] a
+[1:00:07] hard and fast rule. It's not true all
+[1:00:09] the time, but it is true some of the
+[1:00:10] time. So be aware of that.
+[1:00:17] Cool.
+[1:00:18] Um
+[1:00:19] So the final thing I'd like to talk
+[1:00:21] about is meta generation algorithm. So
+[1:00:23] this is going to be a big theme of the
+[1:00:25] class and this is the simplest possible
+[1:00:28] meta generation algorithm again,
+[1:00:30] which is re-ranking. And so what I want
+[1:00:32] to do
+[1:00:34] is I want to re-rank
+[1:00:37] um
+[1:00:39] I want to re-rank the output of GPT
+[1:00:44] 2 small with GPT 2 medium.
+[1:00:47] And so we have a bigger and stronger
+[1:00:49] model and then
+[1:00:51] the smaller model that generates.
+[1:00:54] Um
+[1:00:56] So yeah, this is just the the code to
+[1:00:59] generate
+[1:01:00] to calculate the probability. Actually
+[1:01:02] here um
+[1:01:05] this is the important code if you want
+[1:01:07] to run like a GPU or or MPS, but
+[1:01:11] hopefully like people have done this
+[1:01:13] done this before. I'm sure like
+[1:01:15] everybody's run on GPUs, but like if
+[1:01:18] you're running just on your Mac, like
+[1:01:19] definitely do this because this will
+[1:01:22] speed it up by a lot for free and like
+[1:01:25] the smaller models you can actually run
+[1:01:26] on your on your own computer.
+[1:01:28] Um I'm getting an error.
+[1:01:32] Why am I getting an error?
+[1:01:37] Okay, maybe I just didn't run that.
+[1:01:43] Cool.
+[1:01:44] And so we can we can generate some
+[1:01:46] outputs and calculate the log
+[1:01:49] probabilities between them.
+[1:01:54] So while while we're waiting for this to
+[1:01:55] finish, this is actually
+[1:01:58] a
+[1:01:59] commonly used method in inference where
+[1:02:03] you use a small model to
+[1:02:06] generate an output and then a larger
+[1:02:08] model to like calculate the probability
+[1:02:09] of the output. Does anyone know what uh
+[1:02:12] the name for this is? It's not exactly
+[1:02:15] what we're doing here, yeah.
+[1:02:17] Speculative decoding, yes. So typically
+[1:02:19] in speculative decoding, what you do is
+[1:02:21] you generate you use a small model to
+[1:02:23] generate like
+[1:02:24] five tokens or 10 tokens or whatever and
+[1:02:26] then you use the large model and
+[1:02:29] uh
+[1:02:30] until you get to a point where the small
+[1:02:32] model is wrong.
+[1:02:34] And the reason why this is good is
+[1:02:35] because like calculating tokens in
+[1:02:36] batches is much faster on GPUs. So you
+[1:02:38] can save a lot of time doing this, but
+[1:02:40] we'll talk about that later also.
+[1:02:42] So anyway, um
+[1:02:44] this is the the output and the
+[1:02:47] likelihood. So we have the future of
+[1:02:48] artificial intelligence is bright and
+[1:02:50] promising. Um the future of artificial
+[1:02:53] intelligence is banana purple elephant
+[1:02:55] and artificial intelligence will
+[1:02:57] transform many industries. And in this
+[1:02:59] case, I guess the small model always
+[1:03:01] gave a worse
+[1:03:03] um always gave a worse probability than
+[1:03:05] the large one. So that's not like
+[1:03:08] super exciting.
+[1:03:09] But the more interesting thing is when
+[1:03:11] we actually like use it for re-ranking.
+[1:03:17] And so
+[1:03:22] you get to see which outputs a
+[1:03:24] particular model prefers.
+[1:03:27] And in the case of a smaller model and a
+[1:03:30] larger model from the same model family,
+[1:03:32] it's actually pretty clear. It's pretty
+[1:03:34] pretty fun.
+[1:03:42] So here here's the small model
+[1:03:45] here's the text that the small model
+[1:03:46] prefers versus the text that the large
+[1:03:48] model prefers.
+[1:03:50] And
+[1:03:51] because I generated from the small
+[1:03:52] model, it will make a lot of sense that
+[1:03:54] the small model will prefer most of
+[1:03:56] these. So it's actually more interesting
+[1:03:58] to look at the ones where the medium
+[1:03:59] model prefers it.
+[1:04:01] Um so let's let's look here.
+[1:04:12] Okay.
+[1:04:13] So um
+[1:04:16] Actually there's only one. That's kind
+[1:04:18] of boring.
+[1:04:20] This is this is randomly sampled, so I
+[1:04:22] get a different result every time. When
+[1:04:23] I did it like earlier, I got three, but
+[1:04:25] um here here's here's the one. The
+[1:04:28] future of artificial intelligence is
+[1:04:29] shaping up in very interesting ways. In
+[1:04:31] our next issue, we examine whether
+[1:04:33] machine learning might be able to
+[1:04:35] produce complex tasks.
+[1:04:37] Um and here the medium model preferred
+[1:04:39] it. Um
+[1:04:41] Does anybody notice anything about the
+[1:04:42] difference between that
+[1:04:45] and um
+[1:04:47] and this?
+[1:04:56] Yeah, it's really like actually
+[1:04:57] unfortunately I'm cutting these off
+[1:04:59] here, so
+[1:05:00] that's it that's not it. Oh, I forgot to
+[1:05:03] mention one other thing. So this is not
+[1:05:04] the log probability. This is the per per
+[1:05:08] token log probability. And the reason
+[1:05:10] why I did the per token log probability
+[1:05:12] is
+[1:05:13] that makes it easier to compare longer
+[1:05:15] and shorter things on the same footing.
+[1:05:17] Um let me let me see if I can cut off
+[1:05:19] this
+[1:05:20] like stop the stop to dot dot dot dot
+[1:05:23] stuff.
+[1:05:29] Too many dot dot dots.
+[1:05:37] Um yes, I will. One one second, okay.
+[1:05:41] Yeah.
+[1:05:42] And actually let me generate let me
+[1:05:44] generate again so we don't um
+[1:05:48] so you can get some like additional
+[1:05:50] samples.
+[1:05:52] Um but
+[1:05:53] what I meant by the by which part?
+[1:06:01] Oh, the per token log probability. So
+[1:06:04] what we saw before when we generated
+[1:06:06] from Claude on Tuesday was like the
+[1:06:08] longer ones tended to have a
+[1:06:10] like a lower probability. They had a
+[1:06:14] larger absolute value of their log
+[1:06:15] probability.
+[1:06:17] And
+[1:06:18] so like let's say we wanted to find the
+[1:06:21] output where the medium model preferred
+[1:06:23] it
+[1:06:24] more
+[1:06:25] than the small model by the largest
+[1:06:27] margin.
+[1:06:29] So like what
+[1:06:31] actually hopefully I can do that if we
+[1:06:32] get more than one. Let let me let me see
+[1:06:35] if this works.
+[1:06:39] Yeah, okay. So here what I did is I I
+[1:06:42] wanted to find the one where the the
+[1:06:44] medium model preferred it by the like
+[1:06:46] most.
+[1:06:48] And
+[1:06:49] when I do this,
+[1:06:51] um
+[1:06:52] I
+[1:06:53] would like to
+[1:06:57] have that be relatively independent of
+[1:06:59] how long the actual output is
+[1:07:01] because if the output is really long,
+[1:07:03] the difference is going to be larger
+[1:07:05] just because the magnitude the overall
+[1:07:07] magnitude is larger. And so by dividing
+[1:07:09] by the number of tokens, we can like
+[1:07:11] normalize for the length. So
+[1:07:15] Uh
+[1:07:16] yeah, sequence level log probability
+[1:07:18] normalized by by length. Yeah.
+[1:07:21] So here's a few more examples. So the
+[1:07:24] future of artificial intelligence is now
+[1:07:26] back on the forefront of technology
+[1:07:28] believing AI will deny us an advantage
+[1:07:30] over humans for modeling and
+[1:07:32] understanding the human mind.
+[1:07:33] Uh
+[1:07:34] a little bit weird. Um the future of
+[1:07:36] artificial intelligence is at stake, he
+[1:07:38] warned. Might there be a tipping point
+[1:07:40] coming?
+[1:07:41] But will championship golf can fulfill
+[1:07:43] American dream?
+[1:07:46] Uh
+[1:07:48] In interesting. I I
+[1:07:50] kind of want to read this article, but
+[1:07:51] um
+[1:07:52] Uh so like do people
+[1:07:55] notice any difference between this
+[1:07:58] and the ones that I had up here?
+[1:08:01] Um like still in its infancy, the full
+[1:08:03] attention of expert scientific
+[1:08:05] communities depends on an intelligent
+[1:08:07] machines driven both by the goals that
+[1:08:10] saw the current scientific literature
+[1:08:11] become obsolete and by priorities that
+[1:08:13] reflect redistributive objectives for
+[1:08:16] higher education.
+[1:08:18] So maybe not as clear as I was hoping,
+[1:08:21] but any any ideas?
+[1:08:27] No.
+[1:08:31] Simpler simpler sentences overall, yeah,
+[1:08:33] maybe.
+[1:08:37] What I would say is they have more
+[1:08:39] surprising vocabulary, like more
+[1:08:41] surprising vocabulary choices while
+[1:08:43] still being mostly fluent. Like the the
+[1:08:45] golf kind of threw me for a loop, but
+[1:08:49] and like my general
+[1:08:51] um my general
+[1:08:54] overall
+[1:08:56] impression of like stronger models
+[1:09:00] and larger models are typically stronger
+[1:09:01] models is that they're
+[1:09:04] they give a higher probability or
+[1:09:06] they're more likely to generate
+[1:09:07] sentences that are kind of like
+[1:09:09] interesting and surprising while still
+[1:09:12] not being too like off the wall.
+[1:09:15] Um
+[1:09:16] And like just to give an example of
+[1:09:18] this,
+[1:09:20] I was
+[1:09:21] trying to test whether Deep Seek or
+[1:09:23] GPT-5 wrote better essays.
+[1:09:26] Um and like I I tried several of them
+[1:09:30] and Deep Seek would always write a great
+[1:09:32] essay.
+[1:09:33] Um, it was just kind of like generic and
+[1:09:35] boring. Um,
+[1:09:37] whereas if I used GPT-5, it would write
+[1:09:41] like an actually like somewhat
+[1:09:43] interesting essay. Um, and that's the
+[1:09:45] level we're talking about with our
+[1:09:46] strongest models now. And so, you know,
+[1:09:48] the um the weaker models will uh like
+[1:09:51] GPT-2 will
+[1:09:53] not be uh not be at that level, but they
+[1:09:56] uh
+[1:09:57] still the same general principle. Like
+[1:09:59] they're better at modeling low
+[1:10:00] vocabulary items, low frequency, you
+[1:10:02] know, um phenomena and other stuff like
+[1:10:05] that.
+[1:10:06] Um,
+[1:10:08] cool. Uh yeah, that's all I had for
+[1:10:09] today. Are there um things that people
+[1:10:11] like to discuss around this?
+[1:10:15] Yeah.
+[1:10:25] Oh, what what's the objective of what?
+[1:10:27] Sorry, could you speak up?
+[1:10:33] Um, the downstream use case of meta
+[1:10:34] generation is to improve quality,
+[1:10:37] improve overall quality. So,
+[1:10:39] um
+[1:10:41] let let's give an example. Like you have
+[1:10:43] a re-ranker that's a really strong model
+[1:10:45] that you cannot generate, you know, you
+[1:10:48] cannot generate from efficiently. Um,
+[1:10:51] let's say it's an agent that goes out to
+[1:10:54] um
+[1:10:55] it's an agent that goes out and confirms
+[1:10:57] information or something like that. So,
+[1:11:00] um we'll also be talking about like tool
+[1:11:02] use in the loop of generation and other
+[1:11:04] stuff. If that's the case, you
+[1:11:08] might not want to run that at generation
+[1:11:10] time, but you might be willing to do
+[1:11:11] that to confirm that there's no
+[1:11:12] hallucinations in your text or
+[1:11:14] something. Um,
+[1:11:15] and then do that over like five
+[1:11:16] different tasks. Um, another thing is uh
+[1:11:19] self-consistency is also a variety of
+[1:11:21] meta generation um where you generate
+[1:11:24] multiple outputs and then you do
+[1:11:25] majority over them. So, like there's a
+[1:11:28] lot of different uh varieties of this
+[1:11:29] too.
+[1:11:30] Cool.
+[1:11:31] Any other things?
+[1:11:33] Yeah. You think the difference that you
+[1:11:35] saw between Deep Seek and GPT-5 is more
+[1:11:37] on the training side or on the inference
+[1:11:39] side of things? Um, the difference
+[1:11:41] between Deep Seek and GPT-5 uh I think
+[1:11:44] it was they're both reasoning models and
+[1:11:47] I let them both reason. So, I think it's
+[1:11:49] probably more on the training side
+[1:11:50] there. Um,
+[1:11:52] but yeah, I
+[1:11:53] GPT-5 we're not 100% sure what they're
+[1:11:55] doing for inference.
+[1:11:59] Um, cool. Okay. Thanks everyone. Happy
+[1:12:01] to do this. Thank you.
+[1:12:04] Cool. Cool.

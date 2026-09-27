@@ -1,0 +1,151 @@
+# REFERENCE-GRADE -- NOT EXECUTED IN THIS ENVIRONMENT.
+# No engine, no tokenizer, no schema registry. Adapt before use.
+#
+# The constraint policy bundle: the unit that actually deploys. It is versioned
+# and immutable, and it is the join key between a generated record and the
+# grammar that produced it. A record that cannot name its policy version cannot
+# be defended to the audit committee, so the version is stamped onto every
+# emitted record and onto every validator decision.
+
+apiVersion: inference.ledgerline.io/v1
+kind: ConstraintPolicy
+metadata:
+  name: document-intake-constraints
+  version: 2026.09.4
+  labels:
+    # The schema-compiler build that produced the grammars this policy admits.
+    # A policy naming an unknown compiler version must not load: the audit
+    # properties in spec.audit were proven by that compiler and no other.
+    grammar.ledgerline.io/compiler: schema-compiler-3.2.1
+    # The eval run that gated this bundle.
+    gate.ledgerline.io/eval-run: eval-2026-09-21-c
+spec:
+
+  # ------------------------------------------------------------ constraint classes
+  # The router maps a (surface, schema) pair to exactly one of these. The class
+  # is a property of the CONSTRAINT, not of the customer.
+  classes:
+
+    - name: schema-regular
+      match:
+        surface: [invoice-extraction, code-assignment]
+        schemaShape: { maxNestingDepth: { lte: 1 } }
+      machine: dfa
+      mask: hard
+      # Every field required is the default; optionality is the 2^n multiplier
+      # and must be declared so the compiler can refuse an oversized schema.
+      optionalFields: { max: 8 }
+      validate: always
+      repair: { maxAttempts: 2 }
+
+    - name: schema-recursive
+      match:
+        surface: [invoice-extraction, customs-declaration]
+        schemaShape: { recursive: true }
+      machine: pda
+      mask: hard
+      # Depth is capped at push time, not at overflow. An over-deep request
+      # falls back; it never crashes a decode step.
+      maxStackDepth: 32
+      # Above the cap the request is re-routed to the flat grammar plus the
+      # validator, which is a weaker guarantee and is counted as such.
+      onDepthExceeded: fallback_to_flat
+      validate: always
+      repair: { maxAttempts: 2 }
+
+    - name: symbol-table
+      match:
+        surface: [remittance-matching]
+      machine: none
+      mask: none
+      # "variables must be defined before they are used" is not enforceable
+      # token-by-token. Validate-then-repair is the whole mechanism here.
+      validate: always
+      repair: { maxAttempts: 3 }
+      # A repair loop that converges slowly means the table context is wrong,
+      # not the model. Surface it as a data problem.
+      onRepairExhausted: dead_letter
+
+    - name: semantic-only
+      match:
+        surface: [code-assignment]
+      machine: dfa
+      mask: hard
+      semantic:
+        enabled: true
+        # The corpus's production figure: the top 200 most likely next tokens,
+        # scored by a small discriminator. 100k+ candidates is the full vocab.
+        k: 200
+        # If the top-k does not hold this much of the model's mass, the
+        # truncation has cut into the body of the distribution and the
+        # truncated-out winner is no longer a tail case. Widen or skip.
+        minMass: 0.90
+        # What to do when minMass is not met.
+        onInsufficientMass: widen_and_retry
+        discriminator: formality-v4
+      validate: always
+
+  # ---------------------------------------------------------------- masking
+  mask:
+    # The mechanism, stated so a reviewer can check the implementation against
+    # it: disallowed logits become -inf before softmax, then the distribution
+    # is renormalised.
+    mechanism: neg_inf_before_softmax
+    onEmptyLegalSet: dead_letter
+    # The alternative is `continue_unmasked`, which produces plausible records
+    # with no guarantee. It is not a degradation rung; it is a different system
+    # with a different audit story, and it must not be reachable by config.
+    assertSurvivorsPerStep: true
+    # A step whose legal set is materially smaller than the grammar's
+    # expectation is a schema change nobody announced.
+    legalSetSizeAlertFloor: 1
+
+  # ---------------------------------------------------------------- token healing
+  healing:
+    enabled: true
+    # The corpus: "roll back a token or very rarely to [two] of generation".
+    maxRollback: 1
+    # Curated and tokenizer-version-dependent. Changing the tokenizer without
+    # re-evaluating this list is how healing silently stops firing.
+    offenders: [":", " ", "/", "http", "https"]
+    triggers:
+      offenderList: true
+      veryShort: { maxChars: 1 }
+      noBoundaryWhitespace: true
+      prefixOfAnotherToken: true
+    # Healing that does not change the chosen token spent a recompute and
+    # bought nothing. Above this ratio the trigger list is wrong.
+    maxNoOpRatio: 0.35
+
+  # ---------------------------------------------------------------- audit
+  audit:
+    # Proven at compile time. `strict: false` demotes a dead-end state to a
+    # warning, and is available only so that a schema author can compile a
+    # work-in-progress locally. A non-strict artifact must never be published.
+    strict: true
+    requireNoDeadEnds: true
+    requireAcceptReachable: true
+    onFailure: reject_artifact
+
+  # ---------------------------------------------------------------- validation
+  validate:
+    # The only setting that satisfies the audit committee's "must never".
+    # `sampled` exists in the schema and is rejected at load with a message
+    # pointing at the audit requirement.
+    mode: always
+    # The validator reads the schema version in force, never the grammar the
+    # request carried. A mismatch is a rejection, never a silent pass.
+    schemaSource: registry-live
+    shareCodeWithCompiler: false
+    onReject: repair
+
+  # ---------------------------------------------------------------- degradation
+  # Ordered. Semantic quality is traded first, fluency second, the structural
+  # guarantee never. Rung 5 is the floor, not a rung: shedding load is the
+  # correct response to pressure on the mask itself.
+  degradation:
+    - { rung: 1, action: disable_semantic, loses: policy_constraint }
+    - { rung: 2, action: disable_healing, loses: boundary_fluency }
+    - { rung: 3, action: reduce_repair_budget, to: 1, loses: auto_repair_rate }
+    - { rung: 4, action: pin_grammar_to_last_known_good, loses: freshness }
+    - { rung: 5, action: shed_load, loses: nothing_structural }

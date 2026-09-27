@@ -1,0 +1,187 @@
+Title: How AI Agents Actually Work: ReAct, Tools & Reflexion
+
+--- TRANSCRIPT ---
+
+[0:00] You know, agents can use tools. The real
+[0:02] question is how you run that loop safely
+[0:04] and cheaply. A chatbot answers in one
+[0:06] shot. An agent plans, acts, sees the
+[0:08] result, and decides what to do next,
+[0:10] possibly many times per request. That
+[0:12] autonomy is powerful, and it is also
+[0:14] where cost and reliability quietly
+[0:17] spiral. The design of the loop is the
+[0:19] whole game.
+[0:20] A quick refresher on the pattern
+[0:22] underneath every framework. It is React
+[0:25] from Yao and colleagues in 2022. The
+[0:27] model writes a thought, takes an action
+[0:29] by calling a tool, and reads the
+[0:30] observation that comes back. Then it
+[0:32] loops, using each observation to inform
+[0:35] the next thought until it is confident
+[0:37] enough to give a final answer. In
+[0:39] production, the loop itself is the easy
+[0:41] part. The guards around it are what
+[0:43] actually matter. Cap the number of steps
+[0:45] so a confused agent cannot spin forever.
+[0:48] Validate each observation because a bad
+[0:50] tool result will poison every step that
+[0:52] follows. And let the agent critique its
+[0:55] own failures reflection style,
+[0:57] distilling a mistake into a short hint
+[0:59] it carries into the retry. Those three
+[1:01] guards separate a toy from a product.
+[1:04] Let us watch one clean run of the loop.
+[1:05] The task is a billing question. The
+[1:07] agent's first thought is to call the
+[1:09] invoice search tool scoped to Acme and
+[1:11] quarter two. The observation returns
+[1:13] three invoices totaling $42,000.
+[1:16] Its next thought is simply, I have
+[1:18] enough to answer. Four steps, one tool
+[1:21] call, done. The step limit was never
+[1:22] even reached, which is exactly what a
+[1:24] healthy run looks like.
+[1:26] Stripped down, an agent really is just
+[1:28] this loop. The model proposes a thought
+[1:30] and an action. You run the tool, and you
+[1:32] feed the observation back in. Notice the
+[1:35] range with max steps wrapping the whole
+[1:37] thing. That one guard is the difference
+[1:39] between a bounded cost and an agent that
+[1:41] loops forever on a hard task, burning
+[1:43] money the entire time.
+[1:45] The danger most tutorials skip is that
+[1:47] autonomy has a cost curve. Every extra
+[1:49] step is another paid model call, and
+[1:51] more latency, and errors compound. One
+[1:53] wrong observation can send the next five
+[1:55] steps in the wrong direction.
+[1:57] Reflections answer from Shin and
+[1:58] colleagues in 2023 is to have the agent
+[2:01] write down what went wrong and retry
+[2:03] with that lesson in hand instead of
+[2:04] blundering the same way twice.
+[2:07] Drawn out, the agent cycles thought,
+[2:08] action, observation again and again.
+[2:11] Each pass gathers a little more
+[2:12] information until the model judges it
+[2:14] has enough and produces the final answer
+[2:17] instead of another action. That cycle
+[2:19] plus a step limit is quite literally the
+[2:21] heart of every agent framework you will
+[2:23] ever use.
+[2:24] Before you reach for an agent, ask
+[2:26] whether you actually need the loop. If
+[2:28] the steps are fixed and their order is
+[2:30] known, a plain pipeline is cheaper,
+[2:32] faster, and far easier to debug. Agents
+[2:34] earn their cost only when the path is
+[2:36] genuinely unknown. And when you do build
+[2:39] one, start with the fewest tools
+[2:40] possible. Every extra tool is another
+[2:42] chance for the model to choose wrong.
+[2:45] React is the default, but it is not the
+[2:47] only way an agent can plan. So, let us
+[2:49] compare the main styles. React
+[2:51] interleaves thinking and acting one step
+[2:53] at a time, which is flexible but can
+[2:55] wander. Plan and execute writes a full
+[2:57] plan up front and then carries it out,
+[2:59] which is cheaper and more predictable
+[3:01] for well-understood tasks. Tree search
+[3:03] styles explore several branches and keep
+[3:05] the best one, trading a lot more cost
+[3:07] for higher quality on genuinely hard
+[3:09] problems. The rule of thumb, plan and
+[3:11] execute when the task is structured, or
+[3:13] react when it is exploratory, and
+[3:15] reserve tree search for the rare,
+[3:16] high-value problem that justifies the
+[3:18] spend.
+[3:20] Let us ground all of this in one
+[3:21] realistic production agent. A support
+[3:23] triage agent gets a tight scope tool
+[3:25] set.
+[3:26] Search the docs, read a ticket, and
+[3:29] create a ticket. It is capped at six
+[3:31] steps, and the one right action,
+[3:33] creating a ticket, pauses for a human to
+[3:35] approve. Every run is fully traced, so
+[3:38] when it does misbehave, you replay
+[3:40] exactly what it thought and did. Scoped
+[3:42] tools, a hard limit, a human gate, and a
+[3:45] trace. That is a boring agent, and
+[3:47] boring is what ships.
+[3:49] Agents fail in expensive ways, so design
+[3:51] the guards on purpose. Forget the step
+[3:53] limit and one confused loop can run up a
+[3:55] serious bill before anyone notices. Hand
+[3:58] the model 20 tools and it will pick the
+[4:00] wrong one more often. And an agent that
+[4:02] trusts every observation will let a
+[4:04] single bad search poison every step that
+[4:07] follows. Fewer tools, hard limits, and
+[4:09] validated observations keep agents
+[4:11] predictable.
+[4:12] You rarely hand roll this loop in
+[4:14] production. You pick a framework that
+[4:16] already implements it. The OpenAI Agents
+[4:19] SDK and LangChain workflows are clean
+[4:21] starting points. CrewAI, AutoGen, and
+[4:24] Google's ADK each encode a different
+[4:26] style of agent. And whatever you choose,
+[4:28] put a trace viewer like LangSmith or
+[4:31] AgentOps in front of it because you
+[4:33] cannot debug an agent you cannot watch
+[4:35] think.
+[4:37] So, what is the OpenAI Agents SDK? It is
+[4:40] a lightweight framework for building
+[4:41] tool-using agents without a heavy
+[4:43] orchestration layer. Its building blocks
+[4:45] are agents, tools, handoffs, and
+[4:48] guardrails, and it runs the whole
+[4:50] thought-action-observation loop under
+[4:51] the hood. It is the cleanest starting
+[4:53] point. CrewAI, AutoGen, and LangGraph
+[4:56] are the heavier alternatives.
+[4:58] The loop, the tool calls, and the step
+[5:01] limit are all handled for you. You
+[5:03] declare an agent with instructions and a
+[5:05] list of tools, then run it. The SDK
+[5:07] manages the whole
+[5:08] thought-action-observation cycle under
+[5:10] the hood. Reach for the heavier
+[5:12] LangGraph only when you need explicit
+[5:14] state, branching, or a human approval
+[5:15] step in the middle.
+[5:17] Agents need their own dashboard,
+[5:18] distinct from a chatbot's. Track steps
+[5:21] per task and how often you hit the
+[5:22] limit. A climbing average is your early
+[5:24] warning of loops going astray. Watch the
+[5:26] tool call success rate for bad
+[5:27] arguments. And the number that ties it
+[5:29] all together is cost per completed task,
+[5:32] not cost per call. That is what tells
+[5:34] you whether the agent is actually worth
+[5:35] running.
+[5:36] Let us gather the four things that keep
+[5:38] an agent reliable. First, remember what
+[5:40] an agent really is, an LLM running a
+[5:43] thought-action-observation loop. Second,
+[5:45] always cap the number of steps or a run
+[5:47] will burn your budget. Third, give it
+[5:49] the fewest tools that get the job done
+[5:51] because every extra tool is a chance to
+[5:54] choose wrong. And fourth, validate every
+[5:56] observation before it feeds the next
+[5:58] step. Those guards are unglamorous, but
+[6:00] they are exactly what turns an
+[6:02] impressive agent demo into one you can
+[6:04] actually run in production.
+[6:06] The one-line answer? One agent is
+[6:08] powerful, getting many agents to
+[6:10] cooperate needs orchestration, and that
+[6:12] is next.

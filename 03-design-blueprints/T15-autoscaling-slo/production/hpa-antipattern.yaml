@@ -1,0 +1,107 @@
+# T15 — THE ANTI-PATTERN, COMMITTED ON PURPOSE
+# (REFERENCE-GRADE, NOT EXECUTED HERE)
+#
+# This manifest is valid. It applies cleanly. It will not error. It will run in
+# production for months without anyone filing a ticket about it.
+#
+# It is also the worse of the corpus's two contradictory autoscaling recommendations,
+# and it is reproduced here WITH ANNOTATIONS rather than deleted, because the failure is
+# not syntax -- it is that the signal is only loosely coupled to whether requests are
+# meeting their latency budget.
+#
+# Source: refs/ai-system-design-guide-main/ai-system-design-guide-main/
+#         11-infrastructure-and-mlops/01-llm-infrastructure.md  [R]
+#
+# The corpus's OTHER file says the opposite:
+#   04-inference-optimization/06-serving-infrastructure.md --
+#   "Autoscaling: Scaling based on KV Cache utilization rather than CPU or standard
+#    memory usage."  [R]
+#
+# run.py section 2 quantifies the gap at the corpus's own best-case 15-20s cold start:
+#     CPU at 70%     74.6% SLO   2,320 replica-steps
+#     queue/KV      100.0% SLO   4,804 replica-steps
+#   -> 25 points of SLO, for the choice of signal alone.
+#
+# The correct artifact is autoscaling.yaml in this folder. This one is kept as the
+# teaching case -- see production/README.md.
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: llm-service-hpa
+  namespace: inference
+  annotations:
+    blueprint/status: "ANTI-PATTERN - see production/README.md before applying"
+    blueprint/replaced-by: "autoscaling.yaml"
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: llm-service
+  minReplicas: 2
+  maxReplicas: 20
+  metrics:
+    # ---------------------------------------------------------------------------
+    # FAULT 1: CPU is COMPRESSED as a signal for LLM serving.
+    #
+    # The CPU orchestrates -- tokenisation, batching, HTTP -- while the accelerator
+    # does the work. CPU utilisation therefore rises slowly, saturates well below
+    # 100%, and is only loosely coupled to the queue. In sim/autoscaler.py it tops out
+    # around 0.85 even when the fleet is hopelessly behind, so this 70% target is
+    # reached only at roughly 2.5x overload [D].
+    #
+    # A signal that cannot span its own target range cannot regulate. The loop sits at
+    # its setpoint while the fleet fails.
+    # ---------------------------------------------------------------------------
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70        # <-- fires ~2.5x too late [D]
+    # ---------------------------------------------------------------------------
+    # FAULT 2: requests_per_second ignores request COST.
+    #
+    # A 4k-token request and a 400k-token request count identically here. The corpus's
+    # entire subject matter is long-context agentic traffic [T], which is exactly the
+    # workload where this averaging destroys the signal.
+    # ---------------------------------------------------------------------------
+    - type: Pods
+      pods:
+        metric:
+          name: requests_per_second
+        target:
+          type: AverageValue
+          averageValue: "100"
+    # ---------------------------------------------------------------------------
+    # FAULT 3 (not visible in the manifest): the HPA's control law.
+    #
+    #   desired = ceil(current * currentMetricValue / desiredMetricValue)
+    #
+    # This moves GEOMETRICALLY. It approaches the setpoint rather than jumping to it, so
+    # a fleet far from its target is slow EVEN WITH A PERFECT SIGNAL.
+    #
+    # run.py section 2 isolates this by running cpu_ideal -- a CPU signal with no
+    # compression, no lag and no ceiling:
+    #     cpu_ideal   100.0% SLO at 5,337 replica-steps = 1.98x the static baseline
+    #   -> Fixing the signal does not fix the loop.
+    # ---------------------------------------------------------------------------
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0
+    scaleDown:
+      # ---------------------------------------------------------------------------
+      # FAULT 4: this is the one that costs money rather than latency.
+      #
+      # A 300s scale-down window looks conservative. But it is not derived from the
+      # cold start, and if the boot time ever grows past it -- a bigger model, a colder
+      # image cache, a slower weight store -- the controller starts cancelling replicas
+      # that are still booting.
+      #
+      # run.py section 4, holding everything else fixed:
+      #     symmetric hysteresis   93.4% SLO   29.7% of spend on replicas that never served
+      #     derived (2x boot)     100.0% SLO    8.7%
+      #
+      # The rule: down_cooldown must exceed boot_p99. Derive it; do not hard-code it.
+      # ---------------------------------------------------------------------------
+      stabilizationWindowSeconds: 300

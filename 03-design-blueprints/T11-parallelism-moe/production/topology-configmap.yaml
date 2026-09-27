@@ -1,0 +1,59 @@
+# T11 — chosen topology as cluster config (REFERENCE-GRADE, NOT EXECUTED HERE)
+#
+# Not applied to any cluster. Kept separate from the replica image so the same image can
+# be re-shaped without a rebuild — which is what makes the HLD's degradation ladder a
+# configuration change rather than a redeploy. [D]
+#
+# Transcript coverage: primary
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: t11-topology
+  namespace: inference
+  labels:
+    topic: T11
+    tier: topology
+data:
+  # The decomposition of the replica's world size. world = tp * pp * dp.
+  tp: "8"          # MUST be <= gpusPerNode. TP stays inside the node. [T]
+  pp: "2"          # bubble (PP-1)/(M+PP-1); 2 is the tuned value. [T]
+  dp: "16"
+  ep: "16"         # experts_per_gpu = 256/16 = 16
+
+  # Node geometry. The scheduler places a TP group inside one node; if it cannot, the
+  # replica must not start — a cross-node TP collective is a silent latency regression.
+  gpusPerNode: "8"
+  requireNodeLocalTpGroup: "true"
+
+  # Derived, but written down so the replica and the operator agree without recomputation.
+  # sim/planner.py prints exactly these from the same inputs.
+  expertsPerGpu: "16"
+  kvBytesPerToken: "244736"
+  kvCeilingTokensPerGpu: "565000"
+
+  # The KV ceiling is a *model output* under the assumptions in sim/planner.py, not a
+  # measurement. If your checkpoint differs, re-run `python run.py` and update this. [D]
+  kvCeilingProvenance: "modelled, not measured"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: t11-validation-gates
+  namespace: inference
+  labels:
+    topic: T11
+    tier: validation
+data:
+  # Promotion gates: a topology change is not complete until the long-context sweep
+  # passes at the target shape. The corpus's harness is 10 needles x 3 context shapes x
+  # concurrency, with a >= 7-of-10 pass threshold. [T]
+  niahNeedles: "10"
+  niahPassThreshold: "7"
+  niahContextShapes: "4k,32k,128k"
+  niahConcurrency: "1,8,32,64,128,256,512"
+
+  # The corpus documents a cliff at ~28k inputs / concurrency 256, attributed to KV
+  # recomputation once the cache is exhausted. [T] The sweep must include that corner.
+  knownCliffInputs: "28000"
+  knownCliffConcurrency: "256"

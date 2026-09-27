@@ -1,0 +1,179 @@
+Title: MCP vs A2A: How AI Agents Connect — and How to Govern Them
+
+--- TRANSCRIPT ---
+
+[0:00] As agents multiply, how do they connect
+[0:01] to tools and to each other without
+[0:04] turning into custom glue everywhere?
+[0:06] Before standards, every agent-to-tool
+[0:08] connection was a bespoke integration
+[0:10] rewritten for each model and each
+[0:12] vendor. It did not scale. 2025 was the
+[0:15] year the industry agreed on shared
+[0:17] protocols to fix exactly that, and it
+[0:19] changed what governance has to worry
+[0:21] about.
+[0:22] Two protocols define the landscape, and
+[0:24] they are complements, not rivals. The
+[0:26] model context protocol, MCP, is the
+[0:29] vertical link that connects one agent
+[0:31] down to its tools and data. A2A is the
+[0:33] horizontal link that lets peer agents
+[0:35] delegate to each other. A2A agents
+[0:37] publish an agent card that advertises
+[0:39] what they can do and how to call them.
+[0:41] So, discovery works across vendors, not
+[0:43] just inside one framework.
+[0:45] Here is what interoperability buys you
+[0:47] concretely. You expose one invoice tool
+[0:50] as an MCP server. Claude Desktop, a
+[0:52] LangGraph agent, and your own custom bot
+[0:54] can all call it with no per client
+[0:56] integration code. And over A2A, your
+[0:59] billing agent can hand a tax question to
+[1:01] a separate tax agent it discovered by
+[1:03] its agent card. Write once, connect
+[1:05] everywhere.
+[1:07] With MCP, you expose a tool once with a
+[1:09] name, a type signature, and a docstring.
+[1:12] Any MCP-aware agent then discovers and
+[1:15] calls it. The vendor of the model on the
+[1:17] other side no longer matters, which is
+[1:18] the whole point of a standard. That
+[1:20] docstring and those type hints are not
+[1:23] decoration. They are the specification
+[1:25] the model reads to decide how to use the
+[1:27] tool.
+[1:28] Here is the part leaders miss. Once
+[1:30] connection is a solved, standardized
+[1:32] problem, governance becomes the hard
+[1:33] one. When any agent can invoke any tool
+[1:36] and delegate to any other agent, the
+[1:37] real questions become identity and
+[1:39] permission. Who is allowed to do what on
+[1:41] whose behalf? And you have to evaluate
+[1:43] the whole trajectory an agent took, not
+[1:45] just its final answer, because an agent
+[1:47] can reach the right result through a
+[1:48] reckless or unauthorized path.
+[1:51] Put together, the modern agent stack has
+[1:53] four pillars. Two protocols for
+[1:55] connection, MCP and A2A, and two for
+[1:57] control. Agent ops to trace and evaluate
+[1:59] runs and access policies to gate which
+[2:02] actions are even allowed. The left half
+[2:04] connects your agents, the right half
+[2:06] keeps them accountable. Ship only the
+[2:08] left and you have built something
+[2:09] powerful that no one can govern.
+[2:12] You do not need protocols on day one, so
+[2:13] here is the threshold. A single app
+[2:15] talking to a single model can just call
+[2:17] functions directly. Adopt MCP when the
+[2:20] same tools are reused across several
+[2:22] clients or model vendors, and adopt A2A
+[2:26] when agents owned by different teams or
+[2:27] companies have to cooperate. Standards
+[2:30] pay off precisely when you cross a
+[2:31] boundary.
+[2:33] Let us open up MCP and see the moving
+[2:35] parts. A host application like Cloud
+[2:37] Desktop or your agent runs one MCP
+[2:39] client for each server it connects to.
+[2:41] Each server exposes three things: tools
+[2:44] it can call, resources it can read, and
+[2:46] reusable prompts. Locally, the client
+[2:48] and server talk over standard input and
+[2:50] output. Remotely, they use HTTP with
+[2:54] server-sent events. Either way, the
+[2:56] client can discover what a server offers
+[2:58] at connect time. That discovery step is
+[3:00] the whole magic. The agent learns a new
+[3:02] tool's name, arguments, and description
+[3:04] at runtime without anyone hard-coding
+[3:07] the integration.
+[3:08] Now, the horizontal side, A2A. In a
+[3:10] concrete workflow, imagine a travel
+[3:12] planning coordinator agent. Separate
+[3:14] flight, hotel, and visa agents each
+[3:16] publish an agent card describing what
+[3:18] they do. The coordinator discovers them
+[3:21] and delegates the matching subtask to
+[3:23] each. Because they might come from
+[3:24] different vendors, authentication and
+[3:26] capability scoping decide who is allowed
+[3:28] to call whom and for what. That is the
+[3:30] agentic web taking shape, and governance
+[3:32] is what keeps it safe.
+[3:34] As you open up your tools, a few
+[3:35] governance mistakes get expensive fast.
+[3:38] A tool named "do it" with no docstring
+[3:40] will be misused, because the description
+[3:42] is the only spec the model sees. And
+[3:44] handing every agent every permission
+[3:46] invites disaster. Finally, scoring only
+[3:48] the final answer misses the agent that
+[3:50] reached the right result by a reckless
+[3:52] path. Least privilege, clear tool specs,
+[3:55] and trajectory evals are the guardrails
+[3:57] here.
+[3:58] The tooling around these protocols is
+[4:00] maturing very fast. There are MCP
+[4:02] servers and SDKs in every major
+[4:04] language, A2A agent cards, and the
+[4:06] related ACP and ANP efforts. Agent ops,
+[4:09] LangSmith, and LangFuse trace
+[4:11] multi-agent runs. For control, put an
+[4:13] access policy gateway in front of
+[4:15] sensitive actions. So, permission is
+[4:17] enforced by the system, not left to the
+[4:19] model's good judgment. So, what is the
+[4:22] model context protocol? MCP is an open
+[4:25] standard introduced by Anthropic for
+[4:27] connecting agents to tools and data
+[4:29] through one common interface. It
+[4:31] replaces a tangle of custom integrations
+[4:33] with a single protocol, and fast MCP is
+[4:36] its Python SDK. So, any MCP-aware client
+[4:39] can call the tools you expose. It pairs
+[4:41] with A2A, which does the same job
+[4:43] horizontally between agents.
+[4:46] Getting started is genuinely this small.
+[4:48] Install the SDK, decorate a function as
+[4:51] a tool, and run the server. Claude
+[4:53] Desktop or any other MCP client can now
+[4:55] discover and call it. From this one
+[4:57] file, you have joined the agent
+[4:59] ecosystem. Your tool is now reusable by
+[5:01] any compliant client today.
+[5:03] Governance needs metrics as much as any
+[5:05] other layer. Track the tool call
+[5:07] authorization rate, and crucially, the
+[5:09] denied attempts, because a spike there
+[5:11] is either an attack or a mis-scoped
+[5:13] agent. Watch the trajectory eval pass
+[5:16] rate, not only final answer accuracy.
+[5:18] And monitor the MCP tool error rate and
+[5:21] any unauthorized action attempts. Those
+[5:23] are the smoke detectors for a fleet of
+[5:25] agents you can no longer watch by hand.
+[5:28] Here are the four things to remember
+[5:29] about interoperability and governance.
+[5:32] First, MCP connects an agent down to its
+[5:34] tools and data. Second, A2A connects
+[5:36] agents across to each other. Together,
+[5:37] they replace a tangle of custom glue.
+[5:39] Third, evaluate the whole trajectory an
+[5:42] agent took, not just its final answer.
+[5:44] And fourth, gate actions with least
+[5:46] privilege access policies enforced by
+[5:48] the system. Connection is now the easy
+[5:50] standardized part. Governance, who may
+[5:52] do what and how you prove it, is the
+[5:54] discipline that the whole iGenTech era
+[5:56] turns on.
+[5:57] The one-line answer and the through-line
+[5:59] of the whole playlist, from versioning
+[6:01] one prompt to governing a fleet of
+[6:03] agents that is LLM ops to iGenTech AI
+[6:06] ops. Thanks for watching.

@@ -1,0 +1,280 @@
+Title: Ankit Sobti - From Agent Demos to Production: How Postman Is Building Reliable AI Agent Infra...
+
+--- TRANSCRIPT ---
+
+[0:03] Thank you. Uh again, I appreciate all of
+[0:05] you taking the time to learn about how
+[0:06] we went from prototype to pro production
+[0:09] and delivered an agent that was that's
+[0:11] really driving value within Postman. Uh
+[0:14] this is a curve that that some of you
+[0:15] out there that are building agents are
+[0:17] probably familiar with. We went from
+[0:19] being an organization that was very
+[0:20] agent first in terms of doing
+[0:21] development, but we recognized that we
+[0:22] wanted to start creating runtime agents
+[0:24] that would make decisions or help us
+[0:25] within the organization. So we started
+[0:27] to prototype and identify different
+[0:29] areas within the business that we might
+[0:31] be able to impact. From that we started
+[0:33] getting some initial excitement whether
+[0:34] it be from our CEO of the board and they
+[0:36] came to us and said hey you know we
+[0:38] really want to move and take some of
+[0:39] these and implement them within our
+[0:41] organization. But then the bigger
+[0:42] challenge comes all right well how do I
+[0:44] measure this? How do I manage this? How
+[0:47] do I make sure that you know we're
+[0:48] delivering something that that we can
+[0:50] maintain? So this is where things such
+[0:51] as determining ROI and and runs start
+[0:54] coming into play.
+[0:57] So the problem space that we wanted to
+[0:59] address in this case was enterprise
+[1:01] sales and the benefit of this is a very
+[1:03] uh uh well-defined process you know from
+[1:06] identifying an opportunity to renewing
+[1:08] that deal there's steps that would go
+[1:10] along in that and through that there's a
+[1:12] large number of teams that are working
+[1:13] together. The challenges that we're
+[1:15] running into is these teams have a hard
+[1:17] time in terms of handing off that
+[1:18] context of information amongst each
+[1:20] other. And when you look down in terms
+[1:21] of the number of systems that we're
+[1:23] using that pull in, you know, that the
+[1:25] these members and these teams are are
+[1:27] working with, it's uh just a a swarm of
+[1:30] systems, right? And the hard part is is
+[1:32] figuring out, well, what are the
+[1:33] relationships of data between them?
+[1:35] Ultimately, in the end, we end up with
+[1:37] this opaque process that where at every
+[1:39] step of the of the way, there's some
+[1:41] context that gets lost. And so from our
+[1:43] from our uh organization's perspective,
+[1:46] we wanted to figure out, hey, can we
+[1:47] create an agent that can help us through
+[1:49] all sta all the phases of the the sales
+[1:52] process. So uh we did what every you
+[1:55] know engineering organization would do.
+[1:57] We had a hackathon. So we opened this up
+[1:59] to our engineers and over 30 hours they
+[2:01] created a number of agents. But what you
+[2:02] see here is just a swarm of different
+[2:04] systems and connections and agents that
+[2:06] were created. Ultimately, in the end, we
+[2:08] identified, hey, there's this win-loss
+[2:10] agent that's actually able to give us
+[2:12] some really interesting results. And
+[2:14] from this, we we identified three core
+[2:16] problems.
+[2:18] You know, first uh the the the core
+[2:21] problem is that we found that the more
+[2:23] uh discreet the out I mean, sorry, the
+[2:25] more deterministic the outcome, the
+[2:26] better the the agent was. And in case of
+[2:28] the the win- loss agent, uh I could get
+[2:32] something such as like, you know, here's
+[2:33] the reasons why we lost this particular
+[2:35] uh account. And I could work back from
+[2:38] the reasoning in terms of the results I
+[2:39] got back from the agent say, "Yeah, you
+[2:41] know, that looks about right. You know,
+[2:42] maybe our price was too high and we we
+[2:43] ended up losing that deal." But if I
+[2:45] were to ask that same agent, all right,
+[2:46] well, what's the best way in terms of
+[2:48] generating leads? It it it kind of went
+[2:50] off the rail. It would start generating
+[2:51] results that were very hard for us to
+[2:53] determine is this right or not. Uh the
+[2:55] other thing we found is like depending
+[2:57] on the complexity of the model, the
+[2:58] reasoning that came back was was much
+[3:00] much better, but also the confusion in
+[3:02] terms of like understanding those
+[3:03] results became much much harder.
+[3:07] The second thing is this is really a a
+[3:10] compounding problem. Those of you that
+[3:11] have built a microservices architecture
+[3:13] probably recognize this A2A and agents
+[3:16] community agents. What we were
+[3:17] recognizing is that we were ending up
+[3:19] with both compounding cost and
+[3:21] compounding confusion and the challenges
+[3:23] in terms of the handoffs and testing
+[3:25] between these agents became a much
+[3:28] bigger problem.
+[3:32] And then finally uh one of the other
+[3:34] things that that we recognize is that
+[3:36] this is this is a uh decomposition
+[3:39] problem. We what we were doing is we
+[3:41] were creating individual agents and what
+[3:44] we didn't recognize is that all these
+[3:45] agents were part of the same domain. Uh
+[3:47] if there's any uh design patterns Martin
+[3:49] Fowler fans out there you probably
+[3:51] recognize this pattern as decomposition.
+[3:53] We what we recognized is the interface
+[3:54] between these systems and the handoff of
+[3:56] context that was the biggest challenge.
+[3:58] So we have these three problems and what
+[4:01] we did is we came up with a framework of
+[4:03] of four solutions to address it. You
+[4:05] know uh at at the foundation we created
+[4:08] a monolith agent. Uh this agent had an
+[4:11] understanding of all the knowledge and
+[4:13] information that is available as it
+[4:14] related to the sales process. Salesforce
+[4:16] gong calls it could pull in the
+[4:18] transcripts and I can ask it really
+[4:20] interesting questions get interesting
+[4:21] results. So you know again this was a
+[4:24] great co-pilot. It was a great answer uh
+[4:26] generator, but the the challenge we ran
+[4:28] into is that, you know, if there were
+[4:30] some gray areas, it would start making
+[4:32] things up. And it was a a great
+[4:34] generous, but if I started asking it
+[4:35] more specialized questions, it just it
+[4:37] just had too much information. It wasn't
+[4:39] able to give us the right result. So, we
+[4:41] built off of this. The next stage was
+[4:43] the decomposition component. And there's
+[4:45] two key pieces that we implemented here.
+[4:47] One is the hallucination layer. Don't
+[4:49] recommend something unless you have a
+[4:51] clear understanding of where you're
+[4:53] getting that information from. And if
+[4:54] you don't have it, you need to really
+[4:56] explain why you came up with that
+[4:57] result. If if it's not able to do either
+[5:00] of those things, we would just ignore
+[5:01] it. And on top of it, we wanted to
+[5:03] create those domain specific agents. And
+[5:05] this was not a coding task. These are
+[5:08] actually prompts where I can go in and
+[5:09] say, "Hey, you know, I'm a seller.
+[5:12] Here's the things I would typically do."
+[5:13] And it would go out and it would uh it
+[5:15] would start answering the questions as
+[5:17] it related to that persona. So it
+[5:20] sharpened the output and it stopped
+[5:21] doing a lot of the hallucinations. But
+[5:24] it was confidently wrong. Uh knowledge
+[5:26] and intelligence does not mean uh
+[5:28] strategy. So if I were to ask a sales
+[5:30] agent, what persona should I sell to?
+[5:33] Any guesses out there in the audience,
+[5:34] which persona would would typically be
+[5:36] responsible for buying software?
+[5:39] >> Perfect. Yes. Exactly. So would come
+[5:40] back and say, sell to procurement every
+[5:42] time. If I went into my customers and
+[5:43] said, hey, I'm going to sell to your
+[5:44] procurement organization, they'd laugh
+[5:46] us out of the room. So that's where we
+[5:49] started to identify the teams that own
+[5:51] that strategic content and we put them
+[5:53] in charge of adding that information. So
+[5:55] in this case uh the sales team would go
+[5:57] in and add their account plans. The
+[5:59] field engineering organization would add
+[6:01] things such as how you know their
+[6:03] solutions plays and from this we started
+[6:05] to get more and more strategically
+[6:07] relevant information in these agents and
+[6:09] the outputs were becoming more and more
+[6:11] important. But the challenge was is at
+[6:13] this point I had this super agent that
+[6:15] had understanding of my entire
+[6:16] organization but there were no controls
+[6:18] in place. And that's where we
+[6:20] implemented this last layer which is
+[6:22] beyond the uh model of of determining is
+[6:26] this right or not or is this true or
+[6:27] not? We needed to add another layer and
+[6:29] say hey is this content uh related to
+[6:32] the job that's that's requesting it. So
+[6:34] that way if I went to the CTO agent
+[6:36] that's not going to give me all
+[6:37] information as it relates to the P&L of
+[6:39] the business. it would it would take
+[6:41] into account my context and my job role
+[6:43] and only give me that information that
+[6:44] was relevant to me. But what this has
+[6:47] done is it identified a couple of areas
+[6:49] that we really wanted to lean into in
+[6:50] terms of developing additional agents.
+[6:52] And really we've identified what we call
+[6:55] this agent autonomy curve. And at each
+[6:57] steps of these it determines like is it
+[6:59] the human or the agent that makes the
+[7:00] decision. There's two decisions that
+[7:02] have to happen. Who's going to request
+[7:03] the information and who determines when
+[7:05] to promote it? At the help piece the
+[7:07] human's involved in both of those. I
+[7:09] make the qu I I ask the question and I
+[7:11] an analyze the result. The
+[7:12] recommendations piece the agent starts
+[7:13] doing that. But where the biggest step
+[7:15] change happens is between that act and
+[7:17] own piece where on the act piece the
+[7:19] agent is doing both sides of that
+[7:20] equation within some guard rails and
+[7:22] ultimately the own piece is what we're
+[7:24] all developing towards which is having
+[7:25] longunning agents that will go and own
+[7:27] the entire ecosystem. Now what we saw
+[7:31] from this was really surprising is we
+[7:33] started getting compounding value within
+[7:35] our organization. We went from building
+[7:37] an agent taking a hackathon in 30 hours
+[7:39] down to now we have this framework where
+[7:42] within a matter of hours someone can go
+[7:44] in and create the guard rails and then
+[7:45] build off this body of knowledge that we
+[7:47] have. And on the consumption front we
+[7:49] went from just having a select audience
+[7:51] of users who are taking advantage of
+[7:53] these agents to now the entire
+[7:55] organization being able to identify how
+[7:57] they too can get value from it. So we
+[7:59] got a a compounding value in terms of
+[8:00] the time it took to develop these agents
+[8:02] and a compounding value in terms of the
+[8:04] people that are getting value of it. And
+[8:06] the core val the the the core benefit of
+[8:08] this too is that we also saw a change of
+[8:11] behavior in our organization as well. So
+[8:13] since the sales people now know that the
+[8:14] context that they create and the
+[8:16] questions that they ask also help the
+[8:18] underlying value of these agents, we're
+[8:20] seeing more discovery go on and we're
+[8:22] seeing better quality of content get
+[8:23] created. Uh I'd be remiss to say that we
+[8:26] also didn't create a platform to help uh
+[8:28] address this issue. We uh we took you
+[8:31] know this this learnings in terms of
+[8:33] creating a platform that um you know we
+[8:36] were able to build these compounding
+[8:37] agents within our organization and we
+[8:40] identified that ultimately in the end I
+[8:41] need to be able to measure the outcomes
+[8:43] that are that are occurring. I need to
+[8:44] be able to have a catalog of these
+[8:46] agents that are available that my teams
+[8:47] could hire fire and understand what the
+[8:49] impact is both in terms of the cost and
+[8:51] the return on the investment. Uh, with
+[8:54] that I I appreciate the time today.
+[8:55] Thank you very much. And if you have any
+[8:56] questions, feel free to just connect
+[8:57] with me on LinkedIn.

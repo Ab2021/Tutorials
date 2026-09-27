@@ -1,0 +1,130 @@
+# REFERENCE-GRADE -- NOT EXECUTED IN THIS ENVIRONMENT.
+# No cluster, no engine, no GPU. Adapt before use.
+#
+# The search policy bundle: the unit that actually deploys. It is versioned and
+# immutable, and it is the join key for every replay and every width-vs-BLEU
+# artifact. Decoders pick up a new version on the next request; nothing is
+# migrated in place.
+
+apiVersion: inference.vantage.io/v1
+kind: SearchPolicy
+metadata:
+  name: translation-search
+  version: 2026.09.3
+  labels:
+    # The eval run that gated this bundle. A bundle without one must not load.
+    gate.vantage.io/eval-run: eval-2026-09-19-b
+spec:
+
+  # ---------------------------------------------------------------- classes
+  # The four-way router. `classify.py` maps a request to exactly one of these.
+  classes:
+
+    - name: latency-critical
+      match:
+        customerTier: [interactive]
+        documentTokens: { lt: 400 }
+      mode: greedy
+      K: 1
+      # Greedy has no beam and no normaliser. It is listed with explicit nulls
+      # rather than omitted so that a missing key is a schema error, not a
+      # silent fall-through to the beam default.
+      alpha: null
+      recombine: none
+      earlyStop: true
+
+    - name: prose-default
+      match:
+        segmentClass: prose
+        documentTokens: { lt: 2000 }
+      mode: beam
+      K: 4
+      # alpha is per-language and resolved from the alpha table below; the
+      # bundle carries only the cap, because an uncapped alpha "explodes" and
+      # inverts the preference toward short sequences.
+      alphaFrom: language
+      alphaCap: 1.5
+      recombine: ngram
+      recombineN: 3
+      earlyStop: true
+
+    - name: multi-phrasing
+      match:
+        product: phrasing-set
+      mode: diverse
+      K: 3
+      groups: 3
+      beamsPerGroup: 1
+      # Cumulative diversity: same token at the same time step only. Raw
+      # Hamming is rejected -- it penalises a legitimate "the" regardless of
+      # where it appears.
+      diversityPenalty: 0.5
+      penaltyKind: cumulative
+      alphaFrom: language
+      alphaCap: 1.5
+      recombine: none
+      earlyStop: true
+
+    - name: glossary-constrained
+      match:
+        hasGlossary: true
+      mode: bounded
+      K: 8
+      # Bounded mode has no EOS and a known remaining length, so a row-minimum
+      # heuristic is computable and admissible. `none` here degrades to
+      # uniform-cost: correct but slower.
+      heuristic: row_min
+      requireConstraint: true
+      recombine: kl
+      klThreshold: 0.5
+      alpha: null
+      earlyStop: false
+      # A bounded segment that exhausts the beam emits a flagged partial.
+      # Emitting an empty string would be a silent glossary violation.
+      onEmptyCandidates: partial
+
+  # ------------------------------------------------------------ alpha table
+  # Calibrated per language on a held-out parallel set. Range-capped at the
+  # bundle level above. If a language is missing here the request is refused
+  # rather than defaulted -- a wrong alpha is a systematic quality change, not
+  # a graceful degradation.
+  alphaTable:
+    configMapRef: alpha-table-2026-09
+    requiredForAllTargets: true
+
+  # ------------------------------------------------------------- guarantees
+  guarantees:
+    # Exact decoding is not offered: it would require a beam as wide as the
+    # vocabulary. The contract says so in these words.
+    exactMode: false
+    optimalityClaimed: onlyWhenHeuristicIdenticallyZero
+    replay: requestAndPolicyVersionWithPinnedStack
+    crossVersionReplay: false
+
+  # -------------------------------------------------------------- degrade
+  # Ordered ladder. Steps 1-3 trade quality for capacity; steps 4-5 trade
+  # speed for correctness. A capacity incident and a correctness incident must
+  # never be the same switch.
+  degradation:
+    - trigger: { queueDepth: { gt: 100000 } }
+      action: bestFirstToPlainBeam
+    - trigger: { kvPoolUtilisation: { gt: 0.85 } }
+      action: halveK
+    - trigger: { kvPoolUtilisation: { gt: 0.95 } }
+      action: forceGreedy
+    - trigger: { heuristicOverestimates: { gt: 0 } }
+      action: disableHeuristic
+    - trigger: { glossaryRetention: { lt: 0.99 } }
+      action: disableRecombination
+
+  # ------------------------------------------------------- release gating
+  release:
+    # A width sweep is a required artifact. The curse of beam search is
+    # diagnosed by comparing widths and cannot be seen from production
+    # traffic, so it is a build-time gate, not a dashboard.
+    requireWidthSweep: [1, 2, 4, 8]
+    maxBleuRegression: 0.3
+    requireHumanSample: true
+    # If eval-BLEU and the human sample diverge, refuse the release. That
+    # divergence means the objective is wrong, and no amount of search fixes it.
+    refuseOnMetricHumanDivergence: true

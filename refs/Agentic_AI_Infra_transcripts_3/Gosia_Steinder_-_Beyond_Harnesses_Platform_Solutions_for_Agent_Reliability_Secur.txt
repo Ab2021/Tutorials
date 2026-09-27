@@ -1,0 +1,202 @@
+Title: Gosia Steinder - Beyond Harnesses – Platform Solutions for Agent Reliability, Security, and Efficien
+
+--- TRANSCRIPT ---
+
+[0:02] GOSIA STEINDER: Thank you very much.
+[0:03] It's great to be here.
+[0:08] I believe we are entering the next wave of application
+[0:12] platform evolution.
+[0:14] The first wave being when we separated hardware from software
+[0:18] and developed the first high-level programming
+[0:20] languages.
+[0:22] The second being cloud computing,
+[0:24] when we started creating distributed applications
+[0:26] across the data center and the globe.
+[0:28] Both of these waves resulted in creating a new operating system.
+[0:33] And by operating system, I mean a foundation
+[0:36] that separates application from hardware, from infrastructure
+[0:41] through a layer of abstraction, but also
+[0:43] foundation that offers certain primitives that applications
+[0:46] can rely on to achieve resiliency, scalability,
+[0:51] and efficiency.
+[0:54] AI applications are without any doubt
+[0:56] that the most non-deterministic and unreliable component that
+[1:00] has ever been introduced in enterprise architectures,
+[1:04] and I believe they will require a new foundation,
+[1:07] a new operating system as well.
+[1:10] Now, AI applications are applications,
+[1:12] they can run on existing foundation.
+[1:15] The problem really is that this foundation doesn't really
+[1:17] do much to help solve the novel challenges that are occurring
+[1:22] with these applications, and I personally
+[1:24] like characterizing these challenges in two groups.
+[1:28] There are structural and semantic.
+[1:30] Structural challenges are because these applications have
+[1:35] open-ended instruction set.
+[1:37] By instruction set, I mean the set of operations
+[1:40] that an agent can execute on an external world.
+[1:44] They decide which of these instructions to use at runtime,
+[1:48] and they order them at runtime.
+[1:50] Now, that breaks a few very important assumptions
+[1:53] that existing platforms make.
+[1:55] Zero trust security becomes very difficult
+[1:58] because zero trust security depends
+[2:00] on understanding interaction patterns between applications
+[2:04] a priori, at configuration time.
+[2:08] Recovery becomes very difficult because traditional techniques,
+[2:12] like compensations and rollback, become intractable to implement.
+[2:16] And of course, these applications
+[2:18] are not fully testable in pre-deployment.
+[2:22] Another problem is the lack of separation of instructions
+[2:25] and data in the context, which is what agents are working off.
+[2:29] That's why we are seeing so many novel security
+[2:32] threats associated with agents, and agents communicate
+[2:35] exchanging that context.
+[2:37] So we are losing execution separation
+[2:40] between different agents.
+[2:41] And that essentially means that controlling blast
+[2:44] radius of resiliency and security issues
+[2:46] becomes very difficult.
+[2:48] And now there comes this entire semantic side
+[2:51] that Ian Stoica has been talking about,
+[2:54] that we are not able to fully specify agent goals.
+[2:58] It's very difficult to express what agents should
+[3:00] do in the narrative, but it's even harder
+[3:04] to specify what agents shouldn't do.
+[3:07] And we still lack any formal methods
+[3:09] of expressing agents' goals and validating agents' goals.
+[3:15] It doesn't help that AI models, the agents,
+[3:19] are not good in reporting on their own status.
+[3:22] We essentially do not have any reliable error codes.
+[3:25] All this means that understanding
+[3:27] if agent is working correctly, if it's succeeding,
+[3:30] detecting its failure, understanding its liveness.
+[3:33] So if it's making progress, if it's converging towards the goal
+[3:36] or not hanging, all of these problems become very difficult.
+[3:39] And if we cannot determine what the problem is,
+[3:43] we cannot recover from this either.
+[3:46] And, of course, there is also a semantic gap
+[3:48] between how is thinking and designing
+[3:52] what it should be doing and the schema-based nature
+[3:57] of real world interfaces that with constantly changing
+[4:02] interfaces, leads to mismatch and new errors being introduced.
+[4:10] So how do we address these problems today?
+[4:15] Well, all of this is done in a bespoke manner
+[4:17] in the application layer.
+[4:19] So we develop frameworks, we develop harnesses,
+[4:21] and we have plenty of them.
+[4:23] Every few months, we see a new powerful type
+[4:27] of agent or harness being developed
+[4:30] that tries to address these problems and prove
+[4:36] or proof of existence that the solution exists.
+[4:40] But that creates a lot of fragmentation.
+[4:42] These harnesses are actually very hard to develop.
+[4:44] You need to have a lot of expertise.
+[4:46] Now, we are clearly in the experimentation phase.
+[4:50] And when you look at the history,
+[4:51] we see that in previous waves of innovation,
+[4:54] the same thing happened at the beginning.
+[4:56] We have multiple versions of Unix.
+[4:58] When containers and cloud native era started,
+[5:01] we had lots of versions of containers,
+[5:03] lots of container orchestration platforms,
+[5:06] and entire divergent ecosystems around that.
+[5:10] But eventually, the industry has identified
+[5:13] common patterns, standardized on them, and consolidated.
+[5:17] So we ended up with Unix and POSIX semantics
+[5:21] for in the first wave, and the Kubernetes and the ecosystem
+[5:24] around Kubernetes in the second wave.
+[5:26] We believe something like this will
+[5:28] need to happen in the AI era as well.
+[5:33] So that's what we and my research group are exploring.
+[5:39] And the way we approach it is by looking at the types of agents
+[5:42] that we are running in our organization.
+[5:44] And we essentially have three types of agents.
+[5:46] We have those that we have implemented ourselves using
+[5:49] some framework or some SDK.
+[5:52] So we have complete control over them.
+[5:55] We have agents that are well-known harnesses
+[5:58] that we can control via hooks and plugins.
+[6:02] And we have blackbox agents that we cannot do anything about,
+[6:05] those we can only control by observing them on the outside.
+[6:10] So what we are building is a layer of interception
+[6:13] that can integrate with all of these styles of agents
+[6:18] and provides a uniform way to observe and modify
+[6:23] all interactions that these agents are
+[6:25] making with the external world.
+[6:27] Using that layer of abstraction, we
+[6:30] are adding control functions to manage how agents are behaving.
+[6:35] Our first approach, first problem, that we've tackled
+[6:39] has been security, and particularly,
+[6:41] the zero trust security.
+[6:43] Implementing multi-tier, multi-layered permission system
+[6:46] to control what agents are allowed to do.
+[6:50] This included implementing agent identity
+[6:55] and using that identity to implement delegation
+[6:57] flows with authorization, then policy-based access,
+[7:01] and then finally, intent-based access
+[7:03] to evaluate if what agent is doing
+[7:05] is actually aligned with users objectives.
+[7:08] We have moved since to also start
+[7:10] looking into the semantic layer of agents.
+[7:13] So can in this business logic independent way outside
+[7:17] of agents, control the context and manage context
+[7:22] that agents are using.
+[7:23] Can we manage the correctness of tool calls
+[7:27] and do data flow analysis to understand how data is flowing
+[7:32] and control that.
+[7:34] We are pursuing this in the project called Rossoctl.
+[7:38] Our web pages contain more information
+[7:40] and also contain deeper results of various benchmarks
+[7:44] and experiments.
+[7:45] And my colleague Maya has a poster
+[7:47] that she's going to present today.
+[7:49] So I encourage you to stop by and learn more
+[7:51] about what we have done.
+[7:53] Now, crucially, we are not inventing--
+[7:56] we are not replacing the existing platform.
+[7:58] All of the things that we are doing a bit on existing cloud
+[8:02] platform, we leverage existing standards and extend them.
+[8:06] So standards like O of tools for identity non-policy languages.
+[8:12] We are orchestrating this on Kubernetes,
+[8:15] and our gateway-based approaches are originally
+[8:18] based on envoy proxy.
+[8:20] But now we are moving to a more efficient, Rust-based proxy
+[8:24] implementation based on project praxis.
+[8:28] We have encouraging results.
+[8:30] We can demonstrate cost reduction even with
+[8:32] state-of-the-art agents from context compaction.
+[8:35] We can demonstrate consistent improvements
+[8:37] to tool calling accuracy, which translates into improvements
+[8:41] to agent quality.
+[8:42] And we can certainly demonstrate that we can transparently do
+[8:45] permissioning for these agents.
+[8:49] Another important part of the platform evolution
+[8:54] of applications is, of course, application patterns.
+[8:57] And we believe that for agents, the right application pattern
+[9:00] is serverless.
+[9:01] Serverless pattern separates agent loop
+[9:04] as a stateless component from a durable session lock, where
+[9:08] the context is being managed, and execution tier
+[9:14] provided by diverse set of sandboxes.
+[9:17] We believe that leads to better resiliency, better accuracy,
+[9:22] better performance, and better scalability.
+[9:25] And again, we have encouraging results.
+[9:29] We can save a lot on infrastructure costs,
+[9:31] particularly for agents that are model-bound.
+[9:35] We can flexibly allocate sandboxes.
+[9:37] So not all agents require most expensive sandboxes.
+[9:42] And they can be quite expensive.
+[9:44] And we can also reuse sandboxes for certain types of agents
+[9:48] where security policy allows that.
+[9:51] So to summarize that, we do believe
+[9:54] there is a new wave of platform that is going to be built.
+[9:57] We've started on that journey.
+[9:59] We are very interested to--
+[10:01] I am very interested in talking to you about this
+[10:03] if you agree or disagree.
+[10:04] And certainly, if you work on any project in this direction,
+[10:08] I would like to know about it, and we
+[10:10] would like to partner with you.
+[10:12] Thank you.
+[10:12] [APPLAUSE]

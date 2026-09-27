@@ -1,0 +1,143 @@
+# T15 — Alerts for the autoscaling loop (REFERENCE-GRADE, NOT EXECUTED HERE)
+#
+# The defining property of this component: IT IS PART OF ITS OWN INPUT. Scaling up
+# shortens the queue, which makes the queue signal look healthy -- whether or not the
+# fleet is now five times too large. Most of these rules exist because the loop can hide
+# its own failure.
+---
+groups:
+  - name: autoscaling-cold-start
+    rules:
+      # ---------------------------------------------------------------------------
+      # THE TRIPWIRE. Past a long enough cold start, autoscaling is NEGATIVE-VALUE.
+      #
+      # run.py section 5, static overprovision vs the best autoscaler:
+      #     boot   5 steps   94.2% SLO @ 2,015   vs  100% @ 2,700
+      #     boot  60 steps   76.8% SLO @ 9,653   vs  100% @ 2,700   <- static wins both
+      #     boot 180 steps   37.1% SLO @ 17,266  vs  100% @ 2,700   <- by 6x
+      #
+      # Not fixable by a better policy: if the load rises and falls inside the boot
+      # window, the capacity arrives after the need and is billed anyway.
+      # ---------------------------------------------------------------------------
+      - alert: ColdStartExceedsBurstWindow
+        expr: cold_start_seconds{quantile="0.99"} > 120
+        for: 15m
+        labels: { severity: critical }
+        annotations:
+          summary: "Cold start p99 is {{ $value }}s -- autoscaling is likely negative-value"
+          runbook: >
+            Do not add replicas faster. This is a dead-time problem, not a gain problem.
+            Either reduce the cold start (un-quantized base image, weights on a fast
+            mount -- the corpus's minutes-to-15-20s path [R]) or stop autoscaling and pin
+            a static peak-sized floor. Compare the two on SLO AND cost per served
+            request, not on replica count.
+
+      # Cold start drifting invalidates the derived down-cooldown. This is the
+      # mechanism by which a correctly-derived constant becomes a hard-coded stale one.
+      - alert: ColdStartDrift
+        expr: >
+          cold_start_seconds{quantile="0.99"}
+            > 1.5 * cold_start_baseline_seconds
+        for: 30m
+        labels: { severity: warning }
+        annotations:
+          summary: "Cold start grew {{ $value | humanize }}x -- down_cooldown is now too short"
+          runbook: >
+            down_cooldown_s is derived from boot_p99 by design. If the derivation was ever
+            replaced by a literal, or the baseline was not refreshed, the scale-down
+            controller is now cancelling replicas that are still booting. Check
+            replica_boot_waste_ratio -- it moves before the SLO does.
+
+  - name: autoscaling-stability
+    rules:
+      # Flapping. A rising scale-event rate with flat load is instability, not
+      # responsiveness. An autoscaler driven by its own oscillation is the classic
+      # control-loop failure.
+      - alert: AutoscalerFlapping
+        expr: increase(scale_events_total[15m]) > 10
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          summary: "{{ $value }} scale events in 15m with load not changing"
+          runbook: >
+            Widen the cooldowns, and check the direction split first -- a flap dominated
+            by scale-DOWN means down_cooldown is shorter than the boot time, which is
+            LLD section 4 and has a specific fix.
+
+      # Boot waste is the efficiency metric that a ready-replica count cannot see.
+      # Booting replicas cost money and serve nothing.
+      - alert: BootWasteHigh
+        expr: replica_boot_waste_ratio > 0.15
+        for: 20m
+        labels: { severity: warning }
+        annotations:
+          summary: "{{ $value | humanizePercentage }} of replica spend is on replicas that never served"
+          runbook: >
+            Compare run.py section 4: naive symmetric hysteresis runs at 29.7% waste,
+            the derived cooldown at 8.7%. Above 15% on a steady workload, the cooldown
+            direction is the first thing to check.
+
+  - name: autoscaling-signal
+    rules:
+      # A signal that never approaches its own target cannot regulate. This is the
+      # compression failure (LLD section 3), and it is invisible in every latency panel.
+      - alert: ScalingSignalCannotReachTarget
+        expr: max_over_time(scaling_signal_ratio[24h]) < 0.6
+        for: 1h
+        labels: { severity: warning }
+        annotations:
+          summary: "Scaling signal has not reached 60% of its target in 24h"
+          runbook: >
+            The signal is compressed or misaligned -- CPU is the usual culprit, because
+            the CPU orchestrates while the accelerator works. A target the signal cannot
+            reach means the loop sits at its setpoint while the fleet fails. Replace the
+            signal with queue depth or KV occupancy.
+
+      # Queueing while the signal says healthy: the signal measures a different thing
+      # than the symptom. The signal and the symptom must be the same thing.
+      - alert: QueueingWhileSignalHealthy
+        expr: queue_depth_p99 > 32 and scaling_signal_ratio > 0.9
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "Queue p99 {{ $value }} while the scaling signal reads healthy"
+          runbook: >
+            If the signal is KV occupancy and the deployment is prefill-heavy with fast
+            turnover, the cache may never fill while the fleet queues. Re-derive the
+            threshold from the dimension that is actually binding.
+
+  - name: autoscaling-cost
+    rules:
+      # ---------------------------------------------------------------------------
+      # THE ALERT THAT SEES WHAT THE SLO CANNOT.
+      #
+      # An autoscaler that scales up enough to keep the queue short makes its own signal
+      # look healthy -- regardless of whether the fleet is now five times too large.
+      # SLO attainment is perfect in that state. Only cost reveals it.
+      # ---------------------------------------------------------------------------
+      - alert: AutoscalerHidingOverprovisioning
+        expr: >
+          cost_per_served_request > 1.5 * cost_per_served_request_baseline
+          and slo_attainment > 0.99
+        for: 30m
+        labels: { severity: warning }
+        annotations:
+          summary: "Perfect SLO at {{ $value }}x baseline cost per served request"
+          runbook: >
+            The SLO is being bought with money rather than managed. An autoscaler is part
+            of its own input: it shortened the queue, which made the queue signal look
+            healthy. Compare against the static-peak baseline in run.py section 5 -- a
+            static fleet is often cheaper at the same SLO.
+
+      # Scale-to-zero appearing in a pool that serves interactive traffic.
+      - alert: ReplicasAtZeroOnInteractivePool
+        expr: replicas_ready{pool=~"prefill|decode"} == 0
+        for: 1m
+        labels: { severity: critical }
+        annotations:
+          summary: "Interactive pool at zero replicas -- the next request pays a full cold start"
+          runbook: >
+            Scale-to-zero is disabled for interactive pools by design (HLD section 10,
+            LLD section 7) because a 15-20s cold start exceeds any interactive TTFT
+            budget. Something bypassed min_replicas. Restore the warm floor first and
+            investigate after.

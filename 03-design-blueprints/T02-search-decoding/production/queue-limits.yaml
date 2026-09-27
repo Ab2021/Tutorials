@@ -1,0 +1,85 @@
+# REFERENCE-GRADE -- NOT EXECUTED IN THIS ENVIRONMENT.
+# No cluster, no engine, no GPU. Adapt before use.
+#
+# The priority queue is on the ENGINE HOST's memory, not the GPU's. A frontier
+# blow-up therefore takes out a replica rather than an accelerator, which makes
+# it an availability concern and not just a performance one. These are the
+# limits that keep best-first beam search's memory cost bounded.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: search-queue-limits
+  namespace: inference
+data:
+  # The beam constraint. Best-first beam search keeps K, it just stops
+  # expanding all K of them blindly -- at width 16 or 32 most beams are
+  # obviously low-probability and not worth expanding.
+  beam.width.default: "4"
+  beam.width.max: "8"
+
+  # Frontier cap per request. Best-first's own precondition -- scores can only
+  # decrease when extended -- is what makes aggressive frontier pruning safe:
+  # anything that cannot survive the beam can be dropped before expansion.
+  frontier.max_hypotheses_per_request: "4096"
+
+  # Host-memory ceiling across all in-flight searches on a replica. Crossing
+  # this triggers the degradation ladder rather than OOM.
+  frontier.max_hypotheses_per_replica: "200000"
+  frontier.degrade_threshold: "100000"
+
+  # Early termination: once a complete hypothesis is popped in best-first
+  # mode, and the queue's best f cannot beat it, stop.
+  early_termination.enabled: "true"
+  # Requires monotone scores. A reward-augmented score that can INCREASE along
+  # a path violates this and must not be dropped into this queue unchanged.
+  early_termination.require_monotone_score: "true"
+
+  # KV: beams fork the cache. Worst case is K concurrent sequences; n-gram
+  # recombination at n=3 pulls the steady state below that, but the pool is
+  # sized for worst case.
+  kv.sequences_per_request.worst_case: "8"
+  kv.sequences_per_request.expected: "5"
+
+  # Recombination cost. KL is O(K^2) per step -- at beam 16 that is a 16x16
+  # matrix of divergences per step -- so it is enabled only on the bounded
+  # path where K is small.
+  recombine.kl.max_beam_width: "8"
+  recombine.ngram.n: "3"
+  recombine.ngram.max_beam_width: "32"
+---
+# The observability contract for the same limits. Two of these are release
+# gates rather than dashboards.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: search-observability
+  namespace: inference
+data:
+  metrics: |
+    search_expansions{mode,K,language}          histogram
+    search_queue_depth{replica}                 gauge
+    search_pruned_by_recombination{mode}        counter
+    search_optimality_guaranteed{mode}          counter   # must be 100% outside bounded
+    search_heuristic_overestimates{grammar}     counter   # MUST BE ZERO
+    search_length_histogram{language}           histogram
+    search_partial_outputs{reason}              counter
+    search_kv_sequences_per_request{mode}       histogram
+
+  # A nonzero heuristic_overestimates means an inadmissible heuristic is live
+  # and optimality is no longer guaranteed on that grammar. Page.
+  alerts: |
+    - alert: InadmissibleHeuristicLive
+      expr: increase(search_heuristic_overestimates_total[10m]) > 0
+      severity: page
+      runbook: disable-heuristic-for-grammar
+
+    - alert: SearchQueueApproachingCap
+      expr: search_queue_depth > 100000
+      severity: ticket
+      runbook: degradation-ladder-step-1
+
+    - alert: PartialOutputRateHigh
+      expr: rate(search_partial_outputs_total[1h]) > 0.001
+      severity: ticket
+      runbook: investigate-degenerate-eos

@@ -1,0 +1,90 @@
+# REFERENCE-GRADE -- NOT EXECUTED IN THIS ENVIRONMENT.
+# No collector was run here. Adapt to your own backend and retention rules.
+#
+# Why this file exists at all: a decoding regression is invisible to latency and
+# error-rate monitoring. The request succeeds, the latency is normal, and the
+# output is subtly wrong. The signals that see it are distributional -- the
+# entropy of the pre-truncation distribution and how many candidates survive
+# truncation. Those are what this pipeline carries.
+#
+# Cardinality discipline: `step_bucket` is logarithmic, not the raw step index.
+# A 10,000-token generation must not create 10,000 time series.
+
+receivers:
+  otlp:
+    protocols:
+      grpc: { endpoint: 0.0.0.0:4317 }
+      http: { endpoint: 0.0.0.0:4318 }
+
+processors:
+  # Sampler counters arrive per step from every engine thread. Sample the
+  # distributional ones; never sample the alertable ones.
+  probabilistic_sampler:
+    sampling_percentage: 5
+    hash_seed: 22
+
+  # The alertable counters are always-on and must not be sampled away.
+  filter/always_on:
+    error_mode: ignore
+    metrics:
+      include:
+        match_type: regexp
+        metric_names:
+          - ^sampler\.empty_set$
+          - ^sampler\.fallback$
+          - ^sampler\.ties$
+
+  attributes/strip_high_cardinality:
+    actions:
+      - key: request_id
+        action: delete      # would be unbounded cardinality
+      - key: prompt
+        action: delete      # never ship prompt text on a metrics path
+
+  batch:
+    timeout: 5s
+    send_batch_size: 512
+
+exporters:
+  prometheus:
+    endpoint: 0.0.0.0:8889
+    resource_to_telemetry_conversion:
+      enabled: true
+    # The label set that makes a regression attributable. policy_id carries the
+    # version, so a quality incident joins to the configuration that caused it.
+    const_labels:
+      plane: "sampling"
+
+extensions:
+  health_check: {}
+
+service:
+  extensions: [health_check]
+  pipelines:
+    metrics/always_on:
+      receivers: [otlp]
+      processors: [filter/always_on, attributes/strip_high_cardinality, batch]
+      exporters: [prometheus]
+    metrics/sampled:
+      receivers: [otlp]
+      processors: [probabilistic_sampler, attributes/strip_high_cardinality, batch]
+      exporters: [prometheus]
+
+# Alert definitions that belong with this pipeline (conceptual -- wire them to
+# your own alertmanager):
+#
+#   sampling.empty_set.rate > 0.1/s for 5m
+#     -> a grammar and a distribution have diverged; check the schema version
+#        before touching the policy.
+#
+#   sampling.ties.rate rising on one surface, others flat
+#     -> quantization is distorting this surface's logits. A policy change will
+#        not fix it; the checkpoint will.
+#
+#   sampler.entropy.shift with flat quality
+#     -> the model changed shape under a constant policy. Roll the model
+#        revision back and re-run the eval gate.
+#
+#   sampler.fallback.rate > 0
+#     -> requests are being rescued. Not an outage, but the earliest signal of
+#        one. Correlate with the grammar version.

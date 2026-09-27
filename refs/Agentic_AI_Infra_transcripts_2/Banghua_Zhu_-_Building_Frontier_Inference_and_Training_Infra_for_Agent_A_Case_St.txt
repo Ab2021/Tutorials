@@ -1,0 +1,336 @@
+Title: Banghua Zhu - Building Frontier Inference and Training Infra for Agent: A Case Study of SGLang and M
+
+--- TRANSCRIPT ---
+
+[0:02] Uh, today I'm going to introduce uh,
+[0:03] Ashlan Mouse and where we build the
+[0:06] frontier AI infrastructure uh, within
+[0:08] Reddit Arc.
+[0:11] Um, so the mission of Reddit Arc is to
+[0:12] make frontier level AI infrastructure
+[0:14] open and accessible to everyone.
+[0:16] And to achieve that, we're building in
+[0:18] open source right now where our
+[0:20] inference engine and Ashlan um, is
+[0:23] adopted as a production inference engine
+[0:25] all over the places. And then our recent
+[0:27] RF framework Mouse are also uh, quite
+[0:30] really as a production like frontier
+[0:32] level uh, infra for post training.
+[0:37] A quick intro of Ashlan. So we view that
+[0:40] as a production grade open source
+[0:41] inference engine where Ashlan itself is
+[0:43] supporting language model and visual
+[0:45] language model inference. And we also
+[0:47] have Ashlan diffusion, a relatively
+[0:49] newer project on image and video
+[0:50] generation and then including also like
+[0:53] VOA and word model inference as well.
+[0:56] And third, uh, more recently you have
+[0:57] Ashlan Omni which is more targeted
+[0:59] around ASR and TTS model uh, more around
+[1:02] the audio side.
+[1:04] So all together like the entire Ashlan
+[1:06] ecosystem is more optimized for agentic
+[1:09] workloads
+[1:10] uh, and we provide really performant day
+[1:11] zero model support and also very broad
+[1:14] hardware support including Nvidia, AMD,
+[1:17] TPU, Tranium, Intel and so on and so
+[1:19] forth.
+[1:21] We also have Mouse which is our
+[1:23] enterprise grade reinforcement learning
+[1:25] framework.
+[1:26] So it's fork and co-evolve with Slime
+[1:28] with more features uh, on Nvidia and AMD
+[1:32] latest hardwares. Uh, Slime is a project
+[1:34] that uh, like triple AI built together
+[1:37] uh, with Ashlan community for their GLM
+[1:40] model series training.
+[1:42] So it has been battle tested on
+[1:43] production training at very large scale.
+[1:46] And for Mouse, we also provide day zero
+[1:48] support for all the open models uh,
+[1:50] including Kimmy, GLM, like Inkling from
+[1:53] Thinking Machine, like Nemotron from
+[1:55] Nvidia etc. So at day zero when model
+[1:57] are released, you can just directly use
+[1:59] Mouse for uh training and customization,
+[2:03] and use Ashlar for inference.
+[2:05] So, Mouse uh natively use Ashlar as a
+[2:07] dual stage, and then use Nvidia's
+[2:09] Megatron as a training stage for the
+[2:11] best performance here.
+[2:15] So, today Ashlar and Mouse are already
+[2:16] adopted widely by different enterprises
+[2:18] and writing stock companies, like all
+[2:20] the hardware companies, all the
+[2:22] hyperscalers, enterprises, AI labs,
+[2:24] especially new labs, and also developer
+[2:26] tools and new clouds are mostly like
+[2:29] widely adopting Ashlar and Mouse in
+[2:30] their part of their infrastructure for
+[2:32] inference and training.
+[2:35] There are also different ecosystem
+[2:37] collaboration, where we work with uh
+[2:39] Google Cloud uh very closely for
+[2:42] improving their throughput for uh their
+[2:44] internal inference stack. And also
+[2:46] Cloudflare, IBM, like XAI, uh Meta, they
+[2:49] all use Ashlar
+[2:51] uh as a back as a back end for their
+[2:52] inference engine.
+[2:56] So, to us, 2026 is actually the year of
+[2:59] agentic infrastructure. So, for
+[3:01] inference side, the demand is exploding,
+[3:03] and actually the challenges are very
+[3:04] unique.
+[3:05] And for training side, uh actually every
+[3:07] detail matters, and it's still early,
+[3:09] but everything needs to be done right so
+[3:12] that you can train the model without
+[3:13] hurting its generalization capability.
+[3:18] So, I'll briefly go over the challenges
+[3:19] in both inference side and training side
+[3:21] with the introduction of agentic use
+[3:23] cases.
+[3:24] So, for agentic inference,
+[3:26] um the first thing people care about is
+[3:29] high cache reuse.
+[3:30] Um people see Deep Seek before has a
+[3:32] really low like cache hit rate price,
+[3:35] and such high cache reuse is actually
+[3:37] very important to uh ensure that, and
+[3:40] also make sure uh you have really high
+[3:43] cache hit rate and to reduce your entire
+[3:46] cost of serving.
+[3:48] And second thing is that people are now
+[3:49] all moving towards trillion number of
+[3:51] parameters of models. So, how do you
+[3:53] handle those large models is also
+[3:55] bringing more and more challenges to
+[3:57] open source stack.
+[3:59] And of course, like for contact window,
+[4:01] right now 1 million contact is already
+[4:03] the norm. So, there there will need to
+[4:04] be more optimization around super long
+[4:06] contacts.
+[4:08] So, how does
+[4:08] XLA address those challenges?
+[4:12] So, first for
+[4:13] high cache reuse,
+[4:15] we're bringing like two unique
+[4:16] technology introduced by XLA. One is
+[4:19] unique hybrid value cache, which is
+[4:21] designed for all the recent hybrid
+[4:23] models, where you can make sure the
+[4:26] prefix cache will run smoothly with all
+[4:29] the hybrid models and new architectures
+[4:31] introduced recently.
+[4:33] And second is our high high cache design
+[4:35] and system, which basically enable
+[4:37] people to move the KV cache down from
+[4:40] HBM to DRAM and even to your external
+[4:43] storage, so that there'll be most
+[4:44] efficient way of handling KV cache in
+[4:46] between different memory layers.
+[4:48] So, as a result,
+[4:50] as an concrete example on 1.3 coder,
+[4:53] we got to greatly improve like cache hit
+[4:56] rate and also TTFT and throughput as
+[4:58] well.
+[5:01] The second challenge is more large model
+[5:03] scaling when it comes to 1 trillion, 3
+[5:05] trillion, and even like and even larger
+[5:07] models.
+[5:08] So, the standard technique definitely
+[5:10] include all the 5D like standard
+[5:12] parallelism like data parallelism,
+[5:14] tensor, contact, pipeline, expert
+[5:17] parallelism, etc.
+[5:18] There are also like newer
+[5:20] parallelism strategy like DP attention
+[5:22] like DCP and PCB as well.
+[5:25] And beyond that, there are also new
+[5:27] combinations of deployment strategy.
+[5:29] Like people start from collocate, but
+[5:31] then gradually move towards like prefill
+[5:33] decode mode,
+[5:34] prefill decode disaggregation mode for a
+[5:37] larger scale and more imbalanced prefill
+[5:40] decode deployment. And now for vision
+[5:43] language model, there are also like EPD,
+[5:44] where you also disaggregate encoder in
+[5:47] this case.
+[5:49] And there are also different run-time
+[5:50] optimizations around SGLang where
+[5:54] there are different ways of supporting
+[5:55] spec decoding from Eagle, MTP to Deep
+[5:58] Flash and recent Deep Spark from
+[6:01] introduced by Deep Seek.
+[6:02] There are also like scheduling
+[6:04] designs including the overlap scheduler
+[6:07] and then our most recent Spec V2 for
+[6:09] better support the native spec decoding
+[6:13] speed up in inference stage.
+[6:17] And third and also like perhaps very
+[6:20] important content is also related to how
+[6:22] people handle long context, especially
+[6:24] when it comes to scaling to up to 1
+[6:26] million parameter.
+[6:28] Uh I'm sorry, 1 million context window.
+[6:31] So the first one is chunk pipeline
+[6:33] parallelism where we get to essentially
+[6:37] instead of sending the whole profile
+[6:39] sequence at once, we we get to chunk
+[6:41] them and chunk the entire long prompts
+[6:44] into different smaller chunks and then
+[6:46] process them like
+[6:48] in parallel.
+[6:50] And the second thing is a different
+[6:51] dimension of chunking or
+[6:54] parallelism where we split sentences or
+[6:56] sequences into across GPUs for long
+[6:59] context handling.
+[7:01] There are also specifically
+[7:04] sparse attention related optimization we
+[7:07] did with high sparse where we get to
+[7:10] process the full KV with a hot buffer
+[7:12] here and then to ensure those sparse
+[7:14] attention get more
+[7:17] uh
+[7:19] basically occupy less memory and result
+[7:21] in much higher throughput in this case.
+[7:26] So by combination of all the techniques
+[7:28] and also all the like fine-tuning we
+[7:30] did,
+[7:32] this is a very concrete example where at
+[7:34] day zero
+[7:35] our GLM 5.2
+[7:37] 5.2 performance is already the best and
+[7:40] then over the time we already are able
+[7:42] to achieve like over 2.2 x improvement
+[7:45] and achieving like up to 500 tokens per
+[7:48] second tokens per second per user in
+[7:50] this stage.
+[7:53] So, in summary, Ashlar has been
+[7:56] keeping shaping the frontier
+[7:57] capabilities and in a fast, verified,
+[8:00] and optimized fashion. We're the first
+[8:02] to introduce a lot of new techniques in
+[8:03] large production, including radius
+[8:05] attention, like sparse decoding, PD
+[8:07] distillation, like sparse attention, and
+[8:09] also native RL support with Miles, and
+[8:11] later recently like these flash, these
+[8:13] sparse, and high sparse as well.
+[8:18] So, the next, I'll briefly mention about
+[8:20] agent training part. Um
+[8:22] there are also a lot more challenges
+[8:24] introduced by long long context agent
+[8:27] training. So, one is that people now are
+[8:29] looking at much more diverse
+[8:30] environments. So, it's not only about
+[8:32] more tool calls, and longer context, but
+[8:34] also about some environments might be
+[8:36] very hard to execute, and it might be
+[8:38] even requiring like large experiments to
+[8:40] get the reward signal.
+[8:42] And the second is also about train
+[8:44] inference mismatch, which is a very
+[8:45] popular topic in frontier labs these
+[8:47] days, where if you have very large train
+[8:49] inference mismatch between different
+[8:50] engine, then that will naturally and
+[8:53] silently turn your RL to be more off
+[8:55] policy and hurt your entire training
+[8:57] run.
+[8:59] And third is also people really care
+[9:01] about throughput in your entire RL use
+[9:03] cases. As you if you have higher
+[9:05] throughput, that means you essentially
+[9:07] get to iterate faster with your
+[9:09] different RL experiments, and then you
+[9:11] get more utilization with your GPU as
+[9:13] well.
+[9:16] So, to address the first challenge,
+[9:18] we have been working very closely with
+[9:20] most of the environment suppliers, and
+[9:23] then Miles right now already natively
+[9:24] support most of the open source
+[9:27] RL environments, including Harbor, like
+[9:30] Open AI, like Prime Intellect, War
+[9:31] Fighters, and Daytona, and also like
+[9:34] Nemo Gym, and also Agent AI, which is
+[9:36] used by recent Chemikaze post training.
+[9:40] For correctness, uh there has been um
+[9:43] one of the mouse um biggest focus to
+[9:46] ensure the train inference mismatch uh
+[9:48] will be alleviated. There are different
+[9:49] ways to reduce that. One is just to
+[9:52] introduce deterministic kernels in your
+[9:54] inference engine, which is a like
+[9:56] pre-pre-request to actually ensure zero
+[9:58] KL for the inference and train engine to
+[10:01] make sure you get exact match in your
+[10:03] inference and train engine here.
+[10:06] There are also things related to chat
+[10:07] template fixing, where token token out
+[10:09] make sure that your multi-turn agentic
+[10:12] chat templates will be all aligned, and
+[10:14] then the all the tokens will be matching
+[10:16] the pri- prior tokens uh prior turns
+[10:18] tokens without any train inference
+[10:20] mismatch as well.
+[10:23] And searching is related to algorithm
+[10:25] fix. There have been uh go out routing
+[10:27] replay, and also truncated the most
+[10:29] important sampling. Those are all
+[10:31] techniques to enable stable training uh
+[10:33] with large-scale MOE for reinforcement
+[10:35] learning stage.
+[10:37] And fourth is also um more more
+[10:41] uh
+[10:42] engineering driven. It's mostly we have
+[10:44] data support for model models, and they
+[10:46] are all verified with our own training
+[10:48] runs. Well, whenever we support new
+[10:50] models like including like Chemikaze
+[10:52] training, we always have have our our
+[10:54] own in-house training run to make sure
+[10:57] the KL is controlled, the reward goes
+[10:58] up, so that people um can use the
+[11:01] framework directly without any concern.
+[11:06] Okay, so lastly, uh
+[11:07] for high throughput, like Ashlar and the
+[11:09] mouse are also like keeping improving
+[11:11] around that.
+[11:13] Um we basically have much um
+[11:15] sophisticated and like mature support
+[11:18] for fully async RL, uh which gets to uh
+[11:20] compare with synchronous case. Um
+[11:23] basically, we get to uh
+[11:25] overlap the time for go out and train,
+[11:28] and also dis- disaggregate those two
+[11:29] settings to make sure um those are um
+[11:33] making best use of your GPU.
+[11:37] And also we have very heavy investment
+[11:39] in low precision training where your
+[11:40] rollout will be in a lower precision and
+[11:42] your training backend will be with um
+[11:46] some type of like quantization aware
+[11:48] training. So that enables us to train
+[11:50] with lower precision in rollout stage
+[11:52] where we natively support like 8-bit and
+[11:55] also 4-bit training. And in this case,
+[11:58] we also recently work with human sand to
+[12:00] support a VIP 4 native rollout in our
+[12:03] stage without any performance loss.
+[12:08] Okay. Um
+[12:09] as a summary, um we are producing and
+[12:12] working on excellent models and then we
+[12:13] welcome everyone to uh contribute, work
+[12:15] with us, and try that, provide feedback.
+[12:17] So um please also um take a look at both
+[12:20] projects and then we'd love to hear more
+[12:22] from you. Thank you.

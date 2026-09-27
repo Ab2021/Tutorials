@@ -1,0 +1,172 @@
+Title: Cut LLM Cost & Latency: KV Cache, Batching, Quantization, vLLM
+
+--- TRANSCRIPT ---
+
+[0:00] Your app works. Now the bill and the
+[0:01] latency are both too high. What do you
+[0:03] actually change? The instinct is to
+[0:05] reach for a smaller, weaker model, but
+[0:07] most of the savings live in how you
+[0:09] serve the model, not in downgrading it.
+[0:11] This is where LLM ops meets the finance
+[0:14] team and where a few systems tricks can
+[0:16] cut your bill by an order of magnitude
+[0:18] with no change to quality.
+[0:21] Three mechanisms do most of the work.
+[0:23] First, the KV cache stores the attention
+[0:25] state, so generating the next token
+[0:27] never recomputes the whole sequence.
+[0:29] Second, continuous batching keeps the
+[0:31] GPU full by slotting new requests in as
+[0:34] others finish. Third, quantization
+[0:36] stores weights in eight or four bits
+[0:38] instead of 16. Together, they attack the
+[0:40] two things you pay for: the memory a
+[0:42] request occupies and the compute each
+[0:44] token costs.
+[0:45] Let us stack the savings with concrete
+[0:47] numbers. Start with naive 16-bit serving
+[0:50] one request at a time as 100 cost units.
+[0:52] Turn on continuous batching and you are
+[0:54] near 42. Quantize to 4-bit and you reach
+[0:57] 26. Cache the stable system prompt and
+[1:00] you land around 11. That is roughly a
+[1:02] tenth of the original bill and the model
+[1:04] never changed.
+[1:05] Two levers, both only a few lines, serve
+[1:08] with vLLM and 4-bit quantization to get
+[1:11] batching and a smaller footprint, and
+[1:13] mark a stable system prompt as
+[1:15] cacheable, so the provider stops
+[1:17] charging you full price to reread the
+[1:18] same context on every single call.
+[1:21] Neither of these touches your model
+[1:22] choice or your prompt logic. They are
+[1:24] pure serving side wins.
+[1:26] Here is the insight that reframes the
+[1:28] whole problem. Every wasted token is
+[1:30] charged twice, once on the invoice and
+[1:32] once as latency because the model has to
+[1:35] process it before it can answer.
+[1:37] Trimming a bloated context helps your
+[1:38] cost and your speed at the same time.
+[1:40] Cache reads can be roughly 10 times
+[1:42] cheaper than fresh tokens, and routing
+[1:45] easy questions to a small model often
+[1:47] beats any single low-level trick.
+[1:49] Drawn as bars, the savings clearly
+[1:51] compound. Each technique multiplies with
+[1:54] the last, so So order of magnitude
+[1:56] reduction comes from stacking them, not
+[1:58] from any single hero optimization. From
+[2:00] a naive baseline to roughly a tenth of
+[2:03] the cost with no change to the model
+[2:04] itself, that is the headline of this
+[2:06] whole video.
+[2:08] The biggest decision is buy versus
+[2:09] build. So let us be concrete. At low or
+[2:11] bursty volume, a hosted API is almost
+[2:14] always cheaper and far simpler than
+[2:16] running GPUs. At high steady volume,
+[2:18] self-hosting with VLLM starts to pay
+[2:21] off. But before you touch the model at
+[2:22] all, exhaust the free wins. Prompt
+[2:24] caching and difficulty-based routing
+[2:26] usually move the bill more than
+[2:28] switching models does.
+[2:30] To optimize well, you need to know that
+[2:31] generation has two very different
+[2:33] phases. Prefill is when the model reads
+[2:35] your whole prompt at once. It is
+[2:37] compute-bound and it sets your time to
+[2:39] first token. Decode is when the model
+[2:41] writes the answer one token at a time,
+[2:44] and that phase is limited by memory
+[2:46] bandwidth. This is why continuous
+[2:48] batching helps so much. It packs many
+[2:50] requests decode steps together to keep
+[2:52] the GPU busy. And it is why a huge input
+[2:55] prompt hurts your first token latency
+[2:57] specifically. Knowing which phase is
+[2:59] your bottleneck tells you which lever to
+[3:01] pull. Trim the prompt for prefill or
+[3:03] batch harder for decode.
+[3:05] Here is the single highest leverage
+[3:07] pattern most teams add. A routing tier
+[3:09] in front of the models. A small, cheap
+[3:12] classifier looks at each incoming query
+[3:14] and decides whether it is easy or hard.
+[3:16] The easy majority go to a small, fast
+[3:18] model. Only the genuinely hard queries
+[3:21] reach the expensive one. Put a cache in
+[3:23] front of the whole thing and a timeout
+[3:25] the graceful fallback behind it, and a
+[3:26] routing tier alone often cuts total
+[3:28] spend by half with no drop in quality
+[3:30] that users notice.
+[3:32] Optimization has its own ways to
+[3:33] backfire, so measure as you go. Four-bit
+[3:35] quantization is nearly free on many
+[3:37] models, but on some it quietly drops
+[3:40] accuracy. So always rerun your evals
+[3:42] after quantizing. And caching only helps
+[3:45] a stable prefix. Cache something that
+[3:47] changes each call and you gain nothing.
+[3:49] Route the easy questions to a small
+[3:51] model and save the big one for the hard
+[3:52] ones.
+[3:54] The whole tool chain here is mature and
+[3:56] mostly open source. vLLM, TGI,
+[3:59] TensorRT-LLM, and SGLang to serve. AWQ
+[4:02] and GPTQ to quantize. LightLLM and
+[4:05] OpenRouter to route across providers
+[4:07] behind one API. A common setup is vLLM
+[4:11] to serve a KW quantized model with
+[4:13] LightLLM in front for routing and
+[4:15] provider prompt caching turned on.
+[4:17] Simple and very effective.
+[4:19] So, what is vLLM? It is an open-source
+[4:21] high-throughput inference engine that
+[4:23] came out of UC Berkeley. Its
+[4:25] PagedAttention design and built-in
+[4:27] continuous batching are exactly what led
+[4:29] it serve many requests per GPU far more
+[4:32] cheaply than naive serving. It is the
+[4:35] open default with TGI, TensorRT-LLM, and
+[4:37] SGLang as strong alternatives.
+[4:40] vLLM gives you the throughput wins with
+[4:42] almost no configuration. Load a
+[4:44] quantized model, call generate on a
+[4:46] batch of prompts, and continuous
+[4:47] batching keeps the GPU saturated for
+[4:49] you. No manual batching logic required.
+[4:52] Point an OpenAI compatible endpoint at
+[4:54] it, and the rest of your stack does not
+[4:56] even need to know it switched.
+[4:58] Optimization without measurement is just
+[5:00] guessing, so track these. Cost per
+[5:02] thousand requests is your headline
+[5:04] number. Pair it with 95th percentile
+[5:06] latency and time to first token, which
+[5:08] is what users actually feel. And what's
+[5:10] your cache hit rate and tokens per
+[5:12] request because those two directly
+[5:14] explain most movements in the bill, and
+[5:16] they are the levers you can pull
+[5:17] fastest.
+[5:19] Here are the four levers to remember for
+[5:20] cost and latency. First, reuse the KV
+[5:23] cache and batch requests continuously.
+[5:25] vLLM does both for you. Second, quantize
+[5:28] to four bits, then rerun your evals to
+[5:30] confirm quality held. Third, cache the
+[5:32] stable parts of your prompts. And
+[5:34] fourth, route the easy majority of
+[5:36] queries to a small model and save the
+[5:38] big one for the hard ones. Stack those,
+[5:40] and a tenfold cost reduction is
+[5:42] realistic with no change to the model
+[5:44] and no drop in quality users notice.
+[5:47] The one line answer that completes
+[5:48] production LLM ops. Now we let the model
+[5:51] act on the world. Welcome to agents.

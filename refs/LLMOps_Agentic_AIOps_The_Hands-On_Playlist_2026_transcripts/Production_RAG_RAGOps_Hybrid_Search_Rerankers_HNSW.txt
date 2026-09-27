@@ -1,0 +1,167 @@
+Title: Production RAG (RAGOps): Hybrid Search, Rerankers & HNSW
+
+--- TRANSCRIPT ---
+
+[0:00] Basic Rag works in a demo. What makes
+[0:02] retrieval trustworthy at real scale? The
+[0:04] gap between a notebook demo and a
+[0:06] reliable system is almost always
+[0:07] retrieval quality, not the model. This
+[0:09] is where Rag quietly succeeds or fails.
+[0:12] So, this video is the operational layer
+[0:14] on top of Rag, the chunking, the hybrid
+[0:17] search, the reranking, and the metrics
+[0:19] that keep it honest. A quick refresher
+[0:21] since you already know the basics. Embed
+[0:24] your documents into vectors. Embed the
+[0:25] query. Find the nearest passages. Stuff
+[0:27] them into the prompt and generate. The
+[0:29] model can only use what retrieval hands
+[0:31] it. Hold on to that last line.
+[0:33] Everything in this video exists to raise
+[0:35] that ceiling. Production retrieval is a
+[0:38] funnel with four stages. First, chunk
+[0:40] well, so each piece is a single coherent
+[0:42] idea. Then retrieve two ways at once.
+[0:45] Keyword search with BM25 for exact terms
+[0:48] and dense vectors for meaning. Fuse the
+[0:50] two lists then rerank the top of them
+[0:52] and measure yourself with a retrieval
+[0:54] metric like recall at K so you know the
+[0:56] funnel is actually improving and not
+[0:57] just changing. Let us put numbers on why
+[1:00] the funnel matters. Dense only retrieval
+[1:02] recalls the right passage 61% of the
+[1:05] time. Add keyword search and rank fusion
+[1:07] and that jumps to 78. Add a re-ranker
+[1:10] over the top 20 and you reach 89%. Same
+[1:12] model, same prompt, dramatically better
+[1:15] answers purely from better retrieval.
+[1:17] The funnel encode is short. Two
+[1:19] retrievers, a fusion step, then a
+[1:21] re-ranker. Each retriever returns 20
+[1:24] candidates. Reciprocal rank fusion
+[1:26] blends them and the re-ranker trims that
+[1:28] down to the final four. The model still
+[1:30] sees only four passages, so your prompt
+[1:32] stays small and cheap, but they are now
+[1:34] the right four. Here is the
+[1:36] counterintuitive part. Retrieving more
+[1:38] is often worse. Pushk from four to 50
+[1:41] and you flood the prompt with marginal
+[1:43] passages, which distracts the model and
+[1:45] raises cost. A re-ranker on a small
+[1:48] short list lifts precision far more
+[1:50] cheaply and a subtle operational point.
+[1:53] Deleting documents often leaves
+[1:54] tombstones behind in the index. So
+[1:57] schedule compaction or search slowly
+[1:59] degrades as the data churns. Fast vector
+[2:02] search from Malov and Yashunan's HNSW
+[2:05] works like this. The query enters the
+[2:07] graph at one node and greedily hops
+[2:09] toward closer and closer neighbors a few
+[2:11] steps at a time instead of comparing
+[2:13] against every vector. A handful of hops
+[2:15] reaches the nearest vectors without
+[2:16] scanning millions. That is why
+[2:18] similarity search stays fast even over
+[2:21] huge collections. Not every app needs
+[2:23] all of this. So here is the decision. A
+[2:26] small static set of documents is fine
+[2:28] with a plain dense index. The funnel
+[2:30] earns its keep on large mixed or
+[2:33] constantly changing corpora. And if
+[2:35] exact tokens matter, part numbers, error
+[2:37] codes, surnames, then keyword search is
+[2:39] not optional because dense vectors blur
+[2:41] precisely the details you need to match.
+[2:44] Chunking sounds trivial, but it quietly
+[2:46] decides your retrieval quality. So let
+[2:48] us look closer. Fixed size chunks are
+[2:50] the easy default, but they slice through
+[2:52] the middle of ideas. Recursive chunking
+[2:55] splits on structure first, paragraphs,
+[2:57] then sentences, so each piece stays
+[2:59] coherent. The clever pattern is small to
+[3:01] big. You match the query against small
+[3:04] precise chunks, but then feed the model
+[3:06] the larger parent passage around the
+[3:08] match, so it gets both precision and
+[3:10] context. A little overlap between chunks
+[3:12] and some metadata on each one, and your
+[3:14] recall often jumps before you touch
+[3:16] anything else in the pipeline. In
+[3:18] production, the hardest rag problem is
+[3:20] not search quality. It is staying
+[3:22] current. Documents change constantly, so
+[3:24] you upsert incrementally as they do
+[3:26] rather than rebuilding the whole index
+[3:28] nightly. and use schedule compaction to
+[3:30] clear the tombstones that deletes leave
+[3:32] behind. The safest team's rainex into a
+[3:34] fresh versioned collection and then swap
+[3:36] traffic over. So a bad rainex never
+[3:38] takes down live search. Freshness is an
+[3:40] operational discipline, not a one-time
+[3:42] load. Most rag failures trace back to a
+[3:45] short list of retrieval mistakes. If a
+[3:47] chunk cuts one idea in half, neither
+[3:49] half retrieves well. If you never
+[3:51] reindex, the model quietly answers from
+[3:53] last quarter's documents. And piling on
+[3:55] more passages instead of re-ranking just
+[3:57] floods the prompt and slows everything
+[3:59] down. Fix the chunks and the freshness
+[4:01] first. They beat any clever query trick.
+[4:04] The funnel maps directly onto real
+[4:06] productionready tools. Quant, pg vector,
+[4:09] wev8 or milvvis for the index, elastic
+[4:12] search or a bge re-ranker and coher rank
+[4:15] for the hybrid and rerank stages. And
+[4:17] raas to prove each change actually
+[4:19] improved recall. So you are tuning
+[4:21] against numbers not hunches. So what is
+[4:24] QArant? It is an open- source vector
+[4:26] database purpose-built for similarity
+[4:28] search over embeddings. It handles the
+[4:30] indexing, filtering, and nearest
+[4:32] neighbor lookups that RA depends on. And
+[4:34] it runs anywhere from an in-memory demo
+[4:36] to a large production cluster. It is one
+[4:38] of several strong choices here alongside
+[4:40] PG Vector, WV8, and MILV. Here it is in
+[4:44] practice. QR runs in memory for a demo
+[4:46] and scales to a cluster with the same
+[4:48] code. Add your documents query with a
+[4:50] wide limit of 20. Then drop a re-ranker
+[4:53] on top to trim to the best four. That
+[4:55] single change is usually the biggest
+[4:57] quality win available. From here, add
+[4:59] BM25 and rank fusion. And you have
+[5:02] rebuilt the whole funnel we just walked
+[5:04] through. Retrieval is measurable, so
+[5:06] measure it directly. Recall at K and
+[5:09] NDCG on a labeled set tell you whether
+[5:12] the right passage is even being found.
+[5:14] The re-ranker's win rate tells you it is
+[5:16] earning its latency. and track how stale
+[5:18] your index is and how many context
+[5:20] tokens each query burns because
+[5:22] freshness and cost are the two things
+[5:24] that silently drift in production rag.
+[5:27] Let us collect the four moves that make
+[5:29] retrieval production grade. First, chunk
+[5:32] documents into coherent ideas with a
+[5:34] little overlap. Second, retrieve with
+[5:36] both keywords and vectors. Then, fuse
+[5:38] the two lists. Third, rerank that short
+[5:41] list down to the best few passages. And
+[5:43] fourth, measure recall on a labeled set
+[5:45] and keep the index fresh as documents
+[5:47] change. Every one of those raises the
+[5:49] ceiling that caps your whole RA a
+[5:51] system. Skip them and the smartest model
+[5:53] still answers from the wrong page. The
+[5:55] oneline answer, good answers still have
+[5:57] to be safe answers. Guard rails next.

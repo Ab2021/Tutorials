@@ -1,0 +1,364 @@
+Title: Woosuk Kwon - vLLM: Building Open and Efficient Inference for Agents
+
+--- TRANSCRIPT ---
+
+[0:02] Thanks for joining today. I'm Usag. I'm
+[0:04] a co-creator of VLM and also a
+[0:07] co-founder of Infact, a startup built
+[0:09] around VLM. Today I wanted to talk about
+[0:12] like what agents demand for the
+[0:14] inference stack and uh how we evolving
+[0:17] VLM like open source inference stack to
+[0:19] meet these demands. Uh let's get
+[0:22] started.
+[0:23] So quick intro for everyone new uh like
+[0:27] EDLM VLM is an open source EDLM
+[0:30] inference engine to make ATLM inference
+[0:32] like efficient and effortless. It
+[0:34] started about three years ago here at UC
+[0:37] Berkeley during my PhD and has been
+[0:39] growing rapidly ever since like even now
+[0:42] and we hit it like 88k GitHub stars I
+[0:45] think pretty recently. Uh importantly
+[0:48] this this is a very highly collaborative
+[0:50] project across academia and industry
+[0:52] with major contributors including
+[0:53] Redhead, Nvidia, AMD, Google like
+[0:56] Moonshot and uh outside infact and it's
+[0:59] also being widely deployed in industry
+[1:02] for production inference.
+[1:05] Uh there are two main ways to use VLM.
+[1:08] I'll go them very quickly. The first is
+[1:10] the EDLM class which is a Pyer interface
+[1:13] for offline Python interface for offline
+[1:16] batch inference. You give you give it a
+[1:18] hugging face model name and you call the
+[1:21] generate and that's it. So, VLM
+[1:24] automatically handles model loading,
+[1:26] optimization,
+[1:27] uh scheduling and memory management
+[1:29] under the hood so that you don't need to
+[1:30] care about it in utilizing GPUs and it
+[1:34] generates a text completion uh of the
+[1:36] prompts and returns to you.
+[1:40] The second is online serving VLM serve.
+[1:43] uh this is a single comment uh uh that
+[1:46] you can get a like OpenAI compatible
+[1:48] endpoint from uh like and obviously we
+[1:52] also support anthropic APIs too any
+[1:55] agent framework that speaks the agent
+[1:57] the the open AI or entropic API can also
+[2:01] like work out of the box uh since yeah
+[2:03] the API layer is pretty standard
+[2:06] uh so that's how you use VLM uh in the
+[2:09] first place but as you can see the agent
+[2:11] the API itself is pretty much similar to
+[2:13] the the few years ago, right? Like so it
+[2:17] actually didn't really change that much
+[2:18] for for agents. What has changed a lot
+[2:21] for agent is everything underneath it.
+[2:26] So yeah specifically like uh at a higher
+[2:30] level agents change the inference
+[2:32] problem along three axis like first is
+[2:35] like large models right the frontier
+[2:38] agent models like Kim K3 like DCP4 are
+[2:42] like trillion parameters
+[2:44] and like that forces all to get serious
+[2:47] about like model parallelisms.
+[2:49] uh basically like it gave us a lot of
+[2:52] like opportunities for us to like
+[2:54] paralyze the model in many creative ways
+[2:56] with different trade-offs. I'll talk
+[2:58] about it in more detail later. A second
+[3:01] is long context, right? Like agent
+[3:03] sessions run for like hundreds of turns
+[3:06] like up to a million tokens and the
+[3:09] context only grows over a session.
+[3:11] So like managing KV cache of these like
+[3:14] uh the previous turns is very very eff
+[3:17] uh very important for like inference
+[3:19] performance and we definitely need to
+[3:22] ensure that like any like uh we're not
+[3:25] the inference framework is not
+[3:26] recomputing any of the tokens in the
+[3:28] previous turn because otherwise you'll
+[3:30] be like a lot of recmputation and like a
+[3:33] lot of waste of compute.
+[3:35] A third is enormous token demand. Like
+[3:39] now that like agents are getting really
+[3:41] really smart and so capable uh so that
+[3:44] like there are actually now near
+[3:46] infinite demand now near infinite places
+[3:49] to to deploy it. So the demand is
+[3:52] effectively unbounded. Uh it's it's
+[3:55] growing faster than than the GPU supply.
+[3:58] So like so the the inference engine and
+[4:02] inference serving has to adapt to it. uh
+[4:05] and our solution to this is to basically
+[4:07] like enable this efficient inference for
+[4:10] more diverse like uh hardware backends
+[4:12] so that we can utilize all available
+[4:14] compute to generate tokens.
+[4:17] Okay, let's get into more details.
+[4:21] Uh yeah, let's start with parallelism.
+[4:23] So to efficiently serve such large
+[4:26] models like VLM today supports seven
+[4:28] like mainly seven different types of
+[4:30] parallelism
+[4:32] uh like including tensor pipeline data
+[4:34] experts like sequence parallelism and
+[4:37] like two different kinds of context
+[4:38] parallelism you may recognize some of
+[4:41] those in the from the training world
+[4:44] like VLM supports them all and uh plus
+[4:47] the ones that don't exist in the
+[4:49] training like decode context parallelism
+[4:51] which is parallelism around the KB cache
+[4:55] as a general purpose engine like VM
+[4:58] efficiently implements all of these
+[4:59] parallelism and also like mixture of
+[5:01] them right
+[5:03] however like we found that that's not
+[5:05] enough the important thing is that like
+[5:08] uh these need these parallelism need to
+[5:11] be properly selected and tuned like for
+[5:14] the target model architecture the target
+[5:17] cluster setup and also the the target
+[5:19] workload shape there's no universal
+[5:22] winner or there's a universal solution.
+[5:25] Uh let me show you what this tuning
+[5:26] looks like in a for a real model.
+[5:30] So uh this is like deepse pro uh like
+[5:35] running prefill of it like on B200 GPUs
+[5:38] uh in the disagregated serving setup
+[5:41] like so these set of GPUs only do only
+[5:44] perform prefill.
+[5:46] uh basically the the most
+[5:48] straightforward way to deploy the model
+[5:50] like deep model for like prefield on
+[5:52] this GPU cluster is just using like
+[5:55] eightway tensor parallelism that's the
+[5:57] most standard and like like simplest way
+[5:59] to do it. However, the winning
+[6:01] configuration is pretty much different
+[6:03] like it's a like in in this like
+[6:06] particular workload setup like it was a
+[6:09] like two-way tensor parallel times like
+[6:12] eight way two-way pipeline parallel
+[6:14] times eight way uh like tensor parallel
+[6:17] plus sequence parallelism and
+[6:18] parallelism like uh deployed uh across
+[6:22] 16 GPUs for each model replica.
+[6:27] So like and like we found that this this
+[6:29] gets like much lower TTFP basically like
+[6:32] the latency on the first token and also
+[6:35] much higher like throughput per GPU uh
+[6:38] compared to this the straightforward uh
+[6:41] like single host eightway TP baseline.
+[6:44] The reason being is yeah like it's it's
+[6:47] actually pretty much complicated so I'm
+[6:48] not going to much details but the reason
+[6:51] being is like pipeline parallelism is
+[6:53] like enabling the parallelism between
+[6:54] different chunks in the long prefill
+[6:56] sequence parallelism enables more
+[6:58] communication and computation overlap
+[7:00] and expert parallelism gives us better
+[7:02] gem shapes better matrix multiplication
+[7:04] shapes compared to the uh like eightway
+[7:08] tensor parallelism. Yeah, the so the
+[7:10] high the the the takeaway is that
+[7:13] basically there's no winner and also
+[7:16] like yeah this like we need to basically
+[7:18] this merge models makes this kind of
+[7:20] like model parallelism and sharding a
+[7:23] necessity and there are many different
+[7:25] ways to do it and like depending on how
+[7:28] you choose and like tune the these like
+[7:31] parallelism degree like the performance
+[7:33] like better like varies a lot and
+[7:36] basically in the in this agent work in
+[7:38] this agency era we You need to you need
+[7:39] to have the right like insight and
+[7:41] performance model to set the uh to to
+[7:45] configure this in the correct way and VM
+[7:48] basically provides the the common
+[7:50] substrate that you can basically play
+[7:52] with all these different parallelism.
+[7:56] So the second is uh like KV cache. Uh so
+[8:01] speaking of it so like the one very
+[8:04] critical critical characteristic of the
+[8:06] modern Edo lens are that they are
+[8:09] basically hybrid models like they are
+[8:12] like basically hybrid in the sense that
+[8:14] they're interention
+[8:17] with some other more efficient attention
+[8:19] mechanisms like sliding window or like
+[8:22] linear attention such as Kim delta
+[8:24] attention and and this is basically the
+[8:27] the thing that makes the the 1 million
+[8:29] context lengths feasible because global
+[8:31] attention itself is is like takes too
+[8:34] much memory like if you want to really
+[8:36] go to 1 million context. Uh however in
+[8:39] theory this is very efficient. Uh but
+[8:42] like this in practice this creates a lot
+[8:44] of like real systems challenge like
+[8:48] basically these layers uh like with
+[8:51] different attention types have
+[8:53] completely different memory behavior
+[8:55] like full attention like the KV cache of
+[8:58] full attention grows linearly with the
+[9:00] context while like linear attention like
+[9:02] KDA like keeps a fixed size state per
+[9:05] sequence uh we're still going I mean
+[9:07] like regardless of the the actual
+[9:09] context links So like how should we
+[9:12] curve up the GPU memory between them is
+[9:14] the is a real six one of the like uh
+[9:18] important systems question.
+[9:20] The straightforward like solution or
+[9:23] answer to this question is static
+[9:24] partitioning like reserve like uh like x
+[9:28] percentage for like uh full attention y
+[9:30] percentage for the rest things like
+[9:32] that. Uh this is this works but the
+[9:35] problem is that like the the optimal
+[9:38] split between the two depends on the
+[9:40] batch size and context lengths which is
+[9:41] pretty dynamic over time during
+[9:43] inference.
+[9:45] Uh so like the solution in VLM is
+[9:48] dynamic partitioning. So which is
+[9:50] basically using one shared memory pool
+[9:52] for GPU memory. Uh and each attention
+[9:55] type with different memory behavior like
+[9:58] uh gets its own allocator uh drawing
+[10:00] from the shared memory pool. Um so yeah
+[10:04] like in a sense the full attention
+[10:06] allocator like yeah like reccast to this
+[10:09] shared memory pool on the specific
+[10:10] number of tokens while in the the KDA
+[10:13] allocator because it's a linear
+[10:15] attention like allocates the one giant
+[10:17] block for the entire sequence and like
+[10:19] we have a logic to uh to dynamically
+[10:22] share the same memory space uh between
+[10:25] the two. Uh yeah, this is also pretty
+[10:28] much detailed so I'm not going to uh too
+[10:31] deep, but basically this uh this is one
+[10:34] like critical feature in VLM that's uh
+[10:38] like allows you to not worried about how
+[10:40] to handle the different types of
+[10:42] attention and the the memory split
+[10:44] between the and the and like VLM
+[10:46] basically automatically rebalances the
+[10:48] memory space between the two so that
+[10:50] like no GPU memory is wasted.
+[10:55] Okay. Uh yeah, regarding KV cache though
+[10:58] also another thing is that like
+[11:00] important uh thing is uh like managing
+[11:04] this KV cache within the the GPU GPU
+[11:07] memory space isn't enough right like
+[11:10] especially the agent sessions are pretty
+[11:12] long live and also very intermittent uh
+[11:15] which means basically the the model
+[11:17] generates and then generate some output
+[11:20] tokens and then waits right like for two
+[11:22] calls or sometimes for human response
+[11:25] and then like it basically continues and
+[11:28] during those weights the KB cache is uh
+[11:31] is somehow stored in some some area
+[11:33] right like it could be stored in GPU
+[11:34] memory it could be stored in some other
+[11:36] memory right like uh to store in to
+[11:39] store this KV cache uh unused uh at the
+[11:42] moment uh we basically use uh uh this uh
+[11:47] like concept of KV connector this is
+[11:49] basically allows to leave this like idle
+[11:52] KV cache like store this idle KV cache
+[11:55] to external memory like CPU memory or
+[11:57] disk uh and bring it back when it's
+[12:00] needed and uh yeah like here basically
+[12:05] we yeah like uh yeah truly speaking like
+[12:10] basically we did uh a lot of efforts to
+[12:13] design this abstraction and make sure it
+[12:15] is well working with third party
+[12:17] libraries like moon key and also it is
+[12:20] well working with like other KV transfer
+[12:23] mechanism like like prefill
+[12:24] disagregation In the prefill disegration
+[12:26] case, the KV uh the movement of KV cache
+[12:30] is pretty dynamic and complex because it
+[12:32] needs to move between prefill instance
+[12:34] to decode instance, prefill instance to
+[12:36] the uh to the distributed KV storage
+[12:39] pool like Moon Cake and things like
+[12:41] that. And we basically like set up the
+[12:43] the infra to to to efficiently handle
+[12:46] this. So that like again in the in the
+[12:49] many turn like agent sessions we never
+[12:52] recomputee like yeah as long as the
+[12:54] storage allows like we never recomputee
+[12:56] the the tokens in the previous case in
+[12:58] the previous turns.
+[13:01] Okay. Uh the last part is like hardware.
+[13:05] Uh so basically we believe the economics
+[13:08] of tokens have kind of is flipping. Uh
+[13:11] so like as models get smarter and more
+[13:13] intelligent the value of a token uh like
+[13:16] far exists the cost of generating it. So
+[13:20] therefore naturally the demand is
+[13:22] exploding and we we're witnessing that
+[13:25] uh and honestly there are not enough uh
+[13:27] GPUs in the world to serve it. So the
+[13:30] question becomes uh can we use all the
+[13:33] available compute on earth to generate
+[13:36] tokens efficiently?
+[13:38] Yeah. And and VLM basically like trying
+[13:41] to aims to uh answer that question to
+[13:45] achieve the goal like we support more
+[13:47] than like 10 hardware backends today.
+[13:49] like obviously like Nvidia GPU is like
+[13:52] our major focus but we also uh work on
+[13:55] like Google TPU, AMD GPU and like many
+[13:58] other hardware uh chips from the uh from
+[14:02] the industry uh and they basically have
+[14:05] like the plug-in structure to VLM to
+[14:07] share the core part of VLM while they're
+[14:10] customizing some some specific parts for
+[14:12] their harder backends.
+[14:15] And yeah, like obviously this this makes
+[14:17] more sense because like yeah, the the
+[14:20] API in the inference space is pretty
+[14:22] much standardized, right? You can still
+[14:24] use the same like open AI or anthropic
+[14:26] API and uh just that with different
+[14:29] hardware under the hood generating the
+[14:31] tokens.
+[14:33] Uh yeah, like for the for the sake of
+[14:36] time, I'll probably need to skip this
+[14:37] slides, but basically yeah, we got a lot
+[14:39] of lessons from like supporting this
+[14:41] hardware and we're actively working on
+[14:42] it. But like the TLDDR is that like like
+[14:46] bringing up this new hardware and making
+[14:47] it efficiently supporting the new models
+[14:50] is uh is I think getting better because
+[14:53] of coding agents. Uh but on the on the
+[14:55] other side it also still requires a
+[14:57] pretty like retaking the entire
+[14:59] inference stack from ground up. So yeah
+[15:02] like we are actively working on it.
+[15:04] Yeah. And for a summary, yeah, like uh
+[15:07] in the agentic era basically stresses
+[15:09] the inference on three axis and VLM
+[15:12] answers each uh each of the one like
+[15:15] here large models with workload aware
+[15:17] model parallelism long context with a
+[15:19] dynamic and hierarchical KB cache and uh
+[15:23] like exploding token demand with diverse
+[15:25] hardware backends and everything I
+[15:27] showed you today is open source. So
+[15:29] please come join us uh with different
+[15:31] places. Thank you.

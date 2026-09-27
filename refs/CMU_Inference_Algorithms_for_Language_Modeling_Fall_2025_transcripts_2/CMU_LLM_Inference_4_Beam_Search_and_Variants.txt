@@ -1,0 +1,1869 @@
+Title: CMU LLM Inference (4): Beam Search and Variants
+
+--- TRANSCRIPT ---
+
+[0:00] And with that we can get started. Um so
+[0:03] today we're going to be talking about
+[0:05] sort of beam search and a number of
+[0:07] variants in the same family. Um
+[0:11] yeah uh I think so it's I think it's
+[0:15] recording by default. Yeah. Well, thank
+[0:18] you for double checking.
+[0:22] So today we'll be talking about beam
+[0:23] search and some variants in the same
+[0:25] family. Um, we'll talk a little bit
+[0:27] about what it means to do a mode
+[0:29] seeeking search.
+[0:30] >> Hey guys, could we uh write down please?
+[0:32] Thanks.
+[0:33] >> Thanks. Yeah. So, we'll talk a little
+[0:35] bit about what it means to do a mode
+[0:36] seeeking search. Um, we'll talk about
+[0:37] beam search in kind of its original form
+[0:40] and a number of variants. Um, and then
+[0:42] we'll talk about some properties of beam
+[0:43] search including the kind of ominously
+[0:45] named curse of beam search. Um, so when
+[0:49] we when we last talked on Tuesday, we
+[0:51] were talking about a variety of methods
+[0:52] that all look like sampling from some
+[0:54] distribution. Um, whether that's the
+[0:56] original model distribution or some
+[0:58] modification we've made that might
+[0:59] change at each step. Um, for instance,
+[1:01] if you're doing a top k that the k
+[1:03] tokens in your distribution might change
+[1:05] over time. Um so this is a a pretty
+[1:08] broad class of uh methods but today
+[1:12] we're going to look at the um problem of
+[1:14] decoding from a slightly different
+[1:15] perspective um which is a little more
+[1:17] optimization flavored. So we want not
+[1:20] just a good output from our model but um
+[1:24] the single most likely output um given
+[1:27] the distribution that we've learned over
+[1:28] the parameters. So given our our
+[1:31] evidence and the prior that we have from
+[1:33] this model um we want the single most
+[1:36] likely sequence um and so this is what
+[1:38] we'll call mode seeking search and what
+[1:40] is sometimes also called map decoding
+[1:43] map being for maximum app priority.
+[1:46] Now this is um the mode of the
+[1:48] distribution over outputs. And if we're
+[1:50] sampling just a single token from our
+[1:52] language model, this is actually really
+[1:54] easy to find. Right? If we want to um
+[1:58] look at this distribution at a single
+[1:59] time step, you can take the max by just
+[2:02] doing an arg max over your logits. Um
+[2:05] and we're done. We're this is exactly
+[2:07] what we want for a single token output.
+[2:09] Um but if we're interested in decoding
+[2:11] more than a single token at a time from
+[2:12] our model, if we want a sequence, um
+[2:15] then this is a little bit more
+[2:16] complicated, right? Um and so this is um
+[2:20] sort of the the baseline that we'll be
+[2:21] comparing against today is greedy
+[2:22] decoding where we just take the single
+[2:25] most likely most likely token at each
+[2:27] individual time step. This is super
+[2:29] trivial to compute. uh but it has a
+[2:32] number of sort of problems as we go from
+[2:34] sampling uh or from decoding a single
+[2:36] token into decoding multiple tokens.
+[2:40] Um the first of these is that we're not
+[2:42] necessarily getting the highest
+[2:44] probability output. Right? So if we take
+[2:46] the um sequence that is greater than
+[2:49] length one and we're trying to find the
+[2:52] um we're trying to use greedy decoding
+[2:54] to find the true mode. Maybe this works
+[2:56] okay for the first couple of tokens and
+[2:58] then we reach a splitting point. Um, and
+[3:01] here this is a little bit of an
+[3:02] artificial example, but you could
+[3:03] imagine you have two tokens um that are
+[3:06] relatively similar probabilities at some
+[3:08] time step. Um, so here we have eats and
+[3:10] se's um and then the one that has the
+[3:14] higher probability at time step t has no
+[3:18] particularly high probability
+[3:19] completions happening at time step t
+[3:21] plus one. So here the the most probable
+[3:23] token at t plus one has a probability of
+[3:25] 0.1. Whereas the thing that is slightly
+[3:28] less probable at time step t could have
+[3:31] a really high probability completion at
+[3:33] time step t plus one. And so if you
+[3:35] actually multiply this out, you wind up
+[3:37] with a sequence that you would get from
+[3:39] greedy decoding on the top that is a
+[3:41] substantially lower probability than the
+[3:43] sequence on the bottom, which may or may
+[3:45] not even be the true mode of our
+[3:47] distribution. Um, so this isn't good. If
+[3:50] we're trying to optimize, we're not
+[3:51] doing a very good job. Um, but greedy
+[3:54] decoding can also produce text that
+[3:56] looks a little strange. Um, so this is
+[3:59] an example from GBT3. Um, and if you
+[4:02] kind of were playing around with models
+[4:03] at the the time period that GBD3 was a
+[4:06] sort of frontier or frontier adjacent,
+[4:08] you're probably familiar with text that
+[4:10] looks a little bit like this. Um, this
+[4:11] particular example is from a really
+[4:14] interesting um, short story written with
+[4:16] some like input or collaboration from
+[4:18] GPD3 um, called Ghost uh, which I've
+[4:21] linked here if you're interested in kind
+[4:22] of like collaborative um, writing. But
+[4:26] the this starts as a sort of reasonable
+[4:28] statement or two of turn the space
+[4:30] station into a spaceship. Um, and then
+[4:32] it starts getting a little bit circular.
+[4:34] I'm traveling forward. I'm traveling
+[4:36] backward and I'm traveling sideways. And
+[4:38] then if you let it continue, it sort of
+[4:39] completely falls off the rails until
+[4:41] you're trapped in this loop of just
+[4:42] repeating the same um 10 or 15 tokens
+[4:45] over and over again. Um does anyone have
+[4:48] a sense of why this might happen with
+[4:50] greedy decoding
+[4:55] or anything about greedy decoding that
+[4:57] would make this problem worse?
+[5:04] So imagine you um start in like a space
+[5:09] where you you've trained your model over
+[5:11] a number of texts, some of which are
+[5:12] like good reasonable looking um writing
+[5:15] and some of which are really degenerate
+[5:17] things like just the same character
+[5:18] repeated over and over again or some um
+[5:21] like really poorly formatted XML scraped
+[5:24] from a website or something. when you
+[5:26] start getting into a space that is maybe
+[5:28] a little bit repetitive like I'm
+[5:30] traveling forward and backward and
+[5:32] sideways um you're sort of getting
+[5:35] closer and closer to a space of your
+[5:37] where you've learned um the repetitive
+[5:40] text you saw in pre-training right
+[5:41] you've sort of learned that once you see
+[5:44] something that starts repeating
+[5:45] generally it starts repeating more and
+[5:48] once you so maybe once you've seen like
+[5:51] this I'm h hurtling through the universe
+[5:52] and I'm a ghost and I'm in spaceship
+[5:54] once there's a number of things that are
+[5:56] likely completions. But once you've seen
+[5:57] it twice in a row, the most likely thing
+[5:59] is to see it a third time and then a
+[6:01] fourth time and then a fifth time. And
+[6:03] so maybe if you were sampling
+[6:05] stochastically, you could or if you were
+[6:07] sampling if you're doing a stochcastic
+[6:09] um decoding method, you could sample
+[6:11] something that's a little bit different
+[6:12] from what you had before and you could
+[6:14] break out of this trap. But if you're
+[6:15] always taking the argmax, um you're kind
+[6:19] of reinforcing this repetition and once
+[6:21] you've repeated it twice, you're going
+[6:22] to repeat it a third time. And once you
+[6:23] repeat it a third time, it it becomes
+[6:25] more and more likely it'll be repeated a
+[6:27] fourth time. Um and so this is what we
+[6:28] call the repetition trap. Um and
+[6:31] particularly for older or smaller
+[6:33] models, this is a really common thing to
+[6:34] see when you do greedy decoding.
+[6:37] >> Yeah. One one other comment is this is
+[6:39] like particularly frequent in um like
+[6:42] base models that were trained with
+[6:44] maximum likelihood. It's a little bit
+[6:46] less frequent in instruction models.
+[6:48] It's even less frequent than
+[6:50] reinforcement learn models because if a
+[6:52] reinforcement learn model samples these
+[6:55] repetitive things, it'll get a low score
+[6:57] and so like you actually have an
+[6:58] explicit bias against repeating
+[7:00] yourself. So there are ways to fix it
+[7:02] through training. Um but like as I said
+[7:04] in the first lecture, you can fix things
+[7:06] through training or you can fix them
+[7:07] through infrance. So if you have a model
+[7:09] that's susceptible to this, you want to
+[7:11] like think and you want to use that
+[7:12] model, uh then your only choice is to do
+[7:14] it through
+[7:17] >> question. So was the snippet a part of
+[7:19] the training data like the first three
+[7:21] lines?
+[7:24] >> Um I mean I don't know the training data
+[7:27] of GPD3 so I can't say for sure but I
+[7:29] don't have any like strong reason to
+[7:31] believe.
+[7:32] >> So my question is that let's say there
+[7:34] are two or three sentences but it's
+[7:36] repeated twice we have a total of six
+[7:38] sentences data. So and now I'm giving
+[7:41] the same prompt to to GP3. So after
+[7:44] assuming it repeated twice, is it likely
+[7:46] that it will repeat the third time?
+[7:49] Because like in the original training
+[7:50] data, the the next items will be
+[7:52] something else.
+[7:54] >> You're saying like if you trained uh
+[7:56] GBD3 on a whole bunch of versions of the
+[7:59] sequence that had like two repetitions
+[8:01] and then a thing after, would it
+[8:03] continue repeating?
+[8:04] >> Um I think that's a great question. I
+[8:06] think it would depend on how
+[8:08] like if you're training it on this exact
+[8:10] sequence, I bet you would wind up um
+[8:13] teach like teaching it that there should
+[8:14] be something of following after two
+[8:16] completions because it would memorize
+[8:17] like this two completions plus something
+[8:19] else structure. Um I don't know if you
+[8:21] could train generally on that kind of
+[8:24] data as a way to expl escape repetition.
+[8:28] >> Yeah, it could work. I don't know. I'm a
+[8:31] little curious about how the probability
+[8:32] of the conditional distriution changes
+[8:35] after repetition like do do the logics
+[8:38] where the repetition token is become
+[8:41] increasingly as I increase the
+[8:42] repetitions like
+[8:45] >> yeah um this is a great question so it's
+[8:46] if the as you start repeating does the
+[8:49] conditional distribution change to
+[8:50] become like peakier on the on the logic
+[8:52] of the thing that would be the next
+[8:54] token in the repetition um I think
+[8:58] almost always the answer will be yes Um
+[9:01] but I didn't actually like visualize it
+[9:03] for this.
+[9:05] >> Yeah. I wanted to know as this text is
+[9:09] from GDP3 like for the GPT versions
+[9:12] which are like new then like if you to
+[9:15] use decoding on those would would like
+[9:18] the chance of like probably falling into
+[9:20] the reputation trap be lower because of
+[9:23] like the RF training regimen that I had
+[9:27] or would it just like probably give you
+[9:29] a similar option?
+[9:30] >> Yeah. Would the would a um better or
+[9:33] newer model be as likely to fall into
+[9:35] this trap? Um I think they would be less
+[9:37] likely for um the reason that you named
+[9:40] them for because they have been like RHF
+[9:42] and instruction tuned. Um and also
+[9:44] because models that are better trained
+[9:48] or trained on more data or larger I
+[9:50] think are less likely to run into this
+[9:51] repetition trap to begin with. um if you
+[9:54] started them on some repetitive text,
+[9:55] they would still start repeating, but
+[9:57] they're um like a very
+[10:00] anthropomorphizing way to say this is
+[10:01] that the model kind of talked itself
+[10:03] into this quarter of the of the space.
+[10:05] um that that's not rigorous and that's
+[10:07] not like but it kind you can see it
+[10:10] started like doing this like quasi
+[10:12] repeating thing before it wound up
+[10:13] repeating um because that was sort of
+[10:15] like an an easy thing to predict as a
+[10:18] next token like um and so a model that
+[10:21] is like better trained on a lot of um
+[10:23] like high quality text I think is less
+[10:25] likely to start doing that um in
+[10:27] addition to like all the benefits of
+[10:28] instruction. Another thing is like you
+[10:31] might think that there's low quality
+[10:34] text that has lots of repetitions, but
+[10:35] just think of like all the CSSV files in
+[10:37] GitHub
+[10:38] >> or um you know other stuff like this.
+[10:41] There's just a lot of legitimate reasons
+[10:42] why you would have tons and tons of
+[10:44] repetitions. So like
+[10:46] >> it's not necessarily just the generic
+[10:48] models that see this all the time. It's
+[10:49] like actually good models will also
+[10:52] >> Yeah, there's a lot of there's a lot on
+[10:54] the internet. Um, there's a there's a
+[10:57] great section, I think, of the Dolma
+[10:58] paper that has examples of sort of
+[11:00] degenerate things they found in
+[11:01] reasonable looking places like Reddit
+[11:03] posts with a hard large number of
+[11:04] upvotes that are just the letter M
+[11:06] repeated over and over from a subreddit
+[11:08] that is about simulating the sound of a
+[11:10] microwave going off. So, there's a lot
+[11:13] on the internet and we're giving a lot
+[11:16] of it to these models.
+[11:19] Um, cool. So, these are these are some
+[11:21] issues with greedy decoding. Um, one
+[11:23] last one I want to mention is that when
+[11:25] you're doing 3D decoding, um, the model
+[11:28] is making a a single sort of best effort
+[11:31] guess at each step. And so that means if
+[11:33] you're trying to decode like sort of
+[11:35] some some meaning or express some
+[11:38] sentiment that requires like a
+[11:40] relatively high probability and a
+[11:41] relatively low probability word, you can
+[11:43] wind up with these kind of like
+[11:44] convoluted path of sentences where the
+[11:47] dog was seen by Jane is maybe a less
+[11:50] fluent or less like naturalistic or
+[11:53] smooth way to say this than Jane saw the
+[11:55] dog. But because Jane is a relatively
+[11:58] low probability token, um any entity
+[12:01] name is probably a relatively low
+[12:02] probability token compared to something
+[12:04] like 'the' or dog. Um it will sort of
+[12:07] make the make the choice that is higher
+[12:09] probability until there's no kind of
+[12:12] room left in the sentence but to output
+[12:14] Jane. Um and so you can get these
+[12:16] sentences that seem like a little bit
+[12:17] convoluted or a little bit backwards.
+[12:20] So we have the sense that greedy
+[12:22] decoding is maybe not the best way to
+[12:24] get outputs out of our model. But if we
+[12:25] still want to stick with this intuition
+[12:26] that we want something that is
+[12:29] relatively high probability or close to
+[12:31] the mode maybe as close as we can get um
+[12:34] what do we do? And the answer here um at
+[12:36] least for today will be beam search. Um
+[12:38] so the idea of beam search is that we
+[12:41] don't want to make a hard top one
+[12:42] commitment to the highest probability
+[12:44] token. We think there could be something
+[12:46] kind of hiding under another high
+[12:48] probability but not the highest
+[12:50] probability token. And so we're going to
+[12:51] keep a couple of options around so we
+[12:53] don't miss something that is relatively
+[12:55] high probability that was maybe like the
+[12:57] second or the third best path at a
+[12:59] previous time step. Um and the way we do
+[13:01] this is a type of breadth for search. So
+[13:03] we'll expand at each step into a number
+[13:06] of options. Um we'll prune that back
+[13:08] down um so that this doesn't become
+[13:10] intractable and then we'll generate a
+[13:11] number of candidates for the next step.
+[13:13] Um you can also think of this as a sort
+[13:17] of subsetting or like an approximation
+[13:20] of a turby decoding which would be a way
+[13:22] to exactly explore this probability
+[13:24] space if you explored at every step
+[13:26] every possible vocabulary token. Um of
+[13:29] course this would be pretty intractable
+[13:30] if you want to decode more than like one
+[13:32] or two steps at a time. So we do this as
+[13:34] an approximation. Um, and we're going to
+[13:36] step through this in a decent bit of
+[13:38] detail, even though I know it's
+[13:39] something that a lot of folks have
+[13:40] likely seen before because we're going
+[13:41] to talk about a number of variants and
+[13:43] it'll be helpful to kind of keep in mind
+[13:44] the details.
+[13:46] So, we'll start by um conditioning on
+[13:49] some prefix. Um, here it is when my cat
+[13:52] gets hungry. Um, for reference, this is
+[13:54] cat. Um, and we're going to set our beam
+[13:57] size to or our beam width to three. So,
+[13:59] we're going to keep three completions
+[14:01] around at every step. So we take the
+[14:03] three highest probability things at the
+[14:04] first step which are she, he and it. Um
+[14:08] and then from there we expand out to the
+[14:11] three most probable things following out
+[14:13] from each of those lines. So now we have
+[14:16] nine options from our uh time step two.
+[14:19] Um and so you read this as just like
+[14:20] along these lines like she meows or it
+[14:23] will. Um these all have a score
+[14:26] determined by sort of multiplying the
+[14:27] probabilities that we took to get there.
+[14:29] Um and so now we are going to reduce our
+[14:32] nine things back down to three. So by
+[14:34] pruning all but the top three most
+[14:35] probable things. Um so here this happens
+[14:38] to be two things from sort of our first
+[14:40] original beam and one thing from our
+[14:42] second beam. Um this could just as
+[14:44] equally be three things from three
+[14:46] different beams or all three things from
+[14:48] the top beam. So now we've got sort of
+[14:50] three valid paths um going again. We're
+[14:53] going to expand them back out. Um
+[14:56] there's no particular um sort of like
+[14:58] mathematical reason. There's no longer
+[15:00] probabilities here. It's just getting a
+[15:01] little bit hard to see on the graph. Um
+[15:04] and so now we have nine options once
+[15:06] more. We're going to type our top three.
+[15:09] And then we'll expand out again. Um
+[15:12] notice that now we've got only six
+[15:13] things going here. And this is because
+[15:15] one of the things that we selected at
+[15:17] time step uh what would this be? Three
+[15:20] is the end of sequence token. So now we
+[15:22] have um when my cat gets hungry, she
+[15:25] meows is a sing is like a a fully
+[15:28] decoded potential candidate and we have
+[15:31] in addition to that six other candidates
+[15:33] that are sort of partway through
+[15:34] decoding. So now we have seven options
+[15:37] instead of nine. That's okay because
+[15:39] we're still trying to cut back down to
+[15:40] three options. But now when we sort of
+[15:43] look at scoring these seven options
+[15:45] together, um, does anyone see a sort of
+[15:47] immediate problem with this or reason
+[15:50] that this might not be like a fair
+[15:51] scoring? I see you nodding
+[15:57] multip.
+[16:07] >> Yeah, US is not getting a fair chance.
+[16:09] Is it getting an unfairly good or an
+[16:11] unfairly bad chance?
+[16:14] >> It's getting an unfairly good chance.
+[16:16] Exactly. Um so exactly as you said, just
+[16:18] repeating to the recording. Um we our
+[16:22] probabilities are monotonically
+[16:23] non-increasing and generally
+[16:25] monotonically decreasing. So anything at
+[16:28] time step four is going to on average
+[16:30] have a much lower probability than
+[16:31] anything at time step three. Um to
+[16:34] counter this uh we're going to do some
+[16:36] kind of normalization of our scores by
+[16:37] length. Um, and so here I've been
+[16:40] looking, we've been looking at
+[16:41] probabilities because they're sort of
+[16:42] more intuitive, but we would actually be
+[16:44] looking at in a model is log props. So
+[16:46] I'm just going to change those over. Um,
+[16:48] and then the sort of simplest way to do
+[16:51] this length normalization and a
+[16:52] relatively common way to do it is to
+[16:54] just divide each log prop by the length
+[16:58] of the sequence up to that point. So for
+[17:00] our our seven candidates here, we divide
+[17:03] log props of EOS by three and we divide
+[17:06] the log prop of everything else by four.
+[17:08] Um if you actually like look at these
+[17:11] log um EOS still winds up being capped
+[17:14] as one of our potential completions.
+[17:15] It's still relatively high scoring here,
+[17:17] but as these other things get longer and
+[17:19] longer, there's a chance that they'll
+[17:20] sort of work out to be higher
+[17:22] probability. Um so we still maintain
+[17:25] sort of the possibility of pruning EOS
+[17:27] as we go. Um, and we'll continue this
+[17:29] until we reach some sort of fixed max
+[17:30] decoding length. Um, or until each of
+[17:33] our top three highest probability beams
+[17:36] ends in an EOS token. And then we'll
+[17:38] rescore those three. Um, usually still
+[17:41] using this length normalization method.
+[17:42] And we'll return the highest scoring of
+[17:44] them. Um, sort of tangentially while
+[17:49] we're here, does anyone know why we're
+[17:50] usually using log probability instead of
+[17:52] probability when we decode? I don't know
+[17:54] if we mentioned this yet.
+[17:57] numerical stability. Exactly. So, um,
+[18:00] our probabilities, especially as we keep
+[18:02] going further and further out here, are
+[18:04] going to become really, really small
+[18:05] numbers close to zero. Our hardware
+[18:07] doesn't like really, really small
+[18:08] numbers close to zero. And so, log
+[18:09] probability is a way of preserving the
+[18:11] probability um, and like preserving
+[18:14] numerical stability.
+[18:17] So, I said this was a common way of
+[18:18] normalizing beam search. Um, it's not
+[18:20] sort of the only option. Um this is um
+[18:24] if we view the score of Y being just the
+[18:27] log probability as the unnormalized
+[18:29] score. Um the version that I just showed
+[18:31] you is dividing by the length of Y or
+[18:34] the length of the string so far. Um
+[18:37] another very common variant and in fact
+[18:38] the version that's implemented in
+[18:39] HuggingFace is divided by Y raised to
+[18:43] some hyperparameter alpha which I think
+[18:45] Hugging Face calls the length penalty.
+[18:47] Um so you can set this to be zero if you
+[18:50] want no normalization at all. You can
+[18:52] set this to be one. Um or you can set
+[18:54] this lower or higher depending on how u
+[18:56] sort of your prior and what the sequence
+[18:58] length should be. Um you can also um
+[19:01] reframe this as imposing like a an
+[19:03] additive reward. Um and then in some
+[19:06] particularly I think in machine
+[19:09] translation literature um you can also
+[19:11] define some reward that is relative to
+[19:13] some length that you expect your output
+[19:15] to be. Um this is not very commonly done
+[19:18] anymore. Um, but if you had some strong
+[19:20] prior, like you think um, you're you
+[19:23] happen to know in your tokenizer that
+[19:24] most sentences that are six tokens in
+[19:26] English are usually like seven or eight
+[19:28] tokens in French, you could impose some
+[19:30] kind of restriction so that you wind up
+[19:32] with an output that looks close to the
+[19:33] length that you think it should be.
+[19:36] Um, so this is our beam search algorithm
+[19:39] and just sort of write out what we just
+[19:41] stepped through. We are going to start
+[19:43] by making a decision on beam width. um
+[19:46] and initializing by choosing sort of our
+[19:48] top K probability tokens. Then at every
+[19:50] step after that, we're going to expand
+[19:53] our top K into the K best completions
+[19:55] for each of those. So now we have K
+[19:57] squared options or less if one of our
+[19:59] beams is an EOS. Um and we no longer
+[20:02] expand from there. Then we're going to
+[20:04] prune our potentially up to K squ
+[20:06] options back down to K again. Um so that
+[20:08] this doesn't sort of get out of hand. Um
+[20:10] according to some score function which
+[20:12] is usually the log probabilities plus
+[20:14] some length normalization.
+[20:17] We all on board so far.
+[20:19] >> Great. Yes.
+[20:21] >> Are you curious if there's any
+[20:23] particular
+[20:25] way to normalize lengths such that
+[20:29] sequences of all partic of all possible
+[20:31] lengths are put on. It seems to me that
+[20:34] no matter the power of alpha, you're
+[20:35] like sort of waiting it either one way
+[20:38] or the other in terms of sequence
+[20:39] length. And is there like some sort of
+[20:42] mathematical deduce at what
+[20:46] possible sequence length is put on equal
+[20:48] footing?
+[20:49] >> Yeah, like is there some way of doing of
+[20:52] doing a length penalty alpha or of re um
+[20:55] rewriting this such that every length is
+[20:57] put on kind of equal footing?
+[20:59] Um, my sense is that this is sort of the
+[21:02] price we pay by making our models
+[21:03] locally normalized. I don't I can't
+[21:06] think of anything that would guarantee.
+[21:10] You'd have to you'd have to know like
+[21:11] some notion of true
+[21:14] probability that is distinct from your
+[21:16] notion of how probability in the model
+[21:18] works. Um, I don't think this is
+[21:21] possible.
+[21:22] >> I I think it's a good it's a good
+[21:24] question.
+[21:24] >> It is a great question. Yeah. um like
+[21:27] what how do you mathematically define
+[21:29] equal footing?
+[21:33] >> I think the way I put it is that like
+[21:35] suppose I keep a very aggressive alpha
+[21:38] to be really really high. So it's
+[21:40] exploding then clearly I put the shorter
+[21:43] sequences on a much better footing than
+[21:44] the longer sequences.
+[21:46] >> Yeah. But yeah, what does that mean?
+[21:48] Um
+[21:50] it would be that like if I can picture
+[21:54] every possible sequence length from
+[21:59] one to infinity should be should either
+[22:02] belong to like a uniform distribution
+[22:05] either should be like a uniform or
+[22:06] perhaps a gosh but like one thing is a
+[22:09] gosh I don't know what the mean should
+[22:10] be so just a uniform distribution
+[22:12] >> so this is this is kind of like what
+[22:15] Amanda mentioned uh with the
+[22:19] um Amanda mentioned of the like method
+[22:22] from machine translation where basically
+[22:24] you say okay if I have an English
+[22:26] sentence that's of length um 30 my
+[22:30] French sentence is going to be of length
+[22:32] 20 with this probability 21 with this
+[22:34] probability 22 with this probability so
+[22:36] you can describe a distribution over the
+[22:40] lengths that you expect and then you can
+[22:42] multiply that prior into the probability
+[22:45] that you get from the language model and
+[22:47] then you can adjust that so that it ends
+[22:49] up being the appropriate distribution.
+[22:51] So it doesn't necessarily even need to
+[22:53] be uniform. It can be any distribution
+[22:54] that you define. Um I I can I can share
+[22:58] the paper.
+[23:00] >> Yeah.
+[23:02] >> But that does require you as the user to
+[23:04] kind of define your own prior of what
+[23:05] you think like reasonable length is.
+[23:09] Right. So, what if beams are just great
+[23:13] and you you wind up with some outputs
+[23:15] that look pretty reasonable. Um, but the
+[23:18] the problem that we'll spend sort of the
+[23:19] rest of today thinking about is that you
+[23:22] also wind up with some outputs that look
+[23:23] really really close to each other. Um,
+[23:25] and the reason for this is that while
+[23:26] you're not guaranteed that everything
+[23:28] will wind up being from like one or two
+[23:29] beams, on average you've got sort of
+[23:32] some very high probability thing. And if
+[23:34] you start with a high probability thing,
+[23:36] you're going to wind up with a lot of
+[23:37] things along that beam that are also
+[23:38] relatively high probability. Um so this
+[23:40] is an example um from the first paper
+[23:43] that we'll spend some time on today of
+[23:44] beam search with um beam width six um
+[23:48] doing image captioning for this sort of
+[23:50] picture of a train going through the
+[23:51] woods. Um now a steam engine train
+[23:54] traveling um through blank down or
+[23:58] through is certainly not like the only
+[23:59] way to caption this image. And in fact,
+[24:01] if you asked six people to give a
+[24:03] caption, um they would probably give you
+[24:05] six outputs that are all reasonable and
+[24:07] look quite different from each other. Um
+[24:09] so we have this notion that like maybe
+[24:11] if there's more than one correct answer
+[24:13] or more than one reasonable answer, it
+[24:14] would be nice to not just look at six
+[24:16] things that are relatively close to each
+[24:18] other, but six things that are
+[24:19] relatively good that are slightly
+[24:20] different. Um and we're look at kind of
+[24:22] two different ways of achieving this. Um
+[24:25] the first is um the paper that this
+[24:28] figure is from and this is called
+[24:29] diverse beam search. Um so if we want to
+[24:32] encourage diversity in this procedure
+[24:34] somewhere
+[24:36] setting a new beam width is probably not
+[24:37] going to help if we think things are
+[24:39] going to kind of reduce down to one or
+[24:40] two beams. Um choosing the top k highest
+[24:44] probability token still seems like a
+[24:45] reasonable place to start. And so
+[24:47] instead we're going to look at modifying
+[24:48] these steps three and four here. um
+[24:50] we're going to try to change the notion
+[24:52] of what the highest probability
+[24:53] continuation is to try to factor in some
+[24:56] additional desired criteria which in
+[24:58] this case is diversity or difference
+[24:59] from other things. Um diversity is kind
+[25:02] of a difficult concept to define. Um and
+[25:06] so the intuition and the reason that
+[25:09] kind of makes this tractable is that
+[25:10] we're not going to define diversity on
+[25:12] some sort of absolute level. We're just
+[25:14] going to define it relative to what
+[25:15] we've done before and then kind of step
+[25:17] through this iteratively. So rather than
+[25:19] trying to incl encourage every output to
+[25:21] be diverse, we're going to encourage
+[25:23] each new output we decode to be
+[25:24] different from everything else that
+[25:26] we've decoded up to that point. Um, and
+[25:28] I'll kind of step through and show what
+[25:29] that looks like on a like token by token
+[25:31] level.
+[25:32] So to do this, we're going to define
+[25:34] groups of outputs that we're going to
+[25:35] decode at the same time. Um, if we set
+[25:38] our group size to be one, we're decoding
+[25:41] everything at the same time. This is
+[25:42] going to be exactly the same as regular
+[25:44] beam search. um if we set our group size
+[25:47] to be uh larger than one, then we're
+[25:50] going to decode each of these groups um
+[25:52] sort of in an iterative fashion. So in
+[25:54] our first group, we're going to expand
+[25:56] exactly as we did before. So this is the
+[25:58] same example and I've pulled the log
+[26:00] props off um because now we're going to
+[26:02] be using probabilities that are um
+[26:05] influenced by or added to like some
+[26:07] diversity penalty. Um so in our first
+[26:10] group, we expand exactly as we did
+[26:12] before. In our second group, um, this is
+[26:15] the expansion that we would have if we
+[26:17] were expanding exactly as we did before,
+[26:19] but we're going to modify our log
+[26:21] probabilities to penalize things that
+[26:23] are too similar to what we just decoded
+[26:25] for this time set for the group before.
+[26:27] So, if you look at this, you see we have
+[26:29] she meows and she starts, and we also
+[26:31] have he meows and he starts. Um, and so
+[26:34] these, um, we're going to apply a
+[26:35] penalty to words that are too similar to
+[26:37] what we had before. And so what we'd
+[26:39] actually wind up here with is two kind
+[26:41] of slightly different things being the
+[26:43] the top in the top three most likely
+[26:45] continuations um according to like our
+[26:48] modified distribution. So maybe now we
+[26:49] get he yells and he is and then we'll do
+[26:52] the same thing with this the third group
+[26:54] but now taking into account all six
+[26:56] things we've decoded before. Um and here
+[26:58] actually these were different enough
+[26:59] that we don't need to change anything.
+[27:02] Um, so this is sort of the the idea and
+[27:05] I've sort of deliberately left what
+[27:06] diversity means to be a little bit
+[27:08] vague. Um, but we're going to modify our
+[27:10] log probabilities such that we wind up
+[27:12] with something that is different in each
+[27:14] beam group. Um, and then the other key
+[27:18] intuition of diverse beam search is that
+[27:20] to do this efficiently, we don't
+[27:21] actually need to do this like one, two,
+[27:24] three, um, ver like step through each of
+[27:28] these individually at each step. we just
+[27:30] need to kind of stagger things through
+[27:32] time a little bit. Um, so this is
+[27:35] diverse beam search with a beam size of
+[27:37] six and three groups. Um, so in our
+[27:40] first group here, we're doing our
+[27:42] decoding and we're at time step six. Um,
+[27:45] and then at we're our first group is
+[27:48] just regular beam search. So we we don't
+[27:50] need to condition on anything else. We
+[27:51] can just continue stepping through. In
+[27:53] our second group, we're doing regular
+[27:55] beam search, but we're applying
+[27:56] diversity penalties based on whatever we
+[27:58] decoded in group one. So in group two,
+[28:01] we're at time step five and we're using
+[28:04] whatever we decoded in time step five
+[28:06] from group one to apply the diversity
+[28:08] penalty to determine what we'll pull out
+[28:10] here. And then in group three, we're at
+[28:12] time step four because at time step
+[28:14] four, we've already decided what's in
+[28:15] group ones and two. And so we can apply
+[28:17] the diversity penalty based on what we
+[28:20] computed in group one and two. So if
+[28:22] normal beam search would have finished
+[28:23] in t steps um diverse beam search will
+[28:26] finish in t plus uh g minus one steps
+[28:31] because we need to finish each group two
+[28:32] three four and so on.
+[28:35] Um this also means that when we prune
+[28:37] we're pruning only with respect to
+[28:39] things in the same group. Um so at time
+[28:42] step six here we need to prune group one
+[28:44] back down to two items and so we'll
+[28:46] prune only with respect to things in the
+[28:48] rest of that group. Um similarly for
+[28:50] group two when we hit time step five and
+[28:51] for group three when we hit time step uh
+[28:53] four. So the result of this is that
+[28:56] we're functionally we're doing beam
+[28:57] search uh three different times in
+[28:59] slightly different settings using these
+[29:01] probabilities that we've modified from
+[29:02] the groups before.
+[29:05] Um so if we set this group size to one,
+[29:08] this is exactly the same as regular beam
+[29:10] search. If we set um this group size to
+[29:13] be the number of beams, we're
+[29:14] functionally doing greedy search in each
+[29:16] um individual group. we've just modified
+[29:19] it by the um diversity penalty from the
+[29:22] groups before, right? Because we're
+[29:24] going to sample the one next thing from
+[29:26] each group. Um and if we set one to be
+[29:30] if we set G to be between one and the
+[29:32] beam width, we're doing beam search
+[29:33] within each group but with these
+[29:35] diversity aware penalties applied. Um
+[29:38] and they find that actually doing this
+[29:40] sort of modified greedy search works
+[29:42] quite well. So um in practice they set
+[29:44] the number of groups to be the same as
+[29:46] the number of beams and then they look
+[29:48] at a number of different diversity
+[29:50] metrics um which we'll step through in
+[29:53] just a sec. Um but to kind of visualize
+[29:56] this out we've got a number of time
+[29:58] steps um we do a single step of normal
+[30:01] beam search um which is this line three
+[30:04] here and then for every group after that
+[30:07] we augment the log probabilities. Um so
+[30:10] this is our log probabilities and then
+[30:11] we're adding in some diversity penalty
+[30:13] from all the groups before and we
+[30:15] perform one step of beam search with our
+[30:17] modified probabilities. Um and then once
+[30:20] this completes once everything has
+[30:21] reached the end of sequence token we
+[30:22] return a set of solutions. Um and you
+[30:25] could take the the if you want a single
+[30:27] thing out of this set you could take the
+[30:29] max log prop or the max score. Um but
+[30:32] generally if you're doing diverse beam
+[30:33] search you're doing it because you want
+[30:34] to see all of the outputs of the beams.
+[30:37] So how do we actually define this notion
+[30:39] of diversity? Um we have a number of
+[30:42] options. Um and the diverse beam search
+[30:44] paper looks at four of them. So the the
+[30:48] first um and the one that they say in
+[30:50] practice is actually um sufficient is
+[30:52] something called hamming diversity. And
+[30:54] what this does is this penalizes a token
+[30:57] proportionally to the number of times
+[30:58] it's occurred before in active beams
+[31:01] from the groups that we're considering.
+[31:02] So if there's two beams in group one, we
+[31:04] count up every time the tokenthe'
+[31:06] appeared across each of those two active
+[31:08] beams um and we penalize um the emission
+[31:13] of the token the and group two more if
+[31:14] it's appeared more times.
+[31:17] Um there's some notion that maybe this
+[31:18] is a little bit unfair that it could be
+[31:20] perfectly okay if group one is saying
+[31:22] the the notion at the beginning of the
+[31:24] sentence and you want to say the now 20
+[31:26] tokens in um and so they also consider a
+[31:29] variant called they call cumulative
+[31:31] diversity which is penalizing only if
+[31:34] you're using the same token at the same
+[31:36] time step. So if there's in group one
+[31:38] the tokens 'the' and yell are emitted at
+[31:41] this time step, it would reduce the
+[31:43] probability of generating 'the' or yell.
+[31:47] Um there's also a variant they consider
+[31:51] um which penalizes matches of exact
+[31:53] engrams. And the kind of nice thing
+[31:54] about this is that this penalizes um
+[31:57] both individual tokens and also longer
+[31:59] sequences. So you can imagine if there's
+[32:02] the exact um sequence the cat yells has
+[32:05] been admitted before, you get some kind
+[32:07] of penalty for the cat, some kind of
+[32:10] penalty for the and some kind of penalty
+[32:11] for the cat yells. Yes.
+[32:17] >> Yeah. Um
+[32:23] so let's say I'm just going to say that
+[32:25] we have like one thing in group one. Um
+[32:28] which is maybe
+[32:30] the
+[32:32] cat.
+[32:35] Actually, let's do it, too. Um,
+[32:52] so these are our two things in Can
+[32:55] everyone see this if I'm over here?
+[32:57] Good. Okay. So, these are our two things
+[32:58] in group one. And now we're trying to
+[32:59] decode something in group two. Um
+[33:04] so group one is at time step four which
+[33:06] means group two we're trying to predict
+[33:07] something at time step three. Um so
+[33:12] the cat
+[33:15] um let's see let's say eight is okay. So
+[33:20] if you would see sort of no penalty here
+[33:23] for any token that is not in uh these
+[33:26] prefixes here. Right. So no penalty if
+[33:29] you wanted to generate like meow or
+[33:31] something. Um if you wanted to generate
+[33:33] the next token is
+[33:36] this is um like a two gram prefix and so
+[33:39] you would get some penalty there for
+[33:40] trying to generate something that
+[33:42] matches a two g prefix from group one.
+[33:45] Um, if you were trying to generate the
+[33:46] cat yells, that's a three gram prefix.
+[33:49] And so that would be a higher penalty
+[33:51] than you would get on.
+[33:57] >> Oh, I
+[33:58] >> Yeah, sorry. I had to change it halfway
+[33:59] there. So, a cat is so cat is matches
+[34:03] but not and then the cat yells matches
+[34:06] three things.
+[34:08] Um, and so this is the idea that like
+[34:10] you it's worse to repeat like a full
+[34:12] string than to a full longer string than
+[34:14] like a a single or a double diagram.
+[34:18] >> So here the prefix across both the
+[34:21] groups is same the cat and the could
+[34:24] this happen or does this always happen?
+[34:28] >> Yeah, could it happen that this is the
+[34:29] same? Um, this first step actually is
+[34:33] impossible. This is a good catch because
+[34:35] the first step you're choosing the top k
+[34:38] um like from a distribution and so those
+[34:41] will all be unique. Um this second step
+[34:45] um like could you decode cat if cat was
+[34:48] also decoded above depends on the
+[34:50] strength of the penalty. Um so if you
+[34:52] set your penalty to be very very small
+[34:55] and there's like a relatively
+[34:57] distribution where cat is the most
+[34:58] likely to win by a fair margin still
+[35:00] geted. So my thinking is uh why not
+[35:04] analyze within the group because from
+[35:07] the initial example that you showed the
+[35:09] issue is similarity
+[35:12] at the beginning and not what we use
+[35:14] towards the end. So if you're not
+[35:16] realizing within the group then a strong
+[35:19] competitor would just carry on. Why not
+[35:23] penalize within the group because
+[35:24] otherwise yeah um the reason that they
+[35:27] don't penalize within a group is because
+[35:29] you want to be able to s to decode
+[35:31] everything in the group at the same
+[35:32] time.
+[35:33] >> Um but I think that this um the question
+[35:36] you ask kind of tracks what they what
+[35:38] they find which is this intuition that
+[35:40] setting the group size as small as
+[35:41] possible lets you get more diverse
+[35:43] outputs which is why in in practice they
+[35:46] set group size to be one usually.
+[35:54] [Music]
+[35:55] Um so this is the notion of diverse beam
+[35:57] search. Um and this is a pretty Yes.
+[36:11] vanilla search
+[36:14] >> uh when group size oh I'm sorry yeah
+[36:16] they set group size to be as um they set
+[36:19] group size to be as to be one but the
+[36:22] number of groups to be large so when the
+[36:25] number of group so here um g here is the
+[36:28] number of groups not the group size so
+[36:31] when the number of groups is one
+[36:37] um cool so these are uh three of the
+[36:39] four
+[36:39] sort of three of the four diversity
+[36:41] metrics. The last one they consider um
+[36:43] is maybe dating this paper a little bit
+[36:46] which is they also look at penalizing
+[36:48] things that have overly close word to
+[36:50] embeddings um which is uh just sort of
+[36:53] their the
+[36:56] 17 equivalent of penalizing things that
+[36:59] are semantically close and they find in
+[37:00] practice that this is not actually um
+[37:04] worth the extra computational cost. Um,
+[37:08] I think this kind of makes intuitive
+[37:09] sense if you think about diverse beam
+[37:11] searches giving you outputs that are um
+[37:14] like surface form different but might
+[37:16] still be kind of close to the same
+[37:18] semantic mean of the distribution.
+[37:22] Um, so that's diverse beam search. And
+[37:23] then we're also going to look at a um
+[37:27] another way of kind of getting to at the
+[37:29] same goal which is uh stochcastic beam
+[37:31] search. And stochastic beam search is
+[37:33] based on this kind of nice idea that if
+[37:34] you want more diversity, we know how to
+[37:37] get more diversity out. Um, which is to
+[37:39] sample from the distribution instead of
+[37:40] trying to take an argmax. Um, and so
+[37:42] we're actually going to do like a very
+[37:44] clever trick um, in order to sample from
+[37:46] this distribution um, in a way that sort
+[37:48] of lines up with our other constraints
+[37:50] of beam search. So here um, we've got
+[37:53] the beam search algorithm, but instead
+[37:55] of um, expanding the top K, we're going
+[37:58] to sample K things instead.
+[38:01] Um the problem is that when we do beam
+[38:04] search, we uh expect that we're going to
+[38:06] have k unique things. There's not really
+[38:08] a lot of point in carrying across like
+[38:10] five beams that are all the same token,
+[38:12] even if that token happened to be really
+[38:14] high probability. So what we really want
+[38:16] to do is um get k unique samples from
+[38:19] our distribution. Uh there's a number of
+[38:20] ways we could do this. Uh maybe the
+[38:22] easiest is to just do this iteratively.
+[38:24] So if we define like our distribution
+[38:26] over v tokens, we sample a single token.
+[38:29] we remove it from the distribution and
+[38:31] reormalize and we sample a new token
+[38:33] from the distribution of V minus one
+[38:35] tokens. Um we certainly know how to do
+[38:37] this. Um but it's a little bit um slow,
+[38:42] right? We're going to have to if we have
+[38:44] a beam width of K, we're going to have
+[38:45] to do this K times every time we expand
+[38:47] out a beam. Um and so this is compared
+[38:51] to taking an argmax um kind of a time
+[38:54] inensive thing to do. Um yes,
+[38:56] >> how is this different from just like the
+[38:58] top
+[39:00] picking. How does this different picking
+[39:01] the top K in one go? Um so here we're
+[39:04] sampling instead of doing an argmax.
+[39:07] >> Yeah. Yeah. Yeah. Sorry. So this is
+[39:08] going to be um we we want to sample kind
+[39:11] of respecting the the probability
+[39:12] distribution.
+[39:16] Um another option if we if we want to
+[39:18] sample we could say well we're just
+[39:20] going to we're just going to sample a
+[39:21] whole bunch of things right? um we'll
+[39:24] sample a a big set maybe two or three or
+[39:27] four times larger than we need because
+[39:28] sampling a whole bunch at once is
+[39:30] relatively cheap. Um and then we're just
+[39:32] going to remove everything that's a
+[39:33] duplicate. Um so like some kind of
+[39:35] rejection sampling. Um this is like not
+[39:37] a terrible idea, but if our distribution
+[39:40] and if our distribution is like
+[39:41] relatively uniform or our um tail is
+[39:44] relatively fat, maybe we'll wind up with
+[39:46] actually a sort of output in a
+[39:48] reasonable number of steps here. Um, but
+[39:50] if our distribution over next tokens is
+[39:52] extremely peaky, we could sample a
+[39:53] 100red or 200 things and only get one or
+[39:55] two unique outputs. Um, so this is sort
+[39:57] of unsatisfying, right? We're not really
+[39:59] sure exactly how many steps this would
+[40:01] take. Um, and this could be really
+[40:03] computationally expensive.
+[40:06] There's got to be a better way. Um, and
+[40:09] the better way here is actually going to
+[40:10] take us on a little bit of a detour um
+[40:12] through what I think is one of the
+[40:13] coolest um little mathematical tricks um
+[40:17] that we use today which is um something
+[40:20] called the Gumble Max trick. Um uh man
+[40:24] Gumble was a German mathematician who
+[40:26] was particularly interested in the study
+[40:28] of extreme value distributions. Um, so
+[40:31] the the sort of canonical example here
+[40:34] is if you're thinking about um rain or
+[40:37] flood water, like flood water from a
+[40:38] river, you can measure the the flood
+[40:41] line of every rain from the season, but
+[40:42] you also care about the max the max
+[40:45] flood line for every year. And so you
+[40:47] want sort of the max from this
+[40:48] distribution um over time. And so Gumble
+[40:52] distributions represent um well sort of
+[40:55] the maximum of some other distribution
+[40:56] that you might be sampling from. Um this
+[40:59] is the PDF of the distribution. This is
+[41:01] also sometimes called a double
+[41:02] exponential distribution because you've
+[41:04] got an e to the e to the uh hanging out
+[41:07] in here. And this is um what the gumball
+[41:09] distribution looks like for a couple of
+[41:10] different parameters. Um I don't have
+[41:12] the credit on here, but this is straight
+[41:14] off of Wikipedia. So um here we call mu
+[41:17] the location of the distribution and
+[41:19] beta the scale. Um, and so you'll notice
+[41:22] like a lot of distributions
+[41:23] parameterized this way. Um, if you
+[41:25] change just mu with just the location,
+[41:28] um, you're going to move along without
+[41:29] actually changing the shape of the
+[41:30] distribution. You're just going to
+[41:31] change its location on the x-axis.
+[41:34] Um, so why do we care about this
+[41:36] distribution and why have we suddenly
+[41:38] taken a little corner torn turn into
+[41:40] stats land? Um the Gumble distribution
+[41:43] has this really interesting property
+[41:44] which is that if you take a collection
+[41:46] of random variables um Xi and you draw
+[41:50] each of them from a Gumble distribution
+[41:52] with location mui corresponding to that
+[41:54] X. Um you can calculate out the
+[41:57] probability as you would for any um
+[41:59] group of random variables that any one
+[42:01] of these is the highest valued X in that
+[42:04] set. Um, and I'm not going to walk
+[42:07] through the derivation here because
+[42:08] you're actually going to prove um sort
+[42:10] of the the base case of it in your
+[42:12] homework. Um, which will be out later
+[42:14] today, I promise. Um, but you can write
+[42:18] this out and sort of satisfy yourself
+[42:20] that the probability that any individual
+[42:22] XI is the max of this group is this um,
+[42:27] e to the mui over the sum of e to each
+[42:30] individual mui. Does anyone know what
+[42:31] this is?
+[42:34] This is softmax. Um and so uh the
+[42:39] collection so choosing the argmax of
+[42:42] this collection is functionally
+[42:44] equivalent to taking the soft max over
+[42:46] all of these mui values and sampling one
+[42:49] from it. Um you get something that is
+[42:51] sampled from that conditional
+[42:52] probability distribution. Which means
+[42:54] that if you have a bunch of unnormalized
+[42:56] logits uh you have sort of two ways of
+[42:59] trying to sample from them. You could
+[43:01] softmax the logits and take a sample in
+[43:03] kind of the way we've been talking about
+[43:05] for the past couple classes or you could
+[43:08] add an independently drawn gumball noise
+[43:10] to each logit and take the arg max of
+[43:12] the resulting noised uh values. Um and
+[43:15] the way this works is um your gumball
+[43:18] noise if you draw it from the
+[43:20] distribution with location zero scale
+[43:22] one um and then you make your x eyes by
+[43:25] adding your logits to these gumball
+[43:27] noises you wind up um the location is
+[43:30] just sort of scaling us along the
+[43:31] x-axis. So you wind up with a bunch of
+[43:33] random variables that are um all gumball
+[43:36] mui1 and then this property from the
+[43:38] last slide holds that the max of x is a
+[43:41] sample from this softmax distribution.
+[43:44] Um
+[43:46] >> this is yeah
+[43:47] >> the mu is the mean right?
+[43:49] >> Uh the mu is actually the mode here.
+[43:52] Um and see
+[43:55] um it's going to be the top of this
+[43:56] peak.
+[43:58] >> Um it's not exactly the mean of the
+[43:59] distribution though.
+[44:03] >> Um beta is like the it represents how
+[44:06] much this spreads out how long the right
+[44:08] tail here is. So um higher beta means a
+[44:11] sort of like flatter distribution. Um
+[44:13] but here for the gumbo max trick, we're
+[44:15] always going to set it to one. Um and
+[44:17] this is so that this works out to be
+[44:19] exactly soft max.
+[44:24] >> Zut,
+[44:28] >> how are the these guys? Um this is just
+[44:31] going to be the logics you get out of
+[44:32] your language model. Um so what you
+[44:36] would what you would normally do is
+[44:37] softmax them so that you get a
+[44:39] probability distribution. Um but we're
+[44:40] going to take the unnormalized ones
+[44:42] here. It's kind of magic until you do
+[44:44] the math, but it actually works.
+[44:46] >> I've done the math and I still think
+[44:47] it's magic.
+[44:51] >> It just it doesn't. Yeah. Um, so I mean,
+[44:53] I don't want to I don't want to spoil
+[44:55] all the excitement from homework one,
+[44:57] but um if you what you'll what you'll do
+[44:59] is you'll take this um um you'll
+[45:02] calculate like the cumulative density
+[45:03] function and you'll do an integral over
+[45:05] it. um and a whole bunch of things will
+[45:07] cancel such that um you wind up with
+[45:11] something of this form. It's only
+[45:12] possible um with this distribution um
+[45:15] kind of because you've got this like e
+[45:17] to the e to the thing in here.
+[45:26] >> Yeah. Um so on on the homework, we're
+[45:28] going to have you do this for um the
+[45:30] situation where you just have two random
+[45:32] variables. Um, you can then show it. Um,
+[45:35] I think I think you usually just show it
+[45:36] by induction from there. Um, but yeah, I
+[45:40] think this is maybe some of the coolest
+[45:42] magic uh that we do.
+[45:49] So now armed with a little bit of magic.
+[45:52] Yeah.
+[45:52] >> How is related to
+[45:56] >> Yeah. How is related to Z?
+[45:59] is function of like how do we know mui
+[46:03] like which distribution we are
+[46:06] >> yeah how do we know the the muis um so
+[46:09] we we framed this in this particular way
+[46:11] such that our muis were equal to our zis
+[46:15] um because we wanted to um if we take a
+[46:17] bunch of x eyes drawn from uh gumbles of
+[46:20] like a group of muis we're going to
+[46:22] sample from a categorical distribution
+[46:23] that is what you'd get if you softmax
+[46:25] those muis and we want to softmax these
+[46:29] zis. So we add gumball noise with a
+[46:32] location of zero such that our mui's
+[46:35] will be equal to our zis
+[46:39] um because it would be functionally zi
+[46:41] plus z.
+[46:44] So now armed with a little bit of magic
+[46:47] um we're going to return to our original
+[46:49] problem which was drawing some samples
+[46:51] from a distribution without replacement.
+[46:54] Um why does this help us? Well, we can
+[46:57] do this to find the argmax of the
+[46:58] distribution. Um,
+[47:01] and then if we remove that single thing
+[47:04] we just sampled, we say we take the top
+[47:05] one away. Now we have Z minus one things
+[47:09] in our distribution. Um, and so we have
+[47:12] Z minus one. If we go back, we have Z
+[47:14] minus one random variables here. And so,
+[47:17] um, the next highest thing in our set of
+[47:20] Gumball noise logits is going to be the
+[47:22] softmax of this new distribution. Um and
+[47:25] so instead of taking the top one, we can
+[47:27] take the top k and we will get k things
+[47:30] drawn from our distribution without
+[47:31] replacement. Um according to that um
+[47:35] like according to the distribution
+[47:36] parameterized by our logits.
+[47:39] Um and that's magic. And are we done?
+[47:43] Not quite unfortunately. So now we've
+[47:46] got a good way to sample k things from
+[47:48] our distribution. Um, but if we score
+[47:50] these K things according to a score
+[47:52] function that's just based on log
+[47:54] probability, we're going to kind of undo
+[47:56] all of our good work here because then
+[47:58] we're just going to choose whichever one
+[47:59] of them was the highest probability to
+[48:00] begin with and we might have well might
+[48:02] as well just taken the the top k log
+[48:04] props. Um, so instead we're going to try
+[48:07] to like
+[48:10] uh pass along some notion of of like
+[48:12] soft committing to a um to a sampled
+[48:15] output. um we want to carry along the
+[48:17] sampling decisions we made to the next
+[48:19] step so that we don't immediately throw
+[48:20] out these things that we just worked so
+[48:22] hard to sample. Um but we have to be a
+[48:24] little bit careful here because we want
+[48:26] our probabilities to be monotonically
+[48:28] non-increasing and we're now adding
+[48:29] noise at every step. So there's some
+[48:31] chance we add too much noise and we wind
+[48:33] up with something that has a higher
+[48:34] probability at time t plus one than t
+[48:36] which just like is sort of unsatisfying
+[48:39] and also does weird things if we're also
+[48:41] length normalizing our beams. Um, so
+[48:44] we're going to do a little bit of u
+[48:47] manipulation here. Um, functionally we
+[48:49] want to carry along the gumball modified
+[48:51] log prop. Uh, but we want to so we're
+[48:53] going to keep the noise that we added in
+[48:56] as part of our final score. Um, but
+[48:59] we're going to add a little correction
+[49:01] factor such that the modified log props
+[49:03] are never going to be higher than the
+[49:04] log props of the node we sampled from.
+[49:07] um functionally we want to like we want
+[49:10] to add some noise but we never want to
+[49:11] add enough noise that we go over the
+[49:13] probability we started with um and I'm
+[49:16] not going to spend uh time actually
+[49:19] going through that but this is step 14
+[49:21] here um this is calculating um this is
+[49:25] the stochastic beam search algorithm and
+[49:27] this is um doing the gumball noise but
+[49:31] modifying things such that you're not
+[49:33] winding up with anything that's sort of
+[49:34] higher than you started with Um so if we
+[49:37] actually step through the algorithm
+[49:39] here, we're starting with these empty
+[49:42] beams. We're expanding. Um here we
+[49:45] initialize the expansions. We pull the
+[49:49] um log probabilities. Um so here we take
+[49:52] the log probabilities and some gumball
+[49:54] noise. We keep track of what the highest
+[49:56] probability thing so far is um by doing
+[49:59] this max. Um and then we go through and
+[50:03] we resample um sort of for the next step
+[50:06] by applying and we make sure that
+[50:08] nothing exceeds the max probability from
+[50:10] the step before.
+[50:13] Um in practice what you wind up with
+[50:15] when you do this is a set of outputs
+[50:18] that is more diverse but not necessarily
+[50:20] worse than what you started with. Um
+[50:22] which is a really lovely property. So
+[50:24] this kind of uh squiggles on a on a
+[50:27] graph um represents the at the top the
+[50:30] max in the middle and solid lines the
+[50:33] mean and on the bottom the min blue
+[50:37] score um which is just an engram quality
+[50:39] metric of a group of beam search outputs
+[50:43] um using green is regular beam search.
+[50:46] Um a yellow here or kind of like dirty
+[50:50] yellow is stochastic beam search. Red is
+[50:53] sampling and blue is diverse beam
+[50:56] search. Um how are we winding up sort of
+[50:59] so much better in quality than sampled
+[51:02] outputs? Um we're doing a kind of
+[51:03] pruning based on this albeit modified
+[51:06] log probability. So we're doing some
+[51:08] kind of um manipulation to try to make
+[51:11] our thing our outputs a little bit
+[51:12] better. But because we're also doing
+[51:14] this sampling step, we're winding up
+[51:15] with outputs that are um more diverse um
+[51:19] than beam search outputs. And this is
+[51:21] measured by a diversity metric here that
+[51:22] I think is also engram based. Um so we
+[51:26] wind up with not just a better top one
+[51:28] result here at the very top. Um but also
+[51:31] more diversity and a better average case
+[51:33] performance. Um you notice the top one
+[51:36] at this top is not actually very much
+[51:37] better than the beam search output. So
+[51:39] these kind of like light green up here
+[51:42] is actually still sometimes better than
+[51:43] the stochastic beam search output. Um
+[51:46] but in both stochcastic and diverse beam
+[51:49] search, what we care about is um less
+[51:51] top one performance and more getting a
+[51:53] couple of reasonable outputs to look at.
+[51:55] Um so we say we're sort of maybe we're
+[51:57] not gaining on our absolute top one, but
+[51:59] we care about this average case or the
+[52:01] the best end performance.
+[52:06] >> How do you view this graph? Yeah. Um if
+[52:08] you look at the solid lines in the
+[52:10] middle, this is the mean of a set of 10
+[52:13] examples. Um so the mean blue score uh
+[52:16] average case performance the on top of
+[52:19] that the dotted lines are the max the
+[52:21] best one uh the bottom the lines are the
+[52:23] worst one.
+[52:26] So this is saying you set beam size to
+[52:28] 10 and you looked at your outputs um the
+[52:31] average across those outputs will be
+[52:33] like kind of okay. the single best one
+[52:36] um with beam search or stochastic beam
+[52:39] search will be quite good um better than
+[52:41] the single best best one you'd get with
+[52:43] sampling or diverse beam search in this
+[52:45] problem and the single worst one for all
+[52:47] of them will be kind of similarly bad
+[52:53] >> yeah of course yeah
+[53:01] [Music]
+[53:04] Yeah. Can we also do top P or like some
+[53:06] other decoding strategy during
+[53:07] stochastic beam search? Um, you could do
+[53:10] this. I think what you would need to do
+[53:12] is you would need to um determine like
+[53:16] what you're truncating before you do the
+[53:19] gumball softmech or the the gumball top
+[53:21] K trick. Um, so you would need to sort
+[53:24] of trim your distribution there and then
+[53:25] you'd have a smaller distribution for
+[53:26] that. It's a little bit um strange. I
+[53:30] think you'd have to softmax a
+[53:31] distribution to do top P. Um, and then
+[53:34] you'd want the unnormalized logits to do
+[53:36] the gumball trick, so you'd need to keep
+[53:37] them both around. Um, but there's no
+[53:39] reason that you couldn't do that. I
+[53:41] think like the intuition is good that
+[53:43] that would um reduce the odds of like
+[53:45] one of these beams being really bad.
+[53:50] >> Yeah.
+[53:51] >> What do each of these like points mean?
+[53:53] Like what are we varying along the
+[53:54] x-axis?
+[53:55] >> Yeah. What are we varying along the
+[53:57] x-axis here? um these are modifying the
+[54:00] parameters of the sampling stochastic
+[54:03] beam search or diverse beam search to
+[54:04] try to achieve this output diversity
+[54:07] value of like more or less diverse
+[54:10] things measured by um engram similarity
+[54:12] between the beams. So they actually um
+[54:14] don't specify here what they're doing,
+[54:16] but you could imagine this um as being
+[54:19] like increasing or decreasing
+[54:20] temperature. Um for stochastic beam
+[54:22] search um like they they might be doing
+[54:26] something like top k um for diverse beam
+[54:29] search they're increasing or decreasing
+[54:31] the diversity penalty.
+[54:32] >> Each point corresponds to a particular
+[54:34] choice.
+[54:35] >> Yeah. Yeah.
+[54:37] >> Yeah. So reading the graph for the same
+[54:40] quality of generations sampling and
+[54:44] stoastic search show more diversity.
+[54:47] Isn't that what we wanted
+[54:49] >> for the same quality of generations?
+[54:51] Yeah.
+[54:52] >> For the same blue square you get more
+[54:54] diverse generations.
+[54:56] >> Yeah.
+[55:01] >> Um so would you want to do sampling over
+[55:03] stochastic beam search? I think it
+[55:05] depends on what you want. So if you want
+[55:08] um diversity that's sort of higher than
+[55:11] this like 22 metric here um you would
+[55:14] need to do something like stochcastic
+[55:15] beam search um to get like this
+[55:18] increased diversity between nodes.
+[55:20] You're paying like a diversity quality
+[55:21] trade-off here. Um but notice that your
+[55:24] top one best diversity or your not
+[55:27] diversity sorry your top one best blue
+[55:29] score is always higher for stochastic
+[55:31] beam search than it is for sampling.
+[55:38] Why would you ever want to use like um
+[55:40] stochastic beam search here?
+[55:42] >> Oh, the gumble trick. Um the gumble
+[55:43] trick is what you need to make
+[55:44] stochastic beam search work um uh to
+[55:47] make it work efficiently. So you could
+[55:50] instead do like a sampling iteratively
+[55:52] or uh like rejection sampling. But um
+[55:56] the gumble trick is what we do what we
+[55:58] use to make stochastic beam search sort
+[56:00] of tractable in the same amount of time
+[56:01] it takes to do diverse beam search.
+[56:04] Is there any just sampling and then
+[56:09] you know introducing randomness and then
+[56:14] like
+[56:15] >> yeah like the advantage is that you're
+[56:17] doing this within the framework of beam
+[56:19] search. So you're also doing this like
+[56:21] pruning at each expansion. Um so you
+[56:24] could do the gumball trick to just
+[56:25] sample from the distribution directly
+[56:27] and that would be the same as these like
+[56:28] red sampling lines here. Um but if you
+[56:32] do the Gumble trick plus this like
+[56:33] framework of beam search where you're
+[56:35] also um like expanding out your set of
+[56:38] nodes um pruning down and then expanding
+[56:40] out again you wind up with outputs that
+[56:42] are better. Um you're getting sort of
+[56:44] the benefits of doing some type of
+[56:45] search.
+[56:48] Uh sorry I'll come back.
+[56:50] >> What does DBS stand for?
+[56:51] >> Uh diverse beam search is a great
+[56:53] question.
+[56:55] >> Yeah.
+[56:59] How does
+[57:03] >> uh since you're not using um softmax in
+[57:06] stocastic beam search could you still
+[57:07] like apply something like temperature?
+[57:09] Yeah.
+[57:21] >> Yeah. I don't actually know. There's
+[57:24] there's probably a way to do temperature
+[57:26] with stochcastic beam search, but it
+[57:27] would have to be it would be complicated
+[57:31] because temperature, you're right, you
+[57:33] introduce when you do soft maxing. Um so
+[57:35] to change these like stochastic beam
+[57:37] search parameters they're probably doing
+[57:38] some kind of like truncation style um
+[57:42] modification of the distribution.
+[57:43] >> Could you just
+[57:46] watch
+[57:47] >> could you softex isn't reversible is it?
+[57:54] Or maybe I'm missing something, but like
+[57:57] couldn't you?
+[57:58] >> Oh, no. Yeah, you could like multiply
+[58:01] each logit before you soft max.
+[58:04] >> Yeah.
+[58:04] >> Yeah. No, Grant's exactly right. So, you
+[58:07] can mult You can think of temperature as
+[58:09] like multiplying each log before you
+[58:11] softmax or multi or applying like a
+[58:13] parameter inside the softmax operation.
+[58:22] >> Isn't temperature implemented as just
+[58:25] multiplying the logic before you do
+[58:26] soft.
+[58:28] >> Yeah.
+[58:29] >> Yeah. Multiplying before you do the soft
+[58:31] max in the normal case or in stick you
+[58:34] multiply before you add the goble ones.
+[58:38] >> Yeah.
+[58:41] >> Cool. So, yes.
+[58:44] >> No, you're totally good. I'm just like a
+[58:45] bit curious about that step of yours to
+[58:49] limit the amount of noise on each
+[58:55] property like um how often does it
+[58:57] happen like is the match if you're doing
+[59:03] every app?
+[59:05] >> Yeah, aren't you changing the
+[59:06] distribution of noise when you apply
+[59:08] this value? Um so the answer is you want
+[59:10] to do this only in the um pruning not in
+[59:14] the expanding. So you apply the gumball
+[59:16] noise without um any kind of reduction
+[59:19] to this max value when you expand. So
+[59:22] when you take the top K out of your
+[59:24] gumball noise logits you wind up with
+[59:26] something that is exactly a sample from
+[59:27] the distribution. And then when you're
+[59:30] pruning and you're scoring, you need to
+[59:32] adjust it back down so that you're not
+[59:33] winding up with something that is like a
+[59:35] higher scoring um continuation at t plus
+[59:38] one than it is at t.
+[59:46] >> So I can
+[59:48] I can effectively sample from the mats
+[59:50] every time I make this. So the real
+[59:53] utility is what we do during the stage.
+[59:56] If you're adjusting it before the
+[59:57] cooling stage, we like I I curious to
+[1:00:01] see how the outputs are still having the
+[1:00:04] same property as the Gumble Max solution
+[1:00:06] would provide.
+[1:00:08] >> So, how are they still having the same
+[1:00:09] outputs? So, you're right that they're
+[1:00:10] no longer a proper um like application
+[1:00:13] of the Gumble Max trick at that point.
+[1:00:15] Um but we need the Gumble Max trick to
+[1:00:17] do the expansion, not to do the pruning.
+[1:00:19] So you could imagine like a a variant of
+[1:00:22] this where you do you sample the top K
+[1:00:25] with the gumball trick at the at step
+[1:00:27] three and then you prune at step four
+[1:00:29] with the completely normal unnoised um
+[1:00:32] log props. This is like a compromised
+[1:00:34] position. Um it's saying we don't want
+[1:00:36] to use the gumball noise log props
+[1:00:38] directly because they could have this
+[1:00:40] weird property they're not on that
+[1:00:42] they're like potentially increasing over
+[1:00:44] time. um right if you noise and you wind
+[1:00:47] up with something that's higher than the
+[1:00:49] probability of what you started with. So
+[1:00:50] we don't want to use them directly but
+[1:00:52] we don't want to completely throw them
+[1:00:53] out because we want to capture some kind
+[1:00:55] of like commitment to the sampling
+[1:00:58] choice we made and if we just did log
+[1:00:59] props directly we would be throwing out
+[1:01:01] all the effort we just did to sample. Um
+[1:01:03] so by keeping the gumball noise but
+[1:01:05] capping it so that it can't like
+[1:01:07] increase our log probabilities over time
+[1:01:08] we're kind of like compromising between
+[1:01:10] those two. So people get the top
+[1:01:13] compromise to the top and apply this
+[1:01:16] threshold.
+[1:01:19] >> I Yeah, if you had two that were like
+[1:01:21] both above the threshold. Yeah. Yeah. I
+[1:01:23] think that's a I think that's a good way
+[1:01:24] to think about it. Yeah.
+[1:01:27] >> Yeah, for sure.
+[1:01:29] So this is our two ways of getting more
+[1:01:32] diverse outputs. Um we'll talk about
+[1:01:34] just kind of one more set of things
+[1:01:36] which is a couple of properties of beam
+[1:01:37] search. Um, so kind of one thing that we
+[1:01:41] haven't talked at all about today is how
+[1:01:43] to pick the beam size. Um, and there's
+[1:01:46] like maybe two schools of thought here,
+[1:01:48] right? If you have a smaller beam size,
+[1:01:49] you're decoding less things. Um, and
+[1:01:52] you're also, if you were trying to do
+[1:01:54] all of these in parallel, you're sort of
+[1:01:55] keeping less um potential paths through
+[1:01:58] your decoding space alive. Um, which
+[1:02:00] means that it's faster. And if you were
+[1:02:02] trying to do all of this in parallel,
+[1:02:04] you're also saving some memory. Um but
+[1:02:07] this also means you have more search
+[1:02:08] error, right? This is an approximation
+[1:02:10] to um exact decoding over the space
+[1:02:12] which would require setting your beam
+[1:02:13] size to the size of the vocabulary. So
+[1:02:16] the smaller your beam size, the larger
+[1:02:17] chance you don't find the true highest
+[1:02:19] scored output. If your beam size is
+[1:02:22] larger, it's it's a little slower and
+[1:02:24] maybe more memory intensive, but it's
+[1:02:26] closer to finding the true highest
+[1:02:28] scoring output. Um it's also worse and
+[1:02:31] this is like particularly
+[1:02:33] counterintuitive because we should be
+[1:02:35] getting closer to finding the true mode
+[1:02:37] of the distribution. Um and so this is
+[1:02:39] something called the cursive beam search
+[1:02:41] which is the idea that on um a variety
+[1:02:45] of models mostly sort of benchmarked
+[1:02:47] around 2018 to 2020 or so on a variety
+[1:02:50] of tasks that were important at that
+[1:02:52] time. um as you increase the beam size
+[1:02:55] or the beam width here, the performance
+[1:02:57] downstream actually goes down um for
+[1:03:00] sort of the top one thing returned from
+[1:03:02] beam search. Um and there's two schools
+[1:03:04] of thought on why this might be
+[1:03:05] happening. Um and I'll sort of present
+[1:03:08] them both to you. So the first school of
+[1:03:11] thought and the school of thought
+[1:03:11] espoused by the paper that this
+[1:03:13] particular figure is from is that this
+[1:03:15] is a problem with our length ratios or
+[1:03:17] our length normalization like not being
+[1:03:19] perfect. Um, since our probability is
+[1:03:22] monotonically decreasing with length,
+[1:03:23] we're searching more. We're winding up
+[1:03:25] with slightly shorter outputs on
+[1:03:27] average. And for a wide variety of
+[1:03:29] downstream tasks, making our outputs
+[1:03:30] shorter and shorter is actually not very
+[1:03:32] helpful. Um, they show that in some
+[1:03:35] situations, for some tasks, if you can
+[1:03:37] design your length ratio or your length
+[1:03:39] penalty correctly, um, you can actually
+[1:03:41] get rid of this decreasing with increase
+[1:03:43] with increased beam width.
+[1:03:46] Um the other argument is that the actual
+[1:03:48] mode of the distribution is somehow
+[1:03:50] degenerate or bad. We don't actually
+[1:03:52] want to find the true mode. Um and so in
+[1:03:54] some way these search errors are
+[1:03:55] encoding like a helpful inductive bias
+[1:03:57] that is steering us towards something
+[1:03:59] that isn't the mode but is kind of
+[1:04:00] helpful to find. Um and there's some
+[1:04:02] evidence sort of for both of these
+[1:04:04] arguments. So is it clear that the mode
+[1:04:08] is actually what we want out of the
+[1:04:09] distribution? Um, at the bottom of our
+[1:04:12] probability space, it's pretty obvious
+[1:04:13] that we have things that are that we do
+[1:04:15] not want to find, right? Things that are
+[1:04:17] very low probability, maybe things that
+[1:04:18] are in a different language than
+[1:04:19] whatever language we're currently
+[1:04:21] working in, symbols that are not
+[1:04:22] relevant to us, like random emojis, um,
+[1:04:25] things that are really unlikely
+[1:04:27] completions. But the things at the top
+[1:04:29] of our probability distribution
+[1:04:31] are relatively close in their quality as
+[1:04:34] well as their probability. Um and in
+[1:04:36] fact there's a a number of cases um in
+[1:04:40] kind of relatively open-ended generation
+[1:04:42] where the probability mass of some sort
+[1:04:44] of like semantically sorry some sort of
+[1:04:46] like semantically similar thing could be
+[1:04:48] split over multiple completions. So in
+[1:04:50] this case um the cat sat down as our
+[1:04:52] single highest uh highest probability
+[1:04:55] completion. But these three things that
+[1:04:56] all mean the cat ran away are all kind
+[1:04:58] of similarly high probability and
+[1:05:01] between them have way more probability
+[1:05:03] mass. So you could argue that here maybe
+[1:05:05] what you want is actually not the true
+[1:05:06] mode of the distribution. Um maybe one
+[1:05:08] of these three would be a better output.
+[1:05:10] Um we'll come back to sort of this idea
+[1:05:12] of how to find something that is like
+[1:05:14] semantically consistent or consistent in
+[1:05:15] feature space in like a week and a half.
+[1:05:19] Um but it gets even worse than this. the
+[1:05:23] true mode might be um fully degenerate
+[1:05:25] and in many especially in older models
+[1:05:27] if you go through all the effort of
+[1:05:29] exactly searching through the vocabulary
+[1:05:31] space you get the kind of unsatisfying
+[1:05:33] answer that the true mode is the empty
+[1:05:34] string. Um if and then if we're
+[1:05:38] conditioning on something like
+[1:05:39] repetitive text the true mode of sort of
+[1:05:41] the distribution past that point might
+[1:05:43] be another repetition. Um but we might
+[1:05:45] not want another repetition. We might
+[1:05:47] want some other output that is
+[1:05:48] relatively high probability. Um so we
+[1:05:51] have some notion that maybe the mode is
+[1:05:52] not exactly what we want to find. Um and
+[1:05:55] in fact there's this um great paper that
+[1:05:58] uh Daphne wrote when she was a PhD
+[1:05:59] student um which is looking at the log
+[1:06:03] probability of a number of completions
+[1:06:04] for a a model relative to some human
+[1:06:07] score of their quality. Um and they
+[1:06:10] defined something they called the
+[1:06:11] likelihood trap which is that um
+[1:06:14] particularly in slightly older models
+[1:06:16] and particularly in models that were not
+[1:06:17] RLH after instruction tuned. Um the top
+[1:06:21] of the distribution the things that have
+[1:06:22] the absolute highest probability are
+[1:06:25] less preferred than by humans by than
+[1:06:27] things that are still like quite likely.
+[1:06:29] So still we're talking like the top
+[1:06:32] quarter of a percentile of probability
+[1:06:34] scores from our model or of like log
+[1:06:37] props from our model but still like not
+[1:06:40] exactly the mode. Um so the the set of
+[1:06:42] things that are sort of most preferred
+[1:06:44] by humans are close to the mode but are
+[1:06:45] not exactly at the mode. Um and this is
+[1:06:49] a version of model error. So if our
+[1:06:51] model was a perfect representation of
+[1:06:53] what we actually wanted to decode from
+[1:06:54] it, the things that humans liked um the
+[1:06:57] most would be the things that were at
+[1:06:58] the true mode. Um, and so while I don't
+[1:07:01] have a version of this um, figure that's
+[1:07:03] from something like GBD5, I think
+[1:07:04] there's uh, at least like reason to
+[1:07:07] guess that this might be a little bit
+[1:07:09] less of a problem as our models get
+[1:07:10] better and as we train them with sort of
+[1:07:12] different objection uh, objectives to
+[1:07:14] get closer to human preference.
+[1:07:17] Um, but nevertheless, this means that
+[1:07:19] beam search, if we get better at finding
+[1:07:20] the mode, we actually might wind up with
+[1:07:22] something that is a little bit less
+[1:07:23] likely or a little bit or not less
+[1:07:25] likely, but less likely for humans to
+[1:07:27] like.
+[1:07:29] Um, so if beam search is encoding some
+[1:07:32] kind of helpful inductive bias um or
+[1:07:35] some kind of search error that is useful
+[1:07:37] to us, uh, what might that search error
+[1:07:39] be? Um there's a really interesting
+[1:07:41] paper that um tries to address this
+[1:07:43] argument by functionally designing a
+[1:07:46] exact objective that beam search solves
+[1:07:48] for. Um they call this the blessing of
+[1:07:50] beam search and sort of a parallel to
+[1:07:52] the curse of beam search. Um and if
+[1:07:54] you're interested in this, this paper is
+[1:07:56] a lovely read. It's called um if beam
+[1:07:58] search is the answer, what is the
+[1:08:00] question?
+[1:08:01] Um so they argue that beam search with a
+[1:08:04] relatively small size is more likely to
+[1:08:06] enforce a uniform uh local information
+[1:08:09] density which um they define as the
+[1:08:12] standard deviation of the negative lock
+[1:08:14] likelihood of each individual token. Um
+[1:08:18] this is also sometimes called surprisal
+[1:08:20] in like information theory flavored
+[1:08:22] work. Um so they show that the as you
+[1:08:26] lower beam size um up to a certain point
+[1:08:28] you wind up with a lower standard
+[1:08:30] deviation of negative log likelihood. Um
+[1:08:33] every you wind up with tokens that have
+[1:08:35] sort of more uniform un information
+[1:08:37] density. Um and they argue that this
+[1:08:38] might be sort of a nice property that
+[1:08:40] we're enforcing by accident when we do
+[1:08:42] beam search with a low beam size.
+[1:08:45] Um I want to take just the last couple
+[1:08:48] of minutes here to kind of ask what
+[1:08:51] happened to beam search. So if you've
+[1:08:52] been using a model in maybe the last
+[1:08:54] like two years, chances are pretty good
+[1:08:57] that you haven't been using beam search
+[1:08:59] um when you're decoding or when you're
+[1:09:01] um just sort of hitting an API. Um
+[1:09:04] people don't really use beam search for
+[1:09:07] sort of frontier models anymore. Um and
+[1:09:10] while I don't have like an exact answer
+[1:09:11] for you, I have a couple of uh personal
+[1:09:13] theories for what's going on.
+[1:09:16] um as models get better, we're getting
+[1:09:18] better outputs um with simpler sampling
+[1:09:21] methods. Um so this is sort of something
+[1:09:23] we talked about um on Tuesday. Maybe we
+[1:09:26] actually um it's less crucial that we
+[1:09:29] very carefully design these sort of
+[1:09:30] token level um decoding methods. Um
+[1:09:34] maybe we're making less model errors. So
+[1:09:35] this likelihood trap is a little bit of
+[1:09:37] less of an issue. And maintaining
+[1:09:39] multiple beams requires either more VRAM
+[1:09:41] or more time. Um, and this is a little
+[1:09:44] bit cumbersome as models get sort of
+[1:09:45] larger and larger. Um, we also in the
+[1:09:49] next couple of weeks we'll talk about
+[1:09:50] performing search at sort of different
+[1:09:52] scales over sentences or over
+[1:09:53] paragraphs. Um, and so we're still sort
+[1:09:56] of doing some like notion of
+[1:09:58] optimization over our search space.
+[1:10:00] We're just kind of considering it on a
+[1:10:02] different scale. And then um I was
+[1:10:05] thinking about this and I was kind of
+[1:10:06] trying to find examples of this. And if
+[1:10:09] you're interested in uh software
+[1:10:10] engineer fights, um you would love this
+[1:10:12] thread um from VLM, which is the VLM
+[1:10:15] folks saying exactly what I just said
+[1:10:17] that we don't use beam search anymore.
+[1:10:18] Is it cool if you just get rid of it?
+[1:10:20] And it's um dozens of different people
+[1:10:23] being like absolutely not. This is
+[1:10:25] crucial for the very specific thing I am
+[1:10:27] doing in industry. If you change this,
+[1:10:29] um everything will fall apart and
+[1:10:30] Spotify won't work anymore. Please
+[1:10:32] don't. Um uh Spotify is like one of the
+[1:10:35] actual examples in here. Um and so well
+[1:10:39] sort of my my instinct was that maybe we
+[1:10:41] don't use beam search anymore. Um I
+[1:10:43] think this is another sort of academia
+[1:10:45] industry mismatch where in practice for
+[1:10:47] a lot of more specialized use cases this
+[1:10:50] might be like a perfectly reasonable
+[1:10:51] solution to your problem. Um so I know
+[1:10:54] we're just at the end of time here um
+[1:10:56] but just as a recap beam search is a
+[1:10:58] sort of approximate solution to this
+[1:11:00] optimization um framing of decoding. we
+[1:11:03] have a sense that maybe getting the
+[1:11:04] exact answer might not be any better
+[1:11:06] than what we're doing. Maybe there's
+[1:11:07] some desirable level of noise or error
+[1:11:09] that we're introducing here. Um, and we
+[1:11:12] can modify beam search in a number of
+[1:11:13] ways if we care more about diversity or
+[1:11:15] about getting kind of a couple of good
+[1:11:17] outputs at once.
+[1:11:19] Um, and homework one is going to be out
+[1:11:22] I we think later today. Um, so keep an
+[1:11:25] eye out for that. We'll post an
+[1:11:26] announcement on PS.
+[1:11:29] Cool. Um, thank you. I can do maybe like
+[1:11:32] questions offline since we're right at
+[1:11:33] the end of

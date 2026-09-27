@@ -1,0 +1,656 @@
+Title: Panel: Agentic AI Infrastructure & Platform
+
+--- TRANSCRIPT ---
+
+[0:02] We were trying to well trying to decide
+[0:05] how the seating should fit with Yeah,
+[0:06] please. So, it didn't look super weird,
+[0:08] but hopefully hopefully we've
+[0:10] accomplished something. So, hopefully
+[0:11] everyone's having a good time. It's been
+[0:13] worth it getting up early and getting
+[0:14] through the line and getting in here.
+[0:16] Um, as I mentioned, we're going to talk
+[0:17] about agentic infrastructure uh and the
+[0:19] platforms that are going to be required
+[0:21] to actually drive this major advancement
+[0:24] in AI and how regular people hopefully
+[0:26] use AI and how it transforms businesses.
+[0:29] A little bit of context. It got
+[0:30] referenced earlier in the day. Um, you
+[0:33] know, we had our GPT moment where chat
+[0:36] was the primary way to interface. So,
+[0:38] you had a request, you had a response,
+[0:40] relatively short context, short burst
+[0:43] interactions. Agents are obviously
+[0:45] running at machine speed. They're
+[0:47] running sometimes for hours. You've got
+[0:49] 12 of them running code overnight for
+[0:52] you. Uh, with massive tool volume and
+[0:55] token prefill. If anyone has set up an
+[0:58] agent to run overnight and then awoken
+[1:00] to discover that they have auto refilled
+[1:02] their favorite token provider, uh, raise
+[1:05] your hand. Probably everybody. Exactly.
+[1:08] Uh, don't don't tell my wife that, Bill.
+[1:10] Uh, so I'm going to ask a question for
+[1:12] each of the panelists here. Uh, rapid
+[1:16] fire. In one sentence, what's the sing
+[1:19] biggest biggest failure point in
+[1:21] infrastructure when it comes to
+[1:22] workloads for agents today? What are we
+[1:25] worried about the most?
+[1:29] Jump in. Oh, are we going in order? No.
+[1:33] [laughter]
+[1:34] >> Go ahead.
+[1:35] >> Oh, yeah. Um, that's a great question. I
+[1:37] think the answer actually lies in the
+[1:38] question itself. Um, because just
+[1:40] thinking about what happen if we deploy
+[1:44] a an agent speed machine speed traffic
+[1:49] onto a road that was designed by human
+[1:51] driver. The thing that break first are
+[1:53] like road capacity, traffic light and
+[1:55] speed limit. I guess a li opportunity
+[1:57] there is how to turn those choke point
+[1:59] into a checkpoint.
+[2:02] >> Got it,
+[2:03] >> John.
+[2:04] >> Yeah, I think um like I was talking
+[2:06] about you know the it's this interaction
+[2:09] of this um
+[2:11] this LLM which is they're surprisingly
+[2:14] reliable uh but they also do surprising
+[2:17] things to us and they also um can act in
+[2:19] unpredictable ways. And so I think I
+[2:22] think the big opportunity is to surround
+[2:23] them with
+[2:25] rule-based um policy enforcement um more
+[2:29] deterministic systems, more
+[2:31] deterministic memory systems uh and all
+[2:33] these things that can kind of surround
+[2:35] the this probabilistic thing but give
+[2:37] give you more confidence and certainty
+[2:38] in what it's actually doing.
+[2:40] >> Awesome.
+[2:41] >> Yeah, I mean I would say it's it keeps
+[2:43] on changing and it it keeps on evolving
+[2:45] as as as well. Uh so if you look at the
+[2:47] compute level you need to extract
+[2:51] optimization like basically remove as
+[2:53] many bubbles as possible as part of the
+[2:55] compute which is which is there so that
+[2:56] you can offer maximum efficiency. Uh if
+[2:59] you look at the infrastructure level
+[3:01] layer in terms of like routing etc and
+[3:02] so on right there are requests which are
+[3:04] coming from all over the world. How do
+[3:06] you route them like smoothen out the
+[3:09] spikes which are there so that your your
+[3:11] compute could be used efficiently with
+[3:13] low latency. uh voice is becoming a very
+[3:16] interesting uh engagement medium uh as
+[3:19] well uh which has a different profile
+[3:21] compared to raw text. So how do you
+[3:23] manage that heterogeneity of use cases
+[3:26] as well as the compute environment which
+[3:27] is there on top of that you have
+[3:30] requirements like sovereignty which is
+[3:32] becoming a lot more important as we go
+[3:34] along and and how do you manage that
+[3:36] because that in a way breaks down this
+[3:39] common cloud compute philosophy which is
+[3:41] which is there and also adds a lot of
+[3:43] engineering complexity so I would say
+[3:44] it's across the board and then as you
+[3:46] mentioned like identity security etc
+[3:49] like these are becoming very very big
+[3:50] problems very very quickly for us and
+[3:52] how do we go and solve them?
+[3:55] >> In the interest of time and since you
+[3:56] said a couple sentences, um my answer is
+[3:58] all of it as well. Like it really is
+[4:00] it's going to be a it's going to be a
+[4:01] systems problem from the very top of the
+[4:03] stack to to the guard rails to the
+[4:06] infrastructure, the power, the chips
+[4:07] that are running it. And you have to get
+[4:09] it all right because there's so much
+[4:11] potential for what agents can do. But if
+[4:12] we don't make it efficient, we can only
+[4:14] get a portion of what we can get done
+[4:15] done. And I guess Peter to follow up to
+[4:17] that question of that stack right now,
+[4:21] where what do you most worry about? What
+[4:23] what is the biggest rock to move in the
+[4:24] stack besides everything?
+[4:26] >> Uh I'm an optimist so I don't worry. I I
+[4:29] look for opportunity and I I see
+[4:31] opportunity at like every level like uh
+[4:34] there's
+[4:34] >> someone here is going to go build
+[4:35] something right now and they're inspired
+[4:37] by these conversations. Where do you
+[4:39] point them?
+[4:40] >> Yeah. I I mean you you've heard about 16
+[4:43] problems and uh there's a hundred
+[4:45] constraints like pick one go deep and uh
+[4:49] you know find a find a solution like
+[4:51] have fun
+[4:52] >> maybe build a memory manufacturing plant
+[4:54] tomorrow afternoon after that takes a
+[4:56] little while
+[4:56] >> absolutely you know John we we've
+[5:00] obviously been living off the world of
+[5:01] GPUs mostly from you guys thank you
+[5:06] agent workloads are a little different
+[5:08] than some of the historical LM workloads
+[5:10] we've run. How are you guys thinking
+[5:12] about specializing hardware? Do we think
+[5:14] the chipsets that have come out recently
+[5:16] are going to be optimized already for
+[5:18] agentic or is this going to be are we
+[5:20] going to look for a set of chipsets
+[5:22] whether they're running for local AI or
+[5:25] uh in cloud? How are you guys looking at
+[5:27] agentic workloads differently than LMS
+[5:29] if you know if possible?
+[5:31] >> Yeah, I mean they change things in a few
+[5:32] ways. Um one is you have a lot more
+[5:34] context typically with agents. Um and
+[5:38] the the pattern of how much of that
+[5:40] contract context is cachable versus not
+[5:42] changes. Um the other thing is just
+[5:45] again the heterogeneity you know you
+[5:47] have a agents are [clears throat] LLMs
+[5:51] surrounded by computer stuff right and a
+[5:54] lot of that computer stuff runs on CPUs
+[5:56] it might run on multi-core CPUs a lot of
+[5:58] it also runs on GPUs
+[6:00] >> but there may be you know GPUs that are
+[6:02] configured more for different kinds of
+[6:03] workloads because they're not neural
+[6:06] network inference but they might be you
+[6:07] know run a physics simulation so I think
+[6:10] the the data center that's running an
+[6:13] agentic workload load um is very
+[6:16] heterogeneous and complicated and has
+[6:18] many different processing elements and
+[6:20] many um layers of storage and and um
+[6:24] complicated network topologies and
+[6:26] frankly a lot of this I think the world
+[6:28] still doesn't quite know what's the best
+[6:29] way to do it just because agentic AI is
+[6:32] is still evolving. Um and then on
+[6:34] layered on top of all of this you know
+[6:36] you have these security requirements
+[6:38] security privacy and sovereignty. So I
+[6:39] think I think agentic AI um you know
+[6:43] this this kind of has happened over and
+[6:45] over in the history of AI that we think
+[6:48] we understand it and then a new thing
+[6:50] shows up and suddenly the workloads look
+[6:52] to totally different and get more
+[6:54] complicated and I think it's just one
+[6:55] more step in that trend. Aentic
+[6:57] workloads are significantly more
+[6:59] complicated heterogeneous and expensive
+[7:01] um computationally than anything we've
+[7:03] ever seen before.
+[7:04] >> Awesome. Thank you Sar. You know,
+[7:08] enterprises need workflow specific
+[7:10] agents. We are seeing a big trend right
+[7:12] now of company in a box to go, you know,
+[7:14] have a set of agents that go run your
+[7:16] your business. All this requires some
+[7:18] degree of fine-tuning. And I'm curious,
+[7:20] is the answer fine or some degree of
+[7:22] training? Is the answer finetuning,
+[7:26] custom post-raining, context
+[7:27] engineering, all the above? And who owns
+[7:29] that, do you think?
+[7:30] >> Yeah. So um if you look into
+[7:34] customization like model customization
+[7:36] uh there are many companies which which
+[7:39] say that they have unique data and so
+[7:42] they want the model to be perturbed in a
+[7:44] particular direction uh based based on
+[7:47] that data. uh on the Gemini enterprise
+[7:50] agent platform we provide capabilities
+[7:52] uh like LoRa training which is there
+[7:54] that's the easiest one and the simplest
+[7:56] one which is there I would say the
+[7:58] simplest one is context engineering you
+[7:59] should just try with that the base LLMs
+[8:02] themselves have enough reasoning power
+[8:05] uh Gemini as well as other other models
+[8:07] that they can reason on top of the
+[8:10] context which is provided with the long
+[8:11] context window that was earlier
+[8:13] mentioned like you can actually I mean
+[8:15] you can put in a lot of data on which
+[8:18] the models can reason and also their
+[8:20] they can focus on different aspects. So
+[8:22] the quality of reasoning as part of the
+[8:24] context has improved. So that is one I
+[8:25] would say. Second one would be if you
+[8:27] want to really perturb the model this we
+[8:29] should start with uh LoRa based
+[8:31] finetuning which is pretty cheap pretty
+[8:33] easy from an inference perspective as
+[8:35] well is very efficient and and cost
+[8:37] effective. On top of that uh we have
+[8:39] things like full fine tuning or some
+[8:41] level of like post training. Here we are
+[8:43] perturbing all the weights of the model
+[8:45] that changes the inference dynamics
+[8:48] because you effectively have a brand new
+[8:50] copy of the model and so it becomes a
+[8:52] lot more expensive and in certain cases
+[8:54] with some very special partners we do
+[8:56] some very custom things as well but I
+[8:58] would say the first two would be the
+[9:00] would be the primary awesome let's talk
+[9:02] uh to about observability for a second
+[9:05] you know does experiment tracking do you
+[9:07] think live inside the infrastructure or
+[9:09] in a separate observability layer what
+[9:11] are you seeing customers use for
+[9:12] observability ility for agentic.
+[9:14] >> Yeah, that's a great question. I think
+[9:16] the way I see this is um it's definely
+[9:18] part of infrastructure. Uh however, it's
+[9:21] slightly different from what u like the
+[9:24] environment that people used to train.
+[9:26] The environment is where the agent acts
+[9:28] and learns and uh the experiment tracker
+[9:32] is almost like the memory and the
+[9:35] measurement plan sit beside it. The way
+[9:38] I see this is the environment is where
+[9:40] you train your first brain. The learning
+[9:42] goes into the model ways is compressed.
+[9:44] It's internalized. It's it's it's
+[9:46] capacity bounded. The expand tracker
+[9:49] gives you a second brain where the
+[9:51] learning goes into artifacts. It's
+[9:53] unbounded. Um I guess there's a path to
+[9:57] connect your second brain into your
+[9:58] first brain where you turn your system
+[10:00] record into a data set. Then you can do
+[10:02] fine tune, you can do all policy, area,
+[10:04] etc. But in terms of where it should be
+[10:06] hosted, it's really up to you on your
+[10:09] data containment policy. If it's like
+[10:11] highly demanded, you need to host on
+[10:13] your own infrastructure. If uh that's
+[10:15] not a concern, you can use management
+[10:16] service. But if you want to use for
+[10:18] training for finetuning, you should be
+[10:20] close enough to your training.
+[10:22] >> Awesome. Thank you. You know, I want to
+[10:24] pivot the conversation. We've had an
+[10:25] interesting sort of technical Eddie
+[10:27] here, but I want to pivot more to the
+[10:28] value acrruel business side of all of
+[10:31] this because at some point the venture
+[10:33] community will want you to have positive
+[10:35] margins and maybe even be profitable.
+[10:38] And when we talk about the agentic
+[10:40] harness, you know, I think there's an
+[10:42] interesting connection there. We're
+[10:43] sitting between the model and obviously
+[10:45] the the outcome from the agent. You've
+[10:47] got things like orchestration,
+[10:49] sandboxing, runtime, memory, identity,
+[10:52] eval.
+[10:54] So my question to you know any anyone
+[10:56] who'd like to take it or two folks who
+[10:57] want to take it is where is their margin
+[10:59] durability like where are we going to
+[11:01] monetize this thing? If I'm going to go
+[11:03] solve a problem right now in its green
+[11:06] field, should I go after memory? Should
+[11:08] I go after sandbox? Where where do you
+[11:10] think we're actually going to be able to
+[11:11] make money in the agentic stack?
+[11:16] >> I mean, I can I can
+[11:18] >> I I promise no trick questions and I
+[11:20] feel like I lied to you guys
+[11:21] >> at the hardware.
+[11:22] >> At the hardware. Yeah.
+[11:24] >> So, I would say if you look into AI like
+[11:26] why it has gotten adoption is because of
+[11:29] the quality of results, right? or the
+[11:30] quality of experience as a developer or
+[11:34] as a builder. Look at the entire stack.
+[11:36] The business opportunity is obviously
+[11:38] massive given all the investments etc
+[11:40] which is happening. I think Peter was
+[11:42] alluding to it like there are tons of
+[11:43] problem. Pick one and solve it very very
+[11:46] deeply. If you have the quality or the
+[11:51] promise to the customer delivered at
+[11:52] high enough quality, I think the value
+[11:55] will be extracted over there. Right?
+[11:57] Whether it be on the memory side like so
+[11:59] it's not about like just working on
+[12:00] memory but do you have a compelling
+[12:02] experience for the customers so that
+[12:04] they can leverage the the memory and be
+[12:07] able to deliver what it is supposed to
+[12:09] do beyond just oh I'm using memory and
+[12:11] here is some in prompts etc which are
+[12:13] updated and and so on. So look at that
+[12:16] value and it is across a stack right
+[12:18] from the hardware uh layer as well as at
+[12:21] other layers of the stack at the model
+[12:22] layer at the at the at the agentic uh
+[12:25] layer as well as at the application
+[12:26] layer as as well but it is about about
+[12:28] that driving value for the for the end
+[12:30] customer and one thing I would say is
+[12:32] just due to the excitement in the AI
+[12:35] space and also with almost every CXO in
+[12:38] any major company thinking about AI the
+[12:41] business opportunity is massive so it's
+[12:43] just about like delivering that that
+[12:45] value
+[12:47] >> and al I also want to chime in to
+[12:49] completely agree with the hardware and
+[12:52] all that. Um I also want to say that um
+[12:54] it's also about the vertical
+[12:56] integration. Yeah,
+[12:57] >> people because I'm from Neo cloud people
+[13:00] usually think cloud computing is like
+[13:02] commodity which by large is true but
+[13:05] also cloud computing is very very
+[13:07] challenging very hard you talk about the
+[13:09] entire vertical stack from land the
+[13:11] power
+[13:12] data center build out the HPC architect
+[13:15] the orchestration the software and the
+[13:17] finance and the agent add this new layer
+[13:20] call it sandbox called it harnesses call
+[13:22] it whatever and system record that's a
+[13:25] new layer to be integrated into that
+[13:26] vertical. Whoever can do a good job
+[13:28] there is probably going to keep the
+[13:29] margin.
+[13:32] >> Great. Want to talk a little bit because
+[13:35] we've got
+[13:37] technology provider. We've got a guy
+[13:39] bringing it all together and then we've
+[13:40] got two hyperscalers up here. I'm not
+[13:42] talking otherwise I have a third. You
+[13:44] know, we move to the agent dominated
+[13:46] area. Are there things that you guys
+[13:49] think a neocloud is better suited for or
+[13:52] has a has a advantage? and are the
+[13:54] things that we think hyperscalers have
+[13:56] advantages over in in driving this new
+[13:58] environment.
+[14:02] >> I can say from neo cloudy. Yeah,
+[14:05] [laughter]
+[14:06] >> it's a very tricky question and I will I
+[14:09] would say um yeah we can begin from
+[14:12] being a friendly peer to media and also
+[14:15] to be honest be a friendly peer to also
+[14:18] Google and AWS as well because I do
+[14:20] believe the marketing market is big
+[14:23] enough for multiple players and as a neo
+[14:25] cloud we don't really need to invent
+[14:27] everything by ourself from scratch we
+[14:29] don't really need to do something
+[14:31] completely from everybody else our play
+[14:33] is being focused
+[14:34] Just like how Neo cloud exists in the
+[14:36] first place, the training inference
+[14:38] workload does not fit into the general
+[14:40] compute uh cloud computing. Um so a lot
+[14:44] of innovation in that space GPUs um fast
+[14:47] interconnection between chips,
+[14:49] specialized storage and orchestration
+[14:50] like KAS those are created from these
+[14:53] companies. What we added to that layer
+[14:55] is to basically being focused make those
+[14:58] options the default and offer them to
+[15:00] general public. I think that's how we
+[15:02] build inference training cloud. We are
+[15:04] going to the same thing for the agent
+[15:06] cloud.
+[15:07] >> Awesome.
+[15:08] >> To go back to your question of durable,
+[15:10] I'm not sure the label neo cloud is a
+[15:12] particularly durable label. So like
+[15:14] look, I would the opportunity and and
+[15:16] the uh demand for compute is huge and uh
+[15:19] you know I think uh I think the
+[15:20] hyperscalers have delivered a lot of
+[15:22] that compute. I think there's a lot of
+[15:24] um uh space for uh for for some of the
+[15:27] new insurgent neoclouds to to come in
+[15:30] and do some interesting stuff and they
+[15:31] have it's been very impressive and and I
+[15:33] don't think uh you know I think I don't
+[15:35] think we're going to have 80 neoclouds
+[15:37] out there but I do think we're going to
+[15:38] see some new emerging uh businesses that
+[15:40] look a lot more like hyperscalers over
+[15:42] time. as a hyperscaler or you know as a
+[15:44] incumbent I suppose in this particular
+[15:46] lens you would you would just want to
+[15:48] make sure that you weren't stuck on
+[15:50] doing things uh in one way that might
+[15:52] disadvantage you and you know I think
+[15:53] that's an important thing if you if you
+[15:55] have an an established cloud business
+[15:57] that you're you're listening to your
+[15:58] customers and what they need and you're
+[16:00] you're uh responding to those needs and
+[16:02] so those are always the that's always
+[16:03] the the tension of big and small and uh
+[16:05] incumbent and insurgent and
+[16:07] >> there are pros and cons on both sides.
+[16:10] Awesome. I'm I'm curious. We've got MCP
+[16:12] right now as a protocol that's driving a
+[16:14] fair amount of communications. What are
+[16:16] we missing in agentic communication from
+[16:19] a protocol perspective? What do we need
+[16:20] to go build next to get these things far
+[16:23] more interoperable than they they are
+[16:24] today?
+[16:27] Trick question. That's a good question.
+[16:30] Yeah. I mean, I think I think one of the
+[16:32] things that um
+[16:36] needs to be worked out is this notion of
+[16:38] um you know, this hierarchy of agents
+[16:41] where you have an agent and it spawns
+[16:43] sub agents and it spawns sub agents and
+[16:44] maybe an agent spawns a team that works
+[16:47] together and I think they're kind of
+[16:50] emerging
+[16:52] call it best practices in communication
+[16:54] patterns um which imply like a scope to
+[16:59] some kind of shared memory.
+[17:00] So for example, if I have a team of
+[17:02] agents, you know, maybe they have some
+[17:03] shared workspace, but I have another
+[17:05] agent that doesn't have access to it.
+[17:07] >> And so I think there's there's a there
+[17:10] are new standards to be developed to
+[17:12] describe these kinds of scoped
+[17:16] shared storage systems um and access and
+[17:20] message passing between agents.
+[17:23] And again, it's it's different from
+[17:25] things we've built in the past because
+[17:26] things we've built in the past were
+[17:28] either services or kind of human scale.
+[17:31] And now, you know, an agent can in an ad
+[17:33] hoc way spawn 100,000 sub aents,
+[17:36] >> all of which need to communicate in some
+[17:37] complicated pattern. And I think I think
+[17:39] we're going to have to invent um new
+[17:42] standards for describing these sorts of
+[17:44] things um enforcing them, implementing
+[17:46] them efficiently. I I think that's an
+[17:48] emerging I was slightly
+[17:50] >> yeah I mean along along the same
+[17:52] direction I would say MCP provides you
+[17:55] an interface for an agent to talk to a
+[17:56] data source.
+[17:57] >> Mhm.
+[17:58] >> Another thing that we need is for
+[18:00] multiple agents to talk amongst
+[18:02] themselves and this is along the
+[18:03] direction of uh this shared memory as
+[18:05] well as even the communication uh there
+[18:08] for example there is something called
+[18:09] agent to agent protocol which is there
+[18:11] but it needs more adoption. Similarly uh
+[18:15] if you look on the commerce side like we
+[18:17] need these agents to start supporting
+[18:21] payment/commerce
+[18:23] uh that will open up a huge new
+[18:25] opportunity as well and and and that's
+[18:27] another place where uh like Google has
+[18:29] something called ACP or agent commerce
+[18:31] plat uh protocol uh which is which is
+[18:33] there. So these things need to be more
+[18:36] absorbed into the into the ecosystem as
+[18:38] we call it. Yeah, I was just going to
+[18:40] say on the standards front, I there's
+[18:43] different ways to think about standards.
+[18:44] Um, you know, I think there are deacto
+[18:46] standards, things that become quite
+[18:47] efficient and and I think we'll
+[18:49] definitely trend there as an industry. I
+[18:50] I would hope uh we uh resist
+[18:53] standardizing where we don't need to uh
+[18:56] in the short term you know there's
+[18:57] places you need to standardize sometimes
+[18:58] for security sometimes uh if you're
+[19:01] low-level wire protocol and you need a
+[19:03] bunch of things to talk together but AI
+[19:04] is pretty um elastic and you know
+[19:08] therefore I think agents will find uh
+[19:11] ways to collaborate that are efficient
+[19:13] that we'll have to find tools and
+[19:14] systems that that will make them more
+[19:16] efficient but and I don't think you
+[19:18] meant like NIST standards But like
+[19:20] hopefully we resist low-level standards
+[19:22] uh where where possible for for a while.
+[19:25] I think we want the innovation.
+[19:26] >> All right, we are nearing the end of our
+[19:28] time, but I've got one question sort of
+[19:30] lightning round uh for each each of you
+[19:32] to answer. A lot of builders here today
+[19:35] given it's an agentic conference
+[19:36] probably building somewhere in the
+[19:37] agentic world. No doubt we're all going
+[19:40] to have conversations with folks that
+[19:41] are going to describe what they're
+[19:42] building and you know and and things
+[19:44] like that as the day as the day goes on.
+[19:46] As a VC deal flow is great. What's one
+[19:49] thing you hope someone's going to tell
+[19:50] you they're building today that could be
+[19:52] a creative? And what's one thing where
+[19:53] you might suggest they consider
+[19:55] different options?
+[19:58] >> We can just go down. Let's do it.
+[20:00] >> Okay. Um I remember there's a saying
+[20:03] said that um give someone a fish, you
+[20:06] feed them for a day. Teach someone how
+[20:09] to fish, you feed them for life. I guess
+[20:12] there are things like the model ways,
+[20:13] the problem, the solution of your hand.
+[20:15] Those are the fish. and don't hold on
+[20:17] it. The the value depreciate. Uh
+[20:21] investing how you get there, the means,
+[20:23] the the the tools, the environment, the
+[20:25] system record, those are the things has
+[20:27] long-term value that compounds.
+[20:31] >> Yeah. I don't I don't have some great
+[20:33] insight because every single thing I can
+[20:35] think of there's a company doing today
+[20:37] honestly.
+[20:38] >> You know, vertical, horizontal,
+[20:40] >> there's seven of them, John.
+[20:41] >> Yeah, exactly. So, I I think it's great.
+[20:43] I mean, agentic AI is clearly the new
+[20:46] frontier of AI. Um, and and there's
+[20:50] tremendous opportunity to improve and
+[20:52] innovate everything from security to
+[20:55] storage to vertically integrated domains
+[20:57] to whatever. Um, and and I thought about
+[21:02] this question, you know, in your when
+[21:04] you prepped us a bit, and I I can't
+[21:05] think of a thing that like someone
+[21:07] should do that no one's doing. I guess
+[21:09] the editorial I'll add to that really
+[21:11] quick though is if you are building
+[21:13] something assume that you're not the
+[21:15] only person with this idea and what that
+[21:17] means is you need to really understand
+[21:19] who you're competing with and understand
+[21:22] what color is the ocean and how are you
+[21:25] going to differentiate when when you go
+[21:26] in is probably the it's probably my meta
+[21:28] take from that your comment there. Yeah,
+[21:30] >> I would say that I would tack on just to
+[21:32] kind of go back to my, you know, I think
+[21:34] there's a risk in this frenetic times of
+[21:37] looking at the progress we're making and
+[21:39] thinking a problem is solved and and
+[21:41] that can be it's the other side of that
+[21:43] coin which is you can get too optimistic
+[21:44] that an unsolved problem really isn't
+[21:46] unsolved. You can also fall into a trap
+[21:48] of um the way the models are evolving,
+[21:50] the way uh some of the large labs are
+[21:52] moving, you might be like ah there's
+[21:54] there's no space there at all and resist
+[21:56] that because I I think it is you know
+[21:58] what seems like a solved problem today
+[21:59] will again uh uh be unsolved. I I know
+[22:03] uh that's important to you as a VC but I
+[22:05] I deeply believe this as a technologist
+[22:07] this is very early days.
+[22:09] >> Thanks.
+[22:10] >> Yeah. uh maybe one on the solution side
+[22:12] that uh if you're building like final
+[22:15] products or or full-on agentic solutions
+[22:17] um there might be a current business
+[22:20] process which may have evolved over
+[22:22] multiple years with different levels of
+[22:24] pipeline and many a times what people do
+[22:26] is they sprinkle AI into each of those
+[22:28] pieces of the pipeline and the benefit
+[22:31] that you can extract from AI becomes
+[22:34] very diminished because you are
+[22:36] thresholded by the limitations of each
+[22:38] piece of the pipeline. MM I can use a
+[22:40] trivial example of like if you are doing
+[22:42] a number plate identification for
+[22:44] parking or so on right like you can do
+[22:46] oh take image remove background blah
+[22:48] blah blah like all those different
+[22:50] pieces and you can try to sprinkle AI
+[22:52] into each instead of that see what the
+[22:54] core capabilities of AI is and always be
+[22:56] on the cutting edge because new
+[22:58] capabilities don't don't be static that
+[23:00] is one look into the core capabilities
+[23:02] of what AI can deliver revisit the
+[23:05] entire business process from the ground
+[23:07] up and and think about in an AI native
+[23:09] way if you had to build it what would
+[23:10] that be and build that particular thing
+[23:13] and that and hopefully that should
+[23:14] deliver significant value.
+[23:15] >> Awesome. Thank you guys. With that, that
+[23:17] concludes our panel. Thank you to our
+[23:19] panelists. [applause]
+[23:21] We're going to get up. Thanks. Thank you
+[23:23] guys.

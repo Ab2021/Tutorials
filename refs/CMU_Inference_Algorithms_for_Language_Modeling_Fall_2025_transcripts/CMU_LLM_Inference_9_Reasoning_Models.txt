@@ -1,0 +1,1474 @@
+Title: CMU LLM Inference (9): Reasoning Models
+
+--- TRANSCRIPT ---
+
+[0:00] Okay. Hi. Hi everyone. Sorry uh we were
+[0:03] a little late. We were discussing
+[0:04] homework two and uh had uh had to have
+[0:09] some discussion items. Um cool. Are
+[0:12] there any questions about homework one
+[0:15] at the moment? I know we're getting
+[0:16] close to it being finished.
+[0:20] Yeah.
+[0:23] >> Is what
+[0:26] extension? I mean you have three days to
+[0:28] extend if you would like. So yeah.
+[0:31] >> Um,
+[0:33] >> do you mean extending the deadline by
+[0:35] one or two days?
+[0:36] >> Yeah, I mean you you have permission to
+[0:38] extend the deadline by one or two days
+[0:39] by using your late days.
+[0:43] Uh, so
+[0:46] uh any any other ones?
+[0:50] >> Yeah.
+[0:54] >> So the graph
+[0:56] find we have to
+[0:59] part of the output
+[1:02] like as far as I've read
+[1:07] or do have to use something like agent
+[1:09] or
+[1:11] >> um you
+[1:14] shouldn't have to use an external
+[1:15] library. Um you can uh use
+[1:21] uh
+[1:24] like we we talked about a number of ways
+[1:25] of doing constraint decoding if you need
+[1:27] to. You could also output it in JSON if
+[1:29] you'd like. Um, so uh you can uh be be
+[1:34] creative there. If you can't uh if you
+[1:37] can't do that, I I think it should be
+[1:39] okay to also just parse the output and
+[1:41] and feed it out.
+[1:44] Yeah.
+[1:51] >> Y
+[1:54] it's annoying, isn't it?
+[1:57] That's why we need that's why we need
+[1:58] inference algorithms. So like some of
+[2:01] the stuff we uh some of the stuff we
+[2:03] talked about here um would uh would help
+[2:07] solve those problems.
+[2:08] >> Yeah.
+[2:09] >> Like for what
+[2:12] questions we have to submit our code and
+[2:14] like what are the results?
+[2:16] >> Yeah. Um so for the problems where you
+[2:19] submit the code like
+[2:22] you you specified the format, right?
+[2:24] >> Yeah. everything together.
+[2:26] >> So like say 2.3 2.4 because nothing's
+[2:29] mentioned except just the prompts like
+[2:30] do for that or do I just need
+[2:33] >> um if it asks for submit your code I
+[2:36] think
+[2:38] >> so that's that's the phase submit your
+[2:39] code.
+[2:42] >> Um I mean if you if you're not sure I
+[2:44] can submit it just in case.
+[2:45] >> Yeah. Yeah. And ba basically if it says
+[2:47] submit your code you need to submit your
+[2:49] code. Um like honestly we're probably
+[2:52] going to be looking at the code this
+[2:54] time and not actually running it. When
+[2:56] we will be running the code is uh
+[2:58] especially for the very last assignment.
+[3:00] Um and so like you need to be building
+[3:03] up to the last assignment. But we want
+[3:05] to make sure that we have like proof
+[3:07] that you actually did the thing. So that
+[3:08] that's why we'll have you submit the
+[3:10] code and we'll browse through it but
+[3:12] probably won't be running it ourselves.
+[3:13] So
+[3:14] >> generally if you're not sure it's a good
+[3:15] idea.
+[3:17] >> Yeah.
+[3:19] You don't need to submit like models or
+[3:21] stuff like that. So, please don't please
+[3:23] don't upload qu 32B or stuff like that
+[3:25] together with your code, but we we would
+[3:27] like to see the code. Cool. Um, any
+[3:30] other any other things?
+[3:35] Okay, cool. Um, so now I'd like to talk
+[3:37] about reasoning models. Um, so yeah,
+[3:41] let's get started.
+[3:43] So, what do I mean when I say reasoning
+[3:45] models? Um,
+[3:47] essentially
+[3:50] you could argue about definitions, but
+[3:52] the definition that most people use
+[3:54] nowadays is a model trained usually
+[3:57] using reinforcement learning to leverage
+[4:00] long chains of thought to perform better
+[4:02] on particular tasks. And these long
+[4:05] chains of thought, the it's not just
+[4:08] that they're long, um, but they have
+[4:12] particular properties. And I'm going to
+[4:13] talk specifically about those particular
+[4:15] properties later in the class. Um but
+[4:18] they're extended reasoning sequences.
+[4:20] They have traits like selfcorrection. So
+[4:23] it's like going back and reexamining
+[4:26] uh previous you know assumptions
+[4:29] and in general uh with reasoning models
+[4:32] longer sequences are correlated with
+[4:34] better performance. And so I talked
+[4:36] about even short chains of thought
+[4:38] longer uh you know longer sequences
+[4:41] tended to be correlated with better
+[4:42] performance but that correlation is you
+[4:45] know even more pronounced for reasoning
+[4:47] models
+[4:49] and typically but again not always these
+[4:52] are trained with verifiable rewards and
+[4:54] I'll you know talk about the difference
+[4:56] between that in a second.
+[5:00] So the first paper uh that did this kind
+[5:04] of from the point of view of LLMs is a
+[5:06] paper called star and this uh and all of
+[5:11] these are in the references but
+[5:13] basically the idea of star and you know
+[5:16] other similar models is that you have a
+[5:20] question you run it through the language
+[5:23] model you generate a rationale and an
+[5:26] answer and the rationale is essentially
+[5:28] your chain of
+[5:30] And given the answer um you run a
+[5:35] verifiable reward uh and check whether
+[5:39] it's correct or whether it's wrong. And
+[5:41] the most typical verifiable reward um is
+[5:44] either math or code. And in the case of
+[5:48] math, this means that you extract the
+[5:51] answer to the math problem. uh you know
+[5:54] often it's written in the latex like
+[5:56] boxed uh you know uh command um and you
+[6:02] you check whether it matches. This is uh
+[6:06] generally pretty simple. Um but it also
+[6:08] can be tricky like what if you say um
+[6:11] five uh 500 cm or 5 m you know those are
+[6:16] equivalent but uh you would need to know
+[6:18] that in order to uh check to make sure
+[6:20] it's correct but in general you know
+[6:22] it's much simpler than checking whether
+[6:24] free form uh text is correct.
+[6:27] And then um
+[6:29] one thing that they did in star which
+[6:31] isn't necessarily done in other
+[6:33] reasoning models is you have a wrong
+[6:35] answer. If you get a wrong answer, it
+[6:37] would then uh give a hint. So it would
+[6:40] basically give the correct answer. You
+[6:42] would run that through the language
+[6:43] model and then the language model would
+[6:44] generate a rationale that matched with
+[6:46] the answer. So this is an extra thing
+[6:48] that was added in star but actually
+[6:50] isn't added in all uh language models
+[6:52] nowadays.
+[6:55] So I I kind of went through this already
+[6:57] I guess but like generate answers in
+[6:59] rationals filter correct chains based on
+[7:01] reward if correct keep the full chain if
+[7:03] incorrect generate a rational given an
+[7:05] answer and then you fine-tune on the
+[7:07] filtered data. So this um is kind of
+[7:13] reinforcement learning. it's uh you know
+[7:15] very close to reinforcement learning or
+[7:17] even maybe a particular variety of
+[7:19] reinforcement learning uh where you know
+[7:21] you roll out you get uh get results and
+[7:24] you trade.
+[7:27] So um another way to think about it is
+[7:30] uh through a policy gradient objective.
+[7:32] Do peas has everybody heard of policy
+[7:35] gradient or some people
+[7:38] maybe maybe mo most people. Um but
+[7:42] basically the way the way a policy
+[7:44] gradient works is you um you get a
+[7:49] reward and based on the reward you
+[7:53] essentially multiply the
+[7:57] um the gradient of the log likelihood of
+[8:00] the output by that reward.
+[8:02] And so this is the general form of
+[8:06] policy gradient algorithms and the most
+[8:08] famous one is reinforce.
+[8:11] Um there's a lot of variants on this.
+[8:13] You could almost argue that gpo is also
+[8:15] a variant on this. Uh and uh we'll we'll
+[8:18] talk about gpo in a second. Um but this
+[8:21] is like the most simple version. It's
+[8:23] basically like if it's correct you get a
+[8:25] reward of one. If it's incorrect you get
+[8:26] a reward of zero.
+[8:30] Um and so this will discard gradients
+[8:32] for incorrect uh reasoning shades.
+[8:37] Um so so this is you know really simple
+[8:40] but they demonstrated that even uh you
+[8:43] know three years ago or so this works
+[8:46] and so they they tested a relatively
+[8:49] small model GPJ uh 6B on arithmetic
+[8:52] common sense QA and GSM AK. Um so uh
+[8:56] arithmetic is an arithmetic data set.
+[8:58] Common sense QA is just QA and GSMAK is
+[9:01] kind of grade school math problems.
+[9:06] And the format that they took here was
+[9:09] um kind of interesting. They basically
+[9:13] uh started out with a small amount of
+[9:15] examples in this format. Um so the input
+[9:20] looked like this and the target looked
+[9:21] like this and they had um this scratch
+[9:25] pad. And so for the scratch pad
+[9:27] basically uh they took this
+[9:31] um they checked how much you would
+[9:34] carry. So uh basically this is uh 9
+[9:39] + 4 is three carry one and then you
+[9:43] would have 2 + 5 which is the one in the
+[9:45] middle. Um and so 2 + 5 uh plus carry 1
+[9:50] is 8 and then you would have zero and uh
+[9:54] do this and then uh 8 + 8 + 3 or 883 is
+[9:58] the final answer. And so this was like a
+[10:00] very structured way of representing
+[10:03] reasoning. And they actually generated
+[10:04] this in a rule-based fashion to kind of
+[10:06] like seed the model to be good enough uh
+[10:09] to later be able to be trained using RL.
+[10:15] And
+[10:17] they uh demonstrated that you could
+[10:21] train the model quite well on one digit
+[10:23] addition um with uh without
+[10:27] rationalization. Um but with rational uh
+[10:32] without rationalization things like
+[10:34] three-digit and fourdigit just uh didn't
+[10:36] work as well because you had very sparse
+[10:38] rewards where it wasn't good at uh you
+[10:41] know
+[10:43] it it wasn't able to get enough of the
+[10:45] five-digit uh addition ones correct in
+[10:48] order to add them to the training data.
+[10:49] But if you added rationalization, you
+[10:51] see a much faster um uptake of uh like
+[10:56] how well it is able to do the longer
+[10:57] problems. And one thing I should note is
+[11:00] um here the iterations uh is four
+[11:05] iterations four is here. So like the
+[11:07] x-axis is actually different on these
+[11:09] two figures. But you can see that the um
+[11:12] uh it does a lot better when you
+[11:13] generate uh based the output based on
+[11:16] hints. It does like early
+[11:20] enough iterations with rationalization
+[11:22] will always perform better or is it like
+[11:25] so yeah that's a great question so you
+[11:27] see that this five is kind of plateauing
+[11:29] I actually wish they had brought this
+[11:31] out farther so we could see that but I
+[11:34] think uh indeed it is plateauing earlier
+[11:36] and this is going to be a common theme
+[11:37] in reasoning models actually which is if
+[11:40] you kind of like overs supervise
+[11:41] reasoning models they bootstrap a lot
+[11:45] faster but then they end up plateauing
+[11:46] at a worse place than if you train them
+[11:49] purely with reinforcement learning.
+[11:53] >> Oh, these are different digits. Uh the
+[11:55] like the number of digits in the
+[11:57] addition problem
+[11:58] >> and so like just just so I get
+[12:00] terminology rationalizing refers to
+[12:02] inserting the rational, right?
+[12:05] >> Correct. Yeah, it's the bottom part of
+[12:06] the the figure that I showed.
+[12:08] >> Yeah.
+[12:10] >> Only the bottom part, not the the top
+[12:12] part. Top part just happens. So without
+[12:15] rationalization, it's only doing the top
+[12:16] part.
+[12:17] >> I see.
+[12:22] >> Yep.
+[12:26] >> Cool.
+[12:28] So um yeah, this was a very early
+[12:30] attempt at uh doing reasoning models. Um
+[12:35] and it it kind of seated a whole bunch
+[12:38] of uh you know follow-up work. Uh I I'm
+[12:42] not sure which came first. uh OpenAI's
+[12:45] uh reasoning model efforts or um or this
+[12:48] but I I feel like certainly it
+[12:51] contributed to DeepCar1 which probably a
+[12:54] lot of people have heard about. Um but
+[12:56] basically DeepCar 1 was a reasoning
+[12:59] model that was trained uh with largecale
+[13:01] reinforcement learning directly on the
+[13:03] base model. Um, and one of the big kind
+[13:07] of interesting and in and possibly, you
+[13:09] know, even checking things is they did
+[13:11] no uh supervised fine-tuning at all
+[13:14] first. And um they they trained it using
+[13:20] pure reinforcement learning objectives.
+[13:22] So no like rationalization or anything
+[13:24] like that. Um using an objective that
+[13:27] they call uh GRPO.
+[13:30] And they also had a multi-stage pipeline
+[13:33] where they uh did they started out with
+[13:37] nothing did RL and then based on the RL
+[13:41] they grabbed a whole bunch of successful
+[13:43] trajectories and then they um uh trained
+[13:48] a SFT model on the successful
+[13:52] trajectories and then they did uh RL
+[13:54] again in the end. So like they both
+[13:56] tested out with doing just like cold
+[13:58] start uh RL where they did you know no
+[14:01] supervised fine-tuning first and then
+[14:02] they also uh attempted one that did
+[14:05] supervised fine-tuning first.
+[14:09] Um so the GRPO objective has become very
+[14:13] popular basically because of this paper
+[14:15] but also because it's like just a good
+[14:17] idea in the first place. Um, and it it
+[14:20] puts together like
+[14:22] >> when I saw this objective, I didn't
+[14:24] think anything was new about it. It's
+[14:27] not like a particularly new objective,
+[14:28] but it combines together a lot of uh
+[14:30] existing good ideas from uh RL. So, it's
+[14:34] very worth knowing about.
+[14:36] So, the basic idea is you first generate
+[14:39] outputs in a group where the query is
+[14:43] the same. So, the input uh for all of
+[14:46] these outputs is the same. And for each
+[14:48] one of them uh you get a reward. So you
+[14:51] have all these uh outputs and you have a
+[14:53] reward. And then you use group
+[14:56] statistics to compute an advantage
+[14:59] function. And an advantage function is
+[15:01] basically like how much better is this
+[15:04] output than some other like comparison.
+[15:07] And
+[15:09] there's other meanings for advantage
+[15:11] function also. So an advantage function
+[15:13] can also be like you have a value
+[15:16] function or something like this and then
+[15:17] you see how much better a particular
+[15:19] output did than your value function
+[15:21] which predict predicts. But the way they
+[15:24] calculate the advantage function here is
+[15:26] the advantage function for the E element
+[15:29] of this is equal to the reward minus the
+[15:33] mean of all of the rewards in the group
+[15:35] divided by the standard deviation of all
+[15:37] of the rewards in the group. And so what
+[15:39] that means is essentially um uh that
+[15:44] you're seeing how much better this
+[15:45] output did than all of the other outputs
+[15:47] in the group. And then you're
+[15:48] normalizing by the standard deviation.
+[15:53] Pretty clear.
+[15:56] Okay. Um and so then you you have this
+[16:01] kind of scary looking loss. Um, I
+[16:04] promise it's not as scary as it actually
+[16:06] looks, but basically, um, what you're
+[16:10] doing is you're calculating the,
+[16:13] uh, the probability according to the
+[16:16] policy of that output divided by the
+[16:21] probability according to the policy of
+[16:23] the old output multiplied by the
+[16:25] advantage function. And so basically
+[16:27] this is saying if the advantage function
+[16:29] is positive you uh probably want to make
+[16:33] this probability higher and if the
+[16:35] advantage function is negative you want
+[16:37] to make this probability lower.
+[16:40] Then separately from this we also have
+[16:42] this clipping function where you set
+[16:44] epsilon and the epsilon is basically a
+[16:48] range uh of divergent diverging from one
+[16:53] um where the um where basically like if
+[16:59] you're
+[17:00] 0.1 above one or 0.01 01 above one. Uh
+[17:04] you clip this so it doesn't exceed this
+[17:08] range and then you multiply that by the
+[17:10] advantage here. Um and you take the
+[17:14] minimum of these two. And so basically
+[17:16] what this is saying is you either want
+[17:21] to increase the advantage for the you
+[17:24] know positive advantage uh here or um or
+[17:30] you want to take this clipped value so
+[17:32] you're not like decreasing
+[17:35] um you're not moving in a negative
+[17:38] direction too much. uh basically so like
+[17:41] actually maybe it's better to draw it on
+[17:43] the board.
+[17:48] So basically if if a is positive
+[17:56] if a is positive
+[17:58] you'll have um
+[18:04] pi 1 / pi 2
+[18:17] should have practiced this before I came
+[18:18] here.
+[18:24] So typically you would have um pi theta
+[18:29] / pi theta old multiplied by the
+[18:32] advantage function.
+[18:34] And
+[18:37] here you will clip
+[18:40] you will take the minimum
+[18:43] if
+[18:48] this is lower.
+[18:56] You'll take the minimum if this is
+[18:59] higher than 1 plus theta. Right?
+[19:05] So if if this is getting too high you
+[19:08] will clip and then if you take if this
+[19:13] is negative
+[19:15] you will take
+[19:18] you will clip if it's less than one
+[19:20] minus pi uh sorry 1 minus epsilon. So,
+[19:24] so basically what this is doing is it's
+[19:26] preventing like two extreme uh values
+[19:30] from kind of like messing up your
+[19:32] gradients. And uh yeah, actually I I
+[19:36] should go back and like actually draw
+[19:37] that and share it on Patza. But the the
+[19:39] basic idea is to prevent instability
+[19:41] when you're um when you're getting two
+[19:44] extreme values in this ratio here.
+[19:46] >> Yes.
+[19:47] >> Yeah.
+[19:47] >> Look at the lower extremes
+[19:50] if we have a multiple.
+[19:52] >> Yeah.
+[19:53] Uh it it kind of looks like this. So if
+[19:57] this goes
+[20:00] here, this um can go down to zero.
+[20:05] Basically
+[20:07] >> it could actually like if AI is really
+[20:10] negative and pi theta y of q is not too
+[20:14] is not zero maybe.
+[20:15] >> Yeah.
+[20:16] >> Then you can have like the minimum far
+[20:18] exceeding anything else. Maybe 1,000
+[20:21] into 1 by 10.
+[20:23] >> Yeah. So, this this could go um this
+[20:25] could go way down. And basically, you
+[20:27] don't want to
+[20:31] like you want to prevent it from pushing
+[20:33] it way too far down, I guess. And so,
+[20:38] you don't want to remove the gradient
+[20:39] when it's going really far down.
+[20:42] >> See any way to like sort of keep the
+[20:45] like, you know, I can see how positive
+[20:47] changes aren't enforced too much. The
+[20:49] clip does that.
+[20:49] >> Yeah.
+[20:50] >> But I cannot see how the minimum changes
+[20:52] are being enforced because the minimum
+[20:54] is outside the clip, right?
+[20:56] >> Yeah. So the minimum basically like
+[20:59] >> if you what will what will happen? Let's
+[21:02] focus on the case where advantage is
+[21:04] positive because that's like easier
+[21:06] easier to parse. So if the advantage is
+[21:08] positive,
+[21:10] >> no matter how far down this goes, the
+[21:12] minimum of this will take this. Right.
+[21:14] Right.
+[21:15] >> And so this could go like to zero.
+[21:17] And if that goes to zero and the
+[21:19] advantage of is positive, then that's
+[21:21] kind of like bad, right? You don't want
+[21:23] to be reducing the you don't want to be
+[21:26] reducing the probability to zero when
+[21:29] this is actually a good output, right?
+[21:31] >> And so because of that, your gradient
+[21:33] will never be clipped if you're like
+[21:35] reducing too far. Um, on the other hand,
+[21:39] if this is a good output, you don't want
+[21:41] to increase its probability all the way
+[21:43] to one because that's like too extreme
+[21:45] of a change and that might be like
+[21:47] hurting the probability of other things
+[21:48] that you don't have in your um like in
+[21:51] your set of things to be considering.
+[21:53] So,
+[21:55] >> question is what if AI is negative?
+[21:58] What? So if AI is negative then you
+[22:01] don't want to be
+[22:03] like
+[22:05] you don't want the probability to
+[22:08] increase really really high and so you
+[22:10] don't clip the gradient when the
+[22:12] probability it's increasing
+[22:13] >> but like
+[22:17] yeah does it cap on how much you can
+[22:20] function that
+[22:22] I'm sorry I'm sorry just I just want to
+[22:25] see it is that like um Suppose AI is
+[22:28] minus 1,000.
+[22:29] >> Yeah.
+[22:30] >> Pi theta by pi theta old is 1x 10.
+[22:33] >> Mhm.
+[22:34] >> There is nothing stopping that extreme
+[22:36] decrease from happening
+[22:39] because minus 100 is smaller than any
+[22:41] clip value.
+[22:44] So
+[22:48] well this will be clipped
+[22:51] like let's say this was 0.1.
+[22:54] So 1 / 10
+[22:57] 1 / 10
+[23:00] * -100
+[23:02] is
+[23:04] not as small is 1 / 10 uh 9 / 10 * -
+[23:10] 10,000. So that would be clipped I think
+[23:14] like
+[23:15] >> only the stuff inside the clip would be
+[23:17] clipped right. So like that things
+[23:18] outside.
+[23:19] >> Yeah. So so this would be this would be
+[23:21] 1 divided by 10. This would or this
+[23:23] would be 0.1 and this would be 0.9
+[23:26] because this would be clipped be like
+[23:28] let's say epsilon was 0.1 this would be
+[23:30] clipped between 0.9 and 1.1.
+[23:33] >> So that would be clipped to 0.9 this one
+[23:35] would go all the way towards minus 100.
+[23:40] So this this would go to minus 100 and
+[23:42] this would go to - 900.
+[23:44] >> The pepper is 0.9. Does the clip
+[23:46] function ensure
+[23:47] >> this is multiplied by the advantage too?
+[23:50] >> Ah.
+[23:52] >> Yeah.
+[23:52] >> But all the same um doesn't it sort of
+[23:55] like
+[23:57] allow the
+[23:59] probability to go down like like the
+[24:01] grad is huge, right?
+[24:04] the gra the gradients can get big but
+[24:08] like you're normalizing by the standard
+[24:11] deviation you're dividing by g and stuff
+[24:13] like that so they don't get really huge
+[24:15] they are normalized to be in a
+[24:17] reasonable range yeah
+[24:21] >> this this loss function is exactly
+[24:24] equivalent to what a so policy what is
+[24:29] the innovation what is the change from
+[24:31] that makes
+[24:33] >> so So this clipping is very similar to
+[24:35] PO. Um the normalization with the
+[24:38] advantage function is the main thing
+[24:40] that JRPO is here.
+[24:44] >> Yeah. It's it's basically inspired by PO
+[24:47] but taking normalizing the advantage by
+[24:50] the group. Yeah.
+[24:52] >> Yeah.
+[24:52] >> What like theta and
+[24:57] >> so theta theta old is the theta of uh an
+[25:01] old policy. The old policy can be either
+[25:06] the parameters before the update, which
+[25:08] I believe is what they do in this par in
+[25:10] this paper, or it can be um an even
+[25:13] older policy depending on like how uh
+[25:16] like off policy your generations are. So
+[25:19] if like for example you generated over
+[25:22] your whole corpus um and then you
+[25:25] gradually did updates and were doing
+[25:26] like off policy uh reinforcement
+[25:28] learning then this would be the policy
+[25:30] that used to generate the outputs.
+[25:34] >> Yeah.
+[25:35] >> So like what temperature settings do we
+[25:38] generate all these outputs from the same
+[25:40] temperature?
+[25:41] >> Yeah. And typically when you're training
+[25:43] reasoning models you use a temperature
+[25:44] of one,
+[25:46] >> right? And like my follow question is
+[25:48] like why Do we do that? Because if
+[25:50] people are able to sample from multiple
+[25:51] temperature settings, aren't we like
+[25:53] sampling through a whole family of
+[25:55] probability distributions?
+[25:57] >> You collectively optimizing over a
+[25:59] family of property solutions might be
+[26:02] interesting.
+[26:02] >> You could do that, but then you'd be off
+[26:04] policy because you wouldn't be sampling
+[26:06] from the policy that you're optimizing.
+[26:07] So typically you want to sample from the
+[26:09] policy that you're optimizing. And if
+[26:11] you remember to like the very first
+[26:13] class, the only thing that gives you
+[26:15] samples directly from the policy that is
+[26:18] temperature one. Yeah,
+[26:19] >> thanks.
+[26:20] >> Yeah, sure. Great questions. Sorry, I
+[26:23] should have been more prepared to
+[26:24] explain the complicated gpo ex uh thing
+[26:27] with a a figure. Um, so the next thing
+[26:31] about DeepCar 1 is uh the prompt
+[26:33] template. And so uh as I mentioned, they
+[26:36] started with no fine-tuning whatsoever.
+[26:40] And the prompt template looks a little
+[26:42] bit like this. Um, it's a conversation
+[26:46] between a user and assistant. The user
+[26:47] asks a question and the assistant solves
+[26:50] it. The assistants f the assistant first
+[26:53] thinks about the reasoning process in
+[26:54] the mind and then provides the user with
+[26:56] the answer. The reasoning process and
+[26:58] answer are enclosed within think and
+[27:01] answer uh tags uh respectively. User
+[27:04] prompt assistant. And so this is the
+[27:08] only priming that they use to make the
+[27:10] model uh do you know do this task. Um
+[27:15] and one of the very interesting things
+[27:17] about R1 that was very surprising when
+[27:20] they did this was that this actually was
+[27:22] sufficient to get the model to do a good
+[27:24] enough job at this. Um so why why do you
+[27:28] think this is sufficient?
+[27:34] Going back to one of the things we
+[27:35] talked about in the previous class,
+[27:44] any ideas?
+[27:46] >> Was this sufficient for what?
+[27:48] >> It's sufficient to get the model to
+[27:50] answer the questions well some of the
+[27:52] time without any training.
+[27:56] >> Yeah, exactly. It's seen some stuff in
+[27:57] the training data and we're going to
+[27:58] talk a bit more about that and so this
+[28:00] is enough. Um so that a strong model
+[28:04] trained on the entire internet with uh
+[28:08] how many parameters was it 470 billion
+[28:10] parameters um is able to pick up the
+[28:13] fact that it should be following this
+[28:14] template some of the time not all of the
+[28:17] time but enough that it's able to learn
+[28:18] from the results
+[28:21] and so basically
+[28:24] these are the training results so even
+[28:25] the very beginning has a little bit of
+[28:27] training I don't think they have the
+[28:28] untrained uh model Um but basically this
+[28:35] is um the R10 pass at one accuracy and
+[28:42] this is um the R1 uh zero consistency at
+[28:45] 16 accuracy. So this is with self
+[28:47] consistency and you can see it starts
+[28:50] out um very uh very low you know like
+[28:54] 15% top one accuracy but after training
+[28:57] it for uh a large number of steps with a
+[29:00] very large batch size they're able to
+[29:02] get up to over 70% accuracy on a IME uh
+[29:05] problems which are like very hard math
+[29:08] problems.
+[29:14] Um, another really interesting result
+[29:16] from this paper is that the thinking
+[29:19] time uh allocated to the reasoning model
+[29:22] in uh naturally increases from hundreds
+[29:24] to thousands of tokens. And so um if we
+[29:29] see hundreds of tokens here, maybe 800
+[29:31] tokens or something at the very
+[29:33] beginning, uh you know, as they trained
+[29:35] it and trained it and trained it, it
+[29:37] starts using more and more and more
+[29:39] tokens
+[29:41] uh to to solve the problems.
+[29:45] And another uh another very famous uh
+[29:48] thing from this paper is they showed
+[29:51] this example uh with R10.
+[29:54] Uh so again this is not you know
+[29:56] specifically trained to uh like solve
+[30:00] math problems or do uh selfcorrection
+[30:03] but basically it there's a place where
+[30:05] it says wait that's an aha moment I can
+[30:08] flag here. And so the like language
+[30:11] model uh you know spontaneously
+[30:14] kind of identified that there was a
+[30:16] problem in its derivation and went back
+[30:18] and fixed it. Um and they also have a
+[30:21] very cute thing in the paper where they
+[30:23] said this was also an aha moment for us
+[30:25] as researchers where we realized the
+[30:28] power of reinforcement learning or
+[30:29] something which you know I I thought
+[30:32] that was uh kind kind of true. I mean,
+[30:35] you know, uh if if you're uh if you see
+[30:38] something like this just happen out of
+[30:39] thin air.
+[30:42] Um another thing that they did in this
+[30:44] paper was they demonstrated that you can
+[30:47] distill the reasoning traces from these
+[30:51] very large 470 billion parameter models
+[30:54] down to models of more manageable sizes.
+[30:58] And um they have uh DeepSseek R132B
+[31:04] which is a distilled version of the Quen
+[31:05] model uh with only 32B parameters. And
+[31:08] you can see that it has quite uh
+[31:10] competitive results with other models.
+[31:13] And basically all they did was generate
+[31:14] lots of reasoning traces with R1 uh
+[31:17] filter the ones that were correct and
+[31:18] then train um uh train this DeepCar 132B
+[31:23] model. They have a whole bunch of
+[31:24] different sizes and they also have
+[31:26] experiments where they tried to do R1
+[31:28] from scratch with this smaller model and
+[31:30] they demonstrated that distilling from
+[31:31] the bigger model is much more effective
+[31:34] and I think the reason why is basically
+[31:36] just the larger model is more able to
+[31:40] get like a decent non-zero accuracy when
+[31:43] you train uh when you started off from
+[31:45] uh training from scratch.
+[31:52] Cool. Um, any any questions about this?
+[31:55] Yeah.
+[31:56] >> What the length of the reasoning chains
+[31:58] are?
+[31:59] >> Certainly.
+[32:00] >> So, I'm curious if there's legal any
+[32:02] followup study showing if this has a
+[32:04] platform because it looks to me just
+[32:06] monotonically increasing without any
+[32:08] insight.
+[32:09] >> Yep. I I will talk about that. Yeah. And
+[32:12] any other questions?
+[32:17] Cool.
+[32:18] Um, so what are the This is an inference
+[32:22] class. This is not a training class,
+[32:23] which is also why I'm not, you know,
+[32:25] going super deep into how these models
+[32:27] are trained. Um, but like what are the
+[32:31] implications for inference uh of this
+[32:34] work? Any any ideas?
+[32:44] Any anyone want me to ask you to uh run
+[32:48] a 470 billion parameter model for 10,000
+[32:51] tokens and assignment two?
+[32:56] >> Yeah, maybe maybe not. Um so uh be
+[33:00] because of this and you know like the 01
+[33:03] um OpenAI's 01 03 04 GPT5 models um you
+[33:09] know they're all using more tokens to
+[33:11] think which means inference is becoming
+[33:12] more expensive um they're all getting
+[33:15] larger uh but it also can mean that a
+[33:19] smaller model can beat uh a much larger
+[33:22] model uh with more inference tokens. So
+[33:24] if you look at this uh DeepSseek R1 32B
+[33:27] and compare it to Deepseek V3, Deepseek
+[33:30] V3 is the base model that was used to
+[33:34] train um that was used to train
+[33:37] Deepsecar 1 and you can see this 32B
+[33:39] model is beating this 470B model. Uh so
+[33:42] you can spend like more tokens at
+[33:44] inference with a smaller model and get
+[33:46] uh better results. So this you know
+[33:49] paradigm is really the one that made
+[33:50] inference really really popular at the
+[33:52] beginning of uh this year essentially.
+[33:58] Cool. Um so now I would like to go into
+[34:02] a new uh a new paper. So this is a paper
+[34:05] called cognitive behaviors for
+[34:06] self-improvement.
+[34:08] And the basic idea behind the paper is
+[34:10] as follows. Um so the first one is um
+[34:16] th this is uh RL style training with
+[34:19] essentially star. Uh this was also by
+[34:22] the same group that did the star
+[34:23] algorithm. And we can see that there's
+[34:28] two models. Uh there's the Quen model
+[34:30] and then there's the llama model. And
+[34:33] when you train the Quen model uh the
+[34:35] accuracy goes up uh quite quickly and
+[34:38] gets uh gets good results. It does
+[34:40] plateau but it plateaus a bit higher uh
+[34:43] than the place where the the llama model
+[34:46] plateaus and separately if we look at
+[34:48] the response length the response length
+[34:50] for the quen model goes up whereas for
+[34:52] the llama model it basically goes down
+[34:54] like this.
+[34:56] So what is the difference between these
+[34:58] two models? Um this paper basically uh
+[35:04] analyzed four different behaviors that
+[35:07] they thought were important for ensuring
+[35:10] that this like zeroot uh like
+[35:12] reinforcement learning would work. And
+[35:14] so the first one was verification. So
+[35:17] this is things like let me check my
+[35:18] answer. Um a second one is sub goal
+[35:21] setting. Uh let's try to get to a
+[35:23] multiple of 10. Uh backtracking. Let's
+[35:25] try a different approach. What if we did
+[35:27] whatever? and backward chaining which is
+[35:30] working backwards 24 is 8 time 3 uh etc
+[35:34] etc
+[35:35] and uh we can look at the average count
+[35:38] of these uh behaviors and essentially uh
+[35:42] we can see that like verification and
+[35:44] backtracking and other stuff like that
+[35:47] um were much higher for the Quen model
+[35:49] than they were for the llama model.
+[35:52] And so
+[35:58] um so yeah, I already talked about these
+[36:02] uh behaviors um and they compared a bud
+[36:06] among a bunch of uh different models and
+[36:11] basically they saw the quenbase model uh
+[36:13] displayed more of all of these behaviors
+[36:17] than the llama 3b model and the llama
+[36:20] 70b model. I believe the coinbased model
+[36:22] was 7B. I would Oh, no, sorry. Uh, Quinn
+[36:27] was also 3B. So,
+[36:31] it's not just
+[36:34] it's not just um, you know, size, it's
+[36:37] also just kind of the underlying
+[36:39] propensity of the model. These are all
+[36:42] base models. Um, so like at least
+[36:45] theoretically they're not uh not
+[36:47] instruction tuned models. Does anyone
+[36:49] have an idea why we might be seeing such
+[36:51] a big difference?
+[36:54] >> Yeah.
+[36:55] >> Mid training.
+[36:56] >> Mid-training. Yeah. Um, so mid-training
+[36:58] is basically uh I I would say there's
+[37:01] two possibilities here. Um, mid-training
+[37:03] is basically where you pre-train on lots
+[37:06] of noisy internet text and then um kind
+[37:08] of in the middle of training, right
+[37:11] before you finish training, you train on
+[37:13] quote unquote higher quality text. Um,
+[37:16] and this higher quality text could
+[37:18] either be text that was like mined from
+[37:20] the internet uh in a specific way, so
+[37:23] mining only, you know, math textbooks or
+[37:26] like highly uh quote unquote highly
+[37:28] educational content. Um,
+[37:32] the
+[37:34] even the more open language model
+[37:36] providers like Quen, you know, they
+[37:38] release many of their models open
+[37:39] source. They usually don't talk very
+[37:41] much about their data, but there are
+[37:43] examples of this from like mo and
+[37:45] hugging face. And um Hugging Face
+[37:50] has a project.
+[37:54] Oops.
+[38:08] um called Fine Web. And basically uh
+[38:12] what Fine Web did is they like filtered
+[38:14] down a whole bunch of stuff on the uh a
+[38:18] whole bunch of data from the internet.
+[38:19] And they demonstrated that if you
+[38:21] trained on this like filtered down
+[38:23] version of the internet, you could get
+[38:25] much better results, you know, um much
+[38:28] faster. Um I I would argue that this
+[38:30] will probably plateau earlier than
+[38:32] training on the whole internet. So
+[38:34] actually like training on the whole
+[38:35] internet is still a good idea. Um but
+[38:38] you know what's typical now is you train
+[38:40] on the whole internet and then you add a
+[38:42] little bit of this like very high
+[38:43] quality data right at the very end of
+[38:45] training as you kind of anneal down to
+[38:47] build your final base model and and this
+[38:49] is called mid training. Um another uh
+[38:52] possible reason is that this is uh using
+[38:55] synthetic data of some variety. So
+[38:58] regardless, um, despite the fact that
+[39:01] they're all called a quote unquote base
+[39:03] model, uh, these base models can be
+[39:05] trained in very different ways. And so
+[39:07] that's the reason why these like
+[39:08] cognitive behaviors might emerge for one
+[39:10] of the models but not the others.
+[39:14] Cool.
+[39:17] Um, any any questions?
+[39:21] Okay, nice.
+[39:23] Um
+[39:26] so they also demonstrated in this paper
+[39:29] that you can uh kind of like prime the
+[39:32] model uh by giving it a prompt that
+[39:34] encourages it to uh take these behaviors
+[39:37] and you give them a few examples of
+[39:39] this. Notably this is not what was done
+[39:41] in the deepcar 1 model. Uh so deepcar 1
+[39:44] did intentionally did not do this but if
+[39:46] you do do this this can you know improve
+[39:49] uh the ability of the models to uh take
+[39:53] these behaviors.
+[39:56] >> Cool.
+[39:58] >> One sense graph.
+[40:00] >> Yeah sure.
+[40:05] >> All of them seem to like converge
+[40:07] roughly the same number of the same
+[40:09] amount of responses.
+[40:11] Why?
+[40:13] So for this
+[40:16] I I think this is when they primed based
+[40:19] on a particular strategy. So when they
+[40:21] said use this particular strategy um
+[40:26] like use this particular strategy, it
+[40:30] converged to a a similar but not exactly
+[40:32] the same length. I think like they
+[40:35] encourage particular strategies but also
+[40:37] on a higher level that just encourages
+[40:38] like reasoning in general. And so like I
+[40:42] I think by encouraging structured
+[40:45] reasoning you can kind of get it to have
+[40:47] a similar response like
+[40:50] >> that's like you have only backtracking
+[40:54] approaching the same length as
+[40:55] backtracking plus something else
+[40:57] backtracking and
+[40:58] >> backtracking support. So I was like
+[41:00] wondering why.
+[41:02] >> Yeah, I I think the models um I think
+[41:05] the models will
+[41:08] uh
+[41:10] you know tend to finish when they like
+[41:13] quote unquote think that they have uh
+[41:16] like solved the problem. One other thing
+[41:18] that I'd really I'd like to point out is
+[41:21] um I totally missed this when I first
+[41:24] looked at this graph from Deepseek R1,
+[41:26] but look look carefully at this graph.
+[41:30] And here we have steps, right? This is
+[41:33] 8,000 steps. I don't remember exactly
+[41:35] what the batch size is, but the batch
+[41:37] size is very large for this. They have
+[41:39] lots of GPUs for running these
+[41:41] experiments. And so they're using a
+[41:43] large batch size. the first 200 steps,
+[41:46] the length doesn't increase at all. Um,
+[41:51] now go back here.
+[41:56] Go back here. Look at where this stops.
+[41:58] This stops at 250. And so you can see
+[42:02] that this is stopping at 250. And I
+[42:04] think the batch size for this is smaller
+[42:06] than the batch size used for Decar 1. So
+[42:07] this is trained even less than the
+[42:09] DeepCar 1 that was plateauing. So I I've
+[42:12] also observed that when training
+[42:15] reasoning models, the response length
+[42:18] will stagnate for a while and then after
+[42:20] it's stagnated for a while, it will
+[42:22] increase um when the model has learned
+[42:24] to like use more extensive uh back like
+[42:28] backtracking strategies. So um or more
+[42:32] extensive uh reasoning strategies, not
+[42:34] necessarily just backtracking. So um I I
+[42:38] think this is uh also an important thing
+[42:39] to note.
+[42:41] It could be like completely misleading
+[42:43] this
+[42:44] >> this graph um if you think that the
+[42:47] model has converged to a particular
+[42:49] length and won't increase later uh this
+[42:51] could be misleadingness. I agree.
+[42:53] >> Thanks.
+[42:55] >> Um cool. So next I'd like to talk about
+[42:58] a paper that we did called demystifying
+[43:00] long chain of thought. And um our our
+[43:04] question was to better understand uh
+[43:06] when long chains of thought emerge um in
+[43:10] what conditions enable reasoning um how
+[43:12] does training affect chain of thought
+[43:14] length. And so our experimental setting
+[43:17] was that we wanted to do supervised
+[43:19] fine-tuning and compare it with
+[43:20] reinforcement learning with various
+[43:23] reward functions and training setups.
+[43:24] Also, how many student presentations do
+[43:26] we have today? Just one.
+[43:29] Okay, good. I I just want to make sure I
+[43:31] don't run out of time. Um so we have
+[43:33] various reward functions and training
+[43:35] setups. Um and we did length analysis
+[43:39] across iterations and we tried multiple
+[43:41] model sizes and data sets.
+[43:44] So the first thing that we did was we
+[43:47] compared um the chain of thought type
+[43:51] and essentially what we did was we did
+[43:53] supervised fine-tuning um or or we took
+[43:56] models that had been supervised
+[43:57] fine-tuned to either perform short chain
+[44:02] of thought reasoning. So basically um
+[44:04] perform reasoning with you know only the
+[44:07] traditional chain of thought versus ones
+[44:09] that had been trained uh kind of like
+[44:11] distilled to do long chain of thought.
+[44:14] And we did um supervised fine-tuning on
+[44:19] the kind of uh
+[44:24] on shorter and longer chain of thought
+[44:27] data. And that's the dash line here. And
+[44:29] then we did uh reinforcement learning.
+[44:32] And the thing that you can notice is the
+[44:35] models that were originally like primed
+[44:37] to do um
+[44:40] well on uh short chains of thought did
+[44:44] not benefit very much from RL where the
+[44:46] ones that were primed to do long chains
+[44:48] of thought really uh increased a lot by
+[44:51] doing RL. And so this demonstrates that
+[44:54] there's some you know major advantage in
+[44:57] having like really long chains of
+[44:58] thought uh trained by reinforcement
+[45:00] learning.
+[45:05] Another thing that we looked at in this
+[45:06] paper was uh we were training reasoning
+[45:10] models and we saw essentially that the
+[45:13] models would um go up. Uh they they
+[45:18] would improve for a while and then they
+[45:20] would suddenly crash. And we we were
+[45:23] confused by this for a bit. But
+[45:26] essentially what we found was that uh
+[45:30] they were exceeding the maximum output
+[45:32] length and some of these models had you
+[45:35] know a fixed maximum output length and
+[45:37] that that's what we measured by the
+[45:39] exceed rate and once they started
+[45:42] exceeding the maximum output length they
+[45:43] would be getting all of the the problems
+[45:45] wrong basically because the final answer
+[45:48] was getting clipped and so uh that was a
+[45:51] major you know major problem because you
+[45:53] can't really extend the or well in this
+[45:56] paper we didn't make an attempt to
+[45:58] extend the output length and so
+[45:59] basically just our our training uh died
+[46:04] and so um the way we fixed this was
+[46:08] or or we tried to fix this and the way
+[46:10] we did so was we proposed a new variety
+[46:13] of reward where we considered both the
+[46:18] um correctness and the length. And so
+[46:21] the classic reward gives you a you know
+[46:23] reward of one when you get it correct
+[46:26] and a reward of zero when you get it
+[46:28] wrong. But in this paper we have this uh
+[46:31] reward where we multiply it by the
+[46:33] cosine and
+[46:36] uh where the cosine will converge to
+[46:38] zero at the maximum output length. And
+[46:42] so if the answer is wrong we basically
+[46:46] give a larger negative reward when the
+[46:49] answer is short. And so what that's
+[46:51] saying is um if you're getting it wrong,
+[46:53] make it longer until we like approach
+[46:56] the uh the output length. And then if
+[46:59] you're getting it right, make it shorter
+[47:01] until we uh until you like no longer get
+[47:04] it right. And so this is a way to kind
+[47:05] of balance uh the output. And this
+[47:09] allowed us to stably train uh models
+[47:11] without exceeding the response length.
+[47:16] We also examined a little bit about the
+[47:18] um conditions for emergence and we found
+[47:21] that 7B models really struggled to
+[47:22] develop complex abilities. Um and we
+[47:26] came up with you know the cosign reward.
+[47:29] Um also uh for the base model quality uh
+[47:32] we found that the overexposure to short
+[47:34] data hindered the long coot development
+[47:37] and uh RL from the long coott improved.
+[47:42] Um
+[47:43] so another thing that we looked into was
+[47:46] uh the quality of the verifier and we
+[47:47] found that rule rule-based verifiers
+[47:49] basically work better than modelbased
+[47:51] verifiers.
+[47:52] Um and so there's a lot of things that
+[47:58] need to go right for these abilities to
+[48:00] emerge and we just tried to like catalog
+[48:03] a lot of them in this paper basically.
+[48:07] Cool. Um any any questions about this?
+[48:13] Okay. Um in particular, if you want a
+[48:15] shortcut to making things work, I
+[48:17] recommend this. We've tried it several
+[48:18] times since we did this paper and it
+[48:21] works quite well. So um you know, if
+[48:23] you're doing that sort of training, I'd
+[48:24] suggest trying it out.
+[48:27] Cool. Another one um is as I mentioned
+[48:31] in the cognitive behavior behaviors
+[48:33] paper um a lot of people have done uh or
+[48:38] like basically you need very particular
+[48:40] types of reasoning models to get uh
+[48:44] emergent abilities to emerge. And so
+[48:47] basically this paper has the simple idea
+[48:49] of uh trying to do RL for reasoning on a
+[48:53] very large number of models of different
+[48:55] sizes. And they did a direct RL from
+[48:58] base models and uh no SFT and tried to
+[49:02] find whether smaller diverse models
+[49:04] could exhibit emergent reasoning. And
+[49:07] they found that it is true for some
+[49:10] extent um to some extent the um
+[49:17] they definitely saw the greatest
+[49:20] improvements on Quen, but um if you
+[49:23] train for long enough and have a number
+[49:25] of settings kind of like fine-tuned in a
+[49:29] way that can get the model to generate
+[49:31] uh positive rewards in some cases. uh a
+[49:34] lot of models are are nonetheless able
+[49:36] to uh see improvements
+[49:46] and um they also did uh kind of
+[49:51] evaluations on um whether they exhibited
+[49:54] different behaviors. So we uh were a
+[49:57] they were able to see that uh you know
+[49:59] Quen did thing lots of stuff like sub
+[50:01] goal setting um enumeration verification
+[50:04] maybe less backtracking
+[50:06] um and then Mistl uh you know had more
+[50:11] enumeration and other stuff like this.
+[50:12] So overall this is mostly an empirical
+[50:15] paper but it's also a good code base if
+[50:16] you want to do any sorts of these
+[50:18] experiments. So uh you can definitely
+[50:20] try that out.
+[50:24] Cool.
+[50:27] So, another thing that I'd like to talk
+[50:29] about is um uh a paper we recently did
+[50:32] on reasoning transfer. And a lot of
+[50:37] papers
+[50:39] examine the ability of mathematical
+[50:42] reasoning data to improve
+[50:46] the
+[50:48] scores or mathematical and codebased
+[50:50] reasoning data to improve the scores of
+[50:53] models on reasoning based tasks uh sorry
+[50:57] of math or codebased tasks. So it's
+[50:59] essentially like in-domain training.
+[51:01] It's not exactly the same data set, but
+[51:03] it's like math for math, code for code,
+[51:06] um, and and things like that. And so our
+[51:08] key question in this paper was, do gains
+[51:10] in solving math problems transfer to,
+[51:13] um, other reasoning domains, uh, like
+[51:16] scientific QA, uh, coding and agent
+[51:19] planning
+[51:22] and also uh other non-reing tasks like
+[51:25] conversation and its direction
+[51:27] following.
+[51:30] So the experimental setup was we did
+[51:32] some controlled experiments on quen um
+[51:35] quen 314b uh where we did training data
+[51:37] with math only um and we compared uh
+[51:41] supervised fine-tuning with uh
+[51:42] reinforcement learning is the two
+[51:44] paradigms uh and the SFT setup was
+[51:48] basically rejection sampling with a quen
+[51:50] 332B teacher and so
+[51:54] um for SFT and RL which one do you think
+[51:56] would generalize better to other
+[51:58] domains? Any ideas?
+[52:00] RL
+[52:01] >> RL. Okay. Any ideas why that might be
+[52:03] the case?
+[52:05] >> Vibes.
+[52:06] >> Vibes.
+[52:08] >> I mean, I have to agree that I I had
+[52:10] vibes that RL would work better, too,
+[52:12] but I actually have an explanation for
+[52:14] it after this paper.
+[52:15] >> Okay. Um, and so for the RL setup, we
+[52:18] had answer correctness is the reward. Um
+[52:22] and so
+[52:25] this is the an example of
+[52:28] transferability
+[52:29] um across different tasks with different
+[52:31] reasoning models. Uh so this is this is
+[52:34] our non-controlled experiment where we
+[52:36] basically took reasoning models and the
+[52:39] base models that corresponded to those
+[52:40] reasoning models. And we uh defined
+[52:45] something as the transferability index.
+[52:49] And um the transferability index is
+[52:52] essentially like if we look at the gains
+[52:55] that we get on the task that the model
+[52:57] was trained on and we compare them to
+[52:58] the gains that we get on the tasks that
+[53:00] the model was not trained on or the test
+[53:01] categories that the model was not
+[53:03] trained on. What's the difference
+[53:04] between the two? Um and so
+[53:08] uh what we Oh no, sorry I I misspoke
+[53:13] there. So if we look at the um at the
+[53:16] tasks that the model was not trained on
+[53:18] uh does it improve or not improve there?
+[53:20] And so for other reasoning tasks, what
+[53:22] we found was that the models generally
+[53:27] improved on other reasoning tasks, but
+[53:29] they improved more when they were
+[53:31] trained using RL.
+[53:33] On the other hand, if we looked at
+[53:35] non-reasoning tasks, um we found that
+[53:39] actually the models trained with RL
+[53:41] tended to still improve somewhat, but
+[53:43] the models trained uh with SFT actually
+[53:45] decreased
+[53:47] um to some extent on the non-reent
+[53:49] tasks.
+[53:51] And the reasoning or the reason why we
+[53:54] think this is the case is actually maybe
+[53:58] a little bit
+[54:00] obvious in hindsight but that we didn't
+[54:02] uh we didn't know it before we started
+[54:04] this experiment. But basically uh one of
+[54:06] the things that we looked at was the
+[54:10] change in the probability of various
+[54:12] tokens uh that um uh after the
+[54:17] fine-tuning process. And here are some
+[54:21] examples of tokens that changed greatly
+[54:24] um in the positive direction or the
+[54:25] negative direction for RL and SFT. And
+[54:28] basically what you can see is that the
+[54:31] SFT model uh leads to lots of change in
+[54:34] the model where whereas the RLbased
+[54:36] model it leads to relatively little
+[54:40] change and it leads particularly to
+[54:42] changes in um words that seem related to
+[54:47] reasoning.
+[54:48] So any idea why this is the case?
+[54:53] >> Could it appear that like RL encodes
+[54:55] heristics and SF encodes biases?
+[54:58] >> Arl encodes heristics and SFT encodes
+[55:00] biases. Let let me also uh specifically
+[55:04] say that this is gpo.
+[55:07] Um and if we remember what gpo does, it
+[55:10] generates a bunch of hypotheses. It
+[55:12] compares them. It upweights the good
+[55:13] ones and downweights bad ones.
+[55:22] And also maybe it might be worth
+[55:24] thinking when you're doing SFT, what
+[55:26] hypothesis are you downweing?
+[55:33] You're upweing the correct one, but what
+[55:35] are you downweing?
+[55:51] If you if you do a parameter update on a
+[55:55] particular sequence with SFT, which
+[55:58] sequence's probability will increase and
+[56:02] maybe in general which sequences
+[56:04] probability will decrease?
+[56:07] >> Yeah. Um,
+[56:09] >> yeah, exactly. Basically everything
+[56:11] else. So the difference between gRPO and
+[56:14] SFT is that in GRPO you're downweing the
+[56:18] negative sequences that were sampled
+[56:19] that got a bad reward. And in SFT,
+[56:22] you're upweing the one sequence that you
+[56:24] sampled that got a good reward and
+[56:26] downweing everything else. So basically,
+[56:28] you're modifying every sequence in SFT,
+[56:31] whereas in RL you're only upweing and
+[56:32] downweing like particular sequences. And
+[56:36] so that um we're not the first people to
+[56:39] notice this. Other people have noticed
+[56:41] this as well. But particularly from the
+[56:43] point of view of reasoning, this means
+[56:44] that you get minimal changes. And we
+[56:46] also have some um examination in the
+[56:49] paper that the difference in the um like
+[56:52] model parameters also is much lesser
+[56:55] when you're training using RL than SFT.
+[56:57] And so that kind of makes sense that it
+[56:58] would generalize better, right? You're
+[57:00] not like deleting a lot of the or like
+[57:03] damaging a lot of the knowledge from the
+[57:04] other domains. and it's still able to do
+[57:06] relatively well.
+[57:10] >> In general down,
+[57:14] >> yeah, I can I can also go back to the
+[57:16] GRPO equation,
+[57:19] but basically um
+[57:23] we're
+[57:33] Oops.
+[57:39] So the the negative examples in GRPO are
+[57:41] the ones where the advantage is like
+[57:43] less than zero, right?
+[57:45] >> I see.
+[57:46] >> And so you're you're mostly downing
+[57:49] you're mostly trying to reduce the
+[57:51] probability of the examples where the
+[57:55] advantage is less than zero compared to
+[57:56] the old probability there as opposed to
+[57:59] um comparing it to everything else.
+[58:02] this.
+[58:03] >> Yeah.
+[58:05] >> Is this the reason why?
+[58:09] >> Um
+[58:11] I don't think they explicitly wrote that
+[58:14] in their paper, but I I think the idea
+[58:17] behind trying to train with RL from
+[58:19] scratch is that like this goes all the
+[58:23] way back to AlphaGo. I guess like if you
+[58:26] like AlphaGo had a lot of influence on
+[58:30] um like the the people doing RL because
+[58:33] Alph Go was trained completely from
+[58:35] scratch but it was able to discover
+[58:37] strategies that like you know most
+[58:40] humans would not have thought of and um
+[58:44] so the idea here is we'll just let the
+[58:46] model do whatever whatever it wants and
+[58:50] if we let the model do whatever it wants
+[58:52] and like it's getting at least some
+[58:54] reward then eventually it will you know
+[58:57] uh it will converge onto something good.
+[58:59] Uh that being said, we are using a large
+[59:01] language model. Um and the large
+[59:04] language model has a lot of you know
+[59:06] prior knowledge in it. So we're not
+[59:08] starting completely from scratch. But
+[59:09] that's the basic idea I think. Yeah.
+[59:16] some performance.
+[59:17] >> I I think you can
+[59:20] um I think on mathematical reasoning
+[59:23] actually they did do SFT and RL and that
+[59:26] gave better results on mathematical
+[59:27] reasoning but I think that might give
+[59:28] worse results on other you know on other
+[59:31] tasks. That's what our paper shows
+[59:32] anyway.
+[59:34] Cool. Um I'm going to sorry kind of
+[59:37] power through the final ones to make
+[59:38] sure we have time for the the student
+[59:40] presentation. But um the these are a few
+[59:43] kind of like interesting but maybe less
+[59:46] uh central findings I think in the um uh
+[59:49] like in in the
+[59:52] okay they're they're still good. I I
+[59:54] don't want to downplay them but I'll go
+[59:56] through them quickly. So um the first
+[59:58] one is simple test time scaling. Um,
+[1:00:00] basically what they demonstrated is that
+[1:00:02] you could use a minimal data with like a
+[1:00:04] thousand carefully curated reasoning
+[1:00:06] examples and a very simple trick called
+[1:00:09] budget forcing which allows you to
+[1:00:11] control thinking duration at test time
+[1:00:13] to very efficiently train reasoning
+[1:00:15] models. Um and the way they did this um
+[1:00:19] and this allowed them to just do uh
+[1:00:22] supervised fine-tuning um uh with Quen
+[1:00:26] 2.532B and get good results and uh in a
+[1:00:29] very sample efficient manner. Um
+[1:00:34] and uh the the basic idea here is uh
+[1:00:38] like they did two things. The first
+[1:00:42] thing they did is they had a short chain
+[1:00:44] of thought model generate the chain of
+[1:00:46] thought and then they just put the word
+[1:00:47] weight after it and then they made it
+[1:00:49] generate again.
+[1:00:50] So it's really like it's essentially
+[1:00:54] forcing it to do you know re-examination
+[1:00:56] of its previous hypothesis and this
+[1:00:59] actually worked. Um so uh the second
+[1:01:03] thing that they did was when it started
+[1:01:05] uh reaching the end of its token limit
+[1:01:07] they cut it off and they said times out
+[1:01:09] now answer and it answered. So
+[1:01:12] completely heristic but um despite the
+[1:01:15] fact that it's completely heristic it
+[1:01:17] got like actually quite uh quite good
+[1:01:19] examples with a very quite good results
+[1:01:21] with a very small number of examples.
+[1:01:25] Um, another thing related to length and
+[1:01:28] this is uh actually um another paper by
+[1:01:31] Prangel here at LTI um is uh length
+[1:01:35] controlled policy optimization and
+[1:01:36] basically they wanted to come up with a
+[1:01:39] way to control the reasoning length. Um,
+[1:01:42] and they gave it a prompt like think for
+[1:01:46] n tokens to try to get the model to like
+[1:01:49] think for a varying amount of time uh
+[1:01:51] that you can control.
+[1:01:53] And uh based on this, their results
+[1:01:56] basically showed that they were able to
+[1:01:57] get better uh token uh like token
+[1:02:01] accuracy trade-offs than other um other
+[1:02:04] models including S1, the one I just uh
+[1:02:06] introduced. And the way they did this uh
+[1:02:09] was by adding a new reward. Um they
+[1:02:12] called it L LCPO but basically it's
+[1:02:14] adding another term to uh to the reward
+[1:02:18] uh where you try to find the gold length
+[1:02:20] and compare with the gold length.
+[1:02:23] And uh they got good results on all the
+[1:02:25] data sets they evaluated on.
+[1:02:29] Another really interesting paper which
+[1:02:31] um this came out before R1. Um and
+[1:02:35] actually until R1 came out a lot of
+[1:02:37] people thought that uh the open AI
+[1:02:39] models were actually maybe doing
+[1:02:41] something like this. Uh after R1 came
+[1:02:43] out I think most people switched to
+[1:02:46] thinking that the open AI models did
+[1:02:48] something more similar to R1. Um but
+[1:02:51] basically the idea is you take a search
+[1:02:53] algorithm. So you take like best first
+[1:02:55] search or something like this. um you
+[1:02:59] run that search algorithm, you get a
+[1:03:01] solution and then you turn it into a
+[1:03:03] chain of thought. So you like
+[1:03:04] heristically turn the thing into a chain
+[1:03:06] of thought just like we did for the
+[1:03:08] scratch pad in star. So like star was a
+[1:03:11] way of solving mathematical equations.
+[1:03:13] Now this is a way of like taking a
+[1:03:15] search algorithm and turning it into a
+[1:03:16] chain of thought.
+[1:03:21] Um so they tried a bunch of different uh
+[1:03:23] search strategies like breath first
+[1:03:25] search and depth first search variants.
+[1:03:27] Um, you know, all of these are things
+[1:03:29] you've already learned, basically. Um,
+[1:03:31] and then, uh, they took 500k search, uh,
+[1:03:34] trajectories on a game called Countdown,
+[1:03:36] where you need to countdown, uh, to, uh,
+[1:03:39] I forget the exact details, but it's a,
+[1:03:41] a simple game that nonetheless requires
+[1:03:43] reasoning. And, um, then they uh, they
+[1:03:48] compared this and were able to get uh,
+[1:03:50] good results with this stream of search
+[1:03:52] strategy.
+[1:03:56] And then finally uh an interesting one
+[1:03:59] that kind of mixes reasoning with tool
+[1:04:01] use a little bit. Sorry this figure is a
+[1:04:02] little bit small is uh adaptive parallel
+[1:04:06] search. And basically the idea is they
+[1:04:09] use something similar to stream of
+[1:04:11] search but they give the model the
+[1:04:14] ability to spawn parallel search
+[1:04:17] threads. So it's like a tool that allows
+[1:04:19] you to like split off different threads
+[1:04:23] in in inference and join uh to return
+[1:04:27] the results to a parent thread. So it's
+[1:04:28] like you know multi-thread programming
+[1:04:30] basically
+[1:04:32] um and they do end toend RL optimization
+[1:04:34] of this sort of like parent child
+[1:04:36] coordination. And one interesting thing
+[1:04:39] that they are able to show is that
+[1:04:42] compared to stream of search where
+[1:04:44] stream of search essentially had a limit
+[1:04:47] on what you could do uh due to the
+[1:04:50] overall token length. So like you know
+[1:04:52] everybody talks about inference time
+[1:04:54] scaling by like generating lots of
+[1:04:56] tokens. Um but if you run out of tokens
+[1:05:01] you can't generate anymore, right? So um
+[1:05:04] what this does is this allows you to
+[1:05:05] split off and do parallel search threads
+[1:05:07] and merge them back together um while
+[1:05:10] limiting the number of sequential tokens
+[1:05:12] and greatly increasing the accuracy on
+[1:05:14] the um things they were working on. Um
+[1:05:16] the overall latency gets slower because
+[1:05:18] you need to generate more um more tokens
+[1:05:21] overall but uh nonetheless you can see
+[1:05:23] it's reasonably beneficial.
+[1:05:27] Cool. Um so this is kind of a high level
+[1:05:30] overview. This is a very popular topic
+[1:05:32] nowadays. So there's like tons and tons
+[1:05:33] of stuff that I didn't cover, but um
+[1:05:36] hopefully these give you uh some ideas
+[1:05:38] of general uh general things in that
+[1:05:41] direction. Um cool. And then uh I guess
+[1:05:44] we can switch over to the student
+[1:05:45] presentation uh while we have uh the
+[1:05:48] presenter come

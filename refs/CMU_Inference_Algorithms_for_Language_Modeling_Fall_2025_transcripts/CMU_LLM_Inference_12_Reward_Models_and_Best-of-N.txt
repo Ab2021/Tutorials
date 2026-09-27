@@ -1,0 +1,1395 @@
+Title: CMU LLM Inference (12): Reward Models and Best-of-N
+
+--- TRANSCRIPT ---
+
+[0:00] All right, cool. Uh, we can go ahead and
+[0:01] get started then. Um, before we start, a
+[0:04] couple of updates. Um, as you've
+[0:07] probably seen, homework 2 is out. Um, we
+[0:10] are working on grading homework one.
+[0:12] However, we will probably not release
+[0:14] full grades for homework one before the
+[0:16] drop deadline, which I believe is next
+[0:18] week. So, if this is a concern for you,
+[0:21] if this is like information you needed
+[0:22] to make that decision, if you make a
+[0:24] private post on Piaza, we can like
+[0:25] prioritize grading for anyone that that
+[0:27] applies to. Um there's also a question
+[0:30] on Piaza about the AI and um use policy.
+[0:34] Um and we'll make a post on that later
+[0:36] today. Essentially, our policy is
+[0:39] probably as you've seen in most other
+[0:40] classes that you can use AI assistance,
+[0:42] but you can't just sort of plug in
+[0:43] things directly. Um and we'll we'll have
+[0:46] more details in that post as well. Um
+[0:49] and then last bit of administrative
+[0:52] stuff, um we have the feedback for
+[0:54] feedback form out for homework one. Um
+[0:56] the stuff we've seen on there so far is
+[0:57] super useful and right around half of
+[0:59] the class has filled it out. So if you
+[1:01] haven't filled that out yet um it's
+[1:03] super super helpful. We're keeping it in
+[1:04] mind. It's on Piaza and it'll be open
+[1:06] until I think tomorrow at midnight.
+[1:09] Cool. And so from there we'll get
+[1:11] started. Uh today we're going to be
+[1:12] talking about reward models and best
+[1:14] event and we will have three student
+[1:17] presentations. So this will be maybe a
+[1:19] little bit shorter than usual. Um I
+[1:22] think a sort of reasonable first
+[1:24] question here is why we're going to be
+[1:25] spending a whole lecture on best of end
+[1:27] which from the name alone seems like an
+[1:29] extremely simple idea. Um and the answer
+[1:32] here is that we're going to use this as
+[1:33] sort of a framework to talk about um a a
+[1:36] tiny bit of uh computational statistics
+[1:38] and a little bit more broadly about
+[1:40] reward models which are also um though
+[1:43] RLHF is not something that we'll cover
+[1:44] as much in this class hugely useful for
+[1:47] reinforcement learning and for a wider
+[1:48] variety of different post-training
+[1:50] approaches that are very popular
+[1:51] nowadays. So we'll talk about this
+[1:54] through sort of the inference time
+[1:55] equivalent which is best using a reward
+[1:58] model.
+[1:59] Um, but before we talk about reward
+[2:01] modeling at all, we're going to take a
+[2:03] little bit of a diversion and talk about
+[2:05] the broader problem of rejection
+[2:07] sampling. The idea here is that we have
+[2:10] some type of distribution that we're
+[2:11] interested in generating samples from.
+[2:14] Um, and we know some properties of this
+[2:16] distribution, but we don't have a
+[2:18] well-formed way of drawing samples
+[2:20] directly from it. Maybe it's um not
+[2:23] computationally feasible. Maybe we don't
+[2:25] know um exactly how to write down the
+[2:28] form of this distribution. We kind of
+[2:30] know how to check the probability for a
+[2:31] given point, but we don't really know um
+[2:34] like a good way of sampling from it.
+[2:36] Maybe it's just expensive to sample from
+[2:37] this and so we want some alternative. Um
+[2:41] what if we what do we do if we want to
+[2:43] sample from D but we don't know how to
+[2:45] get it. Um, and the idea of rejection
+[2:47] sampling is to draw samples from some
+[2:49] other distribution and then do some kind
+[2:51] of manipulation at the end to get a
+[2:53] sample that could have plausibly come
+[2:54] from our target distribution D. So to
+[2:58] see how that works, um, let's say this
+[3:00] is our target distribution D. Um, this
+[3:03] kind of so this is probability on the y-
+[3:05] axis and then this x here is our
+[3:07] support. Um, and this is a kind of nasty
+[3:10] looking structure. Maybe it's hard to
+[3:12] write down an equation for that would
+[3:13] give you exactly this function.
+[3:15] Um but we want something that we we want
+[3:17] a sample that sort of fits in this
+[3:19] probability mass space that defines the
+[3:21] distribution D. Right? So what we'll do
+[3:24] instead is rather than trying to write
+[3:27] out what D would look like, we will take
+[3:30] some other target some other candidate
+[3:32] distribution or proposal distribution to
+[3:35] sample from. So here let's say we want
+[3:37] to sample from the distribution with
+[3:40] uniform probability over the support of
+[3:42] D. This is really easy. We know how to
+[3:44] draw a sample from a uniform
+[3:46] distribution, right? You just do random
+[3:49] a random number in that range. Um, and
+[3:51] so it's very easy to from this proposal
+[3:54] distribution sample a number of points.
+[3:56] Once we have points from a proposal
+[3:58] distribution, however, we now have a
+[4:01] sample from our distribution P, our
+[4:03] proposal, and not from our actual target
+[4:05] distribution D. How do we get there? Um
+[4:09] what we're going to do is we're going to
+[4:12] now that we have this sort of sample in
+[4:14] one direction, the sample along the
+[4:15] support, we're going to try to estimate
+[4:18] a probability that each of these things
+[4:20] is actually um from D. So the intuition
+[4:23] here is that we want to say like um if
+[4:26] we were sampling from Directly, the odds
+[4:28] that we would have sampled say um this
+[4:31] point which is like quite um a low
+[4:34] probability region of D are relatively
+[4:36] small. the odds that we would have
+[4:37] sampled say this point which is from
+[4:39] quite a high probability region of D are
+[4:41] relatively high. Um and so by doing this
+[4:44] we're going to eliminate parts of our
+[4:46] sample to try to get something that was
+[4:48] more characteristic of our uh target
+[4:50] distribution.
+[4:52] And the way we do that is we sort of
+[4:53] sample a likelihood of acceptance. And
+[4:56] I'm speaking kind of loosely here
+[4:58] because we'll look at the math in just a
+[4:59] second. Um, and so we've taken these
+[5:02] points that we drew from this
+[5:03] distribution and we've given them sort
+[5:05] of a probability along another
+[5:06] dimension, which is the likelihood that
+[5:07] we would accept that as part of our
+[5:10] sample from D. Um, then we now have this
+[5:14] sort of distribution here and we can
+[5:15] just score this. Anything that was in
+[5:17] like our inner area of D, we're going to
+[5:20] keep. Anything that was outside of that
+[5:21] region, we're going to reject. and our
+[5:24] new um sample here which is just these
+[5:27] green points that we sampled will be
+[5:29] more characteristic of a sample from D
+[5:32] than our original sample from our
+[5:33] proposal distribution.
+[5:35] So to sort of write this out um a little
+[5:39] bit more formally we're going to to
+[5:41] sample from a distribution that we find
+[5:43] is hard to sample from define a proposal
+[5:46] distribution that has support at least
+[5:49] as large as D support. So what this
+[5:50] means is that everywhere that D has
+[5:53] nonzero probability, we need to have
+[5:54] non-zero probability because you can't
+[5:57] get a sample that's characteristic of
+[5:59] this distribution if you can't sample
+[6:00] everything in that distribution, right?
+[6:03] And then we're going to sample from our
+[6:05] proposal distribution. And then we'll
+[6:07] define a probability of acceptance for
+[6:09] each individual point in that sample
+[6:12] which is this probability here. The
+[6:14] probability of that point under D
+[6:17] divided by C times the probability of
+[6:19] that point under our proposal
+[6:20] distribution. And C here um is a
+[6:23] constant. There's a in rejection
+[6:26] sampling you would define this as sort
+[6:27] of the tightest upper ground. Um if
+[6:30] you're doing this uh sort of iteratively
+[6:34] you can also approximate this but the
+[6:36] idea is that you need to pick a value of
+[6:37] C that is big enough such that the
+[6:40] probability under your uh true your
+[6:43] target distribution is smaller than or
+[6:45] equal to C times the probability under
+[6:48] your proposal distribution. And the
+[6:50] reason you do this is you want this to
+[6:52] be a well- definfined probability
+[6:54] distribution here. So, you know, for any
+[6:57] sample, you're going to have support at
+[7:00] least as large as D's. So, D of X could
+[7:02] be zero. Um, but P of X obviously never
+[7:05] will be because you sampled that from P.
+[7:08] And you're going to make sure that your
+[7:10] denominator is always at least as big as
+[7:11] your numerator. So, at most this will go
+[7:14] from 0 to one. And because this is a
+[7:16] probability distribution, you need it to
+[7:18] go no more than zero to one. Right?
+[7:22] So this is um a sort of a something in
+[7:26] the broad class of Monte Carlo
+[7:27] techniques or ways of doing some kind of
+[7:29] probabilistic manipulation to get at
+[7:31] something that is actually hard to
+[7:32] calculate directly. Um and this is our
+[7:35] uh rejection sampling in particular is
+[7:37] our way of getting samples from a
+[7:39] distribution that we don't know how to
+[7:40] sample from directly.
+[7:42] Why are we talking about this if we're
+[7:44] in a class on language models? Um, but
+[7:47] we're going to tie this into the idea of
+[7:48] sampling from the distribution of human
+[7:51] preference or the distribution of uh
+[7:54] some particular subset of people's
+[7:56] preference, which is a distribution that
+[7:58] is kind of hard in practice to write
+[7:59] down and hard to directly draw samples
+[8:01] from. But before we do that, if we look
+[8:05] at this um graph here, so this blue
+[8:07] target distribution and this black
+[8:09] proposal distribution,
+[8:11] um you notice that we we rejected maybe
+[8:14] half of the points that we sampled. If
+[8:17] we wanted a really good uh sample from
+[8:19] our target distribution, we could be
+[8:21] here a really long time, right? So the
+[8:24] idea here is that the closer our target
+[8:28] distribution is to our true
+[8:29] distribution, the less often that will
+[8:31] happen, right? Like if we had a proposal
+[8:33] distribution that put a lot of
+[8:35] probability on these areas where D ofX
+[8:37] is high, then this uh proportion which
+[8:41] is D of X divided by some constant times
+[8:44] some constant times P of X would often
+[8:47] be high. So the probability of accepting
+[8:48] every individual sample would be
+[8:50] relatively high. So if we can define a
+[8:52] proposal distribution that's closer to
+[8:54] our true distribution, we can reject
+[8:56] less often. Uh does this make sense?
+[8:59] Yes. So how do we get a proposal
+[9:02] distribution that's closer to the true
+[9:04] distribution?
+[9:05] Um well, we're going to do that by
+[9:08] instead of taking some sort of simple
+[9:11] distribution from statistics by learning
+[9:14] a distribution um like a language model
+[9:16] and then drawing from that distribution
+[9:17] directly.
+[9:19] But we actually don't care about finding
+[9:22] a a large sample that's sort of
+[9:24] characteristic of some target
+[9:25] distribution of preference. Um what
+[9:27] we're actually going to care about for
+[9:29] the rest of today is finding the single
+[9:31] highest point or some high point in our
+[9:34] target distribution rather than sampling
+[9:36] a bunch of things that are sort of
+[9:37] characteristic of this curve. We want to
+[9:40] sample one thing that is like near one
+[9:42] of these peaks or as close to them as we
+[9:45] can get. Um, if we have a distribution
+[9:47] that's just in two dimensions like this,
+[9:49] uh, this is really easy. We can draw
+[9:50] this out and just take the max. Um, but
+[9:52] we're operating over the space of all
+[9:54] sequences of up to some length, maybe up
+[9:57] to a couple thousand tokens in some
+[10:00] language, which is of course a vastly
+[10:02] more dimensional space than two. And so
+[10:05] since we can't actually draw this out,
+[10:07] what could we do instead?
+[10:13] If we want to, we have some function um
+[10:16] d ofx which gives us the
+[10:19] preference or the target distribution
+[10:21] likelihood or the reward of some
+[10:23] individual point and we want to find the
+[10:26] highest possible point. How could we
+[10:29] approximate this
+[10:36] if we knew our distribution? Yeah, go
+[10:37] for it.
+[10:40] >> Do gradient descent. Yeah, if we knew
+[10:41] that our um distribution was somehow
+[10:44] like well like convex, if we knew that
+[10:46] we would find a minimum or find a
+[10:48] maximum, then we could like try to
+[10:50] descend in some direction, right? Um
+[10:53] this could be sometimes true locally
+[10:55] like maybe we can refine an output. Um
+[10:57] but in general, we're going to have this
+[10:59] sort of non-convex very complicated
+[11:01] space of preference where some things
+[11:02] that are close to each other are very
+[11:04] good and some things that are far from
+[11:05] each other are like very different in
+[11:07] preference.
+[11:09] Um yeah
+[11:13] at least reverse should be more so you
+[11:15] would get the distribution that should
+[11:18] be the highest point. Can you say more
+[11:21] about that?
+[11:22] >> Like um you could um like take your
+[11:26] proposal distribution and do like some
+[11:28] kind of K divergence with a bunch of
+[11:30] sample distributions and then try to um
+[11:33] like yeah if you do reverse scale you
+[11:35] would the prop the optimized solution
+[11:38] would try to seek the mode of which is
+[11:41] the highest point you seem to be
+[11:43] >> reverse scale.
+[11:46] This is
+[11:48] I think this is not quite where we're
+[11:50] headed, but this is an interesting
+[11:51] thought. This is like this is closely
+[11:52] related to the idea of KL divergence.
+[11:58] >> Yeah, maybe we circle back in a sec
+[12:00] because I think I'm not quite following
+[12:01] what you're saying, but it does sound
+[12:03] like the right direction.
+[12:06] But yeah, so our our approach for at
+[12:10] least for today is going to look a
+[12:12] little bit like guess and check. We are
+[12:14] going to take some distribution, some
+[12:16] proposal that is we think is somewhat
+[12:18] close to the distribution D because we
+[12:21] would like to sample things that are
+[12:22] likely to be high in D with higher
+[12:24] probability. And then we're going to
+[12:27] check which has the highest probability
+[12:28] under D. So rather than doing this
+[12:30] projection sampling thing where we're
+[12:31] looking at D of X over CP of X, we're
+[12:34] just going to check D of X and we're
+[12:36] going to return the the highest
+[12:38] probability thing under some um proposal
+[12:40] under the target distribution.
+[12:43] And when we talked about this for
+[12:45] constrained decoding a couple of weeks
+[12:46] ago, we were pretty much we were pretty
+[12:48] strongly against this idea of rejection
+[12:50] sampling, right? We said maybe if you
+[12:52] wanted to generate things until you
+[12:54] stopped until you generated some
+[12:55] sequence that was not harmful or not
+[12:58] about some topic or contained some word,
+[13:00] you could wind up kind of stuck in this
+[13:02] space where you're generating forever.
+[13:04] Um the difference here is that we're
+[13:06] only kind of interested in relative
+[13:08] behavior. So we're going to say we think
+[13:10] our proposal distribution, our language
+[13:12] model is close enough that we're going
+[13:14] to say we're going to get something
+[13:15] reasonable out of it. So we're going to
+[13:17] fix some value of n and say we're going
+[13:19] to sample maybe 10, maybe a hundred
+[13:21] things and we're not going to keep
+[13:22] sampling if those are all low
+[13:24] probability. We're going to sort of say
+[13:25] that's as good as we got. Um so we're
+[13:28] just going to return the sort of least
+[13:30] bad of our samples. And if our
+[13:32] distribution P lines up nicely with D,
+[13:34] then hopefully there's going to be
+[13:36] something in there that's relatively
+[13:37] high probability.
+[13:39] Um, and so this is exactly best of N.
+[13:43] Um, we have some distribution of
+[13:45] preference. We don't know how to get a
+[13:48] sample from the preference distribution
+[13:49] directly. So instead, we're going to
+[13:51] draw samples from P and choose sort of
+[13:53] the highest probability of those
+[13:55] samples.
+[13:58] Um, so this is like an extremely simple
+[14:00] algorithm conceptually, right? We're
+[14:02] going to sample n things. We're going to
+[14:04] rank them according to something other
+[14:06] than the log probability from our
+[14:08] original model because if we were doing
+[14:10] that, we would just be doing some kind
+[14:11] of variant of mode seeking search and
+[14:13] we'll return whichever one is best under
+[14:15] some new ranking, right? Um, so for the
+[14:19] rest of today, we're going to sort of
+[14:21] talk about
+[14:22] two things or really one thing here.
+[14:25] We're going to talk about what something
+[14:26] other than log props from your original
+[14:28] model could possibly be. Um
+[14:32] this is
+[14:34] uh so best event can be viewed as a type
+[14:36] of alignment. So today what we're going
+[14:38] to be talking about is reward models
+[14:40] predominantly which is what um people
+[14:43] talk about when you talk about something
+[14:44] like aligning to human values. You're
+[14:46] usually doing reinforcement learning
+[14:47] with a reward model. Um and so there's a
+[14:51] nice view of best of n as a way of
+[14:53] achieving inference time alignment. Um
+[14:56] so the idea here is that you have like
+[14:59] you is exactly this rejection sampling
+[15:01] idea. You're trying to take a set of
+[15:03] outputs drawn from one distribution and
+[15:05] align them to a new distribution. Um and
+[15:07] you can view this as trying to uh reduce
+[15:10] the kale divergence between samples
+[15:13] drawn from your best of end policy and
+[15:14] your um target distribution.
+[15:19] Um that is closely tied to the question
+[15:21] of how we pick this value n like how do
+[15:24] we decide how many things is enough to
+[15:26] sample? Um there's this pretty
+[15:29] frequently cited number in the
+[15:31] literature which is that you can draw
+[15:33] this sort of loose upper bound on the
+[15:35] divergence between the KL divergence
+[15:38] between your best of end outputs
+[15:39] distribution and your target
+[15:40] distribution as log n minus n minus one
+[15:44] overn. Um and so what this means is if
+[15:48] you this sort of best of n outputs
+[15:50] distribution is if you had say a
+[15:54] thousand um inputs and for each of them
+[15:56] you did best of n with n equals 50 um
+[16:00] you could calculate the expected you
+[16:02] could bound the up the kl divergence
+[16:04] between the distribution of your sort of
+[16:07] best output from each of those and the
+[16:10] distribution of your um target of your
+[16:13] target which is sort of the preference
+[16:14] distribution.
+[16:15] at this value. Um this is often quoted
+[16:19] as an exact value like this is this will
+[16:21] be the KL divergence um or at least as a
+[16:24] very tight bound. There's actually some
+[16:25] very interesting work um in the theory
+[16:27] direction which argues that this is not
+[16:30] in tight upper bound for a number of
+[16:32] sort of edge cases some of which do
+[16:34] occur in practice. Um and so there's
+[16:36] this really excellent paper by Barami at
+[16:38] all. Um which is where this figure is
+[16:40] from actually. So this dotted blue line
+[16:42] here is that log n minus n minus one /n
+[16:47] which is one bound of the kl divergence.
+[16:50] This red line here is a much tighter
+[16:52] sort of more complex bound. And this
+[16:55] black line here or this black dots here
+[16:57] are empirical kale divergence between a
+[16:59] best of end policy and the uh target
+[17:02] distribution as n grows um larger.
+[17:10] >> Yeah. Uh so this the proposed estimator
+[17:12] here I didn't write it out because it's
+[17:14] uh kind of long but this is the um this
+[17:18] is a new a tighter bound on the KL
+[17:20] divergence.
+[17:21] >> Okay. So it's tighter than
+[17:24] >> Yeah. So this is sort of a this is the
+[17:27] formula that you most likely see quoted
+[17:29] in the literature. Um and this is an
+[17:31] upper bound on the KL divergence.
+[17:33] there's a much tighter sort of more
+[17:35] complex upper bound. Um, which is I
+[17:39] think it's like equation 25 in this
+[17:41] paper. Um, and so there's a number of
+[17:44] like there's a a long derivation to get
+[17:47] to this tighter bound. Um, which I think
+[17:49] is quite interesting to read, but we're
+[17:52] not going to go through in depth today.
+[17:59] Great. So,
+[18:01] so this is not quite an answer to the
+[18:03] question of what is the sort of best end
+[18:06] to choose. Um, but it is at least
+[18:08] partway to the answer, which is the
+[18:09] higher the end, the closer you're
+[18:11] getting to sort of the target
+[18:12] distribution that you've defined. Um,
+[18:15] we're going to take a step back and talk
+[18:17] about how you define a target
+[18:18] distribution. Um, and the way that this
+[18:20] is most often parameterized is through a
+[18:24] reward model. uh and reward models, at
+[18:27] least in our normal conception of them,
+[18:30] are models that were trained with a loss
+[18:32] that is derived from this, which is the
+[18:34] Bradley Terry model of preference. So
+[18:36] the idea here is if you have two things
+[18:38] and you're trying to make a pair-wise
+[18:39] comparison between them, you say that
+[18:41] the probability that thing I is better
+[18:43] than thing J is related to this ratio of
+[18:46] probabilities between them. So you can
+[18:48] kind of eyeball this and say they have
+[18:49] the same probability. It's a 50-50 shot.
+[18:52] Um and of course as probability of I
+[18:54] goes up it becomes more likely that
+[18:56] that's the preferred item. Um we think
+[18:59] about things not usually in
+[19:00] probabilities but in log probabilities.
+[19:03] So you'll see loss functions for reward
+[19:05] models that take a form kind of like
+[19:07] this where the reward of output one is
+[19:11] uh related to the reward of output two
+[19:13] in this way. We say the probability that
+[19:15] y1 is better than y2 is the
+[19:17] exponentiation over the sum of exponents
+[19:20] which is exactly the same equation if
+[19:22] your rewards are log probabilities.
+[19:25] So how do we get a model that gives us
+[19:28] this kind of output? Generally we will
+[19:30] take an existing model um generally a
+[19:33] relatively strong language model. Um if
+[19:35] you want to get a scalar prediction
+[19:37] you'll strip off the language modeling
+[19:39] head and replace it with some kind of
+[19:40] sequence classifier. Um and then you
+[19:43] will train on pair-wise preference data.
+[19:45] Um so data where you have like one input
+[19:47] and two outputs, one that is chosen and
+[19:50] one that is rejected or one that is good
+[19:52] and one that is bad. Um and so the task
+[19:55] is to predict whether Y1 or Y2 was the
+[19:58] CH or yeah whether Y1 was the chosen. So
+[20:02] probability Y1 is chosen over Y2.
+[20:05] >> Yeah.
+[20:06] >> Ju just to clarify this is like one
+[20:07] variety of reward model, right? It's got
+[20:09] like a reward model can be any model
+[20:12] that predicts
+[20:13] >> a reward, but this is specifically the
+[20:15] one that's for us.
+[20:17] >> Yeah, we'll talk about generative reward
+[20:19] in just a few minutes.
+[20:21] But this
+[20:22] >> the reason why I was saying this you
+[20:24] just said what is a reward model to
+[20:26] clarify that this is like one variety of
+[20:28] reward. It's not like every every
+[20:30] >> Yeah. So this um this is one variety of
+[20:34] reward model that will give you
+[20:35] generally a scalar reward value. Um,
+[20:38] this is while I think a little less
+[20:41] common than it was a year or two ago,
+[20:42] still a really powerful way of training
+[20:45] reward models and still a a version of
+[20:47] reward modeling that is used in a lot of
+[20:49] RHF.
+[20:51] Um, but the
+[20:54] this is sort of not the only approach
+[20:56] and another approach that is gaining
+[20:58] prominence is the idea of using a
+[20:59] generative model as your reward model.
+[21:01] So this is this seems like a lot of
+[21:03] additional steps. If we are have a model
+[21:05] that is sort of already good, can we
+[21:07] just ask the model which of these
+[21:09] outputs is better? Um and so this
+[21:11] literature is closely related to the
+[21:13] idea of using a language model as a
+[21:15] judge because you are asking a model to
+[21:17] judge between outputs. Um you can also
+[21:20] train generative models to do this task.
+[21:22] So you can SFT them. You can do RL on
+[21:25] whether they've identified the preferred
+[21:26] example or not. Um you can provide
+[21:29] examples in context. you can do
+[21:31] functionally anything you would do for
+[21:33] any other language modeling task but in
+[21:35] this reward modeling space. Um in
+[21:37] particular I think there's a there's an
+[21:39] interesting literature in asking reward
+[21:40] models to justify which one is better.
+[21:43] Um and this and much like other types of
+[21:46] chain of thought improves performance.
+[21:48] Um this also means that you can sort of
+[21:51] step away from the idea of pair-wise
+[21:53] preference. You could just ask for a
+[21:55] sing you could ask if a single output is
+[21:57] good. You could ask if a ranked list is
+[21:59] good or rank you could ask to rank a
+[22:01] list if you have several outputs that
+[22:03] you're interested in considering. Um in
+[22:05] practice pair wise preference is still
+[22:07] quite popular um because it sort of
+[22:08] mimics a natural type of feedback we get
+[22:10] which is like picking between two
+[22:12] candidates. Um
+[22:15] so the nice thing about a generative
+[22:17] reward model is you can do more
+[22:19] different types of preference
+[22:20] evaluation. You don't need to train a
+[22:22] specialized model. You could even use an
+[22:23] API model for this task. And if your
+[22:26] task specifications or your preferred
+[22:28] outputs change, if you have some notion
+[22:29] that maybe something was okay to say
+[22:32] before but it's not now or some
+[22:34] information has changed and now you
+[22:36] don't want your reward model to you know
+[22:38] be trained to output like one person as
+[22:40] the president if an election just
+[22:42] happened and now another one is the
+[22:43] president then the preference um ranking
+[22:45] of those two outputs would change. So
+[22:48] you can easily modify a model um more a
+[22:52] generative reward model that you did not
+[22:54] train for this task if the task
+[22:55] specification changes.
+[22:58] Um but generative reward models also
+[23:00] have some uh minuses which is that they
+[23:05] are inconsistent across calls. So um
+[23:08] most API models are non-deterministic
+[23:10] even at temperature zero. If you call
+[23:12] the reward model twice and the first
+[23:14] time it tells you A is better than B and
+[23:16] the second time it tells you B is better
+[23:17] than A, that's not really helpful. Um,
+[23:20] in practice though, if you ask a you're
+[23:22] not likely to see problems from
+[23:24] non-determinism at temperature of zero.
+[23:26] What you're more likely to see is if you
+[23:28] change your instruction template
+[23:29] slightly or the model updates behind the
+[23:31] scenes and you don't know this because
+[23:33] you're calling an API provider or you
+[23:35] swap the order of the two inputs. If you
+[23:37] say the preference between A B is that A
+[23:39] is better, but the preference between BA
+[23:41] is that B is better. Um, these are sort
+[23:44] of these sort of sensitivities to input
+[23:47] ordering and to format are general
+[23:49] problems with language models. They're
+[23:50] not exclusive to the reward modeling
+[23:52] space. But if you're using a reward
+[23:53] model that is also a generative model,
+[23:55] you need to consider these as potential
+[23:57] um issues or confounders. Um, another
+[24:00] kind of strange thing about generative
+[24:02] reward models which you don't see with a
+[24:04] pair a pair-wise scalar model is that
+[24:06] rewards are generally not transitive. So
+[24:09] if you're ask your reward model is is A
+[24:12] or B better and it says A is better and
+[24:14] then you ask it is B or C better and it
+[24:17] says B is better. Um, if you ask it is A
+[24:20] or C better, you're not always going to
+[24:22] get the answer that A is better, which
+[24:24] is what you would expect. Um this is
+[24:29] sort of um because the model doesn't
+[24:31] have sort of like a mental it doesn't
+[24:34] have a mental model of what came before.
+[24:35] The model doesn't have like a a
+[24:37] knowledge of what you've called and the
+[24:39] model may be sort of not using the same
+[24:42] heavy quotes criteria to grade across
+[24:44] calls. Yeah. Is it so much the issue of
+[24:46] the reward model or the nature of you
+[24:49] know the things that we want to like um
+[24:52] reward
+[24:54] >> like you know Bulbasaur squirrel
+[24:56] Charmander they're not transitive
+[24:58] because they're like the weaknesses if
+[25:00] you play Pokemon
+[25:02] >> the thing is a is a is stronger it's
+[25:05] rock paper scissors rock paper scissors
+[25:08] is not trans but that is just how that
+[25:10] works and if you encode that into a
+[25:12] reward model it might not necessarily
+[25:14] catch it might it might catch it, but
+[25:17] that's really just because of the nature
+[25:19] of the task and not because of the
+[25:20] model, right?
+[25:21] >> Yeah, you're saying like maybe reward
+[25:23] models are not transitive because reward
+[25:24] is not always transitive.
+[25:25] >> Yeah, I think that's a solid point. Um I
+[25:28] think that like they this phenomenon is
+[25:31] maybe a little broader than the cases
+[25:33] where the reward itself is not
+[25:34] transitive, but there's certainly cases
+[25:36] where maybe this isn't a property we
+[25:38] need to enforce.
+[25:39] >> Yeah.
+[25:44] Yeah. How is this different from Elm as
+[25:45] a judge? Um short answer is they're kind
+[25:50] of overlapping. Um where this like a
+[25:52] generative reward model can be seen as
+[25:55] like one version of LM as a judge. Um
+[25:58] often generative reward models are still
+[26:00] framed as a pair-wise task whereas other
+[26:02] LM as a judge um framings might be like
+[26:05] to output a score based on a rubric. But
+[26:08] you could certainly take a model that
+[26:09] gives you a score based on a rubric and
+[26:11] use that as a reward model too. Um, a
+[26:13] reward model is really anything that
+[26:15] gives you some signal about outputs and
+[26:18] their quality. And so that could be a
+[26:20] that could even be a human telling you
+[26:22] which ones are good.
+[26:26] Um, and in fact in I think a week from
+[26:28] today we'll talk about um using rewards
+[26:31] that are based on information you glean
+[26:33] from other outputs from the same model.
+[26:36] um which is a different type of framing
+[26:37] this problem.
+[26:40] So to do reward modeling we need to
+[26:42] generate some kind of preference data or
+[26:44] we need to generate some kind of data
+[26:45] about what types of outputs are good. Um
+[26:48] and to do this I thought we could take a
+[26:51] look at some uh various types of outputs
+[26:54] from models and try to sort of do this
+[26:55] task as a group. Um so first we have a
+[26:58] question. Um, does anyone want to
+[27:01] volunteer opinions on what a good or bad
+[27:04] answer to this question would look like?
+[27:07] Like if I had to write preference data
+[27:10] for this, what's a what's a bad answer?
+[27:13] What's a good answer?
+[27:18] This is a kind of hard question, right?
+[27:20] What about a slightly easier question?
+[27:21] Yeah.
+[27:22] >> Why don't we put it in lina and we can
+[27:25] decide which one we like better.
+[27:26] >> Yeah.
+[27:35] What did I say? What? How does a
+[27:37] language model work?
+[27:43] >> Let me agree to everything.
+[27:48] And
+[27:48] >> I think most people have seen this, but
+[27:49] if you haven't seen this, this is a
+[27:50] place where you can like run multiple
+[27:52] language models and get get
+[28:00] So the key here is that um the question
+[28:02] of what's a good output for this is a
+[28:05] really really broad space but a much
+[28:07] easier question is which of two outputs
+[28:09] for this are better. Um and we could go
+[28:12] through and sort of read these. Um I'm
+[28:15] curious does anyone have a guess of
+[28:17] which model is which here just by pure
+[28:19] style alone?
+[28:25] single left is
+[28:28] >> I think left
+[28:29] >> looks looks like
+[28:31] >> yeah that's that's why I asked this
+[28:33] because I looked at this and I was like
+[28:34] this is this is Claude
+[28:35] >> I think it's probably not quite it
+[28:37] doesn't make enough emojis
+[28:38] >> but the lack of emojis makes it look
+[28:40] like
+[28:44] >> Claude doesn't give me emojis
+[28:49] >> um
+[28:51] why why don't we vote this will be a
+[28:53] very high signal
+[28:55] instance for
+[28:56] >> yeah single-handedly subsidizing the
+[28:58] data.
+[28:59] >> Left is better.
+[29:03] >> We think right is better.
+[29:07] >> I think that's a slight win.
+[29:09] >> Okay, cool. Let's go with
+[29:11] >> All right. Why select left is better.
+[29:16] >> So this kind of um preference data at
+[29:18] scale is exactly how you generate a
+[29:20] preference data set. Um
+[29:25] Look at us go. It doesn't tell us what
+[29:27] the other one was though, does it?
+[29:29] >> Quen 3.
+[29:31] >> Quen 3 max.
+[29:38] >> Yeah, Claude likes headings. Um, so here
+[29:42] we've seen I think live a couple both
+[29:45] good and bad things about preference
+[29:47] modeling. Um, the good is that it this
+[29:49] is this question of like which of these
+[29:50] is better is a lot easier to answer than
+[29:52] the wide openen question of what is a
+[29:54] good output, right? It's a lot easier to
+[29:56] say I like A over B than it is to write
+[29:58] a rubric for this question. Um, the bad
+[30:02] is one, even in this short example, we
+[30:05] had text that was too long for us to
+[30:06] read without scrolling. Um, I didn't
+[30:09] scroll through it probably long enough
+[30:11] for everyone to fully read both answers.
+[30:13] And so even though we voted on it and
+[30:14] made kind of an aggregate decision, um
+[30:17] we voted on it really without reading
+[30:19] the whole thing. Um and in practice for
+[30:21] annotators, this is quite common as
+[30:22] well. Um we also disagree, right? We had
+[30:26] two outputs that looked kind of
+[30:27] reasonable. We didn't have a like maybe
+[30:30] a super strong bias as a group between
+[30:32] them, maybe partially because we didn't
+[30:33] read the whole thing. Um, and then also
+[30:35] we were able to pick up some stylistic
+[30:37] features like I think we had a sense of
+[30:39] which one of these models might be and
+[30:41] if you have strong opinions about
+[30:43] anthropic, good or bad, maybe that
+[30:45] influence which one you voted for. Um,
+[30:48] so preference modeling is quite
+[30:50] powerful. Um, generally when we're doing
+[30:53] preference modeling, we're not looking
+[30:54] at questions that look like this. So
+[30:56] we're not usually trying to pick out
+[30:57] like correctness. Um although some
+[31:00] preference modeling data sets do include
+[31:02] things like in inserting misinformation
+[31:04] or providing outofdate info. Generally
+[31:07] though um we're trying to get that kind
+[31:09] of information from pre-training or from
+[31:11] supervised fine-tuning when we're doing
+[31:13] preference modeling either to do RLHF or
+[31:15] to do best of end. We're trying to get
+[31:17] more at things like style style or
+[31:20] verbosity. So if we have these two
+[31:22] outputs here uh we could say like from a
+[31:26] correctness level these are functionally
+[31:28] equivalent. they both give us the right
+[31:29] answer at the end. But if you want to
+[31:31] train your model to do something that's
+[31:32] more like reasoning or more like
+[31:34] thinking, um you would prefer output
+[31:36] two. If you want your model to output
+[31:38] the minimum number of tokens possible,
+[31:40] you'd prefer output one because this is
+[31:42] maybe a simple enough question. It
+[31:44] doesn't have to do all of that um
+[31:46] multiplication or explanation.
+[31:49] Um and preference modeling is also about
+[31:52] imposing
+[31:54] um your own notions of what how a model
+[31:56] should interact with the world. Um, so
+[31:59] which we were just talking about
+[32:00] anthropic which I think has some of the
+[32:02] more um like coherent and detailed
+[32:05] messaging and what how they think their
+[32:07] model should interact with the world. Um
+[32:09] there's a variety of different opinions
+[32:12] on questions like should a model answer
+[32:14] things like what's my favorite food? Um
+[32:16] should a model say give an age if you
+[32:19] ask how old it is? Should a model tell
+[32:21] you quote who it is? If you ask um
+[32:25] should it say like I am a model built by
+[32:27] anthropic? Should it say I am Claude? Um
+[32:30] and these are all preferences that are
+[32:32] defined broadly by whoever
+[32:35] annotated the data or more upstream
+[32:37] whoever wrote the annotation
+[32:38] instructions for that data. Um so
+[32:40] Anthropic probably has a different
+[32:42] answer to this to OpenAI who probably
+[32:43] has a different answer from this to you
+[32:45] if you were to do this yourself. Um,
+[32:48] this is also related to this notion of
+[32:51] helpfulness versus harmfulness. Um, do
+[32:54] you want your model to be able to answer
+[32:56] questions um because you want it to be
+[32:58] helpful or do you want the model to
+[32:59] abstain from things that could be
+[33:02] potentially harmful downstream? In what
+[33:04] situation should it refuse? Should it
+[33:05] refuse if it asks you if you ask it how
+[33:07] to build a bomb? Should it refuse if it
+[33:09] you ask it about a contentious political
+[33:11] topic? Should it refuse if you ask it um
+[33:14] to generate content that involves a
+[33:16] minor? Um these are all like sort of
+[33:21] riskmanagement style decisions that uh
+[33:24] language modeling companies are making
+[33:25] and they are by and large imposing these
+[33:28] through the training of preference
+[33:30] models like this. Um, the other place
+[33:32] that you might see these trained, which
+[33:33] is kind of closely related, and I think
+[33:36] something we're not going to talk about
+[33:37] too much elsewhere, um, is like content
+[33:40] filtering. So, has anyone ever called a
+[33:43] model and had it cut off mid response
+[33:45] because of a content filter?
+[33:47] >> Yes. What were what were folks asking
+[33:49] about when this happened?
+[33:52] No one wants to admit to it.
+[33:54] Yeah,
+[33:55] >> I I I asked Deepseek for good places to
+[33:58] go uh do tourism in Beijing.
+[34:01] >> So Deep Seek started talking about maybe
+[34:04] Tanaman Square and then cut off.
+[34:06] >> Um that was overdone overdone content
+[34:09] filtering. I think
+[34:12] >> I was um generating data for a um a
+[34:15] story generation thing I was doing um
+[34:17] for any val and had models sort of write
+[34:21] themselves into content moderation holes
+[34:22] where they'd start talking about maybe
+[34:24] like a a fancy tattoo on a wrist and
+[34:26] they'd start talking about the wrist and
+[34:27] they start talking about how it was cut
+[34:28] into the wrist and then it would get
+[34:29] censored for self harm. Um and so these
+[34:32] types of filters are not actually
+[34:34] trained into the model. Generally these
+[34:36] are applied post hawk. Um which is why
+[34:38] you can see sort of outputs that
+[34:40] partially cut off. Um and this is
+[34:42] another type of reward model which given
+[34:44] an output or a partial output says not
+[34:47] is this a good output or not but is this
+[34:49] a safe output for whatever we've decided
+[34:51] is safe or unsafe. Um so that you can
+[34:54] apply that's not best of end that's sort
+[34:56] of like a a post hawk filtering step
+[34:58] that you can apply using a similar type
+[35:00] of model.
+[35:02] Um the other issue with preference
+[35:05] modeling is that preference models are
+[35:07] generated from human labels. So they
+[35:09] reflect sort of the biases of the people
+[35:11] who labeled them. So if we were to
+[35:13] decide between these two outputs which
+[35:14] sort of start the same um does anyone
+[35:17] have an opinion on whether one or two is
+[35:18] better?
+[35:25] Who would prefer one?
+[35:30] Who would prefer two?
+[35:33] All right, maybe 50/50, maybe slightly
+[35:35] towards two. Um, in practice, especially
+[35:38] if annotation instructions are not 100%
+[35:41] comprehensive, people tend to prefer
+[35:44] longer outputs. Um, this is especially
+[35:46] true if the two outputs are um like not
+[35:50] exact copies like this, but sort of
+[35:51] similar. Um, and there's some sort of
+[35:54] human cognitive bias um here. longer
+[35:56] outputs annotators tend to describe as
+[35:58] more detailed or more comprehensive. Um,
+[36:01] if you are annotating for helpfulness,
+[36:04] detailed and comprehensive sound like
+[36:05] pretty reasonable things to be. Um, but
+[36:08] the downstream effect of this is that
+[36:10] while pretty much everything we've done
+[36:12] so far has had to compensate for shorter
+[36:14] things being lower probability, reward
+[36:17] models have the opposite problem that
+[36:18] longer things tend to be higher reward.
+[36:21] Um, and this is a demonstration of this
+[36:24] from a paper about RLHF. So this is
+[36:26] about training not inference but it's
+[36:28] the same type of reward modeling at
+[36:29] stake. Um and you can see this is the
+[36:32] correlation between the length of the
+[36:34] output and tokens and the reward defined
+[36:37] by a reasonably strong reward model. So
+[36:40] even if your outputs are not by any
+[36:42] surface attribute better even if your
+[36:44] outputs are wrong if they are longer
+[36:46] they are like more likely to receive
+[36:47] high reward. Um and so in RLHF um people
+[36:53] will do various things to correct for
+[36:55] this including things like applying
+[36:56] length penalties. Um otherwise when you
+[36:59] train a model with um some sort of
+[37:01] reward um augmented objective you will
+[37:04] see the output space get longer um and
+[37:06] therefore the reward go up even if the
+[37:08] content doesn't necessarily improve.
+[37:11] Um the other issue with reward modeling
+[37:14] that we talked about very briefly when
+[37:15] we talked about uh reward augmented
+[37:17] decoding is that reward models are not
+[37:20] always well defined over subsequences.
+[37:23] Um so this is an issue not necessarily
+[37:25] for best event where we would just
+[37:27] sample all of these things in completion
+[37:29] and then look at them. But for training
+[37:31] with reward models or for doing things
+[37:33] like content filtering where you might
+[37:34] want to interrupt midway through. Um
+[37:36] this is uh from Nathan Lambert's blog
+[37:39] interconnects. Uh this is a sequence of
+[37:42] the reward for each substring um going
+[37:45] up to this full sentence. I love to walk
+[37:47] the dog. What do you like? Um and you
+[37:49] can see that the reward here is really
+[37:51] really bouncy. It goes negative at
+[37:53] several points. Um and what could this
+[37:57] be? This could be partially that
+[37:58] something like I love to walk is not a
+[38:01] full sentence. And so if that was a full
+[38:02] output, that would be low reward. Um but
+[38:05] it could it also seems to be some kind
+[38:07] of surface features. It's not clear why
+[38:09] like um I love to walk the dog what is
+[38:12] worse than I love to walk the dog what
+[38:14] do um so you can try to learn uh models
+[38:19] over subsequences and or over sort of
+[38:22] subsets and in fact this is something
+[38:24] that like something like a process
+[38:26] reward model would be trained
+[38:27] specifically to do but in general if you
+[38:29] have a reward model that was not trained
+[38:31] for this um you shouldn't try to apply
+[38:33] it over subsequences at least without
+[38:34] doing some kind of heavy pre-processing
+[38:38] Um, the other issue with preference is
+[38:40] that there's not always a meaningful
+[38:42] pair-wise distinction. If you ask a
+[38:44] model to name the color of the rainbow,
+[38:47] um, is green or blue a better answer,
+[38:50] right?
+[38:52] >> Maybe we maybe we have a personal
+[38:54] preference here, but by and large, these
+[38:55] are re about the same quality output
+[38:58] from the model, right? Um, and so pair
+[39:01] wise preference can sometimes impose a
+[39:03] sort of artificial um,
+[39:06] uh, ranking between things. If you asked
+[39:08] an annotator to label this, it's not
+[39:09] clear what they would label. Um, and so
+[39:11] one, if you're asking for annotations,
+[39:13] you should allow for this. And two, um,
+[39:15] it's helpful to sometimes check that
+[39:17] reward models have reasonable behavior
+[39:18] in these edge cases. In particular, if I
+[39:21] asked for a scalar reward, like a
+[39:22] prediction from 0 to one of whether
+[39:24] green was better than blue, I would hope
+[39:26] for an answer somewhere around 0.5.
+[39:29] These are roughly the same quality.
+[39:31] And so to kind of look at this in
+[39:33] questions like this, um there's a number
+[39:36] of different benchmarks for reward
+[39:37] modeling. Um this one that came out uh I
+[39:41] think near the end of the summer I think
+[39:42] is quite good. Um and this is called
+[39:44] reward bench v2. Um this is a grouping
+[39:48] of a number of different reward modeling
+[39:50] data sets. And so this is looking at
+[39:51] whether the model behaves um as humans
+[39:55] would on a number of labeling tasks
+[39:57] related to different areas. So there's
+[39:59] sort of a grouping here that is math
+[40:00] related. There's a grouping here that is
+[40:02] safety related questions. And so these
+[40:04] are um somebody else's predefined notion
+[40:07] of what types of things should be
+[40:08] refused versus answered. Um this is
+[40:10] another uh group. I think this is like a
+[40:13] a different topic oriented group. Um and
+[40:16] this is I think the first benchmark to
+[40:18] include a notion of ties. So this is
+[40:20] when the model is given a tie. Does it
+[40:22] does it answer with something close to
+[40:24] 0.5 or does it answer with an answer
+[40:25] like these are equally good for a
+[40:27] generative model. Um and you can see
+[40:29] that the best models on this data set if
+[40:32] we sort by overall score. Yes. Um vary
+[40:36] pretty broadly. There's a number of
+[40:37] models that are just generative models
+[40:39] that were fine-tuned or maybe used
+[40:41] directly like Gemini 2.5 Pro. Um and
+[40:44] there's models on here that were
+[40:45] specifically fine-tuned. So, Skywork um
+[40:47] I think you might I think you'll see in
+[40:49] homework 2 is a version of Llama 3.1
+[40:52] that had the language modeling head um
+[40:54] torn off and replaced with a sequential
+[40:56] classifier.
+[40:58] Um so if you're trying to choose a model
+[41:00] for something like best event on one of
+[41:02] the shared tasks, um looking at a
+[41:04] leaderboard like this is a pretty
+[41:06] reasonable way to go. Um I don't think
+[41:08] this lets you sort by parameters, but
+[41:10] you can kind of look at a lot of these
+[41:11] names and make a pretty reasonable
+[41:13] guess. Um, of course, reward models are
+[41:16] not equally good across all areas. So
+[41:18] perhaps if you want to do reward
+[41:19] modeling on a task like um answering
+[41:22] questions about medical data, you would
+[41:24] want a model that has more training data
+[41:27] related to medicine or more sort of
+[41:30] medical related knowledge. Um, if you
+[41:32] are doing a task like um generating
+[41:35] poetry in Dutch, you would want a model
+[41:37] that has seen some Dutch. Um, so this is
+[41:40] a a broad like useful framework, but you
+[41:42] should also evaluate these models
+[41:44] yourself.
+[41:46] So who actually writes this preference
+[41:49] data? Um, everything related to reward
+[41:53] models to best defend RHF is determined
+[41:56] pretty heavily on what the reward model
+[41:57] says is good or wrong. Um, maybe in an
+[42:00] ideal world, we would actually have a
+[42:01] human do this task, but because we are
+[42:03] doing this as a large scale training,
+[42:05] this is not practical. So instead we're
+[42:07] taking this approximation that we've
+[42:08] learned from largely data somebody else
+[42:10] wrote right. So at various points over
+[42:13] the past few years the answer to this
+[42:14] question has changed. Um maybe in 2022
+[42:19] or so maybe 2021 I this would have been
+[42:22] largescale crowdsourcing efforts. Um
+[42:24] Amazon Mechanical Turk prolific. Um for
+[42:27] a couple of years this was predominantly
+[42:30] contractors hired by a data annotation
+[42:32] company like Scale AI. Um, in the last
+[42:35] couple of years to months, this has
+[42:38] often been experts hired by a large
+[42:39] company annotating really specific
+[42:41] preference data like which of these is a
+[42:43] better proof for this like theoretical
+[42:45] math claim. Um, and over really the last
+[42:49] like 20ome years that the internet is
+[42:52] around this has also been you. So we saw
+[42:54] this with LM Marina. You can also see
+[42:56] this um using pretty much any AI
+[42:59] adjacent application um from chat GBT
+[43:01] asking you for a pair-wise preference
+[43:03] explicitly to signals like a a thumbs up
+[43:07] or thumbs down button or a retry button
+[43:11] for to indicate that maybe this wasn't a
+[43:14] good output for you. Um this is also
+[43:16] informed by whether you click through um
+[43:19] after you see the Gemini summary. I
+[43:22] would bet I don't actually work at
+[43:23] Google. Um, this is informed by things
+[43:25] like what how long do you spend on a
+[43:28] section of the page? How quickly do you
+[43:29] tab away? Do you continue in a
+[43:31] conversation? Um, in the same way that
+[43:34] uh for years people who work on search
+[43:36] engines have been trying to elicit
+[43:38] preference data from people, anyone who
+[43:40] anyone whose language model you interact
+[43:42] with is probably also trying to do the
+[43:44] same thing. Um, and so this is a this
+[43:46] sort of like preference data at scale is
+[43:49] like not a malicious thing. This is a
+[43:50] very normal sort of user study or user
+[43:53] um preference data to try to get. But
+[43:55] this is also where a a decent bit of the
+[43:59] preference data is probably coming from
+[44:00] is just interactions in the wild. Um and
+[44:03] as more people interact with language
+[44:05] models in more different ways, the sort
+[44:06] of distribution of whose preference is
+[44:08] represented is continually shifting.
+[44:11] Um so that's reward models. I'm going to
+[44:15] talk sort of briefly about the costs of
+[44:17] best of n and then I believe in the um
+[44:19] student presentations we'll also have
+[44:21] some uh discussion of some of the
+[44:23] pitfalls of using a roboard model. Um so
+[44:26] best of n requires generating n outputs.
+[44:29] Um how do you choose n? Um and how do
+[44:33] you choose n sort of in such a way that
+[44:35] you're not wasting effort. So maybe if
+[44:36] you have a um a question like what's 2
+[44:40] plus two, you probably don't need to do
+[44:42] like n equals 100 and choose from your
+[44:44] 100 examples that probably all say
+[44:46] something like four. Um so this is going
+[44:49] to be certainly at least partially
+[44:51] problem specific. Um if you know that
+[44:53] your task is relatively easy or that you
+[44:55] believe your task is sort of relatively
+[44:57] well aligned to the target distribution.
+[44:59] If you think your language model, your
+[45:00] proposal is close to the actual target
+[45:02] distribution, you might not need to
+[45:04] sample as much. or maybe you could even
+[45:05] do some type of mode seeeking search to
+[45:07] try to wind up at the top of that
+[45:08] distribution.
+[45:10] Um, other ways to intro to reduce cost,
+[45:12] you could choose to set the value of n
+[45:15] um to be something related to your
+[45:17] hardware. Like maybe if you can generate
+[45:19] 32 things in a single batch, but you
+[45:21] would have to use um a second batch or a
+[45:24] second pass or a second GPU to generate
+[45:26] the 33rd thing, you could set n to be
+[45:27] 32. Um you can also experiment with
+[45:31] different ways of generating with a
+[45:32] smaller model versus using a larger
+[45:34] reward model. So generation is more
+[45:35] expensive than scoring. Um because when
+[45:38] you generate you have to wait for each
+[45:40] um uh new token to be generated um
+[45:43] whereas when you're scoring you can pass
+[45:45] everything through as one block. Um and
+[45:48] also when you generate you're generating
+[45:49] many things. When you're scoring you're
+[45:51] scoring sort of only a few things. So
+[45:54] you can play around with different
+[45:55] variants of using a smaller model versus
+[45:57] larger reward um and vice versa. Um
+[46:02] you can vary decoding settings to get
+[46:04] more unique outputs. So if you have um
+[46:07] and if you know you're generating a 100
+[46:09] things and you know temperature sampling
+[46:11] with temperature point 2 gives you only
+[46:13] maybe 20 unique things on average, you
+[46:15] could try varying temperature. You could
+[46:17] try different decoding strategies. Um
+[46:19] and you can also try sampling from
+[46:20] multiple models to get a set of
+[46:22] candidates. The caveat for these last
+[46:24] two here is that um this nice intuition
+[46:28] we talked about that this is like a a
+[46:30] variant of rejection sampling where we
+[46:32] have a proposal distribution and a
+[46:34] target distribution um are sort of not
+[46:36] well defined if you are changing what
+[46:38] your proposal distribution is across the
+[46:40] process of sampling that set. So if you
+[46:43] sample if you are doing best of 50 but
+[46:46] you got 20 of those outputs from Quen
+[46:48] and 10 of those outputs from GPD5 and 20
+[46:52] of those outputs from Quen but with like
+[46:54] a completely different set of decoding
+[46:55] settings. Now you no longer have sort of
+[46:57] one proposal distributions. You can't
+[46:59] make this same like nice um theoretical
+[47:02] intuition. Um this is still quite
+[47:04] effective in practice though. Um and you
+[47:06] can also train your model to be closer
+[47:08] to the preference distribution. Um this
+[47:10] is the idea behind RLHF. This is also um
+[47:14] the one of the insights from the paper
+[47:17] we just talked about reward bench which
+[47:19] is that even if a model is better on
+[47:21] this sort of absolute ranking of
+[47:23] preference um a model that is from the
+[47:26] same model family that you are using to
+[47:28] generate the input the outputs is more
+[47:30] likely to be a good preference model for
+[47:32] that data um and this is sort of it's
+[47:34] more likely to be a better model to do
+[47:36] RLHF with and it's also more likely to
+[47:38] be a better model for best event u and
+[47:41] the kind of intuition here is that these
+[47:42] models um have similar distributions,
+[47:46] right? Your proposal distribution, your
+[47:48] generating model is placing high
+[47:50] probability in places that your reward
+[47:51] model is also likely to place high
+[47:53] probability. And so you are sampling
+[47:55] things um that sort of line up better
+[47:58] with the notion of reward that model has
+[47:59] defined.
+[48:02] So to summarize um you can think of best
+[48:06] of n and most other multis sample and
+[48:08] reranking strategies as attempting to
+[48:10] get closer to some kind of idealized
+[48:12] distribution over outputs. We represent
+[48:14] an idealized distribution which we don't
+[48:16] actually know in practice by a reward
+[48:19] model which tries to capture some notion
+[48:21] of human preference for some subset of
+[48:23] people that annotated its data. Um and
+[48:27] generally best of end will improve with
+[48:29] more samples or more cost. Um, but you
+[48:31] can do things at training time to try to
+[48:33] reduce the inference cost by trying
+[48:35] training to be closer to the preference
+[48:36] distribution.
+[48:38] Um, and with that, I think we will turn
+[48:41] it over to the student presenters unless
+[48:44] anyone has any questions on best event
+[48:46] or reward modeling.
+[48:52] >> Great.
+[48:53] >> Oh yeah, sorry. Um when you say that you
+[48:56] should like the reward model must be
+[48:57] from the same family as the policy you
+[49:00] are optimizing
+[49:01] >> like isn't that like causing bias as
+[49:04] well because you like if your reward
+[49:06] model is bad at things which you want to
+[49:08] train for
+[49:10] >> then like the smaller version of that
+[49:12] family will also be mad and like
+[49:14] training will be unstable.
+[49:15] >> Yeah. Like is it bad to have the reward
+[49:17] model and the um base model be from the
+[49:20] same family because they'll have like
+[49:21] the same errors. Um I think this is like
+[49:24] certainly possible. Um the I think the
+[49:28] idea here is at least partially that
+[49:30] like you have a better warm start if
+[49:33] they have some agreement on what is
+[49:35] likely to be good. Um, this is I believe
+[49:39] also true even if you started from the
+[49:41] same preference data, although I'm not
+[49:43] actually sure if they run that
+[49:44] experiment. But like your reward model
+[49:48] is like some proportion the distribution
+[49:51] over language that the base model has
+[49:53] already learned and some proportion like
+[49:54] this new preference data that you're
+[49:56] trying to inject in. And the idea is
+[49:58] that when you're doing reward modeling,
+[49:59] you're mostly trying to inject in
+[50:01] whatever you've learned from that
+[50:02] preference data. And so you don't also
+[50:04] need to be changing this like base
+[50:06] distribution. Like maybe Quen thinks
+[50:09] that like Chinese text is a little more
+[50:11] likely than llama does because it was
+[50:13] chained on more Chinese. And you don't
+[50:15] actually need to be like upweing Chinese
+[50:18] text when you're trying to um RLHF llama
+[50:22] or conversely downweing it when you're
+[50:24] trying to RLHF Quen. Um but it's
+[50:26] definitely possible that like whatever
+[50:28] pathologies you have in your reward
+[50:29] model, you're also kind of injecting
+[50:31] into the base model. Another
+[50:37] another thing um just to note here is
+[50:40] that when you have a reward model um
+[50:42] when you generate you have to generate
+[50:44] left to right um and you know that
+[50:47] that's a little bit limiting you know
+[50:49] also we're talking about inference
+[50:50] algorithms our inference algorithms are
+[50:52] limited too so sometimes it's easier
+[50:55] like afterwards to take a second look
+[50:57] and when I say easier it's like there
+[51:00] are specific things that make it easier
+[51:04] like having birectional like or being
+[51:07] able to
+[51:09] uh you know feed in to the model the
+[51:13] entire output or prompt the model
+[51:16] beforehand that it should be looking for
+[51:17] particular things. use more reasoning
+[51:19] like
+[51:20] >> um and you can also like specifically
+[51:22] train a model where like the only job is
+[51:24] to give you a high score if it's a good
+[51:26] output and a low score if it's bad
+[51:28] output instead of using the model
+[51:30] capacity to both generating and um and
+[51:33] like evaluating. So um I think it tends
+[51:37] to be the case that
+[51:40] best of end plus a reward model
+[51:43] can be better but it's not guaranteed
+[51:46] like reward modeling is very very hard
+[51:48] and like creating a small reward model
+[51:51] that is like better than the GP5 that's
+[51:54] generating the output or something like
+[51:55] that is going to be you know very
+[51:57] tricky. So um yeah I I don't want to
+[52:02] minimize the the difficulty of this.
+[52:04] It's it's definitely hard.
+[52:06] >> Yeah, it's also possible to do both
+[52:08] reward modeling um or both best event
+[52:11] and trying to align a model to the
+[52:13] reward model through something like RL.
+[52:15] Um like one of the maybe a trivial case
+[52:17] of the um it's harder to know while
+[52:20] generating than it is after generating
+[52:22] is if you set like a a 100 token max on
+[52:25] your output. um you could have two
+[52:27] outputs that look like perfectly
+[52:29] reasonable for the first 90 some tokens,
+[52:31] but one of them finishes within 100
+[52:33] tokens and the other one doesn't. Um and
+[52:35] so even if you've RLHF your model that
+[52:37] you could maybe if you set your
+[52:39] generation um max length lower than you
+[52:42] did during training, it could be very
+[52:43] easy to end up in this situation. And so
+[52:45] doing RLHF and then also doing best
+[52:47] event on some small set of outputs can
+[52:49] get you kind of the best of both worlds.
+[52:51] It's easier to check at the end than at
+[52:53] the beginning.
