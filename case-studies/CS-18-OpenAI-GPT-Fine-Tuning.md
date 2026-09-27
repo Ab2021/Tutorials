@@ -745,4 +745,519 @@ goes. The production version is a five-question filter:
 > inverse error — starting with the flagship because "quality" — costs 10–20× per experiment and
 > slows your iteration loop to the point where you stop iterating.
 
+---
+
+### 4.5 Token accounting — where the bill comes from
+
+You cannot negotiate with the tokeniser. The provider counts, and the count appears in
+`job.trained_tokens` when the job completes. This subsection teaches you to predict that number to
+within a few percent before you spend anything.
+
+#### 4.5.1 First: what `tiktoken` actually is
+
+The instructor introduces the local counting tool like this:
+
+> *"openai provides you one library, the library name is tiktoken… using this tiktoken I'm going to
+> load this model, CL1 — sorry, CL 100K base model. So this is my encoding model guys. What it will
+> do? It will create a token out of this sentence and it will assign an ID to this particular token"*
+> [39:50]–[40:11]
+>
+> *"So this is also a transformer based model."* [40:14]–[40:16]
+
+> **Correction:** *"this is also a transformer based model"* [40:14]–[40:16] is wrong. `tiktoken` is
+> a **byte-pair-encoding (BPE) tokeniser and merge table** — a lookup algorithm over a static
+> vocabulary file, with no weights, no layers, no forward pass, and no GPU. `cl100k_base` is the
+> *name of a merge table* (roughly 100,000 merges) used by the `gpt-4`, `gpt-3.5-turbo` and
+> text-embedding-ada-002 generation of models. Nothing in the tokenisation step is learned at
+> inference time; the merges were learned once, from a corpus, and frozen. The distinction matters
+> practically: because it is a pure lookup, `tiktoken` runs in microseconds on CPU, which is why the
+> cost-estimation code in this module can run inside a Colab CPU runtime while the training itself
+> happens in a datacentre. Confusing a tokeniser with a model also leads people to expect the token
+> count to be *approximate* for the model they are training. It is not approximate for the model
+> family it belongs to — see §4.5.4.
+
+The notebook's demonstration is clean and correct. `Hello, how are you?` is 19 characters, 4
+whitespace-separated words, and **6 tokens** (cell 39):
+
+| Token | Token ID (notebook) |
+|---|---|
+| `Hello` | 9906 |
+| `,` | 11 |
+| ` how` | 1268 |
+| ` are` | 527 |
+| ` you` | 499 |
+| `?` | 30 |
+
+The transcript renders the instructor reading this table as *"hello is being represented by this
+9906. A comma is being represented by this 11. How is being represented by this 12868 then R then U
+and then this question mark"* [41:00]–[41:09] — note that the spoken ID "12868" disagrees with the
+notebook's `1268`, and the spoken "R then U" disagrees with the notebook's ` are` / ` you`. **Trust
+the notebook over the auto-transcript.** The lesson that survives either way is the ratio:
+
+| Unit | Count for `Hello, how are you?` | Ratio to characters |
+|---|---|---|
+| Characters | 19 | — |
+| Words (whitespace split) | 4 | 0.21 words/char |
+| **Tokens** | **6** | **0.32 tokens/char** |
+
+The rule of thumb that follows — **English prose is roughly 1 token per 4 characters, or ~0.75
+tokens per word** — is good to ±15% on prose and *catastrophically wrong on code, JSON, non-Latin
+scripts, and long numeric IDs*, where tokens/character can reach 1.5–2.0. Never estimate a
+fine-tuning budget from word counts.
+
+#### 4.5.2 The two local counters, and the overhead they model
+
+The notebook defines two counting functions (cells 42 and 58):
+
+```python
+# notebook cell 42 — the "naive" counter used for the video's headline numbers
+def count_total_tokens(messages):
+    return sum(len(encoding.encode(m["content"])) for m in messages)
+
+def count_assistant_tokens(messages):
+    return sum(len(encoding.encode(m["content"]))
+               for m in messages if m["role"] == "assistant")
+```
+
+```python
+# notebook cell 61 — the "cookbook" counter that models per-message overhead
+def num_tokens_from_messages(messages, tokens_per_message=2, tokens_per_name=1):
+    num_tokens = 0
+    for message in messages:
+        num_tokens += tokens_per_message                       # role delimiter overhead
+        for key, value in message.items():
+            num_tokens += len(encoding.encode(value))
+            if key == "name":
+                num_tokens += tokens_per_name
+    num_tokens += 2                                            # reply priming
+    return num_tokens
+```
+
+The difference between them is the thing you have to internalise: **the provider does not bill you
+for the characters in your JSON. It bills you for the tokens after the conversation has been
+rendered into the model's own format** — role markers, turn separators, and a priming suffix are all
+real tokens on the wire.
+
+| Counter | Model | Total for the 10-row video dataset | Where it appears |
+|---|---|---|---|
+| `count_total_tokens` | Sum of content tokens only | **562** | Transcript [46:38]–[46:42]; notebook cell 44 `[59,62,51,62,51,54,54,53,57,59]` |
+| `num_tokens_from_messages` | Content + 2/msg overhead + 2 priming | **672** | Notebook cell 65 |
+| Ratio | — | **+19.6%** | — |
+
+That 19.6% is your overhead, and it is worst on *short* examples because the per-message cost is
+fixed. On the video's 56-token examples, overhead is a fifth of the bill. On 2,000-token examples it
+is under 0.5%. Which means:
+
+> **Beyond the video:** the overhead constant is **the** place where a small-data fine-tune gets
+> expensive per unit of learning, and it is why very short examples are a bad deal. Compare two ways
+> of spending 400,000 billed tokens at `gpt-4.1-nano`'s $1.50/M (i.e. $0.60):
+>
+> | Dataset shape | Rows | Supervised tokens | Overhead tokens | Overhead % | Learning per dollar |
+> |---|---|---|---|---|---|
+> | 56-token examples (video-shaped) | ~5,900 | ~4,700 × 3 epochs | ~1,180 × 3 | 19.6% | very low — 5,900 near-duplicate snippets teach one behaviour |
+> | 2,000-token examples | 200 | ~1,970 × 1 epoch | ~30 | 0.5% | far higher — 200 rich, distinct conversations |
+>
+> The second dataset is not merely cheaper *per token*; it is cheaper *per unit of behaviour
+> learned*, because the fixed per-message overhead is amortised and because 200 long conversations
+> carry more distinct conditional structure than 5,900 short near-duplicates. The video's 56-token
+> average is a property of its 3-unique-question dataset, not a virtue.
+
+#### 4.5.3 Reading the distribution, not the mean
+
+The notebook computes means and maxima (cells 46–47) and the video reads them aloud:
+
+> *"the average token per example is 56 around 56. Average token is there in every example and the
+> maximum token is 62… average assistant token which is around 21 token in every output message
+> there is on an average 21 tokens and maximum is around 25."* [45:51]–[46:16]
+
+The numbers are right (mean 56.2 → 56; max 62; mean assistant 21.2 → 21; max 25), and the instructor
+dismisses the analysis with *"this is not like having any meaning but yeah this is just for the
+analysis"* [46:16]–[46:23]. **That dismissal is the most costly sentence in the video**, because the
+distribution is the only thing that predicts your bill and your truncation risk. See §4.5.5.
+
+The cookbook's `print_distribution` function — which the notebook has, commented out in cell 41 —
+prints min/max, mean/median, and p5/p95:
+
+```python
+def print_distribution(values, name):
+    print(f"\n#### Distribution of {name}:")
+    print(f"min / max: {min(values)}, {max(values)}")
+    print(f"mean / median: {np.mean(values)}, {np.median(values)}")
+    print(f"p5 / p95: {np.quantile(values, 0.1)}, {np.quantile(values, 0.9)}")
+```
+
+Note the bug in the original: `np.quantile(values, 0.1)` and `0.9` are the **p10 and p90**, not the
+p5 and p95 the label claims. Fix it or your "p95" is really a p90 and you will under-provision the
+token cap.
+
+| Statistic | What it is for | Why the mean is not enough |
+|---|---|---|
+| mean | Rough cost estimate on homogeneous data | Hides a long tail that a per-example cap will truncate |
+| median | The "typical" example | On a skewed distribution, mean ≫ median means a few examples dominate |
+| **max / p99** | Truncation risk | If max > per-example cap, you are silently losing data |
+| **p95** | Capacity planning | Set your own `max_seq_length` (open-weight) near p99, not near max |
+| assistant-token mean | The behaviour density | The ratio supervised/(supervised+prompt) tells you how much of your spend teaches anything |
+
+> **Beyond the video — the metric that actually predicts model quality:** compute the **supervised
+> token fraction** = assistant tokens ÷ total tokens, per example, and then look at the *spread*.
+> On the video's data it is 212/562 = **37.7%** (or 212/672 = 31.5% with overhead). That is a
+> healthy ratio for a chat model — roughly a third of every billed token is a token the model is
+> learning to produce. Compare:
+>
+> | Task shape | Typical supervised fraction | Implication |
+> |---|---|---|
+> | Short chat reply | 30–40% | Efficient. |
+> | Summarisation of a 2,000-token document | 5–10% | You are mostly paying to re-read the input 3× per epoch. |
+> | Classification into one label | 0.1–1% | **Fine-tuning by SFT is the wrong tool.** Use a classifier head or a smaller model. |
+> | Long-context extraction with a short JSON output | 1–3% | Consider whether a *base* model + `response_format` already does this (§4.12). |
+>
+> If your supervised fraction is below ~5%, do the arithmetic in §11 before you upload: you may be
+> about to spend most of your budget teaching the model to reproduce your own prompts.
+
+#### 4.5.4 The tokeniser you use is not the tokeniser that bills you
+
+Both notebooks do this:
+
+```python
+encoding = tiktoken.get_encoding("cl100k_base")   # notebook cell 33
+```
+
+`cl100k_base` is the vocabulary of the `gpt-4` / `gpt-3.5-turbo` generation. It does **not** tokenise
+identically to `o200k_base`, which is what the `gpt-4o` and `gpt-4.1` families use. The two differ
+most on:
+
+- non-English text (o200k is materially better for non-Latin scripts);
+- code and punctuation-heavy strings;
+- long runs of digits;
+- whitespace patterns.
+
+For English prose the two counts typically land within a few percent of each other, which is why the
+video's numbers look plausible. But the direction of the error is systematic, and on non-English
+data it can be 20%+. The notebook's own data contains a typographic apostrophe (`I'm` in row 9,
+U+2019 rather than U+0027) which the two vocabularies may split differently — exactly the kind of
+character that makes a "few percent" estimate wrong.
+
+```python
+# The correct local estimate for a gpt-4.1-* fine-tune (2025+ vocabularies)
+import tiktoken
+encoding = tiktoken.get_encoding("o200k_base")
+
+def billed_tokens_estimate(messages, max_tokens_per_example, tokens_per_message=3, tokens_per_name=1):
+    """Upper-bound estimate of what one example will cost per epoch."""
+    n = 0
+    for m in messages:
+        n += tokens_per_message
+        for k, v in m.items():
+            if isinstance(v, str):
+                n += len(encoding.encode(v))
+            if k == "name":
+                n += tokens_per_name
+    n += 3                                     # reply priming
+    return min(n, max_tokens_per_example)      # the cap is applied AFTER counting
+```
+
+> **Beyond the video:** the constants in the video's counter (`tokens_per_message=2`, `+2`) differ
+> from the ones in the commented-out cell (`tokens_per_message=3`, `+3`) and from the cookbook's
+> documented defaults. Nobody in the video notices. The difference is 4 tokens per example — noise on
+> a 56-token example (7%) and irrelevant on a 2,000-token example. **Do not lose sleep over the
+> constant. Do lose sleep over the cap.** The cap in the next subsection is worth three orders of
+> magnitude more.
+
+#### 4.5.5 `MAX_TOKENS_PER_EXAMPLE = 16385` is a stale constant, and the failure is silent
+
+The notebook carries this line (cell 54):
+
+```python
+# Pricing and default n_epochs estimate
+MAX_TOKENS_PER_EXAMPLE = 16385
+```
+
+and uses it in the billing sum (cell 64):
+
+```python
+n_billing_tokens_in_dataset = sum(min(MAX_TOKENS_PER_EXAMPLE, length)
+                                  for length in total_tokens_per_example)
+```
+
+and in the truncation warning (cell 63):
+
+```python
+n_too_long = sum(l > 16385 for l in total_tokens_per_example)
+print(f"\n{n_too_long} examples may be over the 16,385 token limit, "
+      f"if they are crossing the limit they will be truncated during fine-tuning")
+```
+
+Three things are true about `16385` and only one of them is in the video:
+
+1. **It is a real constant from the 2024 cookbook**, derived from a 16,384-token context plus one.
+   Correct for the `gpt-3.5-turbo` / `gpt-4o-mini` fine-tuning era.
+2. **It is not the fine-tuning context of the `gpt-4.1` family.** The demo model
+   `gpt-4.1-nano-2025-04-14` is not a 16k-context model. Using this constant against a `gpt-4.1`
+   fine-tune makes the billing sum **over-count** (it caps too aggressively) and makes the
+   truncation warning **lie** (it flags examples as safe that are not, or claims truncation where
+   none occurs) — depending on which direction the real cap falls.
+3. **Truncation is silent.** The `print` at cell 63 emits `0 examples may be over the 16,385 token
+   limit` for this dataset and nothing else happens. For a dataset that *is* over, the API does not
+   fail the job; it trains on a shortened example. The instructor states the mechanism correctly
+   [63:00 area, cell 63 output]: *"if they are crossing the limit they will be truncated during
+   fine-tuning."* What he does not state is the operational consequence: **you will never find out
+   which rows were truncated, or that it happened at all, except by looking at `trained_tokens` and
+   noticing it is lower than your own sum.**
+
+| Symptom | What it means | Diagnostic |
+|---|---|---|
+| `job.trained_tokens` ≪ your `billing_tokens × epochs` | Examples were capped | Recompute with the *correct* per-example cap for your base model |
+| Model ignores the tail of long inputs | Truncation removed the end of the prompt | Check whether the provider truncates head or tail |
+| Model stops mid-sentence on long outputs | Truncation removed the end of the *assistant* turn — the supervised part | Cap your own examples below the limit before upload |
+
+> **Beyond the video — the production rule:** never let the platform be the thing that decides what
+> gets cut. Pre-truncate yourself, deliberately, with a documented policy:
+>
+> ```python
+> def truncate_example(ex, cap, keep="tail"):
+>     """Guarantee the assistant turn survives. Returns (example, was_truncated)."""
+>     total = num_tokens_from_messages(ex["messages"])
+>     if total <= cap:
+>         return ex, False
+>     msgs = ex["messages"]
+>     if keep == "tail":
+>         # drop the OLDEST user/assistant pairs first, never the final assistant turn
+>         while num_tokens_from_messages(msgs) > cap and len(msgs) > 2:
+>             del msgs[1]                      # keep index 0 (system) and the last pair
+>     else:
+>         # hard-cut the system prompt, which is usually the boilerplate
+>         msgs[0]["content"] = msgs[0]["content"][:200]
+>     return {"messages": msgs}, True
+> ```
+>
+> Then assert that the truncated fraction is under a threshold you chose on purpose (2% is a sane
+> default) and **fail the pipeline** if it is not. A silent 15% truncation rate is the single most
+> common cause of "we fine-tuned and it got worse on long inputs".
+
+---
+
+### 4.6 Cost arithmetic — the worked end-to-end budget
+
+This is the section the module exists for. The instructor attempts this arithmetic on camera and gets
+a structurally wrong answer; correcting it teaches you the whole cost model.
+
+#### 4.6.1 What the pricing page has on it
+
+Reading the fine-tuning pricing table at [20:08]–[20:40], the instructor identifies the columns
+correctly *the first time*:
+
+> *"this is the training cost, this is per hour basis. Now this is the input cost — so the input cost
+> means the message which you are providing to the LLM… this is the cache cost, means if you're going
+> to provide the same input again, OpenAI is going to pick that particular input from the cache
+> memory… Now this is the output cost… the pricing is per 1 million tokens, per 10 lakhs tokens."*
+> [20:08]–[20:40]
+
+He then says, correctly, that the input/output columns are the **inference** prices:
+
+> *"Now here is the cost for the inferencing. So after the finetuning, whenever we are going to
+> inference the model… this cost will come from the input, cache input and the output."*
+> [20:43]–[20:57]
+
+Then, twenty minutes later, he retracts it:
+
+> *"So guys, as I told you, this is an inferencing input and output token price. But guys, this
+> statement was the wrong. So this input and output token price, it is with respect to the training
+> only."* [38:01]–[38:16]
+
+> **Correction:** the retraction at [38:01]–[38:16] is the error. The fine-tuning pricing table has
+> **four distinct columns**, and they are not all training:
+>
+> | Column | What it is | When you pay it |
+> |---|---|---|
+> | **Training** | per 1,000,000 **training tokens processed** (dataset tokens × epochs) | once, per job |
+> | **Input** | per 1,000,000 **inference** input tokens against the fine-tuned model | every call, forever |
+> | **Cached input** | per 1,000,000 inference input tokens that hit the prompt cache | every call that repeats a prefix |
+> | **Output** | per 1,000,000 **inference** output tokens | every call, forever |
+>
+> The instructor's *first* reading [20:43]–[20:57] was right and he talked himself out of it. The
+> practical damage is severe in one direction: a reader who believes the input/output columns are
+> training costs concludes that **inference on a fine-tuned model is free**, and then discovers the
+> real per-call bill only after shipping. The second, subtler damage: the Training column is a
+> **per-token** price, and reading it as per-hour (which he does at [37:47]–[37:53]) is what produces
+> the $0.75 figure in §4.6.3.
+
+#### 4.6.2 The correct arithmetic for the video's own job
+
+Everything needed is in the notebook and the transcript. Assembled:
+
+| Input | Value | Source |
+|---|---|---|
+| Training rows | 10 | `data.jsonl` line count |
+| Content tokens (no overhead) | 562 | notebook cell 44; transcript [46:38]–[46:42] |
+| Billed tokens with per-message overhead | **672** | notebook cell 65 |
+| `n_epochs` requested | 3 | transcript [55:44]–[55:47]; notebook cell 56 |
+| Base model | `gpt-4.1-nano-2025-04-14` | transcript [54:44]–[54:47] |
+| Training price | **$1.50 per 1,000,000 tokens** | transcript [47:31]; notebook cell 67 |
+| Inference input price | $0.20 per 1,000,000 tokens | transcript [47:36] |
+| Inference output price | $0.80 per 1,000,000 tokens | transcript [47:44] |
+| USD→INR rate used | 91 | transcript [49:07]–[49:13] |
+
+```
+billed_training_tokens = 672 tokens/epoch × 3 epochs           = 2,016 tokens
+training_cost          = 2,016 × ($1.50 / 1,000,000)           = $0.003024
+                                                               ≈ ₹0.275 at 91 INR/USD
+```
+
+That is the **entire** training bill for the video's job: **three tenths of a cent, or 27 paise.**
+The notebook computes exactly this at cell 67:
+
+```text
+$1.50 / 1,000,000 = $0.0000015 per token
+2016 × 0.0000015 = $0.003024
+$0.003024 × 91 = ₹0.275184
+```
+
+> **Beyond the video — why this is the most useful number in the module:** it makes the *iteration
+> cost of the data* visible. Nine hundred and ninety-seven of the first thousand experiments you run
+> cost under a dollar. The expensive thing in fine-tuning is not the training run; it is the human
+> hours spent collecting and curating the data, and the only way that stops being true is when you
+> scale `n_epochs` or dataset size into the millions of tokens. Compare:
+>
+> | Dataset | Rows | Tokens/row | Epochs | Billed tokens | `gpt-4.1-nano` @ $1.50/M | `gpt-4.1-mini` @ $3.00/M |
+> |---|---|---|---|---|---|---|
+> | Video demo | 10 | 67 | 3 | 2.0 K | **$0.003** | $0.006 |
+> | Small real | 500 | 400 | 3 | 0.60 M | **$0.90** | $1.80 |
+> | Medium real | 5,000 | 400 | 3 | 6.0 M | **$9.00** | $18.00 |
+> | Large real | 50,000 | 400 | 2 | 40.0 M | **$60.00** | $120.00 |
+> | Very large | 200,000 | 1,200 | 3 | 720.0 M | **$1,080.00** | $2,160.00 |
+>
+> Read the last row against §11.5 before you commit to it: at that spend, a rented A100 and an
+> open-weight 8B model are the same order of magnitude *and* you keep the weights.
+
+#### 4.6.3 Where the video's $0.75 and $0.702396 come from — and why they do not reconcile
+
+The instructor reports two figures:
+
+> *"training, let's say my training is going to be run for the half an hour… So here is my training
+> cost, this is my training cost, this is the training cost **$0.75**."* [48:08]–[48:29]
+>
+> *"Now what is the total cost guys? So the total cost will be this one… this is the total cost
+> **0.702396**."* [48:31]–[48:43]
+>
+> *"0.75 you can multiply it with 91… so it is around 68 rupees or 69, so roughly 69 to 70 rupees
+> I will get."* [49:04]–[49:20]
+
+> **Correction:** three separate errors are stacked here, and each one is worth naming.
+>
+> **1. There is no hourly training cost for supervised fine-tuning.** The instructor states the
+> training price as *"the cost of the GPU on an hourly basis"* [37:45]–[37:53] and then as *"$1.5 for
+> using the GPU… this is the hourly rate, right? Per hour training compute"* [47:31]–[47:48]. The
+> SFT Training column is **per 1,000,000 training tokens**, not per hour. Wall-clock duration does
+> not enter the bill at all: a 10-token job that takes 40 minutes in the queue and a 500M-token job
+> that takes 6 hours are priced by the same formula, and neither has an hourly term. It is
+> **reinforcement** fine-tuning that is billed hourly (the `o4-mini` track). Multiplying
+> `0.5 h × $1.50/h = $0.75` is therefore arithmetic on a quantity that does not exist. The correct
+> training cost is $0.003024 — **248× smaller.**
+>
+> **2. The stated total is smaller than one of its own components.** $0.75 of training plus
+> *"0.23 something"* of token cost [48:04]–[48:08] cannot total $0.702396. Whichever of the three
+> numbers is the misprint, the report is internally inconsistent and should not be used as a budget
+> template. (The most likely reconstruction of `0.702396`: it is close to
+> `10 examples × 16,385 max tokens × $1.50/M × 3 epochs = $0.737`, i.e. the cost you get if you let
+> the `MAX_TOKENS_PER_EXAMPLE` cap, rather than the actual token count, drive the sum. Note that this
+> is the *same* stale 16,385 constant from §4.5.5 and it over-counts this dataset by **244×**.)
+>
+> **3. The conclusion he draws is wrong in the direction that matters.** *"0.75 you can multiply it
+> with 91… roughly 69 to 70 rupees"* frames fine-tuning as a ~₹70 decision. The true figure for this
+> job is **₹0.275**. The framing cost is not the money; it is the *decision quality*. A team that
+> believes each experiment costs $0.75 runs few experiments and treats each as precious. A team that
+> knows the truth runs two hundred and converges on a good dataset in a week.
+
+#### 4.6.4 The four-term cost model to carry in your head
+
+```
+TOTAL =  TRAINING          +  VALIDATION        +  INFERENCE                +  ENGINEERING
+         tokens × epochs      (rate varies)       input + cached + output      your time
+         × train_price        × train_price       × call volume
+         ────────────         ─────────────       ────────────────────────     ──────────
+         one-off              one-off             recurring, monthly           dominant
+```
+
+| Term | Formula | The video's job | A 5k-row production job |
+|---|---|---|---|
+| Training | `billed_tokens × n_epochs × train_price` | $0.0030 | $18.00 (`gpt-4.1-mini`, 6.0 M tokens) |
+| Validation | `val_tokens × n_epochs × train_price` (provider-dependent) | — (none used) | ~$1.80 on a 10% holdout |
+| Inference | `calls × (P_in·r_in + P_out·r_out + P_cached·r_cached)` | ~$0.0002/call | $25–140/month depending on volume |
+| Engineering | 20–200 h of data work | ~3 h | 80–300 h |
+
+> **Beyond the video — the validation-file billing question.** Whether the validation file's tokens
+> are billed at the training rate varies by provider and by era. Two safe practices: **(a)** size
+> your validation set as a percentage of training (10–20%) and treat its tokens as a small linear
+> adder to the training estimate rather than trying to get an exact answer; **(b)** verify against
+> the provider's meter after your first job by comparing `job.trained_tokens` against your own
+> training-file sum. If `trained_tokens` comes back ~10–20% above your training-file estimate, the
+> validation file is being billed. If it matches, it is not.
+
+#### 4.6.5 The comparison nobody runs: hosted fine-tune vs a *shorter prompt on the base model*
+
+Before you spend anything, answer this: **could I just delete some prompt tokens?**
+
+The fine-tuned model's per-token inference price is higher than the base model's — for the `gpt-4.1`
+family it is a clean **2×** on both input and output:
+
+| Model | Base input | FT input | Base output | FT output | Markup |
+|---|---|---|---|---|---|
+| `gpt-4.1-nano` | $0.10/M | **$0.20/M** | $0.40/M | **$0.80/M** | 2.0× |
+| `gpt-4.1-mini` | $0.40/M | **$0.80/M** | $1.60/M | **$3.20/M** | 2.0× |
+| `gpt-4.1` | $2.00/M | **$4.00/M** | $8.00/M | **$16.00/M** | 2.0× |
+| `gpt-4o` (historical) | $2.50/M | $3.75/M | $10.00/M | $15.00/M | 1.5× |
+
+So the fine-tune wins **only if the prompt you can delete is worth more than the markup you pay on
+everything else.** With a 4:1 output:input price ratio (which every model above has), the algebra
+collapses to something you can do in your head:
+
+$$P_f \;<\; \frac{P_b}{2} \;-\; 2O \qquad\text{(hosted FT wins at a 2× markup, 4:1 output:input ratio)}$$
+
+where $P_b$ = base prompt tokens, $P_f$ = fine-tuned prompt tokens, $O$ = output tokens.
+
+Three worked cases, all `gpt-4.1-mini`:
+
+| Case | Base prompt $P_b$ | Output $O$ | Break-even $P_f$ | Actual $P_f$ | Base $/call | FT $/call | Verdict |
+|---|---|---|---|---|---|---|---|
+| **A** — 8-shot support prompt | 1,200 | 150 | < 300 | 400 | $0.000720 | $0.000800 | **FT loses.** You cannot delete enough prompt. |
+| **B** — 30-shot extraction prompt | 3,000 | 90 | < 1,320 | 700 | $0.001344 | $0.000848 | **FT wins**, saves $0.000496/call |
+| **C** — 2-shot, short | 450 | 200 | < −175 (impossible) | 300 | $0.000500 | $0.000880 | **FT loses at any prompt length** — the output-side markup alone exceeds the base total. |
+
+Case B recomputed line by line so you can audit it:
+
+```text
+CASE B — gpt-4.1-mini, 200,000 calls/month
+
+BASE MODEL (no fine-tune)
+  input : 3,000 tok × $0.40/M = $0.001200
+  output:    90 tok × $1.60/M = $0.000144
+  per call                    = $0.001344
+  × 200,000 calls             = $268.80 / month
+
+FINE-TUNED (gpt-4.1-mini, prompt cut to 700 tok)
+  input :   700 tok × $0.80/M = $0.000560
+  output:    90 tok × $3.20/M = $0.000288
+  per call                    = $0.000848
+  × 200,000 calls             = $169.60 / month
+
+MONTHLY SAVING = $99.20
+TRAINING COST  = 5,000 rows × 420 billed tok × 2 epochs × $3.00/M = $12.60
+PAYBACK        = $12.60 / $99.20 = 0.13 months ≈ 4 days
+YEAR 1 NET     = 12 × $99.20 − $12.60 − (validation, ~$1.30) = $1,176.50 saved
+```
+
+> **Beyond the video — the strategic consequence of the break-even formula.** The formula says the
+> only fine-tunes that pay for themselves are the ones that **replace a large block of few-shot
+> examples**. Which means:
+>
+> - If your prompt is short (a system message and a one-line instruction), fine-tuning will *never*
+>   pay for itself on hosted inference economics. You fine-tune for **quality or format compliance**,
+>   and you should say so out loud, because "it's cheaper" will be false.
+> - If your prompt is long *because of examples*, fine-tuning is a straight prompt-compression trade
+>   and it usually wins by a wide margin.
+> - If your output is long relative to your input, the 2× output markup makes hosted fine-tuning
+>   structurally uncompetitive — **and that is the single strongest argument for open-weight
+>   fine-tuning in this handbook.** A fine-tuned 8B model on your own GPU has a marginal output cost
+>   of zero. It is only the fixed cost that differs, and fixed cost amortises.
+
 <!-- CONTINUE -->
