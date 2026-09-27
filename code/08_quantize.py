@@ -98,7 +98,10 @@ def main() -> None:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--model", required=True, help="HF model id or local path")
     p.add_argument("--method", required=False,
-                   choices=["gptq", "awq", "bnb", "gguf", "hqq"], help="quantization method")
+                   choices=["gptq", "awq", "bnb", "gguf"],
+                   help="quantization method. HQQ is deliberately NOT offered: it was "
+                        "previously listed but fell through to the AWQ branch, silently "
+                        "writing an AWQ checkpoint into a directory named hqq-4bit.")
     p.add_argument("--out", default="./out/quantized")
     p.add_argument("--bits", type=int, default=4, choices=[2, 3, 4, 8])
     p.add_argument("--group-size", type=int, default=128,
@@ -119,9 +122,7 @@ def main() -> None:
                    help="Only report the VRAM table for the model; do not quantize.")
     a = p.parse_args()
 
-    model_size = next((m for m in ["0.5B", "1B", "1.5B", "2B", "3B", "7B", "8B",
-                                   "13B", "14B", "32B", "70B"]
-                       if m.lower() in a.model.lower()), "7B")
+    model_size = _sniff_size(a.model)
     _vram_table(model_size)
 
     if a.eval_only:
@@ -130,12 +131,39 @@ def main() -> None:
     if not a.method:
         sys.exit("--method is required (gptq | awq | bnb | gguf).")
 
+    # bitsandbytes only offers 4-bit and 8-bit. Without this guard, --bits 3 would
+    # be interpolated into `load_in_3bit=True` and fail deep inside transformers.
+    if a.method == "bnb" and a.bits not in (4, 8):
+        sys.exit(f"--method bnb supports --bits 4 or 8, not {a.bits}.\n"
+                 "  For 2/3-bit, use --method gguf (Q2_K/Q3_K) or --method gptq.")
+
     if a.method == "gguf":
         _run_gguf(a)
     elif a.method == "bnb":
         _run_bnb(a)
     else:
         _run_gptq_awq(a)
+
+
+# --------------------------------------------------------------------------------------
+def _sniff_size(model_id: str) -> str:
+    """Pick the closest preset size from a model id, e.g. 'Qwen2.5-32B-Instruct' -> 32B.
+
+    A plain substring test is WRONG here and silently so: "2b" is a substring of "32b",
+    and "2B" appears earlier in the list, so `meta-llama/Llama-2-32b` sniffs as 2B and
+    the VRAM table is printed for a model 16x smaller than the one requested. Match on
+    a token boundary instead, and try the longest labels first so "1.5B" cannot lose to
+    "1B".
+    """
+    import re
+    sizes = ["0.5B", "1B", "1.5B", "2B", "3B", "7B", "8B", "13B", "14B", "32B", "70B"]
+    haystack = model_id.lower()
+    for label in sorted(sizes, key=len, reverse=True):
+        # (?<![0-9.]) stops "2b" matching inside "32b" or "1.5b"; (?![0-9]) stops
+        # "1b" matching the "1b" of a hypothetical "1b5".
+        if re.search(rf"(?<![0-9.]){re.escape(label.lower())}(?![0-9])", haystack):
+            return label
+    return "7B"
 
 
 # --------------------------------------------------------------------------------------
@@ -178,10 +206,16 @@ def _run_gptq_awq(a) -> None:
         # instruction-tuned and multimodal models.
         from awq import AutoAWQForCausalLM
         model = AutoAWQForCausalLM.from_pretrained(a.model, **{"low_cpu_mem_usage": True})
+        # calib_data MUST be passed. AutoAWQ falls back to its own generic English
+        # corpus when it is omitted, so the "calibrate on YOUR OWN data" warning this
+        # script prints would be a lie and the artifact would be tuned on the wrong
+        # distribution — the exact benchmark-fine, production-bad failure the header
+        # warns about. Note AutoAWQ was archived in 2024; for new work prefer
+        # llm-compressor. Verify the calib_data argument against your pinned version.
         model.quantize(tok, quant_config={
             "zero_point": True, "q_group_size": a.group_size,
             "w_bit": a.bits, "version": "GEMM",
-        })
+        }, calib_data=calib)
         model.save_quantized(str(out))
         tok.save_pretrained(str(out))
 
@@ -238,7 +272,23 @@ def _run_gguf(a) -> None:
     # using statistics from a calibration corpus.
     cmd2 = [sys.executable, "-m", "llama_cpp.llama_quant",
             str(f16), str(out / f"model-{a.quant_type}.gguf"), a.quant_type]
-    subprocess.run(cmd2, check=False)
+    proc = subprocess.run(cmd2, capture_output=True, text=True)
+    if proc.returncode != 0:
+        # Do NOT delete the f16 intermediate and do NOT claim success. The previous
+        # version ran this with check=False, unlinked the f16, and then printed
+        # "GGUF saved" unconditionally — so a failed quantize left an empty output
+        # directory, no error, and a success message. The f16 is the expensive part;
+        # keep it so the retry is cheap.
+        tail = (proc.stderr or proc.stdout or "").strip()[-800:]
+        sys.exit(
+            f"Quantization to {a.quant_type} failed (exit {proc.returncode}).\n"
+            f"  The f16 intermediate is kept at {f16} — retry from there.\n"
+            "  If the module is missing, llama-cpp-python may not ship a runnable\n"
+            "  `llama_cpp.llama_quant`; use the llama.cpp binary instead:\n"
+            "    llama-quantize model-f16.gguf "
+            f"model-{a.quant_type}.gguf {a.quant_type}\n"
+            + (f"\n  --- tool output ---\n{tail}" if tail else "")
+        )
 
     f16.unlink(missing_ok=True)
     print(f"\n  ✅ GGUF saved to {out}")

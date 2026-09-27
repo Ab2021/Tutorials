@@ -417,6 +417,14 @@ Single GPU, gradient checkpointing on, from `code/common/memory.py`:
 
 **Add 10–20% for allocator and framework overhead.**
 
+> **These are floors, and you will meet higher numbers elsewhere.** The table prices the
+> tensors only. Budget **+10–20%** for the plan, and expect a 7B `lora + bit4` run to be
+> *observed* at **~10–12 GB** rather than the 4.9 GB floor — bitsandbytes upcasts each NF4
+> layer to bf16 for the matmul, and the CUDA context, dataloader and longer `cutoff_len`
+> activations all land on top. Full FT shows the same ~20% spread from bytes-per-param
+> (14 vs 16) and GiB-vs-GB alone. CH-13 §7 has the full accounting; trust a measurement
+> over any table, including this one.
+
 ### 7.2 Multi-GPU: what DeepSpeed buys you
 
 | Config | Shards | Use for | Note |

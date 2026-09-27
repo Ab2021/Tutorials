@@ -21,7 +21,7 @@
 
 - **LLaMA-Factory is a config-driven orchestration layer over Hugging Face, not a new trainer.** The instructor states it plainly: *"LLaMA Factory is a build on top of the hugging face libraries… it internally wrap up transformer, PEFT, bitsandbytes, TRL"* [7:06] — *"they haven't written the complete code from scratch, no"* [7:25]. That single fact explains both its superpower (any HF model works) and its weakness (every HF bug is your bug).
 - **The value proposition is a declarative config plus a dataset/template registry.** One YAML file is the entire unit of reproducibility. The instructor's own rule: *"we should not directly run like this… if the terminal is going to be closed… all the parameter will be lost. So keep it in one physical file"* [55:26]–[57:14].
-- **It supports 100+ model families and every major training stage** — pretraining (`pt`), SFT (`sft`), reward modelling (`rm`), PPO (`ppo`), DPO (`dpo`), KTO (`kto`), plus ORPO and SimPO as preference-loss variants. The video's WebUI walkthrough enumerates exactly this list [34:14].
+- **It supports 100+ model families and every major training stage** — pretraining (`pt`), SFT (`sft`), reward modelling (`rm`), PPO (`ppo`), DPO (`dpo`), KTO (`kto`), and ORPO (`orpo`). ORPO additionally appears as a `pref_loss` value; **SimPO appears *only* as a `pref_loss`** (`pref_loss: simpo` under `stage: dpo`) and is not a stage. The video's WebUI walkthrough enumerates roughly this list [34:14]. The exact accepted values are version-sensitive — verify against your pinned install (CH-15 §3).
 - **QLoRA is not a `finetuning_type`.** `finetuning_type` ∈ `{lora, freeze, full}`. QLoRA = `finetuning_type: lora` **plus** `quantization_bit: 4`. The repo's own `train_gemma_qlora.yaml` proves it: line 7 says `finetuning_type: lora`, line 35 says `quantization_bit: 4`. Getting this wrong is the single most common config error for newcomers.
 - **`template` is the silent killer.** It is not cosmetic: it decides the exact token string fed to the model *and* which special tokens the tokenizer is forced to use. A mismatched template raises **no error** and produces a model that is worse than the base model. The instructor flags it once — *"whatever model you are going to select, according to that you can select the chat template"* [33:38] — and then the WebUI auto-fills it, so the failure never reproduces in a demo.
 - **The dataset registry is a JSON manifest, not a folder convention.** Every dataset — local file, HF Hub repo, or ModelScope — needs a key in `data/dataset_info.json` (or whatever `dataset_dir` points at). *"Even if you are going to read a data from the hugging face, in that case also you will have to make an entry inside this particular file"* [37:33].
@@ -160,7 +160,7 @@ There is no custom autograd, no custom kernel, no custom attention unless you as
 | **`api`** | CLI verb: OpenAI-compatible HTTP server (`/v1/chat/completions`) | Serving | Thought to be a separate product; it is a thin `vllm`/HF worker |
 | **`webui`** | CLI verb: launch LLaMA Board | No-code path | — |
 | **`eval`** | CLI verb: run perplexity / BLEU / ROUGE / MMLU-family evals | Regression testing | Deprecated in current `main` (see Correction in §6.7) |
-| **`stage`** | The training objective: `pt`, `sft`, `rm`, `ppo`, `dpo`, `kto` | Selects the loss and the workflow | Confused with `finetuning_type` |
+| **`stage`** | The training objective: `pt`, `sft`, `rm`, `ppo`, `dpo`, `kto`, `orpo` | Selects the loss and the workflow | Confused with `finetuning_type`; and `simpo` is a `pref_loss`, not a stage — see CH-15 §3 |
 | **`finetuning_type`** | *How* weights are updated: `lora`, `freeze`, `full` | Memory/speed dial | **`qlora` is not a value here** |
 | **QLoRA** | `finetuning_type: lora` + `quantization_bit: 4` (optionally 8) | The default practical recipe | Believed to be a `finetuning_type`; see `train_gemma_qlora.yaml` lines 7 + 35 |
 | **`freeze`** | Train only the last N layers (default 2) and/or named modules | Middle ground between LoRA and full | Thought to be cheaper than LoRA — it is usually *more* VRAM, because it still stores full-precision grads |
@@ -822,6 +822,14 @@ Comfortable — which is exactly why a free T4 runs this. Now scale it:
 |---|---|---|---|
 | Gemma-1.1-2B | ~6 GB | ~40 GB | QLoRA: free T4. Full: needs 48 GB+ |
 | 7–8B (Llama-3.1-8B, Qwen3-8B) | ~10–12 GB | ~120 GB | QLoRA: T4/L4 fine, 4090 comfortable. Full: 8×A100 |
+
+> **These are *observed* figures, not the arithmetic floor — see CH-13 §7.** The floor for 7B
+> QLoRA, as priced by `code/common/memory.py`, is **4.9 GiB**; the ~10–12 GB above is what a
+> real run reports once bitsandbytes' per-layer NF4→bf16 upcast, the CUDA context, the
+> dataloader and allocator fragmentation are included. Likewise the ~120 GB full-FT figure
+> uses 16 bytes/param and decimal GB, where the floor is 91.6 GiB (14 bytes/param). Neither
+> set of numbers is wrong; they answer different questions. **Budget with these, plan
+> against the floor, and trust your own measurement over both.**
 | 13–14B | ~16–18 GB | ~210 GB | QLoRA: L4 24 GB tight, A100 40 GB fine |
 | 70B | ~48–50 GB (bs 1, cutoff 512) | ~1.1 TB | QLoRA: 1×A100-80 barely, or FSDP+QLoRA on 2×24 GB |
 

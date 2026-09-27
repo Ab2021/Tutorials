@@ -44,7 +44,22 @@ from __future__ import annotations
 
 import argparse
 import math
+import sys
 from dataclasses import dataclass, field
+from pathlib import Path
+
+# This file lives inside the `common` package, but the README (and every cheat sheet that
+# cites a VRAM figure) tells you to run it as a FILE: `python common/memory.py --table`.
+# Run that way it is __main__, so `common/__init__.py` never executes and its Windows
+# console fix never applies — and this script prints ⚠ the moment a plan does not fit.
+# Support both entry points rather than depending on which one the reader used.
+try:
+    from ._console import force_utf8                 # python -m common.memory
+except ImportError:                                  # python common/memory.py
+    sys.path.insert(0, str(Path(__file__).parent))
+    from _console import force_utf8                  # noqa: E402
+
+force_utf8()
 
 # --------------------------------------------------------------------------------------
 # Model presets: (params_in_billions, n_layers, hidden_size, n_heads, n_kv_heads)

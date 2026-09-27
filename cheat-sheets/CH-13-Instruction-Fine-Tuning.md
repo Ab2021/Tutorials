@@ -118,7 +118,7 @@ Do you have a held-out eval set?
 | Param | Default | Range | Notes |
 |---|---|---|---|
 | `r` (rank) | 16 | 4 … 128 | Higher = more capacity + more overfit risk. 8–32 covers most work. |
-| `lora_alpha` | 32 | `2×r` | Scale = `alpha / r`. Setting alpha = 2r keeps effective scale ~2. |
+| `lora_alpha` | 32 | `2×r` | Scale = `alpha / r`. Setting alpha = 2r keeps effective scale ~2. **Take `alpha` and `lr` together when you port a recipe** — `alpha=r` (scale 1.0) is equally common, and mixing the two conventions is a silent 2× LR change. See CS-13 §7. |
 | `lora_dropout` | 0.05 | 0 … 0.1 | 0 is faster; 0.05 helps on small datasets. |
 | `target_modules` | all linear | — | `q,k,v,o,gate,up,down`. Attention-only is cheaper but weaker. |
 | `bias` | `"none"` | — | `"none"` standard; `"all"` rarely helps. |
@@ -349,6 +349,28 @@ bf16 weights, fp32 optimiser states for full FT. GB:
 | 70B | 913.8 | 144.5 | 46.8 | 132.6 | 33.9 |
 
 **Add 10–20% for allocator and framework overhead, and leave headroom.**
+
+> **Why you will see *different* numbers elsewhere — and both are right.** This table is the
+> **arithmetic floor**: it prices the tensors and nothing else. Other sources quote higher
+> figures for the same model and method. Three reasons, in order of size:
+>
+> 1. **Bytes per parameter.** Full FT here is `4 B` master weights `+ 2 B` gradients
+>    `+ 8 B` AdamW (`m` + `v`) `= 14 B/param` → 7B × 14 = **91.6 GiB**. The common
+>    back-of-envelope uses **16 B/param** (an extra `2 B` for a separate bf16 working copy)
+>    → 7B × 16 = **112 GB**. Same recipe, +22%, purely a bookkeeping choice.
+> 2. **GiB vs GB.** The table is binary (1024³). Vendor slide figures are usually decimal
+>    (1000³). That is another **+7.4%** on every row — 91.6 GiB is 98.4 GB.
+> 3. **QLoRA dequantises on the fly.** bitsandbytes stores the base in NF4 but upcasts each
+>    linear layer to bf16 to run the matmul, so peak memory transiently holds NF4 + bf16 for
+>    the layer in flight. It is *not* simply ¼ of bf16, which is why a 7B QLoRA run that the
+>    floor prices at **4.9 GiB** is commonly observed at **10–12 GB** once the CUDA context
+>    (~0.5–1 GB), the tokenizer/dataloader, longer `cutoff_len` activations and allocator
+>    fragmentation are added.
+>
+> **How to use this:** treat the table as the *lower bound you must beat*, add 10–20% for a
+> plan, and trust a real measurement over any table — including this one. If a number here
+> and a number in the case study disagree by ~20–30%, check bytes-per-param and GiB-vs-GB
+> before assuming one of them is wrong.
 
 ### Why full FT is ~20× QLoRA
 

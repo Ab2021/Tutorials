@@ -20,7 +20,7 @@
 - **The single most important number in this module: 1,000.** LIMA (Meta, 2023) showed that **1,000 carefully curated instruction/response pairs** fine-tuned onto a 65B base model produced a chatbot competitive with models trained on 50,000+ examples plus RLHF. The corollary, which the instructor states as *"one great example beats ten mediocre ones"* in spirit [24:00]–[25:00], is that **data quality dominates every hyperparameter in this module**. If you take one thing away: spend your time on the dataset, not on the LR sweep.
 - **The thesis war you must be able to referee:** is SFT *teaching* the model new knowledge, or *eliciting* behaviour the base model already has? The correct answer is **mostly elicitation, with a thin, fragile layer of injection**. LIMA's authors call it the *superficial alignment hypothesis*: "a model's knowledge and capabilities are learnt almost entirely during pretraining, while alignment teaches it which subdistribution of formats should be used." Counter-evidence exists and matters: SFT *does* inject narrow facts, but it takes 10–100 paraphrases per fact, the recall is brittle, and it is wiped by the next preference-tuning run. Full treatment in §4.1.
 - **The masking decision is the highest-leverage line of code you will write.** Train on prompt + response (what the notebook does in cell 37) and you spend 60–90% of your loss teaching the model to *generate your prompt*. Mask the prompt (`-100`) and 100% of the gradient goes where you want it. The instructor recommends *not* masking [52:36] — **see the `Correction` callout in §4.4; the industry default is the opposite**, and the reason is arithmetic, not taste.
-- **Silent bug #1 in the companion notebook:** `padding="max_length"` + `labels = input_ids.copy()` means **padding tokens are trained as targets.** On this 5-row dataset that is ~84% of the loss signal. §14 gives the one-line assertion that catches it. **Silent bug #2:** the notebook tokenizes with `TinyLlama-1.1B-Chat-v1.0`'s tokenizer but loads `TinyLlama-1.1B-intermediate-step-1431k-3T` as the model, and formats with `### Instruction:` / `[INST]` templates the model was never pretrained on. §4.3 explains why train/serve template mismatch is the most common production SFT failure.
+- **Silent bug #1 in the companion notebook:** `padding="max_length"` + `labels = input_ids.copy()` means **padding tokens are trained as targets.** On this 5-row dataset that is ~94% of the loss signal (7,200 pad positions against 480 answer tokens — the arithmetic is audited once in §19). §14 gives the one-line assertion that catches it. **Silent bug #2:** the notebook tokenizes with `TinyLlama-1.1B-Chat-v1.0`'s tokenizer but loads `TinyLlama-1.1B-intermediate-step-1431k-3T` as the model, and formats with `### Instruction:` / `[INST]` templates the model was never pretrained on. §4.3 explains why train/serve template mismatch is the most common production SFT failure.
 - **Five data formats cover ~99% of the ecosystem:** Alpaca (`instruction`/`input`/`output`), ShareGPT (`conversations` with `from`/`value`), OpenAI chat (`messages` with `role`/`content`), DPO-ready pairs (`prompt`/`chosen`/`rejected`), and completion-only (`prompt`/`completion`). §4.2 renders the *same* Metformin row from `pharma_instruction_data.jsonl` in all five, and shows exactly which framework key reads which field (LLaMA-Factory `dataset_info.json`, TRL `messages`, Unsloth `train_on_responses_only`).
 - **Chat templates are a contract, not a formatting detail.** `tokenizer.apply_chat_template(..., tokenize=False)` is the only correct way to render a prompt. If you train with `<|im_start|>` and serve with `### Instruction:`, you get a model that looks fine in your eval notebook and produces gibberish behind the API. §4.3 has the inspection one-liners.
 - **SFT overfitting does not look like overfitting.** Val loss can be flat or falling while the model becomes **verbose, rigidly formatted, over-refusing, and worse at everything else**. §4.9 teaches the four signatures and the mitigations (epochs 1–3 not 10; LoRA not full FT; 5–20% general-data replay; eval on out-of-domain prompts).
@@ -871,6 +871,14 @@ Training memory decomposes into five terms. For a model with `N` parameters, bat
 **Worked example — 7B model, `S=2048`, `B=1`, `L=32`, `d=4096`:**
 
 - Full FT fp16 with AdamW: `2N + 2N + 8N + 4N = 16N` = 16 × 7e9 = **112 GB static**. Activations without checkpointing: `1 × 2048 × 32 × 4096 × 34 ≈ 9.1 GB`; with gradient checkpointing `≈ 2N + 2048×32×4096×2 ≈ 14 GB + 0.5 GB`. **≈ 127 GB with checkpointing → 2× A100-80GB minimum, realistically 4× for headroom.** Without checkpointing you are at ~121 GB + 9 GB and you will OOM on 2×80 at `B=2`.
+
+> **Two byte-accountings are in circulation and both appear in this handbook.** This `16N`
+> derivation (bf16 working weights `2N` + fp32 master `4N` + gradients `2N` + AdamW `m`/`v`
+> `8N`) is the conservative, complete one → **112 GB**, in decimal GB. `code/common/memory.py`
+> and CH-13 §7 use **`14N`** (fp32 master `4N` + fp16 gradients `2N` + AdamW `8N`, no separate
+> bf16 copy) → **91.6 GiB**, in binary GiB. The gap is `16/14 × 1.074 = 1.23`, i.e. ~23% —
+> the same recipe, two conventions. **Neither is wrong; do not add them or average them.**
+> Pick one convention, state it, and stay inside it. For provisioning, use this one.
 - LoRA (r=16, q/k/v/o + MLP, ~0.6% of params = 42M trainable): `14 GB weights + 0.084 GB grads + 0.34 GB optimizer + 14 GB (2N for checkpoint recompute) ≈ 29 GB`, plus activations. **Fits on 1× A100-40GB at `S=2048, B=4`, and on 1× 24 GB card at `S=1024, B=2`.**
 - QLoRA: `3.5 GB (4-bit) + 0.42 GB adapter state + activations ≈ 9–12 GB`. **Fits on a 12 GB card; comfortably on a free Colab T4 (16 GB) at `S=2048, B=1, ga=16`.**
 
@@ -1651,8 +1659,8 @@ trainer.train()
 | Optimizer steps per epoch | 1 | `ceil(5 / 8) = 1` |
 | Epochs | 3 | |
 | **Total optimizer steps** | **3** | → the saved artefact is literally `checkpoint-3` [49:05] |
-| Tokens per step | 8 × 512 = 4,096 | dominated by padding (89%) |
-| **Actual response tokens trained on** | 5 rows × ~32 tokens × 3 epochs ≈ **480** | vs. ~61,000 pad-token targets if unmasked |
+| Tokens per step | 8 × 512 = 4,096 | dominated by padding (~94%) |
+| **Actual response tokens trained on** | 5 rows × ~32 tokens × 3 epochs ≈ **480** | vs. **7,200** pad-token targets if unmasked |
 | Learning-rate schedule | None in practice | 3 steps with a cosine schedule and default warmup |
 
 Read that last block again. **Three gradient updates.** The checkpoint name in the video is not a coincidence — it is the whole run. This is a *pipeline demonstration*, and the instructor says so repeatedly [50:40], [54:00]: *"my data set is very small, I just trained it for a very simple epoch... if you are doing it on a full scale with a good model with a good data set, with a huge data set, that definitely this technique will work."*
@@ -1780,6 +1788,25 @@ A model that only works in the bottom-right cell is **format-rigid** (§4.7.2), 
 | `bf16` / `fp16` | Numeric precision | **`fp16=True`** | `bf16=True` on Ampere+ | one of them, not both | Overflow/NaNs (fp16 with high LR) | Slow, more memory | `bf16`, `fp16` |
 | `lora_r` | Adapter rank | **8** | 16 | 4–64 | Overfits small datasets; more memory | Underfits; cannot learn the task | `r` (peft) |
 | `lora_alpha` | Adapter scaling | **16** | `r` or `2r` | keep `alpha/r ∈ [0.5, 4]` | Effectively raises the LR → instability | Adapter has no effect → "fine-tune did nothing" | `lora_alpha` |
+
+> **Reconciling the two conventions you will meet in this handbook — and why mixing them
+> silently changes your learning rate.** Only the ratio matters: the adapter's output is
+> scaled by `alpha / r`. Two conventions are in common use:
+>
+> | Convention | At `r=16` | Scale | Where you will see it |
+> |---|---|---|---|
+> | `alpha = r` | `alpha=16` | **1.0** | CS-13 §19's production recipe (§19), most tutorials |
+> | `alpha = 2r` | `alpha=32` | **2.0** | CH-13 §4.1's default, many published configs |
+>
+> Both are defensible, and **neither is a bug** — but the effective LR is `lr × (alpha/r) ×
+> (constant)`, so a config built for scale 2.0 paired with a config's LR built for scale 1.0
+> is a **2× LR change** that nothing in the logs announces. This is the same failure class as
+> halving `r` while leaving `alpha` alone.
+>
+> **The rule:** pick one convention for a project and keep `alpha/r` fixed when you change
+> `r`. If you port a recipe, port the *pair* — take `alpha` and `lr` together, or rescale one
+> to preserve the product. `alpha/r ∈ [0.5, 4]` is the safe band; outside it you are either
+> not training the adapter or training it unstably.
 | `lora_dropout` | Adapter dropout | **0.05** | 0.05–0.1 | 0–0.1 | Underfit (with `r=8` and 5 rows) | Overfit on small data | `lora_dropout` |
 | `target_modules` | Which linears get adapters | **`q_proj, v_proj`** | all 7 projections | see §7.8 | More memory, slower | Quality ceiling: `q/v` only underperforms `all-linear` by 2–5 points on domain tasks | `target_modules` |
 | `neftune_noise_alpha` | Embedding noise (train only) | not set | 5 | 0–15 (0 = off) | Degrades long-form and already-clean data | — | `neftune_noise_alpha` |
@@ -2048,6 +2075,21 @@ Are responses long (>1,024 tokens)?
 | 13 | **`report_to="none"`** | Nothing to debug with | No curve exists | Turn on wandb/tensorboard |
 | 14 | **Chat template silently not applied** | Model ignores the system message | `tokenizer(text)` used instead of `apply_chat_template` | Print the rendered string in the training script |
 
+> **A caveat on row 8, because it is the row most often over-applied.** "Wrong tokenizer"
+> is only a *silent* failure when the two tokenizers genuinely disagree about the vocabulary
+> — a different family, a different vocab size, or new special tokens added without
+> `resize_token_embeddings`. Pairing a **base checkpoint with its own chat/instruct sibling**
+> (TinyLlama-1.1B-intermediate-step-1431k-3T with TinyLlama-1.1B-Chat-v1.0's tokenizer, as
+> the notebook in §6 does) shares the vocabulary and the special tokens, so the ids are
+> correct and the mismatch is *harmless in itself*. The real defects in that notebook are the
+> two on this list that do bite — the prompt template the weights were never pretrained on
+> (row 3) and the unmasked padding (row 1). The `vocab_size == len(tokenizer)` assertion is
+> still worth running: it is what tells you *which* of the two cases you are in.
+>
+> Rule of thumb: **same family, same vocab → a cosmetic mismatch. Different family, or
+> `resize_token_embeddings` involved → a real one.** The assertion distinguishes them in one
+> line, which is why it is in the table.
+
 ---
 
 ## 10. Exceptions, Edge Cases & Gotchas
@@ -2130,16 +2172,41 @@ The notebook's own run, for contrast:
 
 ### 11.4 Full fine-tuning cost, for completeness
 
-| Model | Method | Hardware | Wall clock (8k × 512 × 2 ep) | Cost @ $1.50/GPU-hr |
-|---|---|---|---|---|
-| 8B | Full FT + ZeRO-3 | 4 × A100-80 | ~1.2 h | **$7.20** |
-| 8B | LoRA fp16 | 1 × A100-40 | ~0.6 h | $0.90 |
-| 8B | QLoRA | 1 × A100-40 | ~0.6 h | $0.90 |
-| 70B | QLoRA | 1 × A100-80 | ~6 h | $9.00 |
-| 70B | Full FT + ZeRO-3 | 16 × A100-80 | ~3 h | **$72.00** |
+The workload is fixed across every row: **8,192 examples × 512 tokens × 2 epochs = 8.39M
+tokens**, priced at $1.50/GPU-hour.
 
-(Estimates, extrapolated from throughputs of 1,000–1,500 tokens/s/GPU full FT, 4,000 LoRA, 2,000 QLoRA-70B. Real numbers move ±40% with `packing`, sequence length, and whether flash-attention is on.)
+| Model | Method | Hardware | Wall clock | Cost | Implied tok/s/GPU | Implied MFU |
+|---|---|---|---|---|---|---|
+| 8B | Full FT + ZeRO-3 | 4 × A100-80 | ~1.2 h | **$7.20** | 485 | 7% |
+| 8B | LoRA fp16 | 1 × A100-40 | ~0.6 h | $0.90 | 3,884 | 60% |
+| 8B | QLoRA | 1 × A100-40 | ~0.6 h | $0.90 | 3,884 | 60% |
+| 70B | QLoRA | 1 × A100-80 | ~6 h | $9.00 | 388 | 52% |
+| 70B | Full FT + ZeRO-3 | 16 × A100-80 | ~3 h | **$72.00** | 49 | 7% |
 
+**Read the last two columns, not the wall clocks.** They are derived (`tokens ÷ (h × 3600 ×
+GPU)` and `6ND ÷ (h × 3600 × peak_GPU_FLOPS)`), and they say something the wall clocks hide:
+
+- **The full-FT rows assume ~7% MFU.** That is what a naive ZeRO-3 configuration actually
+  delivers — all-gather/reduce-scatter traffic dominates, and 16-way sharding makes it worse.
+  At a tuned 35% MFU the same 70B job is **~0.8 h, not 3 h**, and the 8B job is ~0.4 h. So
+  these two rows are deliberately **pessimistic**: they are the cost of a setup that has not
+  been optimised. Treat them as an upper bound, and treat closing that 5× gap as the actual
+  engineering task.
+- **The LoRA and QLoRA rows assume 52–60% MFU**, which is a *good* run. A 7B-class model on
+  one A100 with `packing` on and flash-attention enabled can reach it; the same job with
+  `packing` off and ragged batches will not come close. These rows are closer to a best case
+  than to an average.
+
+> **Correction (self-):** an earlier version of this table carried a note reading
+> "extrapolated from throughputs of 1,000–1,500 tokens/s/GPU full FT, 4,000 LoRA, 2,000
+> QLoRA-70B." Those figures do not reproduce the table — and no single figure per method can,
+> because per-GPU throughput is not a property of the *method*. It falls with model size
+> (388 tok/s for 70B QLoRA against 3,884 for 8B QLoRA on the same GPU) and it collapses with
+> sharding (49 tok/s/GPU at 16-way ZeRO-3 against 485 at 4-way for the same model class).
+> Quoting one number per method was the error; the per-row columns above replace it.
+
+Real numbers move ±40% with `packing`, sequence length, batch shape, and whether
+flash-attention is on. The MFU figures assume A100 peak dense bf16 of 312 TFLOPS.
 ---
 
 ## 12. Evaluation — How To Know It Worked
@@ -2440,7 +2507,7 @@ Run this **three** times: on the SFT start checkpoint, on the candidate, and on 
 | **Data** | `pharma_instruction_data.jsonl`, 5 rows, `instruction`/`input`/`output`. Two rows use `input` (mRNA vaccines, AI in pharma R&D); three leave it empty. Converted from a 5-row CSV in the video [40:45] "because CSVs are ambiguous about empty fields". |
 | **Base model** | `TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T` — a base model, not a chat model [31:46]. |
 | **Technique** | LoRA r=8, α=16, dropout 0.05, `q_proj`/`v_proj` [46:53]; 3 epochs; bs 1 × ga 8; LR 2e-4; fp16 [48:11]. |
-| **Result** | 3 optimizer steps. ~480 response tokens supervised against ~61,000 pad targets (§6.9). The video demonstrates the pipeline end-to-end and gets fluent-looking output [50:09]. |
+| **Result** | 3 optimizer steps. ~480 response tokens supervised against ~7,200 pad targets (§6.9). The video demonstrates the pipeline end-to-end and gets fluent-looking output [50:09]. |
 | **What went wrong first** | Almost everything that makes this a good teaching example: the tokenizer came from a different checkpoint than the model; `format_example` wrote the literal string `None` into training rows; the "instruction-tuned" model and the "non-instruction" model produced byte-identical output; only 5 rows were used; and the prompt was not masked. |
 | **The honest verdict** | This notebook is a **mechanism demonstration, not a recipe**. It shows you every moving part — dataset → format → tokenize → mask → LoRA → Trainer → generate — at a scale where you can read every tensor. It is not evidence that the technique works at 5 rows, and the video never claims it is. Take the pipeline, throw away the hyperparameters, and supply your own 2,000 rows. |
 
@@ -2690,7 +2757,7 @@ tok.save_pretrained(MERGED)
 2. **The number to remember is 1,000.** LIMA reached 43% win/tie against GPT-4 with 1,000 curated examples on a 65B base. Your 8,000 rows are not the reason your model is good; your *curation* is.
 3. **SFT elicits format far more effectively than it injects knowledge.** Design for behaviour: schema, tone, register, refusal policy, stopping. Get facts from retrieval and from continued pretraining (CS-12).
 4. **Masking the prompt is the single most important implementation detail.** `labels[prompt_positions] = -100`, and mask the padding too. Everything you care about — gradient dilution, length balance, format compliance — follows from it.
-5. **Padding is not free; it is target tokens.** With `padding="max_length"` and unmasked labels, the notebook's run spends 61,000 label positions on `<pad>` and 480 on the answer.
+5. **Padding is not free; it is target tokens.** With `padding="max_length"` and unmasked labels, the notebook's run spends 7,200 label positions on `<pad>` and 480 on the answer.
 6. **Read the rendered training string.** The chat template is a contract with the weights; a mismatch produces fluent, wrong behaviour and no error message.
 7. **The five data formats are the same information.** Alpaca, Alpaca-flat, ShareGPT, OpenAI chat, DPO pairs, completion-only. Pick the one your framework eats; convert with a versioned script you can unit-test.
 8. **One great example beats ten mediocre ones, and it is measurable.** 9k filtered from 52k beat the full 52k; 6k curated beat 100k+.
