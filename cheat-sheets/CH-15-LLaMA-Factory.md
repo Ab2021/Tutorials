@@ -19,7 +19,7 @@ loop. LLaMA-Factory is opinionated; fighting it costs more than writing 50 lines
 |---|---|---|
 | 1 | **`template:` must match the model.** | The #1 silent failure. `llama3` ≠ `llama2` ≠ `chatml`. |
 | 2 | **Datasets must be registered in `data/dataset_info.json`.** | The YAML refers to a *name*, not a path. |
-| 3 | **`stage:` picks the whole recipe.** | `sft`, `dpo`, `orpo`, `ppo`, `rm`, `kto`, `pretrain`. |
+| 3 | **`stage:` picks the whole recipe.** | `sft`, `dpo`, `orpo`, `ppo`, `rm`, `kto`, and the pretraining stage. Verify the pretraining spelling (`pt` vs `pretrain`) against your pinned version — see §3 note. |
 | 4 | **`finetuning_type: lora` + `quantization_bit: 4` = QLoRA.** | Two lines, and the VRAM halves. |
 | 5 | **`adapter_name_or_path` chains stages.** | DPO starts from your SFT adapter, not the base model. |
 | 6 | **`llamafactory-cli export` merges the adapter.** | Until you export, you have a two-piece artifact. |
@@ -51,7 +51,9 @@ Which stage do you need?
 ├─ Install knowledge/domain text (no labels)  → stage: pretrain
 ├─ Teach (instruction, response)               → stage: sft        (CH-13)
 ├─ Train a reward model on comparisons         → stage: rm         (then stage: ppo)
-├─ Optimise against preferences                → stage: dpo / orpo / kto / simpo (CH-14)
+├─ Optimise against preferences                → stage: dpo / orpo / kto (CH-14)
+│    └─ and the LOSS is a separate knob: pref_loss: sigmoid | orpo | simpo | ipo | hinge
+│       SimPO and IPO are NOT stages — pick stage: dpo and set pref_loss.
 └─ Optimise against a verifiable reward        → stage: ppo (or use TRL GRPO)
 
 Which finetuning_type?
@@ -63,6 +65,9 @@ Which dataset FORMAT does your file use?
 ├─ {"instruction","input","output"}     → formatting: alpaca
 ├─ {"conversations":[{from,value},...]} → formatting: sharegpt
 └─ neither → convert first. Do not guess; look at one line of the file.
+
+Do you have chosen/rejected pairs?   → add "ranking": true to the registry entry
+                                       (NOT a formatting value — see §5.1)
 
 Is this a MULTI-TURN dataset?
 ├─ Yes → mask_history: true, and verify the masked fraction
@@ -77,6 +82,19 @@ Do you have >1 GPU?
 │        (z3 for full FT; z2 is often enough and faster for LoRA)
 └─ No  → omit the deepspeed key entirely
 ```
+
+> **`stage` and `pref_loss` are two different axes, and conflating them is a documented
+> source of confusion across this handbook's own files.** `stage` selects the *recipe* —
+> what data is loaded, what the model head is, what the training loop optimises. `pref_loss`
+> selects the *loss function* inside a preference stage. So ORPO and KTO are stages
+> (`stage: orpo`, `stage: kto`), while **SimPO and IPO are not** — they are
+> `stage: dpo` with `pref_loss: simpo` / `pref_loss: ipo`. Writing `stage: simpo` fails.
+>
+> The exact accepted spelling of the pretraining stage (`pt` in recent versions) and the full
+> `pref_loss` list are **version-sensitive**. Do not trust a list from a blog post or from
+> this card: run `llamafactory-cli train --help` against your pinned install, or read
+> `Stage` / `pref_loss` in `llamafactory/extras/enums.py` in your checkout. The same caution
+> applies to every error string in §11 — they are greppable in the source, which is the point.
 
 ---
 
@@ -99,7 +117,7 @@ Do you have >1 GPU?
 | `num_train_epochs` | 3.0 | 1–3 | Overfits past 3 |
 | `lr_scheduler_type` | `cosine` | `cosine` | — |
 | `warmup_ratio` | 0 | 0.03–0.1 | 0 is LLaMA-Factory's default and is worth overriding |
-| `bf16` | `true` | `true` | Prefer bf16 over fp16 |
+| `bf16` | *not fixed* | `true` | **Set it explicitly.** HF's `TrainingArguments.bf16` defaults to `False`; LLaMA-Factory derives precision from the device rather than promising a default. Prefer bf16 over fp16 (fp16 needs loss scaling and can silently NaN). |
 | `gradient_checkpointing` | `true` | `true` | Required for most single-GPU runs |
 | `mask_history` | `false` | `true` for multi-turn | Trains on the user's turns if left off |
 | `packing` | `false` | `true` for pretrain | Cross-contamination risk on SFT — see §8 |
@@ -160,19 +178,37 @@ Do you have >1 GPU?
   },
   "my_pairs": {
     "file_name": "my_pairs.jsonl",
-    "formatting": "sharegpt",
-    "columns": { "messages": "conversations", "chosen": "chosen", "rejected": "rejected" }
+    "ranking": true,
+    "columns": {
+      "messages": "conversations",
+      "chosen": "chosen",
+      "rejected": "rejected"
+    }
   }
 }
 ```
 
-| `formatting` | Expected row shape |
+| Key | Expected row shape |
 |---|---|
-| `alpaca` | `{"instruction": "...", "input": "...", "output": "..."}` |
-| `sharegpt` | `{"conversations": [{"role":"user","content":"..."}, ...]}` |
+| `"formatting": "alpaca"` | `{"instruction": "...", "input": "...", "output": "..."}` |
+| `"formatting": "sharegpt"` | `{"conversations": [{"role":"user","content":"..."}, ...]}` |
+| `"ranking": true` | Any of the above **plus** `chosen` / `rejected` |
+
+> **`"ranking": true` is what makes it a preference dataset — not the columns.** Without it,
+> a `stage: dpo` run parses your file as ordinary SFT data: it finds the `conversations`
+> field, builds normal instruction examples, trains happily, and reports a falling loss. The
+> `chosen` and `rejected` fields are simply ignored. Nothing errors. You get a model that was
+> SFT'd a second time and is not preference-tuned at all — which is why "DPO didn't change
+> anything" so often turns out to be a missing boolean in a JSON file.
+>
+> A useful sanity check: after registering, run `stage: dpo` for a few steps and confirm the
+> logged loss is a *preference* loss (it starts near `ln 2 ≈ 0.693` for a sigmoid DPO at
+> `beta=0.1`, and the reference-model term appears in the log). A plain cross-entropy curve
+> starting high and falling smoothly on a `ranking`-less dataset is the tell.
 
 > `columns` and `tags` exist so you can point at *your* key names without rewriting the file.
-> Almost every "dataset registered but parses to zero rows" bug is a `tags` mismatch.
+> Almost every "dataset registered but parses to zero rows" bug is a `tags` mismatch — and
+> almost every "preference training did nothing" bug is a missing `"ranking": true`.
 
 ### 5.2 SFT with LoRA — `train.yaml`
 
@@ -476,10 +512,14 @@ Single GPU, gradient checkpointing on, from `code/common/memory.py`:
 
 ## 11. Common Errors And Their Exact Messages
 
+Two of these are the *loud* failures you actually want — the template and dataset lookups are
+the only places the pipeline refuses to guess. Grep the strings in your own checkout
+(`grep -rn "does not exist" src/llamafactory/data/`) rather than trusting a card.
+
 | Error message | Meaning | Fix |
 |---|---|---|
-| `ValueError: Undefined template: 'xxx'.` | Template name not registered | §6 lists valid names; check spelling and family |
-| `ValueError: Dataset xxx not found.` | Not in `dataset_info.json` | Register it (key = the name in YAML) |
+| `ValueError: Template X does not exist.` | Template name not in `TEMPLATES` | §6 lists valid names; check spelling and family |
+| `ValueError: Undefined dataset X in dataset_info.json.` | The YAML `dataset:` is not a registry key | Add the key; the YAML uses the **key**, never the filename or a Hub URL |
 | `AssertionError: ... no valid data` | Formatting/tags matched no rows | Print one line; fix `formatting` / `tags` |
 | `KeyError: 'conversations'` | `formatting: sharegpt` on an alpaca file | Change `formatting`, or add a `columns` mapping |
 | `TypeError: expected string or bytes-like object` | A field is `null` or a nested dict | Clean the data; DPO fields must be plain strings |

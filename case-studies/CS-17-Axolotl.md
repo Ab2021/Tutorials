@@ -3291,7 +3291,185 @@ Answer these before reading §19.11. If you can answer nine of ten, you can run 
 | **Appendix** | AP-03 — Attention backends | The FA2/FA3/FA4/sdpa/flex/xformers matrix from §4.3.4 |
 | **Appendix** | AP-05 — Distributed training | ZeRO stages versus FSDP2, expanded from §4.8.4 |
 
-<!-- CONTINUE -->
+---
+
+## Appendix A — Instructor's Verbatim Key Claims
+
+Direct quotes from the transcript, with timestamps. Where the claim has since changed or is wrong, the correction is cross-referenced.
+
+### A.1 What Axolotl is
+
+| Timestamp | Verbatim claim | Status |
+|---|---|---|
+| [3:20] | "config-driven framework with a Python extensibility" | **Accurate.** Both interfaces exist — YAML+CLI and the Python API (§4.2) |
+| [9:33] | "it is built on top of the hugging face ecosystem means the base of this library is again hugging face transformer hugging face TRL hugging face data set library" | **Accurate.** Add `peft`, `accelerate`, and `bitsandbytes` to the stack |
+| [10:09] | "Axolotl is a configuration-driven training engine." | **Accurate**, and the best one-line definition in the video |
+| [10:17] | "we can control everything using the single YAML file means we can write a configuration regarding the data loading regarding the tokenization regarding the quantization training evaluation inferencing" | **Slightly overbroad.** Almost everything is YAML-controllable, but attention-backend capability (`attn_supports_packing`) and some defaults are derived, not settable |
+| [10:34] | "we can run it through the CLI means someone has already prepared a code. We are just giving a configuration to that code and we are fine-tuning our model" | **Accurate.** This is the value proposition in one sentence |
+| [5:16] | "this repository is created by the axolotl AI which belong to the USA United States of America" | **Out of date.** The GitHub organisation is now `axolotl-ai-cloud`; the older `OpenAccess-AI-Collective` path appears in tutorials and breaks (§5.1) |
+
+### A.2 Why config-driven matters
+
+| Timestamp | Verbatim claim | Status |
+|---|---|---|
+| [12:20] | "Reproducibility means what? After 1 month, 2 month again I can perform the same experiment. after 1 month 2 month again I can perform the same experiment with the uh with some tweak okay with some changes without touching the code part" | **Necessary but incomplete.** A config alone reproduces nothing. Four things are required (§4.1) |
+| [13:26] | "the next is the automation the CI/CD friendly means this uh YAML configuration or configuration via Python itself" | **Accurate.** The Python API matters for CI, where you often want programmatic config generation |
+| [13:01] | "faster experiment even in the research and the production. So if I am doing my experiment in the research and if I'm productionize my code my model then I can do it very faster in a faster manner." | **Accurate** |
+
+### A.3 Optimisation techniques
+
+| Timestamp | Verbatim claim | Status |
+|---|---|---|
+| [18:58] | "Multipack is a technique to pack multiple sequence into a single batch to increase the training throughput." | **Accurate** — the 2–6× claim is in the docs (§4.6) |
+| [22:41] | "Multipacking means pack multiple short sequences, short sentences into a single training batch to maximize the GPU utilization." | **Accurate** |
+| [23:16] | "it is a memory efficient attention algorithm that computes attention without materializing full metrics enabling faster training in the longer context" | **Accurate** — this is the correct description of FlashAttention |
+| [23:31] | "whenever we are going to be initialize the weight for the self attention right so we have a like very huge matrix with respect to those qv weight so we are doing some sort of a optimization on top of those weight" | **Wrong.** See the correction in §4.3.4: FlashAttention is an exact, IO-aware *algorithm*; it changes no weights and produces bit-comparable outputs to standard attention |
+| [24:29] | "the liger kernel is what a fuse GPU kernel suite that combine multiple transform operation to reduce memory bandwidth and kernel launch overhead" | **Accurate** |
+| [24:49] | "cut cross entropy. It is a loss function. Uh so here you can read about it and optimize loss computation that avoids unnecessary token processing reduce memory uses and speed up the back propagation." | **Accurate.** Cut cross-entropy avoids materialising the full logit tensor |
+| [25:02] | "sequence parallelism ... split long input sequence across GPU instead of model weight enabling a scalable long context training" | **Accurate** |
+| [20:02] | "the next is from the Facebook that is X former" | **Accurate.** xformers is a Meta/Facebook Research project |
+
+### A.4 The Hugging Face versus Axolotl availability table
+
+| Timestamp | Verbatim claim | Status |
+|---|---|---|
+| [26:23] | "multipacking this thing is not available direct directly in the hugging face. But yeah, it is there in the build. Uh it is there in the Excel auto" | **Needs nuance.** TRL's `SFTTrainer` has had a `packing` flag since 2024; plain `transformers` does not. The claim is true for `transformers`, not for the whole HF ecosystem |
+| [26:33] | "flash attention. It is manually enabled. Uh means you will have to write a manual code for the flesh attention" | **Needs nuance.** It is one argument (`attn_implementation="flash_attention_2"`) in both stacks; "manual code" overstates it |
+| [26:48] | "Flex attention it is not there in the hugging phase but it is uh you have a limited access in the Excel" | **Needs nuance.** `flex_attention` is a PyTorch backend available through `attn_implementation` in both |
+| [26:55] | "Liar kernel not natively available but it is integrated in the Excel order" | **Accurate** at the time. Liger is now usable standalone with `transformers` + TRL; it can save 20–40% VRAM and 1.1–1.5× throughput |
+| [27:00] | "cut cross entropy it is not available in the hugging phase directly. Uh you will have to write the custom logic and all but it is available in the Excel order built-in." | **Partly out of date** — cut-cross-entropy is installable standalone and used by other trainers |
+| [27:13] | "sequence parallelism. So no need to write in it is not available directly the hugging phase but yeah it is available in the axel." | **Accurate** |
+| [27:20] | "multiple GPU manual and very painful in the local hugging phase in the in the native hugging phase but if you're using this axelottal wrapper then uh you can directly do it means in one single flag" | **Accurate, and understated.** Multi-node FSDP2/DeepSpeed is where Axolotl's config pays for itself (§4.8.4) |
+
+### A.5 Training methods
+
+| Timestamp | Verbatim claim | Status |
+|---|---|---|
+| [29:01] | "it is supporting to the full fine tuning. Full finetuning means we can support all the weights and biases of the model" | **Imprecise.** Full FT trains all weights; it does not train biases as a separate category |
+| [29:50] | "The one is the DPO. The second is the IPO and next is the KTO. This uh KTO and IPO is a RL based method." | **Debatable.** KTO is an offline, reward-model-free method. Calling DPO supervised and KTO RL is a taxonomy the video applies inconsistently — see §4.8.3 |
+| [30:17] | "Now this DPO is not a RL based method and this ORPO is also not a RLbased method. Got it guys? So this DPO is a simple supervised method and this OPO is also simple supervised method." | **Mostly right, with a caveat.** DPO is a closed-form supervised *objective* derived from the RLHF optimum; the distinction is objective-versus-optimiser, not "no RL anywhere" |
+| [30:33] | "The full form of the ORPO is odd ratio preference optimization." | **Correct name, slightly off expansion.** ORPO is "Odds Ratio Preference Optimization" |
+| [30:04] | "The full form of this GRPU is a uh group group relative policy optimization." | **Accurate** |
+
+### A.6 Datasets
+
+| Timestamp | Verbatim claim | Status |
+|---|---|---|
+| [30:52] | "you can load the data set from the local. You can load the data set from the hugging phase hub... you can load from GCP, Azure, AWS from anywhere" | **Accurate** — `path:` accepts local, `hf://`, and fsspec paths |
+| [31:28] | "it support to the instruction format, support to the chat format, preference format like the DPO and all vision format" | **Accurate**, and the video under-delivers on it — the real zoo is 20+ strategies (§4.5) |
+| [35:13] | "the step by supervised format is designed for chain of thoughts reasoning data set where each example contain multiple completion step and preference label for each step" | **Accurate** — this is the stepwise-supervised format used for PRM data |
+| [35:50] | "template free means guys uh template free means you don't need to mention any sort of a template whether it's a alpaca whether it is my data format is a alpaca format or is a chat format... you simply need to be define your data set" | **Accurate** — this is `type: input_output` with `segments` (§4.5) |
+| [32:09] | "I will create a separate video because uh otherwise this video is going to be too long guys." | Deferral — the dataset detail the reader most needs is in §4.5 |
+
+### A.7 The practical run
+
+| Timestamp | Verbatim claim | Status |
+|---|---|---|
+| [39:15] | "I have mentioned one flag over here. The flag name is no build isolation. Means I'm not going to be create any separate environment" | **Accurate** — `pip install --no-build-isolation` is required for Axolotl's flash-attn build |
+| [41:01] | "there is one more environment variable that is PyTorch CUDA allocation configuration and the value is expandable segment uh true right so this is for uh reducing the fragmentation of the CUDA memory" | **Accurate** — `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`, verbatim correct |
+| [42:27] | "The class name is the load configuration. This I'm loading from the Excel itself from this particular package. So Excel. CLI doconfig and I'm loading this load configuration." | **Accurate** — `from axolotl.cli.config import load_cfg` (§4.2) |
+| [42:44] | "here I'm going to load uh this dict default... this particular class is also required" | **Accurate** — `from axolotl.utils.dict import DictDefault` |
+| [47:11] | "we don't have any evolution data set and the total number of step is 1,105" | The number is **self-inconsistent**: 1,105 steps at `gradient_accumulation_steps: 8` implies 8,840 examples, yet the video trains on one epoch of a dataset it describes as smallish. See the worked check in §1.4 |
+| [47:34] | "we have input ids, label, attention mask" | **Accurate** — the three tensors `load_dataset` returns, already preprocessed |
+| [48:11] | "So this is the max step. I will only run 25 step. Okay, it's not a epoch guys, it's a step." | **Accurate** — `cfg.max_steps = 25`, a diagnostic run, not a real fine-tune |
+| [48:36] | "I'm using a free GPU which is just having 12 GB of VRAM" | **Wrong.** See the correction in §4.4.2: the free-Colab T4 has **16 GB** of VRAM, not 12 GB |
+| [49:41] | "in the LORA Q projection, K projection, V projection, output projection, gate projection, doubt projection and up projection" | **Accurate** — the seven target modules (`q,k,v,o,gate,up,down_proj`); "doubt projection" is a transcription artefact for "down projection" |
+| [50:25] | "we have sample packing I think I already discussed about it as of now it is false because it is required more memory" | **Accurate for the T4 demo, misleading as advice.** Packing reduces *padding* memory; it can increase peak memory at a fixed `micro_batch_size`, which is why it is off here. For any run with headroom, packing is a strong default (§4.6.6) |
+| [50:58] | "fp 16 true bf 16 false" | **Correct for a T4**, which has no usable bf16; **wrong as a general default** — prefer `bf16: true` on Ampere or newer (§14.2 row 5) |
+| [52:09] | "we have defined three variable data set data loader prefetch factor uh data loader number of worker and data loader pin of memory" | **Accurate** |
+| [52:23] | "you don't need to set the value of this uh data loader number of worker. Okay. So don't set zero over here." | **Accurate, and the video's most valuable practical tip.** The instructor hit this error live and diagnosed it correctly — see the correction in §4.3.5 |
+| [52:57] | "prefetching only works when data is loaded in the paral with zero worker there is nothing to prefetch. So if you are prefetching something in that case you have to set the worker otherwise it will not work." | **Accurate.** This is PyTorch `DataLoader` semantics: `prefetch_factor` only applies when `num_workers > 0` |
+| [51:52] | "you can see my training is completed. So it took around 7 minute." | A 25-step diagnostic on a 3B QLoRA. Note the follow-up claim of 5–6 minutes on a fresh Colab instance |
+| [54:00] | "explain the pythagoran theorem to me" | The inference prompt; the run took ~30–40 s to generate (§5.4) |
+| [55:21] | "we are getting numbers guys. I think we'll have to convert into the text." | The output was **token IDs, not decoded text** — the notebook never called `tokenizer.decode` (§5.4) |
+| [56:21] | "this is the main file the save tensor file. This is your adapter lora adapter and you can merge it with your existing model as well. Okay. So your model will be become a LoRa enabled model." | **Accurate.** `adapter_model.safetensors` is the LoRA delta (§16.1) |
+| [57:01] | "I have to show you the setup using the docker... I will show you in the next video because the length is already around 57 to 58 minute" | The Docker walkthrough is deferred out of this video; the companion repo's `axolotl-docker-setup-steps.md` covers it (§6.6) |
+
+---
+
+## Appendix B — Reference Links & Papers
+
+### B.1 Axolotl itself
+
+| Resource | URL | Use it for |
+|---|---|---|
+| Documentation home | https://docs.axolotl.ai/ | The authoritative reference — always check here before trusting a config key from a tutorial |
+| Installation guide | https://docs.axolotl.ai/docs/installation.html | Correct `pip install` flags, Docker tags, `--no-build-isolation` |
+| Getting started / config reference | https://docs.axolotl.ai/docs/getting-started.html | Every YAML key and its default |
+| Dataset formats | https://docs.axolotl.ai/docs/dataset-formats/ | The `type:` zoo: `pretrain`, `completion`, `alpaca`, `input_output`, `chat_template`, pre-tokenised |
+| Dataset loading | https://docs.axolotl.ai/docs/dataset_loading.html | `path:`, `ds_type:`, fsspec/cloud paths, `val_set_size`, `test_datasets` |
+| Chat templates | https://docs.axolotl.ai/docs/chat_templates.html | `chat_template:`, `eot_tokens`, `roles_to_train`, `train_on_eos` |
+| Sample packing | https://docs.axolotl.ai/docs/multipack.html | Multipack mechanics, `pad_to_sequence_len`, `cu_seqlens` |
+| RLHF / preference tuning | https://docs.axolotl.ai/docs/rlhf.html | The `rl:` block, `rl_beta`, DPO/IPO/ORPO/KTO/GRPO configs |
+| Multi-GPU | https://docs.axolotl.ai/docs/multi-gpu.html | DeepSpeed and FSDP2 setup, `--launcher torchrun` |
+| FSDP2 / distributed | https://docs.axolotl.ai/docs/fsdp.html | `fsdp_version: 2`, `fsdp_config`, the FSDP1-to-FSDP2 migration |
+| Custom integrations / plugins | https://docs.axolotl.ai/docs/custom_integrations.html | Custom loss functions, optimisers, and trainers |
+| Troubleshooting & debugging | https://docs.axolotl.ai/docs/debugging.html | The official first stop when a run misbehaves |
+| Configuration reference (Q&A) | https://docs.axolotl.ai/docs/config-reference.html | What a specific key actually does |
+| Support matrix | https://docs.axolotl.ai/docs/models/supported-models.html | Which models are tested with which attention backend and parallelism |
+| GitHub | https://github.com/axolotl-ai-cloud/axolotl | Source, issues, examples. **Note the org name** — older tutorials use `OpenAccess-AI-Collective` |
+| Example configs | https://github.com/axolotl-ai-cloud/axolotl/tree/main/examples | `axolotl fetch examples`; the fastest way to a working config |
+| DeepSpeed configs | https://github.com/axolotl-ai-cloud/axolotl/tree/main/deepspeed_configs | `axolotl fetch deepspeed_configs`; ZeRO-1/2/3 with and without offload |
+
+### B.2 The issues and PRs behind the corrections
+
+| Reference | Subject | Where it is cited |
+|---|---|---|
+| GitHub issue #3453 | Cross-document attention leakage with sample packing | §4.6.4, §17.7 |
+| GitHub issue #3608 | Packing and attention-mask correctness follow-up | §4.6.4 |
+| PR #285 | Multipack / sample-packing implementation | §4.6.1 |
+| PR #1640 | Chat template handling and `roles_to_train` masking | §4.7.2 |
+| Axolotl docs, `multipack.html` | The 2–6× throughput claim and `pad_to_sequence_len` | §4.6.1 |
+| Axolotl docs, `debugging.html` | The healthy loss and grad-norm bands | §12.2 |
+
+### B.3 The optimisation techniques
+
+| Technique | Link | What it is |
+|---|---|---|
+| FlashAttention | https://github.com/Dao-AILab/flash-attention | IO-aware exact attention; papers 2205.14135 (v1), 2307.08691 (v2), 2407.08608 (v3) |
+| xformers | https://github.com/facebookresearch/xformers | Meta's modular transformer building blocks and memory-efficient attention |
+| FlexAttention | https://pytorch.org/blog/flexattention/ | PyTorch's programmable attention with custom masks and sparsity |
+| Liger Kernel | https://github.com/linkedin/Liger-Kernel | LinkedIn's fused Triton kernels; ~20–40% VRAM reduction, 1.1–1.5× throughput |
+| Cut Cross-Entropy | https://github.com/apple/ml-cross-entropy | Apple's linear-cross-entropy implementation; avoids materialising logits |
+| Unsloth | https://github.com/unslothai/unsloth | Hand-written kernels for single-GPU speed |
+| DeepSpeed | https://www.deepspeed.ai/tutorials/zero/ | ZeRO stages 1/2/3, offload, and the memory model |
+| PyTorch FSDP2 | https://pytorch.org/docs/stable/distributed.fsdp.fully_shard.html | Per-parameter sharding via `fully_shard` |
+
+### B.4 The frameworks compared in §13
+
+| Framework | Link | Notes |
+|---|---|---|
+| Axolotl | https://github.com/axolotl-ai-cloud/axolotl | YAML-first, multi-GPU, broadest post-training method coverage |
+| LLaMA-Factory | https://github.com/hiyouga/LLaMA-Factory | YAML plus WebUI; `dataset_info.json` registry; hundreds of models |
+| Unsloth | https://github.com/unslothai/unsloth | Fastest single-GPU path; minimal Python API |
+| torchtune | https://github.com/pytorch/torchtune | Meta's PyTorch-native recipes; the readable one |
+| TRL | https://github.com/huggingface/trl | The library underneath most of the others; `SFTTrainer`, `DPOTrainer`, `GRPOTrainer` |
+| PEFT | https://github.com/huggingface/peft | LoRA/QLoRA implementation; `LoraConfig`, `PeftModel` |
+| bitsandbytes | https://github.com/bitsandbytes-foundation/bitsandbytes | NF4 quantisation and paged optimisers |
+
+### B.5 Papers worth reading
+
+| Paper | arXiv | Why it matters here |
+|---|---|---|
+| LoRA: Low-Rank Adaptation of Large Language Models | 2106.09685 | The `r`, `alpha`, and `target_modules` semantics |
+| QLoRA: Efficient Finetuning of Quantized LLMs | 2305.14314 | NF4, double quantisation, paged optimisers; the basis of `adapter: qlora` |
+| FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness | 2205.14135 | Why attention is memory-bound, not compute-bound |
+| FlashAttention-2: Faster Attention with Better Parallelism and Work Partitioning | 2307.08691 | The version most training runs actually use |
+| Direct Preference Optimization: Your Language Model is Secretly a Reward Model | 2305.18290 | DPO — the closed-form objective behind §15.4 |
+| ORPO: Monolithic Preference Optimization without Reference Model | 2403.07691 | Why ORPO needs no reference model |
+| KTO: Model Alignment as Prospect Theoretic Optimization | 2402.01306 | The KTO objective |
+| SimPO: Simple Preference Optimization with a Reference-Free Reward | 2405.14734 | Length-normalised, reference-free preference optimisation |
+| DeepSeekMath (GRPO) | 2402.03300 | Group Relative Policy Optimization |
+| ZeRO: Memory Optimizations Toward Training Trillion Parameter Models | 1910.02054 | The 16-bytes-per-parameter model in §4.8.4 |
+| PyTorch FSDP: Experiences on Scaling Fully Sharded Data Parallel | 2304.11277 | How FSDP2 differs from DeepSpeed ZeRO |
+| Chain-of-Thought Prompting Elicits Reasoning in Large Language Models | 2201.11903 | The reasoning format the stepwise-supervised dataset type targets |
+| Training language models to follow instructions with human feedback | 2203.02155 | The InstructGPT pipeline that SFT+DPO compresses |
+| LIMA: Less Is More for Alignment | 2305.11206 | Evidence that 1,000 curated examples can beat 50,000 scraped ones — the argument for §15.1's curation effort |
+
+---
+
+*End of CS-17. Companion files: `IQ-17-Axolotl.md` (interview bank), `CH-17-Axolotl.md` (cheat sheet), and the runnable configs under `code/axolotl/`.*
+
 
 
 

@@ -154,9 +154,13 @@ def run_from_teacher(a) -> None:
 # Mode 2: token-level KD — the real thing, and its constraints
 # --------------------------------------------------------------------------------------
 def run_token_kd(a) -> None:
-    from transformers import AutoModelForCausalLM, AutoTokenizer
-    import torch
-    import torch.nn.functional as F
+    # Transformers is needed even for --dry-run: the vocabulary check below is THE
+    # go/no-go for token-level KD, and it needs the real tokenizers. Torch and the
+    # weights are NOT needed for the plan, so they load only on the training path.
+    try:
+        from transformers import AutoTokenizer
+    except ImportError as e:
+        sys.exit(f"  pip install transformers  ({e})")
 
     print(f"\n  ── token-level KD ──")
     tok_t = AutoTokenizer.from_pretrained(a.teacher)
@@ -179,14 +183,10 @@ def run_token_kd(a) -> None:
     print(f"  alpha              {a.alpha} hard-label / {1-a.alpha:.1f} KD")
 
     text = Path(a.text).read_text(encoding="utf-8", errors="ignore")
-    ids = tok_t(text, return_tensors="pt").input_ids[0].to(
-        "cuda" if torch.cuda.is_available() else "cpu")
+    # A plain list, not a tensor: the plan only needs the token COUNT, and keeping
+    # torch out of this path lets --dry-run run with no GPU and no torch installed.
+    ids = tok_t(text)["input_ids"]
     print(f"  corpus             {len(ids):,} tokens")
-
-    t_model = AutoModelForCausalLM.from_pretrained(a.teacher, torch_dtype="auto",
-                                                   device_map="auto").eval()
-    s_model = AutoModelForCausalLM.from_pretrained(a.student, torch_dtype="auto",
-                                                   device_map="auto").train()
 
     print("\n  ── the storage problem nobody mentions ──")
     print("    Caching the teacher's FULL logits for a 150k vocab costs, per token:")
@@ -197,6 +197,42 @@ def run_token_kd(a) -> None:
           f"{a.top_k*8/1024:.1f} KB/token → {len(ids)*a.top_k*8/1e9:.2f} GB. Cached.")
     print("    This is why real KD pipelines store top-k logits, not full distributions,")
     print("    and why the teacher runs OFFLINE, once, not alongside training.")
+
+    if a.dry_run:
+        # Everything above is checkable WITHOUT the weights: vocab alignment (the real
+        # go/no-go for token-level KD), the corpus size, and the storage plan. Loading a
+        # 32B teacher just to print a plan would defeat the point of --dry-run.
+        print("\n  --dry-run: stopped before loading the models.")
+        print(f"     would load   teacher {a.teacher}")
+        print(f"                  student {a.student}")
+        try:
+            hint = a.size_hint.strip().upper()
+            n = float(hint.rstrip("BM"))
+            n_teacher = n * (1e9 if hint.endswith("B") else 1e6)
+            print(f"     teacher size ~{n_teacher * 2 / 1e9:.1f} GB of fp16 weights "
+                  f"(from --size-hint {a.size_hint})")
+            print("                   + KV cache, + the student, + activations")
+            print("     Tip: --quant-bits 0.5 (int4) cuts that ~4x if you only need")
+            print("          the logits, which is all KD ever uses the teacher for.")
+        except ValueError:
+            print(f"     teacher size ~ (could not parse --size-hint {a.size_hint!r})")
+        print("\n  ℹ  The vocab check above is the ONE thing to settle before planning")
+        print("     anything else. If it passed, token-level KD is viable: cache the")
+        print("     teacher's top-k logits offline ONCE, then train the student against")
+        print("     those cached tensors rather than keeping both models resident.")
+        return
+
+    # ── past this point we need torch and the real weights ──────────────────────────
+    import torch
+    import torch.nn.functional as F
+    from transformers import AutoModelForCausalLM
+
+    t_model = AutoModelForCausalLM.from_pretrained(a.teacher, torch_dtype="auto",
+                                                   device_map="auto").eval()
+    s_model = AutoModelForCausalLM.from_pretrained(a.student, torch_dtype="auto",
+                                                   device_map="auto").train()
+    ids = torch.tensor(ids, dtype=torch.long,
+                       device="cuda" if torch.cuda.is_available() else "cpu")
 
     seq = min(a.seq_len, len(ids))
     with torch.no_grad():

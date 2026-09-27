@@ -218,11 +218,15 @@ def build_masked_example(tokenizer, messages, max_len=2048):
     """
     input_ids, labels = [], []
     for i, msg in enumerate(messages):
-        # add_generation_prompt flips on only for the final assistant turn
+        # add_generation_prompt MUST stay False. It appends the assistant's opening
+        # header (e.g. "<|im_start|>assistant\n") to the END of whatever you render.
+        # Setting it per-role appends a spurious header AFTER each assistant turn and
+        # then supervises it — so the last supervised tokens become a header instead of
+        # EOS, and the model learns to open a new assistant turn after every answer.
         rendered = tokenizer.apply_chat_template(
             messages[: i + 1],
             tokenize=False,
-            add_generation_prompt=(msg["role"] == "assistant"),
+            add_generation_prompt=False,   # <- False here is what makes the prefix stable
         )
         # Re-tokenize the growing prefix, but only take the NEW tokens
         new_ids = tokenizer(rendered, add_special_tokens=False)["input_ids"]

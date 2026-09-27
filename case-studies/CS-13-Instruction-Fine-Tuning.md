@@ -710,7 +710,12 @@ def tokenize_with_mask(example, tokenizer, max_len=1024):
     )
 
     enc_full = tokenizer(full, truncation=True, max_length=max_len,
-                         padding="max_length", return_tensors=None)
+                         padding="max_length", return_tensors=None,
+                         add_special_tokens=False)
+    # add_special_tokens MUST match the call above. `full` is tokenized with the
+    # default (True) in the naive version, while `prompt_only` is tokenized with
+    # False — so on any tokenizer that prepends a BOS, n_prompt is short by one and
+    # the whole mask shifts by a token, silently supervising the last prompt token.
     n_prompt = len(tokenizer(prompt_only, add_special_tokens=False)["input_ids"])
 
     labels = list(enc_full["input_ids"])
@@ -718,14 +723,18 @@ def tokenize_with_mask(example, tokenizer, max_len=1024):
     labels[:n_prompt] = [-100] * n_prompt
     # mask PADDING — the bug the notebook ships (see §14, row 1)
     labels = [-100 if a == 0 else l for l, a in zip(labels, enc_full["attention_mask"])]
-    # mask the pad-token-as-label case where pad_token == eos_token and attention is on
-    if tokenizer.pad_token_id is not None:
-        # only mask trailing pads: attention_mask already covers this; belt and braces:
-        pass
 
     enc_full["labels"] = labels
     return enc_full
 ```
+
+> **No extra pad-token mask is needed.** An earlier draft of this function ended with
+> `if tokenizer.pad_token_id is not None: pass` — a no-op stub. The genuine worry behind it
+> is that `pad_token == eos_token` (true for Llama-3, Qwen, and most modern families), so a
+> naive `labels[labels == pad_token_id] = -100` would also mask every real EOS and teach the
+> model never to stop. The `attention_mask` line above is the correct fix: it masks pads by
+> *position*, not by *token id*, so real EOS tokens inside the response survive. That is why
+> the id-based approach is the classic "model never stops generating" bug and this one isn't.
 
 **The same example, as a mask tensor.** Rendered with TinyLlama's SentencePiece tokenizer (token *boundaries* below are illustrative — your exact ids and counts will differ, the structure will not):
 
@@ -1582,7 +1591,20 @@ instruction_model.print_trainable_parameters()
 # trainable params: 1,126,400 || all params: 1,101,375,488 || trainable%: 0.1023
 ```
 
-The numbers, checked: for TinyLlama (`hidden_size=2048`, `num_layers=22`, `num_heads=32`, `head_dim=64`), each LoRA pair on `q_proj` and `v_proj` costs `r × (in + out) = 8 × (2048 + 2048) = 32,768` params. With 22 layers × 2 modules = 44 modules, that is `44 × 32,768 = 1,441,792`. The reported 1,126,400 is lower because `q_proj`/`v_proj` for TinyLlama are `2048×2048` but the count varies by whether biases are included and by the exact GQA configuration — the point stands: **~1.1M trainable parameters, ~0.1% of the model.** The adapter that results is ~2.7 MB in fp32 — exactly the size of the zip in the repo, which is how we know it is an adapter (§10.2).
+The numbers, checked: for TinyLlama (`hidden_size=2048`, `num_layers=22`, `num_heads=32`, `num_key_value_heads=4`, `head_dim=64`), each LoRA pair costs `r × (in + out) = 8 × (in + out)` params. With `r=8` on `q_proj` and `v_proj`:
+
+| Module | Shape | Params at `r=8` |
+|---|---|---|
+| `q_proj` | 2048 → 32 × 64 = **2048** | 8 × (2048 + 2048) = 32,768 |
+| `v_proj` | 2048 → 4 × 64 = **256** | 8 × (2048 + 256) = 18,432 |
+| **Per layer** | | **51,200** |
+| **× 22 layers** | | **1,126,400** |
+
+That reproduces the notebook's 1,126,400 **exactly** — no hand-waving required.
+
+> **Correction (self-):** an earlier draft of this section said `q_proj`/`v_proj` are both `2048×2048`, giving `44 × 32,768 = 1,441,792`, and dismissed the gap as "varies by whether biases are included and by the exact GQA configuration." That was wrong on both counts. `v_proj` in a GQA model projects to `num_key_value_heads × head_dim` = **4 × 64 = 256**, not 2048 — the K and V projections are exactly the tensors GQA shrinks, which is the whole point of GQA. The notebook's number is not approximate; it is the exact figure, and the discrepancy is fully explained by the KV-head count. The lesson generalises: **when a parameter count disagrees with your arithmetic, look for the tensor that isn't square before you reach for an explanation involving biases.**
+
+The point stands: **~1.1M trainable parameters, ~0.1% of the model.** The adapter artifact is 1,126,400 × 4 B ≈ **4.3 MiB** in fp32 (≈2.1 MiB in fp16) — note that the zip in the repo is ~2.7 MB, which is the *compressed archive of the adapter directory*, not the raw fp32 tensors; do not read the zip size as the parameter footprint (§10.2).
 
 The instructor's own description of the fields [47:14]–[47:43] is accurate: *"r is representing the rank... lora_alpha is a scaling factor... lora_dropout: dropout probability... target_modules: which layer to tune... I want to tune query and value... trade-off between cost and quality."* The one thing he does not mention is that **`alpha/r` is the number that matters** — `alpha=16, r=8` means the adapter's output is scaled by 2.0, and if you halve `r` to 4 you should halve `alpha` to 8 to keep the effective scale constant. Changing `r` without changing `alpha` changes your effective learning rate. Full treatment in CS-23.
 

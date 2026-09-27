@@ -301,4 +301,271 @@ from vertexai.preview import tuning
 tuning.TunedModel(...).undeploy()
 ```
 
-<!-- CONTINUE -->
+---
+
+## 6. CLI Commands
+
+```bash
+# ── Auth & project ──────────────────────────────────────────────────────────
+gcloud auth login                                    # your user
+gcloud auth application-default login                # what the Python SDK uses
+gcloud config set project my-proj
+gcloud services enable aiplatform.googleapis.com
+
+# ── The GCS prerequisite ────────────────────────────────────────────────────
+gsutil mb -l us-central1 gs://my-bucket
+gsutil cp code/data/sft.vertex.jsonl gs://my-bucket/vertex/
+gsutil ls gs://my-bucket/vertex/
+gsutil iam ch serviceAccount:service-NUMBER@gcp-sa-aiplatform.iam.gserviceaccount.com:objectViewer gs://my-bucket
+# Or via gcloud:
+gcloud projects add-iam-policy-binding my-proj \
+  --member="serviceAccount:service-NUMBER@gcp-sa-aiplatform.iam.gserviceaccount.com" \
+  --role="roles/storage.objectViewer"
+
+# ── The handbook's script (does validate / estimate / upload / train / list / undeploy) ──
+python code/14_vertex_gemini_finetune.py --data data/sft.jsonl --validate
+python code/14_vertex_gemini_finetune.py --data data/sft.jsonl --estimate
+python code/14_vertex_gemini_finetune.py --data data/sft.jsonl --upload --project P --bucket B
+python code/14_vertex_gemini_finetune.py --train --project P --bucket B --adapter-size 4
+python code/14_vertex_gemini_finetune.py --list --project P
+python code/14_vertex_gemini_finetune.py --undeploy ENDPOINT_ID --project P
+
+# ── gcloud equivalents ──────────────────────────────────────────────────────
+gcloud ai tuning-jobs list --region=us-central1
+gcloud ai endpoints list --region=us-central1        # WHAT IS BILLING RIGHT NOW
+gcloud ai models list --region=us-central1           # stored tuned models (cheap)
+
+# ── Install ─────────────────────────────────────────────────────────────────
+pip install google-cloud-aiplatform
+pip install "google-cloud-aiplatform[tensorboard]"   # if you want the metrics
+```
+
+> `gcloud ai endpoints list` is the single most useful command in this file. Every endpoint it
+> prints is accruing an hourly charge at that moment — whether or not it has ever served a
+> request.
+
+---
+
+## 7. VRAM / Cost Calculator
+
+### 7.1 The verified worked example
+
+Using `code/14_vertex_gemini_finetune.py --estimate` on the 60-row sample SFT fixture, with
+`gemini-1.5-flash` prices as recorded in the script ($3.00/1M train tokens, $0.075/1M input,
+$0.30/1M output, **$3.00/hour** endpoint) at 100,000 calls/month:
+
+| Line item | Amount |
+|---|---|
+| Tuning (9,447 tokens × 3 epochs) | **$0.03** |
+| Endpoint, 1 month ($3.00 × 730 h) | **$2,190.00** |
+| Per-token usage, 100k calls | **$7.63** |
+| **Month 1 total** | **$2,197.66** |
+| **Year 1 total** | **$26,371.64** |
+| Fixed endpoint share of recurring bill | **100%** |
+| Fixed ÷ usage ratio | **287×** |
+| Calls/month for usage to catch up | **~28,686,000** |
+
+> **Read that table again.** Training is **three cents**. The idle endpoint is **$26,372 in
+> year one**. The thing people agonise over — the tuning — is a rounding error; the thing
+> people forget — the deployment — is the entire bill.
+>
+> The 28.7M-calls/month crossover is what high-volume users need. For everyone else, the
+> endpoint is a fixed cost you must actively manage.
+
+### 7.2 Prices on file in the script (VERIFY BEFORE BUDGETING)
+
+| Model | Train /1M | Input /1M | Output /1M | Endpoint /hour |
+|---|---|---|---|---|
+| `gemini-1.5-flash` | $3.00 | $0.075 | $0.30 | $3.00 |
+| `gemini-1.5-pro` | $8.00 | $1.25 | $5.00 | $5.00 |
+| `gemini-2.0-flash` | $3.00 | $0.10 | $0.40 | $3.00 |
+
+> ⚠️ **These are the values the script ships with, not a live price list.** Google changes
+> prices, model availability and tuned-model support regularly, and the 1.5-generation models
+> are superseded. Treat every number here as a placeholder to be checked against the current
+> pricing page before you commit a budget. The *structure* of the arithmetic — the hourly
+> endpoint charge dominating — is the durable lesson.
+
+### 7.3 Fixed vs usage, by volume
+
+| Calls/month | Per-token | Fixed endpoint | Fixed share | Verdict |
+|---|---|---|---|---|
+| 1,000 | ~$0.08 | $2,190 | ~100% | Absurd — undeploy between uses |
+| 100,000 | $7.63 | $2,190 | ~100% | Still absurd |
+| 1,000,000 | ~$76 | $2,190 | 97% | Endpoint dominates |
+| 10,000,000 | ~$763 | $2,190 | 74% | Getting reasonable |
+| 28,686,000 | ~$2,190 | $2,190 | 50% | The crossover |
+| 100,000,000 | ~$7,630 | $2,190 | 22% | Now self-hosting is worth pricing |
+
+### 7.4 What a self-hosted open model would cost instead
+
+| Item | Vertex tuned endpoint | Self-hosted open model |
+|---|---|---|
+| Idle cost | **$2,190/month** | $0 if you stop the instance |
+| Weights | You do not get them | Yours |
+| Control over quantisation | None | Full |
+| Control over serving stack | None | Full (vLLM, llama.cpp) |
+| Ops burden | None | Real |
+| Minimum viable scale | Any | ~1 GPU-month of commitment |
+
+---
+
+## 8. Symptom → Fix Lookup Table
+
+| Symptom | Most likely cause | Fix |
+|---|---|---|
+| **Surprise bill** | A deployed endpoint left running | `gcloud ai endpoints list`, then `--undeploy` |
+| `Permission denied` on the dataset, minutes into the job | The Vertex service account lacks `objectViewer` on the bucket | §5.2; check you used `service-NUMBER`, not `PROJECT_ID` |
+| Job fails immediately with a schema error | One bad row; Vertex fails the **whole job** | Run `--validate` first |
+| `Invalid role` / unexpected role error | `assistant` instead of `model` | Normalise on upload (the script does) |
+| Job rejects mid-conversation `system` turn | `system` allowed only as the first message | Restructure the conversation |
+| `Too few examples` | Below Vertex's minimum | Test with realistic data volumes |
+| Model id rejected / not tunable | That Gemini generation does not support tuning | Check current tuned-model support |
+| Tuned model exists but calls 404 | Not **deployed** to an endpoint | Tuning and deployment are separate steps |
+| Endpoint deployed but slow first response | Cold start | Batch or keep warm — both cost money |
+| Cannot download the tuned weights | By design | Vertex never gives you weights; use open-weight training |
+| `google.auth.exceptions.DefaultCredentialsError` | No ADC | `gcloud auth application-default login` |
+| `403 ... aiplatform.googleapis.com has not been used` | API not enabled | `gcloud services enable aiplatform.googleapis.com` |
+| Cost estimate differs wildly from the invoice | Stale prices in `PRICES` | Update the table; verify against current pricing |
+| Billing continues after deleting the *model* | The **endpoint** is what bills | Undeploy the endpoint, then delete the model |
+
+> **The last row is the classic confusion.** On Vertex there are two objects — a tuned
+> **model** and an **endpoint**. Storing the model is cheap. The endpoint is what charges by
+> the hour. Deleting the model without undeploying the endpoint leaves you paying for a
+> deployment with nothing behind it.
+
+---
+
+## 9. Comparison Matrix
+
+| Dimension | Vertex AI (Gemini) | OpenAI fine-tuning | Self-hosted open weights |
+|---|---|---|---|
+| Weights returned | ❌ | ❌ | ✅ |
+| Idle cost | **$3–5/hour** | **$0** | $0 if you stop the instance |
+| Data location | Your GCS bucket | OpenAI's cloud | Your own |
+| Setup prerequisite | **GCP project + bucket + IAM** | An API key | A GPU + a stack |
+| Schema | `messages` with role `model` | `messages` with role `assistant` | Whatever you write |
+| Minimum data | Enforced minimum | Enforced minimum | None |
+| Merge / quantise / export | ❌ | ❌ | ✅ |
+| Distil from the tuned model | ⚠️ via API only | ⚠️ via API only | ✅ fully |
+| Serving control | ❌ | ❌ | ✅ |
+| Ops burden | None | None | Real |
+| Best when | Data is in GCP; compliance needs it | Simple path, no idle cost | You need control or scale |
+
+### 9.1 Choosing
+
+| Situation | Pick |
+|---|---|
+| Data already in BigQuery/GCS, compliance demands GCP | **Vertex** |
+| Bursty, low-volume use | **OpenAI** (no idle charge) or Vertex with scripted undeploy |
+| Very high steady volume (>28M calls/month) | Price self-hosting an open model |
+| You need the weights | **Self-hosted open weights** |
+| You need a tuned model today with no ops | Either managed service |
+
+---
+
+## 10. Numbers To Memorize
+
+| Number | Value | Context |
+|---|---|---|
+| Hours per month | **730** | The multiplier for any hourly rate |
+| Idle endpoint, flash | **$3.00/hour** | → **$2,190/month** |
+| Idle endpoint, pro | **$5.00/hour** | → **$3,650/month** |
+| Crossover vs usage (worked example) | **~28.7M calls/month** | When usage equals the idle charge |
+| Fixed ÷ usage at 100k calls | **287×** | The endpoint is everything |
+| Tuning cost (worked example) | **$0.03** | Training is not the cost |
+| Year-1 total (worked example) | **$26,371.64** | Almost entirely the endpoint |
+| `adapter_size` options | **1, 4, 8, 16, 32** | Default 4 |
+| Default epochs | **3** | |
+| Roles | `system`, `user`, **`model`** | Not `assistant` |
+| System message position | **first only** | |
+| Tokens per word | **≈1.33** | |
+| Default location | `us-central1` | Keep the bucket in the same region |
+
+---
+
+## 11. Common Errors And Their Exact Messages
+
+| Error message | Meaning | Fix |
+|---|---|---|
+| `google.auth.exceptions.DefaultCredentialsError: Could not automatically determine credentials` | No ADC | `gcloud auth application-default login` |
+| `403 Permission 'aiplatform.tuningJobs.create' denied` | Missing `roles/aiplatform.user` | Grant the role to your principal |
+| `403 ... does not have storage.objects.get access` | Service account lacks bucket read | §5.2 — use `service-NUMBER` |
+| `400 Invalid JSON at line N` | Malformed row | Validate locally first |
+| `400 ... role must be one of ['system','user','model']` | `assistant` used | Normalise to `model` |
+| `400 ... system message must be the first` | Mid-conversation system turn | Restructure |
+| `400 The training dataset must contain at least N examples` | Below the minimum | Use realistic volumes |
+| `400 Model ... does not support tuning` | That generation is not tunable | Check current support |
+| `404 ... endpoint not found` | Not deployed, or wrong region | Deploy; check `--location` |
+| `429 Resource exhausted` | Quota | Request a quota increase |
+| `FAILED_PRECONDITION: The service account ... does not exist` | Wrong project number | Re-derive it |
+| `InvalidArgument: adapter_size must be one of ...` | Unsupported size | Use 1/4/8/16/32 |
+| Silent: job succeeds, model is bad | Bad data, or too few examples | Validate + inspect the data (CH-13) |
+| Silent: bill keeps growing | Endpoint still deployed | `gcloud ai endpoints list` |
+
+---
+
+## 12. Copy-Paste Starter Config
+
+There is no YAML — Vertex is configured by arguments. The equivalent:
+
+```bash
+# ── The whole run, in order. Run each line deliberately. ────────────────────
+export PROJECT=my-proj
+export BUCKET=my-bucket
+export LOCATION=us-central1
+
+# 0. One-time setup
+gcloud config set project $PROJECT
+gcloud services enable aiplatform.googleapis.com
+gsutil mb -l $LOCATION gs://$BUCKET || true
+
+# 1. Validate locally — costs nothing, catches everything
+python code/14_vertex_gemini_finetune.py --data data/sft.jsonl --validate
+
+# 2. Cost model — READ IT before spending
+python code/14_vertex_gemini_finetune.py --data data/sft.jsonl --estimate \
+    --inference-volume 100000
+
+# 3. Upload
+python code/14_vertex_gemini_finetune.py --data data/sft.jsonl --upload \
+    --project $PROJECT --bucket $BUCKET
+
+# 4. Tune
+python code/14_vertex_gemini_finetune.py --train \
+    --project $PROJECT --bucket $BUCKET \
+    --model gemini-1.5-flash-002 --epochs 3 --lr-multiplier 1.0 --adapter-size 4
+
+# 5. Deploy (starts the meter) → use → 6. UNDEPLOY (stops it)
+python code/14_vertex_gemini_finetune.py --list --project $PROJECT
+# ... then:
+# python code/14_vertex_gemini_finetune.py --undeploy ENDPOINT_ID --project $PROJECT
+```
+
+### The five checks before you commit
+
+| # | Check | Pass condition |
+|---|---|---|
+| 1 | `--validate` is clean | No schema problems |
+| 2 | `--estimate` has been read | You know the monthly fixed charge |
+| 3 | Prices in the script are current | Verified against the live pricing page |
+| 4 | You have a written plan to undeploy | A reminder, a cron job, a checklist — something |
+| 5 | You compared against self-hosting | You have seen the alternative's number |
+
+> Check 4 is not a joke. The most common way this module produces a surprise invoice is a
+> deployed endpoint someone forgot about for three months — $6,570 at the flash rate.
+
+---
+
+## 13. What To Read Next
+
+| If you want to… | Read |
+|---|---|
+| The full treated case study | **CS-19 — Gemini / Vertex AI Fine-Tuning** |
+| The OpenAI equivalent, and why it differs | **CH-18 / CS-18 — OpenAI GPT Fine-Tuning** |
+| To decide managed vs self-hosted | **CH-03 / CS-03 — Framework Landscape** |
+| To understand what SFT is doing | **CH-13 / CS-13 — Instruction Fine-Tuning** |
+| To compare against distillation from a big model | **CH-09 / CS-09 — Distillation: LLM → SLM** |
+| To serve your own model instead | `code/15_serve_vllm.py` |
+| Practice being interviewed on this | **IQ-19 — Interview Questions: Gemini / Vertex AI** |
+

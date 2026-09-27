@@ -2276,11 +2276,14 @@ Test it, yes — then **undeploy**. The correct default state for a tuned model 
 
 1. Because the base weights are closed-source and the tuned artefact is only ever exposed as a Vertex resource [3:35]. Consequences: (a) no exit strategy — migrating means re-doing the fine-tune elsewhere; (b) no downstream optimisation — you cannot quantise, merge, batch, or run the model outside a Vertex endpoint, so your serving cost is permanently Google's price.
 
-2. ```json
+2. Because the system prompt is hoisted out of the message list, the row looks like this:
+
+```json
 {"systemInstruction": {"role":"system","parts":[{"text":"..."}]},
  "contents":[{"role":"user","parts":[{"text":"..."}]},
              {"role":"model","parts":[{"text":"..."}]}]}
 ```
+
 Three differences from OpenAI: the system prompt is **hoisted** out of the message list into a top-level `systemInstruction`; the assistant role is `"model"`, not `"assistant"`; the text is nested in a **list** of `parts` objects rather than being a flat `content` string.
 
 3. A tuned `Model` resource (`.../models/<id>@1`) and, by default, a deployed `Endpoint` (`.../endpoints/<id>`). The **Endpoint** bills — per hour, whether or not it receives traffic. The Model itself carries no published hourly charge.

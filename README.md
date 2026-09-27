@@ -73,7 +73,7 @@ python 01_sft_lora.py --dry-run --data data/sample_sft.jsonl   # no GPU needed
 | 16 | Unsloth: 2–4× faster, low-VRAM | 🚧 | ⬜ | ⬜ |
 | 17 | Axolotl: YAML-driven training | ⬜ | ⬜ | ⬜ |
 | 18 | OpenAI GPT fine-tuning | ⬜ | ⬜ | ⬜ |
-| 19 | Gemini / Vertex AI fine-tuning | ⬜ | ⬜ | ⬜ |
+| 19 | Gemini / Vertex AI fine-tuning | ✅ 2439 | ⬜ | ✅ |
 
 ### Part V — Modalities and Scale (CS-20 … CS-23)
 | # | Module | Case study | IQ | Cheat sheet |
