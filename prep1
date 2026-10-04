@@ -1,0 +1,61 @@
+**[Slide 1: Introduction & Objective]**
+
+Thank you for your time today. I will be walking you through our Claim Fraud Analytics program for personal property and casualty claims in North America. This initiative is sponsored by Chris and delivered by the Fraud Analytics Center of Excellence.
+
+In any claims analytics environment, the core goal is straightforward: use AI to find suspicious claims earlier in the lifecycle, while we still have the leverage to act on them. Our objective is to give the system the ability to spot and prioritize high-risk claims right at intake, well before we reach settlement.
+
+This matters for three key reasons: First, we pay out less on fraudulent claims. Second, we spend less time and money chasing recoveries after the fact. And third, we inherently protect the profitability of our broader claims portfolio.
+
+**[Slide 2: Current vs. Future State]**
+
+Where do we stand today? Currently, our fraud models are reactive. They look back at claims that have already been paid and flag them for recovery. While that is better than nothing, the reality is that once the money has left the door, recovering it is expensive, time-consuming, and highly uncertain.
+
+This is the exact gap we are closing.
+
+Our future state is completely proactive. We are entirely redesigning the models with AI and natively integrating them into Claim Vision and Claim Connect. This means scoring happens seamlessly inside normal claims workflows. When a claim looks suspicious, the integration creates an immediate alert for the SIU, helping them triage it *before* settlement.
+
+In parallel, we are building a Context Model powered by a Large Language Model. Rather than relying on simple keyword matching, it is designed to find complex, richer patterns in exactly how a claim is described. We are on track to deliver this in Q4 of 2026.
+
+**[Slide 3: Delivery Status & Data Foundations]**
+
+Looking at our delivery pipeline, we have a clear path to production:
+
+* **Property Real-Time** has successfully passed User Acceptance Testing, signed off, and deployment is actively underway.
+* **Property ON** and **GL by Claims Connect** are in their finalization steps.
+* **Auto by CV** is currently in the model build phase.
+
+To ground this in our data foundations: across General Liability and Property, we are training on over 200,000 claims spanning from 2018 to 2025. But the core takeaway here isn't the sheer volume—it’s the rarity of the target. Fraud only occurs in roughly 1.5% to 4% of these cases. SIU investigators simply cannot manually review everything, so the model’s primary job is to ruthlessly prioritize the claims most worth their time.
+
+**[Slide 4: Feature Discovery – Property Models]**
+
+To understand how we identify that 1.5 to 4%, let’s look at the signals our models extract. A massive differentiator for us is how we use Chubb GPT to process adjuster file notes. These unstructured, qualitative insights actually account for up to 65% of our models' predictive power.
+
+For our combined Property models (Real-Time and ON), we process around 45 unique features. These group into three main themes:
+
+1. **Questionable Circumstances:** The AI flags "mysterious disappearances," capturing when adjusters note "whereabouts unknown." It also catches weather mismatches—where a storm is claimed, but the adjuster verifies no such event occurred. We also see strong signals when items go missing during transition events, like right after movers or contractors had access to the property, or when the claimant's story continuously shifts.
+2. **Policy & Documentation Anomalies:** Timing is highly predictive. The model alerts us if a policy was newly issued or a high-value item was added to the schedule less than 30 days before the loss. It also flags when the *only* expensive item on the schedule goes missing, or when the insured suddenly cannot produce appraisals or invoices for claims over $10,000.
+3. **Insured Background & Behavior:** We track repeat behaviors, automatically flagging when a claimant has a "companion loss" or prior similar claims. The model also correlates financial distress—reading notes about tax judgments, liens, or bankruptcies—which is a highly consistent pattern in high-value property fraud.
+
+**[Simulated Interviewer Interruption: "Feel free to think of a concrete case that stands out."]**
+
+*([Pause appropriately, make eye contact, and speak conversationally without looking at notes])*
+
+Absolutely. A great example of this in action was a recent property claim where the insured reported a $15,000 scheduled watch as stolen. On the surface, it looked standard. But the AI immediately connected three disparate data points: first, it flagged that the specific item was added to the schedule just 14 days prior to the loss. Second, it read the adjuster’s file note stating "no appraisal provided." Third, it pulled background data showing recent financial distress. The model scored it as high-risk, pushed an alert to SIU before a payout was made, and upon investigation, it was confirmed to be a fabricated claim. That ability to instantly connect timing, missing documentation, and background is exactly what we are scaling.
+
+**[Slide 5: Feature Discovery – General Liability]**
+
+*([Seamlessly transition back into the presentation])*
+
+Moving over to General Liability bodily injury claims—these are inherently more complex, so this model utilizes 30 specific features. The highest predictive power here comes directly from physical evidence and legal positioning captured in the notes:
+
+1. **Surveillance & Video Evidence:** The absolute strongest fraud signal in the entire GL model is when adjusters record that private investigator surveillance was conducted. Right behind that is CCTV or Ring doorbell footage that directly contradicts the claimant’s alleged lack of mobility.
+2. **Conflicting Statements:** When the model detects an adjuster explicitly noting an "inconsistent account" and couples that with the camera evidence, the predictive power skyrockets compared to either signal on its own.
+3. **Legal & SIU Indicators:** The model captures early attorney involvement, especially when counsel is retained within days of a soft-tissue injury claim. Finally, the AI reads directly when adjusters explicitly note "SIU red flags," making previously invisible adjuster suspicions fully scorable by the system.
+
+**[Slide 6: Wrap-up & Q&A]**
+
+To bring this full circle: we are transforming our fraud operations from recovering money after payment to proactively alerting the SIU before settlement. By utilizing AI models built on rich internal claim data, unstructured adjuster notes, and external signals, we are closing the gap on expensive recovery efforts.
+
+Our immediate next steps are to complete the Property Real-Time deployment, finalize Property ON and GL, and continue the Auto model build, all tracking toward delivering the LLM Context Model in Q4 2026.
+
+Thank you for your time, and I’d be glad to open the floor to any questions or feedback you might have.
