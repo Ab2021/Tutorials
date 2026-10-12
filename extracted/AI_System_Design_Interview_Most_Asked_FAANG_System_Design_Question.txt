@@ -1,0 +1,772 @@
+Title: AI System Design Interview | Most Asked FAANG System Design Question
+
+--- TRANSCRIPT ---
+
+[0:00] Hi everyone, welcome back. My name is
+[0:03] Aman Chauhan, and today is day five of
+[0:06] my system design series. I have already
+[0:09] completed all the basics regarding
+[0:10] system design. If you haven't watched
+[0:13] them yet, please try to cover that
+[0:15] basic part first. In those videos, I
+[0:18] covered functional requirements,
+[0:20] non-functional requirements, HLD, LLD
+[0:22] —what they are and how they work—
+[0:24] and today we will look at a new
+[0:26] question that is frequently asked in
+[0:28] interviews. Different product-based
+[0:32] companies, service-based companies, and
+[0:33] startups have asked this question very
+[0:35] frequently. And today, I will tell you
+[0:39] how to express yourself if someone asks
+[0:42] you a system design question, how to
+[0:45] define all the goals to the interviewer
+[0:47] , and specifically, how to draw the
+[0:50] architecture. Okay? So, before that, I
+[0:54] have some good news for all of you. I
+[0:59] am finally launching a tool for your
+[1:01] practice, within which you can practice
+[1:04] system design. Meaning you can also
+[1:07] draw the architecture. You can also
+[1:10] perform edits. You can create all the
+[1:12] points through the editor. Plus, you
+[1:14] can also download it as a PDF. Plus,
+[1:16] you can make notes as well. So, I
+[1:18] definitely promise. If you practice in
+[1:22] this tool and solve 10 to 15 questions
+[1:24] with its help, then no matter what the
+[1:26] interview is—whether it's for a
+[1:28] product-based company or a
+[1:30] service-based company—you will
+[1:32] definitely crack it. Let me show you
+[1:34] the tool once, then we can start this
+[1:37] question. Okay, so this is basically
+[1:41] the system design tool, and where you
+[1:44] are looking at the left side, there is
+[1:47] the problem that we are going to
+[1:49] discuss today. Here, you can draw the
+[1:53] architecture. And what is this? Where
+[1:55] you can explain the solution. Which I
+[1:57] have already created. You can also add
+[2:00] things like requirement clarification
+[2:02] and capacity estimation. You can write
+[2:06] all these points under the different
+[2:08] prospective parameters. You can write
+[2:11] down everything you would express to
+[2:13] the interviewer here, and then you can
+[2:15] get help through an AI review. Plus,
+[2:19] you can check past reviews and draw the
+[2:21] architecture. Look, you can link them
+[2:25] like this: DNS, plus you can link them
+[2:28] together, read replicas, okay, Redis,
+[2:31] you can link them like this, and
+[2:34] basically explain an imaginary form
+[2:37] through architecture. If you practice
+[2:40] for the interview like this, then I am
+[2:43] telling you definitely, you are going
+[2:46] to crack your interview. So I wish you
+[2:49] use this tool, this system tool. Plus,
+[2:53] let me know if you need any help with
+[2:55] it. And I have also included coding
+[2:57] here. Where you can do SQL, Python, and
+[3:00] review. If someone asks you to code,
+[3:03] you can code here as well. And you can
+[3:05] check the preview. You can write here,
+[3:07] and drag and drop. If this looks too
+[3:10] big to you, then click on fit here. It
+[3:12] will make it fit as well. You can zoom
+[3:14] it. So with my drive, it took me a long
+[3:17] time to make this best tool, but I have
+[3:19] finally built it for all of you. So
+[3:22] please use this tool and crack all your
+[3:25] interviews. Okay? So through this tool,
+[3:28] today I will explain to you exactly how
+[3:30] we should practice and how we will
+[3:31] basically explain things in an
+[3:32] interview. Okay? So let's start. I am
+[3:37] not wasting much time. So let's start
+[3:39] with the very first question. Design a
+[3:41] URL shortener. Let's first understand
+[3:44] exactly what this problem is. What is
+[3:47] mentioned in it? It says a URL
+[3:49] shortener is a system. Meaning that the
+[3:53] user will give you a long URL and you
+[3:57] basically have to convert it into a
+[4:00] short one and return it. Okay? So
+[4:05] basically, the user gives you a long
+[4:07] URL, the system generates a short URL,
+[4:09] and when someone opens it, the system
+[4:11] finds the original long URL and
+[4:13] redirects the user to it. Let me write
+[4:17] it down for you once to show you what
+[4:18] my question is. Look, what is the first
+[4:25] point? User gives us a long URL. Right?
+[4:35] The long URL can be anything. https www
+[4:42] example dot products or like it's a
+[4:46] continuing, meaning it is a very long,
+[4:51] very long particular long website. A
+[4:56] particular long product, something like
+[5:00] that, it's very, very large in this way
+[5:03] . And after that, second, the system
+[5:10] generates a short URL. As soon as I
+[5:15] generated the URL, I passed it into the
+[5:18] system. What the system did was convert
+[5:22] it into a short URL, https short dot L,
+[5:25] something like that, a short form. Okay
+[5:29] , so that is one. What is the second
+[5:33] concept within this? That when someone
+[5:37] opens it, as in what happened, someone
+[5:40] clicked on this URL. Okay, so the
+[5:44] request should immediately go into the
+[5:47] long URL, hit it, and have it open.
+[5:50] This is your system, which you are
+[5:52] building. So the system finds the
+[5:54] original long URL and redirects the
+[5:56] user to it. So at a very high level,
+[5:58] the system does two things. First, the
+[6:02] long URL is converted into a short code
+[6:06] and the short code is redirected to the
+[6:14] long URL. This is your problem. This is
+[6:16] what you have to design. This is the
+[6:18] product. So the second operation is
+[6:20] much more frequent because every time
+[6:23] somebody clicks a short URL, the system
+[6:25] needs to perform a lookup basically.
+[6:28] Okay? So what is this for you? This is
+[6:30] mainly the question asked by the
+[6:32] interviewer. This is the problem given
+[6:33] to you. Now it is said that you have to
+[6:36] design this. You have to make this into
+[6:39] a product. So what are the things that
+[6:40] could be there? How do you have to
+[6:42] explain it? I will tell you that now.
+[6:44] So this is your problem. What will you
+[6:47] say to the interviewer first? Right?
+[6:49] What do we talk about first?
+[6:52] Requirement clarification. Right? The
+[7:00] first step of system design is
+[7:02] requirement clarification. What do we
+[7:04] need to do? We need to clarify. Before
+[7:07] designing the system, we first clarify
+[7:10] what the system should do and how well
+[7:12] it should perform. So there are two
+[7:15] major types of requirements. There are
+[7:18] two requirements. The first requirement
+[7:21] is functional requirement. The second
+[7:27] requirement is non-functional
+[7:29] requirement. What can functional
+[7:33] requirements be? Let us understand this
+[7:35] . Functional Requirement. Right? So
+[7:44] what is functional requirement? It
+[7:48] describes what the system should do.
+[7:55] Okay, for example, suppose there is a
+[7:58] long URL, then the system generates
+[8:01] abc1234 something like that, and it
+[8:04] returns the short URL. So the long URL
+[8:09] is converted into the short URL. Oh
+[8:15] sorry, the long URL is first converted
+[8:20] to the short code, then it is converted
+[8:25] to the short URL. Okay, so what is the
+[8:29] first step? First is, you have to state
+[8:32] , first is to create a short URL, I am
+[8:34] stating the requirement. You have to
+[8:37] discuss this requirement and also keep
+[8:39] noting down these requirements. So the
+[8:42] first requirement you have is, create a
+[8:45] short URL, that is the first one. What
+[8:48] can be the second functional
+[8:50] requirement for you? What is the second
+[8:51] requirement? The second requirement is
+[8:54] to redirect the URL you have got. Now,
+[8:56] what do you have to do second? Redirect
+[9:00] the short URL. That is obvious. When
+[9:04] the user opens the short URL and clicks
+[9:07] it. The system redirects to the
+[9:09] particular long URL and returns the
+[9:11] redirected response. So the browser
+[9:13] opens the original URL. So what is the
+[9:15] second one? Redirect the shortened URL.
+[9:18] Now what? Now you can ask one more
+[9:21] thing, custom aliases, meaning the user
+[9:23] can optionally choose their own short
+[9:25] code. It could also happen that the
+[9:28] short code generated is not liked, so
+[9:30] instead of generating the code, you can
+[9:32] define a word of your own choice. That
+[9:34] requirement, the custom alias must be
+[9:37] unique. So two users cannot both create
+[9:40] the same kind of URL, therefore alias
+[9:42] creation requires a consistency check
+[9:44] as well. You also have to keep in mind
+[9:47] that two people shouldn't have the same
+[9:48] one, okay? Now what comes fourth? URL
+[9:52] expiration. Meaning, a URL can have an
+[9:57] expiration time as well. For example,
+[10:00] this URL will expire at this time. So
+[10:03] after this time, the URL should no
+[10:05] longer be redirected. So the system
+[10:07] checks if the current time is equal to
+[10:13] Expired at. You have to keep all these
+[10:16] requirements in mind. So if it is true,
+[10:18] the URL is expired, do not redirect.
+[10:21] Okay? That was the fourth one. Now what
+[10:23] can we look at fifth? We can look at
+[10:26] tracking click count. We can do this
+[10:29] too. So the system should track how
+[10:31] many times a short URL was clicked. For
+[10:33] example, ABC 1 2 3 4 clicked 1 2 5 4
+[10:36] times. Meaning, like this one, A 1 2 3
+[10:38] 4 is the short code of the URL. How
+[10:41] many times has it been clicked? Click.
+[10:43] So we can also collect additional
+[10:44] analytics information as well. We can
+[10:46] show this in monitoring to see what is
+[10:48] happening. Okay? So what are the
+[10:50] functional requirements? The first one
+[10:52] is the short code. What is the second
+[10:53] one? Redirect short URL. The third, we
+[10:56] have to remember the URL expiration.
+[10:59] Track click count. Okay? And what will
+[11:02] I do with this now? Simple, I will go
+[11:06] here and you will see. I have already
+[11:11] written the answer inside this because
+[11:13] I want to make the video in a faster
+[11:14] way, so you will find this. Write the
+[11:17] requirements here first. Requirement
+[11:19] clarification, and write functional
+[11:21] requirements here. I have given all the
+[11:23] headings and tags above. The main
+[11:26] points that you have under functional
+[11:28] requirements, I have written them all
+[11:30] here. What have I written first? '
+[11:32] Create a short URL from a long URL',
+[11:34] second 'redirect a short URL to the
+[11:35] original long URL', third 'customer
+[11:37] support', 'a custom alias support', 'a
+[11:39] URL expiration'. So, whatever you feel
+[11:43] are the possible things, discuss them
+[11:44] with the interviewer regarding
+[11:45] functional requirements, ask them, and
+[11:47] finally create a requirement list like
+[11:49] this. So, what is the first point?
+[11:51] Within functional requirements, these
+[11:53] are your six points: 'Allow you to
+[11:54] delete or disable URLs as well'. Okay,
+[11:57] so I have noted all of these down now.
+[11:59] Now what comes next? Now the second
+[12:01] thing is non-functional requirements.
+[12:03] Let's look at non-functional
+[12:04] requirements. What are the things we
+[12:06] can do? Non-functional requirements.
+[12:15] Always remember in non-functional
+[12:17] requirements. What do you need to do?
+[12:20] It describes how a system should behave
+[12:22] at scale. How the system should behave
+[12:32] at scale. Okay. So what do you need to
+[12:36] remember within this? Scalability,
+[12:40] performance, and availability are some
+[12:43] parameters I need to keep in mind for
+[12:46] non-functional requirements.
+[12:51] Reliability, latency, and security. So
+[12:56] I need to define all these things
+[12:58] within this. For this problem, we are
+[13:00] given that, meaning what should we keep
+[13:03] in mind here? What could be the first
+[13:05] requirement? 100 million DAU. What is
+[13:10] DAU? DAU means Daily Active Users. So,
+[13:13] 100 million daily active users—first,
+[13:16] ask the interviewer how many daily
+[13:18] active users to consider. Because I
+[13:20] essentially have to build the
+[13:21] application at a large scale. So I have
+[13:23] to keep that in mind. Now I have
+[13:25] assumed in this, let's assume 100
+[13:27] million DAU, 100 million daily active
+[13:29] users. Right? So how can you calculate
+[13:31] it? 100 million. This means
+[13:33] approximately 100 million unique users
+[13:35] may use the system in the same day. So
+[13:37] DAU does not directly mean 100 million
+[13:39] requests per day. One user may make
+[13:42] many requests possible. Don't think
+[13:44] that 100 million requests are coming
+[13:46] per day. It is not like that. It could
+[13:48] also be possible that. One user may
+[13:50] make many requests. So that is why
+[13:52] first, you can understand it as 100
+[13:54] million. Now what comes second? The
+[13:56] second point comes 1k. URL creation per
+[14:02] second. I am discussing this with
+[14:05] myself; if you do 101 questions, these
+[14:06] possibilities will also come to your
+[14:08] mind. So 1k means 1k writes per second.
+[14:12] 1k writes are coming in 1 second.
+[14:14] Meaning 1,000 URL creations are
+[14:15] happening within 1 second. So these are
+[14:18] , these are write operations. See, in
+[14:20] this, you always have to think about a
+[14:22] larger number of users. Do not think
+[14:24] about just 101 users. You have to think
+[14:26] about how many are coming in one second
+[14:28] ? One K write requests are coming in.
+[14:32] One K write requests are coming in.
+[14:35] Okay? So, this is basically how it is
+[14:37] happening for you. Right? You have to
+[14:40] think about this large scale. Right?
+[14:42] After that, this is done. What can we
+[14:44] do in the third step? 100K redirects.
+[14:48] Redirects per second. Meaning, what
+[14:51] does 100K redirects mean? These are the
+[14:53] read operations. This much larger when
+[14:55] the traffic—when the write traffic
+[14:57] can be there. So the system,
+[14:59] approximately 100K requests can be
+[15:02] redirected when someone clicks on a
+[15:04] particular URL. Okay? You can think
+[15:07] about this. So, in this way, we can
+[15:09] capture many things that I have already
+[15:12] mentioned here. You can have a look.
+[15:15] First, support 100 million DAU, support
+[15:17] 1000 URL creations per second, support
+[15:19] 1000 redirects per second, maintain 100
+[15:22] plus 1 write operations, 99%
+[15:23] availability. So, look, these are my
+[15:27] points; you might have some points too.
+[15:29] Right? But I have created some standard
+[15:32] points. You can use these points in any
+[15:35] application you take, and the shortcut
+[15:38] must be unique and unpredictable. The
+[15:41] system should scale to 1 billion users.
+[15:43] So, I have created all these points
+[15:45] here. Look at them and understand all
+[15:47] the requirements well. Okay? Then okay,
+[15:50] so what do I have to explain now? I
+[15:52] have to explain the capacity estimation
+[15:53] . Right? I have noted down all the
+[15:55] points. I will show you again in this.
+[15:57] What do I have to show within the
+[15:58] capacity estimation? I have to show how
+[16:00] many writes are happening. Like, 1000
+[16:02] URL creations are happening per second.
+[16:04] So, 1000*86400 equals 86.4 million.
+[16:07] What is 86400 million? What is this
+[16:09] value? If you multiply the seconds,
+[16:12] hours, and days, you will get 86,400. I
+[16:16] am multiplying by that. I am talking
+[16:17] about per day, that how many URLs are
+[16:19] being created in a single day. So, how
+[16:21] many hours are in 24 hours? How many
+[16:24] seconds are there? How many minutes are
+[16:25] there? If you multiply this to
+[16:26] calculate, you will get 86400. If you
+[16:28] multiply this by 1000, it is 86.4
+[16:30] million. Meaning, I want to tell you
+[16:32] that we have to explain it
+[16:33] mathematically. How many writes are
+[16:35] happening within the capacity
+[16:36] estimation. Now, this is not a standard
+[16:37] . I am just taking this by myself. It
+[16:39] could even be 1000 or 2000. Give them
+[16:40] an example using 2000. So first you
+[16:42] will explain it in seconds, then in
+[16:45] days, then in years, and then in leap
+[16:47] years. Okay? So I need to explain the
+[16:49] read like that. Similarly, I need to
+[16:50] explain the storage, specifically what
+[16:52] is the short storage? That is done.
+[16:54] Then comes the high-level architecture
+[16:56] design. Which I will explain to you now
+[16:57] . Once all of this is complete. We will
+[16:59] create the architecture diagram inside
+[17:01] the tool. Then, what are the core
+[17:03] components? Like API gateway, URL
+[17:05] services, redirect services. These are
+[17:08] all gateways that you use. These are
+[17:11] standard in system design. Okay? And
+[17:14] Redis cache, so that any request that
+[17:16] comes in. Now, it happens that the
+[17:18] request hits the database repeatedly.
+[17:20] So you have to store it somewhere,
+[17:21] right? As I mentioned in the previous
+[17:23] lecture, you will use cache memory. And
+[17:25] what database am I using? I am using
+[17:26] NoSQL. What is Kafka? Event generation.
+[17:29] Meaning, how many clicks you are making
+[17:31] in a lifetime and how many times it is
+[17:32] being redirected. Who will track that?
+[17:34] We do it through Kafka. You will do
+[17:36] monitoring within analytics. You will
+[17:38] capture all the information. After that
+[17:40] , what are my foreign keys in data
+[17:41] storage? What are the primary keys?
+[17:43] What kind of database can be built? So,
+[17:46] this includes URL mapping, click events
+[17:47] , re-storage, database partitioning,
+[17:49] database replication, and maintaining
+[17:51] multiple database replicas—meaning
+[17:52] fallback, so if one database is not
+[17:54] working, you will use another database
+[17:56] through fallback techniques. Okay? Then
+[17:59] API design, see, POST and GET are
+[18:00] always there in everything. One for the
+[18:03] POST URL. One for the response. One for
+[18:06] the GET. And one for analytics,
+[18:07] basically. Okay? Once that is done,
+[18:09] then scalability. How we can scale it
+[18:12] up. Monitoring. We can monitor
+[18:15] everything. We can track everything.
+[18:16] And finally, trade-offs. Trade-offs are
+[18:18] very important. Like hashing, base62,
+[18:21] distributed IDs, and sequential IDs. So
+[18:25] , we can track all these things. Okay?
+[18:28] So, I want to tell you that you should
+[18:30] answer the interviewer through all
+[18:32] these points. First, functional
+[18:34] requirements; second, non-functional
+[18:36] requirements; third, capacity
+[18:37] estimation. How many writes are in them
+[18:39] ? What are the reads? What is the
+[18:40] storage? Review this code thoroughly
+[18:43] and practice with it. API gateway, URL
+[18:47] services, redirect services, short code
+[18:50] . Alright? So, I have written down
+[18:52] these eight points. You should answer
+[18:54] them using these points. Like, what is
+[18:57] data storage monitoring, and how do we
+[18:59] achieve scalability through it? How do
+[19:01] we handle performance? Okay? So, I have
+[19:03] written the answer for it here. Now,
+[19:06] what do we do? Now, let me explain the
+[19:08] high-level diagram to you. What is its
+[19:10] high-level diagram? The high-level
+[19:12] diagram is what you mainly need to
+[19:14] explain to the interviewer later on.
+[19:16] Alright? But before that, let me draw
+[19:18] it for you. In Notepad, you will get a
+[19:21] basic idea of what a high-level diagram
+[19:23] looks like. Then we can move on to how
+[19:26] we can build it inside. Alright? What
+[19:30] comes first in this? Client. Client
+[19:35] means user. User means a client could
+[19:39] use an API, or a web browser, or a
+[19:42] mobile device. They will send the
+[19:45] request from there. So, where does the
+[19:46] request go first? To the CDN. CDN! What
+[19:51] happens in a CDN? Look at it this way,
+[19:55] we can call it caching. I mean, think
+[19:58] about it, what if you are in Australia
+[20:00] and using an Indian server? Does it
+[20:03] make sense to go to the Indian server
+[20:04] for every request? As I mentioned in
+[20:07] CDN, we store it locally, we cache the
+[20:09] request servers, and that is called CDN
+[20:12] . So, that will be needed because I
+[20:14] have to provide answers about
+[20:16] everything in this. That's the CDN.
+[20:18] What do I see after that? Load balancer
+[20:21] . Load Balancer, because it is possible
+[20:27] that 1,000 requests might come at once.
+[20:29] 10,000 or 10 million requests might
+[20:31] come. We have to balance and redirect
+[20:33] them somewhere, right? So who handles
+[20:35] that? That is the job of the load
+[20:36] balancer. After that comes the API
+[20:38] gateway. As I told you, there are
+[20:40] different types of gateways. API
+[20:42] gateway. How to distribute, how to do
+[20:45] things, where to send, how to redirect
+[20:46] URLs, how to send them to memory. So,
+[20:49] who does this work? API gateway again.
+[20:52] After this, we do rate limiting. What
+[20:54] do I mean by rate limiting? Brother, if
+[20:57] one person sends 10 million requests in
+[20:58] a second, or 10,000, 20,000, or 5,000
+[21:00] requests, that's just wrong, right? So,
+[21:03] rate limiting limits that. After that,
+[21:05] it redirects to the second one. Either
+[21:07] you have your URL services, where the
+[21:09] first one will shorten it. It will go.
+[21:11] The user sent a request, and it will be
+[21:13] shortened. What happens in the second?
+[21:15] Otherwise, redirect. That's the case we
+[21:17] are discussing. Redirect service,
+[21:19] redirect means I have the short link.
+[21:22] As soon as they click on the short link
+[21:24] , they should go to the long one. Okay?
+[21:26] Now, in the short services, where will
+[21:28] this be found? It is inside the Redis
+[21:30] cache. As soon as the user hits it, as
+[21:32] soon as they hit it, it redirects.
+[21:34] Where will it go? Where will it check
+[21:36] first? Inside the Redis cache. If it is
+[21:38] not found in the cache, if it's a miss,
+[21:40] then where will it check? Then it will
+[21:43] check inside NoSQL, it will check
+[21:44] inside NoSQL. Now, suppose if the NoSQL
+[21:47] is also down, then what do I do? I keep
+[21:50] a replica of it, a replica of the NoSQL
+[21:53] . What does the replica do? The replica
+[21:57] keeps an image of it, and maintains
+[21:58] fault tolerance. And similarly, if it
+[22:01] is not found on the URL, where will the
+[22:04] URL go to look for it? Obviously, where
+[22:06] will the URL service connect? To NoSQL.
+[22:09] Right? So, this is your particular
+[22:13] architecture, mainly. Now, one more
+[22:17] thing is missing in this. Could it also
+[22:20] be that inside this there is what?
+[22:24] Redis cache, Redis cache? Redis replica
+[22:30] , this is also there, it can have fault
+[22:32] tolerance within it. This could also be
+[22:36] one, and what I am doing is, I am
+[22:38] checking the event trigger, like as
+[22:41] soon as your redirect service starts,
+[22:44] redirect services, the user keeps
+[22:46] clicking repeatedly, click, click,
+[22:49] click, so where will this go? To Kafka.
+[22:54] Where will Kafka connect? Streaming
+[22:56] processing, it handles live things.
+[22:58] Streaming, after streaming, analytics
+[23:01] DB, analytics DB, okay? Everything will
+[23:04] be there. Then you can do one more
+[23:06] thing. You can also set up monitoring
+[23:08] here. You can monitor everything. You
+[23:09] can also monitor the APIs. You can also
+[23:12] monitor your redirect services. And you
+[23:15] can monitor your streaming. You can
+[23:18] also monitor Kafka. So, this is the
+[23:21] specific high-level diagram that you
+[23:23] need to explain to the interviewer by
+[23:25] drawing it. Now, about this diagram, I
+[23:27] have explained it to you here. Now,
+[23:29] let's create it in the tool to see how
+[23:32] it looks. That will give you an idea.
+[23:34] Okay? So, let's start. Okay? So, let's
+[23:38] begin with the high-level architecture.
+[23:41] Let me tell you. Whatever I explained
+[23:43] through the arrow diagram, we will
+[23:45] implement it here. Right? So, let's
+[23:48] start. What comes first? The client,
+[23:49] and then where does the request go? To
+[23:51] the CDN. So, I have created the CDN
+[23:54] here. Okay? Then where does the request
+[23:56] go from the client? To the CDN. Okay? I
+[23:58] have made the connection here. Where
+[23:59] does the request go from the CDN? To
+[24:01] the load balancer. Let's just make this
+[24:04] a load balancer. What is a load
+[24:06] balancer? Something that balances. I
+[24:07] have explained all of that to you. What
+[24:09] did I tell you about the load balancer?
+[24:11] Where does the request go? The request
+[24:14] goes to the API Gateway. So, I will
+[24:16] create the API Gateway. Right? Let's
+[24:18] create the API Gateway. Right? So, that
+[24:21] is the request. It went to the API
+[24:22] Gateway. And we will check here to see
+[24:25] if it fits, it fits. The API Gateway is
+[24:27] also in there. Now, where does the API
+[24:30] Gateway connect? To the rate limiter.
+[24:32] So, let's create the rate limiter. Here
+[24:34] , your rate limiter is also attached.
+[24:39] Rate limiting is done. The user request
+[24:41] is done. Now, rate limiting is divided
+[24:43] into two parts. One goes to the URL
+[24:45] services. One goes to the redirect
+[24:48] services. So, what did I do? I took a
+[24:50] service here. Created one service here.
+[24:53] And I took another service here. This
+[24:57] is your service URL. URL service. This
+[25:04] is your redirect services. Right? Now,
+[25:15] what did I connect it to? I connected
+[25:17] it here. What did I do with this? I
+[25:20] connected it here. Okay? And I clicked
+[25:24] on fit. So, it fits into a single
+[25:26] screen. After that, what now? Where
+[25:29] will this go after redirecting? It will
+[25:31] go to the Redis cache. First of all, I
+[25:33] took the Redis cache here. Cache memory
+[25:36] is here. What did I do through the
+[25:38] cache memory? I added a cache here.
+[25:40] Connected it. Right? Now, if there is a
+[25:44] cache miss, where does it go? To the
+[25:46] NoSQL database. So I added NoSQL here,
+[25:49] and what did I do after that? I linked
+[25:52] it. And where does it go? I
+[25:54] double-clicked here. So when the cache,
+[25:57] I even wrote it here, a cache miss
+[25:58] occurs. Then after the cache miss, it
+[26:01] comes to NoSQL. What else can there be
+[26:04] in NoSQL? It's possible we might need a
+[26:06] replica too. Okay? So, I took a read
+[26:09] replica here. So, I wrote 'Replica'
+[26:11] here. What does replica mean? That if
+[26:13] fault tolerance is needed, if there's
+[26:15] an issue with SQL, then this becomes
+[26:17] fault tolerance. So, for fault
+[26:20] tolerance, this specific replica will
+[26:22] come into play here. Right? So this is
+[26:26] what I've created. Now, where will it
+[26:28] check the URL? It will check inside
+[26:31] NoSQL if it needs an answer, so this
+[26:34] will be your initial diagram which will
+[26:36] define that the user's request went to
+[26:39] the CDN, load balancer, API gateway,
+[26:42] rate limit, redirect, cache, NoSQL,
+[26:44] read replica. So this will majorly be
+[26:48] your simple diagram. Now, I told you
+[26:51] there is one more thing. What is one
+[26:53] thing? Another thing is, suppose a
+[26:55] request goes to the redirect, but
+[26:58] someone is double-clicking it
+[27:00] repeatedly. Right? So from redirect,
+[27:03] what does it double-click on? To Kafka.
+[27:05] Now, I have created Kafka here. I have
+[27:08] set it here that if someone is clicking
+[27:11] the request repeatedly, a click event.
+[27:17] They clicked the event. The event will
+[27:21] be here. The click event has arrived.
+[27:23] Now, what happens after that here? It
+[27:25] goes to the streaming processor. Here
+[27:28] comes the streaming processor. The
+[27:30] streaming processor is here, it is
+[27:31] connected to this. Now, what is the
+[27:33] streaming processor connected to?
+[27:34] Analytics, so everything will be shown
+[27:36] here, see it has come to analytics,
+[27:39] right? Yes. Now, let's fit it in. Look
+[27:44] here, this is your high-level
+[27:45] architecture diagram for this URL. Okay
+[27:48] ? You can also write a replica for
+[27:50] Redis here, suppose there is Redis. Now
+[27:53] , I will create its replica here. A
+[27:59] read replica, now the Redis replica is
+[28:01] also here. If there is a Redis fault
+[28:03] tolerance issue, it will be resolved by
+[28:05] its replica. This is done too. Now, you
+[28:07] can also add different types of
+[28:09] monitoring ahead of this. All right?
+[28:11] Now, you can even download these images
+[28:13] from this page. You can download these
+[28:17] images, keep them, and use them. Okay?
+[28:20] My image has been downloaded now. Okay?
+[28:23] So now you can see how well you are
+[28:25] able to explain it to the interviewer.
+[28:28] What will this do? Drawing like this
+[28:30] will improve your mind's analytical
+[28:31] thinking. That is why I have created
+[28:35] this tool for everyone, and I will
+[28:36] provide the link. Practice with it, and
+[28:41] if you face any issues, note that you
+[28:43] just need to log in first, and I have
+[28:45] given two or three free attempts. You
+[28:48] can use those two or three free
+[28:50] attempts, and I have kept the value at
+[28:52] a very minimal cost. I will show you;
+[28:55] for just 999, you get access for 30
+[28:59] days and 15 system designs per day to
+[29:04] review. And before that, let me show
+[29:06] you one more thing. I actually forgot
+[29:08] to tell you what you need to do. This
+[29:10] part is done. So, what is the benefit
+[29:12] of this? Now this architecture is also
+[29:14] built. It is right in front of you. Now
+[29:16] , how will I know? If my result is
+[29:18] correct? So, I have also built an AI
+[29:21] review here. What will the AI review do
+[29:23] ? The AI review will take your
+[29:26] architecture answer and review it. Like
+[29:29] mine, for example. Seven out of ten. If
+[29:31] your score is between 7 and 10, then it
+[29:34] is perfect. It is perfect. That means
+[29:37] this is the answer you should give to
+[29:38] the interviewer. Now, it will point out
+[29:40] some gaps. For instance, I added the
+[29:41] replica just to show it for NoSQL. I
+[29:42] shouldn't have added that. It will tell
+[29:44] you that. Look, all these points are
+[29:46] written here. The architecture needs a
+[29:48] little improvement. Because I created
+[29:51] the replica just to show you. So, what
+[29:53] should I have done? I shouldn't have
+[29:55] built the replica here. I should have
+[29:57] defined it separately. The Kafka stream
+[29:58] should have been shown here. Then the
+[30:00] reviews will be even better. Let me
+[30:02] show you my five reviews. Like this one
+[30:04] . Look. All right? It will review
+[30:08] everything. What are your strengths? If
+[30:10] you want to know the answer, you can
+[30:12] just click on "See Expert Approach."
+[30:13] You can view the strength solution. You
+[30:16] can download the PDF. You can even
+[30:18] download the PDF. You can download the
+[30:20] image. So this tool is going to help
+[30:24] you a lot. I promise. If anyone has any
+[30:28] doubts about this tool, let me know.
+[30:31] Okay? So, my main purpose is for all of
+[30:34] you to practice very well. That is my
+[30:38] end goal. That is why I developed this
+[30:40] tool. It took me a lot of time. But I
+[30:42] developed it for everyone. Because I
+[30:44] faced problems myself when I initially
+[30:45] started system design. So, practice
+[30:48] thoroughly within this tool. Practice
+[30:51] your editing here. Practice high-level
+[30:54] design here. Then submit whatever
+[30:56] solution you have. Your score will be
+[30:58] generated. Track it. Okay? Let me show
+[31:01] you other problems that I have already
+[31:04] created in it. Look, these are all the
+[31:07] problems, and these are all questions
+[31:09] asked in interviews. It's not like I
+[31:11] just wrote them out of thin air. All
+[31:12] these problems have been asked in
+[31:14] interviews. And I will expand this much
+[31:16] further. We will write at least 40 or
+[31:18] 50 problems that are asked in
+[31:20] interviews. Whether it's your Google
+[31:22] interview, Facebook, or Microsoft. If
+[31:25] you complete all these questions, I
+[31:27] promise you will clear any major system
+[31:29] design interview. Okay? That's done.
+[31:34] The second thing is that you know what
+[31:38] I have done for the answers to these.
+[31:44] Okay? It also contains proper solutions
+[31:46] . If you want that PDF, it's the same
+[31:49] thing. You have to go to my website.
+[31:52] Same, and let me show you. Click on
+[31:56] notes here, and I haven't uploaded it
+[31:58] yet. I will upload it. Go into the
+[32:01] system design component section. All
+[32:04] those things are right here, system
+[32:06] design. I have already uploaded four
+[32:08] PDFs. I will upload the fifth one today
+[32:11] . Download it from here. Use that PDF.
+[32:13] If you are my member, it will be free
+[32:15] for you. If you are not a member, you
+[32:17] can get it for a minimal cost. Okay? So
+[32:19] I hope you use the material I am
+[32:22] providing, and definitely, as I have
+[32:25] done with these PDFs. See, you download
+[32:29] it. This is the generative interview
+[32:31] pack. Just do this, practice inside the
+[32:35] system design tool and take the
+[32:37] interview. It is best for those who
+[32:40] already have theoretical knowledge. If
+[32:43] anyone is still facing any problems,
+[32:45] where do you need to go? You can go to
+[32:48] the about section within my portal and
+[32:51] email me directly. Or you can even book
+[32:55] a session to talk to me. In case anyone
+[32:57] is facing any problems. Okay? So, I
+[32:58] will add this tool for you. Please use
+[33:02] this tool as much as possible and
+[33:04] please tell those who really need help
+[33:07] about it. I hope it helps them because
+[33:10] the future nowadays is all about system
+[33:12] design. Just understand that every
+[33:14] interviewer is asking about system
+[33:15] design. So, through this tool, you will
+[33:18] definitely get the help you need. Okay?
+[33:20] Thank you so much.

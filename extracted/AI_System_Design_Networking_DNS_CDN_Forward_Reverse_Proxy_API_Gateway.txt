@@ -1,0 +1,672 @@
+Title: AI System Design Networking | DNS, CDN, Forward & Reverse Proxy, API Gateway
+
+--- TRANSCRIPT ---
+
+[0:00] Hello everyone, welcome back to day two
+[0:03] of my AI system design series. So, I
+[0:07] have already covered the basics of
+[0:08] system design. Now, we will focus on
+[0:12] day two, and I am creating this series
+[0:15] in great detail. Both freshers and
+[0:19] experienced professionals can follow
+[0:22] this series. And any interview, whether
+[0:25] it's for a product-based or
+[0:27] service-based company, you will be able
+[0:29] to crack it easily, plus I have created
+[0:31] a beautiful PDF that will be very
+[0:33] helpful in your interview journey. I
+[0:37] will tell you how to get this PDF at
+[0:38] the end of the video. Let’s start
+[0:42] with day two, and in this, we have
+[0:45] covered networking, DNS, CDN, forward
+[0:48] and reverse proxy, and API gateway,
+[0:51] which are very important topics. If we
+[0:55] want to understand system design, I am
+[0:57] moving from basic to advanced. Even if
+[0:59] you don't know it, by watching this and
+[1:01] covering it, you can understand it
+[1:03] easily. Okay? So let’s start with the
+[1:06] first topic, networking. So. Networking
+[1:13] . Okay? So, what is networking? Simply,
+[1:16] networking is a process of connecting
+[1:18] computer devices. So they can
+[1:20] communicate and exchange ideas. Like
+[1:24] when you open Instagram and then send a
+[1:28] WhatsApp message, search Google, or
+[1:31] call any API, the data travels through
+[1:35] the network, okay? So what is
+[1:39] networking? It is a process of
+[1:42] connecting computers. Devices so they
+[1:51] can communicate and exchange data. Okay
+[2:01] ? So whenever the user opens Instagram,
+[2:04] sends a WhatsApp message, searches
+[2:05] Google, or calls an API. Everything
+[2:08] travels through the network only. The
+[2:11] basic flow for this, how it works,
+[2:15] suppose you have, let's say, a basic
+[2:20] request flow. Okay, suppose there is a
+[2:28] user request. A user's phone request,
+[2:31] let's assume I am talking about a phone
+[2:34] request to show how that data travels.
+[2:37] If a phone request comes in, where does
+[2:39] it go first? It first goes to the ISP.
+[2:44] Call it an ISP or a router. Internet
+[2:47] Service Provider. Okay? Where does it
+[2:50] go after that? To the DNS. I will
+[2:52] explain clearly what that is later in
+[2:55] my video. That’s DNS. Then after that
+[2:58] comes the CDN. CDN. After the CDN, the
+[3:05] reverse proxy. Then to the API gateway.
+[3:18] After the API gateway, your request
+[3:21] connects to the back-end system that we
+[3:25] have built. Right? Then after that, the
+[3:30] cache and DB, this is the proper flow.
+[3:35] Any request that travels first starts
+[3:37] with a user, then ISP, router, DNS, CDN
+[3:40] , reverse proxies, API gateway,
+[3:42] back-end system, and cache, DB, okay.
+[3:46] Now, the first question that arises is,
+[3:48] why does networking matter in system
+[3:50] designing? You might be saying, "Bro,
+[3:52] why am I studying networking in system
+[3:54] design?" Because a distributed system
+[3:56] contains multiple components that need
+[3:59] to communicate. Let me tell you why we
+[4:04] are studying it; we are studying it
+[4:08] because suppose there is a user request
+[4:13] : user, API server, microservices,
+[4:17] database, and cache, okay. So what is
+[4:24] happening here? All this communication
+[4:26] is only over a network; user connected
+[4:28] to the API, created a request with
+[4:30] microservices, back-end connected with
+[4:32] front-end. So, bro, it is happening
+[4:34] through some networking, isn't it? So
+[4:37] until you know how the request is
+[4:39] traveling and how it is communicating,
+[4:41] you won't be able to handle system
+[4:43] design interviews well. Right? So that
+[4:47] is why we need to understand how a
+[4:49] distributed system contains multiple
+[4:51] components that can communicate. Right?
+[4:54] It happens through networking. So the
+[4:57] first topic that comes under this is
+[4:59] DNS. DNS. What is DNS? DNS means Domain
+[5:15] Name System. What does Domain Name
+[5:20] System mean? DNS converts
+[5:21] human-readable domain names into IP
+[5:24] addresses. Like you write Google dot
+[5:28] com. Right? So it converts it into its
+[5:32] corresponding IP. 250 and 195 46, that
+[5:35] is the IP address of Google, right?
+[5:38] Okay? So computers use IP addresses to
+[5:40] communicate while humans prefer domain
+[5:42] names. We know the domain name, but how
+[5:45] is the request traveling in the
+[5:47] back-end within networking? It is
+[5:49] communicating through some IP address.
+[5:52] Right? So you can understand it like
+[5:54] this. If you want to remember what DNS
+[5:56] means: Phone book of the internet.
+[5:57] Basically, what did you do? You typed a
+[6:00] person's name and got their phone
+[6:01] number. So DNS does the conversion of
+[6:04] domain names into IP addresses. So that
+[6:06] is why it is very important. Right? So
+[6:09] what is the second concept that comes
+[6:10] under this? DNS resolution. How does
+[6:16] DNS resolution work? Now, as I said,
+[6:18] okay, it converts it into an IP address
+[6:21] . How does this work in the backend?
+[6:24] For instance, assume you typed
+[6:27] google.com. How does this request go
+[6:31] through? First of all, it goes to your
+[6:36] browser cache. Right? After that, it
+[6:43] goes into the DNS resolver. Where does
+[6:47] it go after that? Then it goes to the
+[6:49] root server. From the root server, it
+[6:53] comes to the TLD server; once the TLD
+[6:56] server is done, then it goes to the
+[7:00] authoritative DNS, then finally you get
+[7:06] the IP address; it seems like a very
+[7:09] short track to you, but its journey is
+[7:12] very long. It starts from the browser
+[7:15] cache, then to the DNS resolver, then
+[7:17] the root server, then the TLD server,
+[7:20] then the authoritative DNS, and finally
+[7:22] , you get the IP address. Now, let's
+[7:25] understand all these components in a
+[7:27] bit more detail. I am telling you this
+[7:30] because until your basics are clear,
+[7:32] you won't be able to understand system
+[7:33] design questions well when we do them.
+[7:36] So, let's start with step one. What is
+[7:39] in step one? What do I mean by browser
+[7:43] cache? Right? What happened with the
+[7:45] browser cache? As soon as I typed
+[7:47] Google.com, the browser first checks
+[7:49] whether it already knows the IP. Does
+[7:51] it actually work like that? You typed
+[7:53] Google.com. Do you go to the server
+[7:55] every time? It doesn't connect every
+[7:57] single time. Every browser has its own
+[7:59] cache memory. The meaning of cache is
+[8:02] that it's a temporary memory. Inside
+[8:05] which, as I typed google.com, what will
+[8:07] it do? It will check its cache memory
+[8:10] to see if this thing is already present
+[8:12] or not. Like what did I type here?
+[8:15] Google dot. What did it check? Where
+[8:18] did it check? Inside the browser cache.
+[8:20] Like Google.com, sorry, uh, what do you
+[8:24] call it? Your Edge browser, or Google
+[8:27] Chrome. It has its own cache memory. So
+[8:30] , it looks inside that cache memory to
+[8:32] see if it's there or not. If it hits,
+[8:35] meaning it's found, then you get the IP
+[8:37] address directly from there. The sooner
+[8:40] it's found, the faster the execution
+[8:42] will be. If it's a miss, then it will
+[8:45] go to the DNS resolver. Right? So that
+[8:49] is what your, uh, what do you call it?
+[8:52] Browser cache is. So, the cache avoids
+[8:55] unnecessary DNS lookups. Right? In step
+[8:59] two, you might notice that any website
+[9:02] takes some time to execute or run the
+[9:05] first time, but if you type the same
+[9:07] website a second time, it's already in
+[9:10] the cache memory, so it resolves easily
+[9:12] . Now what is the second step? DNS
+[9:17] Resolver. What is a DNS resolver? Now
+[9:21] the browser asks the DNS resolver. A
+[9:23] resolver can be anything. It can be an
+[9:28] ISP or a public DNS service. Like for
+[9:33] example, 8*8*8, okay? If the resolver
+[9:38] does not already have the answer cached
+[9:40] , it continues the lookup. Understand
+[9:42] this. Okay? So it will check here. If
+[9:45] it doesn't have the answer either. The
+[9:47] DNS resolver doesn't have the answer.
+[9:49] Then where will it go in step three? To
+[9:52] the root server, okay. Root servers
+[9:57] know where the TLD servers are. Like I
+[10:00] wrote google.com, the root server
+[10:03] points towards the dot, okay. A proper
+[10:07] tree hierarchy is formed, okay. Where
+[10:10] to go inside that, inside the dot, that
+[10:12] is told by the root server. What will
+[10:15] be the root server's job? The root DNS
+[10:21] server knows where the TLD servers are.
+[10:30] So if the root server points out where
+[10:33] the dot is? What is the dot TLD? Okay?
+[10:36] So first of all, what came for DNS? DNS
+[10:40] resolver. Okay? It wasn't found here.
+[10:44] Then where will it go? To the root
+[10:46] server. Where will the root server send
+[10:48] it? To the TLD. Okay? Now what is a TLD
+[10:52] server? TLD server means top-level
+[10:55] domain, like .org .net Okay? What is in
+[11:00] step four? TLD server, okay? What is
+[11:07] this? .net .in for google.com the .com
+[11:14] TLD server knows where the
+[11:16] authoritative DNS server for google.com
+[11:19] can be found because a hierarchy is
+[11:22] built like this. A tree hierarchy, like
+[11:25] this, like this, like this. Okay? A
+[11:27] tree hierarchy will be formed. It will
+[11:29] take it to the dot, and it will send it
+[11:31] that...It will have the address of .com
+[11:32] , where it might be. Okay? So. .com TLD
+[11:35] server knows where the authoritative
+[11:37] DNS server for google.com can be found.
+[11:39] So it will go to that particular domain
+[11:41] . Now what is in step five?
+[11:46] Authoritative DNS. So now the
+[11:51] authoritative DNS server contains the
+[11:54] actual DNS record. Now what will it
+[11:56] have? It will have the proper
+[11:58] information. What is the IP address of
+[12:01] google.com? 142.250 199.5.46, so now
+[12:05] the client knows which IP address to
+[12:08] contact. Okay? So that is why it
+[12:11] happens. Now if I draw its complete
+[12:13] diagram in front of you once again,
+[12:15] what will it be? What did the user type
+[12:18] first? Google. com. Okay? Where did we
+[12:26] check first? Inside the browser cache.
+[12:32] Checked in the browser cache. What
+[12:34] happened here? It missed. It's not
+[12:36] found here. Where does it go after that
+[12:38] ? To the DNS resolver. 8.8.8.8 Okay?
+[12:46] Where did it send it, brother? It said,
+[12:48] well, I don't have it either. Do this.
+[12:50] Go to the root server. What information
+[12:53] would be on the root server? That dot
+[12:55] ...Where is the .com TLD? Where is the
+[12:57] top-level domain? Because it must have
+[13:01] a long chart, so where is the dot,
+[13:03] where is it kept, okay? After that, it
+[13:06] sent it to the TLD server. It reached
+[13:12] the TLD server, meaning it has reached
+[13:15] the dot. Now, the authoritative DNS
+[13:19] will have the specific IP address, and
+[13:23] then it will provide that IP address.
+[13:29] This is what is involved in any IP
+[13:32] address when you type a request like
+[13:36] Google.com. Okay? Now, another concept
+[13:40] comes into this. That concept is DNS
+[13:43] caching. DNS cache? So, what does DNS
+[13:51] cache mean? DNS results are cached at
+[13:54] different levels, okay. Where is it
+[13:57] cached first? That's why I said DNS
+[14:00] lookup. Look, look, like when I did
+[14:03] google.com, where did google.com check?
+[14:07] At the DNS lookup? I keep the IP
+[14:10] address cached here; sometimes you find
+[14:13] it right here. Why do I do that? Is
+[14:15] there anyone who would go to the
+[14:17] authority every single time? How much
+[14:19] time would that take? Requests that are
+[14:21] used frequently are either cached in
+[14:23] the browser at the start or cached at
+[14:25] the DNS lookup. Okay? One is cached
+[14:28] here. Okay? Where? At the DNS lookup.
+[14:31] Where is the second request cached? In
+[14:33] the cache memory. Like you said Google
+[14:35] dot. com cache IP address. So the
+[14:41] complete DNS resolution does not need
+[14:44] to happen every time. So DNS cache
+[14:47] reduces the DNS lookup time. Okay? You
+[14:50] have to understand this. Now, there is
+[14:54] a concept in this called DNS
+[14:57] geo-routing. What does DNS geo-routing
+[15:03] mean? DNS can also be used for
+[15:06] geographic routing. What is it used for
+[15:09] ? For geographic routing, meaning
+[15:13] suppose your application has an India
+[15:16] data center, a USA data center, and a
+[15:19] Europe data center. So DNS can return
+[15:22] different IP addresses depending on the
+[15:25] user's location. Okay? Like, BAS India.
+[15:37] Sorry, in India, USA, and Europe, okay.
+[15:45] It will have its own India data center,
+[15:49] USA data center, and Europe data center
+[15:53] . Okay? Okay? So this became the Europe
+[15:57] data center. Okay? Like a user sitting
+[16:00] in India types something, who will they
+[16:02] connect to? They will connect to
+[16:04] India's own data center. It will be the
+[16:06] user. If they are in the US, then they
+[16:08] have their own data center. Right? So
+[16:11] you can say what is DNS? Equal to
+[16:14] domain. Domain means IP plus
+[16:16] Geo-routing. Is there someone sitting
+[16:19] in the US who accessed a website and
+[16:22] its data center is built there? What to
+[16:24] say, if it's in India, then how much
+[16:26] time will the request take to travel?
+[16:28] So it will look up from its own data
+[16:30] center and extract that particular IP
+[16:32] address. Right? So this is what it
+[16:35] means. Now, what is the second topic?
+[16:39] CDN. What does CDN mean? Content
+[16:43] Delivery Network. What does Content
+[16:49] Delivery Network mean? It is a
+[16:52] distributed network of servers that
+[16:54] store copies of content closer to the
+[16:57] user. I mean, let me explain it to you
+[17:00] again. A CDN is a distributed network.
+[17:03] It is a distributed network of servers
+[17:06] that makes copies and stores content
+[17:08] closer to the user. Like the main
+[17:12] points within this are, first one is
+[17:16] its edge nodes. Right? Second is Point
+[17:22] of Presence. What are these? They are
+[17:26] also called POPs. So why do we need CDN
+[17:28] ? Suppose your main origin server is in
+[17:31] Mumbai. Right? A user in New York. If
+[17:35] it is without CDN. Let me explain it to
+[17:37] you again. Suppose where is your main
+[17:39] origin server? Where is our main origin
+[17:41] server? Where is the main origin server
+[17:45] ? Let's assume it is in Mumbai. It's in
+[17:56] Mumbai, right? Without CDN, if suppose
+[18:00] there is no CDN, then there is a user
+[18:03] sitting in New York. They typed a
+[18:09] request, how much long distance will
+[18:11] the request have to travel to connect
+[18:13] to whom? To connect to the Mumbai
+[18:16] request. Think about it. So the request
+[18:18] has to travel a long distance,
+[18:20] increasing the latency. Latency will
+[18:22] increase, right? It is traveling for
+[18:25] time because to connect. Now if there
+[18:27] is CDN, if it has CDN, then what will
+[18:31] CDN do? There is a user sitting in New
+[18:35] York. Now CDN edge. In New York, they
+[18:44] will get the content immediately. Right
+[18:48] ? So how much time will it take? Like 5
+[18:51] milliseconds of time. So when content
+[18:54] is available at a nearby edge, you get
+[18:56] the benefit as well. What will it keep?
+[18:59] The information will be saved in its
+[19:01] local server. So the user sitting in
+[19:04] the US won't need a connection there.
+[19:07] Where a copy is already available to
+[19:10] you, sitting on a server near your
+[19:12] location. So that is why CDN is very
+[19:15] important to understand everything. The
+[19:18] original server contains the original
+[19:20] content. The CDN edge server stores the
+[19:23] cached copies of a particular thing. So
+[19:26] , a CDN cache hit means the requested
+[19:29] content already exists on the CDN edge.
+[19:32] Okay? What if you say, is it necessary
+[19:35] that we get a connection every time?
+[19:38] That's not how it works. There can also
+[19:39] be a cache miss. A cache miss means the
+[19:41] requested content is not available on
+[19:43] that particular edge. So, what will
+[19:45] happen in the next user's case? If it's
+[19:47] a cache miss, see, what does a cache
+[19:50] miss mean? It means the connection will
+[19:53] go to the original, head to the
+[19:55] original. Then it will bring it from
+[19:56] there. Then it will store it in its
+[19:59] cache store. Okay? That is a cache hit,
+[20:02] meaning the CDN copy is available at
+[20:04] your location. A cache miss means the
+[20:07] CDN copy is not available, so it will
+[20:10] travel all the way again. It will
+[20:12] connect to the main server, say Mumbai,
+[20:14] bring the data from there, then cache
+[20:15] that thing. So it becomes easier for
+[20:17] the next time, there won't be that much
+[20:19] latency for the next one. That is why
+[20:21] it is very important. So, yeah, so when
+[20:24] to use a CDN? CDN is used when the
+[20:27] system has global users, or large media
+[20:30] content, or large static assets. So
+[20:34] global plus static media plus
+[20:36] performance, you can think of CDN like
+[20:38] that. Okay? So now, the next concept is
+[20:42] forward proxy. Forward proxy. Okay?
+[20:48] Just like you understood CDN. You
+[20:51] understood CDN. Now, forward proxy.
+[20:53] What is the meaning of forward proxy?
+[20:55] My forward proxy sits between the
+[20:57] client and the internet. You can
+[21:00] understand it like this: client and the
+[21:04] internet. Okay? Client, forward proxy,
+[21:12] then internet, then server. Okay? So,
+[21:20] the client sends the request to the
+[21:22] proxy, the proxy sends the request to
+[21:24] the destination server; you can
+[21:25] understand it like that. So why does
+[21:29] the forward proxy hide the client
+[21:31] identity and IP address from the
+[21:33] destination? So that the server sees
+[21:37] the proxy rather than the original
+[21:38] client's IP address. Haven't you seen
+[21:40] it? That's why you use a proxy server.
+[21:42] The government has banned many sites.
+[21:45] So what do you do? You use a proxy
+[21:47] server to access them. So how do they
+[21:49] do it? It hides your client information
+[21:52] . So that is why they didn't know where
+[21:55] the request was raised from, where the
+[21:57] request came from. So forward proxies
+[21:59] work something like that, it hides the
+[22:01] client. So we can say what it does is,
+[22:05] hide the client. Right, what will it do
+[22:09] ? It will hide the information so that
+[22:11] the user basically doesn't even know
+[22:13] where the request was raised from.
+[22:16] Right, okay. So let me give you an
+[22:21] example, VPNs that we use, VPN circles,
+[22:24] these are all examples of forward
+[22:27] proxies. Now there is a term called
+[22:30] reverse proxy, like we had forward,
+[22:32] then there is a reverse proxy. What is
+[22:35] meant by reverse proxy? A reverse proxy
+[22:37] sits in front of the backend server.
+[22:41] Where is it located? It sits in front
+[22:45] of the backend server. Backend server,
+[22:52] so the client communicates with the
+[22:53] reverse proxy rather than communicating
+[22:55] directly with the individual backend
+[22:57] server. You can understand it like this
+[22:59] . Why does the reverse proxy hide? It
+[23:02] hides the backend server infrastructure
+[23:04] from the client. Right, from the
+[23:07] client's backend server information.
+[23:11] Right, so the reverse proxy sits in
+[23:13] front, meaning the backend server.
+[23:15] Right, like what the client did, let me
+[23:18] tell you, the client Used a reverse
+[23:25] proxy and connected to different
+[23:28] servers, server one, server two, and
+[23:32] server three. Right, so the client
+[23:36] communicates with the reverse proxy
+[23:38] rather than directly communicating with
+[23:39] individual backend services. So why
+[23:42] does the reverse proxy hide? It hides
+[23:44] the backend server infrastructure from
+[23:46] the client. The client didn't know. The
+[23:48] client doesn't know which server
+[23:49] actually handled the request, basically
+[23:51] . Right? Reverse proxy equals hide
+[23:54] server. You can understand it like this
+[23:56] . Right? Because a reverse proxy can
+[23:59] also provide, now there are some
+[24:02] responsibilities. The reverse proxy
+[24:04] handles those. The first responsibility
+[24:08] the reverse proxy will handle is load
+[24:11] balancing. You know about load
+[24:13] balancing, when the load increases.
+[24:14] When too many requests come to the
+[24:16] server at once. How do they manage that
+[24:17] ? They do it through the reverse proxy.
+[24:20] Second is SSL termination, meaning the
+[24:23] reverse proxy can handle the HTTP or
+[24:26] SSL processing before forwarding the
+[24:28] traffic internally. Okay? What is the
+[24:32] third one? Caching. So frequently
+[24:35] requested content can be cached. You
+[24:37] already know this. Fourth is
+[24:39] compression, like you can say responses
+[24:43] can be compressed before being sent to
+[24:46] the client, and security, it always
+[24:49] provides security. Right? Are you
+[24:53] confused about what the difference is
+[24:55] between a forward proxy and a reverse
+[24:57] proxy? A forward proxy is located near
+[25:01] the client. A reverse proxy is located
+[25:04] near the server. And a forward proxy
+[25:07] hides the client's information, while a
+[25:09] reverse proxy hides the server from the
+[25:11] client. And does the client know the
+[25:13] backend in a forward proxy? No, not
+[25:15] relevant, but usually no. You already
+[25:17] know this; like a VPN is an example of
+[25:19] a forward proxy, and Nginx, which you
+[25:22] see, is an example of a reverse proxy.
+[25:25] And what else, it uses privacy
+[25:27] filtering; I mean, regarding forward
+[25:29] proxy, while reverse proxy includes
+[25:31] load balancing, SSL, and caching. So
+[25:35] okay, forward proxy connects to the
+[25:38] internet, see: client, proxy, internet,
+[25:40] hides the client's information. Reverse
+[25:43] proxy: client, proxy, backend, hides
+[25:46] the server. Okay, forward proxy is
+[25:48] client-side, reverse proxy is
+[25:49] server-side. Now the main concept comes
+[25:53] : API Gateway. API Gateway, what do I
+[25:58] mean by API Gateway? An API Gateway is
+[26:01] a simple entry point for client
+[26:03] requests in a system, especially in a
+[26:06] microservices architecture. For
+[26:09] instance, suppose there are user
+[26:11] services, order services, payment
+[26:13] services, or notification services; if
+[26:15] there is no API Gateway, how would you
+[26:17] communicate with these user, order, or
+[26:19] payment services? Don't we build
+[26:22] FastAPIs? Don't we build REST APIs? It
+[26:25] is just like when the frontend needs to
+[26:27] connect to the backend, we build REST
+[26:29] APIs; using those APIs is what this
+[26:30] gateway is. The client knows that, but
+[26:33] what are the issues? The client doesn't
+[26:35] even know how many services there are.
+[26:38] What the endpoints are, how to manage
+[26:39] them, how to communicate with them. So
+[26:42] that is why an API gateway is very
+[26:44] important. Right? So through an API
+[26:47] gateway, you are able to properly
+[26:49] communicate with all the services that
+[26:51] the user has exposed. Like user
+[26:53] services, order services, payment
+[26:55] services. Right? Now, what are its
+[26:57] responsibilities? Authentication, rate
+[27:00] limiting if too many requests come in.
+[27:03] Handling that, or routing, like the
+[27:05] gateway sends the request to the
+[27:06] correct server, okay? And request and
+[27:09] response translation, meaning modifying
+[27:11] headers, transformations, request
+[27:12] formats, transforming the response, and
+[27:14] aggregation, and load balancing, as you
+[27:15] already know. So, this is primarily
+[27:19] what we use within an API gateway. And
+[27:23] if I gather all these concepts again,
+[27:27] what comes in step one? The simple step
+[27:32] in the network is DNS. Okay, the user
+[27:37] entered Instagram.com, and DNS resolved
+[27:40] that, hey, where is Instagram's
+[27:43] endpoint and IP address? Okay?
+[27:46] Geo-routing was done that can directly
+[27:48] help reach the appropriate region. What
+[27:50] happened in step two? CDN, meaning now
+[27:53] the request reaches the CDN. The
+[27:57] request has reached your CDN. Where did
+[27:59] the user's request reach? The request
+[28:01] reached the CDN edge. Okay? Now it
+[28:04] checked if it's static content, meaning
+[28:06] cache hit or cache miss? Okay? After
+[28:10] that, if it is a cache miss, then the
+[28:12] particular step three is the dynamic
+[28:14] request. Okay? Where does it go? To the
+[28:19] reverse proxy. Reverse proxy. Okay?
+[28:23] Which you handle through a VPN or some
+[28:25] other means. Okay? After that, what is
+[28:28] finally step four? API gateway. API
+[28:31] gateway, so within this, various
+[28:33] services connect to that API, and the
+[28:35] API is what I have built using
+[28:37] different microservices, which
+[28:39] communicate through it so that, suppose
+[28:42] you want to use media services, you can
+[28:44] use those media services for that
+[28:46] particular thing. So this is your
+[28:50] complete diagram through which we
+[28:52] handle everything in your system design
+[28:55] . We will study further how this
+[28:58] relates, and finally, I will draw the
+[29:01] diagram one last time so you can
+[29:03] understand it better again. There's the
+[29:07] user, then DNS, domain, IP, okay,
+[29:11] that's done. After that, CDN, cache,
+[29:17] okay, CDN is done. Suppose now what
+[29:22] happened here, cache miss, it doesn't
+[29:24] have it. Then it goes to the reverse
+[29:27] proxy, through this, the server,
+[29:33] through which you will handle it. Then
+[29:36] this will connect to the API gateway.
+[29:42] And the API gateway has its own
+[29:44] features, like authentication, rate
+[29:46] limiting, and it provides different
+[29:47] services. And finally, when everything
+[29:52] is connected, if they need to use any
+[29:55] media service, or user services, or
+[29:58] feed services, they will use it, and
+[30:01] finally, if it needs to be cached, it
+[30:04] will be cached as well. It will also be
+[30:08] saved in the DB. So that is why this
+[30:10] complete picture comes into the market
+[30:12] to connect the network. This is how it
+[30:14] communicates properly throughout, and
+[30:16] it is useful within your data set. I
+[30:19] mean, sorry, within networking. That's
+[30:21] how it forwards the taxi. These are the
+[30:22] kinds of things that happen. So, all of
+[30:24] this is very basic. You might already
+[30:27] know this, but study it thoroughly. As
+[30:30] we move forward, I will gradually
+[30:32] increase the difficulty level of it.
+[30:35] Unless your basics are clear, you won't
+[30:37] understand the system properly. And now
+[30:41] , this is my PDF, in which I have
+[30:45] included networking, DNS, and after
+[30:49] that, CDN, with proper examples, with
+[30:54] diagrams, and everything I have
+[30:58] designed myself in a much better way.
+[31:03] And you won't find these notes anywhere
+[31:06] else but from me, which will clear up
+[31:08] everything. Related to this. Okay? Now
+[31:10] the question arises, how will you get
+[31:13] this PDF? Look, actually, it takes a
+[31:15] lot of hard work for me to create this
+[31:18] PDF. So, I have made it available for
+[31:20] you in two ways, you can get it through
+[31:23] these two ways. The first way is, if
+[31:26] you have taken my YouTube membership,
+[31:28] then all PDFs are absolutely free of
+[31:31] cost for you. Every PDF of my upcoming
+[31:34] videos will be free of cost for you. If
+[31:37] you haven't taken the membership, then
+[31:39] please join my YouTube membership. And
+[31:43] after that, even if you don't want to
+[31:45] join the membership, you can still go
+[31:47] to my website, click on the 'Notes'
+[31:49] icon there, and you can download this
+[31:51] PDF for a very minimal amount. Let me
+[31:55] show you my website once. Okay? This is
+[31:58] my website, aman ai l b. com, here you
+[32:02] have to go to notes. It is simple, more
+[32:08] PDFs will be added here, and suppose
+[32:10] you want to download this Generative AI
+[32:13] project interview questions and answers
+[32:16] PDF. If you are my YouTube member, then
+[32:19] a unique code will automatically reach
+[32:21] you. I have pasted that unique code in
+[32:24] the community membership section, enter
+[32:26] that unique code here, and your PDF
+[32:28] will simply be downloaded from here.
+[32:30] Okay? If you are not a member, then
+[32:34] simply click on ₹ 99 and you can
+[32:36] download all my PDFs for a very minimal
+[32:38] amount of ₹ 99. If you are a member,
+[32:41] then all the PDFs that come out will be
+[32:43] absolutely free of cost. There will be
+[32:45] no charge for that. So, this is how you
+[32:47] can download my PDF. Okay? I will put
+[32:50] the link in the description, including
+[32:52] my website link, and you can download
+[32:54] it from there. If you haven't taken the
+[32:57] membership, then join it because
+[32:58] members are going to benefit a lot in
+[33:00] the coming time. In fact, if they are
+[33:02] preparing for an interview, they can
+[33:04] contact me directly. I will also share
+[33:07] my WhatsApp number with them, and we
+[33:09] can connect one-on-one. Whenever you
+[33:12] need to take a session from me free of
+[33:14] cost. I am telling this to my members.
+[33:16] You can do that as well. So please, if
+[33:18] you haven't taken the membership, join
+[33:20] quickly as it is at a very minimum cost
+[33:22] ; I will add PDF video notes and a quiz
+[33:24] series for members, all of which will
+[33:27] be free of cost. Thank you so much.

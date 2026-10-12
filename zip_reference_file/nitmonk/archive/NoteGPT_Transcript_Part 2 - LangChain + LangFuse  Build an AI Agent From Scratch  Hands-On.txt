@@ -1,0 +1,191 @@
+00:00:00 - 00:01:04
+So hello everyone. So this is a part two of the video now in the video series where we are doing lang hands on to we are trying to cover like let's say lang shenan plus lang graph right hands on means every code will be written line by line with by me line by line explaining everything how the agents are getting created how the rack system are getting connected how tools are getting connected how you build the MCP with first starting with langen and then it will be Going to lang graph right the
+
+00:00:32 - 00:01:33
+major differences of the state management checkp pointers conditional edges those are difference that we have in lang chain and lang graph and lang graph is like kind of more powerful we have deep agents there also uh we where we do agent harness correct so in the previous video we covered all these setups so if you see the part one of this video then you'll get to know how to do this all uh UV setup and everything correct and project environment setup and This is the second part of the video where we'll try to
+
+00:01:03 - 00:02:15
+build the complete agents, connect the tools, uh call the TV, get the response, look at the traces, you know, traces. Now, if you go over here inside uh what do you call T blank fuse, then here we'll be able to see the tracing of all the calls that we'll do, right? We'll also utilize taby, we'll also utilize raas and dpware and we'll keep on working from ground up, right? So let's start right let's we'll try to kind of explain this is the previous build and the first part we did
+
+00:01:38 - 00:03:35
+right okay so let's do uv run python main py so main py so we are in already in agents folder uh is agents folder so there is a problem of open key so we are using load env Open. So we update it again. Clear right. Let's run it. You learn a lot. You will try to learn a lot. Now problem uh the problem is agent invoke what it's saying that invoke dicts messages is list correct or list you pass a role to malo user right or content the one system prompt that we already given correct and another one is let me
+
+00:02:50 - 00:04:23
+connect my pin tab so that explain right this is this is really important to have like mental model all all the time right so so this is an agent that we have already explained right is we have the system prompt and user prompt and or even skills right skills but this system prompt has to be set to make this LM right to a specific reasoning worker that is the reason we have the system prompt user prompt keep on changing or system prompt cast and once this cast you get like up to 80% of cost uh reduction or latency
+
+00:03:37 - 00:04:52
+problem gets solved your correct now coming back I cannot use pent over here because so I'll just try to like explain it because that is for chrome itself right content let's say ask key by general model system prompt is your help and answer all usual query so let me ask tell me the capital capital of United States and USA or let's Say call it India. Now let me uh tell me the capital of India. That is a very basic question. But this is how you pass a message user message as a rule is
+
+00:04:19 - 00:05:44
+user to agent response may we'll get the response. If this will hit correct now again we'll try to run it. Okay. Yes. So now we got the response. Yeah. We have the response. This complete response we got. But see data should come over here inside let's say we'll do 30 minutes to see the data is here or not traces or traces we have initialized from this langu handler we have added or this call back handler say we are just putting it inside this callbacks but there is a problem this get pass something like Yes. So you
+
+00:05:07 - 00:06:15
+do config uh and you pass a dict right and you define let's say callbacks correct and inside call backs you pass an array of this array you can pass other multiple things right now let's we are passing lang fuse handler and this is a call back handler as soon this will be no the data will be passed to the langu lang fuse handler a lang fuse handler will create the traces correct right so now let me run this and search it's a very basic search tool right to be once I remove it right and try to run it
+
+00:05:47 - 00:07:15
+then it will say there is a problem uh there is no description of the search tool right that is passed over here inside the agent let me clear it and run it Correct. There should be an answer. But the whole point is fail to export span badge 401 unauthorized. Let me refresh it. Correct. Response. And let me check credentials. Let me go to uh for example settings and API keys. Uh let me let's say delete it and let me create a new one. Okay. So you can easily come over here and create an API. It's totally
+
+00:06:32 - 00:07:56
+free. So lang lang graph uh complete tutorial complete video. So I'll get the API key. I'll copy it file and I'll go here. I'll paste it. Straightforward right. And then uh it's there to language handle. Correct. And it should be coming now. So configs config and then there is a call backs and then this agent response. Uh take care take care. Let me pass it again. Run it again. Now let me check lang fuse because see tracing is really really important. If you don't have this tracing right then
+
+00:07:16 - 00:08:53
+you won't be able to debug it properly. So So sorry langraph tell me the capital of India it it cost latency was 1 second and this is the cost right so let's remove the pen so this is the cost and this is the model that is getting called this is a chat model [cough and clears throat] that is replying the capital of India is New Delhi and that is we are getting the answer but this is answer is very kind of you know jitter it's not looking good so now we'll use a beauty of pentic if we did not have pyic then I have to
+
+00:08:16 - 00:09:29
+take this agent response you know process it and take those keys we don't need as well let's say we just need the answer exact answer that is coming here correct or the confidence for example so what I'll do I'll try to I'll try to first uh let's say uh import pyic base model pentic import base model correct I'll try to let's say create a class I'll create a class over here or let me call answer right is base model pass and here let's say I'll pass answer
+
+00:08:52 - 00:10:15
+string or let's say confidence how much confidence it is for the particular answer and this will be float correct and now as soon as this is generated right just pass it over here where here here you say response format uh response format is equal to answer that's it or as soon as it will meet this uh schema and these two value will be returned okay and Here we have to tell that we need a structured structured uh response structured spelling structured response. Okay. Right now let me try to print it run it again. Okay.
+
+00:09:34 - 00:10:56
+And as soon as we'll keep on running it right the same the capital of India is New Delhi. This is the beauty of parenting and that's that's how that's how if you look right if you if you check out my Python series correct then that's that's where fast API is much more better than what do you call uh flask right and the major difference these are these are the questions that been asked in the interviews or major important one is decorator second is pidentic right and third is a syninko
+
+00:10:17 - 00:11:33
+right and and these flask doesn't flask has uh let's say decorator maybe it doesn't have a syninko but it has a decorator but it doesn't have all these two and these tools are making fast API really great in terms of agentic world all over the aentic world fast API It tries to it used to do calculation outside the GI now even the let's say input output workload input output workload means API calls whatever we have learned in NodeJS event loop NodeJS event loop correct and that's how it's making derivative so if
+
+00:11:00 - 00:12:07
+you see the Python series right uh then you'll understand everything. So I think it's over here uh it's over here I I'll show you. So if you if you go to boot camp if you look at these all Python right whatever I'm writing you'll be able to easily get it. Okay. So I got the answer I got the confidence confidence. So now what we have is we have the agent running isn't it? Now we have the traces uh at the place. So look at the new traces. Correct. Yeah again there is a model there is a latency cost
+
+00:11:34 - 00:13:00
+and everything and answer and confidence is there in our response it's everything over over here correct now what we do we we try to use this table tool because this is a third party tool like let's say here is a table for example and say we we'll use this table to do research correct we used to call it to web correct tool This is this is all about the tool you you build you take an API you have now we have this llm isn't it we have this input uh what is the capital of India we have this output capital of India is New
+
+00:12:16 - 00:13:51
+Delhi we have this tool let's say search or web search with tabi now if this lm needs this agent needs to call this tool as many times it will call that that's how it becomes autonomous. If this is not calling as many times as it needs then this is not an agent. This is a workflow workflow that is like JP workflow define and it will be used again and again with the same flow that is a major difference to we now use what will happen question it will try to get the answer from the web search tool
+
+00:13:09 - 00:14:32
+right and we'll define it into the system. Here we'll take this we have already defined this description what it does basically correct and we'll pass this to search was doing nothing. It's like simple. This is search for a query. Just that's it. Table [clears throat] web search. The tool is now connected here. Tool is now connected here. And let's let's update uh let's update something. Let's try to ask something new. Uh uh tell me the GDP growth uh GDP GDP growth of
+
+00:13:50 - 00:15:14
+India in 2026. Right. GDP growth of India 26 question and what it should do be doing it should be calling the establish tool with this query answer and then answer there are there is basically two call happens with the LLM what happens is uh there is LLM right right and what we asking for uh GDP GP growth isn't it and uh for India in 2022 26 but this information this LLM doesn't have so it will try to call the web search tool tool call to this is the first call to this is the first call that is
+
+00:14:37 - 00:15:49
+happening as soon as this tool will get answer it will call back it will send back the response or is response it will generate the response for the user generate response for the user so this is one this is second and this could increase If LLM is not satisfied with the answer, right? Let's say it this tool is only returning the text not the answer, right? Then keep on calling. And this is where loop problem happens. Tool answer it can call 100 times till the context window doesn't get destroyed.
+
+00:15:16 - 00:17:01
+So hope you're getting the point. Now let me uh use it and let me try to call it. So I'm UV run uh Python main py we'll also look at the traces because this is how it becomes really important invalid API authoriz I think it's for right go to environment API correct let me go to uh Let's refresh it. Uh let me delete this one. Correct. Let me try [clears throat] to create a new one. And lang tutorial. Okay. And create a new one. I'll copy this. T is free. So you can just utilize at least 1,000 credits and
+
+00:16:17 - 00:17:28
+and build your lang project. Langraph project. So and then I'll clear it up and then again I'll run it. Okay. And we have to look at the traces as well information right so you are a helpful assistant answer all queries which system prompt we will try to ina is is in 2026 India's GDP growth is projected to be around 6.6% to 7.7%. I think 7.8% but at least it's getting the data from somewhere. Let's look at what the tis says to you'll go back uh let's me replace the page. Okay
+
+00:16:52 - 00:18:18
+you will see this is a tool call happened right. So it has started click on open on it langraph it to it took total 8 seconds this is a latency this is a complete latency of the agent right so there is a model call happened there is a model happened tell me about the GDP the question went to the model chat GP correct your help assistant it initiated the table web search we have to edit tool because I don't have this information and this tool has given us I think has given this information and from
+
+00:17:42 - 00:18:58
+these different sites this data went back to the LLM right search response and then went to the model and the model formatted it correct and model has given a response key this is a growth and this is a confidence score. Hope hope you understood uh how to build tools correct connect with the agent how to connect tra uh traces and how to look at the traces traces basics we we had this call back correct call back initialized we have already passed this uh API key or API key say we'll be able to use it
+
+00:18:20 - 00:19:39
+similar way you can you can build by yourself I I'll give this GitHub repo to you open you go to Open weather, right? Open weather, right? And you go over here, correct? You you get an API key from here. Correct? And from this API key, you could do the direct weather API the tool the same way I did it for websites. Similar way you can do it over here for weather similar way, similar way Gmail, similar way anything, any tool call you can do. Correct? Hope I I answered uh everything here in terms of tool calling
+
+00:18:59 - 00:20:14
+in terms of third party uses in terms of building the lang basic agent correct or traces uh so we have this uh or about say we have this models right models is basically straightforward I I'll show you it's straightforward I I'll try to I'll try to explain uh here because see models understand is really really critical temperature understand is really critical right I'll try to create another file let's say models py and inside what do we need is is first of all we need langen to lang
+
+00:19:40 - 00:21:15
+agent import agent uh right and there is this another import that we need is uh for the models so we directly connect right so I think lang fuse I Guess uh in I think chat model it's something like this chat models chat model chat models uh in it in it uh chat model right is chat model we can utilize to see I I I I'll give you the beauty of of of the temperature whatever theory have heard right and how this can f your system completely the temperature world right so So let me define a model correct the model we'll
+
+00:20:27 - 00:22:00
+do in it chat model right let's say model GP for mini here we can pass the temperature uh temperature so I'll start with let's say 0.1 okay and call let's try to use langu lang fuse so from langfuse uh lang call back handle and uh we initialize the lang fuse uh call back handler and uh I think once we'll try to know it then we can we'll be able to use it to temperature max token we also it's really important we have seen what max token so we'll start with 100 we'll start with 100 then there is
+
+00:21:14 - 00:22:38
+timeout maximum retries it's we'll see and then uh step by step so response let's say we'll do model invoke Or we'll ask uh I I like I like your uh beautiful eyes. Uh okay, beautiful eyes. It's metaphoric metaphor and uh [snorts] uh explanation marks and let me pass the config to config right and then we can we'll do the callbacks straightforward. Now see if you understand this very basic thing then you will be able to build bigger bigger codes because you have to put everything into
+
+00:21:58 - 00:23:25
+different files you have to create or design different methods right use external third party sources like API gateway lambda uh s3 bucket right uh agent agent core bedrock right and then keep on building on top of it okay and then and then uh we'll see we'll see we'll do print f right to f string and response from the model is response. Okay. And now let me go back here. Let me go back to models and let me run it. Okay. So this is UV uh run Python and this is models. py. Okay. Okay. So langfuse sorry lang not lang
+
+00:22:41 - 00:24:09
+fuse lang shell. Yeah they cannot remember everything just it's about opa open opa key. It doesn't have open key. So what do we have to do is to load it where from where from the environment from env lo envo. That's it. So we'll do it again and we'll run it. Correct. Again there is a problem but it says aa temperature. I think spelling is not correct. Temperature. Let me check the spelling of temperature. here. Okay. Clear it. Temperature is now 0.1. So, thank you. That's very kind to say uh while I don't
+
+00:23:28 - 00:24:44
+have physical eyes. Okay. And the token was 100. Uh and and also let me let's say apply let's say parentic so that the the responses comes clear. Correct. Or or it's okay. I think you can see you understood what it does and this is the answer that it gave. Correct. This is the complete answer. And if you see uh go to chat GPT tokenizer right over here, right? Let's see what it says. How many tokens are there? So it says 35 tokens are there. Now I'll I'll say 10. Okay. I'll say 10. Maximum
+
+00:24:05 - 00:25:28
+tokens 10. Then then see what will happen. Okay. Look at this. Look at the response. Look at the response. What happened? It's not even completing the response. So, see this is this is why it becomes really critical, right? It's it becomes really critical to know uh the input token, max input token, right? And max output token, right? and tell uh or model LMA. This is a system prompt and according to this you you have to do things in your system lm LMA with help of system prompt. Okay, this is how you
+
+00:24:51 - 00:25:54
+have to in this certain token you have to give the output otherwise they go system prompt s it has given only this much output it's not even completing it correct that is one problem so I'll go back to 100 now I'll change this one I'll make it to two let's see what happens or let's make it to one okay let's make the temperature to one so now you'll understand the you know the beauty of temperature you always say you once you do less temperature Then it become deterministic higher temperature
+
+00:25:23 - 00:26:26
+it becomes very proistic creative you'll see the actual meaning here thank you that's very kind to say how can I assist you today look at look at this content look at this content Even studying Chinese, Japanese and different type of languages. It is trying to be more more and more creative producing anything. So the probability is soft to max that has become like beyond one and speaking everything. So this is another set of problem that you should understand. Okay. Now let's move to the next one.
+
+00:26:09 - 00:27:22
+Message. Message I think I have already told. System message is enough to understand and model invoke I have already told you. Correct. You can run it by yourself. Now tools. tools I have already covered. Now tools I have already covered with with with main. py it's like this is how you u pick uh tools like let's say this is how you take the tool or tool as a function drop and as soon as this happens right as soon this happens right this table web becomes a closer right and it goes into the python
+
+00:26:56 - 00:27:58
+capture variable or captureable and let's try to answer it and this is the beauty of decorator so that's already told pyic I have already told search weather input I have already told so I think this is done let's talk about the sort of memory okay concepts Right. The sortter memory if if you try to understand the concept then we'll understand the actual coding. correct to sort of memory lives in the agent state and is scoped in a single conversation thread to malu there is a conversation
+
+00:27:27 - 00:28:58
+going on with an agent right these marks that I'm doing these are the user messages different messages right what what is happening there is an LLM And there is a tool connected with it. There is a rag connected with it. There is MCP connected with it. And MCP client and server or server are there are tools. So imagine this is a the same A is here here and try to connect it. Correct? So this one conversation this one single conversation that happens starts one user. This gets stored somewhere. What was the
+
+00:28:20 - 00:29:41
+user message? What was the model response? What was the tool called? What was the MCP response? What was the rag response retrieval? If there is all those data you can store in a dict, right? In terms of let's say inside dick you inside mutable dick you can have immutable strings like let's say status for example like let's say messages a mutable list correct all these different set of values you can put or values traverse conversation right this these all values create a new problem that is context problem there we
+
+00:29:02 - 00:30:11
+apply context engineering Correct. Ha. Context engineering, right? And there we we try to solve it with context pruning. Context pruning means do whatever messages that user message and then and then there is there is let's say there is this model response for each and everyone. Model response one. There is model response two. There is model response three. There is model response four. Right? Each and every conversation happen. This gets combined or this keep on increasing user can communicate it for one year
+
+00:29:36 - 00:30:40
+agency it can communicate isn't it just it will keep on increasing the overhead of these agent communication keep on increasing and that's why I do context pruning we take the user message we do the embedding right and we try to store it inside where database like pine cone for example I quadrant Right? If you if you watch my vector database video, I've explained what exactly are these uh that is very very informative and and lovely. So this is all about the short-term memory and and
+
+00:30:09 - 00:31:17
+once we keep on going to database, this becomes long-term memory, right? And there is this this one event type happen that happens episodic memory, right? There are different type of memories. The people have given multiple names but model there won't be any context there won't be any value supplies to another set of agents or a similar agent and when there won't be any context then there will be prop there is no point of having system prompt user prompt or even skills or even rag right because these are the
+
+00:30:44 - 00:32:08
+reasoning models so hope you understand now let's do the practical of short sort of memory let's do practical of sort of memory so so we'll try to use this checkp pointer uh in memory server and I'll try to create uh complete agent here right so let me create one more folder inside this uh let me call it memory uh uh memory and let me do uh sort term memory py okay right so first of all our basic thing I I'll keep on doing it so that you understand everything in your brain So
+
+00:31:26 - 00:32:45
+we need environment. So we have env import load envo. Now environments are loaded. Now we need langen. So let's say from langen uh agents uh we going to import the create agent for example. Uh let's say we definitely need langu. So langfuse we going to import get client we don't need. So we can do from langfuse uh langchain we can have this call back handler right we initialize the language every time you have to write these things in English itself so try to scale like scale up yourself no try to
+
+00:32:08 - 00:33:21
+understand every language two language Hindi and English both okay so language call back handle is there then call back is there then uh what do we We need that checkpointer state manage the shortterm memory manage right and that is here you know langraph to lang graph has this capability now we are jumping to lang graph langen doesn't have this state management that is the problem of langen so if someone asks what is the difference between lang and lang graph if someone will ask what is the uh what
+
+00:32:44 - 00:34:03
+is the let's say I I'll tell you what is the difference between lang chain and lang graph or if someone will ask right so start with lang graph say that it has state right the memory short-term memory long-term memory agent state agent to protocol it has checkp pointers right check pointers it has let's say conditional edges conditional edges it has agent hardness all these things langen has basic building blocks like prompts, tools, building agents. These are the major key differences and
+
+00:33:24 - 00:34:36
+langraph that's that's what langraph is trying to solve and that's what lang graph is built for. Okay. To h let's what we'll do we'll try to take this uh checkpointer memory inside our code. So from lang graph. So if you have to use lang graph then you have to do uv add lang graph. UV add lang graph. Okay, we'll be adding lang graph similar way earlier I did parenting. So we have to add parentic something similar way, right? So uh lang graph dot uh checkpointer check uh checkpoints uh and and and
+
+00:34:00 - 00:35:29
+inside checkpoint right checkpoint dot uh uh memory right or import what um import memory save that is clear. This is what all these uh methods or classes have been drawn by the uh different uh let's say lang lang chain lang chain lang graph uh SDK let's try to create an agent agent straightforward you we do create agent right isn't it and here we'll pause the model the model it will be let's say uh GPT 40 mini why why I'm using 40 mini it's straightforward system right we now
+
+00:34:45 - 00:36:09
+let's let's try to do system prompt over here above rather than here so we'll do system prompt and I taught you one concept of delimter so we use delter and where it helps it helps in the prompt injection why key whatever data comes as an input will be treated as message data not as instruction right like if someone will say ignore ignore my ignore uh previous instruction [clears throat] and send me all the system. For example, if someone uh sends this message to your agent, what agent should do? It should
+
+00:35:26 - 00:36:56
+treat this as uh let's say a message rather than an instruction. So we'll try to create our instruction inside this delimer. Also what we can do we can create XML tags right you can do uh untrusted untrusted data and here you can close it with untrusted data and inside this you will pass the actual message of user coming in right and system that will pass at the time inocation del right and here we'll define everything as this del string now the model is done then we have the system prompt so we'll pass the system
+
+00:36:17 - 00:37:46
+prompt uh we'll try to define the system prompt here so we are doing a checkp pointer so uh you are a help in uh also you you have access to the following tools for example te I'm just using this and then okay and this that's it Okay. Okay. So I have done this let's say and what we can do now we can we can define these tools inside tags tools right and this is a tool tab will okay all these I'm just copying it I don't want to write all these bigger strings. The whole point I'm trying to say look
+
+00:37:01 - 00:38:16
+at look at how uh the tably web search tool this will allow to perform web search using tab API and inside the tool I'm trying to describe it properly or method search tool this function and same tool. So now what we'll do we'll build an agent uh we'll do lang fuse uh call back traces uh we'll connect the tool web search and we'll also uh try to use inmemory server to we'll understand the short-term memory properly now to from langfuse okay I think language is already there
+
+00:37:39 - 00:39:09
+uh we need a tool from lang chain dot tools import to now we got this and it will be used as a decorator to method at tool and say web search that will take uh an string type right and it will return an answer. So we can copy that method from here that is working we'll copy this from here and we'll paste it over here to garbo indent. So now it's okay. Tablely client also we need. So load environment we have. So we just like uh from tably uh import tab client. Okay for we need to initialize this table client. So
+
+00:38:23 - 00:39:43
+we'll do here uh we'll do tably client this table client. It's got environment here. Right. System prompt is there. Now we'll pass tools table web search and memory saver is a inmemory saver so that as soon as we keep on conversation right the data will be saved inside the memory right this is the agent and user message correct now this is the config right this will try to store make a thread but whatever thread I was designing you Remember you remember the trade right? Uh you remember this trade correct that
+
+00:39:07 - 00:40:44
+I was building this trade correct and uh there I was doing this okay and this is all the user messages and then there is a model response user message model response and then model response. So this would be also 1 2 3 so on right it could be stored inside a thread id right and these are the multiple memories that will be there in the thread ID clear okay we'll use a config now look at this this is the same config that we have used just now to pass what langfuse call handler right now what we are passing we
+
+00:39:59 - 00:41:18
+are passing let's a uh kind of a thread ID right we what we'll try to do uh we'll create a config or or what we can do now better is is now we can create a config dict and then just keep on passing the config there because they go danc here correct uh where here this is a dict that we have to pass isn't it so what we do we define a config here correct and we'll do something like this and uh there is one more what is this is uh configurable isn't it so configurable and here we are
+
+00:40:39 - 00:42:00
+passing this thread ID right I know session idal thread idl and this config will be passed inside this uh well inside the invocation isn't it so we'll do agent response for example and agent dot invoke of what you want to ask uh and and then that that you can define let's say inside messages uh or ECMA you will have an uh mutable list and then you'll pass the rule correct and let's say again I'm asking GDP growth correct and then and then I'll have to pass the config I'll just
+
+00:41:20 - 00:42:53
+easily pass the config and then I'll do print f agent response as this but we we haven't passed yet the pent model answer base model answer. Okay. And this will be let's say passed over here. Create agent uh response format is answer. you know how beautiful it's becoming uh in terms of uh passing and then uh we'll invoke it and we'll get the answer. Okay. Similar way what you can do is uh is is you can pass poss and try to like invoke it uh and get the data from posgress. Okay. This is the
+
+00:42:20 - 00:44:00
+middleware that we just we'll cover we'll cover it sometime. So let me run this and see if there is any error coming in and we'll solve it together. So let me go to memory right and let me uh do uv run python now sort the memory right no model name lang graph checkpoint let me check the spelling uh lang graph okay I think I I missed one g no I didn't miss a g what is this uh okay from Lang graph insert in memory server create agent I unknown argument memory ser let me check what is argument there oh sorry
+
+00:43:12 - 00:44:33
+it's it's check pointer sorry so uh it should be checkp pointer so where is the checkp pointer here checkp pointer uh Yeah, syntax. But at least you can know keep on practicing and then you'll finally remembering it. But you don't have to memorize all this. What you can do is you keep on you know keep on kind of uh understanding the concept but that you will understand once you know all this isn't it? So it ran and let me check all these. First of all, let me go to the tracing.
+
+00:43:59 - 00:45:50
+I have meeting in 3 minutes. So I'll do it later. But I'll show you the langraph one. I think we have got this India growth. I think this is the one. Let me check. Let me refresh once more. I think this is the one. No, this is the one. Uh 34 and 39. I think this is the one. Yes. So, let me ask another question. Tell me uh tell me uh tell me where the prime minister of India now today is 2nd September 2nd September 2026. Okay. India is today. Now let me run it. Okay. [clears throat] So second is session department summit
+
+00:45:06 - 00:46:17
+of somewhere ministry of julaki. I don't know means this is correct or not but hope the hope it it will be correct but because because the answer is coming from tabi you know lm is not getting getting the answer. It's coming from Tavi. But this is the whole point. This is how you you solve it. Uh you solve it at a uh bigger uh stage. You know 39 language. Did did we added language or not? Huh? Config to add language handler. Language handler. Huh? We added. Yes. Yes, we added it. So yes, I think this
+
+00:45:41 - 00:46:24
+here. Uh let me check. Tell me this is correct. the model tool table then there then there then there now we have to check where this uh checkpo pointer is so let's let's try to cover it on next meeting next video I hope you like it make sure comment and subscribe thank

@@ -1,0 +1,597 @@
+# URL Shortener — System Design
+
+## 1. Requirements Clarification
+
+### Functional Requirements
+
+- Create a short URL from a long URL.
+- Redirect a short URL to the original long URL.
+- Support custom aliases.
+- Support URL expiration.
+- Track click count and analytics.
+- Allow users to delete or disable URLs.
+
+### Non-Functional Requirements
+
+- Support 100M DAU.
+- Support 1,000 URL creations/sec.
+- Support 100,000 redirects/sec.
+- Maintain a 100:1 read/write ratio.
+- 99.99% availability.
+- P99 redirect latency < 10ms.
+- Short code must be exactly 7 characters.
+- Short codes must be unique and unpredictable.
+- System should scale up to 1B users.
+
+---
+
+## 2. Capacity Estimation
+
+### Writes
+
+- 1,000 URL creations/sec.
+- URLs/day = 1,000 × 86,400 = 86.4M.
+- URLs/year ≈ 31.5B.
+- URLs in 5 years ≈ 158B.
+
+### Reads
+
+- 100,000 redirects/sec.
+- Redirects/day = 100,000 × 86,400 = 8.64B.
+- System is highly read-heavy, so caching is critical.
+
+### Storage
+
+- Approximately 158B URL mappings in 5 years.
+- Assume approximately 500 bytes per mapping.
+- 158B × 500 bytes ≈ 79TB raw storage.
+- Additional capacity is required for replication, indexes, metadata, and backups.
+
+### Short Code Space
+
+- Base62 uses 62 characters: a-z, A-Z, 0-9.
+- 7 characters provide 62⁷ ≈ 3.5 trillion combinations.
+- This is sufficient for approximately 158B URLs.
+
+---
+
+## 3. High-Level Architecture
+
+[ARCHITECTURE DIAGRAM]
+
+---
+
+## 4. Core Component Design
+
+### API Gateway
+
+- Entry point for client requests.
+- Routes create URL requests to URL Service.
+- Routes redirect requests to Redirect Service.
+- Handles authentication and rate limiting.
+- Multiple instances provide high availability.
+
+### URL Service
+
+- Handles URL creation.
+- Validates the long URL.
+- Validates expiration time.
+- Validates custom aliases.
+- Generates a unique short code.
+- Stores the URL mapping in the NoSQL database.
+- Writes the mapping to Redis.
+- Returns the short URL.
+
+### Redirect Service
+
+- Receives requests containing the short code.
+- Checks Redis first.
+- If Redis has the mapping, returns the original URL.
+- If Redis misses, reads from the NoSQL database.
+- Stores the database result in Redis.
+- Checks URL expiration.
+- Returns HTTP 302 redirect.
+- Publishes click events asynchronously to Kafka.
+
+### Short Code Generation
+
+- Generate a unique distributed ID.
+- Scramble the ID.
+- Encode the ID using Base62.
+- Produce exactly 7 characters.
+- Distributed ID provides uniqueness.
+- Scrambling makes the code less predictable.
+- Base62 provides compact representation.
+
+### Custom Alias
+
+- User can optionally provide a custom alias.
+- Alias must be globally unique.
+- Strong consistency is required for alias creation.
+- Database conditional write is used to enforce uniqueness.
+- If the alias already exists, return 409 Conflict.
+- Redis is not the source of truth for uniqueness.
+
+### Redis
+
+- Acts as the caching layer.
+- Stores short_code → long_url.
+- Redirect Service checks Redis before the database.
+- Uses cache-aside strategy.
+- On cache miss, data is fetched from the database and added to Redis.
+- Redis TTL can match URL expiration.
+- Negative caching can be used for invalid short codes.
+- Redis Cluster provides horizontal scaling.
+- Redis replicas provide failover.
+
+### NoSQL Database
+
+- Distributed NoSQL database.
+- Acts as the source of truth.
+- short_code is the primary key.
+- Data is partitioned using short_code.
+- Data is replicated across availability zones.
+- Replicas provide high availability.
+- Database is mainly accessed during URL creation and cache misses.
+
+### Kafka
+
+- Redirect Service publishes click events to Kafka.
+- Kafka decouples analytics from the redirect path.
+- Click processing is asynchronous.
+- Kafka partitions allow horizontal scaling.
+- Events can be retained and replayed if analytics processing fails.
+
+### Analytics
+
+- Kafka → Analytics Workers → Analytics DB.
+- Analytics Workers consume and process click events.
+- Store click counts and other analytics.
+- Analytics can be eventually consistent.
+- Analytics processing does not block redirects.
+
+---
+
+## 5. Data Model & Storage
+
+### URL Mapping
+
+short_code → Primary Key
+long_url → Original URL
+user_id → URL Owner
+created_at → Creation Time
+expires_at → Expiration Time
+status → ACTIVE / EXPIRED / DISABLED
+
+### Click Event
+
+short_code → URL Identifier
+timestamp → Click Time
+country → User Location
+device → Device Type
+browser → Browser
+referrer → Traffic Source
+
+### Storage Strategy
+
+- URL mappings → Distributed NoSQL Database.
+- Frequently accessed mappings → Redis.
+- Click events → Kafka.
+- Processed analytics → Analytics Database.
+
+### Database Partitioning
+
+- Partition using hash(short_code).
+- Distribute URL mappings across multiple partitions.
+- Prevent a single database node from becoming a bottleneck.
+- Add partitions as the system grows.
+
+### Database Replication
+
+- Maintain multiple database replicas.
+- Distribute replicas across availability zones.
+- If one node fails, another replica can serve requests.
+- Replicate critical data across regions for disaster recovery.
+
+---
+
+## 6. API Design
+
+### Create URL
+
+POST /api/v1/urls
+
+Request:
+- long_url
+- custom_alias (optional)
+- expires_at (optional)
+
+Response:
+- short_code
+- short_url
+- expires_at
+
+### Redirect
+
+GET /{short_code}
+
+Response:
+- 302 Found
+- Location: original_url
+
+### Analytics
+
+GET /api/v1/urls/{short_code}/stats
+
+Returns:
+- click_count
+- country statistics
+- device statistics
+- browser statistics
+- referrer statistics
+
+### Delete URL
+
+DELETE /api/v1/urls/{short_code}
+
+- Marks the URL as DISABLED.
+- Removes or invalidates the Redis entry.
+
+---
+
+## 7. Scalability & Performance
+
+### Application Scaling
+
+- URL Service and Redirect Service are stateless.
+- Run multiple instances behind a load balancer.
+- Scale horizontally by adding more instances.
+- Health checks remove unhealthy instances from traffic.
+
+### Database Scaling
+
+- Partition data using hash(short_code).
+- Add database partitions as data grows.
+- Replicate data across multiple availability zones.
+- Use replicas for high availability.
+
+### Cache Scaling
+
+- Use Redis Cluster.
+- Distribute keys across multiple Redis nodes.
+- Use Redis replicas.
+- Enable automatic failover.
+- Add Redis nodes as traffic increases.
+
+### Hot URLs
+
+- Some URLs may receive extremely high traffic.
+- Use CDN and Redis for frequently accessed URLs.
+- CDN can cache suitable redirect responses.
+- Prevent hot URLs from overwhelming the backend.
+
+### URL Creation Path
+
+Client → API Gateway → URL Service → NoSQL Database → Redis
+
+### Redirect Read Path
+
+Client → API Gateway → Redirect Service → Redis → 302
+
+### Cache Miss Path
+
+Client → API Gateway → Redirect Service → Redis → Cache Miss → NoSQL Database → Redis → 302
+
+### Analytics Path
+
+Redirect Service → Kafka → Analytics Workers → Analytics DB
+
+- Analytics processing is asynchronous.
+- Redirect response does not wait for analytics processing.
+- Analytics can scale independently.
+
+### Redis Failure Path
+
+Redirect Service → NoSQL Database → 302
+
+- Redis is only a cache.
+- Redis failure does not cause permanent URL data loss.
+
+### Multi-Region
+
+- Deploy application services across multiple regions.
+- Route users to the nearest healthy region.
+- Replicate critical data across regions.
+- Use automated regional failover.
+- Maintain backups for disaster recovery.
+- Use a consistent authority for operations requiring global uniqueness.
+
+### Scaling to 1B Users
+
+- Add application instances.
+- Add Redis nodes.
+- Add database partitions.
+- Add database replicas.
+- Add Kafka partitions.
+- Add analytics workers.
+- Increase CDN capacity.
+- Add additional regions.
+
+### Latency
+
+- Target P99 latency < 10ms.
+- Critical path:
+
+Client → API Gateway → Redirect Service → Redis → 302
+
+- Database should normally not be involved in the redirect path.
+- Kafka and Analytics DB are not part of the redirect critical path.
+
+---
+
+## 8. Monitoring & Reliability
+
+### Application Metrics
+
+- Request rate.
+- Error rate.
+- P50 latency.
+- P95 latency.
+- P99 latency.
+- CPU usage.
+- Memory usage.
+- Instance health.
+
+### Redis Metrics
+
+- Cache hit ratio.
+- Cache miss ratio.
+- Memory usage.
+- Evictions.
+- Redis latency.
+- Node health.
+- Replication status.
+
+### Database Metrics
+
+- Read latency.
+- Write latency.
+- Error rate.
+- Storage utilization.
+- Replication lag.
+- Partition health.
+- Hot partitions.
+
+### Kafka Metrics
+
+- Throughput.
+- Consumer lag.
+- Failed messages.
+- Partition health.
+- Broker health.
+- Replication status.
+
+### Reliability
+
+- Multiple application instances.
+- Multi-AZ deployment.
+- Load balancing.
+- Database replication.
+- Redis replication.
+- Redis automatic failover.
+- Health checks.
+- Automated failover.
+- Regular backups.
+- Disaster recovery.
+- Cross-region replication.
+
+### Failure Handling
+
+Redis failure:
+
+Redirect Service → NoSQL Database → 302
+
+Database node failure:
+
+Database Replica → Serve Request
+
+Kafka failure:
+
+- Redirect continues normally.
+- Redirect does not wait for analytics.
+- Kafka producer retries failed publishing.
+- Analytics catches up when Kafka becomes available.
+- Durable retry or outbox mechanism can be used when guaranteed event delivery is required.
+
+Application instance failure:
+
+- Load balancer detects the unhealthy instance.
+- Traffic is routed to healthy instances.
+
+Region failure:
+
+- Traffic is routed to another healthy region.
+- Data is recovered from cross-region replicas or backups.
+
+---
+
+## 9. Trade-offs & Alternatives Considered
+
+### Base62 vs Hashing
+
+Hashing:
+
+- Hash the long URL.
+- Truncate the hash to 7 characters.
+- Truncation can cause collisions.
+- Collision detection and retry are required.
+
+Base62 + Distributed ID:
+
+- Generate a unique numeric ID.
+- Scramble the ID.
+- Encode the ID using Base62.
+- Produces a fixed-length short code.
+- Avoids collision problems caused by truncated hashes.
+
+Decision:
+
+Distributed ID + Scrambling + Base62.
+
+### Sequential ID vs Scrambled ID
+
+Sequential ID:
+
+- Simple.
+- Fast.
+- Easy to implement.
+- Predictable.
+
+Scrambled ID:
+
+- Maintains uniqueness.
+- Makes codes difficult to predict.
+- Hides the underlying sequence.
+
+Decision:
+
+Scramble the distributed ID before Base62 encoding.
+
+### SQL vs NoSQL
+
+SQL:
+
+- Strong consistency.
+- Rich querying.
+- Good transaction support.
+- More difficult to horizontally scale at extreme scale.
+
+NoSQL:
+
+- High throughput.
+- Horizontal scalability.
+- Good for key-value lookups.
+- Suitable for very large URL mappings.
+
+Decision:
+
+Distributed NoSQL database.
+
+### Redis vs Database Only
+
+Database Only:
+
+- Simpler architecture.
+- Every redirect reaches the database.
+- Higher database load.
+- Higher latency.
+
+Redis + Database:
+
+- Very fast reads.
+- Reduces database traffic.
+- Handles hot URLs better.
+- Helps achieve the P99 latency target.
+- Database remains the source of truth.
+
+Decision:
+
+Redis + NoSQL Database.
+
+### 301 vs 302
+
+301:
+
+- Permanent redirect.
+- Can be aggressively cached.
+- Reduces origin traffic.
+- Less control over future redirects.
+
+302:
+
+- Temporary redirect.
+- Better control over redirect behavior.
+- Easier to change the destination.
+- Keeps more control at the application layer.
+
+Decision:
+
+302 redirect.
+
+### Synchronous vs Asynchronous Analytics
+
+Synchronous:
+
+Redirect Service → Analytics → Response
+
+Problems:
+
+- Increases redirect latency.
+- Analytics failure can affect redirects.
+- Couples analytics with the critical path.
+
+Asynchronous:
+
+Redirect Service → Kafka → Analytics Workers → Analytics DB
+
+Advantages:
+
+- Low redirect latency.
+- Analytics can scale independently.
+- Analytics failures do not block redirects.
+- Supports eventual consistency.
+
+Decision:
+
+Kafka-based asynchronous analytics.
+
+### Strong vs Eventual Consistency
+
+Strong Consistency:
+
+- Custom alias uniqueness.
+- URL creation.
+- URL updates.
+- URL deletion or disable operations.
+
+Eventual Consistency:
+
+- Click counts.
+- Analytics.
+- Aggregated statistics.
+
+Decision:
+
+Use strong consistency for URL metadata and uniqueness.
+
+Use eventual consistency for analytics.
+
+---
+
+## Final Design
+
+- API Gateway handles routing, authentication, and rate limiting.
+- URL Service handles URL creation.
+- Redirect Service handles high-volume redirects.
+- Distributed ID + Scrambling + Base62 generates 7-character codes.
+- NoSQL database is the source of truth.
+- Redis provides low-latency URL lookups.
+- Kafka handles asynchronous click events.
+- Analytics Workers process click events.
+- Analytics DB stores aggregated analytics.
+- Database and Redis use replication and failover.
+- Stateless services scale horizontally.
+- CDN handles extremely hot URLs.
+- Multi-AZ and multi-region deployment provide high availability.
+
+Main redirect path:
+
+Client → API Gateway → Redirect Service → Redis → 302
+
+Cache miss:
+
+Client → API Gateway → Redirect Service → Redis → NoSQL DB → Redis → 302
+
+Analytics path:
+
+Redirect Service → Kafka → Analytics Workers → Analytics DB

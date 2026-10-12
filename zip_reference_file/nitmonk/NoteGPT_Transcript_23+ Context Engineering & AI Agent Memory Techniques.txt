@@ -1,0 +1,257 @@
+00:00:00 - 00:01:38
+So there there is this memory correct. So I I'll divide into two parts. You'll always remember it. So there is shortlived memory. Correct. And there is long lived memory. Long live memory. Now inside shortlived memory comes the working memory and the session memory. Right? Inside the long live memory two memory comes in. Semantic memory procedural memory right memory let's do something like this let's try to put first episodic memory episodic memory later gets collected as a procedure memory so you episodic memory
+
+00:00:49 - 00:01:58
+right and then there is a procedural memory right and then there is task or project memory or you could say user memory Or then comes let's say the environment memory. Environment memory again you have to take each and everyone example right so that you can understand it properly. Environment memory think about let's say coding agent and a cursor or claude correct they have what they have in the environment they have GitHub in the environment they have let's say Jira in the environment they
+
+00:01:24 - 00:03:08
+Hello everyone. So in this video we'll discuss about two major important problems or solution is contest engineering right and the second one is memory right memory is for the agent memory agent memory they go if you see how can an agent work for hours inside an finite agent recently GPT6 launch it can work for let's say 10 hours 12 hours for example and also we can do computer use there is a limit of let's say 1 million input token 1 million input token that can go inside the LLM or is 1 million token response the same
+
+00:02:19 - 00:03:45
+thing will be answered and basically the for the same question this LLM can answer if you put some some context or some value some question that will not be answered because LM is kind of stateless it doesn't matter you manage your state your application or your regent state so how do you solve this bigger problem working for hours know and that is where context engineering come We apply different set of techniques so that context engineering come makes a rule to solve this problem for working for hours.
+
+00:03:05 - 00:04:19
+There is one video I'm trying to make about agent harness I I'll try to publish it correct the finite window unbound unbounded task what the task accumulates observation tool results edit and history right this could go till infinity right and what the model can hold that is a fixed window correct you have lots of data tool data right tools has given some expected output Right? Or let's say input schema that you have given. Uh let's say that the the system prompt that you defined.
+
+00:03:42 - 00:04:50
+Let's say the user prompt that you defined. Let's say the skills that you have. Correct? Let's say the rag retrieval data that goes to the LLM. All these things coming inside the LM itself. The tool coming inside LM ragcom coming LM correct. the expected output coming output coming LM into LM input schemas coming into LM system prompt coming into LM all these makes the context bigger and bigger so with the help of context engineering we try to solve it okay so now first let's understand what is a context
+
+00:04:15 - 00:06:04
+window correct so the text that we pass prompts questions pros natural language reasoning the code and JSON JSON Whatever you pass or response tool name tools description tool input schema whatever goes to MCP client for example the client and MCP server connection right the server and their tools their prompts their uh let's say resource process prompts you to fix prompt right there is rag all this retrieval it's got let's say list set of chunk responses all these goes to this you know images also goes
+
+00:05:13 - 00:06:35
+to the context conversation goes to the context whatever response that you get and there is you're trying to communicate right the all these goes into The context. So user message then agent response. User again message. User one two agent response. User again send a message then again the agent gives a response. All these goes in terms of conversation inside the context. Isn't it? Tool result the tool responses goes to the context. instruction that we give the system developer agent rules
+
+00:05:54 - 00:07:18
+everything goes into the context. So this this is what called context window and this keeps getting bigger and bigger anatomy of a single model call. What exactly goes in a model call or there is an LLM right and there is an input and there is an output what exactly goes into the input every agent call like even A2A protocol may yeah normal single agent call what exactly this LLM needs to answer everything properly and B to behave like an agent right so the system instruction goes like that you pass inside the LLM The
+
+00:06:36 - 00:07:44
+developer and agent instruction goes definitely that you pass inside the LN. The tool definition that goes whatever tool you connect for every tool there is a name that you give description that you define there is an input schema that you give all goes to the LM the user request goes to the LM recent conversation that I just told you to think about this as an agent over here correct and let's divide in three parts. This is let's say context which is just we are talking about context there is a
+
+00:07:20 - 00:08:47
+state right and there is memory let's try to understand the difference between them context is what now we need right state is basically what current task is right memory is is basically the past physically imagine this is a disk correct you are sitting over here Right? And you are looking at some papers, some documents and you are keep on observing these documents to solve something right and here is your drawer right whenever you need you pick it one document and put it on the table or there is a let's say library table put
+
+00:08:05 - 00:09:14
+pick a book and put it over here just to understand something whatever you put on this desk imagine this as a context. Now, whatever you are trying to solve utilizing this context is a state. Whatever is in the let's say drawer that is a memory. You could say just in time memory. As soon as you need a document from this drawer or from the study table or from the library, you just pick it up, put it over here. That becomes your context, right? And that's come that that is called just in memory.
+
+00:08:41 - 00:09:53
+Just in memory just in time memory you can say right this is how agents connect. Now memory it becomes short-term memory and then it becomes long-term memory right it becomes episodic memory it becomes event based memory there are other set of memories that is available on the ways of condition this condition agent communicate state is all about what is the current task to manage context is what is on the disk that you have that you are seeing hope hope I am properly telling you so if you look at the
+
+00:09:17 - 00:10:24
+budgeting a real window. So you see instruction that instruction that you giving fixed never evicted because this has to pass every time that you have to keep in mind what can be pass every time what you can avoid passing and your technique. This becomes context engineering and there are lots of other techniques that get involved to solve it. Tool definition has to be passed you know scope down to the tool and this uh step can call means which tool exactly we need to call if there are 100 tools right there we apply
+
+00:09:51 - 00:10:54
+let's say progressive discovery progressive discovery we will cover it and I have already covered it in MCP video okay you can watch it there too right conversation that the discussion that I just had all the user messages and model responses has to go to the model, right? The retrieve data that is where where things are coming from rag that has to go to the model tool result whatever tool will respond has to go to the model hand headroom like reserve for reasoning and plus output that is the
+
+00:10:22 - 00:11:42
+headroom that over here. So this is how the budget of a real uh uh budgeting of a real window or context window looks like. Like you have to have all these properly managed to make better agents that can run for longer hours. Basically you can harness the agent properly like you like people do in in India. There is a first geothermal harnessing is happening. Geothermal harnessing the first time in in in India and that is to produce electricity for example that is they are doing the harnessing of the thermal energy where
+
+00:11:02 - 00:12:10
+harness agent to run longer hours and utilize all its capability and power to your context window. Now let's move on to context RAM. Why RAM is basically what happens in RAM? You have a laptop. So movie so movie doesn't sit in RAM, right? Once you start playing, then it comes into the RAM. Otherwise, it sits inside SSD. If you are running a code, right, the code doesn't sit into the RAM. Once you start executing the code, then it comes to the RAM. It's similar way that is a context and memory is a
+
+00:11:36 - 00:12:59
+disk, SSD, hard disk. That's what I'm trying to explain over here. So if you see L CPU right uh the LLM does the reasoning the central processing unit does the reasoning this is the LLM hope hope you are getting the point correct there is a RAM that is a context RAM that is context if you can connect this dot right then you will remember everything every time disk is external memory disk is external memory Right. Then there is operating system that agent harness that does everything. This is this all component sits under
+
+00:12:18 - 00:13:22
+operating system with operating system. Operating system decide when to use this uh RAM when to use this disk and and that is agent hardness when to show something on the window. Okay. Agent hardness example. Then there is a file system that is memory store SQL vectors etc. database and CPU cache is there whatever has been retrieved correct so now from now on you whenever someone talks about context think about the RAM what is in the memory to use to get utilized by the agent right and then I've already told
+
+00:12:49 - 00:14:04
+the difference between this again so there is agent right and there is context correct that is on the disk there is let's say uh memory right and there is let's say what do you call State a state is what the task you have. I keep on repeating things so that you can like in one video you can remember everything and got get the concept. Memory is what is under the draw you know draw and this is basically the past context is what is on the desk that we can utilize to solve a problem. Right? That
+
+00:13:28 - 00:14:30
+is what I'm trying to say over here. What the model can see right now what I can see on the desk right now. you know state what is happening what what after seeing all these document what I'm trying to solve that is a state memory is what I can recall later correct so these three three things are really important and it will be used everywhere if in terms of building an enterprise agent or any agent let's talk about what context engineering is the same way we had this prompt engineering correct where we um
+
+00:13:59 - 00:15:16
+apply multiple techniques like let's say we write system prompt we write user prompt we do let's say uh XML code XML tags or coding right inside the tech we try to apply delimters right we we do all lots of stuff in prompt engineering right to make sure the prompts work properly now and and prompt engineering give birth to skills correct similar way if you look at con context engineering what should the model see at every single step of longunning agent whatever goes to the LM as an input the
+
+00:14:40 - 00:15:51
+same output it will produce it will not consider what he has done previously that is the stateless method of this agent or or the LM sorry right it doesn't know what what you just asked previously you have to store it on your own it's just a reasoning model that can take an input and produce an output Correct. Hope they can provide something in the future so that we don't have to manage all these session and the context outside LLM means this LLM can manage the state means once they like this get
+
+00:15:14 - 00:16:42
+deployed to their GPU and for every user they manage a name space correct and for all this name space this user get all the data and then once all the context of the user sits with the LLM right with the LLM then they the beauty will change like the they can apply this KV cache with the context that is already stored and it's closer to LM so context engineering is a discipline of design selecting right it's like the first one is designing okay designing the second one is selecting it's it's all about context
+
+00:16:01 - 00:17:28
+so if I say designing It means designing context designing selecting. Selecting context correct. Retrieving retrieving context. Compressing context. Context. Compress. Compressing context. Then there is budgeting context. Budgeting context. And there is this ordering context. Order is also matter in terms of context. Each and every design, selecting, retrieving, compressing, budgeting, order context. Correct. Right. If you see construction is assemble the window. It's like take all the system prompt or user prompt or
+
+00:16:49 - 00:18:04
+tool definition name description input schema. MCP tools description name schema to take the rack cative data. You take all the confidence that has happened and from there how you will select it decide which relevant option you can select like after there there is a bigger system prompt there is a bigger cont with user conversation and and and everything. So you can you can pe pick a conversation like let's say this one and you can compress it right and this compression makes it let's say one summary and then again you
+
+00:17:26 - 00:18:47
+have three retrieval from the rag from the rag that becomes another one. There is ordering of the context scheme in which order in which order you put the context so that models can utilize it the LMS can utilize it right position matters model attained unevenly across a long window budgeting budgeting why budgeting really makes important in all the LM context is about the token uses right so you think about a car right car runs on the on the patrol right without patrol this is Nothing without diesel
+
+00:18:15 - 00:19:35
+this is nothing that is exactly the token uses budgeting you have to budget the complete agent system correct there is pruning like what what exactly you need you just need those context you discard other context correct right you you need isolation like there are multiple agents in terms of privacy RBAC privacy RBA ACL everywhere you need this isolation in the terms of context that is isolation give agent their own scope windows so context doesn't bleed together with multiple agent to agent
+
+00:18:54 - 00:20:10
+protocol there is agent one and there is agent two agent two so you already know that this agent has let's say memory this agent has state and this agent has context isn't it similar way this agent will have memory Right? This agent have a state. This agent will have context. How you'll make sure the context of this agent and this agent doesn't get collared. Right? And that's that's where you you you to try to do isolation refresh and just in time I just told you that is under your context. Whatever
+
+00:19:34 - 00:20:57
+paper that you're trying put over here trying to read it that is your context isn't it? Whatever you are pulling out from the drawer right out from the drawer that is an memory and as soon as you pull that is called just in time memory and that becomes in context. So problem like code for example and and let's say cursor for example they apply all these techniques to make themsel better to utilize less number of tools. Okay, refresh is basically periodically reconstruct the window itself after appending means like
+
+00:20:16 - 00:21:34
+changing the context window and appending new part. If you talk about what what all anottomy has about agent contest system prompt that is always present. You have to have sending system prompt to the without you have to have agent instruction. You have to have agent instruction. You have to have user requests. You have to have current plan. You have to have task stated that is under state right. You have to have uh recent conversations that is windowed to this is a lifetime when do we need right
+
+00:20:55 - 00:22:18
+and and the band. So context if I have to define context engineering right. So what do I need? what do I need and when do I need when do I need right this is like let's say it's about time and it's about data so this is the combination of both context engineering what do I need and when do I need and what what means what what list of prompts what list of conversation what list of tool output what list of tool input what what list of instructions I can And what time mean from from the memory
+
+00:21:41 - 00:22:51
+when do I have to take it that is context engineering. This is a very basic understanding that you should have about context engineering. What do I need? When do I need it? system all the time that you should be in the context right there should be system prompt there should be user prompt all these three has to have into the context of model so that it can work current plan current plan is a state that is in the state task also is in the Recent conversation we can do window right we can put in the context window
+
+00:22:27 - 00:23:53
+whenever we need it we can pull it off and applying relative memories important in terms of solving a problem with agents. definition because if you want to understand MCP progressive discovery or I have already told you about MCP client in the video so there is MCP client and there is MCP server MCP server or is there is let's say LLM and wherever the LLM is there is sits MCP host okay to this is how the the the three things are connected. So host say data goes to client. Client uh gives a
+
+00:23:29 - 00:24:42
+request to MCP server. MCP server communicates with their three primitives. T for tools, P for prompts or R for resources. Okay. It goes something like this to the back from here and then from here and then from here. This is how this is what it makes it uh let's say USBC. Okay. Reason you can you can add another set of tools here. You don't have to neither change LLM, MCPOS nor MCP client. You just have to update this MCP server. You can add another let's say set of prompts here. You can add another
+
+00:24:06 - 00:25:34
+set of retrievers over here. You don't have to change anything. So tool. So what happens is let's say here you tools for a very bigger organization. when query so do do will you put all the 1000 data or name and description and then input schema inside MCP client no you never do that you try to figure out the progressive discovery progressive discovery tools name whatever description it has whatever input schema it has hybrid search whatever ever we have read in the rag you apply hybrid search you apply BM25
+
+00:24:52 - 00:26:01
+on what on the tools name and description and then you build a meta tool correct our meta tool which meta tool right you use let's say there is a search execute and result for example three meta tools you create and these meta tools utilize MCP client and server uh framework or protocol and then uh just get that tool that is required to solve this query straightforward. So tool definition is also scope that is already needed and recent tools result is all the time necessary. Environment info is also
+
+00:25:26 - 00:26:42
+necessary when when you need it. So hope I I told you this. Now let's talk about context grows and then it rots. Explain how the context size goes bigger and bigger and how the effectiveness goes lower and lower. That's it you know. So the sixth way the window is deca is overload simply too much information model. So if there is 1 million tokens right that LLM can take if you you'll try to send it more then it will not accept it and with 1 million it will not able to answer everything
+
+00:26:04 - 00:27:30
+and the another problem will start like the token usage uh usage goes bigger and bigger correct then dilution the one crucial line is buried amongst thousands of irrelevant ones right means main query That's dilution. And the the whiskey goes lower and water goes higher. So this get diluted. That's the whole point. You know degradation rotting effective performance drops as window gets noisy and with long red obvious degradation redundancy context the same fact repeated dozens of times across accumulated terms tool result
+
+00:26:57 - 00:28:05
+explosion whatever I was telling you about progressive discovery progressive discovery of those tools through the meta tool okay if we don't have that then there is a 4,000 lines of responses come from a tool tool and then goes back to the context window and then uh the problem starts to happen. Stale context right information what what what was true the file that was since changed these kind of thing that is uh like uh creates a problem solution seven step to keep the context window healthy the first is the sliding
+
+00:27:30 - 00:28:40
+window right it's keep only the most recent interaction let the older one fall off the end if someone will ask you in the interview the first one first answer should be the sliding window Right. And there I think Google or Microsoft has published a paper about LLM sliding window. LM sliding window. I'll quickly explain the problem. So what happens in transformer right when once these input goes in they do a tension mechanism and then produce output. Isn't it? But what happens exactly here that even they write a
+
+00:28:05 - 00:29:36
+single sentence like the cat was thirsty. The cat was thirsty so it drank milk. Correct. The problem is even if the is generated to generate cat he the model needs the even the cat the cat means these two words are generated to generate was it need the cat. So now what happens is you first need the if you need the cat you need the cat was and all these goes into the memory of the KBS okay it cannot remove this and generate was so problem transformer that they trying to solve with sliding window
+
+00:28:51 - 00:30:05
+research paper I haven't read completely yet the sliding window is a very good concept basically you know cheap and predictable But it forgets anything old even it matter right in practice you don't window by turn count you window by token budget token budget sliding window you start picking like let's say this let's say pick two you put I= to let's say one or J equal to let's say two right I keep on increasing I ++ and J++ and this is how you keep on moving the window here in this side And that window
+
+00:29:30 - 00:30:57
+remains in the context. That is a sliding window all about concept bluntly drop old information to fit the budget. Simple but dangerous information important information right summarization. You already know that 20 long history and then there is a compaction. Compaction is a the the very good technique that been used by cloud code compact claude code you if you use cloud code then you see compacting and that is this is what compacting it does there more than a summary extract the important state and
+
+00:30:14 - 00:31:41
+re important context right so important what it says that it says that important state extract the important state extract the important state and rebuild rebuild a smaller context context. This doesn't happen in the compression. So what is the difference between compression and compaction? But this is a major difference and reveal context without losing the state without losing the core information of the message. But compression compression change rather than paraphrasing the transcript. Fire
+
+00:31:02 - 00:32:19
+it on higher watermark. Keep the till alive verbatim and replace the middle with a structure node. And this is how the compactings are are being done. Then there is a structure nodes. A structure node there is a concept like instead of pros keep a compact machine updable record. This is comp most durable form. Correct. Retrieval don't need information hot at all. Store it and fetch it only back when a step needs it. Just in time basically right just in time need info retrieve inject or reason
+
+00:31:48 - 00:33:09
+if I I have to explain it just in time just in time I already explained but the whole point is memory right and this should be in the context. So that should be in the context but other memories will be living below for example and let's call it archival memory archival memory okay these are the memory these are the let's say context right whenever I need it I can pick it up and put it over here so whenever we need If let's say we don't need this now then it can go over here and this will be removed and that is
+
+00:32:37 - 00:34:21
+just in time or memory now that's why cursor or cloud code is becoming bigger and bigger they are inventing all these kind of technologies so that you you can utilize it properly context retrieval similar way to in wherever in in terms of AI gening there is retrieval happens is drag there it will is happened with context there it will happens with MCP server MCP client and MCP server here we have already understood in theor here happens hybrid search BM2 semantic search okay lexical search ranking
+
+00:33:31 - 00:35:10
+Similar way context keyword search keyword search BM25 right semantic semantic hybrid hybrid metadata filtering also I forgot one metadata the most important one meta filtering here also meta filtering happens and in terms of MCP progressive discovery Progressive discovery progressive discovery basically we apply all these hybrid search vegan 25 semantic search lexical search this reanking chise this what you call metadata filtering concept we can apply over here to retrieval. So now if you talk about
+
+00:34:23 - 00:35:43
+there is in in terms of rag input comes in the in terms of rag you can apply 1 to six in terms of context engineering you can apply 1 to six 1 to 6 in terms of MCP server client protocol you can apply progressive discovery 1 to6 so all these are there correct hope I'm able to tell you all this what happening why to passes vectors I'll share this document with uh what do you call into uh the WhatsApp community so just we finished like we just understood about context engineering it's all about
+
+00:35:04 - 00:37:06
+what do we need when do we need it and is no concept like what do we need and when do we need it what do we need and when do we need it when do we need it major logic right if we quickly revise it right so there is an agent right and there is this uh let's say context and there is this tool memory and there is this state correct state job state that is the current task Okay. Memory that is the past context that is now right. Whatever is in the context that is on the table that is in the context
+
+00:36:07 - 00:37:21
+memory that comes out that is the memory but you apply just in time and you get the memory state whatever you do whatever you solve solve a problem or a task looking at all these document is a state correct or there are all these These techniques they are all these techniques you know the construction of the context how you construct the context you know there is a selection of the context there is a budgeting of the context budget when comes into picture when token comes into picture correct there
+
+00:36:45 - 00:37:52
+is isolation of the context isolation when comes into the picture when multiple agent comes into the picture just in time just I told you just in time memory there is a refresh of the context There is context pruning. Right? There is ordering of the context. There is retrieval of the context from the rack. So this is what we have covered in the complete context engineering video. Right? Hope you like it and I'm able to explain what exactly context engineering. Now let's try dive into uh agent memory. Okay. So context
+
+00:37:21 - 00:38:51
+is active memory is retained. So this again agent and now let's talk about again two things you know context and uh memory and uh state set is what the current task is memory is what past context is what now the present okay everything so far left inside a single step but the rear agent needs to carry thing across step session and event days session steps and even days. So that is what sit in in the memory. Memory is a layer beneath the window. You know just beneath the window that's just the past just in time you know just
+
+00:38:07 - 00:39:17
+take it whatever you need it from the memory. Correct. The question is basically the question is what should survive this session and storage write down and durability retrieval find it again whenever there is a need context load into the save window and give it to the is the whole point of the context engineering and agent memory what are the types different types of agent memory that is available manage parts what is the first is the working memory second the shortterm memory Third is a long-term memory. A
+
+00:38:43 - 00:40:05
+long-term memory has also three parts and there is a domain specific memory that also has three parts that we will see different memories in terms of agentic system. Then we'll we'll try to learn each one of them. Okay. So there is a working memory to the the active task. Okay. The current observation plan and latest result right we read into context and there is this input coming in that has to be there. Correct. And then and then let's say there is a tool call happening. Tool call happening. Right.
+
+00:39:44 - 00:41:13
+Tool call. The tool call name or description or input schema may or may not have may or may not have you know means there is there is states getting managed everywhere. This get managed state memory. or or let's try to understand in a different way al together right so there is this memory correct so I'll I'll divide into two parts you'll always remember it so there is shortlived memory correct and there is long lived memory long live memory now inside shortlived memory comes the
+
+00:40:36 - 00:42:27
+working memory and the session memory right inside the long live memory two memory comes in semantic memory procedural memory right is episodic memory which let's do something like this let's try to put first episodic memory episodic memory later gets collected as a procedure memory. So you episodic memory, right? And then there is a procedure memory, right? And then there is task or project memory or you could say user memory or then comes let's say the environment memory. Environment memory you have to take each
+
+00:41:36 - 00:42:38
+and every one example right so that you can understand it properly environment memory think about let's say coding agent and a cursor or claude correct they have what they have in the environment they have GitHub in the environment they have let's say Jira in the environment they are connected with AWS tools in the environment they have all these code written in the environment right they have cog grace in the environment Correct. They have this let's say UV package manager in the environment,
+
+00:42:07 - 00:43:26
+right? They have this PIP installed in the environment. They have this npm in the environment. That is the environment memory. Correct? And agent that is getting stored user memory user it does it code in NexJS most of the time. So let's say with cursor if you have generated five different apps or with cloud you generated five different apps and you told it that please generate nextjs for example or let's say for orchestration of agent you selected let's say for example crewi crew or or let's say always take lang or
+
+00:42:46 - 00:43:58
+langra that becomes a user memory right then there is this task and project memory in project like what this project contain itself like uh which kind of database it has right does it use AWS right does it use uh does it use uh let's say fire store does it use GCP which kind of coding language it's utilizing what kind of cloud MD file it has that comes under the project memory and the task memory then there is a procedure memory procedure memory is basically what exactly list of things needs to be done
+
+00:43:21 - 00:44:50
+to like complete a procedure Let's say build me and project next with Firebase. So what should be the procedure to build this? That is the procedial memory. So it will first try to understand Firebase. Correct. It will try to enable Google login. It will try to implement the admin SDK. Right? it will try to integrate the illumin SDK into the front end right this list of procedure that it has to apply that is a procedural memory okay memory event or some experiences that comes under memory for example
+
+00:44:08 - 00:45:43
+let's say uh let's say uh let's say uh episodic memory is basically Last week, last week try failed, right? Stripe failed that comes under episodic memory. Let's say on 15th of 15th of June, uh this failed that comes under events and episodic memory. There is other memory that is shortlived memory working memory that comes under memory. working memory this is not going anywhere this is whatever is on my desk that is working memory let's say if I ask cler cursor key uh uh build proper proper rate limiting rate
+
+00:45:05 - 00:46:15
+limiting for the tools right so then it will try to take all the p uh coding file and the pdfs and documentation and try to solve the rate limiting that is a working memory if let's Say after some time I'll ask what happened to the earth problem that I asked Firebase or NexK that happened let's say previously like let's say one day back or let's say 30 minutes back what happened to what happened to uh o login o login that become a session memory right and from the session it can come
+
+00:45:40 - 00:46:47
+back for the agent to be get utilized so hope I explained all of these different type of memories that is available Now let's move to the memory right that is available. So it's there is deciding what to remember because again there is a problem of context window and what to remember where it will go it will go to the LLM at the end of the day. So the memory right pipeline interaction right extraction what worth keeping the gate important relevant later or stable. So this filter decides
+
+00:46:14 - 00:47:23
+and then gets stored correct and these these are techniques are utilized majorly by the coding agents like cloud code and cursor because they are the like at the frontier of building great great agents for the future right that we have to implement into our problem solving right like user let's say user ask we have migrated from my mysql to posgress Correct. The extraction is database is now posgress not MySQL you know important durable and useful later then you store it. This is how they decide which information store
+
+00:46:50 - 00:48:02
+which is information to let go. Correct. Right. Not what is stored not the whole sentence but a compact durable fact that is posgress correct because that is a fact that's going to be used. You can call it a let's say semantic. Semantic is kind of fact. Semantic memory is a fact. Okay. By it's all over memory read the loop reading the loop to reading memory and closing the loop basically writing is only half the cycle later new task poses a question the agent queries memory the retrieved fact flows back
+
+00:47:28 - 00:48:53
+into the context again we are on the table we are trying to solve a problem if need be we'll pull back just in time memories and put it on desk. That's exactly what we're saying. New task comes in. What does this project use retrieve data and get because just we said now we are using postgrade as a place of MySQL and that becomes like semantic memory that gets stored somewhere. So memory is loop is this experience write then store retrieve context then the whole concept is everything should
+
+00:48:11 - 00:49:24
+come under the context at the end of the day if this will not come under the context it will not go to the LM it will not do anything else. So memory that is passed memory that is passed and there is a state. So the memory has to run to the context as per the need correct and you have to store the relevant facts infrastructure to where does this memory lives. So if you see memory is the information the database is where how you store it correct and definition different shapes of memory like SQL correct there is SQL relation
+
+00:48:47 - 00:49:56
+database right relational database that you can store structure facts and state you can store key value let's say for example Dynamo DB dynamob or MongoDB you can store vector database all the semantic semantic uh let's say embeddings vector embeddings you can So vector embeddings I have done a great video on vector database. You should watch it. You'll understand everything about vector database and f search engine again we talk about file and object storage blog file hd database again database get enhanced to
+
+00:49:22 - 00:51:05
+grab database or you can say new 4j kind of database where there is a relationship between nodes and entities that is all together. you can store it. Now uh now let me tell you the difference between rag and memory. Okay to rag I you already know and there is memory to rag is basically kind of if I have to explain you right the store is authored elsewhere question right and most retain your own experience memory user memory environment memory project memory semantic memory semantic memory memory
+
+00:50:38 - 00:52:14
+memory, procedural memory, right? Information the agent itself produce and choose to keep across interaction. That is the difference between rag and majorly in memory to retrieving the right memory hybrid retrieval filter and rank memory query. Then again same I I I I I I think I told you three things before right there there is there is this there is this rag retriever you apply hybrid search you apply BM25 you apply lexical search right you you do reanking right all these thing we discussed right
+
+00:51:33 - 00:53:21
+by encoders cross encoders correct also let's say for example you do semantic search okay is may you have hnsw spnn sp all these different kind of algorithm you apply similar way you go to context engineering the similar concept you try to apply to to retrieve data from the tools. Okay. So, so you need you need let's say tools uh context their names their def definitions their description their input schema right context engineering right you you do budgeting budgeting you do isolation right again you let's say uh you do
+
+00:52:28 - 00:53:53
+compression you do compaction correct all list of techniques that you apply also So you when you try to do uh search in the context for different type of context like tool concept rack context MCP tool context then you try to apply BM25 uh uh hybrid BM25 then lexical search then you apply let's say another one this uh semantic search then there is another one uh rag context and then there is this MCP client and an MCP server Okay. Again same thing you you do uh procedural uh sorry progressive
+
+00:53:10 - 00:54:19
+discovery procedural memory uh progressive discovery right and there you try to apply this again hybrid or then this BM25 and then this lexical search and then this uh what do you call ranking of the tool similar way you do it for memory because you have all list of different type memory. short live memory, long live memory, some short live working memory and there is the recession memory, long live memory, you have this semantic memory and then you have this episodic memory, then procedial memory,
+
+00:53:49 - 00:54:56
+then project memory and project memory about us memory etc etc environment memory everywhere wherever there is a data you apply you can apply all these different techniques and you can tell to the interviewer that these are the different techniques that I can apply to phase the data because the whole point is you have to apply those engineering to get the data that's the whole So yeah memory man simple memory is not right forever dduplication that is straightforward failure mode failure mode is straightforward like
+
+00:54:28 - 00:55:30
+false memory the agent stored something that was never actually true right that is a false memory we said that mysql We are not using MySQL. We are now using Postgress. Imagine it never stored Postgr and it stored Dynamo DB for example. That is kind of a false memory. It was true once but uh the world has since moved on and it is never used again. Stale memory right and the these are the memory a new class of failures which these are retrieval failure. The right memory exists but isn't found
+
+00:54:59 - 00:55:59
+anymore. There was a problem of rag retrieval augmented generation because again you try to apply all those list of techniques to retrieve it. Now retrieval pollution you know irrelevant memories get added into the context or in the memory in any type memory in working memory or in the episodic memory or procedial memory contradictive memories like I am saying that yeah we are using MySQL as well we are using postgress as well that is another problem you know millions of low value memories accumulate that is another problem
+
+00:55:29 - 00:56:28
+memory poisoning you know malicious uh content is written to steer the future behavior privacy leakage sensitive information persist. You whenever so poisoning poisoning basically poisoning comes into picture in terms of let's say now it came to memory poisoning and memory poisoning then there is a tool poisoning right then there is a tool poisoning then there is poisoning then there is a rag poisoning all these three poisoning you should know inside memory poisoning you just see the malicious
+
+00:55:58 - 00:57:05
+content is in the memory and that agent is not able to understand what to do correct then there is a tool poisoning the tool name and description written in such a way that MCP is not able to use it or the agent is not able to use it or someone is able to utilize it for their own benefits using prompt injection rag poisoning agent that is affecting your complete let's say agent right so in the next video in the new I think I'll try to publish it today so we we will understand about agent harness and bringing it all
+
+00:56:32 - 00:57:30
+together because agent harness harnessing is really important term right you have to understand like I already told you about the geothermal harnessing geothermal harnessing so what they doing I think this is what they're doing from the earth heat I think I guess so yeah from the earth heat they are trying to generate electricity this is what they trying to do and somewhere I don't know where exactly in India is happening but this is a great news that from the geothermal they are harness the
+
+00:57:01 - 00:58:05
+thermal energy and try to build it to electricity similar way there is harness right we have to utilize the capability of LLM and build a system around it with multiple tools rag context prompts etc to build a system that can solve and work for hours and hours and help us right so there is a context manager about all about the context engineer that manages conversation state and memory conversation is that the model response and the user message right the combination of those you know and also tool
+
+00:57:35 - 00:58:38
+state is a current task that that needs to be performed correct let's say let's say you are booking a ticket what is uh the destination what is the origin of the ticket right what is the timing of the ticket what is the date of the ticket these all information comes in under the state that's memory readr memory storage retrieval etc then lm tool environment and observation that is all all part of agent harness but I I'll do a detailed discussion in the video of agent harness please keep watch that video as
+
+00:58:06 - 00:59:12
+Correct. Then long horizon agent here. You will see that this is very straightforward. You'll see it by yourself. The final model is this that context state memory the context engine the agent. Right? Context state memory then the context engine and then the agent. Correct? So context what it thinks with state what is doing right now what it can recall that is memory you know. So com context engine is basically compaction, retrieval, pruning, selection and budgeting. This is what major context engineering is you
+
+00:58:39 - 00:59:49
+know and that is that is we call context engineer is context engineer and then there is lm and then to environment to hope I'm able to explain you the complete definition of this to the five sentences to remember context is what agent can think with context that is on the disk memory is what an agent can remember memory what agent can remember that is that is a memory there is a state in is is what the uh agent can currently doing the current task context engineering how we decide what model should use correct the
+
+00:59:14 - 00:59:33
+harness is what manage the entire complete process hope you like my video yeah make sure uh comment on the videos that will really help me thank

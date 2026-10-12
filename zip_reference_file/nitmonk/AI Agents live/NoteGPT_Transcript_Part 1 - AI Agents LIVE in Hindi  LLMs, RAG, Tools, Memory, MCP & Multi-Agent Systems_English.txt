@@ -1,0 +1,63 @@
+00:03:26 - 00:06:41
+Okay. correct. So, they don't understand English nearly as well, basically. that. Problem, right? How will you discover that it passes through New Delhi, for example, and goes somewhere here in southern India, where the tournament is being held? So, these startups are doing research on protecting pipelines from corrosion as a problem. You can ask any questions in the comments. energy. communication. communication. Right, these kinds of problem statements, forest fires, electrical grid risks, electricity theft detection, support. correct . Core fundamentals. Core fundamentals. correct. substantial. Linguistic model. How
+
+00:07:57 - 00:12:32
+works? existing. Right, Embeddings. Embeddings vs. Tokens. Implications, right? Implications. Tokens. correct? Then let's say it's true. The next topic, Prompt Engineering, is correct. Jailbreak. tools. Context architecture,memory. system. Problem solving. GP 5, GP 6, GP 7. Which we should take as input. to request. basis. correct. Indian. Curiosity. Most important. Framework. Google, Google, right? Like a cornerstone, right? correct. Python, TypeScript, TypeScript, JavaScript, JavaScript. This is the first thing, it is the fundamental foundation.
+
+00:13:26 - 00:19:18
+The second thing is kind of Java I guess. There is only one video of the complete project from start to finish. Regarding agents. If you finish this list of videos, basics are essential. Watch these four videos. Then the first part. hope. Good. Basic permission. language, Python or TypeScript. correct. How can we use AI to learn deeply and increase the learning speed of underlying learning systems? How did you become true? MC, MCP, MCP. Host MCP server. various. United States intelligence. Because of these models. MCP is correct. Google. 10. This is the response time. This
+
+00:19:19 - 00:23:44
+is the method. system. Essential foundation of Python. Agent. design. GP 2.5, sorry, Gemini 2.5. System design. Thinking and observing. Agent LLM. JSON response to input. Then WhatsApp. Tools, hello. system. system. Then environment. agent. agent. Okay. agent. A simple EC2 device. Data Structures and Algorithms (DSA). DSA. Vector DB. Vector database. The big picture before evaluating machine learning. Unsupervised Learning, Supervised Learning, SBM, CBM, CNN, RNN, TensorFlow. complete. Lots of. basis. practical. find. 100 thousand vectors. Base
+
+00:24:57 - 00:30:39
+Data. Database storage. Multiple. attempt. with me. You are similar to me. You are similar to me. 100. Small. essential. DSA. to understand. I meant system design. I'm trying to answer that. Are you going to refer to us as... huh, as a manager? I don't know. Definitely something. So, the content currently seems a bit disjointed, different topics in one place, unable to connect. It is content. This video. foreign. permission. continued. something. to prepare. a question. Two parts. Two parts. End of July. End of July. Mid July. Only 45 days to understand. Direct traffic will disrupt the system question search. So most of the questions I hope I can
+
+00:32:36 - 00:38:42
+from the answer. Hi I think it's ads. Yes. Computational linguistic model. Video and video type. Good. Hello sir. Good. Thank you. correct. amazing. amazing. Amazing place. Okay. Questions. And now it's true. You should try going. Very, very likely. No more questions. Python, right? MCP MCP MCP MCP MCP directives API or additional directive. MCPs 100 direct resources. correct. MCP Server Connects to the MCP MCP that sits near the LLM Proxy JSON RPC 2.0 MCP Server. MCP Versions MCPol List 100 Name Description Systems Routing Scheme Advance Progressive Discovery.
+
+00:40:19 - 00:46:05
+Gradual discovery. Oh, mainly inspiration. MCP server search. Good. correct. So this becomes very important to understand. correct. Framework. Basic framework ICO system GCP, Google, how they deal with it. Confusing assessment. Some people recommend doing ML and NP. Some people say just do lamb ragwamius cl it doesn't mean the market but start we hope so. What are you building agent search strategy multi agent focus on focus on correct. MCPAcing here. Directive injection here. Steering injection. correct. Steering engineering technology. Steering engineering technology. Context engineering. Engineering. Agent agent one of the bottlenecks
+
+00:46:07 - 00:50:51
+Memory. Memory problem. Current question. Context. Just imagine in concept just hope I can tell. But it's not like you don't MLDDLE this basis. I hope I answered if you're available say hello to the video can we put that project on the resume also number dynamics AWS AWS S3 S3 hybrid vector service S3 bucket vectors or company's AWS Dynamob table, Dynamob table. These two we combine vector space dynamic library vectors, HNSW, SPA metadata, master. Data Yes, I'm listening. Building the concept please guide companies
+
+00:51:00 - 00:56:29
+emerging companies. Ah code for the startup company code for the startup GHub dyn space. Nice. But it looks really nice. Oh nice. This looks really nice. Results. Maybe we'll get something good out of it. So, you can watch here. Contribution. You can see you can look at right uh, open source. Open source. We hope so, sorry. Okay. baset hardness. Fore conting agent. Definitely try to take advantage of it. the past. The past days. the past. Seconds. All of these things are really important and then uh doc I think docs understand we understand and then DP in terms of answering any question.
+
+00:57:17 - 01:01:54
+Well, reliability, answerability, inevitable help, all of these things become really important, evaluation, evaluation, tracking or testing or gold assets to do all three of these things. So you see, deep assessment and tracking. Okay, or test cases, now let's talk about the next. It's very important to how agents work. Not this. What are videos? The basics. Good. Contact. Beautiful. Beautiful. Good. This is much more powerful than the mind. Structure. This is the crux of the matter. This is actually basic. Various list of agents. If you watch this video, implementation supervisor then
+
+01:02:11 - 01:07:00
+Lang return. No questions asked. The app.get user rate is true. correct. Javascript say please get involved based. They are free. If you want to go true. For claims engineering of the system. API gateway, runtime, workflow, MCP, proxy memory. If you watch it, also, which resource is the correct one? This resource is available directly. Take machine learning. Classic machine learning, deep learning. Depth machine learning vectors. Convolutional neural networks, SVM, RN network platform for machine learning. TensorFlow concept. Good. Sir, I understand the logic question. Logic or system design,
+
+01:08:01 - 01:11:33
+Library, framework or API syntax. How do engineers use documentation instead of memorizing formulas? Third party. I would never recommend a different third party library. It accumulates over weeks, months and years. Google Accumulation Harness Proxy. API and there is this flask or django and change a classic movie you must watch flask you are full of inspiration and I am API DC DC+ connected and that is the beauty of going to a government college. This is a very beautiful movie. You must watch it. Oh then sorry about Django, right. To apply this you should search or Google Google Fire Store. correct. umbrella. So now you will be able to learn which frame and which
+
+01:12:30 - 01:16:13
+A library you should use. I hope I have answered your question. Sir, will you teach us the engineering of inferring large linguistic models? Yes, engineering the inference of large linguistic models. But I have already spoken in detail. Sorry. Good. Multi-head, multi-vertex network. Memory states context architecture. Inference to find out what happens in systems. And data power. Sorry. How do you improve your agent's accuracy because changing prompts with completely different behavior isn't there? How do you write now to become an advanced developer? Do we need data science skills? I mean measuring probability. Track evaluation or raen collection.
+
+01:16:37 - 01:20:06
+I think so. So in the present time to become advanced in life development. correct. Good. Large language model learning, reinforcement learning, human feedback. Bonus inclusion and search. correct. Context. Google Brain Research Paper 2017. Attention is all you need. Attention is all you need. Encryption key or decryption key. correct. This is the first person in the paper. Number of followers, right? correct. So, if you read attention is actually a "softmax" function. This is the formula, the mathematical formula for the query, the key and the value. And for the word QV
+
+01:21:09 - 01:24:15
+0.94 0.93 0.67 67.53% are close. So this is really good. correct. Extreme then. So also a linguistic model. Introducing Child This code does not work as I expect. How do I fix it? It's hard to say what's wrong or this is bias and this is look at the evaluation, look at GPT6, look at mythos, mythos preview. If you have seen this movie "The Three Body Problem", The Three Body Problem is a must watch movie for every double. Doubled, right? This This Two This Three Now see the time Must Must Read Explanation of Tokens. So as a person, we can now use artificial intelligence
+
+01:24:17 - 01:26:10
+to write the code. If we have product-oriented thinking, we can know what we do and why we do it, or write the code line by line. If you're a beginner and you're learning, so if you're a beginner now, we can use AI to write code, right? If we have product-oriented thinking, if you know what we're doing and why we're doing it, let's write it line by line. If you are in the learning phase, what are the views on Campus X? I've done one video on the basics of language models, while Campus It's completely up to you. You can follow any of the videos. Oh,
+
+01:25:45 - 01:31:11
+You can, right. I have a clear idea. interview. That's it. This is not necessary. certainly. Thank you. One month. One month. This is how it is probably a thousand times, a thousand times. Alibaba coding. Pair coding. This is to learn larger sentence or words. If you listen to 100 billion sentences, 100 billion ten tens, right? 100 billion, billion K language research papers. correct. Thank you sir. Reverse engineering for No, I'm just asking to confuse you so sorry. Should I also know about such a contributor learning friends. If you watch all fourteen of these most don't apologize. Reverse engineering the previous software is the best project
+
+01:32:44 - 01:36:30
+Open source. Just follow this WhatsApp. You should focus and get a job. This is really important. But the main point is I will share this in the WhatsApp community. Token ID: They don't see them, they see the token. You pay for each token entered and exited. Context boundaries are measured in symbols and outputs. tracking. Completeness of you. I have 2 years of experience. I work in the product cloud, which is smaller. I hope you are in as a GPT master. The open world is regulated by a token. Open coding proxy tokens (tokens). Welcome. Hmm. Hmm. Identifier vector embeddings to solve a problem. model. Back propagation, back propagation. A L L
+
+01:37:40 - 01:41:26
+A L A L A L Language A L in this is progress. Back Retrieve. Thank you very much. my lord. In the future, if artificial general intelligence comes, it will suffer. Okay. This is a very good question. Material World Problem True General Artificial Intelligence Finance for operation such as to build software, system or infrastructure. Hindustan is the future of human value. Based on the problem of watching movies, common words become a single symbol and incredibly expensive. This is why rare words and emojis are symbolically expensive word codes and the precise division of each shape model. Okay. A word.
+
+01:41:47 - 01:46:40
+Billions of dollars then this encoding is incredible. For example, the minimum set is the minimum symbol. Prepare. Prepare. Prepare. encoding. Nationalization of play video artificial intelligence running indian. Or the minimum. A symbol or a nation must once again be an incredible symbol. The process of dividing text into symbols and assigning each to an integer. Or markup text. Search AR C. Send it to GPT Lookup table for the highest frequency pair from the lowest runner to the lowest runner Example example the lowest runner to the lowest runner Actually I am a class of 25 We are graduating I cry a lot these days Depressed content. So try watching my story and then go check it out
+
+01:47:30 - 01:47:52
+My story, then understand, guys.
+
