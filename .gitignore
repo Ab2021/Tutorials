@@ -1,0 +1,42 @@
+# ===========================================================================
+# Personal interview-prep source material — PRIVATE. Do not publish.
+# These are transcripts / question dumps / prep documents, not shareable
+# course material. Everything below must stay out of the GitHub remote.
+# ===========================================================================
+
+# The working folder for source extraction (named explicitly)
+extracted/questions_rough/
+
+# Earlier locations of the same material (kept ignored so it cannot be
+# re-added by accident)
+extracted/questions/
+extracted/Think in models/
+
+# Loose copies of the same personal source documents at extracted/ root
+extracted/AI Interview*.docx
+extracted/AI Interview*.md
+extracted/AI sus design course.txt
+
+# ===========================================================================
+# General hygiene
+# ===========================================================================
+
+# OS noise
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor noise
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Node
+node_modules/
