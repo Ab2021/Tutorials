@@ -17,7 +17,7 @@
 | **Proprietary ML for post-catastrophe property damage** from ultra-high-resolution imagery — "first enabler for virtual claims adjusting in the London market" | This is *their* applied-AI showpiece, and it is **computer vision**. The candidate-feedback question "run images through a model for checking anomalies" is a direct echo of this. Expect it. |
 | **"Continuous learning & exploration… best-in-class technology & tooling"** | Safe to talk modern tooling (vLLM, LangGraph, etc.) as long as you translate it to a business outcome. |
 
-**Azure-first signal:** the JD names **Microsoft Azure AI services, Copilot Studio, Power Platform/Power Apps, Cytora**. This is a Microsoft-shop insurer. Lead with Azure-native where it is genuinely the right answer; bring open-source/self-hosted only with a stated reason (cost, latency, data residency, vendor lock-in).
+**Azure-first signal:** the JD names **Microsoft Azure AI services, Copilot Studio, Power Platform/Power Apps, Cytora** — ⚠️ **read `11` §7.1 first**: the JD names Cytora as a *comparable buy-side product*, not a confirmed Brit deployment. This is a Microsoft-shop insurer. Lead with Azure-native where it is genuinely the right answer; bring open-source/self-hosted only with a stated reason (cost, latency, data residency, vendor lock-in).
 
 ---
 

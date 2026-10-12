@@ -41,6 +41,33 @@ Three facts, all from your own material, shape everything here:
 | 13 | **Final 48 hours cheat sheet** | the night before | day 6–7 |
 | 14 | **Industry intel: lead-AI loops, real questions & verified Brit facts** | all — the evidence base | day 2 (calibrate), day 6 (extra drills) |
 
+### 2b. The deep-dive library — harvested from your own source folders (2026-10-12)
+
+Files **`15`–`26`** are the long-form reference shelf, preserved **in full** so that none of that work is lost. Files `00`–`14` are the curated, interview-shaped pack — **read those first**; come here when you want the substrate underneath an answer, or when the panel drills twice past your opening answer.
+
+They come from two harvests, both on **2026-10-12**:
+- **`15`–`24`** — the earlier `br_ins/` research set, harvested in full.
+- **`25`–`26`** — production-architecture and caching material from `_extracted_txt/`.
+
+Three of the `br_ins/` files carry a **correction banner** (marked ⚠️) because they predate the fact-check now recorded in `11` §7.1 and `14`. Their *frameworks* are sound; their *Brit-specific facts* are not. The authoritative sources for anything you assert about Brit are **`11` §3–§7** and **`14`** — that rule applies to every file in this table.
+
+| # | File | Companion it deepens | Read it when |
+|---|---|---|---|
+| 15 | **RAG architecture deep dive** | `05` · `10` §L | you want the production code, chunking strategies, HNSW, RRF, reranking |
+| 16 | **Agentic AI systems deep dive** | `07` | you want tool schemas, side-effect classes, loop detection, checkpointing, LangGraph |
+| 17 | **Azure AI services deep dive** ⚠️ | `14` (§Azure) · `05` | you want Azure component-by-component depth — **§8 rewritten** |
+| 18 | **System design exercise bank** | `05` | rehearsal: three worked exercises, incl. **the actual question** |
+| 19 | **Coding exploration deep dive** | `06` | you want the 10 RAG improvements with before/after code + the full Git answer |
+| 20 | **People leadership deep dive** | `12` | you want 6 complete STAR stories and 25 model answers |
+| 21 | **Mock interview sessions** ⚠️ | `08` · `09` | you want two fully scripted mocks plus the 8-row rubric |
+| 22 | **Quick reference cheat sheet** | `13` | day-of density: frameworks, RAG/agentic one-pagers, Azure table |
+| 23 | **Brit JD analysis deep dive** ⚠️ | `01` · `11` · `14` | the delivery-model material: RACI, discovery workshop, SS1/23, 30-60-90 |
+| 24 | **Stage-1 strategy deep dive** | `02` | minute-by-minute detail, STARLA, the dial reconciliation |
+| 25 | **Production AI system design blueprint** | `05` · `18` | the whole production architecture — 11 building blocks, 4 planes, 13-item pre-launch checklist, 14 scenario Qs |
+| 26 | **Caching layers deep dive** | `15` · `22` | KV vs prefix vs semantic cache: thresholds, cache keys, staleness, privacy, poison amplification |
+
+> **⚠️ legend:** the file leads with a banner listing exactly which claims were unverified or wrong and what replaced them. Read the banner before quoting the file.
+
 ---
 
 ## 3. The five rules (from `prev_learning` — break these and nothing else in the pack matters)
@@ -68,6 +95,8 @@ Name the dial you are **optimising** and the dial you are **paying** with. If yo
 | **Latency** | What is the P95 target? | streaming, caching, smaller models, batching |
 | **Safety** | Is the output regulated? Who signs it? | grounding, validators, HITL, confidence thresholds |
 
+> **One vocabulary note.** The harvested deep-dives (`15`–`26`) name the same four dials as **Accuracy · Latency · Cost · Reliability**. They are the *same four* — only the fourth is named from a different angle. The reconciliation table lives in `24` § banner. **The line to use in the room:** *"quality, latency, cost — and the fourth dial is reliability; in a Lloyd's-regulated context that means safety and auditability, not just uptime."*
+
 ---
 
 ## 5. The 7-day plan
@@ -84,6 +113,8 @@ Assumes ~2–3 focused hours a day. Day 7 is the interview.
 | **6** | 09 + 10 + 13 + 14 §2 (extra drill bank). Drill the weak spots the mock exposed; memorise the cheat sheet. | Cheat sheet re-written in your own words |
 | **7** | **Interview.** Re-read 02 and 13 only. Nothing new. | — |
 
+**Optional depth, if a day finishes early:** `15`–`26` (the harvested deep-dive library, §2b). Use them as a *reference shelf* — pull one when the mock exposes a thin spot, not as reading to get through. Days 3–5 benefit most: `15` for RAG depth, `16` for agents, `19` for the coding round, `20` for the leadership round, **`25` for the system-design round** and **`26` for any cost/latency question**.
+
 ---
 
 ## 6. How to use this pack in the last hour before the call
@@ -94,7 +125,7 @@ Read **only** these, in this order: `13` (cheat sheet) → `02` §3 (the run-she
 
 ## 7. Source-coverage map (proof that nothing was left out)
 
-Every theme in your seven source files is placed somewhere in the pack. If you want to check a source is fully harvested, read down its row.
+Every theme in your source files is placed somewhere in the pack. If you want to check a source is fully harvested, read down its row.
 
 | Your source | Its themes | Where they live in the pack |
 |---|---|---|
@@ -108,10 +139,41 @@ Every theme in your seven source files is placed somewhere in the pack. If you w
 | **questions_thinkinmodels** | 30+ scenario questions with worked analyses — judge calibration, 0.98²⁰, chunk-size debates, multi-tenant security, model upgrades, capacity planning | `10` (scenario answers) · `07` §4–§9 (eval, judge) · `05` §6 |
 | **`zip_reference_file/nitmonk/archive/`** | *(excluded by your instruction — intentionally not read)* | — |
 | **Web research (new, 2026-10-12)** | lead/staff loops, real questions, verified Brit facts, regulation, vendors, serving/quant numbers | `14` (all), folded into `05`, `06`, `07`, `11` |
+| **`caching`** (new, 2026-10-12) | KV cache vs prefix/prompt cache vs semantic cache; similarity thresholds; cache-key composition; staleness & invalidation; privacy & tenant isolation; poison amplification; separate measurement | **`26`** (all) · `15` · `22` |
+| **`aisyses des`** + **`ai-system-design-tutorial.zip`** (new, 2026-10-12) | the 11 production building blocks, back-of-envelope estimation, HLD vs LLD, the 4-plane architecture, pre-launch checklist, 14 scenario Qs + 6 quick-fire, minimum sufficient intelligence | **`25`** (all) · `05` · `18` |
 
 **Two genuinely new gaps closed on 2026-10-12** (both were source-named and previously uncovered):
 - **Python concurrency — I/O-bound vs CPU-bound and the GIL** → now `06` §5.7. This is Brit's exact split: chat/agent is I/O-bound, imagery inference is CPU-bound.
 - **LLM internals depth — BPE, sampling parameters, attention, RoPE** → now `10` §L.
+
+### The `br_ins/` harvest (2026-10-12)
+
+The earlier `br_ins/` research set was treated as a **source to be harvested in full**, not as a superseded draft. All ten of its files now live in this pack as `15`–`24`. Nothing was dropped; where a claim conflicted with the verified research in `11`/`14`, the **claim** was corrected rather than the file discarded.
+
+| `br_ins/` file | Now at | Correction applied |
+|---|---|---|
+| `00_INDEX.md` | *(superseded by this README)* | — |
+| `01_company_jd_analysis.md` | **`23`** | ⚠️ banner + inline: Cytora (unverified), Nearmap/Maxar → **GIC**, Aon/Marsh/WTW (indicative only), GCC **Pune → Bengaluru**, FCA **PS22/3 → PS22/9**. Includes §10 Blueprint Two |
+| `02_interview_structure_strategy.md` | **`24`** | four-dial reconciliation added; includes the full **§9–§15** appendix (rehearsal drills, crisis-pivot scripts, presence checklist, **scoring rubric**, **40 fire drills**, pre-interview checklist, post-interview debrief) |
+| `03_rag_architecture_mastery.md` | **`15`** | — |
+| `04_agentic_ai_systems.md` | **`16`** | role line: Senior/Lead → Lead |
+| `05_azure_ai_services.md` | **`17`** | ⚠️ §8 rewritten — the "Brit uses Cytora" claim removed |
+| `06_system_design_exercises.md` | **`18`** | — |
+| `07_coding_exploration_prep.md` | **`19`** | — |
+| `08_people_leadership_behavioral.md` | **`20`** | — |
+| `09_mock_interview_sessions.md` | **`21`** | ⚠️ note added on the Ki/syndicate framing inside the scripted answers |
+| `10_quick_reference_cheatsheet.md` | **`22`** | ⚠️ Brit-facts table corrected (Cytora, Ki status); four-dial pointer |
+
+### The `_extracted_txt/` additions (2026-10-12)
+
+Three further sources were handed over from `extracted/questions_rough/_extracted_txt/`. **They became two documents, not three**, because two of them are the same video: a transcript-derived set of notes and the video's written companion guide, in the same order, with the same eleven building blocks. Merging them avoided a near-duplicate file; every transcript-only detail was folded into `25` instead of dropped.
+
+| Source | Now at | Notes |
+|---|---|---|
+| `aisyses des` **+** `ai-system-design-tutorial.zip` → `AI_System_Design_Guide_Codebasics.pdf` | **`25`** | The transcript's timestamps map one-for-one onto the PDF's blocks (05:58 auth → 09:34 gateway → 10:53 guardrails → 13:59 cache → 17:15 freshness → 23:15 router → 30:03 fallback → 35:14 observability; 27:18 minimum sufficient intelligence). Transcript-only specifics folded in: Keycloak/OIDC/SSO, Cloudflare/Nginx, LiteLLM, Datadog/MLflow, XGBoost/Random Forest, the ~200× cost gap, the GPT-4o-mini/Qwen/Mistral small tier. `BlipKart` is kept but explicitly framed as the source's fictional teaching example, **not** a stand-in for Brit. |
+| `caching` | **`26`** | KV / prefix / semantic cache. The semantic-cache **risk** case is the heart of it, not the mechanics. |
+
+> **One known omission, deliberate.** The transcript names a small classifier model as "JAV" — almost certainly a speech-to-text artefact. `25` flags it as such and tells you to say **"the small-model tier"** in the room rather than repeating a name you cannot verify.
 
 ---
 
