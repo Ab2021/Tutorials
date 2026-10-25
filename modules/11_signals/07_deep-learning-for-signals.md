@@ -32,6 +32,8 @@ This topic covers the deep-learning chain for physiological signals: representat
 
 The three failures share a structure: the evaluation design, not the architecture, determines whether the number is real. A deep model is powerful enough to exploit any leak, and the leaks are in the split, the preprocessing, and the threshold.
 
+A fourth failure is a model that is never deployed because its compute budget was ignored. A 100 MB ensemble that wins a benchmark cannot run on a watch. The architecture and the deployment target must be designed together, which is the subject of Topic 10.
+
 ### 1.2 Why deep learning is not a default
 
 A deep model is the right choice when the data are large, the signal is high-dimensional, and the morphology is hard to specify. It is the wrong choice when the data are small, the label is noisy, or the decision needs an interpretable measurement.
@@ -455,6 +457,10 @@ The choice should be pre-specified and validated at the patient level. A model t
 
 **Edge case:** a model that is retrained on new data is a new model, even if the architecture is unchanged. Version it and re-evaluate.
 
+**A monitoring minimum.** At minimum, monitor the input distribution, the score distribution, the positive rate, and the calibration on a labelled sample. A shift in any of the four is a signal to investigate, not a proof of failure.
+
+The monitoring should be pre-specified in the model card, with thresholds and an owner. A monitor without an owner is a dashboard, not a control.
+
 **A model card template.** The card should answer the questions a reviewer will ask.
 
 | Section | Content |
@@ -639,7 +645,13 @@ The case is a small synthetic model on a single task. It does not show:
 
 Each omission is a reason to validate on real data with the intended task. The arithmetic transfers; the performance does not.
 
-The most important omission is the last one. A model that is accurate on average and inaccurate for a subgroup is not a safe model, and the case has no subgroup metadata to test. A real validation must include the metadata before the model is trained, because a subgroup analysis cannot be added after the fact if the data do not carry the group labels.
+The most important omission is the last one. A model that is accurate on average and inaccurate for a subgroup is not a safe model, and the case has no subgroup metadata to test. A subgroup analysis requires the metadata to be collected with the signal, not reconstructed afterward from the device or the site.
+
+A second omission is the threshold. The case reports AUROC and ECE but does not choose a threshold, because the threshold depends on the decision and the cost of errors. A model card should report the operating point that the product will use, not only the ranking.
+
+A third omission is the confidence interval. The AUROC of 0.893 has a standard error of about 0.02, so the plausible range is 0.85 to 0.93. The interval is wide because the test set has only 200 patients, and a product decision should account for it.
+
+A fourth omission is the operating threshold. The case stops at the probability and does not convert it to a decision, which is the next topic's subject. A product decision on a point estimate without the interval is overconfident. A model card should report the operating point that the product will use, not only the ranking. A real validation must include the metadata before the model is trained, because a subgroup analysis cannot be added after the fact if the data do not carry the group labels.
 
 ## 7. Code, query, or calculation
 
@@ -986,6 +998,8 @@ Three red flags deserve emphasis.
 
 **A model card without a limits section.** Every model has a population, a device, and a condition it was not validated on. The limits are the most useful part of the card for a deployment team.
 
+A useful audit question is: what would make this model unsafe? The answer is usually a population, a device, or a workflow, not an architecture. The answer should be in the card and in the monitoring plan.
+
 ## 11. Assumptions and limits
 
 | Assumption | Why needed | What breaks it | How to test |
@@ -1236,6 +1250,29 @@ A strong answer compares the receptive field requirement, the data size, and the
 - **Micro average** — average over samples.
 - **Net benefit** — clinical utility measure.
 - **Decision curve** — net benefit across thresholds.
+- **Channel dropout** — augmentation that removes a lead.
+- **Multi-label** — more than one label per record.
+- **Weighted loss** — loss with class weights.
+- **Focal loss** — loss that down-weights easy examples.
+- **Global average pooling** — mean over the length.
+- **Dilated convolution** — convolution with gaps.
+- **Temporal split** — split by time.
+- **Prospective validation** — validation in the intended setting.
+- **Data card** — documentation of a dataset.
+- **Human factors** — usability evidence.
+- **Cybersecurity** — protection of software and data.
+- **SBOM** — software bill of materials.
+- **Predetermined change** — pre-authorized model update.
+- **Post-market surveillance** — monitoring after launch.
+- **Out-of-distribution** — input unlike the training data.
+- **OOD detection** — flagging unusual inputs.
+- **Prior correction** — adjusting probabilities to a new prevalence.
+- **Net benefit** — utility at a threshold.
+- **Decision threshold** — cut-point for action.
+- **Ensemble** — combination of models.
+- **Distillation** — training a small model from a large one.
+- **Benchmark** — fixed dataset and metric for comparison.
+- **Leaderboard** — ranked benchmark results.
 
 ## 16. Sources
 

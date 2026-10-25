@@ -967,8 +967,8 @@ design are therefore mostly inference from outcomes, not observation of process.
 | Source | Cohort | Headline figure | Definitional caveat |
 |---|---|---|---|
 | DiMasi, Grabowski and Hansen (2016) | 106 drugs from 10 firms | Capitalised cost per approval USD 2,558 million (2013 dollars); clinical approval success rate 11.83% | Self-selected firms; cost includes cost of capital at 10.5% real |
-| BIO/Citeline/QLS (2021) | 9,704 programmes, 2011-2020 | Cumulative LOA from Phase I 7.9%; Phase II transition 28.9% | Programme-indication pairs; company-submitted data |
-| IQVIA Institute (2024) | Phase transitions 2010-2023 | Composite success rate 10.8% for 2023 | Restated prior-year figures; different transition definitions |
+| BIO/Citeline/QLS (2021) | Programme-indication pairs, 2011-2020 | Cumulative LOA from Phase I 7.9%; Phase II transition 28.9% | Programme-indication pairs; company-submitted data |
+| IQVIA Institute (2024) | Phase transitions 2010-2023 | Reported composite success rate 10.8% for 2023 | Restated prior-year figures; different transition definitions |
 | FDA (2025 report) | Novel approvals in calendar 2024 | 50 novel drugs; 24 first-in-class; 26 orphan designation | Approved products only; excludes Center for Biologics Evaluation and Research (CBER) products |
 
 The difference between 7.9% and 10.8% is not a contradiction. These are different cohorts, years,

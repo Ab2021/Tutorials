@@ -183,6 +183,22 @@ requires about 657. The false positives have multiplied the trial by a factor of
 
 The model does not decide whether to enrich. It prices the alternatives:
 
+### 3.6 Three questions to ask of any biomarker
+
+Before any arithmetic, three questions determine whether the programme has a biomarker at all.
+
+1. **Is the marker on the causal pathway, or a correlate?** A marker that is a consequence of tumour
+   burden will change with effective treatment without identifying who responds. Causal evidence
+   comes from genetics, mechanism, or experiments, not from association.
+2. **Can the marker be measured reliably in the patients who need the decision?** An assay that
+   requires fresh tissue, a research-only platform, or a specialised laboratory may be analytically
+   perfect and operationally useless.
+3. **Does the decision change the outcome?** A marker that reclassifies risk without changing
+   treatment is a prognostic description, not a clinical tool.
+
+A programme that cannot answer all three has a research hypothesis. That is a legitimate starting
+point, but it is not a basis for a Phase III design.
+
 - Enrich with a better assay: fewer patients screened per enrolled patient, smaller trial, but a
   narrower label and a diagnostic development cost.
 - Enrich with a worse assay: larger trial, more screen failures, and a diluted effect that may not
@@ -839,6 +855,48 @@ PPV for a given context, or the size of a treatment-by-marker interaction that j
 restricted label. Those are judgements made by the sponsor and reviewed by the regulator. The
 standards constrain the form of the evidence, not its sufficiency.
 
+### 8.5 Bridging the trial assay to the commercial assay
+
+A trial is usually run with a laboratory-developed test or a research-use assay, and the marketed
+product requires an authorised device. The bridge between them is a study, not an assumption.
+
+| Bridging element | Question | Evidence required | Consequence if absent |
+|---|---|---|---|
+| Analytical concordance | Do the two assays classify the same samples the same way? | Agreement study on a representative sample set, with confidence intervals | The labelled population differs from the trial population |
+| Cut-off transfer | Does the trial cut-off correspond to a defined cut-off on the commercial platform? | Calibration study across the analytical range | Patients near the threshold are reclassified |
+| Specimen equivalence | Do archival and fresh samples give the same result? | Stability and concordance study by specimen type | Sites without the required specimen cannot test |
+| Reproducibility | Do results agree across sites and operators? | Multi-site precision study | Site-to-site variation changes enrolment |
+| Software and readout | Do image analysis or scoring algorithms agree? | Algorithm comparison, including version | A software update changes the result |
+
+The bridging study should be designed with the same rigour as the clinical validation, because it
+determines whether the trial's result applies to the patients who will actually be tested. A
+concordance of 85% between trial and commercial assays is not a technical detail; it means 15% of
+patients in the labelled population would have been classified differently in the trial.
+
+### 8.6 What the guidance does not require
+
+The FDA companion diagnostic guidance expects contemporaneous development and cross-referencing in
+labeling, but it does not require the trial assay and the commercial assay to be identical at the
+start of the trial. It requires the evidence to support the claim. That gap is where most bridging
+problems live: the programme meets the letter of the guidance and still cannot demonstrate that the
+marketed test identifies the trial population.
+
+### 8.7 Where the performance data come from
+
+A programme needs four kinds of data before it can run the arithmetic in Section 6, and each comes
+from a different source with a different limitation.
+
+| Input | Typical source | Limitation |
+|---|---|---|
+| Prevalence in the intended population | Registry, epidemiology literature, trial screening data | Rarely measured in the exact label population |
+| Assay sensitivity and specificity | Analytical validation against a reference method | The reference method is itself imperfect |
+| Stratum-specific treatment effects | Randomised Phase II, prospective-retrospective analysis | Often selected on the same data that defined the strata |
+| Expected event rate in the control arm | Historical trials, registry, current standard of care | Changes with standard of care and line of therapy |
+
+The weakest of the four is usually prevalence. A programme that states a single prevalence without a
+source is not making an estimate; it is making an assumption. The report should give the source, the
+year, the population, and a range.
+
 The most consequential gap is the assay-trial interface. A trial can be designed around a
 laboratory-developed test and later transition to a commercial in vitro diagnostic. The standards
 require the commercial device to be validated, but they do not require the trial assay and the
@@ -913,6 +971,27 @@ The last row is the one that matters for practice. There is no registry of bioma
 decisions, so the frequency of the PPV omission cannot be measured. The arithmetic is cheap, which
 is the argument for doing it regardless.
 
+### 9.5 The economics of screening
+
+Screening burden is the cost that biomarker strategies most often understate. Using the worked
+example, 7,810 screens at an illustrative USD 3,000 per screen (assay, pathology review, and site
+time) is USD 23.4 million, before any drug is administered. The improved assay reduces this to 5,850
+screens, or USD 17.6 million. The difference, USD 5.9 million, is comparable to the cost of the
+bridging study that the improved assay requires.
+
+The arithmetic is illustrative, not a benchmark; screening costs vary by assay, country, and
+whether an existing test can be used. The point is structural: in a low-prevalence population, the
+cost of finding eligible patients can exceed the cost of treating them, and a biomarker strategy
+that ignores screening cost will mis-rank the design options.
+
+A second economic effect is the screen-failure rate's impact on sites. A site that screens 20
+patients to randomise one may decline the next study. Screening burden is therefore a feasibility
+constraint as well as a cost.
+
+The budget comparison should therefore include screening, assay validation, bridging, and device
+submission alongside the trial cost. A biomarker strategy that is justified only by a smaller trial
+is usually under-costed.
+
 ## 10. Failure modes and red flags
 
 | Failure | Early warning sign | Mechanism | Consequence | Mitigation |
@@ -935,6 +1014,23 @@ to the date of the analysis that produced the hypothesis. If the cut-off was cho
 outcome data were seen, the effect estimate is a maximum, not an estimate, and the trial is powered
 on an optimistic number.
 
+### 10.1 Red flags by stage
+
+| Stage | Red flag | What it usually means |
+|---|---|---|
+| Discovery | Association reported without adjustment for confounders | The marker may be a proxy for stage or histology |
+| Analytical validation | Validation uses only samples from the discovery cohort | Performance is estimated on a selected specimen set |
+| Cut-off selection | Cut-off described as clinical rather than data-derived | The derivation is undocumented |
+| Phase II design | Single-arm with marker strata | No predictive claim is possible |
+| Power calculation | Uses the stratum-specific effect without dilution | The trial is underpowered |
+| Diagnostic planning | No device partner named at Phase III design | Bridging will be late and expensive |
+| Labeling | Claim broader than the assay's validated use | The test cannot identify the labelled population |
+| Post-approval | No plan for assay changes | The labelled population may drift |
+
+The stage column matters because a red flag that is tolerable early is disqualifying late. An
+unvalidated assay in discovery is normal; an unvalidated assay at Phase III design is a programme
+risk.
+
 ## 11. Assumptions and limits
 
 | Assumption | Why it is needed | What breaks it | How to test it |
@@ -954,6 +1050,22 @@ The central limit is that all of these are estimates with uncertainty, and the d
 them as point values. A programme should present the PPV and the required events as ranges, and
 should state which input drives the range. In most cases it is the prevalence, because it is the
 least well measured of the inputs.
+
+Two further assumptions determine whether the marker can be used at all, as distinct from whether it
+works:
+
+| Assumption | Why it is needed | What breaks it | How to test it |
+|---|---|---|---|
+| A confirmatory method is available for discordant results | Some patients need a second test | No orthogonal assay exists | Concordance study with a second platform |
+| Testing capacity is available at launch | Utility requires access | Central laboratory only; reimbursement absent | Testing-access plan before launch |
+
+A marker with a perfect evidence package and no testing pathway has no clinical utility.
+
+A related limit is that the model treats the assay result as fixed at baseline. In practice, a
+patient's marker status can change between the archival sample and the treatment decision, and a
+retest can move a patient across the cut-off. The programme should state whether the enrolment
+result or a confirmatory result defines eligibility, and should report the discordance rate if both
+are collected.
 
 ## 12. Exercises
 
