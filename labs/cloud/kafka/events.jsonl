@@ -1,0 +1,6 @@
+{"event_id":"evt-0001","patient_id":"synth-1001","event_type":"admit","event_time":"2026-10-01T08:15:00Z","site_id":"site-a","ward":"cardiology","schema_version":"1.0"}
+{"event_id":"evt-0002","patient_id":"synth-1002","event_type":"admit","event_time":"2026-10-01T09:02:00Z","site_id":"site-a","ward":"icu","schema_version":"1.0"}
+{"event_id":"evt-0003","patient_id":"synth-1001","event_type":"transfer","event_time":"2026-10-02T14:20:00Z","site_id":"site-a","ward":"stepdown","schema_version":"1.0"}
+{"event_id":"evt-0004","patient_id":"synth-1003","event_type":"admit","event_time":"2026-10-03T11:45:00Z","site_id":"site-b","ward":"medicine","schema_version":"1.0"}
+{"event_id":"evt-0005","patient_id":"synth-1002","event_type":"discharge","event_time":"2026-10-04T10:10:00Z","site_id":"site-a","ward":"icu","schema_version":"1.0"}
+{"event_id":"evt-0006","patient_id":"synth-1001","event_type":"discharge","event_time":"2026-10-05T16:30:00Z","site_id":"site-a","ward":"stepdown","schema_version":"1.0"}

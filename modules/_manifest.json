@@ -1,0 +1,2042 @@
+[
+  {
+    "id": "00",
+    "folder": "00_orientation",
+    "title": "Orientation and Industry Map",
+    "source": "00_orientation_and_industry_map.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_why-this-course-exists",
+        "title": "Why This Course Exists",
+        "scope": "The gap between academic data science and regulated biomedical work; what employers actually hire for."
+      },
+      {
+        "order": 2,
+        "slug": "02_the-2026-industry-landscape",
+        "title": "The 2026 Industry Landscape",
+        "scope": "Health systems, payers, pharma, medtech, diagnostics, consumer health, and the AI vendor layer."
+      },
+      {
+        "order": 3,
+        "slug": "03_stakeholder-and-buyer-map",
+        "title": "Stakeholder and Buyer Map",
+        "scope": "Who uses, who pays, who blocks, who bears harm; mapping a deal from clinician to procurement."
+      },
+      {
+        "order": 4,
+        "slug": "04_career-tracks-and-role-definitions",
+        "title": "Career Tracks and Role Definitions",
+        "scope": "Titles, scope, and skill mixes across clinical data science, regulatory science, ML engineering, and informatics."
+      },
+      {
+        "order": 5,
+        "slug": "05_the-project-charter",
+        "title": "The Project Charter",
+        "scope": "Turning a vague ask into a decision, user, comparator, outcome, data plan, and stop criteria."
+      },
+      {
+        "order": 6,
+        "slug": "06_evidence-hierarchy-for-industry-claims",
+        "title": "Evidence Hierarchy for Industry Claims",
+        "scope": "Why the pyramid misleads in product work; matching evidence strength to claim strength."
+      },
+      {
+        "order": 7,
+        "slug": "07_regulatory-triage-map",
+        "title": "Regulatory Triage Map",
+        "scope": "A first-pass map of FDA, EU MDR/IVDR, EU AI Act, HIPAA, GDPR, and CLIA touchpoints."
+      },
+      {
+        "order": 8,
+        "slug": "08_ethics-and-professional-conduct",
+        "title": "Ethics and Professional Conduct",
+        "scope": "Conflicts, data use, authorship, escalation, and what to do when a result is inconvenient."
+      },
+      {
+        "order": 9,
+        "slug": "09_how-to-use-this-package",
+        "title": "How to Use This Package",
+        "scope": "Reading order, tracks, labs, assessments, and how the survey files relate to topic folders."
+      },
+      {
+        "order": 10,
+        "slug": "10_success-metrics-and-portfolio",
+        "title": "Success Metrics and Portfolio",
+        "scope": "Program metrics, personal portfolio artifacts, and what evidence of competence looks like."
+      }
+    ]
+  },
+  {
+    "id": "01",
+    "folder": "01_clinical_foundations",
+    "title": "Clinical Foundations for Data Scientists",
+    "source": "01_clinical_foundations.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_clinical-reasoning-and-workflow",
+        "title": "Clinical Reasoning and Workflow",
+        "scope": "How clinicians form and test hypotheses; where data enters and leaves the encounter."
+      },
+      {
+        "order": 2,
+        "slug": "02_anatomy-physiology-and-vital-signs",
+        "title": "Anatomy, Physiology, and Vital Signs",
+        "scope": "Organ systems, normal ranges, compensation, and what derangement looks like in data."
+      },
+      {
+        "order": 3,
+        "slug": "03_laboratory-medicine",
+        "title": "Laboratory Medicine",
+        "scope": "Specimens, assays, reference intervals, sensitivity/specificity, and pre-analytical error."
+      },
+      {
+        "order": 4,
+        "slug": "04_pharmacology-basics",
+        "title": "Pharmacology Basics",
+        "scope": "Absorption, distribution, metabolism, excretion, interactions, and why dosing data is messy."
+      },
+      {
+        "order": 5,
+        "slug": "05_disease-taxonomy-and-coding",
+        "title": "Disease Taxonomy and Coding",
+        "scope": "ICD-10/11, SNOMED CT, MeSH, Orphanet, and the difference between a code and a diagnosis."
+      },
+      {
+        "order": 6,
+        "slug": "06_radiology-and-imaging-basics",
+        "title": "Radiology and Imaging Basics",
+        "scope": "Modalities, acquisition, reporting workflow, and what a radiologist does with an image."
+      },
+      {
+        "order": 7,
+        "slug": "07_cardiology-and-ecg-basics",
+        "title": "Cardiology and ECG Basics",
+        "scope": "The cardiac cycle, leads, intervals, common rhythms, and artifact that mimics disease."
+      },
+      {
+        "order": 8,
+        "slug": "08_documentation-and-clinical-narratives",
+        "title": "Documentation and Clinical Narratives",
+        "scope": "Note types, copy-forward, templates, coded vs narrative content, and documentation bias."
+      },
+      {
+        "order": 9,
+        "slug": "09_special-populations",
+        "title": "Special Populations",
+        "scope": "Pediatrics, pregnancy, older adults, renal/hepatic impairment, and device-dependent patients."
+      },
+      {
+        "order": 10,
+        "slug": "10_clinical-plausibility-checks",
+        "title": "Clinical Plausibility Checks",
+        "scope": "A checklist for catching impossible values, impossible trajectories, and impossible cohorts."
+      }
+    ]
+  },
+  {
+    "id": "01A",
+    "folder": "01A_foundations",
+    "title": "Foundations, Assumptions, and Units",
+    "source": "01A_foundations_assumptions_and_units.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_mathematical-basics",
+        "title": "Mathematical Basics",
+        "scope": "Functions, logs, exponents, rates, ratios, and the algebra used in every later module."
+      },
+      {
+        "order": 2,
+        "slug": "02_probability-and-statistics-basics",
+        "title": "Probability and Statistics Basics",
+        "scope": "Distributions, expectation, variance, sampling, estimation, and hypothesis testing intuition."
+      },
+      {
+        "order": 3,
+        "slug": "03_units-and-metrology",
+        "title": "Units and Metrology",
+        "scope": "SI units, clinical units, conversion factors, significant figures, and measurement uncertainty."
+      },
+      {
+        "order": 4,
+        "slug": "04_dimensional-analysis",
+        "title": "Dimensional Analysis",
+        "scope": "Checking equations by units; common conversion errors in laboratory and device data."
+      },
+      {
+        "order": 5,
+        "slug": "05_biological-basics",
+        "title": "Biological Basics",
+        "scope": "Cells, genes, proteins, metabolism, homeostasis, and the timescales that matter for data."
+      },
+      {
+        "order": 6,
+        "slug": "06_pharmacokinetics",
+        "title": "Pharmacokinetics",
+        "scope": "One- and two-compartment models, half-life, clearance, volume of distribution, dosing."
+      },
+      {
+        "order": 7,
+        "slug": "07_epidemiology-basics",
+        "title": "Epidemiology Basics",
+        "scope": "Incidence, prevalence, risk, rate, standardization, and measures of association."
+      },
+      {
+        "order": 8,
+        "slug": "08_engineering-and-device-basics",
+        "title": "Engineering and Device Basics",
+        "scope": "Signals, sampling, noise, resolution, calibration, and the device as a measurement instrument."
+      },
+      {
+        "order": 9,
+        "slug": "09_computing-basics",
+        "title": "Computing Basics",
+        "scope": "Floating point, missing values, dates and time zones, identifiers, and file formats."
+      },
+      {
+        "order": 10,
+        "slug": "10_the-assumptions-ledger",
+        "title": "The Assumptions Ledger",
+        "scope": "A reusable artifact for recording, testing, and communicating every assumption behind a claim."
+      }
+    ]
+  },
+  {
+    "id": "02",
+    "folder": "02_data_landscape",
+    "title": "The Biomedical Data Landscape",
+    "source": "02_biomedical_data_landscape.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_ehr-data",
+        "title": "EHR Data",
+        "scope": "Encounter, order, result, medication, note, and flow-sheet data; what each can and cannot answer."
+      },
+      {
+        "order": 2,
+        "slug": "02_claims-and-billing",
+        "title": "Claims and Billing Data",
+        "scope": "Claim lifecycle, coding, adjudication, and the economics embedded in the data."
+      },
+      {
+        "order": 3,
+        "slug": "03_registries-and-public-health",
+        "title": "Registries and Public Health Data",
+        "scope": "Disease registries, surveillance, vital statistics, and reporting incentives."
+      },
+      {
+        "order": 4,
+        "slug": "04_imaging-and-dicom",
+        "title": "Imaging and DICOM",
+        "scope": "Pixel data, metadata, series structure, and the imaging archive as a data source."
+      },
+      {
+        "order": 5,
+        "slug": "05_signals-and-wearables",
+        "title": "Signals and Wearables",
+        "scope": "ECG, PPG, accelerometry, CGM, and the provenance problems of consumer devices."
+      },
+      {
+        "order": 6,
+        "slug": "06_omics-data",
+        "title": "Omics Data",
+        "scope": "Genomic, transcriptomic, proteomic, and single-cell data at a survey level."
+      },
+      {
+        "order": 7,
+        "slug": "07_trial-data",
+        "title": "Trial Data",
+        "scope": "EDC, CDISC, randomization, protocol deviations, and the difference from routine care data."
+      },
+      {
+        "order": 8,
+        "slug": "08_standards-and-terminologies",
+        "title": "Standards and Terminologies",
+        "scope": "HL7 v2, FHIR, OMOP, LOINC, SNOMED CT, ICD, RxNorm, and how they relate."
+      },
+      {
+        "order": 9,
+        "slug": "09_licensing-and-access",
+        "title": "Licensing and Access",
+        "scope": "DUAs, BAAs, data-use tiers, credentialed access, and the cost of getting data wrong."
+      },
+      {
+        "order": 10,
+        "slug": "10_data-quality-dimensions",
+        "title": "Data Quality Dimensions",
+        "scope": "Completeness, accuracy, timeliness, consistency, validity, and fitness for purpose."
+      }
+    ]
+  },
+  {
+    "id": "03",
+    "folder": "03_data_engineering",
+    "title": "Data Engineering and Interoperability",
+    "source": "03_data_engineering_interoperability.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_architecture-patterns",
+        "title": "Architecture Patterns",
+        "scope": "Lakehouse, medallion layers, event-driven ingestion, and clinical constraints on each."
+      },
+      {
+        "order": 2,
+        "slug": "02_sql-for-clinical-data",
+        "title": "SQL for Clinical Data",
+        "scope": "Window functions, temporal joins, deduplication, and the queries that define cohorts."
+      },
+      {
+        "order": 3,
+        "slug": "03_python-engineering",
+        "title": "Python Engineering",
+        "scope": "Packaging, typing, testing, configuration, and reproducible environments."
+      },
+      {
+        "order": 4,
+        "slug": "04_orchestration",
+        "title": "Orchestration",
+        "scope": "DAGs, idempotency, backfills, retries, and scheduling clinical pipelines."
+      },
+      {
+        "order": 5,
+        "slug": "05_fhir-ingestion",
+        "title": "FHIR Ingestion",
+        "scope": "Resources, references, bundles, search parameters, and flattening to analytics tables."
+      },
+      {
+        "order": 6,
+        "slug": "06_dicom-pipelines",
+        "title": "DICOM Pipelines",
+        "scope": "Series assembly, de-identification, pixel handling, and imaging cohort construction."
+      },
+      {
+        "order": 7,
+        "slug": "07_data-versioning-and-lineage",
+        "title": "Data Versioning and Lineage",
+        "scope": "Snapshots, hashes, provenance, and answering 'where did this number come from'."
+      },
+      {
+        "order": 8,
+        "slug": "08_deidentification-engineering",
+        "title": "De-identification Engineering",
+        "scope": "Safe Harbor, expert determination, dates, free text, and re-identification risk."
+      },
+      {
+        "order": 9,
+        "slug": "09_security-engineering",
+        "title": "Security Engineering",
+        "scope": "Least privilege, encryption, audit logs, secrets, and pipeline threat models."
+      },
+      {
+        "order": 10,
+        "slug": "10_testing-and-observability",
+        "title": "Testing and Observability",
+        "scope": "Data tests, freshness checks, schema contracts, and alerting on pipeline failure."
+      }
+    ]
+  },
+  {
+    "id": "04",
+    "folder": "04_statistics",
+    "title": "Statistics and Causal Inference",
+    "source": "04_statistics_causal_inference.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_estimation-and-inference",
+        "title": "Estimation and Inference",
+        "scope": "Estimands, standard errors, confidence intervals, and what a p-value does not say."
+      },
+      {
+        "order": 2,
+        "slug": "02_regression-models",
+        "title": "Regression Models",
+        "scope": "Linear, logistic, Poisson, and Cox models as tools for adjustment and prediction."
+      },
+      {
+        "order": 3,
+        "slug": "03_survival-analysis",
+        "title": "Survival Analysis",
+        "scope": "Censoring, hazards, Kaplan-Meier, competing risks, and time-varying confounding."
+      },
+      {
+        "order": 4,
+        "slug": "04_missing-data",
+        "title": "Missing Data",
+        "scope": "MCAR, MAR, MNAR, multiple imputation, and sensible sensitivity analysis."
+      },
+      {
+        "order": 5,
+        "slug": "05_causal-inference-and-dags",
+        "title": "Causal Inference and DAGs",
+        "scope": "Confounding, colliders, mediators, and drawing the graph before the model."
+      },
+      {
+        "order": 6,
+        "slug": "06_propensity-scores-and-weighting",
+        "title": "Propensity Scores and Weighting",
+        "scope": "Matching, IPTW, trimming, balance diagnostics, and effective sample size."
+      },
+      {
+        "order": 7,
+        "slug": "07_target-trial-emulation",
+        "title": "Target Trial Emulation",
+        "scope": "Specifying eligibility, treatment strategies, assignment, time zero, and outcomes."
+      },
+      {
+        "order": 8,
+        "slug": "08_sensitivity-analysis",
+        "title": "Sensitivity Analysis",
+        "scope": "Negative controls, E-values, quantitative bias analysis, and tipping points."
+      },
+      {
+        "order": 9,
+        "slug": "09_subgroups-and-heterogeneity",
+        "title": "Subgroups and Heterogeneity",
+        "scope": "Pre-specification, interaction tests, multiplicity, and credible subgroup claims."
+      },
+      {
+        "order": 10,
+        "slug": "10_reporting-statistical-results",
+        "title": "Reporting Statistical Results",
+        "scope": "Effect sizes with intervals, absolute risk, number needed to treat, and honest uncertainty."
+      }
+    ]
+  },
+  {
+    "id": "05",
+    "folder": "05_study_design",
+    "title": "Study Design and Evidence Generation",
+    "source": "05_study_design_evidence.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_from-claim-to-evidence",
+        "title": "From Claim to Evidence",
+        "scope": "Translating a marketing or clinical claim into a testable evidence plan."
+      },
+      {
+        "order": 2,
+        "slug": "02_trial-designs",
+        "title": "Trial Designs",
+        "scope": "Parallel, crossover, adaptive, cluster, platform, and decentralised designs."
+      },
+      {
+        "order": 3,
+        "slug": "03_real-world-evidence",
+        "title": "Real-World Evidence",
+        "scope": "When RWE is fit for a regulatory or payer decision, and when it is not."
+      },
+      {
+        "order": 4,
+        "slug": "04_validation-designs",
+        "title": "Validation Designs",
+        "scope": "Internal, temporal, external, geographic, and prospective validation."
+      },
+      {
+        "order": 5,
+        "slug": "05_bias-taxonomy",
+        "title": "Bias Taxonomy",
+        "scope": "Selection, information, confounding, immortal time, attrition, and measurement bias."
+      },
+      {
+        "order": 6,
+        "slug": "06_sample-size-and-power",
+        "title": "Sample Size and Power",
+        "scope": "Power for differences, for precision, and for subgroup claims."
+      },
+      {
+        "order": 7,
+        "slug": "07_estimands",
+        "title": "Estimands",
+        "scope": "ICH E9(R1) five attributes and why the estimand comes before the method."
+      },
+      {
+        "order": 8,
+        "slug": "08_external-validation",
+        "title": "External Validation",
+        "scope": "Site selection, transportability, recalibration, and reporting standards."
+      },
+      {
+        "order": 9,
+        "slug": "09_evidence-synthesis",
+        "title": "Evidence Synthesis",
+        "scope": "Systematic review, meta-analysis, indirect comparison, and network meta-analysis."
+      },
+      {
+        "order": 10,
+        "slug": "10_protocol-writing",
+        "title": "Protocol Writing",
+        "scope": "A protocol skeleton that a regulator, IRB, and statistician can all read."
+      }
+    ]
+  },
+  {
+    "id": "06",
+    "folder": "06_machine_learning",
+    "title": "Machine Learning Foundations",
+    "source": "06_machine_learning_foundations.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_problem-framing",
+        "title": "Problem Framing",
+        "scope": "Prediction versus decision; choosing a target that changes an action."
+      },
+      {
+        "order": 2,
+        "slug": "02_labels-and-outcomes",
+        "title": "Labels and Outcomes",
+        "scope": "Label sources, ascertainment bias, proxy labels, and label noise."
+      },
+      {
+        "order": 3,
+        "slug": "03_splitting-and-validation",
+        "title": "Splitting and Validation",
+        "scope": "Patient-level, temporal, and site-level splits; nested cross-validation."
+      },
+      {
+        "order": 4,
+        "slug": "04_preprocessing",
+        "title": "Preprocessing",
+        "scope": "Imputation, scaling, encoding, and fitting inside the fold."
+      },
+      {
+        "order": 5,
+        "slug": "05_model-families",
+        "title": "Model Families",
+        "scope": "Linear, tree, gradient-boosted, kernel, and neural approaches with trade-offs."
+      },
+      {
+        "order": 6,
+        "slug": "06_class-imbalance",
+        "title": "Class Imbalance",
+        "scope": "Resampling, class weights, and why AUROC hides the problem."
+      },
+      {
+        "order": 7,
+        "slug": "07_metrics",
+        "title": "Metrics",
+        "scope": "Discrimination, accuracy, sensitivity, PPV, F1, and their dependence on prevalence."
+      },
+      {
+        "order": 8,
+        "slug": "08_calibration",
+        "title": "Calibration",
+        "scope": "Reliability diagrams, slope and intercept, Brier decomposition, and recalibration."
+      },
+      {
+        "order": 9,
+        "slug": "09_thresholds-and-decision-curves",
+        "title": "Thresholds and Decision Curves",
+        "scope": "Net benefit, harm ratios, capacity constraints, and choosing an operating point."
+      },
+      {
+        "order": 10,
+        "slug": "10_interpretability",
+        "title": "Interpretability",
+        "scope": "Coefficients, partial dependence, SHAP, and the limits of post-hoc explanation."
+      },
+      {
+        "order": 11,
+        "slug": "11_uncertainty",
+        "title": "Uncertainty",
+        "scope": "Confidence intervals, conformal prediction, and abstention."
+      },
+      {
+        "order": 12,
+        "slug": "12_fairness-and-subgroups",
+        "title": "Fairness and Subgroups",
+        "scope": "Subgroup performance, fairness criteria, and the impossibility results."
+      },
+      {
+        "order": 13,
+        "slug": "13_leakage",
+        "title": "Leakage",
+        "scope": "A catalogue of leaks in clinical ML and how to test for each."
+      }
+    ]
+  },
+  {
+    "id": "07",
+    "folder": "07_deep_learning",
+    "title": "Deep Learning, Multimodal Models, and LLMs",
+    "source": "07_deep_learning_multimodal_llms.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_neural-network-fundamentals",
+        "title": "Neural Network Fundamentals",
+        "scope": "Layers, activations, loss functions, backpropagation, and optimization."
+      },
+      {
+        "order": 2,
+        "slug": "02_training-dynamics",
+        "title": "Training Dynamics",
+        "scope": "Initialization, learning rates, regularization, overfitting, and debugging."
+      },
+      {
+        "order": 3,
+        "slug": "03_cnns-and-medical-vision",
+        "title": "CNNs and Medical Vision",
+        "scope": "Convolutions, receptive fields, transfer learning, and medical imaging specifics."
+      },
+      {
+        "order": 4,
+        "slug": "04_sequence-models",
+        "title": "Sequence Models",
+        "scope": "RNNs, temporal convolution, and attention for signals and text."
+      },
+      {
+        "order": 5,
+        "slug": "05_transformers",
+        "title": "Transformers",
+        "scope": "Self-attention, positional encoding, scaling, and compute cost."
+      },
+      {
+        "order": 6,
+        "slug": "06_medical-foundation-models",
+        "title": "Medical Foundation Models",
+        "scope": "Pretraining corpora, adaptation, and the evidence needed before clinical use."
+      },
+      {
+        "order": 7,
+        "slug": "07_llm-basics",
+        "title": "LLM Basics",
+        "scope": "Tokenization, next-token prediction, instruction tuning, and decoding."
+      },
+      {
+        "order": 8,
+        "slug": "08_prompting-and-rag",
+        "title": "Prompting and Retrieval-Augmented Generation",
+        "scope": "Prompt design, retrieval, grounding, and citation of sources."
+      },
+      {
+        "order": 9,
+        "slug": "09_agents-and-tools",
+        "title": "Agents and Tools",
+        "scope": "Tool use, planning, memory, and the failure modes of autonomous clinical agents."
+      },
+      {
+        "order": 10,
+        "slug": "10_evaluating-generative-models",
+        "title": "Evaluating Generative Models",
+        "scope": "Task metrics, human review, hallucination rates, and red teaming."
+      },
+      {
+        "order": 11,
+        "slug": "11_compute-latency-and-cost",
+        "title": "Compute, Latency, and Cost",
+        "scope": "GPU economics, context length, batching, and serving trade-offs."
+      }
+    ]
+  },
+  {
+    "id": "08",
+    "folder": "08_ehr_claims",
+    "title": "EHR, Claims, and Health System Operations",
+    "source": "08_ehr_claims_operations.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_health-system-operating-model",
+        "title": "Health System Operating Model",
+        "scope": "How money, clinicians, and patients move through a hospital and clinic network."
+      },
+      {
+        "order": 2,
+        "slug": "02_ehr-cohorts",
+        "title": "EHR Cohorts",
+        "scope": "Defining populations from encounter and order data without fooling yourself."
+      },
+      {
+        "order": 3,
+        "slug": "03_claims-analytics",
+        "title": "Claims Analytics",
+        "scope": "Episode construction, attribution, risk adjustment, and cost analysis."
+      },
+      {
+        "order": 4,
+        "slug": "04_operational-models",
+        "title": "Operational Models",
+        "scope": "No-show, length of stay, readmission, staffing, and OR scheduling."
+      },
+      {
+        "order": 5,
+        "slug": "05_capacity-and-patient-flow",
+        "title": "Capacity and Patient Flow",
+        "scope": "Queues, bottlenecks, boarding, and simulation of flow interventions."
+      },
+      {
+        "order": 6,
+        "slug": "06_quality-measures",
+        "title": "Quality Measures",
+        "scope": "HEDIS, CMS measures, STAR ratings, and measure specification logic."
+      },
+      {
+        "order": 7,
+        "slug": "07_revenue-cycle",
+        "title": "Revenue Cycle",
+        "scope": "Coding, denials, prior authorization, and where analytics changes cash flow."
+      },
+      {
+        "order": 8,
+        "slug": "08_evaluating-operational-interventions",
+        "title": "Evaluating Operational Interventions",
+        "scope": "Before/after, interrupted time series, difference-in-differences, and step-wedge."
+      },
+      {
+        "order": 9,
+        "slug": "09_case-studies",
+        "title": "Case Studies",
+        "scope": "Documented operational analytics programmes and what actually moved."
+      }
+    ]
+  },
+  {
+    "id": "09",
+    "folder": "09_clinical_nlp",
+    "title": "Clinical NLP",
+    "source": "09_clinical_nlp.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_clinical-text-sources",
+        "title": "Clinical Text Sources",
+        "scope": "Notes, reports, messages, and forms; structure and provenance."
+      },
+      {
+        "order": 2,
+        "slug": "02_documentation-behaviour",
+        "title": "Documentation Behaviour",
+        "scope": "Copy-forward, templates, late entries, and what they do to text data."
+      },
+      {
+        "order": 3,
+        "slug": "03_task-taxonomy",
+        "title": "Task Taxonomy",
+        "scope": "Extraction, assertion, classification, linking, summarization, and question answering."
+      },
+      {
+        "order": 4,
+        "slug": "04_classical-methods",
+        "title": "Classical Methods",
+        "scope": "Rules, dictionaries, regex, and statistical models that still win in production."
+      },
+      {
+        "order": 5,
+        "slug": "05_transformers-for-clinical-text",
+        "title": "Transformers for Clinical Text",
+        "scope": "Domain pretraining, long documents, and efficient inference."
+      },
+      {
+        "order": 6,
+        "slug": "06_annotation",
+        "title": "Annotation",
+        "scope": "Guidelines, adjudication, inter-annotator agreement, and annotation cost."
+      },
+      {
+        "order": 7,
+        "slug": "07_evaluation",
+        "title": "Evaluation",
+        "scope": "Span-level metrics, assertion accuracy, and clinician review designs."
+      },
+      {
+        "order": 8,
+        "slug": "08_deidentification",
+        "title": "De-identification",
+        "scope": "PHI categories, automated de-identification, and residual risk measurement."
+      },
+      {
+        "order": 9,
+        "slug": "09_summarization-and-grounding",
+        "title": "Summarization and Grounding",
+        "scope": "Abstractive summarization, faithful citation, and hallucination detection."
+      },
+      {
+        "order": 10,
+        "slug": "10_llm-safety-in-clinical-text",
+        "title": "LLM Safety in Clinical Text",
+        "scope": "Prompt injection, leakage, unsafe advice, and human-in-the-loop design."
+      }
+    ]
+  },
+  {
+    "id": "10",
+    "folder": "10_imaging",
+    "title": "Medical Imaging and Pathology AI",
+    "source": "10_medical_imaging.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_modalities",
+        "title": "Modalities",
+        "scope": "CT, MRI, X-ray, ultrasound, PET, digital pathology, and their data characteristics."
+      },
+      {
+        "order": 2,
+        "slug": "02_dicom-and-metadata",
+        "title": "DICOM and Metadata",
+        "scope": "Tags, series, spacing, windowing, and the metadata that leaks labels."
+      },
+      {
+        "order": 3,
+        "slug": "03_preprocessing",
+        "title": "Preprocessing",
+        "scope": "Resampling, normalization, augmentation, and preserving diagnostic content."
+      },
+      {
+        "order": 4,
+        "slug": "04_labels-and-annotation",
+        "title": "Labels and Annotation",
+        "scope": "Radiologist reads, segmentation masks, adjudication, and label noise."
+      },
+      {
+        "order": 5,
+        "slug": "05_architectures",
+        "title": "Architectures",
+        "scope": "Classification, detection, segmentation, and self-supervised approaches."
+      },
+      {
+        "order": 6,
+        "slug": "06_leakage-and-shortcuts",
+        "title": "Leakage and Shortcuts",
+        "scope": "Site signatures, scanner effects, laterality markers, and hidden text."
+      },
+      {
+        "order": 7,
+        "slug": "07_evaluation",
+        "title": "Evaluation",
+        "scope": "Lesion-level versus image-level metrics, bootstrap intervals, and reader studies."
+      },
+      {
+        "order": 8,
+        "slug": "08_workflow-integration",
+        "title": "Workflow Integration",
+        "scope": "PACS, worklists, reading room latency, and radiologist trust."
+      },
+      {
+        "order": 9,
+        "slug": "09_regulatory-path",
+        "title": "Regulatory Path",
+        "scope": "FDA clearance routes for imaging AI and the evidence each requires."
+      },
+      {
+        "order": 10,
+        "slug": "10_foundation-models",
+        "title": "Foundation Models",
+        "scope": "Vision encoders, multimodal reporting, and their evaluation gaps."
+      }
+    ]
+  },
+  {
+    "id": "11",
+    "folder": "11_signals",
+    "title": "Physiological Signals and Wearables",
+    "source": "11_physiological_signals_wearables.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_signal-fundamentals",
+        "title": "Signal Fundamentals",
+        "scope": "Sampling, aliasing, filtering, noise, and the signal chain."
+      },
+      {
+        "order": 2,
+        "slug": "02_ecg",
+        "title": "ECG",
+        "scope": "Leads, intervals, rhythms, quality indices, and automated interpretation."
+      },
+      {
+        "order": 3,
+        "slug": "03_eeg",
+        "title": "EEG",
+        "scope": "Montages, frequency bands, artifacts, seizures, and sleep staging."
+      },
+      {
+        "order": 4,
+        "slug": "04_ppg-and-wearables",
+        "title": "PPG and Wearables",
+        "scope": "Optical sensing, SpO2, heart rate, and motion artifact."
+      },
+      {
+        "order": 5,
+        "slug": "05_respiration-and-other-signals",
+        "title": "Respiration and Other Signals",
+        "scope": "Respiratory effort, airflow, EMG, EDA, and continuous glucose."
+      },
+      {
+        "order": 6,
+        "slug": "06_feature-engineering",
+        "title": "Feature Engineering",
+        "scope": "Time-domain, frequency-domain, and morphology features with clinical meaning."
+      },
+      {
+        "order": 7,
+        "slug": "07_deep-learning-for-signals",
+        "title": "Deep Learning for Signals",
+        "scope": "1D CNNs, recurrent models, transformers, and augmentation."
+      },
+      {
+        "order": 8,
+        "slug": "08_digital-biomarkers",
+        "title": "Digital Biomarkers",
+        "scope": "Definition, qualification, and the evidence a payer or regulator accepts."
+      },
+      {
+        "order": 9,
+        "slug": "09_validation",
+        "title": "Validation",
+        "scope": "Reference standards, co-primary endpoints, and confounding by activity."
+      },
+      {
+        "order": 10,
+        "slug": "10_deployment-on-device",
+        "title": "Deployment on Device",
+        "scope": "Latency, power, memory, and firmware constraints for signal models."
+      }
+    ]
+  },
+  {
+    "id": "12",
+    "folder": "12_omics",
+    "title": "Omics and Precision Medicine",
+    "source": "12_omics_precision_medicine.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_data-types",
+        "title": "Data Types",
+        "scope": "Genomics, transcriptomics, epigenomics, proteomics, metabolomics, and microbiomics."
+      },
+      {
+        "order": 2,
+        "slug": "02_genomics-and-variants",
+        "title": "Genomics and Variants",
+        "scope": "Sequencing, alignment, calling, annotation, and clinical interpretation."
+      },
+      {
+        "order": 3,
+        "slug": "03_transcriptomics",
+        "title": "Transcriptomics",
+        "scope": "Bulk RNA-seq, normalization, differential expression, and batch effects."
+      },
+      {
+        "order": 4,
+        "slug": "04_single-cell",
+        "title": "Single-Cell",
+        "scope": "Cell capture, QC, clustering, annotation, and trajectory analysis."
+      },
+      {
+        "order": 5,
+        "slug": "05_spatial-transcriptomics",
+        "title": "Spatial Transcriptomics",
+        "scope": "Spatial assays, deconvolution, and tissue architecture."
+      },
+      {
+        "order": 6,
+        "slug": "06_proteomics-and-metabolomics",
+        "title": "Proteomics and Metabolomics",
+        "scope": "Mass spectrometry, quantification, and identification confidence."
+      },
+      {
+        "order": 7,
+        "slug": "07_multi-omics-integration",
+        "title": "Multi-Omics Integration",
+        "scope": "Early, intermediate, and late fusion; when integration helps."
+      },
+      {
+        "order": 8,
+        "slug": "08_biomarker-discovery",
+        "title": "Biomarker Discovery",
+        "scope": "Discovery, qualification, validation, and the replication crisis."
+      },
+      {
+        "order": 9,
+        "slug": "09_drug-discovery",
+        "title": "Drug Discovery",
+        "scope": "Target identification, screening, ADMET, and AI's actual role."
+      },
+      {
+        "order": 10,
+        "slug": "10_clinical-genomics",
+        "title": "Clinical Genomics",
+        "scope": "ACMG classification, reporting, and genetic counseling interfaces."
+      }
+    ]
+  },
+  {
+    "id": "13",
+    "folder": "13_biopharma",
+    "title": "Biopharma and Clinical Development",
+    "source": "13_biopharma_clinical_development.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_development-funnel",
+        "title": "The Development Funnel",
+        "scope": "Discovery to Phase IV, decision gates, cost, and attrition."
+      },
+      {
+        "order": 2,
+        "slug": "02_data-in-pharma",
+        "title": "Data in Pharma",
+        "scope": "Preclinical, clinical, safety, and commercial data domains."
+      },
+      {
+        "order": 3,
+        "slug": "03_biomarker-strategy",
+        "title": "Biomarker Strategy",
+        "scope": "Prognostic, predictive, pharmacodynamic, and surrogate endpoints."
+      },
+      {
+        "order": 4,
+        "slug": "04_feasibility-and-recruitment",
+        "title": "Feasibility and Recruitment",
+        "scope": "Site selection, enrollment modelling, and diversity planning."
+      },
+      {
+        "order": 5,
+        "slug": "05_cdisc-and-trial-standards",
+        "title": "CDISC and Trial Standards",
+        "scope": "CDASH, SDTM, ADaM, define.xml, and submission-ready data."
+      },
+      {
+        "order": 6,
+        "slug": "06_safety-and-pharmacovigilance",
+        "title": "Safety and Pharmacovigilance",
+        "scope": "AE coding, signal detection, FAERS/AEMS, and aggregate reporting."
+      },
+      {
+        "order": 7,
+        "slug": "07_rwe-in-pharma",
+        "title": "RWE in Pharma",
+        "scope": "External controls, label expansion, and payer evidence."
+      },
+      {
+        "order": 8,
+        "slug": "08_ai-in-discovery-and-development",
+        "title": "AI in Discovery and Development",
+        "scope": "Where models are used, validated, and rejected."
+      },
+      {
+        "order": 9,
+        "slug": "09_decentralized-trials",
+        "title": "Decentralised Trials",
+        "scope": "Remote consent, ePRO, wearables, and the data integrity questions."
+      },
+      {
+        "order": 10,
+        "slug": "10_submission-data",
+        "title": "Submission Data",
+        "scope": "eCTD structure, datasets, and what reviewers actually check."
+      }
+    ]
+  },
+  {
+    "id": "14",
+    "folder": "14_devices_regulation",
+    "title": "Medical Devices, SaMD, and Regulation",
+    "source": "14_medical_devices_samd_regulation.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_definitions-and-classification",
+        "title": "Definitions and Classification",
+        "scope": "Device, SaMD, SiMD, IVD, accessory; risk classes in the US and EU."
+      },
+      {
+        "order": 2,
+        "slug": "02_is-it-a-device",
+        "title": "Is It a Device?",
+        "scope": "The decision tree, clinical decision support exclusions, and why vendors get this wrong."
+      },
+      {
+        "order": 3,
+        "slug": "03_fda-pathways",
+        "title": "FDA Pathways",
+        "scope": "510(k), De Novo, PMA, and the evidence each demands."
+      },
+      {
+        "order": 4,
+        "slug": "04_gmlp-and-pccp",
+        "title": "GMLP and PCCP",
+        "scope": "Good machine learning practice and predetermined change control plans."
+      },
+      {
+        "order": 5,
+        "slug": "05_qms-and-design-controls",
+        "title": "QMS and Design Controls",
+        "scope": "ISO 13485, QMSR, design history file, and document control."
+      },
+      {
+        "order": 6,
+        "slug": "06_iso-14971-risk-management",
+        "title": "ISO 14971 Risk Management",
+        "scope": "Hazard analysis, risk estimation, controls, and residual risk."
+      },
+      {
+        "order": 7,
+        "slug": "07_iec-62304-software-lifecycle",
+        "title": "IEC 62304 Software Lifecycle",
+        "scope": "Safety classes, software requirements, architecture, and verification."
+      },
+      {
+        "order": 8,
+        "slug": "08_eu-mdr-and-ivdr",
+        "title": "EU MDR and IVDR",
+        "scope": "Classification, conformity assessment, notified bodies, and post-market obligations."
+      },
+      {
+        "order": 9,
+        "slug": "09_the-evidence-package",
+        "title": "The Evidence Package",
+        "scope": "What goes in a submission and how the pieces support the claim."
+      },
+      {
+        "order": 10,
+        "slug": "10_post-market-surveillance",
+        "title": "Post-Market Surveillance",
+        "scope": "Complaints, MDR reporting, PSUR, and real-world performance monitoring."
+      }
+    ]
+  },
+  {
+    "id": "14A",
+    "folder": "14A_hardware",
+    "title": "Medical Hardware, Sensors, Chips, and Robotics",
+    "source": "14A_medical_hardware_sensors_chips_robotics.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_the-signal-chain",
+        "title": "The Signal Chain",
+        "scope": "Sensor to ADC to processor to display; where information is lost."
+      },
+      {
+        "order": 2,
+        "slug": "02_sensors",
+        "title": "Sensors",
+        "scope": "Electrodes, optical, pressure, flow, chemical, and MEMS sensing principles."
+      },
+      {
+        "order": 3,
+        "slug": "03_analog-front-ends",
+        "title": "Analog Front Ends",
+        "scope": "Amplification, filtering, common-mode rejection, and noise budgets."
+      },
+      {
+        "order": 4,
+        "slug": "04_adcs-and-signal-conditioning",
+        "title": "ADCs and Signal Conditioning",
+        "scope": "Resolution, sample rate, aliasing, and quantization error."
+      },
+      {
+        "order": 5,
+        "slug": "05_mcus-dsps-and-fpgas",
+        "title": "MCUs, DSPs, and FPGAs",
+        "scope": "Architecture choices, determinism, and real-time constraints."
+      },
+      {
+        "order": 6,
+        "slug": "06_socs-npus-and-gpus",
+        "title": "SoCs, NPUs, and GPUs",
+        "scope": "Heterogeneous compute for on-device inference."
+      },
+      {
+        "order": 7,
+        "slug": "07_power-and-thermal",
+        "title": "Power and Thermal",
+        "scope": "Battery budget, leakage, thermal throttling, and patient safety."
+      },
+      {
+        "order": 8,
+        "slug": "08_firmware-and-rtos",
+        "title": "Firmware and RTOS",
+        "scope": "Scheduling, watchdogs, secure boot, and update mechanisms."
+      },
+      {
+        "order": 9,
+        "slug": "09_medical-equipment-classes",
+        "title": "Medical Equipment Classes",
+        "scope": "Monitoring, imaging, therapeutic, laboratory, and implantable systems."
+      },
+      {
+        "order": 10,
+        "slug": "10_robotics-kinematics",
+        "title": "Robotics Kinematics",
+        "scope": "Frames, forward and inverse kinematics, Jacobians, and singularities."
+      },
+      {
+        "order": 11,
+        "slug": "11_robotics-control",
+        "title": "Robotics Control",
+        "scope": "PID, impedance, admittance, force control, and safety envelopes."
+      },
+      {
+        "order": 12,
+        "slug": "12_surgical-and-rehab-robotics",
+        "title": "Surgical and Rehabilitation Robotics",
+        "scope": "Teleoperation, haptics, registration, and assist-as-needed control."
+      },
+      {
+        "order": 13,
+        "slug": "13_standards-and-emc",
+        "title": "Standards and EMC",
+        "scope": "IEC 60601-1, collateral standards, 60601-1-2 EMC, and 80601-2-77/-2-78."
+      },
+      {
+        "order": 14,
+        "slug": "14_reliability-and-sterilization",
+        "title": "Reliability and Sterilization",
+        "scope": "MTBF, accelerated life testing, biocompatibility, and reprocessing."
+      }
+    ]
+  },
+  {
+    "id": "14B",
+    "folder": "14B_efficient_ai",
+    "title": "Efficient AI and On-Device Inference",
+    "source": "14B_efficient_ai_distillation_quantization_on_device_inference.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_the-deployment-pareto-frontier",
+        "title": "The Deployment Pareto Frontier",
+        "scope": "Accuracy, calibration, latency, memory, energy, and cost as joint constraints."
+      },
+      {
+        "order": 2,
+        "slug": "02_target-hardware-and-performance",
+        "title": "Target Hardware and Performance",
+        "scope": "Profiling, roofline reasoning, and what each accelerator can actually do."
+      },
+      {
+        "order": 3,
+        "slug": "03_the-compression-family",
+        "title": "The Compression Family",
+        "scope": "Distillation, quantization, pruning, low-rank, and when to use each."
+      },
+      {
+        "order": 4,
+        "slug": "04_knowledge-distillation",
+        "title": "Knowledge Distillation",
+        "scope": "Soft targets, temperature, feature matching, and distillation failures."
+      },
+      {
+        "order": 5,
+        "slug": "05_quantization",
+        "title": "Quantization",
+        "scope": "Affine and symmetric schemes, PTQ, QAT, calibration, and STE."
+      },
+      {
+        "order": 6,
+        "slug": "06_pruning-and-sparsity",
+        "title": "Pruning and Sparsity",
+        "scope": "Structured versus unstructured, lottery tickets, and hardware support."
+      },
+      {
+        "order": 7,
+        "slug": "07_inference-optimization",
+        "title": "Inference Optimization",
+        "scope": "Graph fusion, operator fallback, KV cache, and batching."
+      },
+      {
+        "order": 8,
+        "slug": "08_on-device-architecture",
+        "title": "On-Device Architecture",
+        "scope": "Runtimes, model formats, and the deployment pipeline."
+      },
+      {
+        "order": 9,
+        "slug": "09_medical-and-regulatory-constraints",
+        "title": "Medical and Regulatory Constraints",
+        "scope": "Change control, PCCP, and what compression does to a cleared claim."
+      },
+      {
+        "order": 10,
+        "slug": "10_validation-on-target-hardware",
+        "title": "Validation on Target Hardware",
+        "scope": "p99 latency, energy per inference, thermal throttling, and HIL testing."
+      },
+      {
+        "order": 11,
+        "slug": "11_economics-of-compression",
+        "title": "Economics of Compression",
+        "scope": "Cloud cost, device BOM, battery life, and the break-even calculation."
+      }
+    ]
+  },
+  {
+    "id": "15",
+    "folder": "15_mlops",
+    "title": "Deployment and MLOps",
+    "source": "15_deployment_mlops.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_the-production-loop",
+        "title": "The Production Loop",
+        "scope": "Train, validate, deploy, monitor, retrain, retire; where each stage fails."
+      },
+      {
+        "order": 2,
+        "slug": "02_deployment-patterns",
+        "title": "Deployment Patterns",
+        "scope": "Batch, real-time, streaming, embedded, and shadow deployment."
+      },
+      {
+        "order": 3,
+        "slug": "03_packaging-and-reproducibility",
+        "title": "Packaging and Reproducibility",
+        "scope": "Containers, lockfiles, model artifacts, and environment drift."
+      },
+      {
+        "order": 4,
+        "slug": "04_ci-cd-ct",
+        "title": "CI/CD/CT",
+        "scope": "Continuous integration, delivery, and training with clinical gates."
+      },
+      {
+        "order": 5,
+        "slug": "05_monitoring",
+        "title": "Monitoring",
+        "scope": "Service health, data quality, model performance, and outcome monitoring."
+      },
+      {
+        "order": 6,
+        "slug": "06_drift",
+        "title": "Drift",
+        "scope": "Covariate, label, concept, and population drift; detection and response."
+      },
+      {
+        "order": 7,
+        "slug": "07_incident-response",
+        "title": "Incident Response",
+        "scope": "Severity, triage, rollback, communication, and post-incident review."
+      },
+      {
+        "order": 8,
+        "slug": "08_rollout-and-rollback",
+        "title": "Rollout and Rollback",
+        "scope": "Canary, shadow, blue-green, feature flags, and safe reversal."
+      },
+      {
+        "order": 9,
+        "slug": "09_model-governance",
+        "title": "Model Governance",
+        "scope": "Inventory, ownership, approvals, change control, and audit evidence."
+      },
+      {
+        "order": 10,
+        "slug": "10_cost-and-capacity",
+        "title": "Cost and Capacity",
+        "scope": "Serving economics, autoscaling, quotas, and capacity planning."
+      }
+    ]
+  },
+  {
+    "id": "16",
+    "folder": "16_privacy_security",
+    "title": "Privacy, Security, and Ethics",
+    "source": "16_privacy_security_ethics.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_privacy-principles",
+        "title": "Privacy Principles",
+        "scope": "Purpose limitation, minimization, consent, and the clinical exceptions."
+      },
+      {
+        "order": 2,
+        "slug": "02_deidentification-and-anonymization",
+        "title": "De-identification and Anonymization",
+        "scope": "HIPAA Safe Harbor, expert determination, GDPR pseudonymization, and residual risk."
+      },
+      {
+        "order": 3,
+        "slug": "03_privacy-enhancing-technologies",
+        "title": "Privacy-Enhancing Technologies",
+        "scope": "Differential privacy, federated learning, secure computation, and synthetic data."
+      },
+      {
+        "order": 4,
+        "slug": "04_threat-modeling",
+        "title": "Threat Modeling",
+        "scope": "STRIDE, attack trees, insider risk, and the clinical threat surface."
+      },
+      {
+        "order": 5,
+        "slug": "05_access-control-and-cryptography",
+        "title": "Access Control and Cryptography",
+        "scope": "RBAC, ABAC, key management, and encryption in practice."
+      },
+      {
+        "order": 6,
+        "slug": "06_fairness",
+        "title": "Fairness",
+        "scope": "Definitions, measurement, mitigation, and the limits of each."
+      },
+      {
+        "order": 7,
+        "slug": "07_ethics",
+        "title": "Ethics",
+        "scope": "Consent, equity, automation bias, and the ethics of deployment."
+      },
+      {
+        "order": 8,
+        "slug": "08_governance",
+        "title": "Governance",
+        "scope": "Committees, data trusts, model review boards, and accountability."
+      },
+      {
+        "order": 9,
+        "slug": "09_breach-and-incident",
+        "title": "Breach and Incident",
+        "scope": "Detection, notification, containment, and lessons."
+      },
+      {
+        "order": 10,
+        "slug": "10_regulatory-map",
+        "title": "Regulatory Map",
+        "scope": "HIPAA, GDPR, EU AI Act, state law, and sector-specific rules."
+      }
+    ]
+  },
+  {
+    "id": "17",
+    "folder": "17_product_economics",
+    "title": "Product, Economics, and Leadership",
+    "source": "17_product_economics_leadership.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_product-discovery",
+        "title": "Product Discovery",
+        "scope": "Problem interviews, workflow observation, and finding a decision worth changing."
+      },
+      {
+        "order": 2,
+        "slug": "02_value-quantification",
+        "title": "Value Quantification",
+        "scope": "Outcome value, cost avoided, revenue, and the assumptions behind each."
+      },
+      {
+        "order": 3,
+        "slug": "03_health-economics",
+        "title": "Health Economics",
+        "scope": "Cost-effectiveness, ICER, QALYs, budget impact, and discounting."
+      },
+      {
+        "order": 4,
+        "slug": "04_reimbursement",
+        "title": "Reimbursement",
+        "scope": "CPT, HCPCS, DRG, coverage decisions, and payment pathways for software."
+      },
+      {
+        "order": 5,
+        "slug": "05_procurement",
+        "title": "Procurement",
+        "scope": "RFP, security review, contracting, and how health systems actually buy."
+      },
+      {
+        "order": 6,
+        "slug": "06_adoption",
+        "title": "Adoption",
+        "scope": "Workflow fit, trust, training, and the predictors of sustained use."
+      },
+      {
+        "order": 7,
+        "slug": "07_business-models",
+        "title": "Business Models",
+        "scope": "SaaS, per-seat, per-test, risk-sharing, and device-plus-service."
+      },
+      {
+        "order": 8,
+        "slug": "08_leadership",
+        "title": "Leadership",
+        "scope": "Influence without authority, decision memos, and running a review."
+      },
+      {
+        "order": 9,
+        "slug": "09_roadmap-and-prioritisation",
+        "title": "Roadmap and Prioritisation",
+        "scope": "Sequencing evidence, engineering, and commercial work under uncertainty."
+      }
+    ]
+  },
+  {
+    "id": "18",
+    "folder": "18_quality",
+    "title": "Quality, Evaluation, and Reporting",
+    "source": "18_quality_evaluation_reporting.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_the-evidence-chain",
+        "title": "The Evidence Chain",
+        "scope": "Claim to endpoint to dataset to analysis to report; where chains break."
+      },
+      {
+        "order": 2,
+        "slug": "02_reporting-guidelines",
+        "title": "Reporting Guidelines",
+        "scope": "TRIPOD+AI, CONSORT-AI, STARD-AI, SPIRIT-AI, DECIDE-AI, and PROBAST."
+      },
+      {
+        "order": 3,
+        "slug": "03_appraising-clinical-ai-evidence",
+        "title": "Appraising Clinical AI Evidence",
+        "scope": "A structured appraisal worksheet with worked examples."
+      },
+      {
+        "order": 4,
+        "slug": "04_model-cards-and-datasheets",
+        "title": "Model Cards and Datasheets",
+        "scope": "What to document and what readers actually need."
+      },
+      {
+        "order": 5,
+        "slug": "05_reproducibility",
+        "title": "Reproducibility",
+        "scope": "Code, data, environment, and the difference between repeatable and reproducible."
+      },
+      {
+        "order": 6,
+        "slug": "06_quality-management",
+        "title": "Quality Management",
+        "scope": "QMS basics for analytics teams, SOPs, and CAPA."
+      },
+      {
+        "order": 7,
+        "slug": "07_post-market-evaluation",
+        "title": "Post-Market Evaluation",
+        "scope": "Performance monitoring, drift, and real-world evidence generation."
+      },
+      {
+        "order": 8,
+        "slug": "08_audit",
+        "title": "Audit",
+        "scope": "Preparing for an audit and what auditors ask for."
+      },
+      {
+        "order": 9,
+        "slug": "09_documentation",
+        "title": "Documentation",
+        "scope": "Writing documents that survive staff turnover and inspections."
+      }
+    ]
+  },
+  {
+    "id": "19",
+    "folder": "19_capstone",
+    "title": "Capstone, Hackathons, and Competitions",
+    "source": "19_capstone_hackathons.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_capstone-architecture",
+        "title": "Capstone Architecture",
+        "scope": "Scope, team, data, evidence, and the twelve-week shape."
+      },
+      {
+        "order": 2,
+        "slug": "02_milestone-plan",
+        "title": "Milestone Plan",
+        "scope": "Week-by-week gates, kill criteria, and deliverable definitions."
+      },
+      {
+        "order": 3,
+        "slug": "03_team-roles",
+        "title": "Team Roles",
+        "scope": "Clinical, data, engineering, regulatory, and communication roles."
+      },
+      {
+        "order": 4,
+        "slug": "04_capstone-archetypes",
+        "title": "Capstone Archetypes",
+        "scope": "Eight project shapes with different evidence burdens."
+      },
+      {
+        "order": 5,
+        "slug": "05_brief-catalogue",
+        "title": "Brief Catalogue",
+        "scope": "The full set of capstone briefs with constraints and data options."
+      },
+      {
+        "order": 6,
+        "slug": "06_hackathon-formats",
+        "title": "Hackathon Formats",
+        "scope": "How to run and compete in a 24-72 hour event without producing nonsense."
+      },
+      {
+        "order": 7,
+        "slug": "07_competition-landscape",
+        "title": "Competition Landscape 2025-2026",
+        "scope": "Public challenges, their datasets, and what winning solutions share."
+      },
+      {
+        "order": 8,
+        "slug": "08_scoping-playbook",
+        "title": "Scoping Playbook",
+        "scope": "Turning an open problem into a defensible scope in two days."
+      },
+      {
+        "order": 9,
+        "slug": "09_deliverables",
+        "title": "Deliverables",
+        "scope": "Dossier, prototype, demo, and defense requirements."
+      },
+      {
+        "order": 10,
+        "slug": "10_judging",
+        "title": "Judging",
+        "scope": "Rubric, calibration, and the failure modes of judges."
+      },
+      {
+        "order": 11,
+        "slug": "11_demo-day",
+        "title": "Demo Day",
+        "scope": "Executive pitch structure and the questions you will be asked."
+      }
+    ]
+  },
+  {
+    "id": "20",
+    "folder": "20_career",
+    "title": "Career, Portfolio, and Interviews",
+    "source": "20_career_portfolio_interviews.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_role-map",
+        "title": "Role Map",
+        "scope": "Titles, levels, and what each role is actually accountable for."
+      },
+      {
+        "order": 2,
+        "slug": "02_portfolio",
+        "title": "Portfolio",
+        "scope": "Five-project portfolio structure and the evidence each project needs."
+      },
+      {
+        "order": 3,
+        "slug": "03_resume-and-linkedin",
+        "title": "Resume and LinkedIn",
+        "scope": "Translating regulated work into credible, specific claims."
+      },
+      {
+        "order": 4,
+        "slug": "04_interview-types",
+        "title": "Interview Types",
+        "scope": "Screen, technical, case, system design, and panel formats."
+      },
+      {
+        "order": 5,
+        "slug": "05_technical-interviews",
+        "title": "Technical Interviews",
+        "scope": "SQL, statistics, ML, and coding under time pressure."
+      },
+      {
+        "order": 6,
+        "slug": "06_clinical-case-interviews",
+        "title": "Clinical Case Interviews",
+        "scope": "Structuring a clinical analytics case out loud."
+      },
+      {
+        "order": 7,
+        "slug": "07_system-design",
+        "title": "System Design",
+        "scope": "Designing a clinical data product in 45 minutes."
+      },
+      {
+        "order": 8,
+        "slug": "08_behavioural-interviews",
+        "title": "Behavioural Interviews",
+        "scope": "STAR structures for safety, conflict, and failure questions."
+      },
+      {
+        "order": 9,
+        "slug": "09_negotiation",
+        "title": "Negotiation",
+        "scope": "Level, scope, equity, and the questions to ask before accepting."
+      },
+      {
+        "order": 10,
+        "slug": "10_onboarding",
+        "title": "Onboarding",
+        "scope": "A 90-day plan for a new biomedical data role."
+      }
+    ]
+  },
+  {
+    "id": "21",
+    "folder": "21_datasets",
+    "title": "Datasets, Tools, and Benchmarks",
+    "source": "21_datasets_tools_benchmarks.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_five-gate-decision",
+        "title": "The Five-Gate Dataset Decision",
+        "scope": "Access, licence, fitness, bias, and reproducibility gates."
+      },
+      {
+        "order": 2,
+        "slug": "02_access-and-licensing",
+        "title": "Access and Licensing",
+        "scope": "Credentialing, DUAs, BAAs, and commercial restrictions."
+      },
+      {
+        "order": 3,
+        "slug": "03_ehr-claims-and-icu",
+        "title": "EHR, Claims, and ICU Data",
+        "scope": "MIMIC, eICU, All of Us, NHANES, Marketscan-like sources, and their limits."
+      },
+      {
+        "order": 4,
+        "slug": "04_imaging-datasets",
+        "title": "Imaging Datasets",
+        "scope": "Public and credentialed imaging collections and their label quality."
+      },
+      {
+        "order": 5,
+        "slug": "05_signal-datasets",
+        "title": "Signal Datasets",
+        "scope": "PhysioNet collections, wearable corpora, and annotation depth."
+      },
+      {
+        "order": 6,
+        "slug": "06_omics-datasets",
+        "title": "Omics Datasets",
+        "scope": "TCGA, GTEx, single-cell atlases, and access terms."
+      },
+      {
+        "order": 7,
+        "slug": "07_pathology-datasets",
+        "title": "Pathology Datasets",
+        "scope": "Whole-slide collections and the annotation bottleneck."
+      },
+      {
+        "order": 8,
+        "slug": "08_text-and-llm-benchmarks",
+        "title": "Text and LLM Benchmarks",
+        "scope": "Clinical QA sets, summarization sets, and contamination risk."
+      },
+      {
+        "order": 9,
+        "slug": "09_public-health-datasets",
+        "title": "Public Health Datasets",
+        "scope": "Surveillance, vital statistics, and geographic data."
+      },
+      {
+        "order": 10,
+        "slug": "10_pharma-and-safety-datasets",
+        "title": "Pharma and Safety Datasets",
+        "scope": "Trial data sharing, FAERS/AEMS, and pharmacovigilance corpora."
+      },
+      {
+        "order": 11,
+        "slug": "11_tool-stack",
+        "title": "Tool Stack",
+        "scope": "What to use for each function and what to avoid."
+      },
+      {
+        "order": 12,
+        "slug": "12_benchmark-pitfalls",
+        "title": "Benchmark Pitfalls",
+        "scope": "Leaderboard chasing, contamination, and non-comparable splits."
+      }
+    ]
+  },
+  {
+    "id": "22",
+    "folder": "22_sources",
+    "title": "Sources and Further Reading",
+    "source": "22_sources_and_further_reading.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_how-to-read-this-list",
+        "title": "How to Read This List",
+        "scope": "Tiering, recency, and how to judge a source."
+      },
+      {
+        "order": 2,
+        "slug": "02_supplied-clinical-library",
+        "title": "Supplied Clinical Library",
+        "scope": "The books in this package and what each is good for."
+      },
+      {
+        "order": 3,
+        "slug": "03_regulation-and-policy",
+        "title": "Regulation and Policy",
+        "scope": "Primary regulatory sources and how to track changes."
+      },
+      {
+        "order": 4,
+        "slug": "04_methods",
+        "title": "Methods",
+        "scope": "Statistics, causal inference, ML, and evaluation references."
+      },
+      {
+        "order": 5,
+        "slug": "05_clinical-background",
+        "title": "Clinical Background",
+        "scope": "Texts and references for clinical vocabulary."
+      },
+      {
+        "order": 6,
+        "slug": "06_datasets-and-benchmarks",
+        "title": "Datasets and Benchmarks",
+        "scope": "Where to find data and how to cite it."
+      },
+      {
+        "order": 7,
+        "slug": "07_industry-and-market",
+        "title": "Industry and Market",
+        "scope": "Market research, company filings, and credible industry reporting."
+      },
+      {
+        "order": 8,
+        "slug": "08_communities-and-continuing-education",
+        "title": "Communities and Continuing Education",
+        "scope": "Societies, conferences, and ongoing learning."
+      },
+      {
+        "order": 9,
+        "slug": "09_keeping-current",
+        "title": "Keeping Current",
+        "scope": "A maintenance routine for a fast-moving field."
+      }
+    ]
+  },
+  {
+    "id": "23",
+    "folder": "23_specialty",
+    "title": "Specialty Electives",
+    "source": "23_specialty_electives.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_oncology",
+        "title": "Oncology",
+        "scope": "Tumour biology, staging, RECIST, endpoints, and oncology data."
+      },
+      {
+        "order": 2,
+        "slug": "02_cardiology",
+        "title": "Cardiology",
+        "scope": "Heart failure, ACS, arrhythmia, devices, and cardiology registries."
+      },
+      {
+        "order": 3,
+        "slug": "03_pathology",
+        "title": "Pathology",
+        "scope": "Histology, whole-slide imaging, molecular pathology, and reporting."
+      },
+      {
+        "order": 4,
+        "slug": "04_critical-care",
+        "title": "Critical Care",
+        "scope": "ICU physiology, ventilation, sepsis, and high-frequency data."
+      },
+      {
+        "order": 5,
+        "slug": "05_pediatrics-and-obstetrics",
+        "title": "Pediatrics and Obstetrics",
+        "scope": "Growth, dosing, maternal-fetal data, and special consent."
+      },
+      {
+        "order": 6,
+        "slug": "06_public-health",
+        "title": "Public Health",
+        "scope": "Population surveillance, equity, and policy analytics."
+      },
+      {
+        "order": 7,
+        "slug": "07_cross-specialty-comparison",
+        "title": "Cross-Specialty Comparison",
+        "scope": "What transfers between specialties and what does not."
+      }
+    ]
+  },
+  {
+    "id": "24",
+    "folder": "24_hardware_labs",
+    "title": "Hardware and Robotics Labs",
+    "source": "24_hardware_robotics_labs.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_safety-and-standards",
+        "title": "Safety and Standards",
+        "scope": "Lab safety, electrical safety, and the compliance boundary."
+      },
+      {
+        "order": 2,
+        "slug": "02_bench-and-simulation-stack",
+        "title": "Bench and Simulation Stack",
+        "scope": "Instruments, dev boards, simulators, and software."
+      },
+      {
+        "order": 3,
+        "slug": "03_lab-conventions",
+        "title": "Lab Conventions",
+        "scope": "Reproducibility, logging, calibration, and reporting."
+      },
+      {
+        "order": 4,
+        "slug": "04_sensor-and-signal-labs",
+        "title": "Sensor and Signal Labs",
+        "scope": "ECG front end, PPG, temperature, and noise measurement."
+      },
+      {
+        "order": 5,
+        "slug": "05_firmware-labs",
+        "title": "Firmware Labs",
+        "scope": "RTOS scheduling, watchdogs, secure boot, and update."
+      },
+      {
+        "order": 6,
+        "slug": "06_emc-labs",
+        "title": "EMC Labs",
+        "scope": "Emissions, immunity, and pre-compliance testing."
+      },
+      {
+        "order": 7,
+        "slug": "07_hil-labs",
+        "title": "Hardware-in-the-Loop Labs",
+        "scope": "Closed-loop testing, fault injection, and latency measurement."
+      },
+      {
+        "order": 8,
+        "slug": "08_robotics-labs",
+        "title": "Robotics Labs",
+        "scope": "Kinematics, control, registration, and safety envelopes."
+      },
+      {
+        "order": 9,
+        "slug": "09_evidence-dossier",
+        "title": "Evidence Dossier",
+        "scope": "Turning lab results into a defensible evidence package."
+      }
+    ]
+  },
+  {
+    "id": "25",
+    "folder": "25_trial_ops",
+    "title": "Trial Operations, HTA, and Global Regulation",
+    "source": "25_trial_operations_hta_global_regulatory.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_trial-operations",
+        "title": "Trial Operations",
+        "scope": "Start-up, site activation, enrollment, and close-out."
+      },
+      {
+        "order": 2,
+        "slug": "02_site-and-monitoring",
+        "title": "Site and Monitoring",
+        "scope": "Risk-based monitoring, source data review, and query management."
+      },
+      {
+        "order": 3,
+        "slug": "03_clinical-data-management",
+        "title": "Clinical Data Management",
+        "scope": "CRF design, edit checks, medical coding, and database lock."
+      },
+      {
+        "order": 4,
+        "slug": "04_health-technology-assessment",
+        "title": "Health Technology Assessment",
+        "scope": "Evidence requirements, economic models, and submission dossiers."
+      },
+      {
+        "order": 5,
+        "slug": "05_market-access",
+        "title": "Market Access",
+        "scope": "Pricing, reimbursement, and payer negotiation."
+      },
+      {
+        "order": 6,
+        "slug": "06_global-regulation",
+        "title": "Global Regulation",
+        "scope": "EMA, MHRA, PMDA, NMPA, Health Canada, and TGA differences."
+      },
+      {
+        "order": 7,
+        "slug": "07_pricing-and-contracting",
+        "title": "Pricing and Contracting",
+        "scope": "Value-based agreements and risk-sharing arrangements."
+      }
+    ]
+  },
+  {
+    "id": "26",
+    "folder": "26_cloud",
+    "title": "Cloud, Kubernetes, and Streaming Production Labs",
+    "source": "26_cloud_streaming_production_labs.md",
+    "topics": [
+      {
+        "order": 1,
+        "slug": "01_architecture-patterns",
+        "title": "Architecture Patterns",
+        "scope": "Reference architectures for clinical analytics and streaming."
+      },
+      {
+        "order": 2,
+        "slug": "02_containers",
+        "title": "Containers",
+        "scope": "Images, layers, security scanning, and reproducible builds."
+      },
+      {
+        "order": 3,
+        "slug": "03_kubernetes",
+        "title": "Kubernetes",
+        "scope": "Deployments, services, probes, autoscaling, and network policy."
+      },
+      {
+        "order": 4,
+        "slug": "04_infrastructure-as-code",
+        "title": "Infrastructure as Code",
+        "scope": "Terraform modules, state, and environment promotion."
+      },
+      {
+        "order": 5,
+        "slug": "05_streaming",
+        "title": "Streaming",
+        "scope": "Kafka semantics, schemas, idempotence, deduplication, and DLQs."
+      },
+      {
+        "order": 6,
+        "slug": "06_observability",
+        "title": "Observability",
+        "scope": "Metrics, logs, traces, and clinical service SLOs."
+      },
+      {
+        "order": 7,
+        "slug": "07_security",
+        "title": "Security",
+        "scope": "Secrets, identity, network segmentation, and supply chain."
+      },
+      {
+        "order": 8,
+        "slug": "08_cost-and-reliability",
+        "title": "Cost and Reliability",
+        "scope": "SLOs, error budgets, multi-AZ, and cost control."
+      },
+      {
+        "order": 9,
+        "slug": "09_reference-stack-walkthrough",
+        "title": "Reference Stack Walkthrough",
+        "scope": "End-to-end deployment of the lab stack with acceptance criteria."
+      }
+    ]
+  }
+]

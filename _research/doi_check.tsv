@@ -1,0 +1,64 @@
+doi	status	title	journal
+10.1001/jama.2011.1515	200	Risk Prediction Models for Hospital Readmission	JAMA
+10.1001/jama.2016.0287	200	The Third International Consensus Definitions for Sepsis and Septic Shock (Sepsis-3)	JAMA
+10.1001/jama.2016.0288	200	Assessment of Clinical Criteria for Sepsis	JAMA
+10.1001/jama.2017.14585	200	Diagnostic Assessment of Deep Learning Algorithms for Detection of Lymph Node Metastases in Women With Breast Cancer	JAMA
+10.1001/jama.2024.0179	200	International Consensus Criteria for Pediatric Sepsis and Septic Shock	JAMA
+10.1001/jamacardio.2016.3956	200	Prediction of 30-Day All-Cause Readmissions in Patients Hospitalized for Heart Failure	JAMA Cardiology
+10.1001/jamainternmed.2021.2626	200	External Validation of a Widely Implemented Proprietary Sepsis Prediction Model in Hospitalized Patients	JAMA Internal Medicine
+10.1001/jamaophthalmol.2018.1934	200	Automated Diagnosis of Plus Disease in Retinopathy of Prematurity Using Deep Convolutional Neural Networks	JAMA Ophthalmology
+10.1002/14651858.CD007228.pub3	200	Structured telephone support or non-invasive telemonitoring for patients with heart failure	Cochrane Database of Systematic Reviews
+10.1002/jbm.a.37845	200	Efficacy of Various Dry Electrode‐Based                     <scp>ECG</scp>                     Sensors: A Review	Journal of Biomedical Materials Research Part A
+10.1006/jbin.2001.1029	429		
+10.1007/s10729-010-9143-6	200	Operational research in the management of the operating theatre: a survey	Health Care Management Science
+10.1016/S0140-6736(17)30568-8	200	Computerised interpretation of fetal heart rate during labour (INFANT): a randomised controlled trial	The Lancet
+10.1016/S0140-6736(99)04440-2	200	Effect of metoprolol CR/XL in chronic heart failure: Metoprolol CR/XL Randomised Intervention Trial in-Congestive Heart Failure (MERIT-HF)	The Lancet
+10.1016/S1470-2045(23)00298-X	200	Artificial intelligence-supported screen reading versus standard double reading in the Mammography Screening with Artificial Intelligence trial (MASAI): a clinical safety analysis of a randomised, controlled, non-inferiority, single-blinded, screening accuracy study	The Lancet Oncology
+10.1016/S2589-7500(21)00208-9	200	The false hope of current approaches to explainable artificial intelligence in health care	The Lancet Digital Health
+10.1016/j.artmed.2021.102083	200	Multi-domain clinical natural language processing with MedCAT: The Medical Concept Annotation Toolkit	Artificial Intelligence in Medicine
+10.1016/j.healthpol.2018.02.002	200	No-shows in appointment scheduling – a systematic literature review	Health Policy
+10.1038/gim.2015.30	200	Standards and guidelines for the interpretation of sequence variants: a joint consensus recommendation of the American College of Medical Genetics and Genomics and the Association for Molecular Pathology	Genetics in Medicine
+10.1038/nature14539	200	Deep learning	Nature
+10.1038/s41467-024-44824-z	200	Segment anything in medical images	Nature Communications
+10.1038/s41576-018-0018-x	200	The personal and clinical utility of polygenic risk scores	Nature Reviews Genetics
+10.1038/s41586-019-1799-6	200	International evaluation of an AI system for breast cancer screening	Nature
+10.1038/s41586-020-2145-8	200	Video-based AI for beat-to-beat assessment of cardiac function	Nature
+10.1038/s41586-021-03819-2	200	Highly accurate protein structure prediction with AlphaFold	Nature
+10.1038/s41586-023-06139-9	200	Transfer learning enables predictions in network biology	Nature
+10.1038/s41586-023-06291-2	200	Large language models encode clinical knowledge	Nature
+10.1038/s41591-018-0213-5	200	The Artificial Intelligence Clinician learns optimal treatment strategies for sepsis in intensive care	Nature Medicine
+10.1038/s41591-018-0240-2	200	Screening for cardiac contractile dysfunction using an artificial intelligence–enabled electrocardiogram	Nature Medicine
+10.1038/s41591-018-0300-7	200	High-performance medicine: the convergence of human and artificial intelligence	Nature Medicine
+10.1038/s41591-018-0310-5	200	Guidelines for reinforcement learning in healthcare	Nature Medicine
+10.1038/s41591-019-0462-y	200	Deep learning can predict microsatellite instability directly from histology in gastrointestinal cancer	Nature Medicine
+10.1038/s41591-019-0548-6	200	Do no harm: a roadmap for responsible machine learning for health care	Nature Medicine
+10.1038/s41591-021-01620-2	200	Artificial intelligence for diagnosis and Gleason grading of prostate cancer: the PANDA challenge	Nature Medicine
+10.1038/s41591-022-01894-0	200	Prospective, multi-site study of patient outcomes after implementation of the TREWS machine learning-based early warning system for sepsis	Nature Medicine
+10.1038/s41591-023-02448-8	200	Large language models in medicine	Nature Medicine
+10.1038/s41592-024-02201-0	200	scGPT: toward building a foundation model for single-cell multi-omics using generative AI	Nature Methods
+10.1038/s41597-022-01899-x	200	MIMIC-IV, a freely accessible electronic health record dataset	Scientific Data
+10.1056/NEJMc2029240	200	Racial Bias in Pulse Oximetry Measurement	New England Journal of Medicine
+10.1056/NEJMoa030808	200	Estrogen plus Progestin and the Risk of Coronary Heart Disease	New England Journal of Medicine
+10.1056/NEJMoa1704559	200	Aspirin versus Placebo in Pregnancies at High Risk for Preterm Preeclampsia	New England Journal of Medicine
+10.1056/NEJMoa1901183	200	Large-Scale Assessment of a Smartwatch to Identify Atrial Fibrillation	New England Journal of Medicine
+10.1056/NEJMoa2021436	200	Dexamethasone in Hospitalized Patients with Covid-19	New England Journal of Medicine
+10.1056/NEJMoa2101765	200	BNT162b2 mRNA Covid-19 Vaccine in a Nationwide Mass Vaccination Setting	New England Journal of Medicine
+10.1056/NEJMoa2200075	200	Circulating Tumor DNA Analysis Guiding Adjuvant Therapy in Stage II Colon Cancer	New England Journal of Medicine
+10.1073/pnas.2112532119	200	Modeling for COVID-19 college reopening decisions: Cornell, a case study	Proceedings of the National Academy of Sciences
+10.1093/aje/kwv254	200	Using Big Data to Emulate a Target Trial When a Randomized Trial Is Not Available: Table 1.	American Journal of Epidemiology
+10.1093/biomet/70.1.41	200	The central role of the propensity score in observational studies for causal effects	Biometrika
+10.1093/cid/ciae237	200	More High-Quality Evidence Curbing Our Enthusiasm for Enhanced Terminal Decontamination of Hospital Rooms With No-Touch Technologies: Is It Lights Out for UV-C?	Clinical Infectious Diseases
+10.1093/sleep/zsaa291	200	Performance of seven consumer sleep-tracking devices compared with polysomnography	Sleep
+10.1109/jsen.2020.3012394	200	Impedance and Noise of Passive and Active Dry EEG Electrodes: A Review	IEEE Sensors Journal
+10.1126/science.aax2342	200	Dissecting racial bias in an algorithm used to manage the health of populations	Science
+10.1136/bmj-2022-070904	200	Reporting guideline for the early stage clinical evaluation of decision support systems driven by artificial intelligence: DECIDE-AI	BMJ
+10.1136/bmj-2023-078378	200	TRIPOD+AI statement: updated guidance for reporting clinical prediction models that use regression or machine learning methods	BMJ
+10.1136/bmj.m1328	200	Prediction models for diagnosis and prognosis of covid-19: systematic review and critical appraisal	BMJ
+10.1136/jamia.2009.001560	200	Mayo clinical Text Analysis and Knowledge Extraction System (cTAKES): architecture, component evaluation and applications	Journal of the American Medical Informatics Association
+10.1161/CIRCULATIONAHA.110.937409	200	Efficacy and Safety of Automatic Remote Monitoring for Implantable Cardioverter-Defibrillator Follow-Up	Circulation
+10.1161/CIRCULATIONAHA.122.060291	200	Detection of Atrial Fibrillation in a Large Population Using Wearable Devices: The Fitbit Heart Study	Circulation
+10.1177/0272989X06295361	200	Decision Curve Analysis: A Novel Method for Evaluating Prediction Models	Medical Decision Making
+10.1186/s13059-025-03574-x	200	Zero-shot evaluation reveals limitations of single-cell foundation models	Genome Biology
+10.1609/aaai.v33i01.3301590	200	CheXpert: A Large Chest Radiograph Dataset with Uncertainty Labels and Expert Comparison	Proceedings of the AAAI Conference on Artificial Intelligence
+10.21037/cdt-20-302	200	Pathophysiology of heart failure	Cardiovascular Diagnosis and Therapy
+10.3233/978-1-61499-564-7-574	200	Observational Health Data Sciences and Informatics (OHDSI): Opportunities for Observational Researchers	Studies in Health Technology and Informatics

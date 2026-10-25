@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: risk-model
+  namespace: biomed
+data:
+  model.json: |
+    {
+      "version": "0.1.0",
+      "intercept": -6.0,
+      "coefficients": {
+        "age": 0.04,
+        "systolic_bp": 0.01,
+        "creatinine": 0.3,
+        "prior_admissions": 0.4
+      },
+      "threshold": 0.2
+    }

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: risk-service-config
+  namespace: biomed
+data:
+  MODEL_PATH: /models/model.json
+  LOG_LEVEL: INFO
+  RISK_THRESHOLD: "0.20"
+  MODEL_VERSION: "0.1.0"

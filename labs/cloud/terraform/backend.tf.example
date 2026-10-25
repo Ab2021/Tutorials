@@ -1,0 +1,10 @@
+# Copy to backend.tf after creating the state bucket and lock table.
+terraform {
+  backend "s3" {
+    bucket         = "replace-with-your-terraform-state-bucket"
+    key            = "biomed/dev/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "terraform-locks"
+    encrypt        = true
+  }
+}

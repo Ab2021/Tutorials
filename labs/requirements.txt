@@ -1,0 +1,8 @@
+# Starter lab dependencies. Add dataset-specific packages only when needed.
+numpy
+pandas
+scipy
+matplotlib
+scikit-learn
+jupyterlab
+duckdb
