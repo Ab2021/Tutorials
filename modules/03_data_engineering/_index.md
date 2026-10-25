@@ -39,6 +39,9 @@ not the whole program.
 | 8 | [`08_deidentification-engineering.md`](08_deidentification-engineering.md) | De-identification Engineering | Safe Harbor, expert determination, dates, free text, and re-identification risk. | 1,200-1,800 | complete |
 | 9 | [`09_security-engineering.md`](09_security-engineering.md) | Security Engineering | Least privilege, encryption, audit logs, secrets, and pipeline threat models. | 1,200-1,800 | complete |
 | 10 | [`10_testing-and-observability.md`](10_testing-and-observability.md) | Testing and Observability | Data tests, freshness checks, schema contracts, and alerting on pipeline failure. | 1,200-1,800 | complete |
+| 11 | [`11_fhir-bulk-export-and-analytics.md`](11_fhir-bulk-export-and-analytics.md) | FHIR Bulk Export and Analytics | Asynchronous Bulk FHIR $export, SMART backend services, NDJSON, and Parquet data lakes. | 1,200-1,800 | complete |
+| 12 | [`12_da-vinci-and-us-core-interoperability.md`](12_da-vinci-and-us-core-interoperability.md) | Da Vinci and US Core Interoperability | US Core IG, Da Vinci CRD/DTR/PAS prior auth triad, and CMS-0057-F mandate. | 1,200-1,800 | complete |
+| 13 | [`13_cds-hooks-and-smart-on-fhir.md`](13_cds-hooks-and-smart-on-fhir.md) | CDS Hooks and SMART on FHIR | Event-driven CDS Hooks, Cards, prefetch optimization, and OAuth2 app launch. | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 

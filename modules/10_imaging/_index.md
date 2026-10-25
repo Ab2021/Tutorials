@@ -39,6 +39,9 @@ not the whole program.
 | 8 | [`08_workflow-integration.md`](08_workflow-integration.md) | Workflow Integration | PACS, worklists, reading room latency, and radiologist trust. | 1,200-1,800 | complete |
 | 9 | [`09_regulatory-path.md`](09_regulatory-path.md) | Regulatory Path | FDA clearance routes for imaging AI and the evidence each requires. | 1,200-1,800 | complete |
 | 10 | [`10_foundation-models.md`](10_foundation-models.md) | Foundation Models | Vision encoders, multimodal reporting, and their evaluation gaps. | 1,200-1,800 | complete |
+| 11 | [`11_wsi-pipeline-infrastructure.md`](11_wsi-pipeline-infrastructure.md) | Whole-Slide Imaging Infrastructure | Pyramidal WSI formats (DICOM Supplement 145), tiling, Macenko stain normalization, and HistoQC. | 1,200-1,800 | complete |
+| 12 | [`12_pathology-foundation-models.md`](12_pathology-foundation-models.md) | Pathology Foundation Models and Pathomics | UNI, CONCH, GigaPath, Attention-MIL (CLAM), and H&E-based molecular mutation prediction. | 1,200-1,800 | complete |
+| 13 | [`13_digital-pathology-lab-operations.md`](13_digital-pathology-lab-operations.md) | Digital Pathology Lab Operations | Lab digitization, CLIA LDT vs. FDA IVD regulatory divide, LIMS HL7 integration, and telepathology. | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 

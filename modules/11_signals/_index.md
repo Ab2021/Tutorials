@@ -39,6 +39,7 @@ not the whole program.
 | 8 | [`08_digital-biomarkers.md`](08_digital-biomarkers.md) | Digital Biomarkers | Definition, qualification, and the evidence a payer or regulator accepts. | 1,200-1,800 | complete |
 | 9 | [`09_validation.md`](09_validation.md) | Validation | Reference standards, co-primary endpoints, and confounding by activity. | 1,200-1,800 | complete |
 | 10 | [`10_deployment-on-device.md`](10_deployment-on-device.md) | Deployment on Device | Latency, power, memory, and firmware constraints for signal models. | 1,200-1,800 | complete |
+| 11 | [`11_predictive-maintenance-medical-equipment.md`](11_predictive-maintenance-medical-equipment.md) | Medical Equipment Predictive Maintenance | Telemetry feature engineering, Remaining Useful Life (RUL), calibration drift, and IoT fleet diagnostics. | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 

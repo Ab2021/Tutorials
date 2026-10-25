@@ -710,6 +710,8 @@ The architecture is therefore not constrained by the model. A model update can g
 
 The decision is to ship the current model with the A/B update path, the 96 KiB arena, and the 136 KiB SRAM map, and to set a model-size trigger: if the model exceeds 120 KiB per slot, the flash headroom falls below 12.5% and the layout must be revisited.
 
+The SRAM trigger is an arena above 128 KiB, at which point the total exceeds 168 KiB and the headroom falls below 35%. The latency trigger is a model above 55 ms, at which point the pipeline margin falls below 10%.
+
 This is the characteristic shape of a device architecture decision: not "does it fit", but "which margin binds first, and what is the trigger for revisiting the design".
 
 ### 6.12 What the case does not show
@@ -1032,6 +1034,12 @@ Each is a hypothesis that the test plan must address, not an assumption the arch
 
 **The privacy obligation is continuous.** Telemetry that is acceptable at launch may become unacceptable when the population or the data source changes.
 
+### 9.6 A note on procurement
+
+The architecture is also a procurement document. The flash and SRAM sizes, the runtime, the update path, and the security features determine which part can be bought and at what price. A team that specifies the model first and the part second often discovers that the only part with enough SRAM is also the part that breaks the bill of materials.
+
+The practical sequence is to set the memory and security requirements from the clinical and update requirements, then choose the smallest part that meets them with headroom.
+
 ## 10. Failure modes and red flags
 
 | Failure | Early warning sign | Mechanism | Consequence | Mitigation |
@@ -1053,6 +1061,8 @@ Each is a hypothesis that the test plan must address, not an assumption the arch
 | Boot time exceeds availability requirement | Device slow to start | Large image, slow flash | Missed first alert | Measure cold boot; optimize init |
 | Wake latency not measured | Battery life or latency off | Peripheral restore time | Missed deadline | Measure wake separately |
 | Self-test absent | Bad model runs | No known-input check | Silent wrong output | Add a boot self-test |
+| Debug port left open | Production access | No fuse or lock | Data extraction | Disable in production |
+| Keys stored in flash | Key extraction | No secure element | Update forgery | Use a secure element |
 
 ## 11. Assumptions and limits
 
@@ -1073,6 +1083,8 @@ Each is a hypothesis that the test plan must address, not an assumption the arch
 | Cold boot meets the availability requirement | Device usable at power-on | Large image, slow verification | Measure cold boot |
 | Wake time is measured separately | Predicts latency | Peripheral restore | Measure wake |
 | The self-test exercises the model | Detects bad updates | Load-only check | Fault injection |
+| Debug access is disabled in production | Prevents extraction | Open port | Verify fuses |
+| Keys are protected | Prevents forgery | Keys in plain flash | Inspect the design |
 
 The central limit is that the architecture is validated on a small number of devices, while the field contains many. Unit-to-unit variation in flash, sensors, and batteries can move the margins. The validation should include at least three units from different production lots, and the margins should be large enough to absorb the variation.
 
@@ -1245,6 +1257,9 @@ A strong answer rejects on no rollback, no watchdog, no safe state, insufficient
 - **Warm restart** — restart after a watchdog reset.
 - **Self-test** — boot check of sensor, model, and known input.
 - **Load check** — verification that the model loads, not that it works.
+- **Secure element** — protected key storage and cryptographic operations.
+- **Watchdog window** — a service window that detects both too-early and too-late checks.
+- **Ring buffer** — fixed-size log that overwrites the oldest entries.
 
 ## 16. Sources
 

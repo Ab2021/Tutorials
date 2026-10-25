@@ -39,6 +39,8 @@ not the whole program.
 | 8 | [`08_eu-mdr-and-ivdr.md`](08_eu-mdr-and-ivdr.md) | EU MDR and IVDR | Classification, conformity assessment, notified bodies, and post-market obligations. | 1,200-1,800 | complete |
 | 9 | [`09_the-evidence-package.md`](09_the-evidence-package.md) | The Evidence Package | What goes in a submission and how the pieces support the claim. | 1,200-1,800 | complete |
 | 10 | [`10_post-market-surveillance.md`](10_post-market-surveillance.md) | Post-Market Surveillance | Complaints, MDR reporting, PSUR, and real-world performance monitoring. | 1,200-1,800 | complete |
+| 11 | [`11_in-silico-trials-and-simulation.md`](11_in-silico-trials-and-simulation.md) | In-Silico Trials and Simulation | ASME V&V 40 credibility, ISO/TR 23809, statistical shape modeling, and FDA CM&S dossier. | 1,200-1,800 | complete |
+| 12 | [`12_udi-and-pms-analytics.md`](12_udi-and-pms-analytics.md) | UDI and Post-Market Surveillance Analytics | Unique Device Identification (DI/PI), FDA GUDID, MAUDE text mining, and CUSUM quality control. | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 

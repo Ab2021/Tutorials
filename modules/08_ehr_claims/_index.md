@@ -38,6 +38,8 @@ not the whole program.
 | 7 | [`07_revenue-cycle.md`](07_revenue-cycle.md) | Revenue Cycle | Coding, denials, prior authorization, and where analytics changes cash flow. | 1,200-1,800 | complete |
 | 8 | [`08_evaluating-operational-interventions.md`](08_evaluating-operational-interventions.md) | Evaluating Operational Interventions | Before/after, interrupted time series, difference-in-differences, and step-wedge. | 1,200-1,800 | complete |
 | 9 | [`09_case-studies.md`](09_case-studies.md) | Case Studies | Documented operational analytics programmes and what actually moved. | 1,200-1,800 | complete |
+| 10 | [`10_fraud-waste-and-abuse-analytics.md`](10_fraud-waste-and-abuse-analytics.md) | Fraud, Waste, and Abuse Analytics | Claims anomaly detection, peer profiling, Benford's Law, and False Claims Act evidence. | 1,200-1,800 | complete |
+| 11 | [`11_health-equity-and-sdoh-analytics.md`](11_health-equity-and-sdoh-analytics.md) | Health Equity and SDOH Analytics | Area Deprivation Index (ADI), Z-codes, Disparity Rate Ratio, and proxy bias avoidance. | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 

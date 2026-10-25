@@ -39,6 +39,9 @@ not the whole program.
 | 8 | [`08_deidentification.md`](08_deidentification.md) | De-identification | PHI categories, automated de-identification, and residual risk measurement. | 1,200-1,800 | complete |
 | 9 | [`09_summarization-and-grounding.md`](09_summarization-and-grounding.md) | Summarization and Grounding | Abstractive summarization, faithful citation, and hallucination detection. | 1,200-1,800 | complete |
 | 10 | [`10_llm-safety-in-clinical-text.md`](10_llm-safety-in-clinical-text.md) | LLM Safety in Clinical Text | Prompt injection, leakage, unsafe advice, and human-in-the-loop design. | 1,200-1,800 | complete |
+| 11 | [`11_ambient-ai-and-documentation.md`](11_ambient-ai-and-documentation.md) | Ambient AI and Autonomous Documentation | Real-time clinical transcription, acoustic diarization, verifiable audio grounding, and SOAP synthesis. | 1,200-1,800 | complete |
+| 12 | [`12_icsr-and-pharmacovigilance-nlp.md`](12_icsr-and-pharmacovigilance-nlp.md) | NLP for Pharmacovigilance and ICSR | Individual Case Safety Reports (ICH E2B), MedDRA autocoding, and 15-day expedited triage. | 1,200-1,800 | complete |
+| 13 | [`13_linguistic-equity-in-clinical-nlp.md`](13_linguistic-equity-in-clinical-nlp.md) | Linguistic Equity in Clinical NLP | Tokenizer fertility, medical false cognates, code-switching, and multilingual disparity audits. | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 

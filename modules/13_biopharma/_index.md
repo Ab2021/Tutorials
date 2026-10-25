@@ -39,6 +39,9 @@ not the whole program.
 | 8 | [`08_ai-in-discovery-and-development.md`](08_ai-in-discovery-and-development.md) | AI in Discovery and Development | Where models are used, validated, and rejected. | 1,200-1,800 | complete |
 | 9 | [`09_decentralized-trials.md`](09_decentralized-trials.md) | Decentralised Trials | Remote consent, ePRO, wearables, and the data integrity questions. | 1,200-1,800 | complete |
 | 10 | [`10_submission-data.md`](10_submission-data.md) | Submission Data | eCTD structure, datasets, and what reviewers actually check. | 1,200-1,800 | complete |
+| 11 | [`11_digital-twins-in-clinical-trials.md`](11_digital-twins-in-clinical-trials.md) | Digital Twins in Clinical Trials | Patient-level generative emulators, PROCOVA method, ANCOVA variance reduction, and trial downsizing. | 1,200-1,800 | complete |
+| 12 | [`12_statistical-pharmacovigilance.md`](12_statistical-pharmacovigilance.md) | Statistical Pharmacovigilance | Disproportionality metrics (PRR, ROR), Empirical Bayes (MGPS/EBGM), FAERS, and the Weber effect. | 1,200-1,800 | complete |
+| 13 | [`13_pass-and-active-safety-surveillance.md`](13_pass-and-active-safety-surveillance.md) | PASS and Active Safety Surveillance | Post-Authorization Safety Studies, Self-Controlled Case Series (SCCS), FDA Sentinel, and TreeScan. | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 

@@ -39,6 +39,7 @@ not the whole program.
 | 8 | [`08_standards-and-terminologies.md`](08_standards-and-terminologies.md) | Standards and Terminologies | HL7 v2, FHIR, OMOP, LOINC, SNOMED CT, ICD, RxNorm, and how they relate. | 1,200-1,800 | complete |
 | 9 | [`09_licensing-and-access.md`](09_licensing-and-access.md) | Licensing and Access | DUAs, BAAs, data-use tiers, credentialed access, and the cost of getting data wrong. | 1,200-1,800 | complete |
 | 10 | [`10_data-quality-dimensions.md`](10_data-quality-dimensions.md) | Data Quality Dimensions | Completeness, accuracy, timeliness, consistency, validity, and fitness for purpose. | 1,200-1,800 | complete |
+| 11 | [`11_global-health-and-lmic-data.md`](11_global-health-and-lmic-data.md) | Global Health and LMIC Data Systems | DHIS2, OpenMRS, verbal autopsy, and disease surveillance in low-resource settings. | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 

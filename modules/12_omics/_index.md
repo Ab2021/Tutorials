@@ -39,6 +39,12 @@ not the whole program.
 | 8 | [`08_biomarker-discovery.md`](08_biomarker-discovery.md) | Biomarker Discovery | Discovery, qualification, validation, and the replication crisis. | 1,200-1,800 | complete |
 | 9 | [`09_drug-discovery.md`](09_drug-discovery.md) | Drug Discovery | Target identification, screening, ADMET, and AI's actual role. | 1,200-1,800 | complete |
 | 10 | [`10_clinical-genomics.md`](10_clinical-genomics.md) | Clinical Genomics | ACMG classification, reporting, and genetic counseling interfaces. | 1,200-1,800 | complete |
+| 11 | [`11_pharmacogenomics-cds-and-cpic.md`](11_pharmacogenomics-cds-and-cpic.md) | Pharmacogenomics CDS and CPIC | CYP450 star-alleles, Activity Scores, CPIC API integration, and pre-emptive EHR alerts. | 1,200-1,800 | complete |
+| 12 | [`12_polygenic-risk-scores.md`](12_polygenic-risk-scores.md) | Polygenic Risk Scores in Clinical Practice | C+T, LDpred2, PRS-CS, ancestry portability gap, Decision Curve Analysis, and LDT status. | 1,200-1,800 | complete |
+| 13 | [`13_spatial-omics-and-pathology-integration.md`](13_spatial-omics-and-pathology-integration.md) | Spatial Omics and Pathology Integration | Spatial transcriptomics (Visium/Xenium), H&E co-registration, cell deconvolution, and TME modeling. | 1,200-1,800 | complete |
+| 14 | [`14_ai-for-protein-engineering.md`](14_ai-for-protein-engineering.md) | AI for Protein Engineering | Protein language models (ESM-2), pLDDT/PAE interpretation, RFdiffusion, and ProteinMPNN. | 1,200-1,800 | complete |
+| 15 | [`15_crispr-and-gene-therapy-pipelines.md`](15_crispr-and-gene-therapy-pipelines.md) | CRISPR and Gene Therapy Pipelines | sgRNA design, off-target detection (GUIDE-seq), CRISPResso2 indels, and pooled MAGeCK screens. | 1,200-1,800 | complete |
+| 16 | [`16_microbiome-analytics.md`](16_microbiome-analytics.md) | Microbiome Analytics and Metagenomics | 16S vs WGS shotgun metagenomics, compositionality trap, Centered Log-Ratio (CLR), and UniFrac. | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 
