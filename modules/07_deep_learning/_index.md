@@ -29,17 +29,17 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_neural-network-fundamentals.md`](01_neural-network-fundamentals.md) | Neural Network Fundamentals | Layers, activations, loss functions, backpropagation, and optimization. | 1,200-1,800 | planned |
-| 2 | [`02_training-dynamics.md`](02_training-dynamics.md) | Training Dynamics | Initialization, learning rates, regularization, overfitting, and debugging. | 1,200-1,800 | planned |
-| 3 | [`03_cnns-and-medical-vision.md`](03_cnns-and-medical-vision.md) | CNNs and Medical Vision | Convolutions, receptive fields, transfer learning, and medical imaging specifics. | 1,200-1,800 | planned |
-| 4 | [`04_sequence-models.md`](04_sequence-models.md) | Sequence Models | RNNs, temporal convolution, and attention for signals and text. | 1,200-1,800 | planned |
-| 5 | [`05_transformers.md`](05_transformers.md) | Transformers | Self-attention, positional encoding, scaling, and compute cost. | 1,200-1,800 | planned |
-| 6 | [`06_medical-foundation-models.md`](06_medical-foundation-models.md) | Medical Foundation Models | Pretraining corpora, adaptation, and the evidence needed before clinical use. | 1,200-1,800 | planned |
-| 7 | [`07_llm-basics.md`](07_llm-basics.md) | LLM Basics | Tokenization, next-token prediction, instruction tuning, and decoding. | 1,200-1,800 | planned |
-| 8 | [`08_prompting-and-rag.md`](08_prompting-and-rag.md) | Prompting and Retrieval-Augmented Generation | Prompt design, retrieval, grounding, and citation of sources. | 1,200-1,800 | planned |
-| 9 | [`09_agents-and-tools.md`](09_agents-and-tools.md) | Agents and Tools | Tool use, planning, memory, and the failure modes of autonomous clinical agents. | 1,200-1,800 | planned |
-| 10 | [`10_evaluating-generative-models.md`](10_evaluating-generative-models.md) | Evaluating Generative Models | Task metrics, human review, hallucination rates, and red teaming. | 1,200-1,800 | planned |
-| 11 | [`11_compute-latency-and-cost.md`](11_compute-latency-and-cost.md) | Compute, Latency, and Cost | GPU economics, context length, batching, and serving trade-offs. | 1,200-1,800 | planned |
+| 1 | [`01_neural-network-fundamentals.md`](01_neural-network-fundamentals.md) | Neural Network Fundamentals | Layers, activations, loss functions, backpropagation, and optimization. | 1,200-1,800 | complete |
+| 2 | [`02_training-dynamics.md`](02_training-dynamics.md) | Training Dynamics | Initialization, learning rates, regularization, overfitting, and debugging. | 1,200-1,800 | complete |
+| 3 | [`03_cnns-and-medical-vision.md`](03_cnns-and-medical-vision.md) | CNNs and Medical Vision | Convolutions, receptive fields, transfer learning, and medical imaging specifics. | 1,200-1,800 | complete |
+| 4 | [`04_sequence-models.md`](04_sequence-models.md) | Sequence Models | RNNs, temporal convolution, and attention for signals and text. | 1,200-1,800 | complete |
+| 5 | [`05_transformers.md`](05_transformers.md) | Transformers | Self-attention, positional encoding, scaling, and compute cost. | 1,200-1,800 | complete |
+| 6 | [`06_medical-foundation-models.md`](06_medical-foundation-models.md) | Medical Foundation Models | Pretraining corpora, adaptation, and the evidence needed before clinical use. | 1,200-1,800 | complete |
+| 7 | [`07_llm-basics.md`](07_llm-basics.md) | LLM Basics | Tokenization, next-token prediction, instruction tuning, and decoding. | 1,200-1,800 | complete |
+| 8 | [`08_prompting-and-rag.md`](08_prompting-and-rag.md) | Prompting and Retrieval-Augmented Generation | Prompt design, retrieval, grounding, and citation of sources. | 1,200-1,800 | complete |
+| 9 | [`09_agents-and-tools.md`](09_agents-and-tools.md) | Agents and Tools | Tool use, planning, memory, and the failure modes of autonomous clinical agents. | 1,200-1,800 | complete |
+| 10 | [`10_evaluating-generative-models.md`](10_evaluating-generative-models.md) | Evaluating Generative Models | Task metrics, human review, hallucination rates, and red teaming. | 1,200-1,800 | complete |
+| 11 | [`11_compute-latency-and-cost.md`](11_compute-latency-and-cost.md) | Compute, Latency, and Cost | GPU economics, context length, batching, and serving trade-offs. | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,9 +71,9 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 11 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 11 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.
 

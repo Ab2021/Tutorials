@@ -29,7 +29,7 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_signal-fundamentals.md`](01_signal-fundamentals.md) | Signal Fundamentals | Sampling, aliasing, filtering, noise, and the signal chain. | 1,200-1,800 | planned |
+| 1 | [`01_signal-fundamentals.md`](01_signal-fundamentals.md) | Signal Fundamentals | Sampling, aliasing, filtering, noise, and the signal chain. | 1,200-1,800 | complete |
 | 2 | [`02_ecg.md`](02_ecg.md) | ECG | Leads, intervals, rhythms, quality indices, and automated interpretation. | 1,200-1,800 | planned |
 | 3 | [`03_eeg.md`](03_eeg.md) | EEG | Montages, frequency bands, artifacts, seizures, and sleep staging. | 1,200-1,800 | planned |
 | 4 | [`04_ppg-and-wearables.md`](04_ppg-and-wearables.md) | PPG and Wearables | Optical sensing, SpO2, heart rate, and motion artifact. | 1,200-1,800 | planned |
@@ -69,9 +69,9 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 9 |
 | draft | 0 |
-| complete | 0 |
+| complete | 1 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.
 

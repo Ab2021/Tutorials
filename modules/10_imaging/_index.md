@@ -29,16 +29,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_modalities.md`](01_modalities.md) | Modalities | CT, MRI, X-ray, ultrasound, PET, digital pathology, and their data characteristics. | 1,200-1,800 | planned |
-| 2 | [`02_dicom-and-metadata.md`](02_dicom-and-metadata.md) | DICOM and Metadata | Tags, series, spacing, windowing, and the metadata that leaks labels. | 1,200-1,800 | planned |
-| 3 | [`03_preprocessing.md`](03_preprocessing.md) | Preprocessing | Resampling, normalization, augmentation, and preserving diagnostic content. | 1,200-1,800 | planned |
-| 4 | [`04_labels-and-annotation.md`](04_labels-and-annotation.md) | Labels and Annotation | Radiologist reads, segmentation masks, adjudication, and label noise. | 1,200-1,800 | planned |
-| 5 | [`05_architectures.md`](05_architectures.md) | Architectures | Classification, detection, segmentation, and self-supervised approaches. | 1,200-1,800 | planned |
-| 6 | [`06_leakage-and-shortcuts.md`](06_leakage-and-shortcuts.md) | Leakage and Shortcuts | Site signatures, scanner effects, laterality markers, and hidden text. | 1,200-1,800 | planned |
-| 7 | [`07_evaluation.md`](07_evaluation.md) | Evaluation | Lesion-level versus image-level metrics, bootstrap intervals, and reader studies. | 1,200-1,800 | planned |
-| 8 | [`08_workflow-integration.md`](08_workflow-integration.md) | Workflow Integration | PACS, worklists, reading room latency, and radiologist trust. | 1,200-1,800 | planned |
-| 9 | [`09_regulatory-path.md`](09_regulatory-path.md) | Regulatory Path | FDA clearance routes for imaging AI and the evidence each requires. | 1,200-1,800 | planned |
-| 10 | [`10_foundation-models.md`](10_foundation-models.md) | Foundation Models | Vision encoders, multimodal reporting, and their evaluation gaps. | 1,200-1,800 | planned |
+| 1 | [`01_modalities.md`](01_modalities.md) | Modalities | CT, MRI, X-ray, ultrasound, PET, digital pathology, and their data characteristics. | 1,200-1,800 | complete |
+| 2 | [`02_dicom-and-metadata.md`](02_dicom-and-metadata.md) | DICOM and Metadata | Tags, series, spacing, windowing, and the metadata that leaks labels. | 1,200-1,800 | complete |
+| 3 | [`03_preprocessing.md`](03_preprocessing.md) | Preprocessing | Resampling, normalization, augmentation, and preserving diagnostic content. | 1,200-1,800 | complete |
+| 4 | [`04_labels-and-annotation.md`](04_labels-and-annotation.md) | Labels and Annotation | Radiologist reads, segmentation masks, adjudication, and label noise. | 1,200-1,800 | complete |
+| 5 | [`05_architectures.md`](05_architectures.md) | Architectures | Classification, detection, segmentation, and self-supervised approaches. | 1,200-1,800 | complete |
+| 6 | [`06_leakage-and-shortcuts.md`](06_leakage-and-shortcuts.md) | Leakage and Shortcuts | Site signatures, scanner effects, laterality markers, and hidden text. | 1,200-1,800 | complete |
+| 7 | [`07_evaluation.md`](07_evaluation.md) | Evaluation | Lesion-level versus image-level metrics, bootstrap intervals, and reader studies. | 1,200-1,800 | complete |
+| 8 | [`08_workflow-integration.md`](08_workflow-integration.md) | Workflow Integration | PACS, worklists, reading room latency, and radiologist trust. | 1,200-1,800 | complete |
+| 9 | [`09_regulatory-path.md`](09_regulatory-path.md) | Regulatory Path | FDA clearance routes for imaging AI and the evidence each requires. | 1,200-1,800 | complete |
+| 10 | [`10_foundation-models.md`](10_foundation-models.md) | Foundation Models | Vision encoders, multimodal reporting, and their evaluation gaps. | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -69,9 +69,9 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.
 
