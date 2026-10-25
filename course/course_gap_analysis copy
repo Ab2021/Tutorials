@@ -1,0 +1,504 @@
+Course Gap Analysis — Biomedical Data Science for Industry (2026)
+Prepared: 25 October 2026
+Scope: Review of all 30 module index files, course survey files, books inventory, and web research on 2026 industry skill demands.
+Method: Systematic comparison of existing module topics against (1) 2026 industry skills-gap reports, (2) book inventory coverage, (3) emerging technology domains, and (4) operational completeness of planned vs. complete topics.
+
+[!IMPORTANT] This document identifies gaps only — topics, sub-topics, or entirely missing modules that are not adequately covered by any existing module. Each gap is rated by Priority (P0 = critical; P1 = high; P2 = nice-to-have) and mapped to the most appropriate insertion point in the existing structure.
+
+Executive Summary
+The course is exceptionally broad and well-structured. The majority of foundational, clinical, and advanced topics are addressed across the 30 modules. However, six structural gaps and ~40 topic-level gaps exist across the following categories:
+
+Category	# Gaps	Max Priority
+A. Agentic AI & Autonomous Clinical Workflows	5	P0
+B. Synthetic Data & Digital Twins (Clinical)	4	P0
+C. Computational Pathology (dedicated depth)	4	P0
+D. Health Supply Chain & Manufacturing Analytics	5	P1
+E. Pharmacovigilance Signal Detection (dedicated depth)	3	P1
+F. Health IT Interoperability — SMART on FHIR / CDS Hooks	4	P1
+G. Synthetic Biology & Bioeconomy Data Engineering	3	P2
+H. Genomic Counseling Automation & Clinical Decision Support	3	P1
+I. Global Health & LMIC Data Science	4	P1
+J. Multimodal Benchmark Infrastructure & Evaluation Protocols	3	P1
+K. Completion of Planned (Status = planned) Modules	—	P0
+Section A: Agentic AI & Autonomous Clinical Workflows
+[!NOTE] Module 07 covers "Agents and Tools" in a single topic (~1,200–1,800 words). Industry in 2026 has moved agentic AI from R&D into operational deployment (prior authorizations, scheduling, real-time alerting, autonomous documentation). This warrants dedicated, expanded treatment.
+
+A.1 — Missing: Multi-Agent Orchestration in Healthcare
+Gap: No topic covers multi-agent system design—how multiple specialized agents (retriever, validator, escalation agent, summariser) are orchestrated for regulated healthcare workflows, including human-in-the-loop interruption points and audit trails.
+
+What to add to Module 07 or as Module 07B:
+
+LangGraph / LlamaIndex Workflows / CrewAI patterns applied to clinical tasks
+Agent memory: short-term (context window), long-term (vector store), episodic (structured logs)
+Guardrails: output validators, Constitutional AI checks for HIPAA-relevant outputs
+Multi-agent failure modes: cascading errors, circular reasoning, hallucinated tool calls
+Regulatory framing: when does an autonomous agent become a SaMD?
+Case study: autonomous prior-authorization agent (approval, denial, escalation paths)
+Lab: Build a simple 2-agent system (extractor + validator) on a MIMIC-IV task using LangGraph
+Priority: P0 | Location: Add as Topic 12 in Module 07 or a standalone Module 07B
+
+A.2 — Missing: Agentic AI Safety, Red-Teaming, and Clinical Guardrails
+Gap: Evaluation of generative models (Module 07 Topic 10) covers general hallucination rates. No topic specifically covers adversarial testing of agentic systems in clinical settings—jailbreaks, prompt injections into EHR data, refusal-to-answer calibration, and post-deployment monitoring of agent decisions.
+
+What to add:
+
+Clinical red-teaming taxonomy: factual hallucination, instruction injection, confidentiality leakage, unsafe medical advice
+Red-team tooling: Garak, promptbench adapted for clinical LLMs
+Agent-specific monitoring: decision logs, disagreement detection between agent and clinician
+Regulatory expectation: FDA AI/ML action plan §4 (monitoring) applied to agents
+Case study: documented failures in autonomous clinical documentation tools
+Priority: P0 | Location: Add as Topic 13 in Module 07 or as a section in Module 15 (MLOps)
+
+A.3 — Gap in Module 09: Ambient AI & Autonomous Documentation
+Gap: Module 09 covers clinical NLP extensively but does not specifically address ambient AI (real-time voice-to-structured-note systems like Suki, Nuance DAX, AWS HealthScribe), which is the dominant 2026 deployment pattern for clinical AI.
+
+What to add to Module 09:
+
+Ambient AI architecture: ASR → diarization → entity extraction → FHIR write
+Regulatory status: FDA enforcement discretion vs. SaMD determination for ambient documentation
+Data quality concerns: hallucinated diagnoses propagating into EHRs, copy-forward amplification
+Evaluation: SOAP note accuracy, physician acceptance rate, HIPAA/BAA requirements
+Lab: Evaluate an ambient AI transcript against a ground-truth note using NER-F1 and a clinical plausibility checklist
+Priority: P0 | Location: Add as Topic 15 in Module 09
+
+A.4 — Missing: CDS Hooks and SMART on FHIR Integration
+Gap: Module 03 and Module 08 mention FHIR but do not cover HL7 CDS Hooks and SMART on FHIR — the actual mechanism by which AI models are embedded into EHR workflows (Epic, Cerner) at the point of care.
+
+What to add to Module 03 or 08:
+
+SMART on FHIR: launch context, authorization, scopes, patient and provider app patterns
+CDS Hooks: hook types (patient-view, order-select, order-sign), request/response anatomy
+Building a CDS service: FHIR R4 resource parsing, ML score → card construction
+Epic/Cerner specific integration notes (App Orchard, SMART Gallery)
+Testing environments: SMART Health IT sandbox, Logica Sandbox
+Lab: Deploy a sepsis-risk CDS Hook service against a HAPI FHIR test server
+Priority: P1 | Location: Add as Topic 15 in Module 03 or Topic 14 in Module 08
+
+A.5 — Missing: Workflow Automation & RPA in Healthcare Operations
+Gap: No topic covers Robotic Process Automation (RPA) and task automation in healthcare — prior auth bots, coding automation, denial management — a major deployment archetype for data scientists at payers and providers.
+
+What to add to Module 17:
+
+RPA vs. AI agents: what RPA is good for, where it breaks
+Healthcare-specific automation: revenue cycle, coding, prior auth, ADT notifications
+Build vs. buy: UiPath, Automation Anywhere, Epic Robotic Automation
+Measuring ROI: cost-per-task, error rate reduction, FTE displacement ethics
+Priority: P1 | Location: Add as Topic 10 in Module 17
+
+Section B: Synthetic Data & Digital Twins
+[!NOTE] Module 16 mentions synthetic data under PETs in a single topic. Module 13 mentions digital twins briefly. Neither provides standalone, deep treatment. Industry in 2026 is using synthetic data for trial simulation, bias correction, and regulatory-accepted external control arms.
+
+B.1 — Missing: Synthetic Data Generation — Methods, Evaluation, Regulatory Acceptance
+Gap: No module provides standalone treatment of synthetic data generation methods and regulatory acceptance.
+
+What to add (expansion of Module 16 Topic 3 or new module):
+
+Generation methods: GANs (CTGAN, TVAE), diffusion models, rule-based agents, LLM-based record generation
+Evaluation dimensions: fidelity (statistical similarity), utility (downstream model performance), privacy (nearest-neighbor distance, membership inference)
+Synthea: population-scale simulation; how to customize for a clinical use case
+FDA/EMA guidance: 2024 draft guidance on synthetic control arms
+Pitfalls: propagating real biases, hallucinated rare events
+Lab: Generate a synthetic cohort from MIMIC-IV summary stats using CTGAN; evaluate with fidelity + utility metrics
+Priority: P0 | Location: Expand Module 16 Topic 3 significantly OR add as new Module 16B
+
+B.2 — Missing: Patient-Level Digital Twins for Trial Simulation
+Gap: Module 13 mentions digital twins in the RWE section without mechanistic detail.
+
+What to add to Module 13:
+
+Digital twin types: mechanistic (ODE/PDE), data-driven (ML emulators), hybrid
+Data inputs: EHR trajectory, omics, imaging, wearable streams
+Validation: how FDA/EMA evaluate in-silico evidence (2025 draft guidance)
+Use cases: oncology dose-optimization, DCT external arm, device testing
+Platforms: Unlearn.AI, Insilico Medicine, regulatory-accepted examples
+Risk: twin overconfidence, distribution shift, regulatory non-acceptance
+Priority: P0 | Location: Add as Topic 11 in Module 13
+
+B.3 — Missing: In-Silico Trials for Medical Devices (ISO/TR 23809)
+Gap: Module 14 and Module 24 do not mention in-silico trials or FDA/ASME V&V 40 CM&S framework.
+
+What to add:
+
+FDA's CM&S roadmap, ASME V&V 40 for medical devices
+Physics-based simulation: FEM for implants, CFD for catheters
+Virtual patient populations: statistical shape models, synthetic imaging phantoms
+Lab: Run a simple FEM simulation of a stent deployment (FEBio or SimVascular)
+Priority: P1 | Location: Add as Topic 11 in Module 14 or Topic 13 in Module 24
+
+B.4 — Missing: Federated Learning Infrastructure — Practical Implementation
+Gap: Module 16 Topic 3 mentions FL under PETs without implementation depth. No treatment of healthcare-specific FL consortia or engineering challenges.
+
+What to add:
+
+FL frameworks: NVIDIA FLARE, PySyft, Flower, TensorFlow Federated
+Aggregation: FedAvg, FedProx, FedNova trade-offs
+Communication: DP noise budgets, compression, secure aggregation
+Healthcare consortia: OHDSI network studies, FDA Sentinel, NIH N3C
+Lab: Simulate a 3-site federated model on MIMIC-IV partitions using Flower
+Priority: P1 | Location: Expand Module 16 Topic 3 OR add as Topic 15 in Module 03
+
+Section C: Computational Pathology (Dedicated Depth)
+[!NOTE] Module 10 covers WSI as one topic among many imaging modalities. Computational pathology is a distinct, fast-growing industry segment with unique engineering needs, specialized foundation models, and regulatory pathways.
+
+C.1 — Expand Module 10: Whole-Slide Imaging Pipeline Infrastructure
+Gap: Missing entirely: engineering infrastructure for WSI at scale.
+
+What to add:
+
+Storage formats: DICOM-WSI, SVS, TIFF; openslide, tifffile
+Tiling strategies: tile size, overlap, magnification levels, tissue-foreground masks
+Stain normalization: Macenko, Vahadane, stain augmentation
+Data loaders: pathml, HistoQC for QC; TorchPath, CLAM
+Petabyte-scale storage: object stores, lazy loading, streaming dataloaders
+Lab: Build an end-to-end WSI tiling and QC pipeline on a TCGA slide
+Priority: P0 | Location: Add as Topic 15 in Module 10
+
+C.2 — Expand Module 10: Foundation Models for Pathology
+Gap: No topic covers pathology-specific foundation models (UNI, CONCH, GigaPath, PathChat) or pathomics.
+
+What to add:
+
+Models: UNI, CONCH, GigaPath, PathChat, CHIEF — architecture, training corpora, benchmark performance
+Pathomics: predicting molecular subtype, mutation status, MSI/TMB from H&E
+CLAM-style MIL (Multiple Instance Learning) for slide-level classification
+Evaluation: TCGA benchmarks, CPTAC, clinical validation requirements
+Regulatory: FDA clearance pathway for AI-assisted pathology (Paige.AI, PathAI examples)
+Priority: P0 | Location: Add as Topic 16 in Module 10
+
+C.3 — Missing: Digital Pathology Lab Operations & Diagnostics Industry
+Gap: No topic covers the operational business context of digital pathology — lab digitization, regulatory status of LDTs vs. IVDs, commercial market.
+
+What to add:
+
+Lab digitization: slide scanner selection, pre-analytics, LIMS integration
+LDT vs. IVD regulatory distinction for AI-assisted diagnostics (CLIA, FDA 21st Century Cures)
+Telepathology: synchronous vs. asynchronous, bandwidth requirements
+Reimbursement: CPT codes for digital pathology reads and AI add-ons
+Priority: P1 | Location: Expand Module 23 Topic 03 (Pathology) significantly
+
+C.4 — Missing: Spatial Omics Integration with Pathology
+Gap: No topic bridges spatial transcriptomics (Module 12 Topic 05) with spatial pathology — registering spatial data to H&E, predicting spatial gene expression from histology.
+
+What to add:
+
+Spatial data registration: image-based to sequencing-based coordinates (MERSCOPE, Xenium, Visium)
+Predicting transcriptomics from H&E: HIPT, THItoGene
+Cell segmentation in spatial context: Baysor, Cellpose, StarDist on tissue images
+TME analysis: cell-cell interaction, neighborhood analysis, COMMOT
+Lab: Align a Visium dataset with matched H&E; plot gene expression overlaid on tissue morphology
+Priority: P1 | Location: Add as Topic 11 in Module 12
+
+Section D: Health Supply Chain & Manufacturing Analytics
+[!NOTE] This domain is completely absent from the course despite significant data science employment in pharma supply chain, cold chain for cell/gene therapies, medical device supply resilience, and serialization analytics.
+
+D.1 — Missing: Pharmaceutical Supply Chain Analytics
+What to add (Module 23 elective or new Module 27):
+
+Data sources: ERP (SAP, Oracle), MES, LIMS, QMS, serialization platforms
+Demand forecasting: specialty drug vs. commodity drug; orphan disease supply constraints
+Cold chain analytics: IoT temperature excursion detection, regulatory impact
+CGT logistics: vein-to-vein tracking for autologous CAR-T; chain-of-identity data
+DSCSA: serialization, traceability, interoperability
+Lab: Build a temperature excursion anomaly detector on simulated cold-chain IoT data
+Priority: P1 | Location: Module 23 new elective topic OR new Module 27
+
+D.2 — Missing: Manufacturing Execution Systems (MES) & Process Analytical Technology
+What to add:
+
+PAT framework (FDA Guidance, ICH Q8/Q9/Q10): real-time quality monitoring
+MES data: batch records, deviation tracking, equipment OEE
+MSPC: PCA/PLS on process sensor streams; golden batch analysis
+Regulatory: linking process data to CPV in submissions
+Priority: P1 | Location: New topic in Module 13 or Module 27
+
+D.3 — Expand Module 14: UDI & Post-Market Surveillance Analytics
+Gap: Module 14 Topic 10 covers PMS conceptually without the analytical systems detail (GUDID, MAUDE, EUDAMED).
+
+What to add:
+
+UDI system: GUDID, DI vs. PI, issuing agencies (GS1, HIBCC)
+MAUDE database analysis: disproportionality analysis for devices
+EU EUDAMED: PSUR, PMSR data requirements
+Complaint trending and device failure signal detection
+Lab: Pull MAUDE records for a device category; apply disproportionality analysis
+Priority: P1 | Location: Expand Module 14 Topic 10
+
+D.4 — Missing: Predictive Maintenance for Medical Equipment
+What to add:
+
+Sensor data from medical equipment: CT, MRI, ventilators, infusion pumps
+PdM: condition monitoring, anomaly detection, remaining useful life (RUL) prediction
+Operational context: clinical engineering, OEM service contracts, uptime SLAs
+Lab: Apply LSTM-based RUL model to NASA CMAPSS dataset; discuss adaptation to imaging equipment
+Priority: P2 | Location: New topic in Module 08 or 11
+
+D.5 — Missing: Health Insurance FWA Detection (Fraud, Waste & Abuse)
+Gap: Module 08 covers claims data but not FWA detection — a major payer data science application.
+
+What to add:
+
+FWA typology: upcoding, unbundling, ghost patients, kickback networks
+Graph analytics: provider network community detection, centrality measures
+Anomaly detection: isolation forest, LOF on claims patterns
+CMS program integrity: ZPIC, RAC, MAC contractor analytics roles
+Case study: CMS Open Payments + LEIE databases as FWA signal sources
+Priority: P1 | Location: Add as Topic 14 in Module 08
+
+Section E: Pharmacovigilance Signal Detection
+[!NOTE] Module 13 Topic 06 exists but is one topic. Industry demand for data scientists who build automated PV pipelines is high and growing.
+
+E.1 — Expand Module 13 Topic 06: Statistical Signal Detection Methods
+What to add:
+
+Disproportionality analysis: PRR, ROR, BCPNN, GPS/MGPS
+FAERS data wrangling: case deduplication, MedDRA coding, outcome coding
+Empirical Bayes vs. frequentist approaches; VigiBase vs. FAERS benchmarks
+Lab: Download FAERS quarterly data; compute PRR for a drug-event pair; replicate a known signal
+Priority: P1 | Location: Split Module 13 Topic 06 into 06a (PV concepts) + 06b (Signal detection analytics)
+
+E.2 — Missing: AI/NLP for Automated Case Processing (ICSR Automation)
+What to add (Module 09 or 13):
+
+E2B(R3) structure for ICSRs
+NLP pipeline: AE entity extraction, drug-disease-outcome triple extraction
+Sources: EHR notes, social media, biomedical literature
+Validation against MedDRA term hierarchy
+Tools: MedDRA autocoder, OpenFDA API
+Priority: P1 | Location: Add as Topic 15 in Module 09 or Topic 11 in Module 13
+
+E.3 — Missing: Real-World Safety Monitoring Post-Approval (PASS/PAES)
+What to add:
+
+PASS/PAES: regulatory requirements, registry studies, pragmatic trial designs
+Active surveillance: Sentinel Initiative, BEST
+EHR-based safety studies: confounding, time-varying covariates, negative controls
+Priority: P1 | Location: Add as Topic 12 in Module 13
+
+Section F: FHIR Bulk Export, Da Vinci, and Interoperability Gaps
+F.1 — Missing: FHIR Bulk Data Export & Population Analytics Pipelines
+What to add to Module 03:
+
+FHIR Bulk Data API: $export, ndjson format, kickoff + polling pattern
+SMART Backend Services: system-level auth for bulk access
+ETL to OMOP: Rabbit-in-a-Hat, Usagi
+Performance: handling 100k-patient exports (Parquet, Delta Lake)
+Lab: Run bulk FHIR export from Synthea-populated HAPI server; load to DuckDB; run OMOP cohort query
+Priority: P1 | Location: Add as Topic 15 in Module 03
+
+F.2 — Missing: Da Vinci Project, US Core IG & CMS Interoperability Rule
+What to add to Module 03 or 08:
+
+US Core IG: mandatory FHIR profiles, MustSupport semantics
+Da Vinci: CRD, DTR, PAS — payer-to-provider interoperability
+CMS Interoperability Final Rule 2024: API mandates, timelines
+PDex: member attribution, claims-to-FHIR conversion
+Priority: P1 | Location: Add as Topic 16 in Module 03
+
+Section G: Synthetic Biology & Protein Engineering
+G.1 — Missing: AI for Protein Engineering & Structural Biology
+What to add (expand Module 12 Topic 09):
+
+AlphaFold 2/3: structure prediction, accuracy metrics, use in target identification
+Protein language models: ESM-2 embeddings, variant effect prediction
+Generative protein design: RFDiffusion, ProteinMPNN for enzyme/antibody design
+Benchmarks: CASP15/16, ProteinGym, DMS datasets
+Lab: Use ESMFold to predict structure of a variant; score with ESM-2 embeddings
+Priority: P1 | Location: Expand Module 12 Topic 09
+
+G.2 — Missing: CRISPR & Gene Therapy Data Pipelines
+What to add to Module 12:
+
+CRISPR screens: pooled sgRNA libraries, MAGeCK workflow
+Base editing/prime editing: off-target analysis, CRISPResso2
+Gene therapy analytics: vector sequencing, AAV capsid profiling, biodistribution
+Cell therapy (CAR-T/NK): manufacturing data, in-process analytics, release testing
+Priority: P2 | Location: Add as Topic 11 in Module 12
+
+G.3 — Missing: Microbiome Analytics
+What to add:
+
+16S rRNA vs. WGS metagenomics: workflow differences, depth requirements
+QIIME2, MetaPhlAn4 for processing
+Alpha/beta diversity, compositional analysis (ANCOM, ALDEx2)
+Lab: QIIME2 amplicon analysis on HMP 16S dataset
+Priority: P2 | Location: Add as Topic 12 in Module 12
+
+Section H: Genomic Clinical Decision Support
+H.1 — Missing: Pharmacogenomics CDS (CPIC Integration)
+What to add:
+
+PGx basics: CYP450 polymorphisms, drug-gene interaction categories
+CPIC, DPWG guidelines: encoding and delivery as CDS alerts
+PharmGKB, CPIC API: programmatic access
+EHR integration: Epic/Cerner CPIC-based PGx alerts
+Lab: Query CPIC API for a gene-drug pair; build a CDS alert rule
+Priority: P1 | Location: Add as Topic 11 in Module 12
+
+H.2 — Missing: Polygenic Risk Scores in Clinical Practice
+What to add:
+
+PRS construction: clumping + thresholding, LDpred2, PRS-CS
+Calibration across ancestry groups: why PRS fails in non-European populations
+Clinical utility: NRI, DCA for PRS
+Regulatory status: FDA approach to LDTs based on PRS
+DTC genomics: 23andMe, Color Genomics use cases and limitations
+Priority: P1 | Location: Add as Topic 12+ in Module 12
+
+Section I: Global Health & LMIC Data Science
+I.1 — Missing: LMIC Health Data Infrastructure
+What to add (expand Module 23 Topic 06 or Module 02):
+
+DHIS2: architecture, aggregate vs. tracker programs, API, custom analytics
+OpenMRS: clinical data model, low-connectivity challenges
+Disease surveillance: IHR, EWARN, eIDSR systems
+mHealth data: SMS-based collection, mobile money as health outcome proxy
+Equity analytics: LMIC-specific bias, lack of ICD coding coverage
+Priority: P1 | Location: Expand Module 23 Topic 06 significantly
+
+I.2 — Missing: AI for Disease Surveillance & Outbreak Detection
+What to add:
+
+Digital disease surveillance: syndromic, event-based (ProMED, HealthMap)
+Nowcasting models: spatio-temporal models for case projection
+Wastewater epidemiology: SARS-CoV-2 case study; pathogen detection from signal processing
+One Health: zoonotic spillover risk, animal surveillance databases
+Priority: P1 | Location: Expand Module 23 Topic 06
+
+I.3 — Missing: Health Equity Analytics (Structured Treatment)
+What to add:
+
+SDOH data sources: ACS, CDC PLACES, AHRQ SDOH, ADI
+Disparity measurement: rate ratios, slope index of inequality, concentration index
+SDOH in models: when to include, when proxies perpetuate discrimination
+Regulatory context: CMS Health Equity Plans, ONC USCDI+ SDOH data elements
+Lab: Merge MIMIC-IV with ADI zip-code data; compare outcome rates by deprivation quartile
+Priority: P1 | Location: Add as Topic 14 in Module 08 or Topic 11 in Module 16
+
+I.4 — Missing: Linguistic Equity in Clinical NLP
+What to add to Module 09:
+
+Performance disparities: NER accuracy by patient language in clinical notes
+Code-switching in clinical text: Spanish-English mixed notes
+Translation pipelines for multilingual NLP: risks, HIPAA considerations
+Regulatory: ONC 2024 guidance on health equity in USCDI
+Priority: P1 | Location: Add as Topic 16 in Module 09 or absorb into existing bias topic
+
+Section J: Multimodal Benchmarks & Evaluation
+J.1 — Missing: Internal Benchmark Design (Not Just Usage)
+What to add to Module 18 or 21:
+
+Internal evaluation harnesses: when public benchmarks don't represent your deployment
+Human evaluation protocols: inter-rater reliability, clinical adjudication panels
+Living benchmarks: time-varying test sets to detect model drift
+Clinical benchmark design: from MedQA/PubMedQA to task-specific operational benchmarks
+Reference: HealthBench, MedAgentBench design papers; FDA AI evaluation framework
+Priority: P1 | Location: Add as Topic 14 in Module 18
+
+J.2 — Missing: Multimodal Fusion Architectures (Vision + Text + Signal + Omics)
+Gap: Module 07 covers multimodal models broadly. Biomedical-specific fusion architectures are not detailed — a frontier area of clinical AI in 2026.
+
+What to add to Module 07:
+
+Fusion architectures: early (feature concat), intermediate (cross-attention), late (ensemble)
+Biomedical multimodal models: BioViL-T, REMEDIS, GigaPath, CONCH
+Missing-modality robustness: training and inference when one modality is unavailable
+Evaluation: modality-ablation studies, contribution attribution
+Lab: Train a late-fusion model combining tabular EHR + CXR embedding for 30-day mortality prediction
+Priority: P0 | Location: Add as Topic 12 in Module 07
+
+J.3 — Missing: Target Trial Emulation Framework
+Gap: No topic covers the Target Trial Emulation (TTE) framework — now the FDA/EMA preferred methodological standard for RWE studies in regulatory submissions.
+
+What to add to Module 05:
+
+Target trial emulation: eligibility, treatment strategy, outcome, follow-up, causal contrast (Hernán & Robins)
+Active comparator new-user (ACNU) design
+Sequential trial emulation for sustained treatments
+Negative control outcomes as bias detectors
+FDA and EMA guidance references (2023 RWE framework)
+Lab: Emulate the UKPDS trial in UK Biobank data using TTE; compare to published RCT estimates
+Priority: P0 | Location: Add as Topic 15 in Module 05
+
+Section K: Operational Completeness — Planned Modules Without Content
+[!WARNING] 14 of the 30 modules have 0 complete topics (all planned). These represent the highest-priority content production need. The skeleton exists; body content does not.
+
+Module	Planned Topics	Priority
+14 — Medical Devices, SaMD, Regulation	10	P0
+15 — Deployment / MLOps	10	P0
+16 — Privacy, Security, Ethics	10	P0
+17 — Product, Economics, Leadership	9	P0
+18 — Quality & Evaluation	8	P0
+19 — Capstone & Hackathons	15	P0
+20 — Career & Portfolio	14	P0
+21 — Datasets & Benchmarks	17	P1
+22 — Sources & Further Reading	12	P1
+23 — Specialty Electives	7	P1
+24 — Hardware & Robotics Labs	12	P1
+25 — Trial Operations / HTA	7	P1
+26 — Cloud / Kubernetes / Streaming	9	P1
+Prioritised Change Recommendations
+[!TIP] Tackle in this order for maximum industry-readiness improvement at minimum course restructuring cost.
+
+#	Change	Priority	Module	Effort
+1	Add Target Trial Emulation topic	P0	05	1 topic
+2	Add Multimodal Fusion Architectures	P0	07	1 topic
+3	Add Multi-Agent Orchestration	P0	07	1 topic
+4	Add Agentic AI Red-Teaming & Guardrails	P0	07	1 topic
+5	Expand Synthetic Data (CTGAN/diffusion/evaluation)	P0	16	Expand T3
+6	Add Patient-Level Digital Twins	P0	13	1 topic
+7	Add WSI Pipeline Infrastructure	P0	10	1 topic
+8	Add Pathology Foundation Models	P0	10	1 topic
+9	Add Ambient AI & Autonomous Documentation	P0	09	1 topic
+10	Write all 10 planned topics in Module 14	P0	14	10 topics
+11	Write all 10 planned topics in Module 15	P0	15	10 topics
+12	Write all 10 planned topics in Module 16	P0	16	10 topics
+13	Write all 9 planned topics in Module 17	P0	17	9 topics
+14	Add CDS Hooks / SMART on FHIR	P1	03/08	1 topic
+15	Add FHIR Bulk Export pipeline	P1	03	1 topic
+16	Add Da Vinci / US Core IG	P1	03	1 topic
+17	Add FWA Detection to Module 08	P1	08	1 topic
+18	Expand PV signal detection (split T06 → T06a + T06b)	P1	13	Split T6
+19	Add ICSR NLP automation	P1	09/13	1 topic
+20	Add PASS/PAES real-world safety monitoring	P1	13	1 topic
+21	Add Pharmacogenomics CDS (CPIC)	P1	12	1 topic
+22	Add Polygenic Risk Scores	P1	12	1 topic
+23	Add Spatial Omics × Pathology bridge	P1	12	1 topic
+24	Add Protein Engineering AI (expand Drug Discovery topic)	P1	12	Expand T9
+25	Expand UDI & PMS analytics	P1	14	Expand T10
+26	Add In-Silico Trials (ISO/TR 23809, ASME V&V 40)	P1	14	1 topic
+27	Add Federated Learning implementation	P1	03/16	1 topic
+28	Expand LMIC health data infrastructure	P1	23	Expand T6
+29	Add Health Equity Analytics	P1	08/16	1 topic
+30	Add Linguistic Equity in Clinical NLP	P1	09	1 topic
+31	Add Pharma Supply Chain as elective	P1	23	1 topic
+32	Add RPA/Workflow Automation	P1	17	1 topic
+33	Add Internal Benchmark Design	P1	18	1 topic
+34	Add Microbiome Analytics	P2	12	1 topic
+35	Add CRISPR/Gene Therapy pipelines	P2	12	1 topic
+36	Add Predictive Maintenance for medical equipment	P2	11	1 topic
+Book Coverage Gap Analysis
+The 10 books on hand are clinical reference texts (Bates' Physical Exam, ECG, Respiratory Physiology, Radiology, Neuroanatomy, Neurology — clinical focus). They map well to Module 01 (Clinical Foundations) and Module 11 (ECG/signals).
+
+Absent from book collection (recommend adding to Module 22 reading list):
+
+Computational biology/bioinformatics textbook (Bioinformatics Algorithms, Durbin Biological Sequence Analysis)
+Clinical trial design textbook (Piantadosi, or Friedman's Fundamentals of Clinical Trials)
+Health economics textbook (Drummond's Methods for the Economic Evaluation of Health Care)
+Medical device standards handbook (ISO/IEC standards compendium)
+Causal inference textbook (Hernán & Robins Causal Inference: What If — freely available)
+Summary Findings
+Finding	Severity
+14/30 modules have zero written topic files (all planned)	🔴 Critical
+Agentic AI gets 1 topic; warrants 3+ given 2026 industry deployment	🔴 High
+Synthetic data & digital twins have no standalone dedicated content	🔴 High
+Target Trial Emulation not covered despite FDA/EMA requiring it for RWE	🔴 High
+Computational pathology lacks WSI infrastructure & foundation model depth	🔴 High
+Multimodal biomedical fusion architectures need dedicated topic in Module 07	🔴 High
+Health supply chain analytics entirely absent	🟡 Medium
+Pharmacogenomics CDS not covered despite CPIC integration in major EHRs	🟡 Medium
+Polygenic risk scores not covered despite clinical deployment	🟡 Medium
+LMIC health data systems absent from global-health track	🟡 Medium
+FWA detection absent from claims/payer module	🟡 Medium
+Protein Engineering AI (AlphaFold, ESM-2) not covered in drug discovery	🟡 Medium
+Generated 25 Oct 2026. Based on review of all 30 _index.md module files, 4 course-level files (COURSE_OUTLINE.md, README.md, _course_spec.md, MODULE_EXPANSION_SPEC.md), 10 book titles in /books/, and 3 web-research passes on 2026 industry skills-gap reports.
+Next step: Select one P0 gap to develop as a full topic file — recommend starting with Target Trial Emulation (Module 05 Topic 15).
