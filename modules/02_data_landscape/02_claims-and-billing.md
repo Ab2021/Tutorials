@@ -349,7 +349,7 @@ Three things sit outside the 28 steps and must be handled separately:
 
 A team that runs the 28 steps and skips these three will produce a clean dataset and a weak answer. The steps are necessary and not sufficient.
 
-### 5.1 Field-level mechanics: the claim header
+### 5.2 Field-level mechanics: the claim header
 
 1. **Member identifier.** A plan-specific identifier, not a national one. Linkage across payers requires probabilistic matching or a trusted third party.
 2. **Provider identifier.** National Provider Identifier (NPI) for professionals; for facilities, the NPI plus a tax identification number. Provider attribution is ambiguous when a claim is billed under a group NPI.
@@ -359,7 +359,7 @@ A team that runs the 28 steps and skips these three will produce a clean dataset
 6. **DRG and payment fields.** Present on institutional claims; used for payment, not for clinical classification.
 7. **Status.** Paid, denied, pending, or adjusted. The status determines whether the claim belongs in a utilization count.
 
-### 5.2 Field-level mechanics: claim lines
+### 5.3 Field-level mechanics: claim lines
 
 1. **Revenue code.** Facility service category. A single inpatient claim may have 30 or more lines, most of which are not clinically meaningful.
 2. **CPT or HCPCS code.** The billable service. Bundling rules mean that not every service performed is separately coded.
@@ -368,7 +368,7 @@ A team that runs the 28 steps and skips these three will produce a clean dataset
 5. **Place of service.** Where the service happened. A telehealth visit and an office visit can share a CPT code and differ by POS.
 6. **Allowed and paid per line.** Line-level amounts should sum to the header total; if they do not, the claim was adjusted.
 
-### 5.3 Field-level mechanics: pharmacy claims
+### 5.4 Field-level mechanics: pharmacy claims
 
 1. **NDC.** Eleven digits identifying labeler, product, and package. The same drug in a 30-day and a 90-day package has different NDCs.
 2. **Days supply and quantity.** Both are required to compute adherence. Either can be wrong, and the pair is sometimes internally inconsistent.
@@ -417,7 +417,76 @@ Two deserve emphasis.
 | Product pooling | Multiple lines of business | Stratify and standardize | Separate analyses |
 | Run-out | Data cutoff near the analysis date | Trim the tail | Model the lag |
 
-### 5.7 Derivations and the assumptions they hide
+### 5.6 Edge cases the procedure has to survive
+
+The 28 steps assume a stable extract. Seven edge cases recur in claims work, and each has a defined handling rule with a count to report.
+
+**Null member identifier.** A claim with no member ID cannot be attributed to a denominator. Quarantine it, report the count by source file, and do not drop it silently, because a null member ID often signals a coordination-of-benefits or eligibility-file problem.
+
+**Conflicting claim families.** The institutional claim says one admission; the professional claims suggest two. The facility claim is authoritative for admissions and bed days, the professional claims for procedures and provider attribution. When they disagree, report the discrepancy rather than choosing a family per analysis.
+
+**Unit and code variants.** Revenue codes and CPT codes describe different things and are not interchangeable. A revenue code of 0450 (emergency room) is a facility category, not a service. A procedure performed in an emergency department may appear as a revenue code on the facility claim and a CPT code on the professional claim, and summing both double-counts.
+
+**Code-system change within the period.** ICD-10-CM updates every 1 October, and NDC changes continuously as products are repackaged. A drug cohort built on NDC will change size when a manufacturer repackages, without any change in prescribing. Map NDC to RxNorm ingredient or clinical drug at extraction, and keep the NDC for audit.
+
+**Late-arriving claims.** Institutional claims arrive later than professional claims, and Medicaid later than commercial. The handling rule is to compute the arrival curve by claim family, set the run-out to cover the slowest family, and either trim the tail or model the lag.
+
+**Partial identifiers.** A claim billed under a group NPI has no individual rendering provider, so provider attribution is impossible. Keep the claim in utilization analyses, exclude it from provider-level analyses, and report the group-billed share by specialty.
+
+**Duplicate and adjusted claims.** A corrected claim is submitted with a frequency code that marks it as a replacement or an adjustment. Summing all versions double-counts the service. The rule is to keep the latest version per claim identifier and to retain the superseded versions in an audit table.
+
+**Service-date boundaries.** A claim spanning 31 December may be assigned to either year depending on whether the admission or discharge date is used. Choose one convention, apply it everywhere, and state it, because the year boundary affects year-over-year comparisons.
+
+### 5.7 Decision table: handling denied claims
+
+Denials have more than two defensible treatments. Choose by the question, and never by whether the denial is inconvenient.
+
+| Question | Denials' role | Action | What to report |
+|---|---|---|---|
+| Services delivered | Evidence of a service | Include with a status flag | Denial rate by service type |
+| Services paid | Administrative outcome | Exclude | Paid amount and denial rate |
+| Access to care | The outcome itself | Model denial as the outcome | Denial rate by group and service |
+| Cost of care | Distorts the price basis | Exclude from cost, include in utilization | Both totals and the gap |
+| Safety | Could be a signal | Include, and review denial reasons | Reason codes for denied safety-relevant claims |
+| Trend over time | Policy changes | Include, with a policy-period variable | Denial rate by period |
+
+The rule that overrides the table: if denial rates differ by member group, any analysis that excludes denials inherits a selection bias, and the bias must be bounded rather than ignored.
+
+### 5.8 Field-level validation rules
+
+| Rule | Test | Severity | Action on failure |
+|---|---|---|---|
+| Member in eligibility | Every claim member-month exists in the eligibility file | High | Quarantine; investigate COB or file lag |
+| Service date in coverage | Service date within an enrolled month | High | Flag; check retroactive termination |
+| Header-line reconciliation | Sum of line allowed equals header allowed within 1% | Medium | Flag; check for suppressed lines |
+| Frequency code validity | Code is in the permitted set | Medium | Quarantine the claim version |
+| Diagnosis code validity | Code exists in the FY in force | Medium | Flag; crosswalk; report unmapped |
+| Procedure code validity | Code exists in the CPT/HCPCS year | Medium | Flag; report by service line |
+| Plausible allowed amount | Allowed above zero and below a service-specific ceiling | Low | Flag; review the top 20 |
+| Place of service present | POS is populated and valid | Medium | Flag; site-of-care analyses unreliable |
+| Duplicate claim identifier | One current version per claim ID | High | Collapse to the latest version |
+| Provider identifier | NPI is 10 digits and passes the check digit | Medium | Flag; group-billed attribution |
+
+Two of these rules do most of the work. The member-in-eligibility check catches coordination-of-benefits and file-lag problems that otherwise appear as missing utilization. The header-line reconciliation catches suppressed lines and adjustment artefacts that otherwise appear as cost anomalies.
+
+A rule set that reports every finding at the same severity will be ignored. The severities above are chosen so that high-severity findings block an analysis and medium-severity findings produce a documented decision.
+
+### 5.9 Partial identifiers and linkage keys
+
+Claims linkage is often attempted on a partial identifier: a member ID that changed at a plan merger, a subscriber ID rather than a member ID, or a hashed identifier from a third party. Four situations and their handling:
+
+| Situation | Symptom | Handling | Report |
+|---|---|---|---|
+| Member ID reused | Two people share an ID across years | Split on date of birth and sex | Reuse rate |
+| Member ID changed | One person appears as two | Link on subscriber ID plus demographics | Link rate and error estimate |
+| Subscriber versus member | Family members collapse | Use the member-level ID where present | Share of claims at subscriber level |
+| Hashed identifier | Cannot be reversed or joined | Treat as a separate universe | Whether cross-payer analysis is possible |
+
+The third case is the most damaging and the least noticed: an analysis of "members" that is really an analysis of subscribers will under-count children and over-count adults, because a family's claims are attributed to the policyholder.
+
+A fifth situation sits behind all four: the identifier may be stable within a payer and unstable across payers. That is why cross-payer linkage almost always requires a trusted third party or a privacy-preserving method, and why a plan that only holds one payer's data should not assume the member's history is complete.
+
+### 5.10 Derivations and the assumptions they hide
 
 | Derived variable | Usual construction | Hidden assumption | Challenge question |
 |---|---|---|---|
@@ -571,7 +640,71 @@ The earlier statement of "about 8.9 percent" rounds 8.84 to 8.8, not 8.9. The co
 
 This is exactly the kind of small arithmetic slip that survives into a board deck. Recompute every derived number in a memo before it leaves the team, and keep the intermediate values in an appendix so a reviewer can find the slip.
 
-### 6.11 What a reviewer would ask
+### 6.11 Variant case: the same plan with a broader diagnosis definition
+
+The narrow definition in 6.3 required I50.x. A common alternative includes hypertensive heart disease with heart failure (I11.0) and hypertensive heart and chronic kidney disease with heart failure (I13.0, I13.2), because clinicians often document heart failure under those codes.
+
+Rerunning the cohort with the broader definition:
+
+| Quantity | Narrow (I50.x) | Broad (adds I11.0, I13.0, I13.2) |
+|---|---:|---:|
+| HF members | 9,742 | 11,486 |
+| Prevalence | 3.92% | 4.62% |
+| HF admissions | 3,106 | 3,494 |
+| Eligible discharges | 2,894 | 3,236 |
+| 30-day readmissions | 641 | 712 |
+| Readmission rate | 22.15% | 22.00% |
+
+Check: 9,742 + 1,744 = 11,486. 11,486 / 248,600 = 0.04620.
+Check: 3,106 + 388 = 3,494. 2,894 + 342 = 3,236. 641 + 71 = 712.
+Check the rate: 712 / 3,236 = 0.22002, or 22.00%.
+
+The 1,744 added members contribute 388 admissions, 342 eligible discharges, and 71 readmissions. Their own readmission rate is 71 / 342 = 0.2076, or 20.76%, which is slightly lower than the narrow cohort's 22.15%. Because the added group is large but less readmission-prone, the pooled rate falls by 0.15 percentage points (22.15 − 22.00).
+
+The clinical conclusion is therefore robust to this definitional choice. That is the first thing to check, and here it passes.
+
+The budget conclusion is not robust.
+
+### 6.12 What the definition does to the programme economics
+
+The high-risk segment grows with the cohort:
+
+| Quantity | Narrow | Broad |
+|---|---:|---:|
+| High-risk members | 1,180 | 1,340 |
+| Readmissions in segment | 498 | 556 |
+| Programme cost at $540 per member | $637,200 | $723,600 |
+| Break-even avoided readmissions | 38 | 43 |
+| Break-even relative reduction | 7.6% | 7.7% |
+
+Check: 1,340 × 540 = 723,600. 1,180 × 540 = 637,200. The difference is 86,400, or 13.56% of the narrow cost (86,400 / 637,200 = 0.1356).
+Check: 723,600 / 16,840 = 42.97, so 43 avoided readmissions. 43 / 556 = 0.0773, or 7.7%.
+
+Per-member cost also changes, because the added members are cheaper:
+
+| Quantity | Narrow | Broad |
+|---|---:|---:|
+| HF-attributable allowed amount | $62,745,200 | $68,254,800 |
+| Member-months | 116,904 | 137,832 |
+| PMPM | $536.72 | $495.20 |
+
+Check: 388 added admissions × $14,200 = $5,509,600. $62,745,200 + $5,509,600 = $68,254,800.
+Check: 11,486 × 12 = 137,832 member-months. $68,254,800 / 137,832 = $495.20.
+
+The PMPM falls by $41.52 (7.7%) because the added members have lower per-member costs, while total spend rises by 8.8% (5,509,600 / 62,745,200 = 0.0878). A finance committee that budgets on PMPM will under-estimate the programme's total cost, and one that budgets on total spend will see a larger programme than the narrow definition implied.
+
+### 6.13 Which definition I would report, and why
+
+Both are computable, and the choice follows the decision:
+
+- **For benchmarking**, report the narrow I50.x definition, because published heart failure prevalence and readmission benchmarks use it, and a broader definition is not comparable to them.
+- **For case finding and programme budgeting**, report the broad definition, because a patient documented under I11.0 still needs the programme and still generates the cost. Excluding them understates the eligible population by 15.2% (1,744 / 11,486 = 0.1518).
+
+The defensible presentation reports both, states which drives each conclusion, and notes that the readmission finding is stable while the budget is not. That is a more useful deliverable than either number alone, because it tells the committee where the decision is sensitive and where it is not.
+
+A reviewer will also ask whether the added patients are genuinely heart failure or are hypertensive disease without failure. That question cannot be answered from claims alone, and it is the reason the validation sample in step 11 of the procedure matters more for the broad definition than for the narrow one.
+
+### 6.14 What a reviewer would ask
 
 A finance reviewer will ask four questions about this analysis, and each has a defensible answer:
 
@@ -859,7 +992,30 @@ Four practices separate teams that produce defensible work from teams that produ
 
 The absence of the first and the last are the strongest predictors of a number that cannot be defended in a meeting with finance.
 
-### 9.7 Regulatory use of claims-derived evidence
+### 9.7 How a payer evaluates a vendor's claims product
+
+A payer buying a claims-derived product runs a standard diligence, and the questions are predictable:
+
+| Question | Why it matters | Weak answer | Strong answer |
+|---|---|---|---|
+| What is the covered population? | Determines generalizability | "Millions of lives" | Denominator by product, year, and geography |
+| What is the price basis? | Determines cost comparability | "Our costs" | Allowed, with the percentage paid and member liability |
+| What is the run-out? | Determines tail completeness | "Complete" | 90 days commercial, longer for Medicaid, with the arrival curve |
+| Are denials included? | Determines utilization counts | "Only paid claims" | Separate denial file with reason codes |
+| How is the member identified? | Determines linkage | "Unique ID" | Member-level ID with reuse and change rates |
+| What validation exists? | Determines phenotype quality | "Clinically validated" | PPV and sensitivity with the reference and sample size |
+
+The pattern in the strong answers is that each names a number and a method. A vendor that cannot produce them is selling coverage, not fitness.
+
+### 9.8 The build-versus-buy decision
+
+A payer or provider with its own claims can build the analytic dataset, and often should for questions about its own population. Buying a commercial product makes sense when the question requires a population the organization does not cover, or a normalization it cannot build.
+
+The cost comparison is not license versus zero. Building requires a data warehouse, a member-month table, a phenotype library, and maintenance, which is a multi-year investment. Buying requires a license, a DUA, and an ETL, which is a multi-month one. The right choice depends on how many questions the asset will answer, which is a portfolio question rather than a project question.
+
+The failure mode in both directions is the same: an organization builds for one question and then discovers the maintenance cost, or buys for one question and then discovers the license does not cover the next.
+
+### 9.9 Regulatory use of claims-derived evidence
 
 The FDA's real-world evidence program accepts claims-based studies for some purposes, particularly safety and utilization, and is cautious about claims-only effectiveness claims. The reservations concentrate on unmeasured confounding, outcome misclassification, and the absence of clinical severity measures.
 
@@ -904,7 +1060,13 @@ Pharmacy claims carry no diagnosis. A drug-based cohort therefore infers the ind
 
 The practical fix is to require a diagnosis code on a medical claim within a window around the first fill, and to report the proportion of drug-initiated members who never receive a matching diagnosis. That proportion is a direct measure of the indication uncertainty.
 
-### 10.4 The three-layer attribution
+### 10.4 The definitional sensitivity failure
+
+A less obvious failure than the ones in the table is a conclusion that survives one definition and not another, reported as if it were definition-independent. The variant case in section 6.11 shows the pattern: the readmission rate moved by 0.15 percentage points while the programme cost moved by 13.6 percent.
+
+The red flag is a methods section that states one definition without saying why it was chosen. The repair is a one-line sensitivity table with the alternative definition's headline number, and a sentence saying which decision it would change.
+
+### 10.5 The three-layer attribution
 
 When a claims result looks wrong, attribute the failure to one of three layers before proposing a fix:
 
@@ -1025,6 +1187,14 @@ Deliverable: two PMPM figures and a short explanation.
 
 Acceptance criteria: arithmetic correct to the cent; explanation distinguishes denominator change from numerator change.
 
+### Exercise 10 — Definitional variant (calculation and design, 60 minutes)
+
+Recompute the section 6.12 economics if the broad definition adds 2,300 members rather than 1,744, with 470 added admissions, 415 eligible discharges, 80 added readmissions, and 190 added high-risk members. Report the pooled readmission rate, programme cost, and break-even reduction, and state whether the recommendation would change.
+
+Deliverable: three recalculated figures and a recommendation.
+
+Acceptance criteria: all intermediates shown; the break-even is computed against the segment's readmissions, not the cohort's; the recommendation distinguishes the clinical from the budgetary conclusion.
+
 ---
 
 ## 13. Self-check answers
@@ -1116,6 +1286,8 @@ Joining a claim header table to a claim line table without aggregating, which mu
 - **APCD** — all-payer claims database.
 - **APC** — ambulatory payment classification.
 - **Attrition** — loss of members from the dataset over time.
+- **Denial rate** — denied claims divided by submitted claims, by service type.
+- **Run-out model** — an estimate of the share of eventual claims present at a given extraction date.
 - **Churn** — members entering and leaving coverage.
 - **Claim** — a request for payment.
 - **Claim line** — a service-level record within a claim.
@@ -1198,3 +1370,32 @@ All URLs accessed 24 October 2026.
 - Root survey file: [`../../02_biomedical_data_landscape.md`](../../02_biomedical_data_landscape.md)
 - Labs: [`../../labs/`](../../labs/)
 - Lab 2.4 in the survey file (source-selection matrix) uses the claims-versus-EHR comparison in section 3 as one of its scenarios.
+
+Three checks to carry into the next topic:
+
+- Does the definition change the clinical conclusion, the budget, or both?
+- Is the added population clinically the same condition, or a coding convenience?
+- Which published benchmark uses this definition, and will the number be compared to it?
+
+### 11.3 The limit that decides a budget
+
+For a programme decision, the limit that matters is usually the definitional one, not the statistical one. A confidence interval around a readmission rate tells a finance committee almost nothing; the range of the eligible population under two defensible definitions tells it how much money it might need.
+
+The practical statement is a range, not a point: "the eligible population is between 9,742 and 11,486 members depending on whether hypertensive heart disease with heart failure is included, and the programme cost is therefore between $637,200 and $723,600 per year." That sentence changes a decision; a p-value does not.
+
+A last check before the next topic: if a reviewer asked for the eligible population, would you give them one number or a range? For a budget decision, the range is the honest answer, and it is the one this topic equips you to produce.
+
+That question is the bridge to registries, where the denominator is defined by a reporting mandate rather than by enrollment, and where completeness becomes the central quality question.
+
+Four questions to carry into the registry topic:
+
+- Is the denominator a covered population or a geographic one?
+- Is ascertainment a mandate or a transaction?
+- Is the lag a submission cycle or a settlement cycle?
+- Is completeness measurable from a second source, or only asserted?
+
+Answers to those four questions determine which quality dimension dominates: completeness for registries, conformance for claims, plausibility for device data.
+
+That mapping is not a coincidence. Each data source in this module is defined by how its denominator is constituted, and the quality dimension that matters most follows from that definition.
+
+Read the next topic with that in mind: a registry's completeness is its central quality question, and its denominator is a legal definition rather than an enrollment file.

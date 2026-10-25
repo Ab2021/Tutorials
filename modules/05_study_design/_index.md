@@ -29,16 +29,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_from-claim-to-evidence.md`](01_from-claim-to-evidence.md) | From Claim to Evidence | Translating a marketing or clinical claim into a testable evidence plan. | 1,200-1,800 | planned |
-| 2 | [`02_trial-designs.md`](02_trial-designs.md) | Trial Designs | Parallel, crossover, adaptive, cluster, platform, and decentralised designs. | 1,200-1,800 | planned |
-| 3 | [`03_real-world-evidence.md`](03_real-world-evidence.md) | Real-World Evidence | When RWE is fit for a regulatory or payer decision, and when it is not. | 1,200-1,800 | planned |
-| 4 | [`04_validation-designs.md`](04_validation-designs.md) | Validation Designs | Internal, temporal, external, geographic, and prospective validation. | 1,200-1,800 | planned |
-| 5 | [`05_bias-taxonomy.md`](05_bias-taxonomy.md) | Bias Taxonomy | Selection, information, confounding, immortal time, attrition, and measurement bias. | 1,200-1,800 | planned |
-| 6 | [`06_sample-size-and-power.md`](06_sample-size-and-power.md) | Sample Size and Power | Power for differences, for precision, and for subgroup claims. | 1,200-1,800 | planned |
-| 7 | [`07_estimands.md`](07_estimands.md) | Estimands | ICH E9(R1) five attributes and why the estimand comes before the method. | 1,200-1,800 | planned |
-| 8 | [`08_external-validation.md`](08_external-validation.md) | External Validation | Site selection, transportability, recalibration, and reporting standards. | 1,200-1,800 | planned |
-| 9 | [`09_evidence-synthesis.md`](09_evidence-synthesis.md) | Evidence Synthesis | Systematic review, meta-analysis, indirect comparison, and network meta-analysis. | 1,200-1,800 | planned |
-| 10 | [`10_protocol-writing.md`](10_protocol-writing.md) | Protocol Writing | A protocol skeleton that a regulator, IRB, and statistician can all read. | 1,200-1,800 | planned |
+| 1 | [`01_from-claim-to-evidence.md`](01_from-claim-to-evidence.md) | From Claim to Evidence | Translating a marketing or clinical claim into a testable evidence plan. | 1,200-1,800 | complete |
+| 2 | [`02_trial-designs.md`](02_trial-designs.md) | Trial Designs | Parallel, crossover, adaptive, cluster, platform, and decentralised designs. | 1,200-1,800 | complete |
+| 3 | [`03_real-world-evidence.md`](03_real-world-evidence.md) | Real-World Evidence | When RWE is fit for a regulatory or payer decision, and when it is not. | 1,200-1,800 | complete |
+| 4 | [`04_validation-designs.md`](04_validation-designs.md) | Validation Designs | Internal, temporal, external, geographic, and prospective validation. | 1,200-1,800 | complete |
+| 5 | [`05_bias-taxonomy.md`](05_bias-taxonomy.md) | Bias Taxonomy | Selection, information, confounding, immortal time, attrition, and measurement bias. | 1,200-1,800 | complete |
+| 6 | [`06_sample-size-and-power.md`](06_sample-size-and-power.md) | Sample Size and Power | Power for differences, for precision, and for subgroup claims. | 1,200-1,800 | complete |
+| 7 | [`07_estimands.md`](07_estimands.md) | Estimands | ICH E9(R1) five attributes and why the estimand comes before the method. | 1,200-1,800 | complete |
+| 8 | [`08_external-validation.md`](08_external-validation.md) | External Validation | Site selection, transportability, recalibration, and reporting standards. | 1,200-1,800 | complete |
+| 9 | [`09_evidence-synthesis.md`](09_evidence-synthesis.md) | Evidence Synthesis | Systematic review, meta-analysis, indirect comparison, and network meta-analysis. | 1,200-1,800 | complete |
+| 10 | [`10_protocol-writing.md`](10_protocol-writing.md) | Protocol Writing | A protocol skeleton that a regulator, IRB, and statistician can all read. | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -69,9 +69,9 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.
 

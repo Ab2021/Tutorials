@@ -419,7 +419,84 @@ A mask without these five items is an array of integers with an unknown relation
 | Dose estimate | DLP × conversion factor | The conversion factor applies to this body region | Which factor and which region? |
 | Scanner effect | Difference in feature by scanner | Scanner is the only difference | Were protocol and patient mix balanced? |
 
-### 5.6 Branch points summarized
+### 5.6 Edge cases the procedure has to survive
+
+**Missing acquisition fields.** `SliceThickness` is absent on some MR series; `ContrastBolusAgent` is often absent even when contrast was given. Absence is not evidence of absence. The rule is to treat a missing field as unknown, exclude the study from analyses that require it, and report the missingness by protocol name, because protocols predict which fields are populated.
+
+**Conflicting header and report.** The header says unenhanced; the report describes contrast enhancement. The header is the acquisition record and the report is a human interpretation; when they disagree, review the images for enhancement and record the adjudication. Do not silently prefer either.
+
+**Unit and scale variants.** CT pixel values are integers that require rescale; MR values are arbitrary; some secondary-capture objects store windowed values in the pixel field. The rule is to verify the rescale with air and water before any measurement, and to reject any object whose `RescaleSlope` is absent when the SOP class requires it.
+
+**Transfer-syntax variants.** The same study can arrive as uncompressed, JPEG-lossy, or JPEG-lossless. Lossy compression changes texture features permanently. The rule is to record the transfer syntax per instance and to exclude lossy-compressed series from quantitative texture analysis.
+
+**Late-arriving studies.** A study can be re-sent after a correction, producing a second object with the same SOP Instance UID and a different content. The rule is to keep the latest version by `InstanceCreationDate` and to retain superseded objects in an audit store.
+
+**Partial identifiers.** A study with a `StudyInstanceUID` that does not match the order system cannot be linked to the encounter. The rule is to keep it in the image-level analysis, exclude it from encounter-linked analyses, and report the unmatched share by modality.
+
+**Duplicate studies.** The same study under two accession numbers inflates counts and biases scanner means if the duplicates are not random. The rule is to deduplicate on `StudyInstanceUID`, to report duplicates by accession pattern, and to check whether the duplicate rate differs by scanner.
+
+**Timezone and acquisition-time boundaries.** `StudyTime` and `AcquisitionTime` have no timezone, and two sites in different zones will produce a mixed series. The rule is to derive the timezone from `TimezoneOffsetFromUTC` where present, to record it per site, and to test for hour-of-day artefacts at daylight-saving transitions.
+
+### 5.7 Decision table: a series with mixed slice thickness
+
+A single series can contain reconstructions at different thicknesses, which is more than a two-way choice.
+
+| Situation | Evidence | Action | Effect on cohort |
+|---|---|---|---|
+| Uniform thin series | One thickness, spacing equals thickness | Include as is | None |
+| Uniform thick series | One thickness above the threshold | Exclude for texture; include for detection | Loses thick-slice studies |
+| Mixed within series | Spacing varies; thickness varies | Split into sub-series by thickness | Requires re-derivation of series identity |
+| Overlapping reconstruction | Spacing less than thickness | Include; record both | Volume calculation must use spacing |
+| Derived thin from thick | `DerivationDescription` shows interpolation | Exclude; not independent | Prevents synthetic resolution |
+
+The mixed-within-series case is the one that breaks pipelines, because the series identifier no longer corresponds to a single acquisition. Splitting it is correct and must be recorded, since the split changes the unit of analysis from series to sub-series.
+
+### 5.8 Field-level validation rules
+
+| Rule | Test | Severity | Action on failure |
+|---|---|---|---|
+| Rescale present for CT | `RescaleSlope` and `RescaleIntercept` populated | High | Quarantine the instance |
+| HU sanity | Air near −1000, water near 0 within 20 HU | High | Quarantine the series; check the decoder |
+| Geometry consistent | Slice positions evenly spaced | High | Split or quarantine |
+| Instance count complete | Count matches the expected series count | Medium | Flag; check the transfer |
+| Photometric interpretation known | Value is in the supported set | High | Quarantine; wrong display mapping |
+| Pixel spacing present | Both values populated and non-zero | High | Quarantine measurement |
+| Burned-in flag set | `BurnedInAnnotation` present and NO after cleaning | High | Block sharing |
+| Private tags removed | No odd-group elements after de-identification | Medium | Re-run the cleaner |
+| Study UID unique | One study per UID | Medium | Deduplicate |
+| Acquisition date in range | Date within the study period | Low | Flag; check the archive |
+
+Two of these are gates rather than flags. A failure of HU sanity or of geometry consistency invalidates every downstream measurement, so the series cannot be analyzed until it is resolved.
+
+### 5.9 Decision table: choosing a de-identification profile
+
+The profile is a set of options, and the choice depends on the sharing context. The same collection can require different profiles for internal analysis, external collaboration, and public release.
+
+| Context | Profile | Retain options | Residual risk | Cost |
+|---|---|---|---|---|
+| Internal analysis, controlled enclave | Basic profile, no cleaning | Retain UIDs and longitudinal dates | Low if access is controlled | Low |
+| External collaboration under DUA | Basic plus clean descriptors | Retain longitudinal dates, map UIDs | Moderate | Medium |
+| Public release | Basic plus clean pixel data, clean graphics, clean descriptors | No retain options | Low but non-zero | High, includes human review |
+| Regulatory submission | Basic plus clean descriptors, documented method | Retain as required by the protocol | Low, documented | Medium |
+| Model training corpus | Basic plus clean pixel data | Consistent pseudonyms, no dates | Moderate | Medium |
+
+The rule that overrides the table: if the pixels carry text, no header-only profile is sufficient, and the clean pixel data option is mandatory for any sharing outside a controlled enclave.
+
+A practical sequencing note: apply the cleaning options before any conversion to another format, because a conversion that strips the header removes the information the cleaner needs to decide what to remove.
+
+The cost column is not decorative. Public release with clean pixel data usually requires human review of a sample, and that review is the largest line item in a de-identification budget for a collection of any size.
+
+### 5.10 What to do when the phantom is unavailable
+
+Retrospective calibration is impossible without a physical reference, and most real-world archives have none. Three fallbacks, in order of preference:
+
+1. **Use a body-composition reference.** Measure a structure with known attenuation in vivo (for example, subcutaneous fat or the aorta) and compare its distribution across scanners. This does not give an absolute offset, and it does detect a relative one.
+2. **Use a patient-level internal control.** Measure the same patient on two scanners where the archive allows it, and estimate the offset from the paired difference. The sample is small and selected.
+3. **Include scanner as a covariate and state the limit.** This absorbs the mean offset and leaves the interaction unidentified.
+
+The honest statement for a retrospective study is that scanner effects are estimated, not measured, and that the estimate cannot separate scanner from patient mix.
+
+### 5.11 Branch points summarized
 
 | Branch | Condition | Path A | Path B |
 |---|---|---|---|
@@ -431,10 +508,6 @@ A mask without these five items is an array of integers with an unknown relation
 | Derived objects | SEG or NIfTI | Preserve references | Store a mapping table |
 
 Three of these choices are irreversible once the export is done. Restricting the thickness range discards studies permanently; applying a full de-identification profile cannot be undone; and resampling to a target spacing loses the original grid. Make them deliberately, and record them before the export runs rather than after.
-
-### 5.7 Branch points summarized
-
-### 5.6 Branch points summarized
 
 ---
 
@@ -552,7 +625,66 @@ A 9.8 percent defect rate is not acceptable for external sharing. The most commo
 - A mean offset near a threshold produces a disproportionate change in prevalence, so the effect must be computed from the empirical distribution.
 - De-identification defects concentrate in free text and pixels, not in the standard identity attributes that tools handle well.
 
-### 6.9 What a reviewer would ask
+### 6.9 Variant case: the same cohort after removing duplicate studies
+
+The primary analysis used the archive as delivered. A quality review found that scanner B's studies had been sent twice under two accession numbers during a system migration, so 180 of its 2,110 studies are duplicates of records already in the cohort.
+
+Deduplicating on `StudyInstanceUID`:
+
+| Quantity | As delivered | Deduplicated |
+|---|---:|---:|
+| Cohort total | 6,372 | 6,192 |
+| Scanner A | 2,980 | 2,980 |
+| Scanner B | 2,110 | 1,930 |
+| Scanner C | 1,282 | 1,282 |
+
+Check: 6,372 − 180 = 6,192. 2,110 − 180 = 1,930. 2,980 + 1,930 + 1,282 = 6,192.
+
+The duplicates were not a random subset. Of the 180, 96 were below the 40 HU threshold, a rate of 53.3%, against 233 of 1,930 (12.1%) among the unique studies.
+
+Check: 96 / 180 = 0.5333. 233 / 1,930 = 0.1207.
+Check the combination: (233 + 96) / (1,930 + 180) = 329 / 2,110 = 0.1559, which reproduces the 15.6% in section 6.4.
+
+Recomputing scanner B's threshold prevalence:
+
+| Stage | Below 40 HU | n | Prevalence |
+|---|---:|---:|---:|
+| As delivered, uncorrected | 329 | 2,110 | 15.6% |
+| Deduplicated, uncorrected | 233 | 1,930 | 12.1% |
+| As delivered, corrected | 156 | 2,110 | 7.4% |
+| Deduplicated, corrected | 112 | 1,930 | 5.8% |
+
+Check: 233 / 1,930 = 0.1207. 112 / 1,930 = 0.0580.
+
+The duplicate defect alone accounted for 3.5 percentage points of B's apparent prevalence (15.6 − 12.1), which is larger than the scanner offset of 7.9 HU would suggest. A pipeline that calibrated but did not deduplicate would have reported B at 7.4 percent and concluded that B was comparable to A.
+
+### 6.10 What the variant changes
+
+| Metric | As delivered | Deduplicated |
+|---|---:|---:|
+| Corrected prevalence, A | 7.9% | 7.9% |
+| Corrected prevalence, B | 7.4% | 5.8% |
+| Corrected prevalence, C | 6.7% | 6.7% |
+| Spread across scanners | 1.2 points | 2.1 points |
+| Recommendation | Proceed with scanner as covariate | Investigate B before modeling |
+
+Check the spreads: 7.9 − 6.7 = 1.2 as delivered. 7.9 − 5.8 = 2.1 after deduplication.
+
+The conclusion changes in a way that matters. In the primary analysis, B sat within 0.5 percentage points of A after calibration, which supports the view that the residual spread was population. After deduplication, B sits 2.1 points below A, which is a signal that either B's calibration is incomplete or B serves a different population — and neither explanation supports pooling without an adjustment.
+
+The general lesson is that a data management defect can mimic a biological difference, and calibration does not remove it because calibration corrects a measurement offset, not a sampling artefact.
+
+### 6.11 Which figure I would report, and why
+
+Both figures are computable from the same archive, and the choice is not symmetric:
+
+- **Report the deduplicated analysis as primary.** Duplicates are a record-management defect, not a property of the population. Keeping them gives extra weight to a subset of studies and biases every scanner-level statistic that the duplicated scanner contributes to.
+- **Report the as-delivered analysis only as a sensitivity check**, and only to show how much the defect mattered. It is not a defensible primary because the duplication mechanism is known and is unrelated to the clinical question.
+- **Report the duplicate rate as a quality metric** in its own right, by scanner and by accession pattern, so the defect is visible to whoever maintains the archive.
+
+A reviewer will ask why the duplicates were not caught in the cohort construction step. The answer is that step 7 deduplicated on `StudyInstanceUID`, and the duplicates had distinct UIDs because they were re-registered under new accession numbers. The fix is a second deduplication key on patient, study date, series description, and instance count, which is exactly the kind of rule that belongs in section 5.8.
+
+### 6.12 What a reviewer would ask
 
 1. **Why exclude studies above 2.5 mm?** Because texture features and partial volume differ materially at thicker slices, and mixing them would confound the scanner effect. The cost is 2,244 studies and a loss of generalizability to thick-slice protocols.
 2. **Is one phantom scan per scanner enough?** No. It establishes an offset at one point in time. A monthly phantom scan would detect drift, and the absence of drift data is a limitation.
@@ -785,6 +917,17 @@ These have largely replaced DIMSE for new integrations, and they make scripted, 
 
 ## 9. Industry practice and case evidence
 
+### 8.8 What DICOM does not standardize
+
+DICOM standardizes the object and the metadata, and it deliberately does not standardize four things that analysts need:
+
+- **Protocol names.** `ProtocolName` is free text and site-specific, so "CT ABD PV" and "CT abdomen portal venous" are not comparable without a local mapping.
+- **Contrast phase.** There is no standard field for arterial, portal venous, or delayed phase. Analysts infer it from the agent, the timing, and the protocol name.
+- **Reconstruction intent.** There is no standard field for "soft tissue kernel" versus "bone kernel"; the kernel name is vendor-specific.
+- **Clinical indication.** The reason for the study is in the order and the report, not in the object.
+
+Each gap is a reason the local mapping table from topic 8 is necessary even in a fully conformant archive.
+
 ### 9.1 The public imaging commons
 
 The Cancer Imaging Archive (TCIA), operated by the National Cancer Institute, is the largest public cancer imaging resource. Its 2017 data descriptor reported 30.9 million radiology images from about 37,568 subjects; the archive has grown since, and its browse interface now presents more than 200 collections organized by disease, modality, and research focus, with subject counts per collection.
@@ -889,6 +1032,22 @@ A vendor that can answer all six with documentation is selling an archive. One t
 | Single-site validation | Test set from one scanner | No external data | Overstated generalization | Multi-site test; report acquisition distribution |
 | Report-derived label leakage | Label predicts ordering pattern | Label encodes workflow | Model fails at deployment | Define label from image or adjudicated truth |
 
+### 9.10 What an imaging AI validation should report
+
+A validation report that does not include the acquisition distribution cannot be interpreted. The minimum set:
+
+| Item | Why | Typical omission |
+|---|---|---|
+| Scanner models and counts | Detects single-scanner dependence | Reported only as "multi-site" |
+| Slice thickness distribution | Affects texture and partial volume | Reported as a range only |
+| Reconstruction kernels | Affects noise and texture | Omitted |
+| Contrast phase | Affects lesion visibility | Omitted |
+| Patient inclusion criteria | Affects generalizability | Omitted |
+| Reference standard and readers | Affects label noise | Partially reported |
+| Performance by scanner | Detects site shift | Reported only overall |
+
+The last row is the one that predicts deployment failure. An overall area under the curve of 0.90 with a per-scanner range of 0.72 to 0.94 is a model that works at one site, and the overall number hides it.
+
 ### 10.1 The de-identification red flags
 
 Three signs that an imaging dataset is not de-identified in any meaningful sense:
@@ -899,7 +1058,13 @@ Three signs that an imaging dataset is not de-identified in any meaningful sense
 
 A dataset that passes all three is not guaranteed safe, but one that fails any of them is not de-identified.
 
-### 10.2 The "it looks fine" trap
+### 10.2 The duplicate-study trap
+
+Duplicates in imaging are unusually hard to see because the objects are large and the UIDs differ after re-registration. The signature is a scanner whose study count exceeds its order count, or a cohort whose patient count is stable while the study count rises.
+
+The repair is a second deduplication key on patient identifier, study date, series description, and instance count, plus a report of the duplicate rate by accession pattern. That key catches the re-registration case that a UID-only rule misses.
+
+### 10.3 The "it looks fine" trap
 
 Imaging data fails visually before it fails numerically. A converted image with the wrong photometric interpretation looks plausible; an image in the wrong window looks plausible; a series with slices out of order reconstructs into something that resembles anatomy. The only defence is programmatic checks on the header and on known reference structures, not visual inspection.
 
@@ -917,6 +1082,12 @@ Imaging data fails visually before it fails numerically. A converted image with 
 | De-identification is complete | Data sharing | Free text, pixels, private tags | Sampled audit with defect rate |
 | The label is derived from the image | Model validity | Label from report or ordering | Compare label to adjudicated reads |
 | The cohort is representative | Generalization | Single-site, single-scanner data | External test set |
+
+### 10.4 The protocol-name illusion
+
+A team that groups series by `ProtocolName` will believe it has standardized the acquisition. It has standardized the string. Two sites with the same protocol name can use different kernels, thicknesses, and contrast timing, and two sites with different names can use identical settings.
+
+The repair is to classify on the parameters that matter (thickness, kernel, contrast agent, spacing) and to use the protocol name only as a label for reporting.
 
 ### 11.1 Limits that are inherent
 
@@ -1023,6 +1194,14 @@ For a task of your choice, define an imaging label from the image rather than th
 Deliverable: a label definition and a validation plan with sample size and agreement metric.
 
 Acceptance criteria: the label does not depend on workflow artefacts; the validation plan states the reference standard and the agreement statistic.
+
+### Exercise 10 — Duplicate-study audit (application, 60 minutes)
+
+Using the counts in section 6.9, recompute scanner B's deduplicated prevalence if 240 rather than 180 studies were duplicates and 120 of them were below 40 HU. Report the deduplicated n, the uncorrected and corrected prevalence, and the spread against scanner A at 7.9%.
+
+Deliverable: three recalculated figures and a recommendation.
+
+Acceptance criteria: the duplicate share is computed against the as-delivered count; the corrected figure subtracts the duplicates' corrected count; the recommendation states whether B remains comparable to A.
 
 ---
 
@@ -1200,3 +1379,22 @@ Related reading: [`05_signals-and-wearables.md`](05_signals-and-wearables.md) co
 The single sentence to remember: the pixel data shows the anatomy, and the header decides whether the anatomy is comparable.
 
 A second sentence, for the privacy side: the header also decides whether the anatomy can be shared, and the pixels can override the header.
+
+A third, for the quality side: duplicates and re-registrations change the denominator, and the denominator changes the conclusion before any model is trained.
+
+### 11.5 The limit that decides whether a model can be deployed
+
+For an imaging product, the decisive limit is the acquisition distribution of the deployment site versus the training set. A model trained on 1.25 mm soft-kernel portal-venous studies will meet 2.5 mm sharp-kernel studies in the community, and no amount of validation on held-out data from the same archive predicts that.
+
+The practical statement is a distribution comparison, not a caveat: "training included 0.6 to 2.5 mm slices across four kernels; the deployment site uses 3.0 mm slices and one kernel not represented in training, so performance there is unquantified."
+
+Four questions to carry into the signal topic:
+
+- Is the raw measurement available, or only a derived value?
+- Is the device or scanner recorded with a version?
+- Is the missingness behavioural or technical?
+- Can the measurement be compared across devices without a reference?
+
+Those four questions are the same ones the next topic asks of a wearable, with one addition: the behavioural missingness that imaging does not have.
+
+The comparison is exact: an imaging archive and a wearable dataset both fail when the acquisition metadata is missing, and both succeed when it is recorded and used.

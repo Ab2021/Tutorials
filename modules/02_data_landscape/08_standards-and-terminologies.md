@@ -439,7 +439,85 @@ A question about adherence needs the clinical drug; a question about class effec
 | Phenotype | Concept set plus logic | The logic is portable across sites | Which sites validated it? |
 | Prevalence | Cohort divided by denominator | The denominator uses the same mapping | Was the denominator mapped identically? |
 
-### 5.6 Branch points summarized
+### 5.6 Edge cases the procedure has to survive
+
+**A source code with no candidate.** Some local codes have no lexical or semantic match. The rule is to record the code, its volume, and the reason (local invention, obsolete code, free text in a coded field), and to report the unmapped volume by domain rather than dropping the rows.
+
+**Conflicting candidate maps.** A local code maps to two standard concepts with equal confidence. The rule is to choose by the question's granularity, record the alternative, and run the cohort under both if the code is high-volume.
+
+**Unit variants in the target.** A LOINC concept can be expressed in mg/dL or mmol/L, and UCUM codes distinguish them. The rule is to convert to a single unit for analysis and to keep the source unit, as in topic 1.
+
+**Code-system version changes.** ICD-10-CM changes annually; LOINC releases twice yearly; SNOMED CT twice yearly; RxNorm monthly. A mapping built on one release may reference a deprecated concept. The rule is to pin the release, to check for deprecated concepts at load, and to diff the mapping when the release changes.
+
+**Late vocabulary releases.** A new vocabulary release arrives after the ETL has run. The rule is to treat the release as a version of the data, not as a patch, and to re-run the cohort with a diff report.
+
+**Partial identifiers in the mapping table.** A mapping row with no source code, or with a code that does not exist in the source, is an orphan. The rule is to validate the mapping table against the source code inventory before use and to report orphans in both directions.
+
+**Duplicate hierarchy paths.** A concept can have more than one path to an ancestor, so `concept_ancestor` can return duplicates. The rule is to use `DISTINCT` on the descendant and to check the maximum path length, because a cycle in a malformed hierarchy produces an unbounded expansion.
+
+**Semantic drift between releases.** A concept can be reclassified from one parent to another, changing which queries capture it. The rule is to store the release with the concept set and to re-run the cohort after each release.
+
+### 5.7 Decision table: an unmapped source code
+
+An unmapped code has more than two treatments, and the right one depends on volume and on the question.
+
+| Situation | Volume | Action | Reporting |
+|---|---|---|---|
+| Local code with no standard equivalent | High | Build a local concept and document it | Local-to-standard gap |
+| Obsolete code with a known replacement | Any | Crosswalk to the replacement | Crosswalk table |
+| Free text in a coded field | High | Extract and map | Extraction precision |
+| Rare local code | Low | Leave unmapped | Unmapped volume |
+| Code from a different code system | Any | Re-identify the source system | Source system error |
+| Ambiguous code with two candidates | High | Map to both; sensitivity analysis | Both cohort sizes |
+
+The rule that overrides the table: an unmapped high-volume code is a project risk, and it should be resolved before the analysis rather than reported after it.
+
+### 5.8 Field-level validation rules
+
+| Rule | Test | Severity | Action on failure |
+|---|---|---|---|
+| Source code exists | Every mapping row's source code is in the source inventory | High | Quarantine the row |
+| Target concept exists | Every concept ID resolves in the vocabulary release | High | Quarantine the row |
+| Target is standard | `standard_concept = 'S'` where required | High | Re-map or flag |
+| Domain consistent | Concept domain matches the table | Medium | Flag; check the ETL |
+| Confidence present | Every row has a confidence level | High | Block the mapping load |
+| Hierarchy acyclic | No concept is its own ancestor | High | Block the concept set |
+| Deprecated concept | Concept validity end date is in the future | Medium | Flag; re-map |
+| Duplicate mapping | One target per source per confidence level | Medium | Collapse; report |
+| Unit convertible | Source unit maps to a UCUM code | High | Quarantine the value |
+
+### 5.9 What a concept set record contains
+
+A concept set is the analytic unit for a phenotype, and it needs six fields to be reusable:
+
+| Field | Example | Why |
+|---|---|---|
+| Concept IDs | 84114007 and 47 descendants | Reproducible membership |
+| Vocabulary release | Athena 2025-08-30 | Hierarchy and mapping version |
+| Include/exclude logic | Include descendants; exclude congenital | Prevents over-capture |
+| Confidence threshold | Exact and direct only | Controls the PPV trade-off |
+| Owner and review date | Cardiology informatics, 2026-03 | Accountability |
+| Validation | PPV 0.91 on 200 chart reviews | Evidence for use |
+
+A concept set without the first three cannot be run at another site, and one without the last three cannot be defended when the cohort size is questioned.
+
+Two practical additions make a concept set auditable. Store the SQL or the platform expression that implements the include/exclude logic, not only the concept list, because the logic is where the errors live. And store the cohort size it produced at each site, so a change between runs is visible without re-running everything.
+
+### 5.10 How to choose a confidence threshold
+
+The confidence threshold is the main lever on the sensitivity-specificity trade-off, and it should be set against the use rather than against a preference.
+
+| Use | Threshold | Consequence |
+|---|---|---|
+| Prevalence estimate | Exact plus narrower | Higher sensitivity; slight over-count |
+| Comparative effectiveness | Exact only | Higher specificity; smaller cohort |
+| Case finding for outreach | Exact plus broader | Higher sensitivity; accepts false positives |
+| Safety signal | Exact only | Avoids dilution of the signal |
+| Regulatory submission | Exact, documented | Defensible and auditable |
+
+A threshold that changes between analyses of the same condition is not a threshold. Record it with the concept set.
+
+### 5.11 Branch points summarized
 
 | Branch | Condition | Path A | Path B |
 |---|---|---|---|
@@ -547,14 +625,58 @@ A dose-response analysis needs the clinical drug level and therefore loses 18.6 
 - The RxNorm level determines capture and must be chosen against the question.
 - Cross-site comparisons require identical concept-set logic, not merely identical vocabularies.
 
-### 6.8 What a reviewer would ask
+### 6.8 Variant case: including approximate mappings
+
+The primary analysis used exact mappings only. The site's mapping table also contains 340 approximate maps (broader or narrower than the source), covering codes that the terminologist judged clinically related but not equivalent. Suppose the coordinating centre decides to include them to improve sensitivity.
+
+| Quantity | Exact only | Exact plus approximate |
+|---|---:|---:|
+| Source codes used | 9 | 34 |
+| HF patients | 2,140 | 2,410 |
+| Prevalence | 3.91% | 4.40% |
+| PPV against chart review | 0.91 | 0.88 |
+
+Check: 2,410 / 54,800 = 0.04398, or 4.40%.
+Check: 2,410 − 2,140 = 270 added patients, from 25 extra codes.
+Check the pooled PPV: (2,140 × 0.91 + 270 × 0.62) / 2,410 = (1,947.4 + 167.4) / 2,410 = 2,114.8 / 2,410 = 0.8775.
+
+The added group's PPV of 0.62 came from a 100-record chart review of the newly captured patients, in which 62 were confirmed. That is a much weaker confirmation rate than the 0.91 for the exact set, which is what "approximate" should mean.
+
+### 6.9 What the variant changes
+
+The prevalence estimate rises by 12.5 percent:
+
+- Relative change = 4.40 / 3.91 − 1 = 0.1253.
+
+The PPV falls by 3.3 percentage points (0.91 − 0.88 = 0.03), which sounds small and is not, because the PPV applies to every patient in the cohort and the added group is concentrated in ambiguous cases.
+
+The consequence for a comparative analysis is dilution. If true heart failure patients have an event rate of 20 percent and non-heart-failure patients have 10 percent, the added group's observed rate is:
+
+- 0.62 × 20% + 0.38 × 10% = 12.4% + 3.8% = 16.2%.
+
+Check: 0.62 × 0.20 = 0.124. 0.38 × 0.10 = 0.038. Sum = 0.162.
+
+The added group's rate is 16.2 percent against 20 percent in true cases, so pooling attenuates the contrast by (20 − 16.2) / 20 = 19 percent. An effect that is real will look 19 percent smaller, and a null will look unchanged.
+
+### 6.10 Which threshold I would report, and why
+
+The two uses pull in opposite directions:
+
+- **For prevalence**, the broader set is arguably better, because it captures cases that the exact map misses, and a PPV of 0.88 is acceptable for a burden estimate. Report it with the PPV and the added-group confirmation rate.
+- **For comparative effectiveness**, the exact set is better, because the 19 percent attenuation applies to the contrast of interest and biases the estimate toward the null. Report it with the sensitivity limitation and the prevalence under the broader set as context.
+
+Reporting one number for both uses is the error. A prevalence and an effect estimate have different tolerances for misclassification, and the threshold should be chosen per use and stated in the methods.
+
+A reviewer will ask why the approximate maps exist at all if they are not used. The answer is that they are useful for sensitivity analyses and for case finding, and that keeping them in the table with their confidence level is what makes the choice reversible.
+
+### 6.11 What a reviewer would ask
 
 1. **Which vocabulary release?** The Athena release date and the concept counts should be stated.
 2. **Was the mapping reviewed?** By whom, against what standard, and with what precision on a sample.
 3. **Why the parent concept rather than the exact concepts?** Because the exact concepts miss 6.1 percent of patients, and the parent captures them without over-capturing a different disease.
 4. **Does the parent concept capture anything that is not heart failure?** It should be checked; a parent can have descendants that are not clinically equivalent, which is why the descendant list must be reviewed rather than assumed.
 
-### 6.9 Cross-site comparison after harmonizing the concept set
+### 6.12 Cross-site comparison after harmonizing the concept set
 
 Once all three sites use the parent-plus-descendants concept set, the prevalence estimates become comparable:
 
@@ -571,7 +693,7 @@ Before harmonization, site B had used the four-mapped-concept query and reported
 
 That 6.4 percent change is the size of the artefact that the query difference introduced. It is smaller than many real differences between sites and larger than the difference between B and C, which means the previous comparison was ordering sites by query logic as much as by disease.
 
-### 6.10 What the example cannot tell you
+### 6.13 What the example cannot tell you
 
 Three things the mapping analysis cannot establish:
 
@@ -913,6 +1035,19 @@ The ETL becomes simpler and more standardized, and it does not become unnecessar
 | FHIR version conflated with profile | Certification failure | R5 cited for a US Core requirement | Non-conformance | Cite the profile and version |
 | OMOP v6 chosen | Tooling does not work | Unsupported version | Migration cost | Use 5.4 or 5.5 |
 
+### 9.8 How a mapping project gets funded
+
+Terminology work is usually invisible in a budget until it fails. Four arguments get it funded:
+
+| Argument | Evidence | Audience |
+|---|---|---|
+| Rework avoidance | Hours lost per mapping rebuild | Engineering leadership |
+| Comparability | Cohort size differences across sites | Research leadership |
+| Regulatory risk | Validator and review findings | Regulatory affairs |
+| Commercial | License cost of a terminology already owned | Procurement |
+
+The strongest is the first, because it is measurable: a mapping rebuilt twice costs the original effort plus the rework, and the rework is usually charged to a different team, which is why it is never counted.
+
 ### 10.1 The three red flags
 
 1. **A mapping table with no confidence column.** Without confidence, every map is treated as exact.
@@ -939,6 +1074,12 @@ The diligence questions are: which fields are SNOMED-coded at the point of captu
 | The license covers the use | Commercial viability | Distribution restriction | License review |
 | The terminology version is recorded | Reproducibility | Unstated release | Audit the ETL |
 | LOINC axes are matched for labs | Assay comparability | Component-only matching | Review the axes |
+
+### 10.3 The confidence-threshold drift
+
+A team that changes its mapping threshold between analyses of the same condition will produce cohort sizes that differ by 10 to 15 percent without any change in the data. The variant in section 6.8 shows the mechanism: 2,140 patients at the exact threshold and 2,410 at the expanded one.
+
+The signature is a cohort size that moves whenever a new analyst runs the definition. The repair is to store the threshold in the concept set record and to treat a change as a version, not as a setting.
 
 ### 11.1 Limits that are inherent
 
@@ -1030,6 +1171,14 @@ Describe what changes when a site upgrades from LOINC 2.79 to 2.80 and from ICD-
 Deliverable: a change table and two re-run decisions.
 
 Acceptance criteria: the changes are specific (deprecations, new codes); the re-run decisions name the affected cohorts.
+
+### Exercise 10 — Threshold sensitivity (calculation and design, 60 minutes)
+
+Using the counts in section 6.8, recompute the pooled PPV and prevalence if the added group were 500 patients with a PPV of 0.55 rather than 270 with 0.62. Report the attenuation of a 20 percent versus 10 percent contrast and state which threshold you would use for a comparative analysis.
+
+Deliverable: three recalculated figures and a recommendation.
+
+Acceptance criteria: the pooled PPV is weighted by group size; the attenuation formula is shown; the recommendation names the use.
 
 ---
 
@@ -1149,6 +1298,8 @@ A strong answer: pin the release for the study, diff the mappings and hierarchie
 - **US Core** — the US realm FHIR profiles.
 - **USCDI** — US Core Data for Interoperability.
 - **Value set** — a defined set of codes for a purpose.
+- **Confidence threshold** — the mapping confidence level included in a concept set.
+- **Orphan mapping** — a mapping row whose source or target does not resolve.
 
 ---
 
@@ -1207,3 +1358,44 @@ All URLs accessed 24 October 2026.
 Related reading: [`09_licensing-and-access.md`](09_licensing-and-access.md) for the licensing consequences summarized in section 8.5; [`10_data-quality-dimensions.md`](10_data-quality-dimensions.md) for the validity dimension that a mapping failure violates; and [`01_ehr-data.md`](01_ehr-data.md) for the source-system context.
 
 The sentence to remember: a standard tells you where the data sit or what the data mean, and a mapping between meanings always loses something worth measuring.
+
+### 11.3 The limit that decides cross-site comparability
+
+For a multi-site study, the binding limit is not the vocabulary (all sites can load the same release) but the mapping quality at each site. Two sites with the same SNOMED release and different local mapping practices will produce different cohorts from the same concept set.
+
+The practical statement is a mapping-rate table by site, next to the cohort sizes. If site B's mapping rate is 20 points below site A's, its smaller cohort is a data finding, not an epidemiology finding.
+
+### 11.4 The limit that licensing imposes
+
+A terminology that cannot be distributed constrains the analysis even when the license permits internal use. A model that embeds SNOMED CT concepts in its outputs may need a distribution license, and the constraint is discovered at the point of shipping rather than at the point of modeling.
+
+The practical statement names the terminology, the license, and the permitted uses, in the same way a data use agreement is summarized.
+
+### 11.5 The three numbers to report with any mapped cohort
+
+- The mapping rate by code count and by volume, by site.
+- The PPV of the concept set against a chart-reviewed sample, with the sample size.
+- The cohort size under at least one alternative threshold.
+
+A deliverable with those three is auditable across sites. One that reports only the cohort size is not.
+
+Four questions to carry into the licensing topic:
+
+- Does the contract permit the analysis and the publication?
+- Does the de-identification retain the fields the analysis needs?
+- Can the data be stored where the contract requires?
+- Does the timeline fit the decision?
+
+Those four questions are the access problem in miniature, and the next topic treats them as a decision with a cost and a timeline rather than as a compliance checklist.
+
+A mapping that is technically perfect and contractually unusable is not an asset, and the licensing topic is where that distinction becomes a budget line.
+
+A final check: if a reviewer asked for the cohort size, would you give one number or the range across thresholds? For a cross-site comparison, the range is the honest answer, and it is the one the concept set record makes possible.
+
+The range is also what makes the licensing conversation concrete: a broader definition may need a different data tier, and the tier may cost more or arrive later.
+
+That link between definition and access is the bridge to the next topic, where the definition you can afford is the one the contract permits.
+
+Every topic in this module ends at the same place: the analysis is bounded by what the data can mean and by what the contract allows.
+
+The next topic takes that boundary and turns it into a budget, a timeline, and a set of clauses.

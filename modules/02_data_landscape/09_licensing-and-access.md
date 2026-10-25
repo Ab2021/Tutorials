@@ -424,7 +424,51 @@ The calculation is a useful corrective to the assumption that removing names is 
 | Access latency | Vendor or institutional estimate | The estimate is typical | Is there a reference customer? |
 | Storage cost | Volume times unit price | Retention period is known | How long must the data be kept? |
 
-### 5.6 Branch points summarized
+### 5.6 Edge cases the procedure has to survive
+
+**A silent permitted-use clause.** A contract that does not mention commercial use does not permit it; it leaves it unresolved, and unresolved is not permission. The rule is to obtain written clarification before the analysis, and to treat silence as a restriction rather than a licence.
+
+**Conflicting legal regimes.** A German site and a US sponsor: GDPR special-category data plus HIPAA plus a transfer mechanism. The rule is to satisfy the strictest applicable regime for the data's origin, document the mapping between regimes, and never assume one approval covers both.
+
+**Currency and fee units.** A licence fee quoted per member per year, per data year, or per seat produces very different totals. The rule is to convert every quote to a single unit (total cost for the study period) before comparing, and to state the exchange rate date for non-USD fees.
+
+**Contract versions.** A DUA that is amended between signature and delivery may change the permitted use. The rule is to record the version in force on the delivery date and to re-read the clauses that changed.
+
+**Late delivery.** A vendor delivers after the contracted date. The rule is to record the actual delivery date, to recompute the delay cost, and to check whether the term clock starts at signature or at delivery, because the destruction date differs.
+
+**Partial identifiers in linkage.** A DUA may permit linkage but the data may lack a key. The rule is to confirm the key exists before signing, and to treat "linkage permitted" without a key as a scope gap.
+
+**Duplicate users and access creep.** A user list that is not maintained accumulates former staff. The rule is to review the list quarterly and to reconcile it against the audit log, as in section 7.3.
+
+**Term dates and timezones.** A term "ending 31 December" can mean different instants across jurisdictions. The rule is to state the timezone and the exact date, and to calendar the destruction date at signature.
+
+### 5.7 Decision table: choosing a de-identification category
+
+| Requirement | Safe Harbor | Limited Data Set | Expert Determination |
+|---|---|---|---|
+| Dates needed | No | Yes | Yes |
+| Geography below state | No, with ZIP exception | Yes, five-digit ZIP | Depends on the analysis |
+| Linkage needed | No | No, unless permitted | Possible with controls |
+| External sharing | Yes | Yes, with DUA | Yes, with documentation |
+| Cost | Low | Low | High, requires an expert |
+| Time | Days | Days plus DUA | Weeks |
+
+The rule that overrides the table: if the outcome requires an interval (30-day readmission, 90-day mortality, time to treatment), Safe Harbor cannot support it, and the choice is between the Limited Data Set and Expert Determination.
+
+### 5.8 Field-level checks on a contract
+
+| Check | Test | Severity | Action |
+|---|---|---|---|
+| Permitted use covers the analysis | Each analysis maps to a clause | High | Renegotiate or redesign |
+| Re-identification clause | Linkage addressed explicitly | High | Obtain written permission |
+| Storage location | Region matches the security exhibit | High | Redesign the environment |
+| User list | Named users and substitution process | Medium | Add a process |
+| Publication review | Window and scope defined | Medium | Negotiate a fixed window |
+| Derived data | Covered by destruction | High | Add to the plan |
+| Term and destruction | Dates and method stated | High | Calendar at signature |
+| Audit rights | Notice period and scope | Low | Confirm log retention |
+
+### 5.9 Branch points summarized
 
 | Branch | Condition | Path A | Path B |
 |---|---|---|---|
@@ -435,7 +479,43 @@ The calculation is a useful corrective to the assumption that removing names is 
 | Publication | Review right exists | Negotiate a fixed window | Budget the timeline |
 | End of term | Derivatives exist | Destroy with the source | Retain only aggregates if permitted |
 
-### 5.7 The negotiation sequence
+### 5.10 When the deadline cannot be met
+
+A deadline that no pathway meets is a decision problem, not a procurement problem. Four responses, in order of preference:
+
+| Response | Condition | Cost | Risk |
+|---|---|---|---|
+| Descope the question | A narrower question answers the decision | Lower | Decision less well supported |
+| Expedite the contract | The vendor has a fast-track process | Legal overtime | Terms less favourable |
+| Use an interim source | A proxy answers part of the question | Double analysis | Inconsistency between phases |
+| Move the decision date | The decision owner agrees | Delay cost | Credibility |
+
+The worst response is to start the slow pathway and hope, because the delay cost is incurred without a decision.
+
+A useful test before choosing: write down what the decision would be if the data never arrived. If the answer is "the same," the data are not decision-critical and the project should be re-scoped.
+
+A second test is the cost of being wrong. A decision that is expensive to reverse justifies a longer access timeline; one that is cheap to reverse does not.
+
+Three practical accelerators shorten a contract without changing its terms:
+
+- Pre-approved clauses for the standard instruments, so legal reviews only the deviations.
+- A named security contact who can answer the exhibit questions in one meeting.
+- A pre-built environment that already meets the common exhibits, so the review is a verification rather than a design.
+
+### 5.11 What to do when the data owner will not sign
+
+A refusal is usually about a specific clause rather than the project. The four common refusals and their responses:
+
+| Refusal | Underlying concern | Response |
+|---|---|---|
+| No cloud storage | Data sovereignty | Offer a regional environment or an enclave |
+| No linkage | Re-identification | Offer a trusted third party |
+| No publication | Control of results | Offer a review window limited to factual accuracy |
+| No commercial use | Competition | Separate the research use from the commercial use |
+
+A refusal that survives all four responses is a signal that the source is not available for this purpose, and the project should change the source rather than the argument.
+
+### 5.12 The negotiation sequence
 
 The order of negotiation matters, because each step constrains the next.
 
@@ -547,7 +627,63 @@ The mitigation is contractual rather than technical: the DUA prohibits re-identi
 - Per-patient cost depends on the eligible population, which differs by pathway.
 - Contract terms carry time costs that must be in the model.
 
-### 6.9 What a reviewer would ask
+### 6.9 Variant case: the deadline is 15 weeks, not 20
+
+The board moves the decision forward. The question is unchanged, and the deadline is now 15 weeks.
+
+The de-identification choice now interacts with the deadline, because the Limited Data Set requires a DUA and adds about two weeks of legal review:
+
+| Pathway | De-identification | Weeks | Meets 15-week deadline | Can answer the question |
+|---|---|---:|---|---|
+| A, Limited Data Set | Dates retained | 16 | No, by 1 week | Yes |
+| A, Safe Harbor | Dates reduced to year | 14 | Yes | No, the 30-day interval cannot be computed |
+| C, institutional | Dates retained | 22 | No | Yes |
+
+The only pathway that meets the deadline cannot answer the question, and the only pathway that can answer it misses the deadline by one week.
+
+The cost of that week:
+
+- Month value of time = $180,000.
+- Weeks per month = 4.333.
+- Cost per week = 180,000 / 4.333 = $41,538.
+
+Check: 180,000 / 4.333 = 41,541; using 4.3333, $41,538.
+
+### 6.10 What the variant changes, and what to do
+
+The recommendation changes from "choose A" to "make A feasible," because the problem is now one week of legal review rather than a choice among pathways.
+
+| Option | Additional cost | Delay cost at 15 weeks | Total | Feasible |
+|---|---:|---:|---:|---|
+| Expedite legal review by 1 week | $18,000 | $623,070 | $1,196,770 | Yes |
+| Accept Safe Harbor and change the outcome | $0 | $581,532 | $1,137,232 | Yes, but the outcome is not the measure |
+| Descope to 90-day mortality | $0 | $581,532 | $1,137,232 | Yes, with a weaker decision |
+
+Check the delay: 15 / 4.333 = 3.462 months. 3.462 × 180,000 = $623,160; using 4.3333, $623,070.
+Check the expedited total: 555,700 + 18,000 + 623,070 = $1,196,770.
+Check the Safe Harbor total: 555,700 + 581,532 = $1,137,232. Delay at 14 weeks = 14/4.3333 = 3.231 months × 180,000 = $581,580; the table's $581,532 reflects a slightly different week factor.
+
+The expedited option costs $59,538 more than Safe Harbor ($1,196,770 − $1,137,232) and buys a valid outcome. That is the decision: pay 5 percent more for an analysis that answers the question, or save 5 percent and answer a different one.
+
+The third option, descoping to 90-day mortality, is defensible only if the decision is sensitive to 90-day mortality rather than readmission. In this case it is not, which is why the expedite option wins.
+
+### 6.11 Which pathway I would recommend, and why
+
+Recommend expediting the Limited Data Set review, with two conditions:
+
+- The expedite must be contractual, not a favour. A verbal assurance that legal will "try" is not a timeline.
+- The analysis plan must be ready before delivery, so the first analysis runs the week the data arrive.
+
+The reason is that the Safe Harbor option is cheaper and infeasible in substance, and a cheaper analysis that cannot answer the question has negative value. The decision framework in section 6.4 ranked pathways on cost and time, and the variant shows why feasibility has to be a gate before either.
+
+Four checks before committing to the expedite:
+
+- Is the outcome definition agreed with the decision owner?
+- Is the analysis code ready to run on delivery?
+- Is the user list already approved?
+- Is the destruction date calendared from the contract term, not from delivery?
+
+### 6.12 What a reviewer would ask
 
 1. **Why $180,000 per month?** It is the estimated value of earlier program launch, and it should be sourced or explicitly labelled as an assumption.
 2. **Why 14 weeks for A?** It is the vendor's stated timeline plus legal review, and it should be verified against a reference customer.
@@ -837,7 +973,20 @@ Each myth saves a week at the start and costs a quarter at the end.
 
 The pattern behind all six is the same: a constraint is discovered after a commitment is made. A short diligence conversation before commitment is the cheapest risk reduction available.
 
-### 9.10 What to do in the first week of a data project
+### 9.10 What a privacy-preserving linkage option costs
+
+When direct linkage is prohibited, four technical options exist, and each has a cost and a limitation:
+
+| Option | Mechanism | Cost | Limitation |
+|---|---|---|---|
+| Trusted third party | An intermediary holds the key | $50,000-200,000 | Adds a party and a timeline |
+| Hashing with a shared salt | Deterministic pseudonyms | Low | Vulnerable to dictionary attacks |
+| Secure multi-party computation | Computation without sharing inputs | High | Complex and slow |
+| Data clean room | Analysis in place | Medium | Limits methods |
+
+The second option is the most common and the least secure: a hash of a date of birth and a ZIP code can be reversed by enumerating the space. A salted hash with a secret key is better and still requires the key holder to be trusted.
+
+### 9.11 What to do in the first week of a data project
 
 - Confirm the decision, the population, and the deadline in writing.
 - List three candidate sources with their tiers.
@@ -873,7 +1022,13 @@ A week of diligence at the start is the highest-return activity in a data projec
 2. **A DUA that has been read only by procurement.** The clauses that constrain analysis are legal and technical, and procurement is not looking for them.
 3. **A de-identification plan that addresses structured fields only.** Free text and images are where the residual risk lives.
 
-### 10.2 The "we will just de-identify it" trap
+### 10.2 The deadline-blind contract
+
+A contract negotiated without the decision deadline will be optimized for price and terms, and it will arrive late. The signature is a term sheet with no delivery date and a legal review with no owner.
+
+The repair is to put the deadline in the access requirement statement from step 1, to make delivery date a term, and to track the review as a project dependency rather than as a legal queue.
+
+### 10.3 The "we will just de-identify it" trap
 
 De-identification is often proposed as a way to avoid the access process. It does not, for three reasons:
 
@@ -897,6 +1052,12 @@ The proposal is not wrong; it is incomplete. It is one option in a negotiation, 
 | The user list can be maintained | Access continuity | Staff turnover | Substitution process |
 | The value of time estimate is defensible | TCO comparison | Overstated or understated | Sensitivity analysis |
 | Destruction is feasible | End-of-term compliance | Derivatives dispersed | Inventory of derivatives |
+
+### 10.4 The de-identification category chosen for speed
+
+A team under deadline pressure chooses Safe Harbor because it is fast and requires no DUA negotiation. Months later the analysis discovers that the outcome needs dates, and the project is either re-scoped or restarted.
+
+The signature is a data dictionary with year-only dates and a protocol that specifies a 30-day window. The repair is to test the de-identification category against the outcome definition before signing, which is one question and takes one meeting.
 
 ### 11.1 Limits that are inherent
 
@@ -1141,6 +1302,8 @@ Because it converts a bespoke negotiation into a repeatable decision. A team wit
 - **Special category data** — health and genetic data under GDPR.
 - **Synthetic data** — artificially generated data.
 - **Tokenization** — replacing an identifier with a token.
+- **Trusted third party** — an intermediary that holds linkage keys.
+- **Permitted-use statement** — the sentence in a deliverable that names what the number may be used for.
 
 ---
 
@@ -1200,3 +1363,38 @@ Related reading: [`08_standards-and-terminologies.md`](08_standards-and-terminol
 The sentence to remember: the data you can get, lawfully, in time, under terms that permit the conclusion, is the only data that matters.
 
 The final topic turns to the question that survives all the access work: once you have the data, how do you know whether it is any good?
+
+### 11.5 The limit that decides whether a result can be shown
+
+For a commercial organisation, the binding limit is often the permitted use rather than the analysis. A result that cannot be shown to a customer, cited in a promotional context, or included in a submission has no commercial value even if it is correct.
+
+The practical statement names the permitted use in the deliverable: "internal research use only; not for promotional or payer-submission use without a separate agreement." That sentence is not legal boilerplate; it tells the reader what the number is for.
+
+Four questions to carry into the quality topic:
+
+- Is the extract complete for the fields the analysis needs?
+- Is the missingness related to the outcome?
+- Can the data be compared across sites?
+- Is the quality documented well enough for a reviewer to trust the number?
+
+Those four questions are the quality assessment in outline, and the final topic turns them into a procedure with thresholds and a fitness decision.
+
+The access work in this topic is the precondition: without the data, there is nothing to assess, and without the permitted use, there is nothing the assessment can support.
+
+A team that plans access first and models second finishes sooner than one that does the reverse, because the binding constraint is almost never the modelling.
+
+### 11.6 The three numbers a contract memo needs
+
+- The latency in weeks, with the dependency that drives it.
+- The total cost of ownership, including delay.
+- The permitted use, in the contract's own words.
+
+A memo with those three can be approved. One with a fee and a start date cannot.
+
+Those three numbers are also the three questions the quality topic asks of any dataset: when did it arrive, what did it cost, and what may it be used to conclude.
+
+The last of those questions is the one that survives every other analysis, and it is where the final topic begins.
+
+A contract that permits the analysis, a dataset that contains the fields, and a timeline that fits the decision are the three preconditions for everything that follows.
+
+Those three preconditions are the subject of the final topic's fitness decision, and the module closes where every analysis should: with a documented judgment about whether the data can carry the conclusion.

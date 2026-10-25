@@ -398,19 +398,55 @@ The last point is the most consequential. A single-cell study with 10 donors and
 | Variant pathogenicity | ACMG criteria applied to evidence | The evidence is complete and current | Which ClinVar and gnomAD releases? |
 | Tumor purity | Estimate from copy number or expression | The estimator is calibrated | Which estimator and version? |
 
-### 5.6 Branch points summarized
+### 5.6 Edge cases the procedure has to survive
 
-| Branch | Condition | Path A | Path B |
+**Zero counts.** A zero in a bulk RNA-seq matrix usually means "below detection," not "absent," and in single-cell data it usually means "not captured." Treating zeros as true zeros biases fold changes and inflates apparent differences. The rule is to filter features with a documented minimum, and to distinguish structural zeros from sampling zeros in single-cell data.
+
+**Conflicting annotations.** The same reads summarized against two annotation releases give different counts for genes whose models changed. The rule is to record the annotation and never to merge matrices from different releases without re-summarizing.
+
+**Unit and scale variants.** Expression is reported as raw counts, CPM, TPM, FPKM, or log2-transformed values. A fold change computed on log2 values is a difference, and one computed on raw values is a ratio; mixing them produces values that cannot be interpreted. The rule is to record the scale and the transformation, and to convert explicitly.
+
+**Identifier variants.** Gene symbols change, and a symbol can refer to different genes across releases (the classic example is a symbol reused after a rename). The rule is to join on stable identifiers (Ensembl or Entrez) and to keep the symbol for display only.
+
+**Late-arriving samples.** A sample sequenced in a later batch arrives after the first analysis. Adding it without re-running the batch assessment can create a batch effect that looks like a group difference. The rule is to re-run the batch diagnostics on every addition.
+
+**Partial identifiers.** A sample with no participant link cannot be used in a clinical analysis. The rule is to require a sample-to-participant map at receipt, and to quarantine unmapped samples.
+
+**Duplicates.** The same library sequenced twice produces two files with near-identical counts. The rule is to detect duplicates by genotype concordance or count correlation, and to keep one.
+
+**Sample swaps.** A swap between two participants is detected by genotype or sex check. The rule is to run the check before any analysis, and to treat a swap as a data integrity event requiring re-labelling, not deletion.
+
+**Reference build changes.** A study that moves from GRCh37 to GRCh38 changes every coordinate. The rule is to lift over with a documented tool and to re-verify a sample of variants, never to mix builds in one matrix.
+
+### 5.7 Decision table: handling zeros and missing values
+
+| Situation | Evidence | Action | Effect on the test |
 |---|---|---|---|
-| Data level | Raw reads available | Re-align and re-quantify | Analyze the provided matrix |
-| Batch | Not confounded | Include batch as covariate | Correct the matrix, with sensitivity |
-| Batch | Completely confounded | Restrict claims; collect new data | Not available |
-| Composition | Bulk tissue | Deconvolve and adjust | State the limitation |
-| Ancestry | Single group | Report and restrict claims | Validate in a second group |
-| Replication | Independent cohort available | Replicate with a different pipeline | Report as a discovery, not a finding |
-| Single cell | Many donors | Pseudobulk by donor | State pseudoreplication risk |
+| Structural zero, bulk | Feature below detection in all samples of a group | Filter the feature | Removes uninformative tests |
+| Sampling zero, single cell | Dropout in a subset of cells | Model with a zero-inflated method | Preserves sparsity |
+| Missing, proteomics | Value absent for some samples | Report MNAR sensitivity | Wide interval |
+| Missing, genotype | No call at a locus | Impute with a reference panel | Introduces imputation error |
+| Duplicate library | High count correlation, same genotype | Keep one; record the duplicate | Removes pseudo-replication |
+| Swapped sample | Sex or genotype mismatch | Re-label; do not delete | Preserves the participant |
 
-### 5.7 Quality metrics by assay
+The rule that overrides the table: any handling of zeros or missing values must be applied identically across groups. A method applied only to the cases is a bias, not a correction.
+
+### 5.8 Field-level validation rules
+
+| Rule | Test | Severity | Action on failure |
+|---|---|---|---|
+| Sample identity | Genotype or sex matches the metadata | High | Quarantine; re-label |
+| Library size | Total counts within a factor of 3 of the median | Medium | Flag; check normalization |
+| Mapping rate | Above the assay threshold | High | Quarantine the sample |
+| Duplication rate | Below the assay threshold | Medium | Flag; check library prep |
+| Reference build | Declared and consistent across samples | High | Block the merge |
+| Annotation version | Declared and consistent | High | Block the merge |
+| Gene identifier | Stable ID present for every feature | Medium | Flag; map or drop with a record |
+| Batch balance | Every batch has both groups | High | Block the comparison |
+| Phenotype completeness | Critical covariates present | Medium | Flag; report the missing rate |
+| Count distribution | No sample with a bimodal or truncated distribution | Low | Flag; review |
+
+### 5.9 Quality metrics by assay
 
 The metrics that matter differ by assay, and using the wrong one gives false reassurance.
 
@@ -423,7 +459,7 @@ The metrics that matter differ by assay, and using the wrong one gives false rea
 
 A quality report that lists all six assays' metrics for one assay is not a quality report.
 
-### 5.8 What to do when the pipeline is unknown
+### 5.10 What to do when the pipeline is unknown
 
 If a matrix arrives without a pipeline record, three options remain:
 
@@ -439,7 +475,41 @@ If the record is incomplete but the raw data exist, re-deriving is usually cheap
 
 The same logic applies to annotation. A re-annotation with a newer gene model can move reads between genes, which changes every count for those genes without any change in the data.
 
-### 5.9 Branch points summarized
+### 5.11 Normalization choices and what they assume
+
+| Method | Assumption | Fails when | Typical consequence |
+|---|---|---|---|
+| Total count (CPM) | Most features do not change | A few genes dominate | False fold changes |
+| TPM/FPKM | Transcript length matters | Comparing across pipelines | Not comparable across studies |
+| Median-of-ratios | Most features are unchanged | Large global shift | Distorted size factors |
+| Upper-quartile | The upper quartile is stable | Few highly expressed features | Unstable factors |
+| Trimmed mean of M-values | A reference sample is representative | No representative reference | Bias toward the reference |
+| Spike-in normalization | Spike-ins behave like endogenous RNA | Spike-in ratio differs | Corrects only the spike-in fraction |
+
+The practical rule is to state the method and run one alternative as a sensitivity analysis. If the DE list changes materially between two defensible normalizations, the result depends on the normalization, and that dependence is a finding.
+
+A useful sanity check on any normalization is to compare the distribution of library sizes before and after. A method that equalizes totals but leaves a 10-fold spread in the 75th percentile of counts has not corrected composition, only depth.
+
+Two further checks apply to every matrix before testing:
+
+- The fraction of reads in genes should be stable across samples; a sample with half the usual fraction has a library problem.
+- The correlation between samples within a group should exceed the correlation between groups; if not, the grouping is not the dominant source of variation.
+
+### 5.12 What a minimal provenance record contains
+
+Five lines are enough to make an omics matrix reproducible, and their absence is the most common reason a matrix cannot be compared to anything:
+
+1. The assay, the library protocol, and the read length.
+2. The reference build and the annotation release.
+3. The aligner and quantifier with versions.
+4. The filtering rule and the normalization method.
+5. The sample sheet with group, batch, and any covariates.
+
+A record missing any of the five turns the matrix into a table of numbers with an unknown relationship to biology, and no amount of downstream modeling recovers the missing line.
+
+Store the record with the matrix, not in a lab notebook. A record that lives in a notebook is a record that the next analyst will not find.
+
+### 5.13 Branch points summarized
 
 ---
 
@@ -532,14 +602,63 @@ Check: 30 × 60,000,000 = 1,800,000,000 bases. × 120 = 216,000,000,000 bases = 
 - A sensitivity analysis that removes the most imbalanced batch quantifies how much of the signature depends on confounding.
 - The analytic funnel reduces five million variant calls to about a thousand reportable variants, which is where clinical interpretation begins.
 
-### 6.8 What a reviewer would ask
+### 6.8 Variant case: four samples were swapped
+
+The primary analysis used the sample sheet as delivered. A genotype concordance check, run before any modelling, found two pairs of samples with swapped labels: four samples assigned to the wrong participant, and therefore to the wrong group in two cases.
+
+The swap cannot be resolved by re-labelling because the pairs are within the same group for two samples and across groups for two others. The defensible action is to exclude all four and re-run.
+
+| Quantity | As delivered | After excluding the four samples |
+|---|---:|---:|
+| Samples | 120 | 116 |
+| Tumour | 60 | 58 |
+| Normal | 60 | 58 |
+| Genes at q < 0.05 | 640 | 596 |
+| Overlap with the original list | — | 571 |
+
+Check: 60 − 2 = 58 for each group if one tumour and one normal are lost per pair. The example assumes the four exclusions are two tumours and two normals, so 58 and 58.
+Check: 640 − 571 = 69 genes lost. 596 − 571 = 25 genes gained.
+
+A single gene illustrates the mechanism. Gene X had a log2 fold change of 2.14 and q = 3 × 10⁻⁹ in the delivered analysis. After exclusion it has a log2 fold change of 0.31 and q = 0.42. The entire signal came from two swapped samples that placed normal tissue in the tumour group.
+
+### 6.9 What the variant changes
+
+| Metric | As delivered | After correction |
+|---|---:|---:|
+| Genes at q < 0.05 | 640 | 596 |
+| Genes lost | — | 69 (10.8% of 640) |
+| Genes gained | — | 25 |
+| Replication of the batch-restricted set | 355 | 340 |
+| Replication proportion of the full list | 55.5% | 57.0% |
+
+Check: 69 / 640 = 0.1078. 340 / 596 = 0.5705. 355 / 640 = 0.5547.
+
+The headline number changes by 6.9 percent (640 to 596), which is small enough that a reader might treat the two analyses as equivalent. The gene-level changes are not small: 10.8 percent of the list is different, and the gene that a team might have taken forward as the top hit disappears entirely.
+
+The pattern of the losses is informative. Of the 69 lost genes, 40 were among the 285 genes that did not replicate when the confounded batch was removed. That is 14.0 percent of the fragile set, against 29 of the 355 replicated genes, or 8.2 percent. A four-sample integrity defect concentrated in the genes that were already suspect.
+
+Check: 40 / 285 = 0.1404. 29 / 355 = 0.0817.
+
+### 6.10 Which result I would report, and why
+
+Report the corrected analysis as primary, and record the swap as a data integrity event:
+
+- **Corrected analysis, primary.** The swapped samples are mislabelled observations, and keeping them means the group labels are wrong for those records. No statistical method repairs a mislabelled group.
+- **Delivered analysis, not reported as a result.** It can be mentioned only as a description of what the integrity check caught, with the number of affected samples and genes.
+- **The genotype check, reported as a quality metric.** A concordance rate of 116 of 120 (96.7 percent) is the number that belongs in the methods, alongside the action taken.
+
+Check: 116 / 120 = 0.9667.
+
+A reviewer will ask why the check was not part of the cohort construction step. The answer is that step 8 in section 5 covers sample swaps, and a pipeline that skips it will produce a result that looks like the delivered analysis. The cost of the check is one genotyping array or one existing genotype file; the cost of skipping it is a retracted finding.
+
+### 6.11 What a reviewer would ask
 
 1. **Why is library prep date the batch variable rather than site?** Because the prep date determines reagent lot, operator, and sequencer run, which are the technical drivers. Site is a proxy that happens to be nested within date here.
 2. **Is 86.6 percent replication good?** It is reassuring for direction but does not establish that the genes are biologically meaningful. Replication in an independent cohort with a different pipeline is the stronger test.
 3. **Why not correct the matrix with ComBat?** Because correction removes variance that may be biological when batch is confounded with group. Covariate adjustment plus a sensitivity analysis is more transparent.
 4. **Is a 0.9 percent pathogenic rate plausible?** It is plausible for a filtered exome set, and it depends heavily on the ClinVar release and the classification pipeline. The number should be reported with both versions.
 
-### 6.9 Cost and timeline arithmetic
+### 6.12 Cost and timeline arithmetic
 
 A discovery programme's cost is dominated by sample processing and validation, not sequencing.
 
@@ -558,7 +677,7 @@ The confirmation line is 47 percent of the total (255,250 / 543,250 = 0.4698), w
 
 The validation cohort is 16.6 percent (90,000 / 543,250 = 0.1657). Cutting it saves the smallest share and removes the only evidence that the discovery replicates, which is the worst trade in the table.
 
-### 6.10 What the example cannot tell you
+### 6.13 What the example cannot tell you
 
 Three questions the data cannot answer, each with the study that would:
 
@@ -568,7 +687,7 @@ Three questions the data cannot answer, each with the study that would:
 
 Each of these is a different study, not a different analysis. Recognizing that is the difference between a research plan and a wish list.
 
-### 6.11 The decision the example supports
+### 6.14 The decision the example supports
 
 After the analysis, the team has 640 genes at q < 0.05, 355 of which replicate when the most imbalanced batch is removed, and an estimated 285 that depend on the confounded batch. The defensible next step is not to advance all 640 to validation. It is to advance the 355 replicated genes first, and to treat the remaining 285 as candidates requiring a design that can separate batch from biology.
 
@@ -862,6 +981,8 @@ Public omics data has a property that clinical data lacks: a result can often be
 
 The commercial implication is that a company's omics advantage rarely comes from possessing public data. It comes from proprietary cohorts, validated pipelines, and the ability to replicate. A strategy built on exclusive access to TCGA would be a strategy built on a public resource.
 
+The corollary for a data team is that investment in pipeline reproducibility has a higher return than investment in proprietary data access, because the data are increasingly shared and the pipeline is not.
+
 ---
 
 ## 10. Failure modes and red flags
@@ -881,13 +1002,36 @@ The commercial implication is that a company's omics advantage rarely comes from
 | Contamination | Unexpected variants or taxa | Cross-sample contamination | False calls | Estimate and report contamination |
 | Resource version drift | Annotation changed mid-project | Database updated | Irreproducible filtering | Pin versions |
 
+### 9.9 How an omics CRO or core prices a project
+
+| Cost driver | Unit | Typical range | What changes it |
+|---|---|---|---|
+| Library prep | Per sample | $150-600 | Protocol, automation, input amount |
+| Sequencing | Per gigabase | $10-40 | Read length, depth, platform |
+| Alignment and quantification | Per sample | $20-80 | Reference, pipeline maturity |
+| Statistical analysis | Per project | $10,000-60,000 | Design complexity, replication |
+| Validation | Per gene or panel | $5-50 | Assay type, sample size |
+| Data management | Per project | $5,000-25,000 | Volume, retention, access tier |
+
+The pattern that surprises buyers is that sequencing is rarely the largest line. For a 120-sample discovery project, library prep and analysis usually exceed sequencing, and validation exceeds all three if the gene list is large.
+
+A second pattern is that a cheap pipeline is cheap because it omits a step. The omitted step is usually the genotype check, the batch assessment, or the replication, and each omission is invisible in the deliverable.
+
 ### 10.1 The three red flags
+
+A fourth deserves equal weight in omics: a result that disappears when a small number of samples is removed. The variant in section 6.8 removed 3.3 percent of samples and changed 10.8 percent of the gene list, including the top hit. A list that fragile is a list about the samples, not about the biology.
 
 1. **A gene list with p-values and no q-values.** Without FDR control, the list is not a discovery set.
 2. **A group-by-batch table that is never shown.** If the authors did not show it, either it is balanced and they missed an opportunity, or it is not.
 3. **No replication cohort.** A discovery without replication is a hypothesis, and the paper's language should say so.
 
-### 10.2 The "biomarker" inflation
+### 10.2 The fragile-list failure
+
+A gene list that loses more than about 10 percent of its members when a small number of samples is removed, or when one batch is excluded, is a list about the data rather than about the disease. The variant in section 6.8 is an example: four samples changed 69 genes.
+
+The diagnostic is cheap and should be routine: remove 5 percent of samples at random, re-run, and measure the overlap. A list with under 80 percent overlap is not ready for validation.
+
+### 10.3 The "biomarker" inflation
 
 A gene that is differentially expressed at q < 0.001 with a 1.2-fold change is statistically robust and clinically weak. The inflation happens when significance is translated into "biomarker" without a consideration of effect size, measurement stability, and the intended use.
 
@@ -908,6 +1052,12 @@ A useful test: ask what decision would change if the biomarker were true. If the
 | Replication is independent | Confirming a discovery | Same pipeline, same site | Different cohort and pipeline |
 | Clinical validity implies utility | Product claims | No outcome evidence | Utility study |
 
+### 10.4 The matrix-without-provenance failure
+
+A count matrix that arrives without a reference build, an annotation release, or a pipeline record cannot be compared to any other matrix, and the limitation is usually discovered when a reviewer asks for a replication analysis.
+
+The signature is a matrix whose gene identifiers do not match a current annotation, or whose sample names encode a pipeline version nobody recognises. The repair is to request the raw data or the pipeline record, and if neither is available, to restrict the analysis to within-matrix contrasts and state that cross-study comparison is not supported.
+
 ### 11.1 Limits that are inherent
 
 - **Omics measures molecules, not outcomes.** A molecular difference is not a clinical benefit.
@@ -923,7 +1073,13 @@ A useful test: ask what decision would change if the biomarker were true. If the
 
 That paragraph gives the design, the control, the confounding, the sensitivity, and the residual threat.
 
-### 11.3 The limit that decides whether a result is a product
+### 11.3 The limit that decides whether a list is a discovery
+
+For an omics discovery, the binding limit is rarely the p-value and usually the fragility of the list. A 640-gene list that loses 69 genes to four samples, and 285 genes to one batch, is a list whose membership depends on the data handling rather than on the disease.
+
+The practical statement is a stability number: "the list retained 80 percent of its members under random removal of 5 percent of samples and 55 percent under removal of the most imbalanced batch." A reviewer can act on that sentence; a q-value alone does not support it.
+
+### 11.4 The limit that decides whether a result is a product
 
 For a commercial decision, the decisive limit is usually not statistical but operational:
 
@@ -1012,6 +1168,14 @@ A dataset has 48,000 cells from 12 donors. Explain why the effective sample size
 Deliverable: a 300-word explanation with the pseudobulk procedure.
 
 Acceptance criteria: the explanation distinguishes cells from donors; the procedure states the aggregation unit and the test.
+
+### Exercise 10 — Sample-swap sensitivity (calculation and critique, 45 minutes)
+
+Using the counts in section 6.9, recompute the overlap and the lost-gene share if eight samples rather than four were excluded and 590 genes remained at q < 0.05 with 505 overlapping. Report the lost share, the gained share, and whether the list would still be worth validating.
+
+Deliverable: three figures and a recommendation with a threshold.
+
+Acceptance criteria: shares are computed against the original list; the recommendation states an explicit fragility threshold; the threshold is justified, not asserted.
 
 ---
 
@@ -1200,3 +1364,37 @@ The next topic turns to trial data, where the design is prospective and many of 
 That contrast is the reason the two topics sit next to each other in this module: same molecular questions, different evidence standards.
 
 A reader who understands why a batch-confounded discovery needs replication will understand why a trial needs randomization, and the logic is the same.
+
+### 9.10 What to ask before licensing an omics dataset
+
+- Which reference build and annotation release produced the matrix?
+- Which pipeline, and is the code available?
+- What is the ancestry composition, and was it measured or inferred?
+- What is the consent scope, and does it cover commercial use?
+- Is the raw data available, or only the matrix?
+- What validation exists for the phenotype labels?
+
+A vendor that answers the first three in writing and the last three with documents is selling a dataset an analyst can defend. One that answers none of them is selling access.
+
+### 11.5 The three numbers to report with any omics list
+
+- The list size at a stated FDR and method.
+- The stability under sample removal and under batch restriction.
+- The replication proportion in an independent cohort.
+
+A deliverable with those three numbers is auditable. One with a p-value and a gene count is not.
+
+Four questions to carry into the trial topic:
+
+- Is the question prospective and pre-specified, or retrospective and exploratory?
+- Is the comparison randomized?
+- Is the endpoint the one the decision needs?
+- Is the data provenance documented to the standard a regulator will apply?
+
+Those four questions are the same ones a trial protocol answers by design, which is why the next topic reads as the controlled version of this one.
+
+The contrast is exact: a discovery estimates an association from observational data, and a trial estimates an effect from a design. Both need provenance, and only one needs randomization.
+
+A reader who has internalized the fragility diagnostics above will recognize the same logic in the trial topic's analysis populations: the population definition decides the estimate before any model is fitted.
+
+That is the bridge: population, variable, and summary measure decide the answer before the data are touched.

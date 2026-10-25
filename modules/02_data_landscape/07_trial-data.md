@@ -417,7 +417,53 @@ Rule: name at least three limits, including population, duration, and comparator
 5. **Database lock checklist.** A formal list of checks that must pass before lock. A lock without a checklist is a date, not a control.
 6. **Post-lock changes.** Any change after lock requires an audit trail and a documented reason. A post-lock change without a record is a data integrity finding.
 
-### 5.7 Branch points summarized
+### 5.7 Edge cases the procedure has to survive
+
+**Null dates.** A subject with a randomization date but no first-dose date cannot be assigned to the safety population. The rule is to keep the subject in ITT, exclude from safety with a recorded reason, and report the count. A null first-dose date often means the subject was randomized and never treated, which is itself a finding about the site.
+
+**Conflicting EDC and safety database.** A serious adverse event is in the safety database but not in the clinical database, or the dates differ. The rule is to reconcile before lock, to record the reconciliation date, and to report the number of unreconciled events. An unreconciled event produces two different safety tables from the same trial.
+
+**Unit and code variants.** Adverse events are coded to MedDRA, and a version upgrade moves terms between system organ classes. Laboratory values may be in SI or conventional units, and the reference ranges differ. The rule is to pin the dictionary version for the analysis and to store both the source and the standardized unit.
+
+**Late-arriving data.** Data entered after the cut but before the lock are the normal case, not an error. The rule is to define the cut, to define the lock, and to report the number of records changed between them. A lock without a change count is an assertion.
+
+**Partial identifiers.** A subject identifier that appears in one dataset but not another breaks the join. The rule is to validate the identifier set across all domains before analysis and to report the missing subjects rather than dropping the rows.
+
+**Duplicate subjects.** A subject randomized twice, or a screening failure re-entered with a new identifier, produces duplicates. The rule is to check on date of birth, sex, and randomization date, and to report the duplicate rate by site.
+
+**Timezone and date boundaries.** Randomization time and first-dose time may be recorded in local time at sites in different zones, and a date-only field loses the order of events on the same day. The rule is to keep the time where it exists, to record the site timezone, and to use the date only when the time is unavailable.
+
+### 5.8 Decision table: handling a missing primary endpoint
+
+Missing endpoint data has more than two treatments, and the choice must match the estimand.
+
+| Estimand strategy | Missing mechanism | Primary method | Sensitivity | What to report |
+|---|---|---|---|---|
+| Treatment policy | Discontinuation | Collect data after discontinuation | Worst-case for the arm with more missing | Both estimates |
+| Hypothetical | Discontinuation | Multiple imputation under MAR | Tipping point | Imputation model |
+| Composite | Intercurrent event | Event counted in the composite | None if pre-specified | Component counts |
+| While on treatment | Discontinuation | Censor at discontinuation | None | Censoring rule |
+
+The rule that overrides the table: the method must be pre-specified against the estimand. A method chosen after seeing the missingness pattern is a result, not a plan.
+
+### 5.9 Field-level validation rules
+
+| Rule | Test | Severity | Action on failure |
+|---|---|---|---|
+| Randomization date present | Every randomized subject has one | High | Quarantine; check the IRT feed |
+| First dose after randomization | Dose date on or after randomization | High | Query; check timezone |
+| ITT flag complete | Every randomized subject has an ITT flag | High | Block the analysis |
+| Safety flag consistency | Safety flag implies a first dose | High | Block the safety analysis |
+| AE verbatim to coded | Every AE has a MedDRA code | High | Code before lock |
+| AE start before stop | Start date on or before stop date | Medium | Query |
+| Lab unit known | Unit present and in the controlled list | High | Quarantine the value |
+| Query closure | No open queries at lock | High | Complete queries before lock |
+| Deviation classification | Every deviation has a major/minor flag | Medium | Classify before unblinding |
+| Subject identifier across domains | Same ID set in every domain | High | Reconcile before analysis |
+
+The two "block" rules are deliberate: an incomplete ITT flag or an inconsistent safety flag changes the population, and no downstream check can detect it after the fact.
+
+### 5.10 Branch points summarized
 
 | Branch | Condition | Path A | Path B |
 |---|---|---|---|
@@ -429,7 +475,33 @@ Rule: name at least three limits, including population, duration, and comparator
 | Multiplicity | Ordered endpoints | Fixed-sequence hierarchy | Gatekeeping |
 | Submission standard | New study | SDTMIG v3.4 | Not applicable |
 
-### 5.8 Operationalizing the estimand
+### 5.11 Derivations and the assumptions they hide
+
+| Derived variable | Usual construction | Hidden assumption | Challenge question |
+|---|---|---|---|
+| Analysis flag | Population membership | The classification was pre-specified | Was it set before unblinding? |
+| Baseline value | Last value before first dose | The timing is consistent across arms | Was the visit window respected? |
+| Change from baseline | Post minus baseline | The assessment is comparable | Same instrument and timing? |
+| Time to event | Event date minus randomization | The event date is accurate | How were interval events handled? |
+| Censoring date | Last assessment or data cut | Censoring is non-informative | Is censoring related to the outcome? |
+| Exposure duration | Last dose minus first dose | The dates are complete | What about interruptions? |
+| Adherence | Doses taken over doses expected | The diary or count is accurate | Prospective or retrospective? |
+
+The censoring assumption is the one most often violated in practice. If subjects discontinue because of toxicity, censoring at discontinuation is informative, and the while-on-treatment estimand inherits that dependence.
+
+A second assumption deserves equal scrutiny: the baseline visit window. If the treatment arm is assessed a week later than the control arm because of scheduling, the change-from-baseline comparison includes a time difference as well as a treatment difference.
+
+### 5.12 What the procedure does when the SAP is silent
+
+A SAP that does not specify a case is not a licence to choose freely. Three defaults apply, in order:
+
+1. **Follow the protocol.** If the protocol specifies the analysis, the SAP cannot override it without an amendment.
+2. **Follow the regulator's guidance.** If the protocol is silent, use the convention in the applicable guidance and cite it.
+3. **Document the choice before unblinding.** If neither applies, write the rule, date it, and obtain approval.
+
+The failure mode is a choice made after seeing the data and described afterwards as a convention. The date is the evidence, and it is why every SAP change is dated.
+
+### 5.13 Operationalizing the estimand
 
 An estimand statement is only useful if it changes the ADaM derivations. Three practical checks:
 
@@ -546,7 +618,64 @@ With a Bonferroni correction at 0.05/4 = 0.0125 per endpoint, the family-wise er
 - Interim boundaries are not 0.05, and using 0.05 at an interim inflates the type I error.
 - Multiplicity control is required for secondary claims, and the method affects power.
 
-### 6.9 What a reviewer would ask
+### 6.9 Variant case: 8 percent of the primary endpoint is missing
+
+The primary analysis assumed a complete endpoint. Suppose 8 percent of participants have no 24-week response assessment: 44 of 552, evenly split at 22 per arm.
+
+Complete-case analysis:
+
+| Arm | Randomized | Assessed | Responders | Rate |
+|---|---:|---:|---:|---:|
+| Control | 276 | 254 | 83 | 32.7% |
+| Treatment | 276 | 254 | 116 | 45.7% |
+
+Check: 276 − 22 = 254 per arm. 83 / 254 = 0.3268. 116 / 254 = 0.4567. Difference = 12.99 points.
+
+The complete-case difference of 13.0 points is larger than the 12.0 points assumed in the sample size calculation, because removing 22 non-responders from the control arm raised the control rate. That is a warning sign in itself: missingness in the control arm was associated with non-response.
+
+Worst-case and best-case bounds under the treatment-policy estimand:
+
+| Scenario | Control responders | Treatment responders | Control rate | Treatment rate | Difference |
+|---|---:|---:|---:|---:|---:|
+| Worst case for treatment | 105 | 116 | 38.0% | 42.0% | 4.0 points |
+| Complete case | 83 | 116 | 32.7% | 45.7% | 13.0 points |
+| Best case for treatment | 83 | 138 | 30.1% | 50.0% | 19.9 points |
+
+Check the worst case: control gains all 22 missing as responders (83 + 22 = 105), treatment gains none (116). 105 / 276 = 0.3804. 116 / 276 = 0.4203. Difference = 3.99 points.
+Check the best case: control gains none (83), treatment gains all 22 (116 + 22 = 138). 83 / 276 = 0.3007. 138 / 276 = 0.5000. Difference = 19.93 points.
+
+### 6.10 What the variant changes, and the tipping point
+
+The direction of the conclusion survives: even the worst case leaves a 4.0 percentage point advantage, so superiority is robust to any pattern of missingness at this level.
+
+The magnitude does not survive. The number needed to treat ranges from 5.0 in the best case to 25.1 in the worst case, a fivefold range.
+
+Check: 1 / 0.1993 = 5.02. 1 / 0.0399 = 25.06.
+
+The tipping point is the amount of missingness at which the worst case reaches zero difference. Control would need to reach 116 responders, which requires 33 of its missing participants to be responders, so the tipping point is 33 missing per arm, or 66 of 552.
+
+Check: 66 / 552 = 0.1196, or 12.0%.
+
+At 8 percent missing the trial is robust; at 12 percent it is not. That is the number a data monitoring committee needs, and it is more useful than either the complete-case estimate or a p-value.
+
+### 6.11 Which estimate I would report, and why
+
+Report three numbers, in this order:
+
+- **The primary estimate under the pre-specified method**, with its confidence interval. If the SAP specified multiple imputation, that is the primary, and the complete-case figure is a sensitivity analysis.
+- **The worst-case bound**, stated as a bound rather than an estimate, because it is the most conservative defensible reading.
+- **The tipping point**, because it converts the missingness into a decision rule the committee can monitor.
+
+Reporting only the complete-case estimate is the common failure, because it is the easiest to compute and the most flattering. Reporting only the worst case is the opposite failure, because it discards information from the observed participants and overstates the uncertainty.
+
+Four checks on any missing-data sensitivity:
+
+- Is the missingness balanced across arms? If not, the complete-case estimate is biased and the bound is the primary.
+- Is the tipping point above the expected missingness? If not, the trial is fragile.
+- Does the imputation model include the outcome and the covariates that predict missingness?
+- Is the sensitivity analysis labelled as a bound or as an estimate? A bound presented as an estimate overstates precision.
+
+### 6.12 What a reviewer would ask
 
 1. **Why 30 and 42 percent?** They should come from prior data, a phase 2 estimate, or a clinically meaningful difference. An assumption with no basis produces a sample size with no basis.
 2. **Is the dropout assumption supported?** It should come from similar trials, and it should be checked against actual dropout at the interim.
@@ -744,6 +873,17 @@ A practical note on the transport format: XPT v5 is the long-standing default an
 
 ## 9. Industry practice and case evidence
 
+### 8.8 What a validator does not check
+
+A conformance validator checks structure: variable names, types, codelists, and cross-references. It does not check four things that matter more:
+
+- **Whether the derivation is correct.** A variable can conform and be computed wrongly.
+- **Whether the population flag is right.** A conformant flag can encode the wrong population.
+- **Whether the endpoint matches the SAP.** A conformant dataset can implement a different analysis.
+- **Whether the numbers reconcile.** A conformant submission can disagree with the clinical study report.
+
+Conformance is necessary and is not evidence of correctness. That is why the reconciliation steps in section 5 exist alongside the validator run.
+
 ### 9.1 The economics of trial data
 
 Trial data is expensive per record because of the surrounding infrastructure, not because of the data itself. The costs that dominate are site monitoring, query resolution, adjudication of endpoints, and the statistical and programming effort for the submission package.
@@ -830,6 +970,34 @@ The cost is not only administrative. A late change weakens the confirmatory stat
 | Undocumented derivation | ADaM variable with no definition | Programming shortcuts | Reviewer cannot reproduce | define.xml for every variable |
 | Query treated as deviation | Confusion in the deviation log | Process misunderstanding | Wrong PP population | Separate logs and training |
 | Unblinded analysis | Analyst had access to assignment | Poor access control | Unconscious bias | Firewall; documented roles |
+
+### 9.9 What a submission readiness review checks
+
+| Area | Check | Failure consequence |
+|---|---|---|
+| Protocol-SAP traceability | Every SAP section maps to a protocol version | Statistical review finding |
+| Population flags | ITT, safety, and PP counts reconcile | Uninterpretable analysis |
+| SDTM conformance | Validator errors at zero | Technical rejection |
+| Define.xml | Every dataset and variable described | Reviewer cannot reproduce |
+| Terminology versions | One version across all datasets | Inconsistency findings |
+| Dictionary versions | MedDRA and WHO Drug pinned | AE counts change |
+| Data cut and lock | Documented and consistent | Timeline ambiguity |
+| Unblinding date | Recorded relative to SAP finalization | Confirmatory status questioned |
+
+The review is a checklist, and the value is that it happens before submission rather than during review. A team that runs it once will find between five and twenty issues on a typical study.
+
+### 9.10 What a sponsor should ask a CRO
+
+| Question | Why | Weak answer |
+|---|---|---|
+| Who owns the data and the derived datasets? | Determines portability | "We do" |
+| What is the SDTM conversion timeline after lock? | Determines submission date | "Standard" |
+| Which validator version will be used? | Determines conformance target | "Latest" |
+| How are protocol deviations classified and by whom? | Determines the PP population | "By the site" |
+| What is the query closure rate at lock? | Determines data quality | "High" |
+| Can we audit the ADaM derivations? | Determines reviewer readiness | "Yes, on request" |
+
+The first question is the one that causes the most trouble later. A sponsor that does not own the derived datasets cannot move to another vendor without re-deriving everything.
 
 ### 10.1 The three red flags
 
@@ -1199,3 +1367,34 @@ That caveat is not boilerplate. The SDTM requirement date determines whether a s
 Read the next topic with that in mind: standards decide what can be submitted, and terminology decides what can be compared.
 
 That sentence is the bridge to the standards topic, where the same distinction between structure and meaning organizes the material.
+
+### 11.5 The limit that decides a labelling claim
+
+For a labelling claim, the binding limits are the population studied, the comparator used, and the durability of the effect. A trial that shows a 12-point difference at 24 weeks against standard care does not support a claim about long-term benefit or about a different comparator, and no amount of statistical precision changes that.
+
+The practical statement names all three: "in adults meeting the eligibility criteria, against standard care, at 24 weeks." A claim that omits any of the three is broader than the evidence.
+
+Four questions to carry into the standards topic:
+
+- Which standard governs the data at rest, and which governs it in motion?
+- Which standard is a terminology, and which is a structure?
+- Which mapping is lossy, and what is lost?
+- Which version is in force for this submission?
+
+The second question is the one that organizes the next topic: a trial dataset can conform perfectly to a structure and still be semantically incomparable to another study, because the concepts underneath are different.
+
+### 11.6 The limit that survives every analysis
+
+Randomization addresses confounding, and it does not address the four limits above. A trial's population, duration, comparator, and endpoint remain the boundaries of its claim after every sensitivity analysis has been run.
+
+A reader who understands that will not ask for a trial to be more general than it is, and will know which additional study the question requires.
+
+That boundary is not a weakness of the design; it is the price of the causal claim, and it is why the module pairs trial data with real-world data rather than treating one as a substitute for the other.
+
+Read the next topic for the machinery that makes those boundaries explicit: versioned standards and terminologies, each with a scope and a date.
+
+That machinery is not bureaucracy. It is what allows a reviewer in one country to check an analysis produced in another, and it is the subject of the next topic.
+
+A reader who has followed the SDTM-to-ADaM distinction will find the same pattern in FHIR-to-OMOP: a tabulation standard, an analysis model, and a derivation in between that must be documented.
+
+The derivation is the place where meaning is lost, and it is the place the next topic teaches you to inspect.

@@ -420,7 +420,86 @@ The mitigation is not to abandon composites but to report the components alongsi
 | Duplicate rate | Duplicates divided by records | The duplicate key is correct | Was the key defined before counting? |
 | Timeliness | Median lag from event to availability | The event date is accurate | Which date, and is it complete? |
 
-### 5.5 Branch points summarized
+### 5.5 Edge cases the procedure has to survive
+
+**Structural versus missing.** A field that does not apply to a record must be excluded from the denominator, not counted as missing. The signature is a completeness rate that falls when a new patient group is added to the cohort. The rule is to define eligibility per field and to report both rates.
+
+**Conflicting sources.** The EHR says one diagnosis, claims another, the registry a third. The rule is to carry all three with a source flag, report the concordance, and use the source closest to the clinical event for clinical facts.
+
+**Unit variants across sites.** A lab reported in mg/dL at one site and µmol/L at another produces a plausibility check that fails for the wrong reason. The rule is to normalize units before plausibility testing, and to test the unit field first.
+
+**Code-system versions.** A conformance check against the wrong ICD year produces false failures. The rule is to check the version in force at the service date, not at the extraction date.
+
+**Late-arriving data.** Completeness measured before the run-out is complete will understate the final rate. The rule is to measure completeness at a fixed interval after the period ends, and to state the interval.
+
+**Partial identifiers.** A record that cannot be linked to a patient cannot contribute to longitudinal completeness. The rule is to report cross-sectional and longitudinal completeness separately.
+
+**Duplicate records.** Duplicates inflate completeness and deflate missingness. The rule is to deduplicate before any completeness calculation, and to report the duplicate rate.
+
+**Timezone and date boundaries.** A "same-day" readmission depends on the timezone of the discharge and the admission. The rule is to align to one timezone and to state whether calendar days or 24-hour intervals are used.
+
+### 5.6 Decision table: handling informative missingness
+
+| Evidence | Likely mechanism | Primary analysis | Sensitivity | What to report |
+|---|---|---|---|---|
+| Missingness unrelated to group and outcome | MCAR | Complete case | None beyond precision | Complete-case rate |
+| Missingness predicted by observed covariates | MAR | Multiple imputation | Complete case | Imputation model |
+| Outcome rate higher in missing group | MNAR | Include missing indicator | Bounding | Both estimates and the bound |
+| Outcome rate lower in missing group | MNAR, opposite direction | Include missing indicator | Bounding | Both estimates |
+| Missingness concentrated at one site | Workflow | Site-stratified | Pooled with site effect | Site-specific rates |
+| Missingness concentrated in one period | System change | Split the series | Pooled with a period indicator | Change date |
+
+The rule that overrides the table: the direction of the bias must be established from data, not assumed. The variant in section 6.9 shows that reversing the assumption reverses the direction of the bias and the decision.
+
+### 5.7 Field-level validation rules
+
+| Rule | Test | Severity | Action |
+|---|---|---|---|
+| Denominator defined | Every metric has an explicit denominator | High | Block the report |
+| Structural exclusion | Inapplicable records excluded from the denominator | High | Recompute |
+| Duplicate check | Duplicate key rate computed before completeness | High | Deduplicate first |
+| Unit normalized | Units standardized before plausibility | High | Quarantine unconvertible |
+| Code version | Codes validated against the version in force | Medium | Flag; report unmapped |
+| Stratification | Every metric reported by site and year | High | Block the comparison |
+| Threshold pre-specified | Thresholds recorded before measurement | High | Re-document |
+| Reference standard | Validation sample size and method stated | Medium | Flag as unvalidated |
+| Small-cell suppression | Counts below the threshold suppressed | Medium | Suppress before release |
+| Re-assessment date | Assessment date within the refresh cycle | Low | Re-run |
+
+### 5.8 How to set a threshold that is not arbitrary
+
+A threshold should come from one of four places, in order of preference:
+
+| Basis | Example | Strength | Weakness |
+|---|---|---|---|
+| Decision requirement | Adjustment variable needed for 90% of patients | Tied to the use | Requires modelling the use |
+| Benchmark | Published completeness for the same measure | External | Benchmark may not transfer |
+| Prior performance | Site's own best year | Realistic | Institutionalises mediocrity |
+| Expert consensus | Clinical informatics group | Available | Not evidence |
+
+The first is the only one that connects the threshold to the decision, and it is the one most often skipped because it requires knowing what the analysis will do with the variable.
+
+A practical method: for each critical variable, ask what fraction of patients can be missing before the adjusted estimate changes by more than the effect size of interest. That fraction is the threshold, and it is computable with a simple sensitivity analysis rather than a debate.
+
+Worked mini-example. If the effect of interest is a 3 percentage point mortality difference, and excluding patients with a missing adjustment variable shifts the estimate by 2 points at 20 percent missing and 4 points at 40 percent missing, the threshold is between 20 and 40 percent, and 30 percent is a defensible choice with the sensitivity analysis documented.
+
+That method produces a threshold with a rationale, which is what a reviewer needs and what a copied benchmark cannot provide.
+
+### 5.9 What a quality profile must contain to change a decision
+
+A profile that lists metrics without connecting them to actions is a report, not an assessment. The minimum structure:
+
+| Element | Content | Consequence if missing |
+|---|---|---|
+| Critical elements | The fields the use depends on | Assessment is unfocused |
+| Thresholds | Pre-specified per element | Decision is post hoc |
+| Stratification | Site, year, subgroup | Pattern is hidden |
+| Differential test | Outcome by completeness status | Bias direction unknown |
+| Reference validation | PPV or agreement, with sample size | Accuracy unknown |
+| Decision rule | Pass, conditional, fail | No action follows |
+| Residual risk | What could not be tested | Overconfidence |
+
+### 5.10 Branch points summarized
 
 | Branch | Condition | Path A | Path B |
 |---|---|---|---|
@@ -593,7 +672,54 @@ Check: 520/2,140 = 0.2430.
 - A composite score's decision can reverse with plausible weights, so composites need gates and sensitivity analyses.
 - The fitness decision must name the excluded population and the residual risk.
 
-### 6.9 What a reviewer would ask
+### 6.9 Variant case: the missing patients were healthier, not sicker
+
+The primary analysis assumed, from the observed data, that patients without a recorded ejection fraction had higher mortality. Suppose the opposite is true: the ejection fraction was not recorded because those patients were low-risk and the workup was deferred, and their mortality is 6.3 percent rather than 14.2 percent.
+
+| Group | Patients | Deaths | Mortality |
+|---|---:|---:|---:|
+| EF recorded | 1,470 | 141 | 9.6% |
+| EF missing, original assumption | 670 | 95 | 14.2% |
+| EF missing, variant assumption | 670 | 42 | 6.3% |
+| All, original | 2,140 | 236 | 11.03% |
+| All, variant | 2,140 | 183 | 8.55% |
+
+Check: 670 × 0.063 = 42.2, so 42 deaths. 141 + 42 = 183. 183 / 2,140 = 0.0855.
+
+The direction of the bias reverses:
+
+- Under the original assumption, complete-case analysis understates mortality by 1.4 points (9.6 versus 11.03).
+- Under the variant, complete-case analysis overstates mortality by 1.0 point (9.6 versus 8.55).
+
+Check: 11.03 − 9.59 = 1.44. 9.59 − 8.55 = 1.04.
+
+The complete-case estimate is identical in both cases. Only the assumption about the unobserved group changed, and the conclusion about the direction of bias changed with it.
+
+### 6.10 What the variant changes, and the threshold sensitivity
+
+The decision about whether to include the missing patients is not the only thing that depends on an assumption. The completeness gate is also a choice, and it moves sites across the boundary:
+
+| Gate | A (78.0%) | B (41.0%) | C (87.9%) | D (62.0%) | Sites included |
+|---|---|---|---|---|---|
+| 75% | Pass | Fail | Pass | Fail | A, C |
+| 60% | Pass | Fail | Pass | Pass | A, C, D |
+| 50% | Pass | Fail | Pass | Pass | A, C, D |
+
+Check: D's 62.0 percent clears a 60 percent gate and fails a 75 percent gate. A's 78.0 percent clears both; B's 41.0 percent clears neither.
+
+The gate at 60 percent admits site D, which has 400 patients and a plausibility failure (2.4 percent duplicate encounters). The gate at 75 percent excludes it. Neither gate is obviously right, and the choice should be justified by what the missing EF data would do to the adjustment, which is the method in section 5.8.
+
+### 6.11 Which assumption I would report, and why
+
+Report the measured differential, not either assumed one, and report the range:
+
+- **The measured differential** between included and excluded patients is the only evidence available, and it supports the original direction in this dataset.
+- **The range** from the variant (a 1.4 point understatement to a 1.0 point overstatement) is the honest statement of what the data cannot establish.
+- **The gate** should be reported with its rationale, and the sensitivity at 60 and 75 percent should be shown, because D's inclusion changes the cohort and the comparison.
+
+The general rule is that an assumption about the unobserved is not a finding. A report that presents one direction as fact, when the opposite is equally consistent with the data, has overstated what the quality assessment can conclude.
+
+### 6.12 What a reviewer would ask
 
 1. **Why 75 percent for EF completeness?** Because below that level, adjustment for EF is effectively a site selection mechanism. The threshold should be justified against the analysis plan, not chosen to fit the data.
 2. **Is kappa the right statistic?** For a common condition with balanced marginals it is reasonable, and PPV and sensitivity should be reported alongside because they are what a clinician interprets.
@@ -935,6 +1061,18 @@ The commercial logic is that transparency reduces the buyer's diligence cost, wh
 | Timeliness ignored | Data arrive after the decision | Lag not measured | Analysis late or wrong | Measure lag; set cutoff |
 | Small cells published | Subgroup counts below 11 | Disclosure risk | Privacy breach | Suppression policy |
 
+### 9.9 How a data quality programme is staffed and measured
+
+| Function | Responsibility | Metric | Typical failure |
+|---|---|---|---|
+| Data steward | Field definitions and code sets | Definition changes per quarter | Dictionary drifts |
+| Quality analyst | Profiling and reporting | Profiles delivered per dataset | Reports without decisions |
+| Clinical reviewer | Phenotype validation | PPV by phenotype | Validation backlog |
+| Engineering | Automated checks | Check pass rate | Checks not maintained |
+| Owner | Fitness decision | Decisions documented | Decision deferred |
+
+The programme is measured by decisions, not by reports. A team that produces ten profiles and no fitness decisions has built a dashboard, not a function.
+
 ### 10.1 The three red flags
 
 1. **A quality section that reports one number.** Quality is multidimensional, and one number cannot describe it.
@@ -961,6 +1099,12 @@ The repair is to replace the phrase with a statement of what was checked, agains
 | Strata are complete | Detecting site effects | An unmeasured stratum | Add strata; review with operators |
 | The composite weights are defensible | Scoring | Arbitrary weights | Weight sensitivity |
 | The assessment is current | Relevance | System change since assessment | Re-assess on refresh |
+
+### 10.3 The assumption presented as a finding
+
+The variant in section 6.9 is the most common quality-reporting error: a direction of bias stated as fact when the data are consistent with either direction. The signature is a sentence like "missing patients were likely sicker" with no differential test behind it.
+
+The repair is to report the measured difference where it exists, and to state the range where it does not. A sentence with a range is less satisfying and more true.
 
 ### 11.1 Limits that are inherent
 
@@ -1224,3 +1368,36 @@ All URLs accessed 24 October 2026.
 This topic closes the module. The through-line from topic 1 to here is that every data source can answer some questions and no source can answer all of them, and the quality profile is how you tell which is which for the decision in front of you.
 
 The sentence to remember: quality is not a property of a dataset, it is a relationship between a dataset and a decision, and the relationship has to be documented.
+
+### 11.3 The limit that decides whether a comparison is fair
+
+For a cross-site comparison, the binding limit is whether the quality profile is similar across sites. A site with 41 percent completeness on an adjustment variable is not comparable to a site with 88 percent, even if both pass a lenient gate.
+
+The practical statement compares the profiles, not only the rates: "completeness of the ejection fraction differed by 47 percentage points between sites, and the excluded patients' mortality differed by 4.6 points, so the cross-site comparison is reported descriptively and not as a ranking."
+
+### 11.4 The limit that closes the module
+
+Every topic in this module has ended with the same sentence in different words: the data can answer some questions and not others, and the boundary is a property of the source, not of the analysis.
+
+The quality profile is how that boundary is measured rather than asserted. A deliverable that states its profile, its thresholds, its decision rule, and its residual risk is a deliverable a reader can act on.
+
+### 11.5 The three numbers a quality statement needs
+
+- The completeness of each critical element, by site.
+- The outcome differential between complete and incomplete records.
+- The validation result, with its sample size and reference standard.
+
+A quality statement with those three is auditable. One that says "the data were of high quality" is not.
+
+A final note on the module as a whole: the ten topics describe ten different producers, ten different failure mechanisms, and one shared discipline. That discipline is to state what the data are, what they can measure, what they cannot, and how the boundary was tested.
+
+Everything else in this folder is detail in service of that sentence.
+
+That sentence is also the module's industry question, and it is the one a data-source decision memo has to answer for every source it considers.
+
+Four checks to carry into practice:
+
+- Has the denominator been defined for every metric?
+- Has the missingness been tested against the outcome?
+- Has the threshold been justified against the decision?
+- Has the residual risk been named?

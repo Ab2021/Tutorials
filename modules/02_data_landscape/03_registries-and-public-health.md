@@ -362,7 +362,7 @@ Rule: name at least three limits and say which threatens the conclusion.
 5. **Age at death.** Recorded in years, with special handling for infants under one year.
 6. **Revision of the code set.** A new ICD revision creates a discontinuity in cause-specific trends that is not a real change in mortality.
 
-### 5.5 Quantitative checks to run inside the procedure
+### 5.4 Quantitative checks to run inside the procedure
 
 Run these after step 17 and before step 18. Each catches a class of error that is expensive to find later.
 
@@ -383,7 +383,7 @@ Two deserve emphasis.
 
 **Stage completeness by year.** Stage is the field most often used and most often missing. A decline in stage completeness in the most recent years is normal (abstraction backlog), and it means that any stage-specific analysis of recent years is biased toward the cases that were abstracted first, which are usually the simpler ones.
 
-### 5.6 Derivations and the assumptions they hide
+### 5.5 Derivations and the assumptions they hide
 
 | Derived variable | Usual construction | Hidden assumption | Challenge question |
 |---|---|---|---|
@@ -395,7 +395,7 @@ Two deserve emphasis.
 | Time trend | Rate by year | The case definition is stable | What changed in the period? |
 | Facility comparison | Rate by facility | Case mix is comparable | Was risk adjustment applied? |
 
-### 5.7 Handling the lag without discarding the recent period
+### 5.6 Handling the lag without discarding the recent period
 
 The most common practical decision is what to do with the most recent year. Three options, each with a cost:
 
@@ -422,7 +422,83 @@ A final check applies to all three options: the completeness ratio must be compu
 
 If that ratio is unavailable, the honest presentation is the observed count with an explicit statement that it is a lower bound, and a note on the expected revision.
 
-### 5.8 Branch points summarized
+### 5.7 Edge cases the procedure has to survive
+
+**Structural missingness.** Stage is not missing for a patient who was never staged; it is inapplicable. Counting it as missing inflates the missingness rate and makes stage completeness incomparable across sites that stage different proportions of patients. The rule is to define the denominator per field and to report both "missing among eligible" and "not eligible."
+
+**Conflicting sources for vital status.** The registry says alive at last follow-up; the death certificate file has a death date; the EHR has a hospice discharge. The rule is to prefer the death certificate for the fact of death and the date, to prefer the registry for the cancer-specific fields, and to report the disagreement rate. A registry that never links to death records will under-count deaths and over-state survival.
+
+**Code-system variants.** ICD-O-3 morphology codes change between editions, and the rules for multiple primaries changed in 2007 and again in 2018. A series spanning those changes contains tumours classified under different rules. The rule is to record the coding edition per case and to split the series at the rule change rather than smoothing across it.
+
+**Late reporting and backfill.** A case diagnosed in November may be abstracted in March. Backfill raises historical counts and looks like an outbreak in a monthly series. The rule is to plot by report date as well as by diagnosis date, and to use the diagnosis-date series for epidemiology and the report-date series for operations.
+
+**Partial identifiers.** A registry case with no linkage to the hospital record cannot be checked against source data. The rule is to keep it in incidence counts, exclude it from treatment and stage analyses that require source verification, and report the share.
+
+**Duplicate tumour records.** Multiple reports of the same tumour from a hospital, a laboratory, and a physician practice are common. The rule is to define the duplicate key (patient, site, morphology, diagnosis date within a window), to report duplicates by reporting source, and to keep the merged record's provenance.
+
+**Date boundaries.** A diagnosis on 31 December may be assigned to either year if the registry uses the report date. The rule is to use the diagnosis date for all epidemiologic analyses and to state the convention in the methods.
+
+### 5.8 Decision table: handling multiple primaries
+
+The multiple-primary rules have more than two outcomes, and the choice changes incidence.
+
+| Situation | Rule outcome | Incidence effect | Reporting |
+|---|---|---|---|
+| Same site, same morphology, within 2 months | One primary | Counts once | State the window |
+| Same site, different morphology | Usually two primaries | Counts twice | State the rule set |
+| Contralateral paired organ | Two primaries | Counts twice | State the laterality logic |
+| Recurrence after 5 years, same site | Often a new primary | Counts twice | State the interval |
+| Metastasis to a new site | Not a new primary | Counts once | State the distinction |
+| Unknown primary with metastasis | One primary, unknown site | Counts once, site unknown | Report the unknown-site share |
+
+The rule that overrides the table: whatever rule set you use, name its edition and apply it to the whole series. Mixing editions is a definitional break that no statistical adjustment fixes.
+
+### 5.9 Field-level validation rules
+
+| Rule | Test | Severity | Action on failure |
+|---|---|---|---|
+| Diagnosis date in range | Date within the registry's coverage period | High | Quarantine; check the source report |
+| Diagnosis before death | Diagnosis date on or before death date | High | Quarantine; investigate |
+| Age at diagnosis plausible | 0-120 years | Medium | Flag; check birth date |
+| Site-morphology compatibility | Morphology is valid for the site code | Medium | Flag; review the abstract |
+| Stage valid for site | Stage schema applies to the primary site | Medium | Flag; set to unknown |
+| Behaviour code valid | In situ, malignant, borderline, benign | High | Quarantine; check the pathology report |
+| Vital status consistent | Alive implies no death date; dead implies a death date | High | Quarantine; link to death records |
+| Follow-up date after diagnosis | Last contact on or after diagnosis | Medium | Flag; correct from source |
+| Duplicate tumour | Same patient, site, morphology, and diagnosis within the window | High | Merge; keep provenance |
+| Reporting facility present | Facility identifier populated | Medium | Flag; affects ascertainment analysis |
+| Treatment date after diagnosis | First course after diagnosis date | Medium | Flag; check the source |
+
+The vital-status rule is the one that most affects survival estimates. A registry that allows "dead" without a death date cannot compute survival time, and one that allows "alive" with a death date will produce impossible follow-up. Both are cheap to test and expensive to discover during analysis.
+
+### 5.10 Derivation table: what each survival measure assumes
+
+| Measure | Construction | Key assumption | Failure |
+|---|---|---|---|
+| Observed survival | Death from any cause | Vital status is complete | Understated mortality if loss to follow-up is high |
+| Cause-specific survival | Death from the cancer | Cause of death is accurate | Misclassification between cancer and competing causes |
+| Relative survival | Observed divided by expected population survival | The population lifetable applies | Bias when the cohort differs from the population |
+| Net survival | Excess hazard after background | Background rates are correct | Sensitive to the reference population |
+| Conditional survival | Survival given survival to t | Follow-up is complete beyond t | Unstable with small numbers |
+
+Each measure answers a different question, and the choice must match the decision. A report that presents relative survival as if it were observed survival will overstate survival in an older cohort with high competing mortality.
+
+Two checks catch most survival-measure errors. First, compare the number of deaths in the registry to the number expected from the death certificate file for the same cohort; a shortfall indicates incomplete linkage. Second, plot the follow-up time distribution; a spike at the maximum follow-up indicates that the registry is administratively censoring everyone at the same date rather than following them.
+
+### 5.11 What the procedure does when the registry changes
+
+Registry programmes change their submission systems, their software vendors, and their abstraction contracts. Four changes and their handling:
+
+| Change | Signature | Handling | Reporting |
+|---|---|---|---|
+| New abstracting software | Field-level completeness jumps or falls at a date | Split the series; re-baseline | Change date and affected fields |
+| New reporting facility | Count rises without a rate change in existing facilities | Report facility-specific series | Facility contribution |
+| Changed case definition | Step change in a specific site or stage | Apply the new definition retroactively if possible | Definition edition |
+| Changed death linkage | Vital status completeness improves | Do not compare survival across the change | Linkage method and date |
+
+The default rule is to split rather than to adjust, because adjustment across a process change assumes the two processes are comparable, which is exactly what is in doubt.
+
+### 5.12 Branch points summarized
 
 | Branch | Condition | Path A | Path B |
 |---|---|---|---|
@@ -567,7 +643,50 @@ Reporting "5,613 (95% CI 5,593-5,634), sensitivity analysis allowing positive de
 - Age adjustment can reverse a comparison, and the reversal is a substantive finding rather than a technicality.
 - Two adjustments can offset, producing a right answer for the wrong reason.
 
-### 6.9 A note on the denominator vintage
+### 6.9 Variant case: including a provisional year
+
+The analysis in 6.4 to 6.6 used 2022-2024, all of which are final. Suppose the health department asks for an update including 2025, and the 2025 file is the submission-year file rather than the final one.
+
+Annual cases, diagnosis year:
+
+| Year | Cases | Status |
+|---|---:|---|
+| 2022 | 1,540 | Final |
+| 2023 | 1,668 | Final |
+| 2024 | 1,604 | Final |
+| 2025 | 1,540 | Provisional, 88% complete |
+
+Check: 1,540 + 1,668 + 1,604 = 4,812, which matches the three-year total used earlier.
+
+The naive comparison: 2025 against 2024 changes by (1,540 − 1,604) / 1,604 = −0.0399, or −4.0%.
+
+The corrected estimate uses the historical completeness ratio. For diagnosis years 2021 to 2023, the submission-year file contained 88 to 92 percent of the eventual count, so 88 percent is a reasonable assumption for 2025:
+
+- Expected final 2025 cases = 1,540 / 0.88 = 1,750.
+- Corrected change = (1,750 − 1,604) / 1,604 = +0.0910, or +9.1%.
+
+The two conclusions are opposite. The crude incidence rates make the same point:
+
+| Year | Observed cases | Rate per 100,000 | Corrected cases | Corrected rate |
+|---|---:|---:|---:|---:|
+| 2024 | 1,604 | 129.35 | 1,604 | 129.35 |
+| 2025 | 1,540 | 124.19 | 1,750 | 141.13 |
+
+Check: 1,604 / 1,240,000 × 100,000 = 129.35. 1,540 / 1,240,000 × 100,000 = 124.19. 1,750 / 1,240,000 × 100,000 = 141.13.
+
+### 6.10 Which 2025 figure I would report, and why
+
+Neither the naive nor the corrected figure is automatically the right one; the choice depends on whether the completeness ratio is stable.
+
+- If the registry's submission process is unchanged and the historical ratio is stable within a few points, report the corrected estimate with an interval that reflects the ratio's historical variation, and label it an estimate.
+- If the submission process changed, the historical ratio does not apply, and the only defensible choice is to exclude 2025 and state the last complete year.
+- If the decision cannot wait, report the observed figure with an explicit "provisional, expected to rise by about 12 percent" and no trend claim.
+
+Check the 12 percent: 1,750 / 1,540 = 1.136, so the expected rise is 13.6 percent, not 12. The correct statement is "expected to rise by about 14 percent," and the arithmetic is 1,750/1,540 − 1 = 0.136.
+
+This is the kind of slip that a reviewer catches in seconds and that undermines an otherwise careful report. Compute the backfill factor explicitly rather than describing it approximately.
+
+### 6.11 A note on the denominator vintage
 
 The county population of 1,240,000 is a Vintage 2024 estimate for 2024, applied to all three years of cases. That is a simplification. If the population grew by 1.2 percent per year over the period, the person-years denominator is overstated for 2022 and understated for 2024, and the three-year average rate is biased slightly downward.
 
@@ -577,7 +696,7 @@ Correcting it: if the 2022 population was 1,211,000 and the 2024 population is 1
 
 The difference from 129.35 is 1.54 per 100,000, or about 1.2 percent. Small, and larger than the sampling error of the count. Denominator vintage is a real source of error that analysts routinely ignore because it is invisible in the data.
 
-### 6.10 What a reviewer would ask
+### 6.12 What a reviewer would ask
 
 Four questions, and the answers that hold:
 
@@ -792,6 +911,17 @@ The European Health Data Space Regulation (EU) 2025/327, published 5 March 2025 
 
 For a registry holder, this changes the access pathway rather than the registry's own collection rules. For an analyst, it means that cross-border registry analyses in the EU will increasingly run inside approved environments rather than on locally downloaded files.
 
+### 8.7 What a reporting mandate does not guarantee
+
+A mandate creates an obligation to report, not a guarantee that reporting happens correctly. Four gaps are structural:
+
+- **Capacity.** A registry with a fixed abstraction budget cannot abstract every case in a surge year.
+- **Definition literacy.** A new case definition requires training, and the first year after a change is usually the weakest.
+- **Completeness of the denominator.** A mandate covers reportable cases, and the population at risk is estimated from a census rather than counted.
+- **Timeliness.** A mandate sets a reporting window, and the window is often longer than the decision cycle.
+
+Each gap is a reason to measure completeness rather than assume it, and each is visible in a stratified profile.
+
 > **Note:** Regulatory statements here are educational and not legal advice. Registry obligations are set primarily by state and national law and require local counsel.
 
 ---
@@ -888,6 +1018,30 @@ A useful rule: use public health data to frame the problem and registry or clini
 | Loss to follow-up ignored | Revision rate below clinical expectation | Patients leave the registry catchment | Understated event rate | Link to death and hospital data; report follow-up |
 | Cause of death taken literally | Cause distribution implausible for the age group | Coding to mechanism rather than underlying cause | Misattributed mortality | Use multiple cause; validate against medical records |
 
+### 9.7 How a pharma team uses registry data
+
+Three uses dominate in industry, and each has a different quality requirement:
+
+| Use | Registry requirement | Tolerance for lag | Tolerance for incompleteness |
+|---|---|---|---|
+| Epidemiology and burden | Population coverage, stable definition | High | Low |
+| Trial feasibility | Site-level counts, recent years | Low | Medium |
+| Post-authorisation safety | Complete outcome capture, linkage | Medium | Low |
+
+A registry that is excellent for burden can be useless for feasibility, because feasibility needs the most recent year and that is the year the registry has not finished. The mismatch is common and is usually discovered after a site has been selected.
+
+### 9.8 The registry data request that gets answered
+
+Registry staff are a small team with a statutory workload. A request that is answered quickly has five properties:
+
+- It names the exact years, sites, and variables.
+- It states the legal basis and the requester's institution.
+- It accepts the registry's disclosure rules, including small-cell suppression.
+- It asks for a de-identified extract rather than record-level identifiers.
+- It offers to share the resulting analysis with the registry.
+
+The last point matters more than it appears: registries are evaluated partly on the use of their data, and a request that produces a publication is easier to justify internally than one that produces a slide deck.
+
 ### 10.1 Three diagnostics for a reporting artefact
 
 When a registry time series shows a change, run these before interpreting it epidemiologically:
@@ -918,6 +1072,23 @@ The analyst's response is not to avoid public-reporting registries but to compar
 | Stage is missing at random | Stage-specific survival | Missingness related to prognosis | Compare survival by missingness status |
 | The registry population is representative | Generalization | Regional practice and screening differences | Compare to a national source |
 | The reporting regime is constant | Before-and-after comparison | Public reporting or payment change | Add a regime indicator |
+
+### 10.3 The single-source completeness claim
+
+A frequent failure is a completeness statement based on one source: "the registry captures 98 percent of cases," where the 98 percent is a comparison to the registry's own prior year. That is a stability check, not a completeness estimate, and it cannot detect a systematic shortfall that has persisted for years.
+
+The red flag is a completeness figure with no external reference. The repair is either a second source or an explicit statement that completeness is assumed rather than measured, with the assumption's consequence for the estimate.
+
+### 10.4 The published-rate comparison trap
+
+Comparing a local rate to a published national rate is the most common use of registry data in industry, and it fails for four reasons:
+
+1. The published rate uses a different database (SEER 21 versus SEER 9, for example).
+2. The published rate uses a different standard population for age adjustment.
+3. The published rate is for a different year, often a final year against a provisional local year.
+4. The published rate uses a different case definition, particularly for in-situ disease and unknown-primary cases.
+
+A comparison that does not fix all four is a comparison of four definitions, and the difference it finds is not a difference in disease.
 
 ### 11.1 Limits that are inherent
 
@@ -1025,6 +1196,14 @@ Compare a disease registry and a surveillance system for timeliness, completenes
 Deliverable: a three-row comparison table and two recommendations.
 
 Acceptance criteria: the recommendations are justified by the trade-off, not by preference; each names the cost of the choice.
+
+### Exercise 10 — Provisional-year correction (calculation and critique, 60 minutes)
+
+Using the counts in section 6.9, recompute the corrected 2025 estimate if the completeness ratio were 0.82 rather than 0.88. Report the corrected case count, the corrected rate, and the year-on-year change, and state whether the decision to expand screening would change.
+
+Deliverable: three recalculated figures and a recommendation.
+
+Acceptance criteria: the backfill factor is stated as a ratio, not a percentage; the rate uses the same denominator as 2024; the recommendation distinguishes a stable from an unstable submission process.
 
 ---
 
@@ -1199,3 +1378,24 @@ Related reading: [`01_ehr-data.md`](01_ehr-data.md) for the encounter-anchored v
 A registry is the best available answer to "how much disease is there" and a poor answer to "what happened to this patient." Keeping those two questions separate is the discipline this topic teaches.
 
 The next topic moves to a data type where the file itself is the object of analysis rather than a record about a patient: imaging and DICOM.
+
+### 11.4 The limit that changes a screening decision
+
+For a screening or early-detection decision, the binding limit is usually completeness, not the confidence interval. A 4 percent annual change in incidence is within the range that a 12 percent backfill can produce, so a programme that expands screening on the basis of a 4 percent decline is responding to a submission artefact.
+
+The practical rule is to require two consecutive final years before claiming a trend, and to state the observed change alongside the corrected range whenever a provisional year is included.
+
+Four questions to carry into the imaging topic:
+
+- Is the denominator a population or a set of studies?
+- Is completeness measured against a second source or assumed?
+- Is the comparability problem definitional or measurement-based?
+- Does the lag make the data unusable for the decision, or only for the trend?
+
+The third question is the one that transfers: every data source in this module has a comparability problem, and identifying whether it is definitional or measurement-based determines whether it can be fixed.
+
+That distinction is the bridge to imaging, where the comparability problem is measurement-based and the metadata is the only place to fix it.
+
+A registry analysis that answers "how much disease is there" and an imaging analysis that answers "what does this scan show" fail for different reasons, and the quality profile is how you tell them apart.
+
+Read the next topic for the measurement side of the same problem.

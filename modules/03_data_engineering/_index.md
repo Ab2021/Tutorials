@@ -29,16 +29,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_architecture-patterns.md`](01_architecture-patterns.md) | Architecture Patterns | Lakehouse, medallion layers, event-driven ingestion, and clinical constraints on each. | 1,200-1,800 | planned |
-| 2 | [`02_sql-for-clinical-data.md`](02_sql-for-clinical-data.md) | SQL for Clinical Data | Window functions, temporal joins, deduplication, and the queries that define cohorts. | 1,200-1,800 | planned |
-| 3 | [`03_python-engineering.md`](03_python-engineering.md) | Python Engineering | Packaging, typing, testing, configuration, and reproducible environments. | 1,200-1,800 | planned |
-| 4 | [`04_orchestration.md`](04_orchestration.md) | Orchestration | DAGs, idempotency, backfills, retries, and scheduling clinical pipelines. | 1,200-1,800 | planned |
-| 5 | [`05_fhir-ingestion.md`](05_fhir-ingestion.md) | FHIR Ingestion | Resources, references, bundles, search parameters, and flattening to analytics tables. | 1,200-1,800 | planned |
-| 6 | [`06_dicom-pipelines.md`](06_dicom-pipelines.md) | DICOM Pipelines | Series assembly, de-identification, pixel handling, and imaging cohort construction. | 1,200-1,800 | planned |
-| 7 | [`07_data-versioning-and-lineage.md`](07_data-versioning-and-lineage.md) | Data Versioning and Lineage | Snapshots, hashes, provenance, and answering 'where did this number come from'. | 1,200-1,800 | planned |
-| 8 | [`08_deidentification-engineering.md`](08_deidentification-engineering.md) | De-identification Engineering | Safe Harbor, expert determination, dates, free text, and re-identification risk. | 1,200-1,800 | planned |
-| 9 | [`09_security-engineering.md`](09_security-engineering.md) | Security Engineering | Least privilege, encryption, audit logs, secrets, and pipeline threat models. | 1,200-1,800 | planned |
-| 10 | [`10_testing-and-observability.md`](10_testing-and-observability.md) | Testing and Observability | Data tests, freshness checks, schema contracts, and alerting on pipeline failure. | 1,200-1,800 | planned |
+| 1 | [`01_architecture-patterns.md`](01_architecture-patterns.md) | Architecture Patterns | Lakehouse, medallion layers, event-driven ingestion, and clinical constraints on each. | 1,200-1,800 | complete |
+| 2 | [`02_sql-for-clinical-data.md`](02_sql-for-clinical-data.md) | SQL for Clinical Data | Window functions, temporal joins, deduplication, and the queries that define cohorts. | 1,200-1,800 | complete |
+| 3 | [`03_python-engineering.md`](03_python-engineering.md) | Python Engineering | Packaging, typing, testing, configuration, and reproducible environments. | 1,200-1,800 | complete |
+| 4 | [`04_orchestration.md`](04_orchestration.md) | Orchestration | DAGs, idempotency, backfills, retries, and scheduling clinical pipelines. | 1,200-1,800 | complete |
+| 5 | [`05_fhir-ingestion.md`](05_fhir-ingestion.md) | FHIR Ingestion | Resources, references, bundles, search parameters, and flattening to analytics tables. | 1,200-1,800 | complete |
+| 6 | [`06_dicom-pipelines.md`](06_dicom-pipelines.md) | DICOM Pipelines | Series assembly, de-identification, pixel handling, and imaging cohort construction. | 1,200-1,800 | complete |
+| 7 | [`07_data-versioning-and-lineage.md`](07_data-versioning-and-lineage.md) | Data Versioning and Lineage | Snapshots, hashes, provenance, and answering 'where did this number come from'. | 1,200-1,800 | complete |
+| 8 | [`08_deidentification-engineering.md`](08_deidentification-engineering.md) | De-identification Engineering | Safe Harbor, expert determination, dates, free text, and re-identification risk. | 1,200-1,800 | complete |
+| 9 | [`09_security-engineering.md`](09_security-engineering.md) | Security Engineering | Least privilege, encryption, audit logs, secrets, and pipeline threat models. | 1,200-1,800 | complete |
+| 10 | [`10_testing-and-observability.md`](10_testing-and-observability.md) | Testing and Observability | Data tests, freshness checks, schema contracts, and alerting on pipeline failure. | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -69,9 +69,9 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.
 

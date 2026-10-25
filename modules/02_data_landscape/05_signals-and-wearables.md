@@ -416,7 +416,54 @@ The pattern is that every derived value embeds a model, and the model was valida
 | Sampling rate | Varies across participants | Analyze in the time domain only | Resample and record the method |
 | Validation | Reference available | Report bias and limits of agreement | State the absence as a limitation |
 
-### 5.8 Artefact handling by signal type
+### 5.8 Edge cases the procedure has to survive
+
+**Missing samples versus zero values.** A CGM reading of 0 mg/dL is a sensor error, not hypoglycaemia, and a heart rate of 0 is a disconnection. The rule is to treat zeros inside a physiologic band as missing and zeros outside it as artefacts, and never to impute them as real values.
+
+**Conflicting device and clinical measurements.** A wearable reports a resting heart rate of 58; the clinic recorded 74 an hour later. Both can be correct, because the contexts differ. The rule is to keep both, record the context, and never average them into a single "heart rate."
+
+**Unit variants.** Glucose is mg/dL in the US and mmol/L in most other countries, with a conversion factor of 18.0182. A cohort that mixes them differs by a factor of 18. The rule is to store the source unit and the converted value, and to reject any record whose unit is unknown.
+
+**Firmware and app changes.** A firmware update can change the sampling rate, the derived value, or the sleep algorithm. The rule is to record the version per participant, to plot derived values by version, and to split the series at a change rather than pooling across it.
+
+**Late sync and batched uploads.** A device that syncs weekly delivers seven days of data at once, with timestamps that are correct but arrival times that are not. The rule is to use the device timestamp for physiology and the upload time only for operations, and never to infer adherence from upload timing.
+
+**Partial device identifiers.** A dataset keyed by device serial rather than participant cannot be linked to clinical data. The rule is to require a participant key at enrollment, to keep the serial for device-level analysis, and to report the share of records without a participant key.
+
+**Duplicates from re-sync.** A device that re-uploads after a failed sync can duplicate samples with identical timestamps and values. The rule is to deduplicate on participant, timestamp, and value, and to report the duplicate rate by device.
+
+**Clock and timezone boundaries.** Device clocks drift, and participants travel. The rule is to record the device timezone where available, to detect drift against a reference event, and to test for the daylight-saving artefacts described in section 5.4.
+
+### 5.9 Decision table: handling non-wear
+
+Non-wear has more than two treatments, and the choice changes the metric.
+
+| Question | Denominator | Treatment of non-wear | Metric | Reporting |
+|---|---|---|---|---|
+| Glycaemic control during wear | Worn time | Exclude | TIR on worn time | Wear days and percent |
+| Control over the study period | Expected time | Impute with a stated assumption | TIR with a range | Assumption and range |
+| Device performance | Device-on time | Exclude sensor-off | Valid-reading rate | Sensor survival |
+| Adherence | Protocol time | Exclude | Wear time divided by protocol time | Distribution by participant |
+| Comparative effectiveness | Worn time, balanced | Exclude, then adjust for wear | TIR with wear as covariate | Wear difference between arms |
+
+The rule that overrides the table: never include non-wear in a clinical denominator without saying so, because a missing reading is not a normal reading and treating it as one biases every metric toward the middle of the range.
+
+### 5.10 Field-level validation rules
+
+| Rule | Test | Severity | Action on failure |
+|---|---|---|---|
+| Physiologic bounds | Glucose 20-600 mg/dL; HR 20-250 bpm | High | Flag as artefact; do not delete silently |
+| Sampling interval | Interval equals the nominal rate within tolerance | High | Quarantine the segment |
+| Duplicate timestamp | One value per participant per timestamp | Medium | Collapse; keep the source |
+| Unit known | Unit is in the controlled list | High | Quarantine the value |
+| Wear flag consistent | No readings when the wear flag is off | Medium | Flag; check the flag logic |
+| Device version present | Model and firmware populated | High | Block device comparisons |
+| Clock drift | Drift under 1 minute per week | Medium | Correct linearly; report |
+| Implausible rate of change | Glucose change under 4 mg/dL per minute | Low | Flag; retain |
+
+The first rule and the last rule work together: bounds catch values that cannot be physiology, and rate-of-change catches values that are individually plausible but jointly impossible.
+
+### 5.11 Artefact handling by signal type
 
 Artefact rules are signal-specific, and a generic rule will either miss artefact or delete physiology.
 
@@ -428,7 +475,31 @@ Artefact rules are signal-specific, and a generic rule will either miss artefact
 
 The common principle is to reject windows rather than edit values. An edited value is indistinguishable from a measurement, and a rejected window can be reported as missing.
 
-### 5.9 What to do when the raw signal is unavailable
+### 5.12 Designs for comparing two devices
+
+An observational dataset cannot separate device from population. Four designs can, and they differ in cost and strength:
+
+| Design | What it identifies | Sample size | Weakness |
+|---|---|---|---|
+| Concurrent wear, same participants | Within-person device difference | Small (30-60) | Short duration; order effects |
+| Randomised crossover | Device effect plus period effect | Small to moderate | Washout needed; burden |
+| Parallel arms, randomised device | Device effect in a population | Moderate | Between-person variability |
+| Benchmark against a reference instrument | Bias and limits of agreement | Moderate | Reference error |
+
+The smallest defensible design for a device comparison is concurrent wear in 30 to 60 participants for at least the minimum wear period, analyzed as a paired difference. Anything less is a comparison of device users, not of devices.
+
+A practical note on analysis: the paired difference should be reported with a Bland-Altman plot rather than a correlation. Two devices can correlate at 0.95 and disagree by 20 mg/dL at the high end, and the correlation hides exactly the disagreement that matters clinically.
+
+Four numbers belong in any device comparison report:
+
+- The mean paired difference and its confidence interval.
+- The limits of agreement, at 1.96 standard deviations of the difference.
+- The proportion of paired readings that fall outside a clinically acceptable difference.
+- The difference by strata that matter, at minimum glucose range or activity level.
+
+A comparison that reports only the first two has described the average agreement and hidden the clinical disagreement, which is usually concentrated at the extremes.
+
+### 5.13 What to do when the raw signal is unavailable
 
 If only derived values exist, three options remain:
 
@@ -548,14 +619,51 @@ A useful check is whether the device's own derived values are internally consist
 
 Both are in the expected range. A correlation near zero would indicate a computation error, such as a TIR denominator that includes non-wear.
 
-### 6.7 What the example establishes
+### 6.7 Variant case: the same metrics with non-wear in the denominator
+
+The primary analysis divided by worn readings. A common shortcut divides by expected readings, treating every unworn interval as if it were in range. This is the same numerator with a different denominator, and it is worth computing because it is what many dashboards actually do.
+
+| Metric | Worn-time denominator | Expected-time denominator | Difference |
+|---|---:|---:|---:|
+| Pooled TIR | 62.7% | 52.6% | −10.1 points |
+| Device A TIR | 64.8% | 59.1% | −5.7 points |
+| Device B TIR | 58.2% | 41.9% | −16.3 points |
+| A minus B | 6.6 points | 17.2 points | +10.6 points |
+
+Check the pooled figure: 509,338 / 967,680 = 0.5264, or 52.6%.
+Check device A: 357,198 / 604,800 = 0.5906, or 59.1%.
+Check device B: 152,140 / 362,880 = 0.4193, or 41.9%.
+Check the gap as delivered: 64.8 − 58.2 = 6.6. On expected time: 59.1 − 41.9 = 17.2.
+
+### 6.8 What the variant changes
+
+The pooled metric falls by 10.1 percentage points, which is a large change for the same underlying readings. The device comparison changes more: the gap widens from 6.6 to 17.2 points, a factor of 2.6.
+
+The mechanism is that non-wear is not distributed evenly. Device B has 28 percent missing readings against device A's 8.9 percent, so the expected-time denominator penalizes B roughly three times as much.
+
+Check the missingness: A is 604,800 − 551,232 = 53,568 missing, or 8.86%. B is 362,880 − 261,408 = 101,472 missing, or 27.96%.
+
+The conclusion changes from "the devices differ modestly" to "the devices differ substantially." Neither conclusion is about glycaemia; both are about the denominator.
+
+### 6.9 Which denominator I would report, and why
+
+Report the worn-time denominator as primary, and state the wear time alongside it:
+
+- **Worn time** answers "what was glycaemia like when measured," which is the clinical question and the one the consensus metrics assume.
+- **Expected time** answers "what would the average be if unworn periods behaved like in-range periods," which is an assumption, not a measurement, and it is biased toward the middle of the range exactly where the missing data are unobserved.
+
+The expected-time figure is worth reporting as a sensitivity analysis, because it bounds how much a dashboard that uses it would differ, and because it makes the denominator choice visible to a reader who might otherwise assume the two are interchangeable.
+
+A reviewer will also ask about the direction of the missingness. If device B's missing periods were predominantly overnight hyperglycaemia, the worn-time figure still overstates control, and the sensitivity analysis in section 6.4 (45.2% under an 80 percent hyperglycaemic assumption) is the more informative range. The three figures together — 58.2 percent observed, 45.2 percent corrected for informative missingness, 41.9 percent on expected time — bracket the plausible truth, and reporting all three is more honest than choosing one.
+
+### 6.10 What the example establishes
 
 - Completeness differs by device, and the difference is a finding rather than a nuisance.
 - Pooled metrics must be weighted by readings, not averaged across participants.
 - Non-wear bias has a direction and can be bounded with a stated assumption.
 - A device comparison from observational data cannot separate algorithm from population.
 
-### 6.8 What a reviewer would ask
+### 6.11 What a reviewer would ask
 
 1. **Why 80 percent hyperglycemic for missing periods?** It is an assumption based on the cohort's overnight pattern, and it should be presented as a sensitivity range (for example, 60 to 90 percent) rather than a point.
 2. **Is 14 days enough?** International consensus recommends 14 days for CGM metrics in most adults, with 70 percent wear time. Device B is at 72 percent, which is at the threshold, and its wear days average 10.4, which is below the 14-day target.
@@ -748,7 +856,18 @@ Wearable data can be personal data even when it is not protected health informat
 
 Location data from wearables is a frequently overlooked identifier. A GPS trace identifies a home and a workplace with high reliability.
 
-### 8.6 Reading a device clearance summary
+### 8.6 What device standards do not cover
+
+IEEE 1752 and the related mobile-health schemas standardize the data envelope, not the measurement. Four gaps remain:
+
+- **Algorithm transparency.** The schema carries the value, not the computation that produced it.
+- **Wear detection.** The schema has no standard field for whether the device was worn.
+- **Firmware identity.** Version strings are optional and inconsistent.
+- **Reference validation.** The schema says nothing about accuracy.
+
+Each gap is why a provenance record has to be built by the data team rather than read from the file metadata.
+
+### 8.7 Reading a device clearance summary
 
 A 510(k) summary is public and short. Four fields decide whether it supports your use:
 
@@ -759,7 +878,7 @@ A 510(k) summary is public and short. Four fields decide whether it supports you
 
 A clearance is a regulatory finding for a stated use, not a general statement of accuracy.
 
-### 8.7 The international dimension
+### 8.8 The international dimension
 
 A device marketed in both the US and the EU has two regulatory files, and they may cover different claims. The EU MDR requires a clinical evaluation that is broader than a 510(k) equivalence argument in some respects, particularly for class IIa and above.
 
@@ -875,13 +994,47 @@ The analytic consequence is that the data source is partly determined by the pay
 | Summary data used for individual inference | Only daily means available | Aggregation discards variation | Ecological fallacy | Use individual-level data |
 | Battery or charging gaps | Regular multi-hour gaps | Device behaviour | Systematic missingness by time of day | Model the gap pattern |
 
+### 9.9 How a digital biomarker gets qualified
+
+A sensor-derived measure becomes usable in a regulatory or reimbursement context through a sequence that is documented, not assumed:
+
+| Step | Question | Evidence | Typical duration |
+|---|---|---|---|
+| Concept of interest | What clinical state is being measured? | Clinical rationale | Weeks |
+| Analytic validation | Does the sensor measure it accurately? | Bench and reference comparison | Months |
+| Clinical validation | Does it associate with the outcome? | Prospective study | Months to years |
+| Clinical utility | Does acting on it improve outcomes? | Trial or quasi-experiment | Years |
+| Fit-for-purpose determination | Is it adequate for this use? | Regulatory or payer review | Months |
+
+Most wearable programmes stop at step two and describe the result as validation. The later steps are the ones that decide whether the measure can be used, and they are the ones that require clinical data the device company may not have.
+
+### 9.10 What a wearable dataset contract should specify
+
+| Term | Why it matters | Typical gap |
+|---|---|---|
+| Raw versus derived | Determines re-analysis | Contract silent |
+| Device and firmware versions | Determines comparability | Not enumerated |
+| Sampling rate and filtering | Determines spectral validity | Not stated |
+| Wear detection method | Determines the denominator | Not described |
+| Algorithm version | Determines derived values | Not recorded |
+| Validation evidence | Determines claims | Marketing summary only |
+| Update notification | Determines continuity | No obligation |
+
+A contract that omits the last row allows the vendor to change the algorithm mid-study without telling the sponsor, which is the failure mode that invalidates a longitudinal endpoint.
+
 ### 10.1 The three red flags
 
 1. **No device or firmware version.** If the dataset does not say what produced the values, it cannot be compared to anything.
 2. **Completeness reported only as a percentage.** Without wear days and a missingness analysis, the number hides the bias.
 3. **A validation study with no population description.** A positive predictive value in an unstated population is not a result.
 
-### 10.2 The "validated device" trap
+### 10.2 The denominator error in wearable dashboards
+
+The variant in section 6.7 is the single most common wearable analytics error: dividing by expected time rather than observed time. It is common because the expected count is easy to compute from the enrollment period, and the observed count requires a wear detection step.
+
+The signature is a metric that moves when the study period changes but the participants do not. If extending the observation window lowers the average, the denominator is expected time and the missing data are being treated as values.
+
+### 10.3 The "validated device" trap
 
 A device can be validated and still be wrong for your question. Validation is specific to the population, the reference standard, and the firmware. A statement that a device is "FDA cleared" means the manufacturer demonstrated substantial equivalence for a stated intended use, not that the device is accurate for your endpoint in your population.
 
@@ -921,6 +1074,12 @@ For an analyst, the question is which claim the data can support. A dataset with
 | The sample represents the target population | Generalization | Access and healthy-user bias | Compare demographics to target |
 | Optical sensing is unbiased across skin tones | Equity of the estimate | Melanin absorbance | Record skin tone; stratified validation |
 
+### 10.5 The firmware-change failure
+
+A firmware update during a study is not a hypothetical. It produces a step change in derived values that looks like a physiological shift, and it is invisible unless the version is recorded per participant.
+
+The signature is a discontinuity in a derived metric at a date that affects participants across sites. The test is to plot the metric by firmware version; if the versions differ by more than the physiology, the series must be split.
+
 ### 11.1 Limits that are inherent
 
 - **Derived data cannot be re-analyzed.** Once the raw signal is gone, the algorithm's errors are permanent.
@@ -935,7 +1094,13 @@ For an analyst, the question is which claim the data can support. A dataset with
 
 That paragraph gives the reader everything needed to judge the claim.
 
-### 11.3 What the metric does not mean
+### 11.3 The limit that decides a trial endpoint
+
+For a trial, the binding limit is whether the endpoint is acceptable to the regulator for the intended claim. A wearable-derived endpoint in a label claim needs analytic validation, a documented device version, and a pre-specified analysis that matches the estimand. Without those, the endpoint may be acceptable to the sponsor and not to the reviewer.
+
+The practical statement is a three-part sentence: what the device measures, how it was validated, and what happens to the endpoint when the device changes. A protocol that cannot answer the third part has not planned for a firmware update during a multi-year trial.
+
+### 11.4 What the metric does not mean
 
 A time in range of 62.7 percent is a population average over worn time. It does not mean:
 
@@ -1025,6 +1190,14 @@ Design a study to separate device algorithm from population in the section 6 exa
 Deliverable: a one-page design.
 
 Acceptance criteria: the design includes concurrent wear; the analysis separates within-person device difference from between-person population difference; the sample size logic is stated, even if approximate.
+
+### Exercise 10 — Denominator sensitivity (calculation and critique, 45 minutes)
+
+Using the counts in sections 6.3 and 6.7, recompute the pooled and per-device TIR under a third denominator that counts only readings during a pre-specified 06:00-24:00 window, assuming 78 percent of readings fall in that window and they carry 70 percent of the in-range readings. State which denominator you would report for a clinical audience.
+
+Deliverable: three recalculated TIR values and a recommendation.
+
+Acceptance criteria: the numerator and denominator are recomputed consistently; the recommendation names the audience and the question; the assumption is labelled.
 
 ---
 
@@ -1201,3 +1374,27 @@ All URLs accessed 24 October 2026.
 Related reading: [`04_imaging-and-dicom.md`](04_imaging-and-dicom.md) for the other high-frequency data type; [`07_trial-data.md`](07_trial-data.md) for how wearable endpoints are regulated inside a trial; [`09_licensing-and-access.md`](09_licensing-and-access.md) for the contracts that govern device data; and [`10_data-quality-dimensions.md`](10_data-quality-dimensions.md) for the formal vocabulary of completeness and plausibility.
 
 The sentence to remember: a sensor is not a biomarker until it has been validated for this measure, in this population, against this reference, with this firmware.
+
+### 7.4 A second calculation: the device gap under two denominators
+
+The variant in 6.7 is easy to reproduce by hand and worth doing once, because it makes the denominator choice concrete.
+
+1. Device A in-range readings = 551,232 × 0.648 = 357,198.
+2. Device B in-range readings = 261,408 × 0.582 = 152,140.
+3. Worn-time rates: 357,198 / 551,232 = 64.8%; 152,140 / 261,408 = 58.2%. Gap = 6.6 points.
+4. Expected-time rates: 357,198 / 604,800 = 59.1%; 152,140 / 362,880 = 41.9%. Gap = 17.2 points.
+
+The ratio of the two gaps is 17.2 / 6.6 = 2.6, which is the ratio of the devices' missingness rates: 27.96 / 8.86 = 3.2. The gaps are not proportional to the missingness because the in-range proportions also differ, but the direction is the same: the device with more missing data is penalized more by the expected-time denominator.
+
+One more observation from that arithmetic: the ratio of gaps (2.6) is not the ratio of missingness (3.2), because the in-range proportions differ between devices. A quick proportionality assumption would have been close and wrong, which is why the two figures are computed rather than inferred.
+
+Four questions to carry into the omics topic:
+
+- Is the measurement absolute or relative?
+- Is the technical variation structured by batch?
+- Is the sample size enough for the number of tests?
+- Does the data use agreement cover the analysis and the publication?
+
+The first two questions are the ones that transfer most directly: a derived heart rate and a relative RNA abundance are both measurements whose meaning depends on a pipeline that the analyst did not write.
+
+That dependence is the subject of the next topic, where the pipeline is called a reference genome and the batch is called a flow cell.

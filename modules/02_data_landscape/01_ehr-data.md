@@ -449,7 +449,77 @@ The pattern is that the derivation is easy and the assumption is hard. Writing t
 
 A second pattern is worth naming: derived variables tend to be re-used long after their assumption has expired. A length-of-stay field built when the system had one facility is still in the pipeline after a merger added three, and nobody revisits it. Version the derivation, not only the query.
 
-### 5.8 Branch points summarized
+### 5.8 Edge cases the procedure has to survive
+
+The 26 steps assume clean inputs. Reality delivers seven recurring edge cases, and each has a defined handling rule. Apply the rule, record which rule you applied, and report the count affected.
+
+**Null and missing values at each step.**
+
+| Where | Symptom | Handling rule | What to report |
+|---|---|---|---|
+| Step 4, grain check | Key column null in 6% of rows | Do not treat null keys as duplicates; quarantine them | Null-key count and source system |
+| Step 8, inclusion | Age null because birth date missing | Create an "unknown age" bucket; do not exclude silently | Count and outcome rate of the unknown-age group |
+| Step 11, eligibility | Eligibility variable null | Keep with a missing indicator; never drop | Excluded-group outcome rate if you do drop |
+| Step 16, feature derivation | No value in the window | Emit null, not zero and not the cohort mean | Percent null per feature per site |
+| Step 19, label | Outcome not observable before cutoff | Right-censor; do not code as no-event | Person-time censored |
+
+**Conflicting sources for the same fact.** The EHR says the patient has heart failure; the claims file does not; the registry does. Three rules apply:
+
+1. Prefer the source closest to the clinical event for clinical facts (EHR over claims).
+2. Prefer the source with a legal mandate for population facts (registry over EHR for incidence).
+3. When the sources disagree, carry both and model the disagreement as a variable, rather than choosing one silently.
+
+The practical implementation is a `source_priority` column and a `concordance_flag`, so a sensitivity analysis can be run by source.
+
+**Unit variants.** A creatinine recorded in micromoles per litre at one site and milligrams per decilitre at another differs by a factor of about 88.4. The handling rule is to store the source value, the source unit, the conversion factor, and the standardized value, and to reject any row where the conversion factor is not in a controlled list. A conversion applied without a factor recorded is unauditable.
+
+**Code-system variants within the study period.** ICD-10-CM changes every 1 October. A study spanning September and October 2025 contains codes from FY2025 and FY2026, and 28 codes were deleted in the transition. The handling rule is to map both years to a common concept set at extraction time, keep the source code and its fiscal year, and report the proportion of the cohort whose capture depends on a code that changed.
+
+**Late-arriving data.** A lab drawn on 30 December may be verified on 3 January and extracted on 10 January. The handling rule is to define the data cutoff as the last date with a stable arrival curve, to exclude the tail or model the lag, and never to treat a missing result as a normal result.
+
+**Partial identifiers.** A record with an MRN but no enterprise ID cannot be linked to the longitudinal history. The handling rule is to keep the record in encounter-level analyses, exclude it from patient-level analyses, and report the proportion in each category by site.
+
+**Duplicate records.** Duplicates arise from registration errors, merged identities, and feed replays. The handling rule is to define the key before counting, to report duplicates by key, and to resolve conflicts with a stated tie-break (most recent, most complete, or source priority). Never deduplicate on a key you chose after seeing the counts.
+
+**Timezone and clock boundaries.** Multi-site extracts often mix local time and UTC, and daylight-saving transitions create an hour that occurs twice or not at all. The handling rule is to convert everything to a single timezone at extraction, record the source timezone per site, and test for duplicate or missing local hours at the transition dates.
+
+### 5.9 Field-level validation rules
+
+A validation rule is a test with a pass condition, a severity, and an action. Rules that only log are decoration; rules that only delete are dangerous. The table below is the minimum set for an EHR extract, with the action each rule should trigger.
+
+| Rule | Test | Severity | Action on failure |
+|---|---|---|---|
+| Key integrity | `COUNT(*) = COUNT(DISTINCT encounter_id)` | High | Quarantine duplicates; do not proceed |
+| Referential integrity | Every `patient_id` in `encounter` exists in `patient` | High | Quarantine orphans; report by source |
+| Temporal ordering | `admit_date <= discharge_date` | High | Quarantine; investigate the feed |
+| Plausible age | `0 <= age <= 120` | Medium | Flag; do not exclude |
+| Plausible length of stay | `0 <= LOS <= 365` days | Medium | Flag; review the top 20 |
+| Unit presence | Numeric result has a non-null unit | High | Quarantine the value; do not assume a unit |
+| Unit conversion validity | Unit is in the controlled conversion list | High | Quarantine; add the unit to the list after review |
+| Code validity | Diagnosis code exists in the FY in force | Medium | Flag; attempt a crosswalk; report the unmapped rate |
+| Value plausibility | Result inside a wide physiologic band | Low | Flag; retain |
+| Duplicate event | Same patient, same concept, same timestamp, same value | Medium | Collapse; keep the source rows |
+| Cross-field logic | Discharge disposition "expired" implies a death date | Medium | Flag; investigate the source |
+| Site completeness | Each site has above-threshold completeness for critical fields | High | Block the site-level comparison |
+
+Two design rules make the set usable. First, every rule has an owner and a documented disposition, so a failure is a decision rather than a queue item. Second, the rules run before analysis and their results are stored with the dataset, so a later reviewer can see what was caught.
+
+### 5.10 Decision table: handling a missing eligibility variable
+
+Step 11 has more than two defensible outcomes. Choose by the mechanism, not by convenience.
+
+| Mechanism | Evidence | Action | Sensitivity analysis | Report |
+|---|---|---|---|---|
+| Structural (field inapplicable) | Missing only in a group where it cannot apply | Exclude from denominator | None needed | Denominator definition |
+| MCAR | Missingness unrelated to group, site, or outcome | Complete case | None needed beyond precision | Percent complete |
+| MAR | Missingness predicted by observed variables | Multiple imputation including the outcome | Compare with complete case | Imputation model and variables |
+| MNAR, direction known | Missing group has worse outcomes | Keep with missing indicator | Bounding analysis with stated bounds | Both estimates and the bound |
+| MNAR, direction unknown | Missingness concentrated in one site | Keep; add site interaction | Site-stratified analysis | Site-specific estimates |
+| Workflow-driven | Missingness tracks shift, unit, or template | Model as a site-period effect | Compare periods before and after the workflow change | Workflow change dates |
+
+The rule that overrides the table: if the missing variable is the exposure or the outcome rather than a covariate, no missing-data method rescues the design. Redesign or change the source.
+
+### 5.11 Branch points summarized
 
 | Branch | Condition | Path A | Path B |
 |---|---|---|---|
@@ -580,7 +650,78 @@ Hospital D: 0.40 × 5.65 = 2.260; 0.35 × 13.05 = 4.5675; 0.25 × 12.57 = 3.1425
 
 The rank reversal is the point. On the crude rate, A (11.49%) is better than C (11.87%). After standardization, A (11.68%) is slightly worse than C (11.65%). The crude comparison was confounded by age: hospital A treats a younger population, and younger patients die less often. A quality dashboard built on the crude rate would reward the hospital with the healthiest case mix.
 
-### 6.7 What this example establishes
+### 6.7 Variant case: the same cohort with a patient-level denominator
+
+The question in 6.1 was framed per encounter ("among adults admitted with a sepsis-coded encounter"). Suppose the quality committee instead asks: "what is a patient's risk of dying if admitted with sepsis at each hospital?" That is a patient-level question, and the unit of analysis must change.
+
+Building the variant: keep only the first included encounter per patient. The 10,725 encounters belong to 8,210 patients, so 2,515 encounters are repeats.
+
+| Quantity | Encounter-level (primary) | Patient-level (variant) |
+|---|---:|---:|
+| Units | 10,725 | 8,210 |
+| Deaths | 1,201 | 986 |
+| Mortality | 11.20% | 12.01% |
+
+Check: 10,725 − 8,210 = 2,515 repeat encounters. 1,201 − 986 = 215 deaths among repeats.
+Repeat mortality = 215 / 2,515 = 0.0855, or 8.55%.
+Patient-level mortality = 986 / 8,210 = 0.12010, or 12.01%.
+
+The repeat encounters have much lower mortality than first encounters (8.55% versus 12.01%). That is clinically plausible: a patient who survives the first admission, is discharged, and returns is a survivor being readmitted, often for a less lethal problem.
+
+Site-level under the variant:
+
+| Hospital | Patients | Deaths | Patient-level mortality | Encounter-level crude |
+|---|---:|---:|---:|---:|
+| A | 3,310 | 401 | 12.11% | 11.49% |
+| B | 2,450 | 272 | 11.10% | 10.69% |
+| C | 1,540 | 198 | 12.86% | 11.87% |
+| D | 910 | 115 | 12.64% | 10.40% |
+| Total | 8,210 | 986 | 12.01% | 11.20% |
+
+Check: 3,310 + 2,450 + 1,540 + 910 = 8,210. 401 + 272 + 198 + 115 = 986.
+Check rates: 401/3,310 = 0.12115. 272/2,450 = 0.11102. 198/1,540 = 0.12857. 115/910 = 0.12637.
+
+Now derive the repeat-encounter profile that explains the movement:
+
+| Hospital | Encounters | Patients | Repeats | Repeat deaths | Repeat mortality |
+|---|---:|---:|---:|---:|---:|
+| A | 4,290 | 3,310 | 980 | 92 | 9.39% |
+| B | 3,180 | 2,450 | 730 | 68 | 9.32% |
+| C | 2,005 | 1,540 | 465 | 40 | 8.60% |
+| D | 1,250 | 910 | 340 | 15 | 4.41% |
+| Total | 10,725 | 8,210 | 2,515 | 215 | 8.55% |
+
+Check: 980 + 730 + 465 + 340 = 2,515. 92 + 68 + 40 + 15 = 215.
+Check: 980/4,290 = 0.2284 of A's encounters are repeats; 340/1,250 = 0.2720 of D's. D has the highest repeat share and the lowest repeat mortality.
+
+### 6.8 What changes, and why
+
+| Ranking basis | Best | Second | Third | Worst |
+|---|---|---|---|---|
+| Encounter-level crude | D (10.40%) | B (10.69%) | A (11.49%) | C (11.87%) |
+| Encounter-level age-standardized | D (9.97%) | B (11.14%) | C (11.65%) | A (11.68%) |
+| Patient-level crude | B (11.10%) | A (12.11%) | D (12.64%) | C (12.86%) |
+
+Hospital D moves from best on both encounter-level measures to third of four on the patient-level measure. The mechanism is arithmetic, not clinical: D's 340 repeat encounters carry only 15 deaths (4.41%), so they dilute its per-encounter rate. Once each patient contributes one observation, the dilution disappears.
+
+Hospital A moves from worst on the standardized encounter measure to second on the patient measure, for the opposite reason: its repeats are comparatively deadly (9.39%), so removing them helps A's standing.
+
+The difference between the two headline rates is 0.81 percentage points (12.01 − 11.20), and the difference between the two rankings is two positions for D. A committee that saw only one number would make a different decision about where to send patients.
+
+### 6.9 Which denominator I would report, and why
+
+Both are computable from the same extract, and the choice is a statement about the decision:
+
+- **Report encounter-level** when the decision is about admissions: a quality measure, a bundle-compliance target, a capacity plan, or a payment rule defined per discharge. The measure specification usually dictates the unit, and changing it breaks comparability with published benchmarks.
+- **Report patient-level** when the decision is about people: which hospital a patient should choose, what a patient's risk is, or how a cohort should be followed longitudinally. Repeat admissions are not independent observations of the same risk, and treating them as such both dilutes the rate and understates the variance.
+
+For the committee's actual question ("what is a patient's risk"), the patient-level estimate is the correct primary and the encounter-level estimate is the measure-aligned sensitivity. For the original quality-improvement question in 6.1, the order reverses.
+
+The general rule: name the decision, derive the unit from the decision, and report the alternative as a sensitivity analysis with the rank change stated explicitly. A deliverable that reports one rate without the unit definition invites the reader to assume the other.
+
+One more check a reviewer will ask for: the 2,515 repeats are not a random subset, and the 215 deaths among them are not distributed evenly across sites. The site-level repeat mortality in 6.7 is therefore itself a quality signal worth investigating, because a site with a 4.41% repeat mortality may be readmitting patients who did not need admission, which is a different problem from a low mortality rate.
+
+### 6.10 What this example establishes
 
 - The cohort definition is a chain of choices, and the exclusion with the largest effect was the one that looked most innocent (requiring a lactate).
 - The screening flag's PPV of 59.0% makes it unusable as a label without qualification.
@@ -860,7 +1001,21 @@ Six questions separate a usable extract from an unusable one, and all six can be
 
 A vendor that cannot answer questions 3 and 5 is selling a count, not a dataset. A vendor that answers all six with documents is selling something an analyst can defend.
 
-### 9.8 What a mature EHR analytics team looks like
+### 9.8 What a data diligence meeting should produce
+
+A diligence meeting that ends with impressions has failed. It should end with five artefacts, each of which can be checked later:
+
+| Artefact | Content | Who owns it |
+|---|---|---|
+| Source inventory | Systems, vendors, versions, last upgrade | Data owner |
+| Extract specification | Tables, grains, keys, filters, snapshot date | Data engineering |
+| Phenotype library extract | Definitions, validation status, code set versions | Clinical informatics |
+| Quality summary | Completeness and concordance by site and year | Analytics |
+| Access and use terms | DUA, permitted use, retention, publication rights | Legal |
+
+If any artefact is missing, the meeting produced a conversation rather than a basis for a decision, and the gap should be recorded as a risk rather than filled with an assumption.
+
+### 9.9 What a mature EHR analytics team looks like
 
 Organizations that do this well tend to share four features, and their absence predicts rework:
 
@@ -897,7 +1052,26 @@ A useful discipline is to assign every failure in the table to one of three laye
 
 Most project post-mortems attribute an analysis-layer error to a source-layer limitation, because the source-layer explanation is unfalsifiable and the analysis-layer explanation requires admitting a mistake. Resisting that attribution is part of professional practice.
 
+### 10.2 Edge-case failures and their signatures
+
+The edge cases in section 5.8 each produce a distinctive signature in the output. Learning the signatures shortens diagnosis.
+
+| Edge case | Signature in the data | First query to run | Usual root cause |
+|---|---|---|---|
+| Null key | Row count falls after a join to a patient table | Count null keys per table | Feed mapping or a new source system |
+| Conflicting source | Cohort size differs by 5-15% between EHR-only and claims-only definitions | Cross-tabulate the two definitions | Different documentation and billing purposes |
+| Unit variant | A lab mean jumps by a factor near 88 or 10 at a date | Quantiles by month and unit string | Assay or interface change |
+| Code version change | Case counts step at 1 October | Counts by week around the boundary | Annual code set update |
+| Late-arriving data | Final month 20-40% below trend | Arrival curve by extraction date | Run-out too short |
+| Partial identifier | Longitudinal analyses lose 3-10% of records | Count records with and without an enterprise ID | Registration practice at one site |
+| Duplicate record | Encounter counts exceed scheduling records | Duplicate key count by site | Feed replay or registration error |
+| Clock boundary | Events cluster at 00:00 or an hour is missing in spring | Events by hour around DST dates | Local time stored without offset |
+
+A signature is not a diagnosis, but it narrows the search from days to hours.
+
 ### 10.1 The three red flags that should stop a project
+
+Before those three, there is a fourth that is easier to spot: a cohort whose size changes materially when a defensible alternative definition is applied. In the worked example, switching the denominator moved the cohort from 10,725 to 8,210 (23.5 percent) and changed the site ranking. A result that depends on that choice is a result about the definition, not about the hospitals.
 1. **No flow diagram with counts.** If the analyst cannot show how many records were removed at each step, the cohort is not reproducible and the bias is unknown.
 2. **No chart-reviewed validation of the primary label.** A label defined only from codes has an unknown error rate. The error rate is usually large enough to change the conclusion.
 3. **No statement of what the data cannot answer.** A memo that presents an EHR analysis without limits is either naive or hiding something. Both are disqualifying.
@@ -943,6 +1117,18 @@ A limits section fails review for three reasons: it is generic, it is buried, or
 - **Longer than the finding.** Rank the limits. Three that threaten the conclusion matter more than ten that do not. State the three, then list the rest in one line.
 
 A useful test: give the limits section alone to a colleague who has not seen the analysis and ask them what the analysis cannot support. If they cannot answer, the section is decorative.
+
+### 11.3 The limits that change with the unit of analysis
+
+The worked example shows a limit that is easy to miss: the unit of analysis is itself a limit on the claim. An encounter-level rate cannot support a statement about patients, and a patient-level rate cannot be compared to a per-discharge benchmark.
+
+Three limits follow from the unit, and each should be stated explicitly:
+
+- **Independence.** Encounters within a patient are correlated, so a per-encounter variance estimate is too small unless cluster-robust methods are used.
+- **Weighting.** A patient-level average weights each patient once; an encounter-level average weights frequent attenders more. The two answer different questions about equity.
+- **Benchmark comparability.** Published measures are defined per discharge or per patient, and a rate computed on the other unit is not comparable regardless of how similar the numerator looks.
+
+A deliverable that states its unit, its variance method, and its benchmark definition has already addressed the most common reviewer objection.
 
 ---
 
@@ -1019,6 +1205,14 @@ Using any multi-site extract, compute completeness for five key fields by site a
 Deliverable: a completeness matrix and a 200-word hypothesis.
 
 Acceptance criteria: matrix stratified by site and year; hypothesis names a workflow or build change, not "bad data"; at least one falsifiable test proposed.
+
+### Exercise 10 — Denominator switch (calculation and critique, 60 minutes)
+
+Using the encounter-level and patient-level counts in sections 6.2 and 6.7, recompute both rates and the site ranking for a fifth hospital with 1,600 encounters, 1,190 patients, 172 deaths overall, and 26 deaths among 410 repeat encounters. State which denominator you would report for a patient-facing quality report and why.
+
+Deliverable: a five-row table with both rates and both rankings, plus a one-paragraph recommendation.
+
+Acceptance criteria: the patient-level death count is derived correctly from the overall and repeat counts; the recommendation names the decision the denominator serves; the rank change is stated explicitly.
 
 ---
 
@@ -1139,7 +1333,9 @@ A strong answer: the grain of each table and the identity resolution. Grain erro
 - **Temporal leakage** — using information unavailable at the decision time.
 - **UCUM** — Unified Code for Units of Measure.
 - **US Core** — the HL7 US realm implementation guide constraining FHIR for US exchange.
+- **Unit of analysis** — the entity each row represents (encounter, patient, episode).
 - **Washout period** — a period excluded to ensure incident cases.
+- **Cluster-robust variance** — a variance estimate that accounts for correlation within a patient.
 
 ---
 
@@ -1198,4 +1394,10 @@ All URLs accessed 24 October 2026.
 
 Related topics for continued reading: the terminology layer in [`08_standards-and-terminologies.md`](08_standards-and-terminologies.md) explains why code mapping is lossy; the quality framework in [`10_data-quality-dimensions.md`](10_data-quality-dimensions.md) turns the checks in section 5.6 into a repeatable assessment; and [`09_licensing-and-access.md`](09_licensing-and-access.md) covers the contractual path to obtaining an EHR extract in the first place.
 
-If you read only one sibling next, read the standards topic. Most of the failure modes in section 10 are terminology problems wearing a data problem's clothes, and the mapping section there is the fastest way to see why.
+If you read only one sibling next, read the standards topic. The denominator discussion in sections 6.7 to 6.9 is developed further in the quality topic, where the unit of analysis is one of the first things a fitness decision must fix. Most of the failure modes in section 10 are terminology problems wearing a data problem's clothes, and the mapping section there is the fastest way to see why.
+
+Three checks to carry into the next topic:
+
+- Does the source record the unit of analysis, or does the analyst impose it?
+- Does the source record the code set version, or does the analyst guess it?
+- Does the source record the denominator, or does the analyst construct it from a different table?
