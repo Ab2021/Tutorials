@@ -1296,5 +1296,5 @@ All URLs accessed 25 October 2026.
 - Previous topic: [`09_security-engineering.md`](09_security-engineering.md)
 - Related sibling: [`04_orchestration.md`](04_orchestration.md)
 - Related sibling: [`07_data-versioning-and-lineage.md`](07_data-versioning-and-lineage.md)
-- Root survey: [`../../03_data_engineering_interoperability.md`](../../03_data_engineering_interoperability.md)
+- Root survey: [`../../03_data_engineering_interoperability.md`](../../course/03_data_engineering_interoperability.md)
 - Labs: [`../../labs/`](../../labs/) — Lab 3.4 implements six quality checks and an alert; Lab 3.6 diagnoses a broken pipeline.

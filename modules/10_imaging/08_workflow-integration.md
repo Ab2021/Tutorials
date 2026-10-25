@@ -1289,7 +1289,7 @@ periodic accuracy audit. A weak answer monitors only uptime.
 - Previous topic: [`07_evaluation.md`](07_evaluation.md)
 - Next topic: [`09_regulatory-path.md`](09_regulatory-path.md)
 - Related topic: [`02_dicom-and-metadata.md`](02_dicom-and-metadata.md)
-- Root survey: [`../../10_medical_imaging.md`](../../10_medical_imaging.md)
+- Root survey: [`../../10_medical_imaging.md`](../../course/10_medical_imaging.md)
 - Labs: [`../../labs/`](../../labs/)
 
 > **Note:** The workflow role is a product decision; the model is only one component of it.

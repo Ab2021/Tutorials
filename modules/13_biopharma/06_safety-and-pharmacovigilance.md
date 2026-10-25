@@ -523,6 +523,10 @@ produce incidence; the spontaneous sources can produce disproportionality.
 A signal analysis should state its search strategy: the PTs, the SOC, the version, and whether it
 searched the narrow or broad scope. A result without a search strategy cannot be reproduced.
 
+The same discipline applies to the comparator: state which drugs were included, why, and how many
+reports they contributed. A comparator that is described only as "all other drugs" is not a
+definition.
+
 ### 5.1 Decision table for a screening hit
 
 | Screening result | Clinical review | Recommended outcome | Condition |
@@ -1296,5 +1300,5 @@ under-reaction.
 - Next topic: [`07_rwe-in-pharma.md`](07_rwe-in-pharma.md)
 - Related: [`02_data-in-pharma.md`](02_data-in-pharma.md)
 - Related: [`10_submission-data.md`](10_submission-data.md)
-- Survey file: [`../../13_biopharma_clinical_development.md`](../../13_biopharma_clinical_development.md)
+- Survey file: [`../../13_biopharma_clinical_development.md`](../../course/13_biopharma_clinical_development.md)
 - Labs: [`../../labs/`](../../labs/)

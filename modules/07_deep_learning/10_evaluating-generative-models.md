@@ -1294,7 +1294,7 @@ design needs a larger sample, and the text says so where it matters.
 - Module index: [`_index.md`](_index.md)
 - Previous topic: [`09_agents-and-tools.md`](09_agents-and-tools.md)
 - Next topic: [`11_compute-latency-and-cost.md`](11_compute-latency-and-cost.md)
-- Module survey: [`../../07_deep_learning_multimodal_llms.md`](../../07_deep_learning_multimodal_llms.md)
+- Module survey: [`../../07_deep_learning_multimodal_llms.md`](../../course/07_deep_learning_multimodal_llms.md)
 - Labs: [`../../labs/`](../../labs/)
 - Lab 7.5, red-team an LLM: [`../../labs/`](../../labs/)
 - Module 06, calibration: [`../06_machine_learning/08_calibration.md`](../06_machine_learning/08_calibration.md)

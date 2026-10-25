@@ -1291,7 +1291,7 @@ answer says the FDA is slow.
 - Previous topic: [`08_workflow-integration.md`](08_workflow-integration.md)
 - Next topic: [`10_foundation-models.md`](10_foundation-models.md)
 - Related topic: [`07_evaluation.md`](07_evaluation.md)
-- Root survey: [`../../10_medical_imaging.md`](../../10_medical_imaging.md)
+- Root survey: [`../../10_medical_imaging.md`](../../course/10_medical_imaging.md)
 - Labs: [`../../labs/`](../../labs/)
 
 > **Note:** This topic is educational and is not legal advice.

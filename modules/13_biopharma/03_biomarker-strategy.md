@@ -614,7 +614,7 @@ Using the mixture formula with a 24-month control non-progression probability of
 S_treat(true high)  = 0.55^0.55  = 0.720
 S_treat(true low)   = 0.55^0.95  = 0.566
 S_treat(mixture)    = 0.40 x 0.720 + 0.60 x 0.566 = 0.288 + 0.340 = 0.628
-HR_mixture          = ln(0.628) / ln(0.55) = -0.465 / -0.598 = 0.777
+HR_mixture          = ln(0.628) / ln(0.55) = -0.465 / -0.598 = 0.778
 ```
 
 The trial will observe approximately 0.78, not 0.55. The biomarker has not failed; the test has
@@ -625,9 +625,9 @@ diluted it.
 Required events for 90% power, two-sided alpha 0.05:
 
 ```text
-E = 4 x (1.960 + 1.282)^2 / (ln 0.777)^2
+E = 4 x (1.960 + 1.282)^2 / (ln 0.778)^2
   = 4 x 10.507 / 0.0636
-  = 660.9 events
+  = 669 events
 ```
 
 Compare with the event count if every enrolled patient were truly high:
@@ -636,11 +636,11 @@ Compare with the event count if every enrolled patient were truly high:
 E(HR 0.55) = 4 x 10.507 / (ln 0.55)^2 = 42.03 / 0.3567 = 117.8 events
 ```
 
-The false positives multiply the required events by 5.6.
+The false positives multiply the required events by 5.7.
 
 Converting events to patients: with 24-month follow-up and a mixture event probability of about
-0.46 per patient, the trial needs 660.9/0.46 = 1,437 assay-positive patients. At 18.4% assay
-positivity, that requires screening 7,810 patients. The programme's feasibility estimate assumed
+0.46 per patient, the trial needs 669/0.46 = 1,455 assay-positive patients. At 18.4% assay
+positivity, that requires screening 7,910 patients. The programme's feasibility estimate assumed
 2,200 screens. The trial is not feasible as designed.
 
 ### 6.5 Two diagnostics that reveal a broken design
@@ -669,14 +669,14 @@ without changing sensitivity.
 detected high = 0.92 x 80 + 0.05 x 920 = 73.6 + 46.0 = 119.6
 PPV           = 73.6 / 119.6 = 61.5%
 S_treat       = 0.615 x 0.720 + 0.385 x 0.566 = 0.443 + 0.218 = 0.661
-HR_mixture    = ln(0.661) / ln(0.55) = -0.414 / -0.598 = 0.692
-E             = 4 x 10.507 / (ln 0.692)^2 = 42.03 / 0.1361 = 308.8 events
+HR_mixture    = ln(0.661) / ln(0.55) = -0.414 / -0.598 = 0.693
+E             = 4 x 10.507 / (ln 0.693)^2 = 42.03 / 0.1348 = 312 events
 ```
 
-At 308.8 events and 0.44 events per patient, the trial needs about 702 assay-positive patients.
-Assay positivity is now 12.0%, so screening is 5,850 patients. The trial moves from infeasible
-(7,810 screens) to demanding but feasible (5,850 screens), and the required events fall from 661 to
-309.
+At 312 events and 0.46 events per patient, the trial needs about 678 assay-positive patients.
+Assay positivity is now 12.0%, so screening is 5,670 patients. The trial moves from infeasible
+(7,910 screens) to demanding but feasible (5,670 screens), and the required events fall from 669 to
+312.
 
 The decision changes from "do not proceed with the current assay" to "proceed only if the improved
 assay is validated and the screening capacity is confirmed". Note that the improved assay also
@@ -692,17 +692,17 @@ events per patient for the enriched designs and 0.47 for all-comers.
 | Design | Assumed HR | Events | Patients | Screens | Predictive label supported |
 |---|---:|---:|---:|---:|---|
 | All-comers | 0.80 | 844 | 1,796 | 0 | No, unless interaction is powered |
-| Enrichment, current assay (PPV 40%) | 0.777 | 661 | 1,437 | 7,810 | Yes, for assay-positive patients |
-| Enrichment, improved assay (PPV 61.5%) | 0.692 | 309 | 702 | 5,850 | Yes, for assay-positive patients |
+| Enrichment, current assay (PPV 40%) | 0.778 | 669 | 1,455 | 7,910 | Yes, for assay-positive patients |
+| Enrichment, improved assay (PPV 61.5%) | 0.693 | 312 | 678 | 5,670 | Yes, for assay-positive patients |
 | Ideal assay, true-high only | 0.550 | 118 | 256 | 3,200 | Yes, but no such assay exists |
 
 The all-comers design is the smallest in screening burden and the largest in patients. The ideal
 assay is the smallest overall but is unattainable. The realistic choice is between the two middle
 rows, and the decision depends on whether the improved assay can be validated in time and whether
-5,850 screens are available.
+5,670 screens are available.
 
 A frequent governance error is to compare the all-comers patient number (1,796) with the enriched
-patient number (1,437) and conclude that enrichment saves little. The comparison ignores the
+patient number (1,455) and conclude that enrichment saves little. The comparison ignores the
 screening burden, the probability of success, and the label. A like-for-like comparison states the
 events, the screens, the expected effect, and the label claim together.
 
@@ -775,8 +775,8 @@ print(f"events at HR 0.80: {events_required(0.80):.0f}")
 Expected output (Python 3.12, executed):
 
 ```text
-spec 0.88: PPV 0.400  NPV 0.992  HR 0.777  events 661  patients 1437  screens 7810
-spec 0.95: PPV 0.615  NPV 0.998  HR 0.692  events 309  patients 702  screens 5850
+spec 0.88: PPV 0.400  NPV 0.992  HR 0.778  events 669  patients 1455  screens 7910
+spec 0.95: PPV 0.615  NPV 0.993  HR 0.693  events 312  patients 678  screens 5670
 events at HR 0.55: 118
 events at HR 0.80: 844
 ```
@@ -786,10 +786,10 @@ Reading the output:
 - The PPV moves from 40.0% to 61.5% when specificity improves from 88% to 95%, while sensitivity is
   unchanged. The NPV is above 99% in both cases, which is why a negative result is informative even
   when a positive result is not.
-- The diluted hazard ratio moves from 0.777 to 0.692, and the required events fall from 661 to 309.
+- The diluted hazard ratio moves from 0.778 to 0.693, and the required events fall from 669 to 312.
   The relationship is steep because the event count depends on the inverse square of the log hazard
   ratio.
-- The screening burden falls less dramatically, from 7,810 to 5,850, because the improved assay also
+- The screening burden falls less dramatically, from 7,910 to 5,670, because the improved assay also
   reduces the proportion of patients who test positive.
 
 Assumptions: the mixture formula uses a single time point and a constant hazard ratio within each
@@ -974,9 +974,9 @@ is the argument for doing it regardless.
 ### 9.5 The economics of screening
 
 Screening burden is the cost that biomarker strategies most often understate. Using the worked
-example, 7,810 screens at an illustrative USD 3,000 per screen (assay, pathology review, and site
-time) is USD 23.4 million, before any drug is administered. The improved assay reduces this to 5,850
-screens, or USD 17.6 million. The difference, USD 5.9 million, is comparable to the cost of the
+example, 7,910 screens at an illustrative USD 3,000 per screen (assay, pathology review, and site
+time) is USD 23.7 million, before any drug is administered. The improved assay reduces this to 5,670
+screens, or USD 17.0 million. The difference, USD 6.7 million, is comparable to the cost of the
 bridging study that the improved assay requires.
 
 The arithmetic is illustrative, not a benchmark; screening costs vary by assay, country, and
@@ -1296,5 +1296,5 @@ harmonised.
 - Next topic: [`04_feasibility-and-recruitment.md`](04_feasibility-and-recruitment.md)
 - Related: [`05_cdisc-and-trial-standards.md`](05_cdisc-and-trial-standards.md)
 - Related: [`07_rwe-in-pharma.md`](07_rwe-in-pharma.md)
-- Survey file: [`../../13_biopharma_clinical_development.md`](../../13_biopharma_clinical_development.md)
+- Survey file: [`../../13_biopharma_clinical_development.md`](../../course/13_biopharma_clinical_development.md)
 - Labs: [`../../labs/`](../../labs/)

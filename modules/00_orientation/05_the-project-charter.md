@@ -1231,6 +1231,6 @@ All URLs accessed on 24 October 2026 unless otherwise stated.
 - Next topic: [`06_evidence-hierarchy-for-industry-claims.md`](06_evidence-hierarchy-for-industry-claims.md)
 - Related topic: [`01_why-this-course-exists.md`](01_why-this-course-exists.md)
 - Related topic: [`07_regulatory-triage-map.md`](07_regulatory-triage-map.md)
-- Module survey file: [`../../00_orientation_and_industry_map.md`](../../00_orientation_and_industry_map.md)
+- Module survey file: [`../../00_orientation_and_industry_map.md`](../../course/00_orientation_and_industry_map.md)
 - Labs: [`../../labs/`](../../labs/)
 - Calibration and decision-curve lab: [`../../labs/06_calibration_decision_curve.ipynb`](../../labs/06_calibration_decision_curve.ipynb)

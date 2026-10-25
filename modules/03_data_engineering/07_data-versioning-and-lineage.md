@@ -1298,5 +1298,5 @@ All URLs accessed 25 October 2026.
 - Previous topic: [`06_dicom-pipelines.md`](06_dicom-pipelines.md)
 - Next topic: [`08_deidentification-engineering.md`](08_deidentification-engineering.md)
 - Related sibling: [`10_testing-and-observability.md`](10_testing-and-observability.md)
-- Root survey: [`../../03_data_engineering_interoperability.md`](../../03_data_engineering_interoperability.md)
+- Root survey: [`../../03_data_engineering_interoperability.md`](../../course/03_data_engineering_interoperability.md)
 - Labs: [`../../labs/`](../../labs/) — Lab 3.6 requires tracing a failure to its source and quantifying impact.

@@ -1322,5 +1322,5 @@ All URLs accessed 25 October 2026.
 - Previous topic: [`05_fhir-ingestion.md`](05_fhir-ingestion.md)
 - Next topic: [`07_data-versioning-and-lineage.md`](07_data-versioning-and-lineage.md)
 - Related sibling: [`08_deidentification-engineering.md`](08_deidentification-engineering.md)
-- Root survey: [`../../03_data_engineering_interoperability.md`](../../03_data_engineering_interoperability.md)
+- Root survey: [`../../03_data_engineering_interoperability.md`](../../course/03_data_engineering_interoperability.md)
 - Labs: [`../../labs/`](../../labs/) — Lab 3.5 audits a synthetic dataset for identifiers, including DICOM if available.

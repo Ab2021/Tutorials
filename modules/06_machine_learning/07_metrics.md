@@ -1297,6 +1297,6 @@ any of the three is missing, the number is not yet evidence.
 - Previous topic: [`06_class-imbalance.md`](06_class-imbalance.md)
 - Next topic: [`08_calibration.md`](08_calibration.md)
 - Labels and outcomes: [`02_labels-and-outcomes.md`](02_labels-and-outcomes.md)
-- Survey file: [`../../06_machine_learning_foundations.md`](../../06_machine_learning_foundations.md)
+- Survey file: [`../../06_machine_learning_foundations.md`](../../course/06_machine_learning_foundations.md)
 - Labs: [`../../labs/`](../../labs/)
 - Calibration lab: [`../../labs/06_calibration_decision_curve.ipynb`](../../labs/06_calibration_decision_curve.ipynb)

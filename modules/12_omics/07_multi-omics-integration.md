@@ -1304,6 +1304,6 @@ combining them adds anything.
 - Previous topic: [`06_proteomics-and-metabolomics.md`](06_proteomics-and-metabolomics.md)
 - Next topic: [`08_biomarker-discovery.md`](08_biomarker-discovery.md)
 - Related topic: [`04_single-cell.md`](04_single-cell.md)
-- Survey file: [`../../12_omics_precision_medicine.md`](../../12_omics_precision_medicine.md)
+- Survey file: [`../../12_omics_precision_medicine.md`](../../course/12_omics_precision_medicine.md)
 - Labs: [`../../labs/`](../../labs/)
-- Lab 12.6, multi-omics integration, in the survey file: [`../../12_omics_precision_medicine.md`](../../12_omics_precision_medicine.md)
+- Lab 12.6, multi-omics integration, in the survey file: [`../../12_omics_precision_medicine.md`](../../course/12_omics_precision_medicine.md)

@@ -1,7 +1,7 @@
 # Module 09 — Clinical NLP
 
 > **Part of:** Biomedical Data Science for Industry (2026), expanded edition.
-> **Survey file:** [`../../09_clinical_nlp.md`](../../09_clinical_nlp.md)
+> **Survey file:** [`../../course/09_clinical_nlp.md`](../../course/09_clinical_nlp.md)
 > **Folder:** `modules/09_clinical_nlp/`
 > **Version:** 2026.3
 

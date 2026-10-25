@@ -1306,5 +1306,5 @@ All URLs accessed 25 October 2026.
 - Previous topic: [`01_architecture-patterns.md`](01_architecture-patterns.md)
 - Next topic: [`03_python-engineering.md`](03_python-engineering.md)
 - Related sibling: [`05_fhir-ingestion.md`](05_fhir-ingestion.md)
-- Root survey: [`../../03_data_engineering_interoperability.md`](../../03_data_engineering_interoperability.md)
+- Root survey: [`../../03_data_engineering_interoperability.md`](../../course/03_data_engineering_interoperability.md)
 - Labs: [`../../labs/`](../../labs/) — Lab 3.1 builds a cohort in DuckDB; Lab 3.6 injects a duplicate feed.

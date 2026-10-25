@@ -609,8 +609,9 @@ control arm.
 ### 6.4 The missingness diagnostic
 
 The difference in missingness between arms (31 versus 18) is 13 participants, or 5.4% of the
-randomised population. A chi-square test of 31/240 versus 18/240 gives a p-value of about 0.04, which
-is evidence against MCAR.
+randomised population. A chi-square test of 31/240 versus 18/240 gives a p-value of about 0.07, which
+is suggestive but not conclusive. The stronger evidence against MCAR is the association with clinical
+worsening, not the arm difference.
 
 The reason is visible in the visit data: participants who discontinued the device or missed the remote
 visit were more likely to have worsened on the site-reported clinical global impression at week 12.
@@ -763,7 +764,7 @@ Expected output (Python 3.12, SciPy 1.17, executed):
 overall compliance: 78.0%
 under 65: 87.0%
 65 and over: 62.0%
-missingness 31/240 vs 18/240: chi2 4.22, p 0.0399
+missingness 31/240 vs 18/240: chi2 3.27, p 0.0704
 delta -5 m: adjusted difference 14.0 m
 delta -10 m: adjusted difference 13.3 m
 delta -15 m: adjusted difference 12.7 m
@@ -1297,5 +1298,5 @@ missing-data pattern has been characterised by subgroup. Weak: asks about the br
 - Next topic: [`10_submission-data.md`](10_submission-data.md)
 - Related: [`04_feasibility-and-recruitment.md`](04_feasibility-and-recruitment.md)
 - Related: [`05_cdisc-and-trial-standards.md`](05_cdisc-and-trial-standards.md)
-- Survey file: [`../../13_biopharma_clinical_development.md`](../../13_biopharma_clinical_development.md)
+- Survey file: [`../../13_biopharma_clinical_development.md`](../../course/13_biopharma_clinical_development.md)
 - Labs: [`../../labs/`](../../labs/)

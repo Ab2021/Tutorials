@@ -1,7 +1,7 @@
 # Module 13 — Biopharma and Clinical Development
 
 > **Part of:** Biomedical Data Science for Industry (2026), expanded edition.
-> **Survey file:** [`../../13_biopharma_clinical_development.md`](../../13_biopharma_clinical_development.md)
+> **Survey file:** [`../../course/13_biopharma_clinical_development.md`](../../course/13_biopharma_clinical_development.md)
 > **Folder:** `modules/13_biopharma/`
 > **Version:** 2026.3
 
@@ -29,16 +29,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_development-funnel.md`](01_development-funnel.md) | The Development Funnel | Discovery to Phase IV, decision gates, cost, and attrition. | 1,200-1,800 | planned |
-| 2 | [`02_data-in-pharma.md`](02_data-in-pharma.md) | Data in Pharma | Preclinical, clinical, safety, and commercial data domains. | 1,200-1,800 | planned |
-| 3 | [`03_biomarker-strategy.md`](03_biomarker-strategy.md) | Biomarker Strategy | Prognostic, predictive, pharmacodynamic, and surrogate endpoints. | 1,200-1,800 | planned |
-| 4 | [`04_feasibility-and-recruitment.md`](04_feasibility-and-recruitment.md) | Feasibility and Recruitment | Site selection, enrollment modelling, and diversity planning. | 1,200-1,800 | planned |
-| 5 | [`05_cdisc-and-trial-standards.md`](05_cdisc-and-trial-standards.md) | CDISC and Trial Standards | CDASH, SDTM, ADaM, define.xml, and submission-ready data. | 1,200-1,800 | planned |
-| 6 | [`06_safety-and-pharmacovigilance.md`](06_safety-and-pharmacovigilance.md) | Safety and Pharmacovigilance | AE coding, signal detection, FAERS/AEMS, and aggregate reporting. | 1,200-1,800 | planned |
-| 7 | [`07_rwe-in-pharma.md`](07_rwe-in-pharma.md) | RWE in Pharma | External controls, label expansion, and payer evidence. | 1,200-1,800 | planned |
-| 8 | [`08_ai-in-discovery-and-development.md`](08_ai-in-discovery-and-development.md) | AI in Discovery and Development | Where models are used, validated, and rejected. | 1,200-1,800 | planned |
-| 9 | [`09_decentralized-trials.md`](09_decentralized-trials.md) | Decentralised Trials | Remote consent, ePRO, wearables, and the data integrity questions. | 1,200-1,800 | planned |
-| 10 | [`10_submission-data.md`](10_submission-data.md) | Submission Data | eCTD structure, datasets, and what reviewers actually check. | 1,200-1,800 | planned |
+| 1 | [`01_development-funnel.md`](01_development-funnel.md) | The Development Funnel | Discovery to Phase IV, decision gates, cost, and attrition. | 1,200-1,800 | complete |
+| 2 | [`02_data-in-pharma.md`](02_data-in-pharma.md) | Data in Pharma | Preclinical, clinical, safety, and commercial data domains. | 1,200-1,800 | complete |
+| 3 | [`03_biomarker-strategy.md`](03_biomarker-strategy.md) | Biomarker Strategy | Prognostic, predictive, pharmacodynamic, and surrogate endpoints. | 1,200-1,800 | complete |
+| 4 | [`04_feasibility-and-recruitment.md`](04_feasibility-and-recruitment.md) | Feasibility and Recruitment | Site selection, enrollment modelling, and diversity planning. | 1,200-1,800 | complete |
+| 5 | [`05_cdisc-and-trial-standards.md`](05_cdisc-and-trial-standards.md) | CDISC and Trial Standards | CDASH, SDTM, ADaM, define.xml, and submission-ready data. | 1,200-1,800 | complete |
+| 6 | [`06_safety-and-pharmacovigilance.md`](06_safety-and-pharmacovigilance.md) | Safety and Pharmacovigilance | AE coding, signal detection, FAERS/AEMS, and aggregate reporting. | 1,200-1,800 | complete |
+| 7 | [`07_rwe-in-pharma.md`](07_rwe-in-pharma.md) | RWE in Pharma | External controls, label expansion, and payer evidence. | 1,200-1,800 | complete |
+| 8 | [`08_ai-in-discovery-and-development.md`](08_ai-in-discovery-and-development.md) | AI in Discovery and Development | Where models are used, validated, and rejected. | 1,200-1,800 | complete |
+| 9 | [`09_decentralized-trials.md`](09_decentralized-trials.md) | Decentralised Trials | Remote consent, ePRO, wearables, and the data integrity questions. | 1,200-1,800 | complete |
+| 10 | [`10_submission-data.md`](10_submission-data.md) | Submission Data | eCTD structure, datasets, and what reviewers actually check. | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -69,9 +69,9 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.
 

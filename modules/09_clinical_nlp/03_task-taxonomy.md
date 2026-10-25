@@ -1296,5 +1296,5 @@ All URLs accessed 25 October 2026.
 - Annotation design for tasks: [`06_annotation.md`](06_annotation.md)
 - Evaluation at each level: [`07_evaluation.md`](07_evaluation.md)
 - Summarization as a claim-level task: [`09_summarization-and-grounding.md`](09_summarization-and-grounding.md)
-- Module survey: [`../../09_clinical_nlp.md`](../../09_clinical_nlp.md)
+- Module survey: [`../../09_clinical_nlp.md`](../../course/09_clinical_nlp.md)
 - Labs: [`../../labs/`](../../labs/)

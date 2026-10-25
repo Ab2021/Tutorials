@@ -1294,7 +1294,7 @@ benchmark results, not a finding from a controlled trial.
 - Module index: [`_index.md`](_index.md)
 - Previous topic: [`08_prompting-and-rag.md`](08_prompting-and-rag.md)
 - Next topic: [`10_evaluating-generative-models.md`](10_evaluating-generative-models.md)
-- Module survey: [`../../07_deep_learning_multimodal_llms.md`](../../07_deep_learning_multimodal_llms.md)
+- Module survey: [`../../07_deep_learning_multimodal_llms.md`](../../course/07_deep_learning_multimodal_llms.md)
 - Labs: [`../../labs/`](../../labs/)
 - Lab 7.5, red-team an LLM: [`../../labs/`](../../labs/)
 - Module 06, metrics: [`../06_machine_learning/07_metrics.md`](../06_machine_learning/07_metrics.md)

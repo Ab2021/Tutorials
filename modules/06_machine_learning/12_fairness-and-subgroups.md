@@ -1295,7 +1295,7 @@ The analysis is a means to a decision, not a verdict.
 - Next topic: [`13_leakage.md`](13_leakage.md)
 - Labels and outcomes: [`02_labels-and-outcomes.md`](02_labels-and-outcomes.md)
 - Metrics: [`07_metrics.md`](07_metrics.md)
-- Survey file: [`../../06_machine_learning_foundations.md`](../../06_machine_learning_foundations.md)
+- Survey file: [`../../06_machine_learning_foundations.md`](../../course/06_machine_learning_foundations.md)
 - Labs: [`../../labs/`](../../labs/)
 
 

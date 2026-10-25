@@ -1361,7 +1361,7 @@ All URLs accessed 24 October 2026.
 - Related sibling: [`02_claims-and-billing.md`](02_claims-and-billing.md)
 - Related sibling: [`03_registries-and-public-health.md`](03_registries-and-public-health.md)
 - Related sibling: [`08_standards-and-terminologies.md`](08_standards-and-terminologies.md)
-- Root survey file: [`../../02_biomedical_data_landscape.md`](../../02_biomedical_data_landscape.md)
+- Root survey file: [`../../02_biomedical_data_landscape.md`](../../course/02_biomedical_data_landscape.md)
 - Labs: [`../../labs/`](../../labs/)
 - Lab 2.5 in the survey file (data-quality profile) is the direct practical companion to this topic, and Lab 2.2 (OMOP cohort query) provides the data for the completeness and concordance exercises.
 

@@ -1300,6 +1300,6 @@ All URLs accessed 25 October 2026.
 - Previous topic: [`07_metrics.md`](07_metrics.md)
 - Next topic: [`09_thresholds-and-decision-curves.md`](09_thresholds-and-decision-curves.md)
 - Metrics: [`07_metrics.md`](07_metrics.md)
-- Survey file: [`../../06_machine_learning_foundations.md`](../../06_machine_learning_foundations.md)
+- Survey file: [`../../06_machine_learning_foundations.md`](../../course/06_machine_learning_foundations.md)
 - Labs: [`../../labs/`](../../labs/)
 - Calibration lab: [`../../labs/06_calibration_decision_curve.ipynb`](../../labs/06_calibration_decision_curve.ipynb)

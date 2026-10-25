@@ -1,7 +1,7 @@
 # Module 17 — Product, Economics, and Leadership
 
 > **Part of:** Biomedical Data Science for Industry (2026), expanded edition.
-> **Survey file:** [`../../17_product_economics_leadership.md`](../../17_product_economics_leadership.md)
+> **Survey file:** [`../../course/17_product_economics_leadership.md`](../../course/17_product_economics_leadership.md)
 > **Folder:** `modules/17_product_economics/`
 > **Version:** 2026.3
 
@@ -29,15 +29,15 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_product-discovery.md`](01_product-discovery.md) | Product Discovery | Problem interviews, workflow observation, and finding a decision worth changing. | 1,200-1,800 | planned |
-| 2 | [`02_value-quantification.md`](02_value-quantification.md) | Value Quantification | Outcome value, cost avoided, revenue, and the assumptions behind each. | 1,200-1,800 | planned |
-| 3 | [`03_health-economics.md`](03_health-economics.md) | Health Economics | Cost-effectiveness, ICER, QALYs, budget impact, and discounting. | 1,200-1,800 | planned |
-| 4 | [`04_reimbursement.md`](04_reimbursement.md) | Reimbursement | CPT, HCPCS, DRG, coverage decisions, and payment pathways for software. | 1,200-1,800 | planned |
-| 5 | [`05_procurement.md`](05_procurement.md) | Procurement | RFP, security review, contracting, and how health systems actually buy. | 1,200-1,800 | planned |
-| 6 | [`06_adoption.md`](06_adoption.md) | Adoption | Workflow fit, trust, training, and the predictors of sustained use. | 1,200-1,800 | planned |
-| 7 | [`07_business-models.md`](07_business-models.md) | Business Models | SaaS, per-seat, per-test, risk-sharing, and device-plus-service. | 1,200-1,800 | planned |
-| 8 | [`08_leadership.md`](08_leadership.md) | Leadership | Influence without authority, decision memos, and running a review. | 1,200-1,800 | planned |
-| 9 | [`09_roadmap-and-prioritisation.md`](09_roadmap-and-prioritisation.md) | Roadmap and Prioritisation | Sequencing evidence, engineering, and commercial work under uncertainty. | 1,200-1,800 | planned |
+| 1 | `01_product-discovery.md` | Product Discovery | Problem interviews, workflow observation, and finding a decision worth changing. | 1,200-1,800 | planned |
+| 2 | `02_value-quantification.md` | Value Quantification | Outcome value, cost avoided, revenue, and the assumptions behind each. | 1,200-1,800 | planned |
+| 3 | `03_health-economics.md` | Health Economics | Cost-effectiveness, ICER, QALYs, budget impact, and discounting. | 1,200-1,800 | planned |
+| 4 | `04_reimbursement.md` | Reimbursement | CPT, HCPCS, DRG, coverage decisions, and payment pathways for software. | 1,200-1,800 | planned |
+| 5 | `05_procurement.md` | Procurement | RFP, security review, contracting, and how health systems actually buy. | 1,200-1,800 | planned |
+| 6 | `06_adoption.md` | Adoption | Workflow fit, trust, training, and the predictors of sustained use. | 1,200-1,800 | planned |
+| 7 | `07_business-models.md` | Business Models | SaaS, per-seat, per-test, risk-sharing, and device-plus-service. | 1,200-1,800 | planned |
+| 8 | `08_leadership.md` | Leadership | Influence without authority, decision memos, and running a review. | 1,200-1,800 | planned |
+| 9 | `09_roadmap-and-prioritisation.md` | Roadmap and Prioritisation | Sequencing evidence, engineering, and commercial work under uncertainty. | 1,200-1,800 | planned |
 
 ## 4. How the topics fit together
 

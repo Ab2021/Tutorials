@@ -1303,7 +1303,7 @@ https://ai-act-service-desk.ec.europa.eu/en/ai-act/timeline/timeline-implementat
 - Module index: [`_index.md`](_index.md)
 - Previous topic: [`02_training-dynamics.md`](02_training-dynamics.md)
 - Next topic: [`04_sequence-models.md`](04_sequence-models.md)
-- Module survey: [`../../07_deep_learning_multimodal_llms.md`](../../07_deep_learning_multimodal_llms.md)
+- Module survey: [`../../07_deep_learning_multimodal_llms.md`](../../course/07_deep_learning_multimodal_llms.md)
 - Labs: [`../../labs/`](../../labs/)
 - Lab 7.1, CNN on medical images: [`../../labs/`](../../labs/)
 - Module 06, metrics: [`../06_machine_learning/07_metrics.md`](../06_machine_learning/07_metrics.md)

@@ -1319,7 +1319,7 @@ All URLs were accessed on 25 October 2026. Where a source is an industry estimat
 - Module index: [`_index.md`](_index.md)
 - Next topic: [`02_ehr-cohorts.md`](02_ehr-cohorts.md) — defining populations from encounter and order data.
 - Related topic: [`03_claims-analytics.md`](03_claims-analytics.md) — episodes, attribution, risk adjustment, and cost.
-- Root survey file: [`../../08_ehr_claims_operations.md`](../../08_ehr_claims_operations.md)
+- Root survey file: [`../../08_ehr_claims_operations.md`](../../course/08_ehr_claims_operations.md)
 - Labs: [`../../labs/`](../../labs/)
 
 The operating model is the reference frame for the rest of the module. Topic 02 uses its encounter definitions, Topic 03 uses its payment and cost vocabulary, Topic 04 uses its distinction between operational and clinical outcomes, Topic 05 uses its capacity definitions, Topic 06 uses its denominator logic, and Topic 07 uses its charge-to-payment chain. If a later topic uses a term that seems ambiguous, return to Section 4 and check whether the ambiguity is a unit-of-analysis problem.

@@ -1388,7 +1388,7 @@ All URLs accessed 24 October 2026.
 - Related sibling: [`08_standards-and-terminologies.md`](08_standards-and-terminologies.md)
 - Related sibling: [`10_data-quality-dimensions.md`](10_data-quality-dimensions.md)
 - Related sibling: [`09_licensing-and-access.md`](09_licensing-and-access.md)
-- Root survey file: [`../../02_biomedical_data_landscape.md`](../../02_biomedical_data_landscape.md)
+- Root survey file: [`../../02_biomedical_data_landscape.md`](../../course/02_biomedical_data_landscape.md)
 - Labs: [`../../labs/`](../../labs/)
 - Lab 2.1 in the survey file (FHIR bundle exploration) and Lab 2.2 (OMOP cohort query) both use the cohort construction pattern in section 7.
 

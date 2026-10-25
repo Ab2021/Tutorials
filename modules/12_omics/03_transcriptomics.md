@@ -1301,5 +1301,5 @@ Standards:
 - Next topic: [`04_single-cell.md`](04_single-cell.md)
 - Related topic: [`05_spatial-transcriptomics.md`](05_spatial-transcriptomics.md)
 - Related topic: [`08_biomarker-discovery.md`](08_biomarker-discovery.md)
-- Survey file: [`../../12_omics_precision_medicine.md`](../../12_omics_precision_medicine.md)
+- Survey file: [`../../12_omics_precision_medicine.md`](../../course/12_omics_precision_medicine.md)
 - Labs: [`../../labs/`](../../labs/)

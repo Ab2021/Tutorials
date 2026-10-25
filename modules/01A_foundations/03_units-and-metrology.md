@@ -1702,9 +1702,9 @@ All URLs were accessed on 24 October 2026.
 - Up to the module map: [`_index.md`](_index.md)
 - Previous topic: [`02_probability-and-statistics-basics.md`](02_probability-and-statistics-basics.md)
 - Next topic: [`04_dimensional-analysis.md`](04_dimensional-analysis.md)
-- Mathematical basis of ratios and logarithms: [`01_mathematical-basics.md`](01-mathematical-basics.md)
+- Mathematical basis of ratios and logarithms: [`01_mathematical-basics.md`](01_mathematical-basics.md)
 - Device measurement chain: [`08_engineering-and-device-basics.md`](08_engineering-and-device-basics.md)
 - Assumption testing: [`10_the-assumptions-ledger.md`](10_the-assumptions-ledger.md)
-- Root survey file: [`../../01A_foundations_assumptions_and_units.md`](../../01A_foundations_assumptions_and_units.md)
+- Root survey file: [`../../01A_foundations_assumptions_and_units.md`](../../course/01A_foundations_assumptions_and_units.md)
 - Labs: [`../../labs/`](../../labs/) — `01A_unit_conversion.ipynb` is the conversion lab; `14B_quantization.ipynb`
   covers resolution and quantisation in sampled data.

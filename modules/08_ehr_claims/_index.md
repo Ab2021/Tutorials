@@ -1,7 +1,7 @@
 # Module 08 — EHR, Claims, and Health System Operations
 
 > **Part of:** Biomedical Data Science for Industry (2026), expanded edition.
-> **Survey file:** [`../../08_ehr_claims_operations.md`](../../08_ehr_claims_operations.md)
+> **Survey file:** [`../../course/08_ehr_claims_operations.md`](../../course/08_ehr_claims_operations.md)
 > **Folder:** `modules/08_ehr_claims/`
 > **Version:** 2026.3
 

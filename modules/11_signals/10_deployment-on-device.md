@@ -44,6 +44,8 @@ A data scientist who ignores deployment will build models that cannot ship. The 
 
 A model that is designed for the device is not a compromise; it is a model that can be validated, shipped, and monitored.
 
+A fourth failure is a deployment that cannot be diagnosed. The device misses a deadline, the log has no timing data, and the team cannot tell whether the cause is the model, the clock, or the radio. The observability is part of the design, not an afterthought.
+
 ## 2. Learning outcomes
 
 By the end of this topic you can:
@@ -169,6 +171,14 @@ A 100 mAh, 3.7 V battery stores 1,332 J. A device that uses 1 mJ per inference a
 | Atomic update | All-or-nothing write | Partial update | method |
 | Telemetry | Device-reported metrics | Ignoring | data |
 | Re-identification | Identifying a person from data | Assuming aggregation is enough | risk |
+| WCET | Worst-case execution time | Using the mean | ms |
+| Jitter | Variation in latency | Ignoring the tail | ms |
+| Interrupt latency | Delay before an ISR runs | Ignoring | µs |
+| Cache miss | Memory access penalty | Ignoring in WCET | cycles |
+| Wait state | Flash access delay | Ignoring | cycles |
+| A/B partition | Two firmware slots | Single slot | method |
+| Boot counter | Counts failed boots | No rollback trigger | count |
+| Fuel gauge | Battery state estimator | Voltage only | % |
 
 ## 5. The mechanics, step by step
 
@@ -249,6 +259,25 @@ The table is a starting point. The choice should be driven by the model and the 
 
 **Edge case:** the framework itself uses memory. TFLM's interpreter and kernels can use 10 kB to 30 kB, which must be added to the budget.
 
+**Partitioning the memory.** Flash and RAM are separate budgets, and each has fixed consumers.
+
+| Region | Flash | RAM | Contents |
+|---|---:|---:|---|
+| Bootloader | 8-32 kB | 0 | Secure boot, rollback |
+| Application code | 30-100 kB | 0 | Drivers, radio stack |
+| Runtime | 10-30 kB | 2-8 kB | Interpreter, kernels |
+| Weights | 3-500 kB | 0 | Quantized parameters |
+| Arena | 0 | 20-100 kB | Activations, scratch |
+| Stack | 0 | 2-8 kB | Call frames |
+| Heap | 0 | 0 in production | Avoided |
+| Logging buffer | 0 | 1-4 kB | On-device events |
+
+The table is a budget, not a suggestion. A device with 64 kB of RAM that allocates 61.9 kB to the arena has 2.1 kB for the stack, the runtime, and the logging buffer, which is not enough. The arena must shrink or the device must change.
+
+The flash budget is usually less tight than the RAM budget, but the update image doubles the requirement: an A/B partition scheme needs room for two images, so a 256 kB flash with a 200 kB application has no room for a rollback copy.
+
+**Static versus dynamic allocation.** A production firmware should avoid `malloc` after initialization. A preallocated arena, a fixed stack, and a fixed logging buffer make the memory use deterministic and auditable. Dynamic allocation introduces fragmentation, which can fail after hours even when the high-water mark is below the limit.
+
 ### Step 4. Quantize the model
 
 **Input:** the trained float model and a calibration set.
@@ -276,6 +305,17 @@ The table is a starting point. The choice should be driven by the model and the 
 
 The table shows the trade-off. Int8 is the default for microcontrollers because the hardware supports it and the accuracy loss is usually small. Int4 is attractive for memory but requires careful calibration and may not be supported.
 
+**Quantized inference arithmetic.** An int8 convolution does not multiply the quantized values directly. Each input and weight tensor has a scale, and the product is accumulated in int32:
+
+```text
+ acc = sum_i (q_x[i] - z_x) * (q_w[i] - z_w)
+ y = acc * (s_x * s_w / s_y) + z_y
+```
+
+The multiplier `s_x * s_w / s_y` is a floating-point constant that the runtime applies once per output, often as a fixed-point multiply and shift. The int32 accumulator has enough range for the products if the tensor lengths are moderate; a long accumulation can overflow, which is why some runtimes use int16 inputs with int32 accumulation and others restrict the channel count.
+
+The arithmetic matters for two reasons. First, the zero point `z` is not zero for asymmetric tensors, so a naive `sum(q_x * q_w)` is wrong. Second, the requantization step rounds, and the rounding error accumulates across layers. A model with many layers and small activations can lose more accuracy than the weight error suggests.
+
 ### Step 5. Optimize the compute
 
 **Input:** the quantized model and the target platform.
@@ -291,6 +331,24 @@ The table shows the trade-off. Int8 is the default for microcontrollers because 
 **Branch point:** if the latency is too high, reduce the MACs or increase the clock. The first is usually better for energy.
 
 **Edge case:** a model with many small operators can be slower than a model with fewer large operators, because the per-operator overhead dominates.
+
+**Latency is not one number.** The end-to-end latency has five components, and the deadline applies to the sum plus the jitter.
+
+| Component | Typical | Variability | Source |
+|---|---:|---|---|
+| Acquisition window | 2,000 ms | fixed | design |
+| Preprocessing | 2-10 ms | low | DSP |
+| Inference | 7.5-75 ms | medium | clock, cache |
+| Decision logic | < 1 ms | low | firmware |
+| Notification | 10-100 ms | high | radio, display |
+
+The worst-case execution time (WCET) is the maximum over the components, not the mean. A 37.5 ms mean inference with a 10 ms cache-miss penalty and a 5 ms interrupt can be 52.5 ms at the 99th percentile. A deadline of 50 ms is missed by the tail, even though the mean meets it.
+
+Determinism matters more than speed for an alarm. A model that runs in 20 ms on average and 80 ms occasionally is worse than a model that runs in 40 ms every time, because the alarm deadline is a maximum, not an average.
+
+**Interrupt latency and blocking.** The inference can be delayed by a higher-priority interrupt, a flash write, or a radio event. The firmware should either mask the long operations during the inference or budget the delay. A flash write can block the CPU for milliseconds on some parts.
+
+**Cache and memory access.** A Cortex-M7 with a cache can run the same model 2× faster than the same core without a cache, and the timing can vary with the data. A WCET analysis should include the cache-miss case.
 
 ### Step 6. Measure the energy
 
@@ -326,7 +384,7 @@ The table shows that the sensor is the largest single contributor in a 2 s cycle
 
 **Rationale:** the compute is often a small part of the total. The sensor and the radio dominate.
 
-**Arithmetic:** a 100 mAh, 3.7 V battery stores 1,332 J. A sensor at 5.5 mW continuous uses 475 J/day. A radio at 6.9 mW for 10% of the day uses 59.6 J/day. A compute at 0.188 mJ per inference at 0.5 inferences/s uses 8.1 J/day. The total is 543 J/day, and the battery lasts 2.45 days.
+**Arithmetic:** a 100 mAh, 3.7 V battery stores 1,332 J. A sensor at 5.5 mW continuous uses 475.2 J/day. A radio at 6.9 mW for 10% of the day uses 59.6 J/day. A compute at 0.938 mJ per inference at 0.5 inferences/s uses 40.5 J/day. The sleep current adds 0.7 J/day. The total is 576.0 J/day, and the battery lasts 2.31 days.
 
 **Branch point:** if the battery life is too short, duty-cycle the sensor or the radio before optimizing the model.
 
@@ -372,6 +430,19 @@ The mitigation is a design choice. A device that runs continuously at high power
 
 **Edge case:** a partial update can leave the device in an inconsistent state. The update should be atomic and recoverable.
 
+**Watchdog and fail-safe behaviour.** A deployed model must fail visibly and safely.
+
+| Failure | Detection | Safe action |
+|---|---|---|
+| Inference overruns | Watchdog | Reset; log; retry |
+| Repeated reset | Boot counter | Roll back image |
+| Sensor invalid | Quality flag | Suppress output |
+| Model output out of range | Range check | Suppress; log |
+| Low battery | Fuel gauge | Reduce duty cycle |
+| Thermal limit | Temperature sensor | Throttle; warn |
+
+The fail-safe action should be defined for each failure, and the device should not fail silently. A monitor that stops reporting because the model crashed is worse than a monitor that reports "unavailable."
+
 **Update checklist.**
 
 | Item | Question | Evidence |
@@ -414,7 +485,21 @@ The checklist is the minimum for a regulated update. A missing row is a risk tha
 
 The table is a privacy design, not a legal opinion. The retention and transfer should be justified by the decision, not by the convenience of the pipeline.
 
-A device that sends raw signal for a cloud model has a different privacy posture from a device that sends a decision. The architecture and the privacy design are the same decision. A privacy review that starts after the architecture is a review of a decision that has already been made.
+A device that sends raw signal for a cloud model has a different privacy posture from a device that sends a decision. The architecture and the privacy design are the same decision.
+
+**On-device logging without PHI.** A device needs logs for debugging and audit, and the logs must not become a repository of protected health information.
+
+| Log field | Keep | Why |
+|---|---|---|
+| Timestamp | Yes, relative | Debug timing |
+| Model version | Yes | Traceability |
+| Quality flags | Yes | Failure analysis |
+| Feature values | Aggregated | Debug without identity |
+| Raw waveform | No, unless consented | Re-identifiable |
+| User identifier | Hashed or none | Privacy |
+| Location | No | Not needed |
+
+A rolling buffer of the last few minutes of signal can be useful for a crash diagnosis, but it should be encrypted, time-limited, and deleted after upload. A log that stores raw ECG indefinitely is a privacy liability, not an engineering convenience. A privacy review that starts after the architecture is a review of a decision that has already been made.
 
 The same is true of the power budget: a review that starts after the model is trained is a review of a model that may not fit.
 
@@ -557,9 +642,41 @@ The battery stores 1,332 J. The compute alone would last 164 days at the lowest 
 | MCU active | 25 mW | 1.9% | 40.5 J |
 | Radio | 6.9 mW | 10% | 59.6 J |
 | Sleep | 8.1 µW | 98% | 0.7 J |
-| Total | — | — | 575.8 J |
+| Total | — | — | 576.0 J |
 
-The battery lasts 1,332/575.8 = 2.31 days. The sensor is 82% of the energy. Reducing the sensor duty cycle from 100% to 50% saves 237.5 J/day and extends the battery to 3.9 days. Optimizing the model from 0.938 mJ to 0.188 mJ saves 32.4 J/day and extends the battery to 2.45 days. The sensor is the lever.
+The battery lasts 1,332/576.0 = 2.31 days. The sensor is 82% of the energy. Reducing the sensor duty cycle from 100% to 50% saves 237.5 J/day and extends the battery to 3.9 days. Optimizing the model from 0.938 mJ to 0.188 mJ saves 32.4 J/day and extends the battery to 2.45 days. The sensor is the lever.
+
+The budget reconciles to the total:
+
+| Component | J/day | Share |
+|---|---:|---:|
+| Sensor | 475.2 | 82.5% |
+| Radio | 59.6 | 10.3% |
+| MCU | 40.5 | 7.0% |
+| Sleep | 0.7 | 0.1% |
+| Total | 576.0 | 100% |
+
+The components sum to the total. A budget that does not reconcile to within a few percent has a missing term or a unit error.
+
+### 6.6.1 The deadline diagnostic
+
+The offline latency is 37.5 ms at 100 MOPS, which meets a 50 ms deadline with 12.5 ms of margin. On the device, the 99th-percentile latency is 64 ms, and the deadline is missed.
+
+The components of the difference are:
+
+| Source | Effect | Latency |
+|---|---:|---:|
+| Nominal at 64 MHz | — | 37.5 ms |
+| Clock throttled to 48 MHz | × 64/48 | 50.0 ms |
+| Cache miss on the weights | +10% | 55.0 ms |
+| Interrupt during inference | +5 ms | 60.0 ms |
+| Flash wait states | +8% | 64.8 ms |
+
+The diagnostic is to measure the 99th percentile on the target, at the throttled clock, with the worst-case input, and with the radio active. A mean latency measured on a laptop or a development board is not the WCET.
+
+The consequence of missing the diagnostic is a missed deadline at the tail. At 43,200 inferences/day, a 1% miss rate is 432 late decisions per day. For an arrhythmia alarm, that is 432 alarms that arrive after the event.
+
+The fix is to design for the WCET: reduce the model, shorten the window, raise the clock, or move the inference to a phone. The mean is not the design target.
 
 ### 6.6 Quantization arithmetic
 
@@ -823,6 +940,8 @@ A fifth gap is the on-device model version. A device can report a performance nu
 
 The table is a reminder that the standards are a floor, not a complete design.
 
+A deployment that meets the standards and misses the deadline has met the floor and failed the product. The requirements table in Section 5, Step 1 is the product-specific layer that the standards do not provide.
+
 ## 9. Industry practice and case evidence
 
 ### 9.1 Q-PPG and microcontroller inference
@@ -924,6 +1043,9 @@ The evidence should be collected on the production firmware, not on a developmen
 | Radio retry | Higher energy | Poor connection | Battery drain | Backoff |
 | Wrong model version | Results differ | Version mismatch | Unverified | Version check |
 | Telemetry privacy | Data over-collection | Over-monitoring | Compliance | Minimize |
+| Tail latency | Mean meets, p99 misses | Jitter | Missed deadline | WCET budget |
+| Interrupt blocking | Late inference | ISR priority | Deadline miss | Mask or budget |
+| Log PHI | Raw signal retained | Convenience | Privacy breach | Retention policy |
 
 ## 11. Assumptions and limits
 
@@ -946,6 +1068,9 @@ The evidence should be collected on the production firmware, not on a developmen
 | The watchdog is fed | Reliability | Long inference | Timing test |
 | The battery is derated | Life estimate | Cold, age | Worst-case test |
 | The telemetry is minimized | Privacy | Over-collection | Data-flow review |
+| The WCET meets the deadline | Alert utility | Mean only | Tail measurement |
+| The logs exclude PHI | Privacy | Raw signal retained | Log audit |
+| The A/B partition fits | Update | Image too large | Partition check |
 
 ## 12. Exercises
 
@@ -1012,6 +1137,14 @@ The evidence should be collected on the production firmware, not on a developmen
 **Acceptance criteria:** all four metrics; the high-water mark; the thermal condition.
 
 **Time:** 45 minutes.
+
+### Exercise 9. Deadline analysis (application, 25 min)
+
+**Deliverable:** given a mean inference of 30 ms, a 20% clock throttle, a 10 ms interrupt, and a 50 ms deadline, decide whether the design meets the deadline at the tail.
+
+**Acceptance criteria:** the throttled latency computed; the interrupt added; the margin or miss stated; a mitigation proposed.
+
+**Time:** 25 minutes.
 
 ### Submission standard
 
@@ -1095,6 +1228,15 @@ A strong answer explains re-identification and the data volume. A weak answer sa
 **12. How do you handle thermal limits?**
 A strong answer duty-cycles, reduces power, and measures the surface temperature. A weak answer ignores it.
 
+**13. What is WCET and why is the mean not enough?**
+A strong answer defines the worst-case execution time and explains that a deadline is a maximum. A weak answer says the average is representative.
+
+**14. How do you log on a device without storing PHI?**
+A strong answer keeps timestamps, versions, and flags, aggregates features, and excludes raw signal or identifiers. A weak answer stores everything for debugging.
+
+**15. What happens when an inference overruns?**
+A strong answer uses a watchdog, a defined safe action, and a rollback after repeated resets. A weak answer says the device restarts.
+
 ## 15. Key terms
 
 - **Edge inference** — computation on the device.
@@ -1127,6 +1269,10 @@ A strong answer duty-cycles, reduces power, and measures the surface temperature
 - **Privacy** — protection of data.
 - **On-device validation** — testing on target.
 - **Device mix** — distribution of devices.
+- **Observability** — ability to diagnose behaviour.
+- **Fail-safe** — defined action on failure.
+- **Safe state** — output suppressed or defaulted.
+- **Log retention** — how long logs are kept.
 
 ## 16. Sources
 
@@ -1150,5 +1296,5 @@ All URLs accessed 25 October 2026.
 - Previous topic: [`09_validation.md`](09_validation.md)
 - Related topic: [`07_deep-learning-for-signals.md`](07_deep-learning-for-signals.md)
 - Related topic: [`04_ppg-and-wearables.md`](04_ppg-and-wearables.md)
-- Module survey file: [`../../11_physiological_signals_wearables.md`](../../11_physiological_signals_wearables.md)
+- Module survey file: [`../../course/11_physiological_signals_wearables.md`](../../course/11_physiological_signals_wearables.md)
 - Lab: [`../../labs/`](../../labs/)

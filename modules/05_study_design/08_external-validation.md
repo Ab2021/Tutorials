@@ -1295,6 +1295,6 @@ All URLs accessed 25 October 2026.
 - Previous topic: [`07_estimands.md`](07_estimands.md)
 - Next topic: [`09_evidence-synthesis.md`](09_evidence-synthesis.md)
 - Related topic: [`04_validation-designs.md`](04_validation-designs.md)
-- Module survey file: [`../../05_study_design_evidence.md`](../../05_study_design_evidence.md)
+- Module survey file: [`../../05_study_design_evidence.md`](../../course/05_study_design_evidence.md)
 - Labs: [`../../labs/`](../../labs/)
 - Calibration and decision curve lab: [`../../labs/06_calibration_decision_curve.ipynb`](../../labs/06_calibration_decision_curve.ipynb)

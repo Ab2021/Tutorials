@@ -1420,6 +1420,6 @@ pooled. A weak answer reports one aggregate AUROC and a subgroup footnote withou
 - Next topic: [`02_dicom-and-metadata.md`](02_dicom-and-metadata.md)
 - Related topic: [`03_preprocessing.md`](03_preprocessing.md)
 - Related topic: [`06_leakage-and-shortcuts.md`](06_leakage-and-shortcuts.md)
-- Root survey: [`../../10_medical_imaging.md`](../../10_medical_imaging.md)
+- Root survey: [`../../10_medical_imaging.md`](../../course/10_medical_imaging.md)
 - Labs: [`../../labs/`](../../labs/)
 - Module 07 foundations: [`../07_deep_learning/`](../07_deep_learning/)

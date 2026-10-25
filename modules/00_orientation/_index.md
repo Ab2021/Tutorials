@@ -1,7 +1,7 @@
 # Module 00 — Orientation and Industry Map
 
 > **Part of:** Biomedical Data Science for Industry (2026), expanded edition.
-> **Survey file:** [`../../00_orientation_and_industry_map.md`](../../00_orientation_and_industry_map.md)
+> **Survey file:** [`../../course/00_orientation_and_industry_map.md`](../../course/00_orientation_and_industry_map.md)
 > **Folder:** `modules/00_orientation/`
 > **Version:** 2026.3
 

@@ -1310,7 +1310,7 @@ https://doi.org/10.1038/nature14539 (accessed 25 October 2026).
 - Module index: [`_index.md`](_index.md)
 - Next topic: [`02_training-dynamics.md`](02_training-dynamics.md)
 - Related topic: [`03_cnns-and-medical-vision.md`](03_cnns-and-medical-vision.md)
-- Module survey: [`../../07_deep_learning_multimodal_llms.md`](../../07_deep_learning_multimodal_llms.md)
+- Module survey: [`../../07_deep_learning_multimodal_llms.md`](../../course/07_deep_learning_multimodal_llms.md)
 - Labs: [`../../labs/`](../../labs/)
 - Lab 7.1, CNN on medical images: [`../../labs/`](../../labs/)
 - Module 06 foundations, splitting and validation:

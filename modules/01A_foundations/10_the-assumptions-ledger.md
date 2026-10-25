@@ -1628,6 +1628,6 @@ All URLs were accessed on 24 October 2026.
 - Biological assumptions: [`05_biological-basics.md`](05_biological-basics.md)
 - Causal and epidemiological assumptions: [`07_epidemiology-basics.md`](07_epidemiology-basics.md)
 - Device assumptions: [`08_engineering-and-device-basics.md`](08_engineering-and-device-basics.md)
-- Root survey file: [`../../01A_foundations_assumptions_and_units.md`](../../01A_foundations_assumptions_and_units.md)
+- Root survey file: [`../../01A_foundations_assumptions_and_units.md`](../../course/01A_foundations_assumptions_and_units.md)
 - Labs: [`../../labs/`](../../labs/) — the survey file's Lab 01A.3 is the assumption audit; apply the
   template in section 6.2 to a published prediction model.

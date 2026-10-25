@@ -1289,7 +1289,7 @@ answer says never.
 - Previous topic: [`09_regulatory-path.md`](09_regulatory-path.md)
 - Related topic: [`05_architectures.md`](05_architectures.md)
 - Related topic: [`06_leakage-and-shortcuts.md`](06_leakage-and-shortcuts.md)
-- Root survey: [`../../10_medical_imaging.md`](../../10_medical_imaging.md)
+- Root survey: [`../../10_medical_imaging.md`](../../course/10_medical_imaging.md)
 - Labs: [`../../labs/`](../../labs/)
 
 > **Note:** A foundation model is a prior, not a product claim.

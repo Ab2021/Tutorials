@@ -1271,7 +1271,7 @@ The national studies describe trends; they do not identify the cause of a local 
 - Previous topic: [`04_operational-models.md`](04_operational-models.md) — no-show, length of stay, and readmission models.
 - Next topic: [`06_quality-measures.md`](06_quality-measures.md) — HEDIS and CMS measure logic.
 - Related topic: [`08_evaluating-operational-interventions.md`](08_evaluating-operational-interventions.md) — the designs used to evaluate flow interventions.
-- Root survey file: [`../../08_ehr_claims_operations.md`](../../08_ehr_claims_operations.md)
+- Root survey file: [`../../08_ehr_claims_operations.md`](../../course/08_ehr_claims_operations.md)
 - Labs: [`../../labs/`](../../labs/)
 
 ### Reading path

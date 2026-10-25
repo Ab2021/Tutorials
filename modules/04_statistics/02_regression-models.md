@@ -1307,6 +1307,6 @@ All URLs were accessed on 25 October 2026.
 - Causal adjustment: [`05_causal-inference-and-dags.md`](05_causal-inference-and-dags.md) — choosing the adjustment set.
 - Propensity methods: [`06_propensity-scores-and-weighting.md`](06_propensity-scores-and-weighting.md) — an alternative to outcome regression.
 - Reporting: [`10_reporting-statistical-results.md`](10_reporting-statistical-results.md) — presenting coefficients and marginal effects.
-- Survey file: [`../../04_statistics_causal_inference.md`](../../04_statistics_causal_inference.md)
+- Survey file: [`../../04_statistics_causal_inference.md`](../../course/04_statistics_causal_inference.md)
 - Labs: [`../../labs/`](../../labs/) — Lab 4.2 compares regression, IPTW, and naive estimates.
-- Foundations: [`../../01A_foundations_assumptions_and_units.md`](../../01A_foundations_assumptions_and_units.md) — notation and units.
+- Foundations: [`../../01A_foundations_assumptions_and_units.md`](../../course/01A_foundations_assumptions_and_units.md) — notation and units.

@@ -1292,9 +1292,9 @@ All URLs were accessed on 25 October 2026.
 - Causal graphs: [`05_causal-inference-and-dags.md`](05_causal-inference-and-dags.md) — effect modification and adjustment.
 - Regression: [`02_regression-models.md`](02_regression-models.md) — interaction terms.
 - Reporting: [`10_reporting-statistical-results.md`](10_reporting-statistical-results.md) — forest plots and effect scales.
-- Survey file: [`../../04_statistics_causal_inference.md`](../../04_statistics_causal_inference.md)
+- Survey file: [`../../04_statistics_causal_inference.md`](../../course/04_statistics_causal_inference.md)
 - Labs: [`../../labs/`](../../labs/) — Lab 4.2 compares subgroup estimates.
-- Foundations: [`../../01A_foundations_assumptions_and_units.md`](../../01A_foundations_assumptions_and_units.md) — assumptions ledger.
+- Foundations: [`../../01A_foundations_assumptions_and_units.md`](../../course/01A_foundations_assumptions_and_units.md) — assumptions ledger.
 - Estimation: [`01_estimation-and-inference.md`](01_estimation-and-inference.md) — interaction intervals.
 - Target trial emulation: [`07_target-trial-emulation.md`](07_target-trial-emulation.md) — pre-specified subgroup analyses.
-- Module 13: [`../../13_biopharma_clinical_development.md`](../../13_biopharma_clinical_development.md) — label claims and trials.
+- Module 13: [`../../13_biopharma_clinical_development.md`](../../course/13_biopharma_clinical_development.md) — label claims and trials.

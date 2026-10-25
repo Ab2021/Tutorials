@@ -1296,5 +1296,5 @@ All URLs accessed 25 October 2026.
 - Annotation of identifier spans: [`06_annotation.md`](06_annotation.md)
 - Evaluation metrics: [`07_evaluation.md`](07_evaluation.md)
 - Source provenance and data use: [`01_clinical-text-sources.md`](01_clinical-text-sources.md)
-- Module survey: [`../../09_clinical_nlp.md`](../../09_clinical_nlp.md)
+- Module survey: [`../../09_clinical_nlp.md`](../../course/09_clinical_nlp.md)
 - Labs: [`../../labs/`](../../labs/)

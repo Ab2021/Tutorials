@@ -1254,7 +1254,7 @@ All URLs were accessed on 25 October 2026.
 - Previous topic: [`07_revenue-cycle.md`](07_revenue-cycle.md) — denials, prior authorization, and cash.
 - Next topic: [`09_case-studies.md`](09_case-studies.md) — documented operational analytics programmes.
 - Related topic: [`04_operational-models.md`](04_operational-models.md) — the models whose effect this topic evaluates.
-- Root survey file: [`../../08_ehr_claims_operations.md`](../../08_ehr_claims_operations.md)
+- Root survey file: [`../../08_ehr_claims_operations.md`](../../course/08_ehr_claims_operations.md)
 - Labs: [`../../labs/`](../../labs/)
 
 ### Reading path

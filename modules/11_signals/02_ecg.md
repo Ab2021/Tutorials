@@ -1292,7 +1292,7 @@ All URLs accessed 25 October 2026.
 - Previous topic: [`01_signal-fundamentals.md`](01_signal-fundamentals.md)
 - Next topic: [`03_eeg.md`](03_eeg.md)
 - Related topic: [`06_feature-engineering.md`](06_feature-engineering.md)
-- Module survey file: [`../../11_physiological_signals_wearables.md`](../../11_physiological_signals_wearables.md)
+- Module survey file: [`../../course/11_physiological_signals_wearables.md`](../../course/11_physiological_signals_wearables.md)
 - Lab: [`../../labs/`](../../labs/) — `11_ecg_quality.ipynb`, which covers quality assessment and R-peak detection on real records.
 - Related topic: [`04_ppg-and-wearables.md`](04_ppg-and-wearables.md) for the single-lead and optical counterpart.
 - Standards: [IEC 60601-2-25](https://webstore.iec.ch/en/publication/2636)

@@ -1,7 +1,7 @@
 # Module 20 — Career, Portfolio, and Interviews
 
 > **Part of:** Biomedical Data Science for Industry (2026), expanded edition.
-> **Survey file:** [`../../20_career_portfolio_interviews.md`](../../20_career_portfolio_interviews.md)
+> **Survey file:** [`../../course/20_career_portfolio_interviews.md`](../../course/20_career_portfolio_interviews.md)
 > **Folder:** `modules/20_career/`
 > **Version:** 2026.3
 
@@ -29,16 +29,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_role-map.md`](01_role-map.md) | Role Map | Titles, levels, and what each role is actually accountable for. | 1,200-1,800 | planned |
-| 2 | [`02_portfolio.md`](02_portfolio.md) | Portfolio | Five-project portfolio structure and the evidence each project needs. | 1,200-1,800 | planned |
-| 3 | [`03_resume-and-linkedin.md`](03_resume-and-linkedin.md) | Resume and LinkedIn | Translating regulated work into credible, specific claims. | 1,200-1,800 | planned |
-| 4 | [`04_interview-types.md`](04_interview-types.md) | Interview Types | Screen, technical, case, system design, and panel formats. | 1,200-1,800 | planned |
-| 5 | [`05_technical-interviews.md`](05_technical-interviews.md) | Technical Interviews | SQL, statistics, ML, and coding under time pressure. | 1,200-1,800 | planned |
-| 6 | [`06_clinical-case-interviews.md`](06_clinical-case-interviews.md) | Clinical Case Interviews | Structuring a clinical analytics case out loud. | 1,200-1,800 | planned |
-| 7 | [`07_system-design.md`](07_system-design.md) | System Design | Designing a clinical data product in 45 minutes. | 1,200-1,800 | planned |
-| 8 | [`08_behavioural-interviews.md`](08_behavioural-interviews.md) | Behavioural Interviews | STAR structures for safety, conflict, and failure questions. | 1,200-1,800 | planned |
-| 9 | [`09_negotiation.md`](09_negotiation.md) | Negotiation | Level, scope, equity, and the questions to ask before accepting. | 1,200-1,800 | planned |
-| 10 | [`10_onboarding.md`](10_onboarding.md) | Onboarding | A 90-day plan for a new biomedical data role. | 1,200-1,800 | planned |
+| 1 | `01_role-map.md` | Role Map | Titles, levels, and what each role is actually accountable for. | 1,200-1,800 | planned |
+| 2 | `02_portfolio.md` | Portfolio | Five-project portfolio structure and the evidence each project needs. | 1,200-1,800 | planned |
+| 3 | `03_resume-and-linkedin.md` | Resume and LinkedIn | Translating regulated work into credible, specific claims. | 1,200-1,800 | planned |
+| 4 | `04_interview-types.md` | Interview Types | Screen, technical, case, system design, and panel formats. | 1,200-1,800 | planned |
+| 5 | `05_technical-interviews.md` | Technical Interviews | SQL, statistics, ML, and coding under time pressure. | 1,200-1,800 | planned |
+| 6 | `06_clinical-case-interviews.md` | Clinical Case Interviews | Structuring a clinical analytics case out loud. | 1,200-1,800 | planned |
+| 7 | `07_system-design.md` | System Design | Designing a clinical data product in 45 minutes. | 1,200-1,800 | planned |
+| 8 | `08_behavioural-interviews.md` | Behavioural Interviews | STAR structures for safety, conflict, and failure questions. | 1,200-1,800 | planned |
+| 9 | `09_negotiation.md` | Negotiation | Level, scope, equity, and the questions to ask before accepting. | 1,200-1,800 | planned |
+| 10 | `10_onboarding.md` | Onboarding | A 90-day plan for a new biomedical data role. | 1,200-1,800 | planned |
 
 ## 4. How the topics fit together
 

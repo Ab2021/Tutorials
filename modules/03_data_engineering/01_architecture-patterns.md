@@ -1303,5 +1303,5 @@ All URLs accessed 25 October 2026.
 - Next topic: [`02_sql-for-clinical-data.md`](02_sql-for-clinical-data.md)
 - Related sibling: [`07_data-versioning-and-lineage.md`](07_data-versioning-and-lineage.md)
 - Related sibling: [`09_security-engineering.md`](09_security-engineering.md)
-- Root survey: [`../../03_data_engineering_interoperability.md`](../../03_data_engineering_interoperability.md)
+- Root survey: [`../../03_data_engineering_interoperability.md`](../../course/03_data_engineering_interoperability.md)
 - Labs: [`../../labs/`](../../labs/) — see Lab 3.1 (cohort pipeline) and Lab 3.6 (incident simulation).

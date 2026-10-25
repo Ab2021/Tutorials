@@ -1,7 +1,7 @@
 # Module 07 — Deep Learning, Multimodal Models, and LLMs
 
 > **Part of:** Biomedical Data Science for Industry (2026), expanded edition.
-> **Survey file:** [`../../07_deep_learning_multimodal_llms.md`](../../07_deep_learning_multimodal_llms.md)
+> **Survey file:** [`../../course/07_deep_learning_multimodal_llms.md`](../../course/07_deep_learning_multimodal_llms.md)
 > **Folder:** `modules/07_deep_learning/`
 > **Version:** 2026.3
 

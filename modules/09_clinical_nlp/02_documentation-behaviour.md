@@ -1296,5 +1296,5 @@ All URLs accessed 25 October 2026.
 - Annotation and agreement: [`06_annotation.md`](06_annotation.md)
 - Leakage from copied outcomes: [`07_evaluation.md`](07_evaluation.md)
 - De-identification and identifier propagation: [`08_deidentification.md`](08_deidentification.md)
-- Module survey: [`../../09_clinical_nlp.md`](../../09_clinical_nlp.md)
+- Module survey: [`../../09_clinical_nlp.md`](../../course/09_clinical_nlp.md)
 - Labs: [`../../labs/`](../../labs/)

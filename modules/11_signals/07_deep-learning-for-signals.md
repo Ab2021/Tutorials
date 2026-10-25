@@ -1296,5 +1296,5 @@ All URLs accessed 25 October 2026.
 - Previous topic: [`06_feature-engineering.md`](06_feature-engineering.md)
 - Next topic: [`08_digital-biomarkers.md`](08_digital-biomarkers.md)
 - Related topic: [`10_deployment-on-device.md`](10_deployment-on-device.md)
-- Module survey file: [`../../11_physiological_signals_wearables.md`](../../11_physiological_signals_wearables.md)
+- Module survey file: [`../../course/11_physiological_signals_wearables.md`](../../course/11_physiological_signals_wearables.md)
 - Lab: [`../../labs/`](../../labs/)

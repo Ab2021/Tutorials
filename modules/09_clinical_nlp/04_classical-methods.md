@@ -1296,5 +1296,5 @@ All URLs accessed 25 October 2026.
 - Next topic: [`05_transformers-for-clinical-text.md`](05_transformers-for-clinical-text.md)
 - Annotation of cues and scope: [`06_annotation.md`](06_annotation.md)
 - Evaluation at span and patient level: [`07_evaluation.md`](07_evaluation.md)
-- Module survey: [`../../09_clinical_nlp.md`](../../09_clinical_nlp.md)
+- Module survey: [`../../09_clinical_nlp.md`](../../course/09_clinical_nlp.md)
 - Labs: [`../../labs/`](../../labs/)

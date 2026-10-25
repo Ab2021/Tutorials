@@ -1367,7 +1367,7 @@ All URLs accessed 24 October 2026.
 - Related sibling: [`01_ehr-data.md`](01_ehr-data.md)
 - Related sibling: [`07_trial-data.md`](07_trial-data.md)
 - Related sibling: [`10_data-quality-dimensions.md`](10_data-quality-dimensions.md)
-- Root survey file: [`../../02_biomedical_data_landscape.md`](../../02_biomedical_data_landscape.md)
+- Root survey file: [`../../02_biomedical_data_landscape.md`](../../course/02_biomedical_data_landscape.md)
 - Labs: [`../../labs/`](../../labs/)
 - Lab 2.5 in the survey file (data-quality profile) is the natural companion to the completeness and missingness analysis in sections 5 and 6.
 

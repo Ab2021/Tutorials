@@ -1301,6 +1301,6 @@ input. A weak answer says always resample.
 - Previous topic: [`02_dicom-and-metadata.md`](02_dicom-and-metadata.md)
 - Next topic: [`04_labels-and-annotation.md`](04_labels-and-annotation.md)
 - Related topic: [`05_architectures.md`](05_architectures.md)
-- Root survey: [`../../10_medical_imaging.md`](../../10_medical_imaging.md)
+- Root survey: [`../../10_medical_imaging.md`](../../course/10_medical_imaging.md)
 - Labs: [`../../labs/`](../../labs/)
 - MONAI: https://monai.io/

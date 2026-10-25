@@ -543,6 +543,9 @@ Three transparency practices strengthen a package:
 An analysis that was designed after seeing the data can still be valid, but it must be reported as
 exploratory, and the distinction is what the reviewer is looking for.
 
+The registry entry should also name the data source version, because a later extract can produce a
+different cohort and the protocol must be tied to the data it planned for.
+
 ## 6. Worked example
 
 > **Note:** The drug, database, and counts are fictional and constructed for teaching. The
@@ -756,9 +759,9 @@ Expected output (Python 3.12, executed):
 ```text
 crude rates 20.0 vs 30.0 per 1000 PY; RR 0.667; E-value 2.37
 weighted rates 26.0 vs 27.0; RR 0.963 (0.884-1.049); E-value 1.24
-RR 0.9: 2979 events
+RR 0.9: 2828 events
 RR 0.85: 1189 events
-RR 0.8: 736 events
+RR 0.8: 631 events
 RR 0.7: 247 events
 ```
 
@@ -770,7 +773,7 @@ Reading the output:
 - The adjusted rate ratio of 0.963 has an E-value of 1.24, so even a weak unmeasured confounder
   could explain it. A null result with a small E-value is also fragile, in the opposite direction.
 - The events-needed table shows why an RWE study aiming to detect a 10% relative difference needs
-  about 3,000 events. Many claims analyses have far fewer, which is why they can only exclude large
+  about 2,800 events. Many claims analyses have far fewer, which is why they can only exclude large
   effects.
 
 The E-value is computed on the ratio scale and assumes a risk ratio interpretation. For a rate ratio
@@ -1296,5 +1299,5 @@ adjusted estimate because it is "the real one".
 - Next topic: [`08_ai-in-discovery-and-development.md`](08_ai-in-discovery-and-development.md)
 - Related: [`04_feasibility-and-recruitment.md`](04_feasibility-and-recruitment.md)
 - Related: [`10_submission-data.md`](10_submission-data.md)
-- Survey file: [`../../13_biopharma_clinical_development.md`](../../13_biopharma_clinical_development.md)
+- Survey file: [`../../13_biopharma_clinical_development.md`](../../course/13_biopharma_clinical_development.md)
 - Labs: [`../../labs/`](../../labs/)

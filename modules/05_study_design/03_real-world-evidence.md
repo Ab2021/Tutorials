@@ -1298,7 +1298,7 @@ All URLs accessed 25 October 2026.
 - Previous topic: [`02_trial-designs.md`](02_trial-designs.md)
 - Next topic: [`04_validation-designs.md`](04_validation-designs.md)
 - Related topic: [`05_bias-taxonomy.md`](05_bias-taxonomy.md)
-- Module survey file: [`../../05_study_design_evidence.md`](../../05_study_design_evidence.md)
+- Module survey file: [`../../05_study_design_evidence.md`](../../course/05_study_design_evidence.md)
 - Labs: [`../../labs/`](../../labs/)
 - Cohort pipeline lab: [`../../labs/03_cohort_pipeline.ipynb`](../../labs/03_cohort_pipeline.ipynb)
 - Calibration and decision curve lab: [`../../labs/06_calibration_decision_curve.ipynb`](../../labs/06_calibration_decision_curve.ipynb)

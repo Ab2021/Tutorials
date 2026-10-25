@@ -1266,7 +1266,7 @@ All URLs were accessed on 25 October 2026.
 - Previous topic: [`05_capacity-and-patient-flow.md`](05_capacity-and-patient-flow.md) — capacity, boarding, and flow.
 - Next topic: [`07_revenue-cycle.md`](07_revenue-cycle.md) — denials, prior authorization, and cash.
 - Related topic: [`08_evaluating-operational-interventions.md`](08_evaluating-operational-interventions.md) — evaluating whether a measure improved care.
-- Root survey file: [`../../08_ehr_claims_operations.md`](../../08_ehr_claims_operations.md)
+- Root survey file: [`../../08_ehr_claims_operations.md`](../../course/08_ehr_claims_operations.md)
 - Labs: [`../../labs/`](../../labs/)
 
 ### Reading path

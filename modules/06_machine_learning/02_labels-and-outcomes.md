@@ -1296,6 +1296,6 @@ is not ready, and no model trained on it will be.
 - Previous topic: [`01_problem-framing.md`](01_problem-framing.md)
 - Next topic: [`03_splitting-and-validation.md`](03_splitting-and-validation.md)
 - Metrics and prevalence: [`07_metrics.md`](07_metrics.md)
-- Survey file: [`../../06_machine_learning_foundations.md`](../../06_machine_learning_foundations.md)
+- Survey file: [`../../06_machine_learning_foundations.md`](../../course/06_machine_learning_foundations.md)
 - Labs: [`../../labs/`](../../labs/)
 - Cohort pipeline lab: [`../../labs/03_cohort_pipeline.ipynb`](../../labs/03_cohort_pipeline.ipynb)

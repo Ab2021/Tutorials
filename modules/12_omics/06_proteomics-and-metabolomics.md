@@ -1298,5 +1298,5 @@ Standards and regulation:
 - Previous topic: [`05_spatial-transcriptomics.md`](05_spatial-transcriptomics.md)
 - Next topic: [`07_multi-omics-integration.md`](07_multi-omics-integration.md)
 - Related topic: [`08_biomarker-discovery.md`](08_biomarker-discovery.md)
-- Survey file: [`../../12_omics_precision_medicine.md`](../../12_omics_precision_medicine.md)
+- Survey file: [`../../12_omics_precision_medicine.md`](../../course/12_omics_precision_medicine.md)
 - Labs: [`../../labs/`](../../labs/)

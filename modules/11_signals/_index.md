@@ -1,7 +1,7 @@
 # Module 11 — Physiological Signals and Wearables
 
 > **Part of:** Biomedical Data Science for Industry (2026), expanded edition.
-> **Survey file:** [`../../11_physiological_signals_wearables.md`](../../11_physiological_signals_wearables.md)
+> **Survey file:** [`../../course/11_physiological_signals_wearables.md`](../../course/11_physiological_signals_wearables.md)
 > **Folder:** `modules/11_signals/`
 > **Version:** 2026.3
 
@@ -30,15 +30,15 @@ not the whole program.
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
 | 1 | [`01_signal-fundamentals.md`](01_signal-fundamentals.md) | Signal Fundamentals | Sampling, aliasing, filtering, noise, and the signal chain. | 1,200-1,800 | complete |
-| 2 | [`02_ecg.md`](02_ecg.md) | ECG | Leads, intervals, rhythms, quality indices, and automated interpretation. | 1,200-1,800 | planned |
-| 3 | [`03_eeg.md`](03_eeg.md) | EEG | Montages, frequency bands, artifacts, seizures, and sleep staging. | 1,200-1,800 | planned |
-| 4 | [`04_ppg-and-wearables.md`](04_ppg-and-wearables.md) | PPG and Wearables | Optical sensing, SpO2, heart rate, and motion artifact. | 1,200-1,800 | planned |
-| 5 | [`05_respiration-and-other-signals.md`](05_respiration-and-other-signals.md) | Respiration and Other Signals | Respiratory effort, airflow, EMG, EDA, and continuous glucose. | 1,200-1,800 | planned |
-| 6 | [`06_feature-engineering.md`](06_feature-engineering.md) | Feature Engineering | Time-domain, frequency-domain, and morphology features with clinical meaning. | 1,200-1,800 | planned |
-| 7 | [`07_deep-learning-for-signals.md`](07_deep-learning-for-signals.md) | Deep Learning for Signals | 1D CNNs, recurrent models, transformers, and augmentation. | 1,200-1,800 | planned |
-| 8 | [`08_digital-biomarkers.md`](08_digital-biomarkers.md) | Digital Biomarkers | Definition, qualification, and the evidence a payer or regulator accepts. | 1,200-1,800 | planned |
-| 9 | [`09_validation.md`](09_validation.md) | Validation | Reference standards, co-primary endpoints, and confounding by activity. | 1,200-1,800 | planned |
-| 10 | [`10_deployment-on-device.md`](10_deployment-on-device.md) | Deployment on Device | Latency, power, memory, and firmware constraints for signal models. | 1,200-1,800 | planned |
+| 2 | [`02_ecg.md`](02_ecg.md) | ECG | Leads, intervals, rhythms, quality indices, and automated interpretation. | 1,200-1,800 | complete |
+| 3 | [`03_eeg.md`](03_eeg.md) | EEG | Montages, frequency bands, artifacts, seizures, and sleep staging. | 1,200-1,800 | complete |
+| 4 | [`04_ppg-and-wearables.md`](04_ppg-and-wearables.md) | PPG and Wearables | Optical sensing, SpO2, heart rate, and motion artifact. | 1,200-1,800 | complete |
+| 5 | [`05_respiration-and-other-signals.md`](05_respiration-and-other-signals.md) | Respiration and Other Signals | Respiratory effort, airflow, EMG, EDA, and continuous glucose. | 1,200-1,800 | complete |
+| 6 | [`06_feature-engineering.md`](06_feature-engineering.md) | Feature Engineering | Time-domain, frequency-domain, and morphology features with clinical meaning. | 1,200-1,800 | complete |
+| 7 | [`07_deep-learning-for-signals.md`](07_deep-learning-for-signals.md) | Deep Learning for Signals | 1D CNNs, recurrent models, transformers, and augmentation. | 1,200-1,800 | complete |
+| 8 | [`08_digital-biomarkers.md`](08_digital-biomarkers.md) | Digital Biomarkers | Definition, qualification, and the evidence a payer or regulator accepts. | 1,200-1,800 | complete |
+| 9 | [`09_validation.md`](09_validation.md) | Validation | Reference standards, co-primary endpoints, and confounding by activity. | 1,200-1,800 | complete |
+| 10 | [`10_deployment-on-device.md`](10_deployment-on-device.md) | Deployment on Device | Latency, power, memory, and firmware constraints for signal models. | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -69,9 +69,9 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 9 |
+| planned | 0 |
 | draft | 0 |
-| complete | 1 |
+| complete | 10 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.
 

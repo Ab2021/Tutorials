@@ -1,7 +1,7 @@
 # Module 14 — Medical Devices, SaMD, and Regulation
 
 > **Part of:** Biomedical Data Science for Industry (2026), expanded edition.
-> **Survey file:** [`../../14_medical_devices_samd_regulation.md`](../../14_medical_devices_samd_regulation.md)
+> **Survey file:** [`../../course/14_medical_devices_samd_regulation.md`](../../course/14_medical_devices_samd_regulation.md)
 > **Folder:** `modules/14_devices_regulation/`
 > **Version:** 2026.3
 
@@ -29,16 +29,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_definitions-and-classification.md`](01_definitions-and-classification.md) | Definitions and Classification | Device, SaMD, SiMD, IVD, accessory; risk classes in the US and EU. | 1,200-1,800 | planned |
-| 2 | [`02_is-it-a-device.md`](02_is-it-a-device.md) | Is It a Device? | The decision tree, clinical decision support exclusions, and why vendors get this wrong. | 1,200-1,800 | planned |
-| 3 | [`03_fda-pathways.md`](03_fda-pathways.md) | FDA Pathways | 510(k), De Novo, PMA, and the evidence each demands. | 1,200-1,800 | planned |
-| 4 | [`04_gmlp-and-pccp.md`](04_gmlp-and-pccp.md) | GMLP and PCCP | Good machine learning practice and predetermined change control plans. | 1,200-1,800 | planned |
-| 5 | [`05_qms-and-design-controls.md`](05_qms-and-design-controls.md) | QMS and Design Controls | ISO 13485, QMSR, design history file, and document control. | 1,200-1,800 | planned |
-| 6 | [`06_iso-14971-risk-management.md`](06_iso-14971-risk-management.md) | ISO 14971 Risk Management | Hazard analysis, risk estimation, controls, and residual risk. | 1,200-1,800 | planned |
-| 7 | [`07_iec-62304-software-lifecycle.md`](07_iec-62304-software-lifecycle.md) | IEC 62304 Software Lifecycle | Safety classes, software requirements, architecture, and verification. | 1,200-1,800 | planned |
-| 8 | [`08_eu-mdr-and-ivdr.md`](08_eu-mdr-and-ivdr.md) | EU MDR and IVDR | Classification, conformity assessment, notified bodies, and post-market obligations. | 1,200-1,800 | planned |
-| 9 | [`09_the-evidence-package.md`](09_the-evidence-package.md) | The Evidence Package | What goes in a submission and how the pieces support the claim. | 1,200-1,800 | planned |
-| 10 | [`10_post-market-surveillance.md`](10_post-market-surveillance.md) | Post-Market Surveillance | Complaints, MDR reporting, PSUR, and real-world performance monitoring. | 1,200-1,800 | planned |
+| 1 | [`01_definitions-and-classification.md`](01_definitions-and-classification.md) | Definitions and Classification | Device, SaMD, SiMD, IVD, accessory; risk classes in the US and EU. | 1,200-1,800 | complete |
+| 2 | [`02_is-it-a-device.md`](02_is-it-a-device.md) | Is It a Device? | The decision tree, clinical decision support exclusions, and why vendors get this wrong. | 1,200-1,800 | complete |
+| 3 | [`03_fda-pathways.md`](03_fda-pathways.md) | FDA Pathways | 510(k), De Novo, PMA, and the evidence each demands. | 1,200-1,800 | complete |
+| 4 | [`04_gmlp-and-pccp.md`](04_gmlp-and-pccp.md) | GMLP and PCCP | Good machine learning practice and predetermined change control plans. | 1,200-1,800 | complete |
+| 5 | [`05_qms-and-design-controls.md`](05_qms-and-design-controls.md) | QMS and Design Controls | ISO 13485, QMSR, design history file, and document control. | 1,200-1,800 | complete |
+| 6 | [`06_iso-14971-risk-management.md`](06_iso-14971-risk-management.md) | ISO 14971 Risk Management | Hazard analysis, risk estimation, controls, and residual risk. | 1,200-1,800 | complete |
+| 7 | [`07_iec-62304-software-lifecycle.md`](07_iec-62304-software-lifecycle.md) | IEC 62304 Software Lifecycle | Safety classes, software requirements, architecture, and verification. | 1,200-1,800 | complete |
+| 8 | [`08_eu-mdr-and-ivdr.md`](08_eu-mdr-and-ivdr.md) | EU MDR and IVDR | Classification, conformity assessment, notified bodies, and post-market obligations. | 1,200-1,800 | complete |
+| 9 | [`09_the-evidence-package.md`](09_the-evidence-package.md) | The Evidence Package | What goes in a submission and how the pieces support the claim. | 1,200-1,800 | complete |
+| 10 | [`10_post-market-surveillance.md`](10_post-market-surveillance.md) | Post-Market Surveillance | Complaints, MDR reporting, PSUR, and real-world performance monitoring. | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -69,9 +69,9 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.
 

@@ -1299,6 +1299,6 @@ All URLs were accessed on 25 October 2026.
 - Causal inference: [`05_causal-inference-and-dags.md`](05_causal-inference-and-dags.md) — missing confounders and selection.
 - Sensitivity analysis: [`08_sensitivity-analysis.md`](08_sensitivity-analysis.md) — E-values and tipping points.
 - Reporting: [`10_reporting-statistical-results.md`](10_reporting-statistical-results.md) — reporting missingness and FMI.
-- Survey file: [`../../04_statistics_causal_inference.md`](../../04_statistics_causal_inference.md)
+- Survey file: [`../../04_statistics_causal_inference.md`](../../course/04_statistics_causal_inference.md)
 - Labs: [`../../labs/`](../../labs/) — Lab 4.5 covers complete case, MI, and MNAR sensitivity.
-- Foundations: [`../../01A_foundations_assumptions_and_units.md`](../../01A_foundations_assumptions_and_units.md) — assumptions ledger.
+- Foundations: [`../../01A_foundations_assumptions_and_units.md`](../../course/01A_foundations_assumptions_and_units.md) — assumptions ledger.

@@ -1295,7 +1295,7 @@ Scope, method, and limits: those three words are the whole discipline.
 - Next topic: [`11_uncertainty.md`](11_uncertainty.md)
 - Model families: [`05_model-families.md`](05_model-families.md)
 - Fairness and subgroups: [`12_fairness-and-subgroups.md`](12_fairness-and-subgroups.md)
-- Survey file: [`../../06_machine_learning_foundations.md`](../../06_machine_learning_foundations.md)
+- Survey file: [`../../06_machine_learning_foundations.md`](../../course/06_machine_learning_foundations.md)
 - Labs: [`../../labs/`](../../labs/)
 
 

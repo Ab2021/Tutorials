@@ -1171,7 +1171,7 @@ Accessed 24 October 2026 unless otherwise stated.
 - First topic: [`01_clinical-reasoning-and-workflow.md`](01_clinical-reasoning-and-workflow.md)
 - Related topic: [`03_laboratory-medicine.md`](03_laboratory-medicine.md)
 - Related topic: [`08_documentation-and-clinical-narratives.md`](08_documentation-and-clinical-narratives.md)
-- Survey file: [`../../01_clinical_foundations.md`](../../01_clinical_foundations.md)
+- Survey file: [`../../01_clinical_foundations.md`](../../course/01_clinical_foundations.md)
 - Labs: [`../../labs/`](../../labs/)
 - Cohort pipeline lab: [`../../labs/03_cohort_pipeline.ipynb`](../../labs/03_cohort_pipeline.ipynb)
 

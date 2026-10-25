@@ -797,7 +797,8 @@ def deterministic(target=800, n_sites=60, act=5, ppsm=0.55):
     return m, enrolled
 
 for sites, rate in [(60, 0.55), (80, 0.55), (60, 0.84)]:
-    print(sites, rate, deterministic(n_sites=sites, ppsm=rate))
+    m, e = deterministic(n_sites=sites, ppsm=rate)
+    print(sites, rate, (m, round(e, 1)))
 ```
 
 ```text
@@ -1296,5 +1297,5 @@ enrolment only.
 - Next topic: [`05_cdisc-and-trial-standards.md`](05_cdisc-and-trial-standards.md)
 - Related: [`07_rwe-in-pharma.md`](07_rwe-in-pharma.md)
 - Related: [`09_decentralized-trials.md`](09_decentralized-trials.md)
-- Survey file: [`../../13_biopharma_clinical_development.md`](../../13_biopharma_clinical_development.md)
+- Survey file: [`../../13_biopharma_clinical_development.md`](../../course/13_biopharma_clinical_development.md)
 - Labs: [`../../labs/`](../../labs/)

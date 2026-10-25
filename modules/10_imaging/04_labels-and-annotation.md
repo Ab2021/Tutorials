@@ -1297,6 +1297,6 @@ positive prediction, so PPV depends on the prior probability. A weak answer conf
 - Previous topic: [`03_preprocessing.md`](03_preprocessing.md)
 - Next topic: [`05_architectures.md`](05_architectures.md)
 - Related topic: [`06_leakage-and-shortcuts.md`](06_leakage-and-shortcuts.md)
-- Root survey: [`../../10_medical_imaging.md`](../../10_medical_imaging.md)
+- Root survey: [`../../10_medical_imaging.md`](../../course/10_medical_imaging.md)
 - Labs: [`../../labs/`](../../labs/)
 - MIDRC: https://www.midrc.org/

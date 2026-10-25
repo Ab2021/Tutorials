@@ -1296,5 +1296,5 @@ All URLs accessed 25 October 2026.
 - Previous topic: [`03_python-engineering.md`](03_python-engineering.md)
 - Next topic: [`05_fhir-ingestion.md`](05_fhir-ingestion.md)
 - Related sibling: [`10_testing-and-observability.md`](10_testing-and-observability.md)
-- Root survey: [`../../03_data_engineering_interoperability.md`](../../03_data_engineering_interoperability.md)
+- Root survey: [`../../03_data_engineering_interoperability.md`](../../course/03_data_engineering_interoperability.md)
 - Labs: [`../../labs/`](../../labs/) — Lab 3.6 simulates a broken pipeline and requires an incident report.

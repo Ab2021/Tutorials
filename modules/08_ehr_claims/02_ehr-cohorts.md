@@ -1270,7 +1270,7 @@ A paper that answers fewer than four of these questions is a description, not a 
 - Previous topic: [`01_health-system-operating-model.md`](01_health-system-operating-model.md) — the operating model that defines the population and the decision.
 - Next topic: [`03_claims-analytics.md`](03_claims-analytics.md) — episodes, attribution, risk adjustment, and cost.
 - Related topic: [`04_operational-models.md`](04_operational-models.md) — the models that consume cohort labels.
-- Root survey file: [`../../08_ehr_claims_operations.md`](../../08_ehr_claims_operations.md)
+- Root survey file: [`../../08_ehr_claims_operations.md`](../../course/08_ehr_claims_operations.md)
 - Labs: [`../../labs/`](../../labs/)
 
 The cohort is the unit of analysis for the rest of the module. A readmission model, a no-show model, a care-gap dashboard, and a quality measure all begin with a population definition. If a later topic produces a result that seems implausible, return to the cohort specification and check the index rule, the lookback, and the validation sample before questioning the model.

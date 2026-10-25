@@ -1292,7 +1292,7 @@ labels.
 - Next topic: [`07_evaluation.md`](07_evaluation.md)
 - Related topic: [`02_dicom-and-metadata.md`](02_dicom-and-metadata.md)
 - Related topic: [`04_labels-and-annotation.md`](04_labels-and-annotation.md)
-- Root survey: [`../../10_medical_imaging.md`](../../10_medical_imaging.md)
+- Root survey: [`../../10_medical_imaging.md`](../../course/10_medical_imaging.md)
 - Labs: [`../../labs/`](../../labs/)
 
 > **Note:** The audit is a lifecycle control; the numbers are only valid for the audited version.

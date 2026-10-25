@@ -1296,5 +1296,5 @@ All URLs accessed 25 October 2026.
 - Next topic: [`07_evaluation.md`](07_evaluation.md)
 - Task specification: [`03_task-taxonomy.md`](03_task-taxonomy.md)
 - Source selection and sampling: [`01_clinical-text-sources.md`](01_clinical-text-sources.md)
-- Module survey: [`../../09_clinical_nlp.md`](../../09_clinical_nlp.md)
+- Module survey: [`../../09_clinical_nlp.md`](../../course/09_clinical_nlp.md)
 - Labs: [`../../labs/`](../../labs/)

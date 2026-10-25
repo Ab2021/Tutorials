@@ -1295,7 +1295,7 @@ All URLs accessed 25 October 2026.
 - Next topic: [`02_ecg.md`](02_ecg.md)
 - Related topic: [`06_feature-engineering.md`](06_feature-engineering.md)
 - Related topic: [`10_deployment-on-device.md`](10_deployment-on-device.md)
-- Module survey file: [`../../11_physiological_signals_wearables.md`](../../11_physiological_signals_wearables.md)
+- Module survey file: [`../../course/11_physiological_signals_wearables.md`](../../course/11_physiological_signals_wearables.md)
 - Lab: [`../../labs/`](../../labs/) — see `11_ecg_quality.ipynb` for the ECG quality and R-peak lab.
 - Related topic: [`08_digital-biomarkers.md`](08_digital-biomarkers.md)
 - Dataset: [`https://physionet.org/content/mitdb/`](https://physionet.org/content/mitdb/)

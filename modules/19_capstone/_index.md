@@ -1,7 +1,7 @@
 # Module 19 — Capstone, Hackathons, and Competitions
 
 > **Part of:** Biomedical Data Science for Industry (2026), expanded edition.
-> **Survey file:** [`../../19_capstone_hackathons.md`](../../19_capstone_hackathons.md)
+> **Survey file:** [`../../course/19_capstone_hackathons.md`](../../course/19_capstone_hackathons.md)
 > **Folder:** `modules/19_capstone/`
 > **Version:** 2026.3
 
@@ -29,17 +29,17 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_capstone-architecture.md`](01_capstone-architecture.md) | Capstone Architecture | Scope, team, data, evidence, and the twelve-week shape. | 1,200-1,800 | planned |
-| 2 | [`02_milestone-plan.md`](02_milestone-plan.md) | Milestone Plan | Week-by-week gates, kill criteria, and deliverable definitions. | 1,200-1,800 | planned |
-| 3 | [`03_team-roles.md`](03_team-roles.md) | Team Roles | Clinical, data, engineering, regulatory, and communication roles. | 1,200-1,800 | planned |
-| 4 | [`04_capstone-archetypes.md`](04_capstone-archetypes.md) | Capstone Archetypes | Eight project shapes with different evidence burdens. | 1,200-1,800 | planned |
-| 5 | [`05_brief-catalogue.md`](05_brief-catalogue.md) | Brief Catalogue | The full set of capstone briefs with constraints and data options. | 1,200-1,800 | planned |
-| 6 | [`06_hackathon-formats.md`](06_hackathon-formats.md) | Hackathon Formats | How to run and compete in a 24-72 hour event without producing nonsense. | 1,200-1,800 | planned |
-| 7 | [`07_competition-landscape.md`](07_competition-landscape.md) | Competition Landscape 2025-2026 | Public challenges, their datasets, and what winning solutions share. | 1,200-1,800 | planned |
-| 8 | [`08_scoping-playbook.md`](08_scoping-playbook.md) | Scoping Playbook | Turning an open problem into a defensible scope in two days. | 1,200-1,800 | planned |
-| 9 | [`09_deliverables.md`](09_deliverables.md) | Deliverables | Dossier, prototype, demo, and defense requirements. | 1,200-1,800 | planned |
-| 10 | [`10_judging.md`](10_judging.md) | Judging | Rubric, calibration, and the failure modes of judges. | 1,200-1,800 | planned |
-| 11 | [`11_demo-day.md`](11_demo-day.md) | Demo Day | Executive pitch structure and the questions you will be asked. | 1,200-1,800 | planned |
+| 1 | `01_capstone-architecture.md` | Capstone Architecture | Scope, team, data, evidence, and the twelve-week shape. | 1,200-1,800 | planned |
+| 2 | `02_milestone-plan.md` | Milestone Plan | Week-by-week gates, kill criteria, and deliverable definitions. | 1,200-1,800 | planned |
+| 3 | `03_team-roles.md` | Team Roles | Clinical, data, engineering, regulatory, and communication roles. | 1,200-1,800 | planned |
+| 4 | `04_capstone-archetypes.md` | Capstone Archetypes | Eight project shapes with different evidence burdens. | 1,200-1,800 | planned |
+| 5 | `05_brief-catalogue.md` | Brief Catalogue | The full set of capstone briefs with constraints and data options. | 1,200-1,800 | planned |
+| 6 | `06_hackathon-formats.md` | Hackathon Formats | How to run and compete in a 24-72 hour event without producing nonsense. | 1,200-1,800 | planned |
+| 7 | `07_competition-landscape.md` | Competition Landscape 2025-2026 | Public challenges, their datasets, and what winning solutions share. | 1,200-1,800 | planned |
+| 8 | `08_scoping-playbook.md` | Scoping Playbook | Turning an open problem into a defensible scope in two days. | 1,200-1,800 | planned |
+| 9 | `09_deliverables.md` | Deliverables | Dossier, prototype, demo, and defense requirements. | 1,200-1,800 | planned |
+| 10 | `10_judging.md` | Judging | Rubric, calibration, and the failure modes of judges. | 1,200-1,800 | planned |
+| 11 | `11_demo-day.md` | Demo Day | Executive pitch structure and the questions you will be asked. | 1,200-1,800 | planned |
 
 ## 4. How the topics fit together
 

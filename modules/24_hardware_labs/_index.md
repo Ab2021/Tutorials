@@ -1,7 +1,7 @@
 # Module 24 — Hardware and Robotics Labs
 
 > **Part of:** Biomedical Data Science for Industry (2026), expanded edition.
-> **Survey file:** [`../../24_hardware_robotics_labs.md`](../../24_hardware_robotics_labs.md)
+> **Survey file:** [`../../course/24_hardware_robotics_labs.md`](../../course/24_hardware_robotics_labs.md)
 > **Folder:** `modules/24_hardware_labs/`
 > **Version:** 2026.3
 
@@ -29,15 +29,15 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_safety-and-standards.md`](01_safety-and-standards.md) | Safety and Standards | Lab safety, electrical safety, and the compliance boundary. | 1,200-1,800 | planned |
-| 2 | [`02_bench-and-simulation-stack.md`](02_bench-and-simulation-stack.md) | Bench and Simulation Stack | Instruments, dev boards, simulators, and software. | 1,200-1,800 | planned |
-| 3 | [`03_lab-conventions.md`](03_lab-conventions.md) | Lab Conventions | Reproducibility, logging, calibration, and reporting. | 1,200-1,800 | planned |
-| 4 | [`04_sensor-and-signal-labs.md`](04_sensor-and-signal-labs.md) | Sensor and Signal Labs | ECG front end, PPG, temperature, and noise measurement. | 1,200-1,800 | planned |
-| 5 | [`05_firmware-labs.md`](05_firmware-labs.md) | Firmware Labs | RTOS scheduling, watchdogs, secure boot, and update. | 1,200-1,800 | planned |
-| 6 | [`06_emc-labs.md`](06_emc-labs.md) | EMC Labs | Emissions, immunity, and pre-compliance testing. | 1,200-1,800 | planned |
-| 7 | [`07_hil-labs.md`](07_hil-labs.md) | Hardware-in-the-Loop Labs | Closed-loop testing, fault injection, and latency measurement. | 1,200-1,800 | planned |
-| 8 | [`08_robotics-labs.md`](08_robotics-labs.md) | Robotics Labs | Kinematics, control, registration, and safety envelopes. | 1,200-1,800 | planned |
-| 9 | [`09_evidence-dossier.md`](09_evidence-dossier.md) | Evidence Dossier | Turning lab results into a defensible evidence package. | 1,200-1,800 | planned |
+| 1 | `01_safety-and-standards.md` | Safety and Standards | Lab safety, electrical safety, and the compliance boundary. | 1,200-1,800 | planned |
+| 2 | `02_bench-and-simulation-stack.md` | Bench and Simulation Stack | Instruments, dev boards, simulators, and software. | 1,200-1,800 | planned |
+| 3 | `03_lab-conventions.md` | Lab Conventions | Reproducibility, logging, calibration, and reporting. | 1,200-1,800 | planned |
+| 4 | `04_sensor-and-signal-labs.md` | Sensor and Signal Labs | ECG front end, PPG, temperature, and noise measurement. | 1,200-1,800 | planned |
+| 5 | `05_firmware-labs.md` | Firmware Labs | RTOS scheduling, watchdogs, secure boot, and update. | 1,200-1,800 | planned |
+| 6 | `06_emc-labs.md` | EMC Labs | Emissions, immunity, and pre-compliance testing. | 1,200-1,800 | planned |
+| 7 | `07_hil-labs.md` | Hardware-in-the-Loop Labs | Closed-loop testing, fault injection, and latency measurement. | 1,200-1,800 | planned |
+| 8 | `08_robotics-labs.md` | Robotics Labs | Kinematics, control, registration, and safety envelopes. | 1,200-1,800 | planned |
+| 9 | `09_evidence-dossier.md` | Evidence Dossier | Turning lab results into a defensible evidence package. | 1,200-1,800 | planned |
 
 ## 4. How the topics fit together
 

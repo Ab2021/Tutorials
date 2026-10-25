@@ -1151,7 +1151,7 @@ Accessed 24 October 2026 unless otherwise stated.
 - Next topic: [`04_pharmacology-basics.md`](04_pharmacology-basics.md)
 - Related topic: [`09_special-populations.md`](09_special-populations.md)
 - Related topic: [`10_clinical-plausibility-checks.md`](10_clinical-plausibility-checks.md)
-- Survey file: [`../../01_clinical_foundations.md`](../../01_clinical_foundations.md)
+- Survey file: [`../../01_clinical_foundations.md`](../../course/01_clinical_foundations.md)
 - Labs: [`../../labs/`](../../labs/)
 - Unit conversion lab: [`../../labs/01A_unit_conversion.ipynb`](../../labs/01A_unit_conversion.ipynb)
 

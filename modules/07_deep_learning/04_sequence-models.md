@@ -1293,7 +1293,7 @@ evidence rather than a statement by the authors, the text says so.
 - Module index: [`_index.md`](_index.md)
 - Previous topic: [`03_cnns-and-medical-vision.md`](03_cnns-and-medical-vision.md)
 - Next topic: [`05_transformers.md`](05_transformers.md)
-- Module survey: [`../../07_deep_learning_multimodal_llms.md`](../../07_deep_learning_multimodal_llms.md)
+- Module survey: [`../../07_deep_learning_multimodal_llms.md`](../../course/07_deep_learning_multimodal_llms.md)
 - Labs: [`../../labs/`](../../labs/)
 - Lab 11, ECG quality: [`../../labs/11_ecg_quality.ipynb`](../../labs/11_ecg_quality.ipynb)
 - Module 06, splitting and validation:

@@ -16,10 +16,10 @@
 | 08 | EHR, Claims, and Health System Operations | 9 | 9 | 9 | 11,729 |
 | 09 | Clinical NLP | 10 | 10 | 10 | 13,056 |
 | 10 | Medical Imaging and Pathology AI | 10 | 10 | 10 | 13,196 |
-| 11 | Physiological Signals and Wearables | 10 | 1 | 1 | 1,301 |
-| 12 | Omics and Precision Medicine | 10 | 0 | 0 | 0 |
-| 13 | Biopharma and Clinical Development | 10 | 0 | 0 | 0 |
-| 14 | Medical Devices, SaMD, and Regulation | 10 | 0 | 0 | 0 |
+| 11 | Physiological Signals and Wearables | 10 | 10 | 10 | 13,024 |
+| 12 | Omics and Precision Medicine | 10 | 10 | 10 | 13,352 |
+| 13 | Biopharma and Clinical Development | 10 | 10 | 10 | 13,071 |
+| 14 | Medical Devices, SaMD, and Regulation | 10 | 10 | 10 | 14,263 |
 | 14A | Medical Hardware, Sensors, Chips, and Robotics | 14 | 0 | 0 | 0 |
 | 14B | Efficient AI and On-Device Inference | 11 | 0 | 0 | 0 |
 | 15 | Deployment and MLOps | 10 | 0 | 0 | 0 |
@@ -35,7 +35,7 @@
 | 25 | Trial Operations, HTA, and Global Regulation | 7 | 0 | 0 | 0 |
 | 26 | Cloud, Kubernetes, and Streaming Production Labs | 9 | 0 | 0 | 0 |
 
-**Total topic files:** 124
+**Total topic files:** 163
 
-**Total topic lines:** 163,943
+**Total topic lines:** 216,352
 

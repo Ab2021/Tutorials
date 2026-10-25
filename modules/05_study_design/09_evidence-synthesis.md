@@ -1296,5 +1296,5 @@ All URLs accessed 25 October 2026.
 - Previous topic: [`08_external-validation.md`](08_external-validation.md)
 - Next topic: [`10_protocol-writing.md`](10_protocol-writing.md)
 - Related topic: [`05_bias-taxonomy.md`](05_bias-taxonomy.md)
-- Module survey file: [`../../05_study_design_evidence.md`](../../05_study_design_evidence.md)
+- Module survey file: [`../../05_study_design_evidence.md`](../../course/05_study_design_evidence.md)
 - Labs: [`../../labs/`](../../labs/)

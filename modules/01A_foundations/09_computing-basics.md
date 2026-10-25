@@ -1581,6 +1581,6 @@ All URLs were accessed on 24 October 2026.
 - Statistical handling of missing data: [`02_probability-and-statistics-basics.md`](02_probability-and-statistics-basics.md)
 - Time-varying biological processes: [`05_biological-basics.md`](05_biological-basics.md)
 - Assumption recording: [`10_the-assumptions-ledger.md`](10_the-assumptions-ledger.md)
-- Root survey file: [`../../01A_foundations_assumptions_and_units.md`](../../01A_foundations_assumptions_and_units.md)
+- Root survey file: [`../../01A_foundations_assumptions_and_units.md`](../../course/01A_foundations_assumptions_and_units.md)
 - Labs: [`../../labs/`](../../labs/) — `03_cohort_pipeline.ipynb` exercises joins and cohort
   construction; `14B_quantization.ipynb` covers numeric representation in signals.

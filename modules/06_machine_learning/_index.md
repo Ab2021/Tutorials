@@ -1,7 +1,7 @@
 # Module 06 — Machine Learning Foundations
 
 > **Part of:** Biomedical Data Science for Industry (2026), expanded edition.
-> **Survey file:** [`../../06_machine_learning_foundations.md`](../../06_machine_learning_foundations.md)
+> **Survey file:** [`../../course/06_machine_learning_foundations.md`](../../course/06_machine_learning_foundations.md)
 > **Folder:** `modules/06_machine_learning/`
 > **Version:** 2026.3
 

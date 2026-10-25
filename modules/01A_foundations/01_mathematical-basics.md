@@ -1823,6 +1823,6 @@ All URLs were accessed on 24 October 2026.
 - Pharmacokinetic applications: [`06_pharmacokinetics.md`](06_pharmacokinetics.md)
 - Epidemiological rates and ratios: [`07_epidemiology-basics.md`](07_epidemiology-basics.md)
 - The assumptions ledger: [`10_the-assumptions-ledger.md`](10_the-assumptions-ledger.md)
-- Root survey file: [`../../01A_foundations_assumptions_and_units.md`](../../01A_foundations_assumptions_and_units.md)
+- Root survey file: [`../../01A_foundations_assumptions_and_units.md`](../../course/01A_foundations_assumptions_and_units.md)
 - Labs: [`../../labs/`](../../labs/) — see `01A_unit_conversion.ipynb` for the conversion lab and
   `06_calibration_decision_curve.ipynb` for the calibration and decision-curve lab.

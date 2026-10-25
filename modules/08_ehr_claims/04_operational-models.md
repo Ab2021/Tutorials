@@ -1266,7 +1266,7 @@ All URLs were accessed on 25 October 2026.
 - Previous topic: [`03_claims-analytics.md`](03_claims-analytics.md) — the claims and risk-adjustment basis for operational outcomes.
 - Next topic: [`05_capacity-and-patient-flow.md`](05_capacity-and-patient-flow.md) — queues, bottlenecks, boarding, and simulation.
 - Related topic: [`06_quality-measures.md`](06_quality-measures.md) — the measure specifications that operational models must align with.
-- Root survey file: [`../../08_ehr_claims_operations.md`](../../08_ehr_claims_operations.md)
+- Root survey file: [`../../08_ehr_claims_operations.md`](../../course/08_ehr_claims_operations.md)
 - Labs: [`../../labs/`](../../labs/)
 
 ### Reading path

@@ -1656,10 +1656,10 @@ All URLs were accessed on 24 October 2026.
 - Up to the module map: [`_index.md`](_index.md)
 - Previous topic: [`03_units-and-metrology.md`](03_units-and-metrology.md)
 - Next topic: [`05_biological-basics.md`](05_biological-basics.md)
-- Mathematical basis of functions and ratios: [`01_mathematical-basics.md`](01-mathematical-basics.md)
+- Mathematical basis of functions and ratios: [`01_mathematical-basics.md`](01_mathematical-basics.md)
 - Pharmacokinetic applications of clearance and AUC: [`06_pharmacokinetics.md`](06_pharmacokinetics.md)
 - Device and infusion safety: [`08_engineering-and-device-basics.md`](08_engineering-and-device-basics.md)
 - Assumption recording: [`10_the-assumptions-ledger.md`](10_the-assumptions-ledger.md)
-- Root survey file: [`../../01A_foundations_assumptions_and_units.md`](../../01A_foundations_assumptions_and_units.md)
+- Root survey file: [`../../01A_foundations_assumptions_and_units.md`](../../course/01A_foundations_assumptions_and_units.md)
 - Labs: [`../../labs/`](../../labs/) — `01A_unit_conversion.ipynb` covers conversion and dimensional
   checks; `14B_quantization.ipynb` covers resolution in sampled signals.

@@ -1300,9 +1300,9 @@ All URLs were accessed on 25 October 2026.
 - Survival analysis: [`03_survival-analysis.md`](03_survival-analysis.md) — time-zero and competing risks.
 - Sensitivity analysis: [`08_sensitivity-analysis.md`](08_sensitivity-analysis.md) — unmeasured confounding.
 - Reporting: [`10_reporting-statistical-results.md`](10_reporting-statistical-results.md) — the results table.
-- Survey file: [`../../04_statistics_causal_inference.md`](../../04_statistics_causal_inference.md)
+- Survey file: [`../../04_statistics_causal_inference.md`](../../course/04_statistics_causal_inference.md)
 - Labs: [`../../labs/`](../../labs/) — Lab 4.3 writes a target trial protocol.
-- Foundations: [`../../01A_foundations_assumptions_and_units.md`](../../01A_foundations_assumptions_and_units.md) — assumptions ledger.
+- Foundations: [`../../01A_foundations_assumptions_and_units.md`](../../course/01A_foundations_assumptions_and_units.md) — assumptions ledger.
 - Missing data: [`04_missing-data.md`](04_missing-data.md) — loss to follow-up and censoring.
-- Module 13: [`../../13_biopharma_clinical_development.md`](../../13_biopharma_clinical_development.md) — trial design and real-world evidence.
-- Module 25: [`../../25_trial_operations_hta_global_regulatory.md`](../../25_trial_operations_hta_global_regulatory.md) — HTA and regulatory use.
+- Module 13: [`../../13_biopharma_clinical_development.md`](../../course/13_biopharma_clinical_development.md) — trial design and real-world evidence.
+- Module 25: [`../../25_trial_operations_hta_global_regulatory.md`](../../course/25_trial_operations_hta_global_regulatory.md) — HTA and regulatory use.

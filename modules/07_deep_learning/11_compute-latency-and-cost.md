@@ -1292,7 +1292,7 @@ sensitivity in Step 9 shows why the label matters.
 
 - Module index: [`_index.md`](_index.md)
 - Previous topic: [`10_evaluating-generative-models.md`](10_evaluating-generative-models.md)
-- Module survey: [`../../07_deep_learning_multimodal_llms.md`](../../07_deep_learning_multimodal_llms.md)
+- Module survey: [`../../07_deep_learning_multimodal_llms.md`](../../course/07_deep_learning_multimodal_llms.md)
 - Labs: [`../../labs/`](../../labs/)
 - Lab 7.6, cost and latency budget: [`../../labs/`](../../labs/)
 - Module 14B, quantization: [`../14B_efficient_ai/`](../14B_efficient_ai/)

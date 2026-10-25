@@ -1257,8 +1257,8 @@ All URLs were accessed on 25 October 2026.
 - Previous topic: [`08_evaluating-operational-interventions.md`](08_evaluating-operational-interventions.md) — ITS, DiD, and stepped-wedge designs.
 - Related topic: [`04_operational-models.md`](04_operational-models.md) — the models these programmes deploy.
 - Related topic: [`07_revenue-cycle.md`](07_revenue-cycle.md) — the cash arithmetic behind a business case.
-- Root survey file: [`../../08_ehr_claims_operations.md`](../../08_ehr_claims_operations.md)
-- Next module: [`../../09_clinical_nlp.md`](../../09_clinical_nlp.md) — clinical natural language processing.
+- Root survey file: [`../../08_ehr_claims_operations.md`](../../course/08_ehr_claims_operations.md)
+- Next module: [`../../09_clinical_nlp.md`](../../course/09_clinical_nlp.md) — clinical natural language processing.
 - Labs: [`../../labs/`](../../labs/)
 
 ### Reading path

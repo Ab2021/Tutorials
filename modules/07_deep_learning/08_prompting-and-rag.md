@@ -1293,7 +1293,7 @@ produced by the code shown. Where a number is an assumption, such as the 1.33 to
 - Module index: [`_index.md`](_index.md)
 - Previous topic: [`07_llm-basics.md`](07_llm-basics.md)
 - Next topic: [`09_agents-and-tools.md`](09_agents-and-tools.md)
-- Module survey: [`../../07_deep_learning_multimodal_llms.md`](../../07_deep_learning_multimodal_llms.md)
+- Module survey: [`../../07_deep_learning_multimodal_llms.md`](../../course/07_deep_learning_multimodal_llms.md)
 - Labs: [`../../labs/`](../../labs/)
 - Lab 7.3, build a RAG system: [`../../labs/`](../../labs/)
 - Module 06, metrics: [`../06_machine_learning/07_metrics.md`](../06_machine_learning/07_metrics.md)

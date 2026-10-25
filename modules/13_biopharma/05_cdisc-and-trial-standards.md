@@ -1297,5 +1297,5 @@ detect. Weak: a formatting error.
 - Next topic: [`06_safety-and-pharmacovigilance.md`](06_safety-and-pharmacovigilance.md)
 - Related: [`10_submission-data.md`](10_submission-data.md)
 - Related: [`02_data-in-pharma.md`](02_data-in-pharma.md)
-- Survey file: [`../../13_biopharma_clinical_development.md`](../../13_biopharma_clinical_development.md)
+- Survey file: [`../../13_biopharma_clinical_development.md`](../../course/13_biopharma_clinical_development.md)
 - Labs: [`../../labs/`](../../labs/)

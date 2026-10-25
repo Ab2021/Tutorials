@@ -1296,5 +1296,5 @@ All URLs accessed 25 October 2026.
 - Previous topic: [`08_deidentification-engineering.md`](08_deidentification-engineering.md)
 - Next topic: [`10_testing-and-observability.md`](10_testing-and-observability.md)
 - Related sibling: [`07_data-versioning-and-lineage.md`](07_data-versioning-and-lineage.md)
-- Root survey: [`../../03_data_engineering_interoperability.md`](../../03_data_engineering_interoperability.md)
+- Root survey: [`../../03_data_engineering_interoperability.md`](../../course/03_data_engineering_interoperability.md)
 - Labs: [`../../labs/`](../../labs/) — Lab 3.6 includes a post-incident review with root cause and prevention.

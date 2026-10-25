@@ -1,7 +1,7 @@
 # Module 10 — Medical Imaging and Pathology AI
 
 > **Part of:** Biomedical Data Science for Industry (2026), expanded edition.
-> **Survey file:** [`../../10_medical_imaging.md`](../../10_medical_imaging.md)
+> **Survey file:** [`../../course/10_medical_imaging.md`](../../course/10_medical_imaging.md)
 > **Folder:** `modules/10_imaging/`
 > **Version:** 2026.3
 

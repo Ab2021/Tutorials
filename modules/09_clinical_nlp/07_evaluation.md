@@ -1296,5 +1296,5 @@ All URLs accessed 25 October 2026.
 - Task units and aggregation: [`03_task-taxonomy.md`](03_task-taxonomy.md)
 - Reference standards and agreement: [`06_annotation.md`](06_annotation.md)
 - Grounded summarization evaluation: [`09_summarization-and-grounding.md`](09_summarization-and-grounding.md)
-- Module survey: [`../../09_clinical_nlp.md`](../../09_clinical_nlp.md)
+- Module survey: [`../../09_clinical_nlp.md`](../../course/09_clinical_nlp.md)
 - Labs: [`../../labs/`](../../labs/)

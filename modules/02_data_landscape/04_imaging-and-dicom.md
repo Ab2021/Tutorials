@@ -1370,7 +1370,7 @@ All URLs accessed 24 October 2026.
 - Related sibling: [`01_ehr-data.md`](01_ehr-data.md)
 - Related sibling: [`06_omics-data.md`](06_omics-data.md)
 - Related sibling: [`10_data-quality-dimensions.md`](10_data-quality-dimensions.md)
-- Root survey file: [`../../02_biomedical_data_landscape.md`](../../02_biomedical_data_landscape.md)
+- Root survey file: [`../../02_biomedical_data_landscape.md`](../../course/02_biomedical_data_landscape.md)
 - Labs: [`../../labs/`](../../labs/)
 - Lab 2.3 in the survey file (DICOM metadata audit) is the practical companion to sections 5 and 7 of this topic.
 

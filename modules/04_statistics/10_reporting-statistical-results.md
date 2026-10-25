@@ -1290,11 +1290,11 @@ All URLs were accessed on 25 October 2026.
 - Estimation: [`01_estimation-and-inference.md`](01_estimation-and-inference.md) — intervals and effect scales.
 - Sensitivity analysis: [`08_sensitivity-analysis.md`](08_sensitivity-analysis.md) — reporting robustness.
 - Regression: [`02_regression-models.md`](02_regression-models.md) — reporting adjusted estimates.
-- Survey file: [`../../04_statistics_causal_inference.md`](../../04_statistics_causal_inference.md)
+- Survey file: [`../../04_statistics_causal_inference.md`](../../course/04_statistics_causal_inference.md)
 - Labs: [`../../labs/`](../../labs/) — the reporting exercises in Lab 4.6.
-- Foundations: [`../../01A_foundations_assumptions_and_units.md`](../../01A_foundations_assumptions_and_units.md) — units and notation.
-- Module 18: [`../../18_quality_evaluation_reporting.md`](../../18_quality_evaluation_reporting.md) — quality reporting and evaluation.
+- Foundations: [`../../01A_foundations_assumptions_and_units.md`](../../course/01A_foundations_assumptions_and_units.md) — units and notation.
+- Module 18: [`../../18_quality_evaluation_reporting.md`](../../course/18_quality_evaluation_reporting.md) — quality reporting and evaluation.
 - Target trial emulation: [`07_target-trial-emulation.md`](07_target-trial-emulation.md) — the TARGET reporting items.
 - Missing data: [`04_missing-data.md`](04_missing-data.md) — reporting missingness and the FMI.
 - Propensity scores: [`06_propensity-scores-and-weighting.md`](06_propensity-scores-and-weighting.md) — reporting balance.
-- Study design: [`../../05_study_design_evidence.md`](../../05_study_design_evidence.md) — design and reporting alignment.
+- Study design: [`../../05_study_design_evidence.md`](../../course/05_study_design_evidence.md) — design and reporting alignment.

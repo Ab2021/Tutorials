@@ -1307,5 +1307,5 @@ the executive summary and accept its numbers.
 - Next topic: [`02_data-in-pharma.md`](02_data-in-pharma.md)
 - Related: [`04_feasibility-and-recruitment.md`](04_feasibility-and-recruitment.md)
 - Related: [`07_rwe-in-pharma.md`](07_rwe-in-pharma.md)
-- Survey file: [`../../13_biopharma_clinical_development.md`](../../13_biopharma_clinical_development.md)
+- Survey file: [`../../13_biopharma_clinical_development.md`](../../course/13_biopharma_clinical_development.md)
 - Labs: [`../../labs/`](../../labs/)

@@ -1296,7 +1296,7 @@ https://doi.org/10.1136/bmj-2023-078378 (accessed 25 October 2026).
 - Module index: [`_index.md`](_index.md)
 - Previous topic: [`06_medical-foundation-models.md`](06_medical-foundation-models.md)
 - Next topic: [`08_prompting-and-rag.md`](08_prompting-and-rag.md)
-- Module survey: [`../../07_deep_learning_multimodal_llms.md`](../../07_deep_learning_multimodal_llms.md)
+- Module survey: [`../../07_deep_learning_multimodal_llms.md`](../../course/07_deep_learning_multimodal_llms.md)
 - Labs: [`../../labs/`](../../labs/)
 - Lab 7.3, build a RAG system: [`../../labs/`](../../labs/)
 - Module 06, metrics: [`../06_machine_learning/07_metrics.md`](../06_machine_learning/07_metrics.md)

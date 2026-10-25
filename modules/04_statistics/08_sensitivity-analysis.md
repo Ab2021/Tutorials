@@ -1272,12 +1272,12 @@ All URLs were accessed on 25 October 2026.
 - Missing data: [`04_missing-data.md`](04_missing-data.md) — delta adjustment and tipping points.
 - Propensity scores: [`06_propensity-scores-and-weighting.md`](06_propensity-scores-and-weighting.md) — the balance table is not a sensitivity analysis.
 - Reporting: [`10_reporting-statistical-results.md`](10_reporting-statistical-results.md) — reporting the sensitivity result.
-- Survey file: [`../../04_statistics_causal_inference.md`](../../04_statistics_causal_inference.md)
+- Survey file: [`../../04_statistics_causal_inference.md`](../../course/04_statistics_causal_inference.md)
 - Labs: [`../../labs/`](../../labs/) — Lab 4.5 covers MNAR sensitivity.
-- Foundations: [`../../01A_foundations_assumptions_and_units.md`](../../01A_foundations_assumptions_and_units.md) — assumptions ledger.
+- Foundations: [`../../01A_foundations_assumptions_and_units.md`](../../course/01A_foundations_assumptions_and_units.md) — assumptions ledger.
 - Estimation: [`01_estimation-and-inference.md`](01_estimation-and-inference.md) — intervals and effect scales.
 - Target trial emulation: [`07_target-trial-emulation.md`](07_target-trial-emulation.md) — the design context.
-- Module 18: [`../../18_quality_evaluation_reporting.md`](../../18_quality_evaluation_reporting.md) — evaluation standards.
+- Module 18: [`../../18_quality_evaluation_reporting.md`](../../course/18_quality_evaluation_reporting.md) — evaluation standards.
 
 ### 6.7 Vary one assumption: the outcome is common and the measure is an odds ratio
 

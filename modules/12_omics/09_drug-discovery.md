@@ -1302,5 +1302,5 @@ Standards:
 - Next topic: [`10_clinical-genomics.md`](10_clinical-genomics.md)
 - Related topic: [`02_genomics-and-variants.md`](02_genomics-and-variants.md)
 - Related topic: [`07_multi-omics-integration.md`](07_multi-omics-integration.md)
-- Survey file: [`../../12_omics_precision_medicine.md`](../../12_omics_precision_medicine.md)
+- Survey file: [`../../12_omics_precision_medicine.md`](../../course/12_omics_precision_medicine.md)
 - Labs: [`../../labs/`](../../labs/)

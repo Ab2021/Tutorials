@@ -1384,5 +1384,5 @@ All URLs accessed 25 October 2026.
 - Previous topic: [`04_orchestration.md`](04_orchestration.md)
 - Next topic: [`06_dicom-pipelines.md`](06_dicom-pipelines.md)
 - Related sibling: [`02_sql-for-clinical-data.md`](02_sql-for-clinical-data.md)
-- Root survey: [`../../03_data_engineering_interoperability.md`](../../03_data_engineering_interoperability.md)
+- Root survey: [`../../03_data_engineering_interoperability.md`](../../course/03_data_engineering_interoperability.md)
 - Labs: [`../../labs/`](../../labs/) — Lab 3.3 ingests a FHIR bundle and produces a mapping report.

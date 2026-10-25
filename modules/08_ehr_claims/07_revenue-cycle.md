@@ -1267,7 +1267,7 @@ All URLs were accessed on 25 October 2026.
 - Previous topic: [`06_quality-measures.md`](06_quality-measures.md) — HEDIS and CMS measure logic.
 - Next topic: [`08_evaluating-operational-interventions.md`](08_evaluating-operational-interventions.md) — interrupted time series, difference-in-differences, and step-wedge designs.
 - Related topic: [`03_claims-analytics.md`](03_claims-analytics.md) — the claims and payment basis for revenue-cycle analysis.
-- Root survey file: [`../../08_ehr_claims_operations.md`](../../08_ehr_claims_operations.md)
+- Root survey file: [`../../08_ehr_claims_operations.md`](../../course/08_ehr_claims_operations.md)
 - Labs: [`../../labs/`](../../labs/)
 
 ### Reading path

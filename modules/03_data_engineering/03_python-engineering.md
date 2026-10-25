@@ -1308,5 +1308,5 @@ All URLs accessed 25 October 2026.
 - Previous topic: [`02_sql-for-clinical-data.md`](02_sql-for-clinical-data.md)
 - Next topic: [`04_orchestration.md`](04_orchestration.md)
 - Related sibling: [`10_testing-and-observability.md`](10_testing-and-observability.md)
-- Root survey: [`../../03_data_engineering_interoperability.md`](../../03_data_engineering_interoperability.md)
+- Root survey: [`../../03_data_engineering_interoperability.md`](../../course/03_data_engineering_interoperability.md)
 - Labs: [`../../labs/`](../../labs/) — Lab 3.1 requires a script that runs from a clean checkout.

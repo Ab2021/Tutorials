@@ -1351,5 +1351,5 @@ All URLs accessed 25 October 2026.
 - Source and annotation dependency: [`06_annotation.md`](06_annotation.md)
 - Evaluation of source-stratified results: [`07_evaluation.md`](07_evaluation.md)
 - De-identification of free-text corpora: [`08_deidentification.md`](08_deidentification.md)
-- Module survey: [`../../09_clinical_nlp.md`](../../09_clinical_nlp.md)
+- Module survey: [`../../09_clinical_nlp.md`](../../course/09_clinical_nlp.md)
 - Labs: [`../../labs/`](../../labs/)

@@ -1,7 +1,7 @@
 # Module 01A — Foundations, Assumptions, and Units
 
 > **Part of:** Biomedical Data Science for Industry (2026), expanded edition.
-> **Survey file:** [`../../01A_foundations_assumptions_and_units.md`](../../01A_foundations_assumptions_and_units.md)
+> **Survey file:** [`../../course/01A_foundations_assumptions_and_units.md`](../../course/01A_foundations_assumptions_and_units.md)
 > **Folder:** `modules/01A_foundations/`
 > **Version:** 2026.3
 

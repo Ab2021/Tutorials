@@ -1295,7 +1295,7 @@ All URLs accessed 25 October 2026.
 - Module map: [`_index.md`](_index.md)
 - Next topic: [`02_labels-and-outcomes.md`](02_labels-and-outcomes.md)
 - Validation design: [`03_splitting-and-validation.md`](03_splitting-and-validation.md)
-- Survey file: [`../../06_machine_learning_foundations.md`](../../06_machine_learning_foundations.md)
+- Survey file: [`../../06_machine_learning_foundations.md`](../../course/06_machine_learning_foundations.md)
 - Labs: [`../../labs/`](../../labs/)
 - Calibration and decision curve lab: [`../../labs/06_calibration_decision_curve.ipynb`](../../labs/06_calibration_decision_curve.ipynb)
 - Cohort pipeline lab: [`../../labs/03_cohort_pipeline.ipynb`](../../labs/03_cohort_pipeline.ipynb)

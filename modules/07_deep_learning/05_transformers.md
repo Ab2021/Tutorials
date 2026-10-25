@@ -1294,7 +1294,7 @@ That invariance is the reason the arithmetic is worth learning.
 - Module index: [`_index.md`](_index.md)
 - Previous topic: [`04_sequence-models.md`](04_sequence-models.md)
 - Next topic: [`06_medical-foundation-models.md`](06_medical-foundation-models.md)
-- Module survey: [`../../07_deep_learning_multimodal_llms.md`](../../07_deep_learning_multimodal_llms.md)
+- Module survey: [`../../07_deep_learning_multimodal_llms.md`](../../course/07_deep_learning_multimodal_llms.md)
 - Labs: [`../../labs/`](../../labs/)
 - Module 14B, quantization: [`../14B_efficient_ai/`](../14B_efficient_ai/)
 - Module 06, metrics: [`../06_machine_learning/07_metrics.md`](../06_machine_learning/07_metrics.md)

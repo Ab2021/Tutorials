@@ -1646,6 +1646,6 @@ All URLs were accessed on 24 October 2026.
 - Dimensional checks of clearance and AUC: [`04_dimensional-analysis.md`](04_dimensional-analysis.md)
 - Exponential and half-life mathematics: [`01_mathematical-basics.md`](01_mathematical-basics.md)
 - Assumption recording: [`10_the-assumptions-ledger.md`](10_the-assumptions-ledger.md)
-- Root survey file: [`../../01A_foundations_assumptions_and_units.md`](../../01A_foundations_assumptions_and_units.md)
+- Root survey file: [`../../01A_foundations_assumptions_and_units.md`](../../course/01A_foundations_assumptions_and_units.md)
 - Labs: [`../../labs/`](../../labs/) — the survey file's Lab 01A.5 exercises the one-compartment fit
   and loading-dose calculation; no dedicated notebook is present in `labs/` for this topic.

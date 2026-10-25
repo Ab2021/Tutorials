@@ -1298,7 +1298,7 @@ measurements, and they should be treated as planning estimates.
 - Module index: [`_index.md`](_index.md)
 - Previous topic: [`05_transformers.md`](05_transformers.md)
 - Next topic: [`07_llm-basics.md`](07_llm-basics.md)
-- Module survey: [`../../07_deep_learning_multimodal_llms.md`](../../07_deep_learning_multimodal_llms.md)
+- Module survey: [`../../07_deep_learning_multimodal_llms.md`](../../course/07_deep_learning_multimodal_llms.md)
 - Labs: [`../../labs/`](../../labs/)
 - Lab 7.2, fine-tune a clinical language model: [`../../labs/`](../../labs/)
 - Module 06, model families: [`../06_machine_learning/05_model-families.md`](../06_machine_learning/05_model-families.md)

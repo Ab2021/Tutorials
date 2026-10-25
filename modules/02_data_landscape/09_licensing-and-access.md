@@ -1354,7 +1354,7 @@ All URLs accessed 24 October 2026.
 - Related sibling: [`01_ehr-data.md`](01_ehr-data.md)
 - Related sibling: [`02_claims-and-billing.md`](02_claims-and-billing.md)
 - Related sibling: [`06_omics-data.md`](06_omics-data.md)
-- Root survey file: [`../../02_biomedical_data_landscape.md`](../../02_biomedical_data_landscape.md)
+- Root survey file: [`../../02_biomedical_data_landscape.md`](../../course/02_biomedical_data_landscape.md)
 - Labs: [`../../labs/`](../../labs/)
 - Lab 2.4 in the survey file (source-selection matrix) uses the access tier comparison in section 1.2 as one of its inputs.
 

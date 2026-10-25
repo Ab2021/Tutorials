@@ -1295,6 +1295,6 @@ Standards and regulation:
 - Previous topic: [`04_single-cell.md`](04_single-cell.md)
 - Next topic: [`06_proteomics-and-metabolomics.md`](06_proteomics-and-metabolomics.md)
 - Related topic: [`03_transcriptomics.md`](03_transcriptomics.md)
-- Survey file: [`../../12_omics_precision_medicine.md`](../../12_omics_precision_medicine.md)
+- Survey file: [`../../12_omics_precision_medicine.md`](../../course/12_omics_precision_medicine.md)
 - Labs: [`../../labs/`](../../labs/)
-- Lab 12.4, spatial deconvolution, in the survey file: [`../../12_omics_precision_medicine.md`](../../12_omics_precision_medicine.md)
+- Lab 12.4, spatial deconvolution, in the survey file: [`../../12_omics_precision_medicine.md`](../../course/12_omics_precision_medicine.md)

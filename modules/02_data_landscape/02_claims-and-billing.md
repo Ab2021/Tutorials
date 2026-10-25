@@ -1367,7 +1367,7 @@ All URLs accessed 24 October 2026.
 - Related sibling: [`09_licensing-and-access.md`](09_licensing-and-access.md)
 - Related sibling: [`10_data-quality-dimensions.md`](10_data-quality-dimensions.md)
 - Related sibling: [`08_standards-and-terminologies.md`](08_standards-and-terminologies.md)
-- Root survey file: [`../../02_biomedical_data_landscape.md`](../../02_biomedical_data_landscape.md)
+- Root survey file: [`../../02_biomedical_data_landscape.md`](../../course/02_biomedical_data_landscape.md)
 - Labs: [`../../labs/`](../../labs/)
 - Lab 2.4 in the survey file (source-selection matrix) uses the claims-versus-EHR comparison in section 3 as one of its scenarios.
 

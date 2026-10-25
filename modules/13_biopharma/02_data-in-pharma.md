@@ -760,13 +760,39 @@ CREATE TABLE sdtm_ae (
   PRIMARY KEY (subjid, aeseq)
 );
 
--- Excerpt of the inserted rows (15 safety reports, 15 clinical events)
 INSERT INTO safety_ae VALUES
  ('C01','S001','Rash','2025-03-01','Y','26.0'),
  ('C02','S001','Nausea','2025-03-05','N','26.0'),
+ ('C03','S002','Rash','2025-04-02','N','26.0'),
+ ('C04','S002','Vomiting','2025-04-03','N','26.0'),
+ ('C05','S003','Headache','2025-05-10','N','26.0'),
+ ('C06','S004','Rash','2025-06-01','Y','26.0'),
+ ('C07','S005','Anaemia','2025-07-12','Y','27.0'),
+ ('C08','S006','Pyrexia','2025-08-01','N','27.0'),
+ ('C09','S007','Rash','2025-09-01','N','27.0'),
+ ('C10','S007','Nausea','2025-09-02','N','27.0'),
  ('C11','S008','Dizziness','2025-10-01','N','26.0'),
  ('C12','S008','Dizziness','2025-10-01','N','26.0'),  -- duplicate report
+ ('C13','S009','Rash','2025-11-01','N','27.0'),
+ ('C14','S009','Pruritus','2025-11-02','N','27.0'),
  ('C15','S010','Rash','2026-01-15','N','27.0');       -- after the cut
+
+INSERT INTO sdtm_ae VALUES
+ ('S001',1,'Rash','2025-03-01','Y','26.0'),
+ ('S001',2,'Nausea','2025-03-05','N','26.0'),
+ ('S002',1,'Rash','2025-04-02','N','26.0'),
+ ('S002',2,'Vomiting','2025-04-03','N','26.0'),
+ ('S003',1,'Headache','2025-05-11','N','26.0'),
+ ('S004',1,'Rash','2025-06-01','Y','26.0'),
+ ('S005',1,'Anaemia','2025-07-12','Y','27.0'),
+ ('S006',1,'Pyrexia','2025-08-01','N','27.0'),
+ ('S007',1,'Rash','2025-09-01','N','27.0'),
+ ('S007',2,'Nausea','2025-09-02','N','27.0'),
+ ('S008',1,'Dizziness','2025-10-01','N','26.0'),
+ ('S009',1,'Rash','2025-11-01','N','27.0'),
+ ('S010',1,'Rash','2026-01-15','N','27.0'),
+ ('S011',1,'Fatigue','2025-12-01','N','27.0'),
+ ('S012',1,'Rash','2025-12-02','N','27.0');
 
 WITH s AS (
   SELECT case_id, subjid, ae_term, onset_date
@@ -1315,5 +1341,5 @@ percentage looks high.
 - Next topic: [`03_biomarker-strategy.md`](03_biomarker-strategy.md)
 - Related: [`05_cdisc-and-trial-standards.md`](05_cdisc-and-trial-standards.md)
 - Related: [`06_safety-and-pharmacovigilance.md`](06_safety-and-pharmacovigilance.md)
-- Survey file: [`../../13_biopharma_clinical_development.md`](../../13_biopharma_clinical_development.md)
+- Survey file: [`../../13_biopharma_clinical_development.md`](../../course/13_biopharma_clinical_development.md)
 - Labs: [`../../labs/`](../../labs/)

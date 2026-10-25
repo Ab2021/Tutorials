@@ -1351,7 +1351,7 @@ All URLs accessed 24 October 2026.
 - Related sibling: [`04_imaging-and-dicom.md`](04_imaging-and-dicom.md)
 - Related sibling: [`09_licensing-and-access.md`](09_licensing-and-access.md)
 - Related sibling: [`10_data-quality-dimensions.md`](10_data-quality-dimensions.md)
-- Root survey file: [`../../02_biomedical_data_landscape.md`](../../02_biomedical_data_landscape.md)
+- Root survey file: [`../../02_biomedical_data_landscape.md`](../../course/02_biomedical_data_landscape.md)
 - Labs: [`../../labs/`](../../labs/)
 - Lab 2.4 in the survey file (source-selection matrix) applies directly to the omics-versus-clinical-data choice, and Lab 2.5 (data-quality profile) covers the batch diagnostics in section 5.
 

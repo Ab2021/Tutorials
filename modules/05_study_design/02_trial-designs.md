@@ -1305,6 +1305,6 @@ All URLs accessed 25 October 2026.
 - Previous topic: [`01_from-claim-to-evidence.md`](01_from-claim-to-evidence.md)
 - Next topic: [`03_real-world-evidence.md`](03_real-world-evidence.md)
 - Related topic: [`06_sample-size-and-power.md`](06_sample-size-and-power.md)
-- Module survey file: [`../../05_study_design_evidence.md`](../../05_study_design_evidence.md)
+- Module survey file: [`../../05_study_design_evidence.md`](../../course/05_study_design_evidence.md)
 - Labs: [`../../labs/`](../../labs/)
 - Cohort pipeline lab: [`../../labs/03_cohort_pipeline.ipynb`](../../labs/03_cohort_pipeline.ipynb)

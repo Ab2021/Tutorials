@@ -791,7 +791,7 @@ def index_text(module) -> str:
     a(f"# Module {mid} — {title}")
     a("")
     a("> **Part of:** Biomedical Data Science for Industry (2026), expanded edition.")
-    a(f"> **Survey file:** [`../../{source}`](../../{source})")
+    a(f"> **Survey file:** [`../../course/{source}`](../../course/{source})")
     a(f"> **Folder:** `modules/{folder}/`")
     a("> **Version:** 2026.3")
     a("")
@@ -825,7 +825,8 @@ def index_text(module) -> str:
         key = "planned" if st == "planned" else ("complete" if st == "complete" else "draft")
         counts[key] += 1
         label = st if n == 0 else f"{st}"
-        a(f"| {i} | [`{slug}.md`]({slug}.md) | {ttitle} | {scope} | 1,200-1,800 | {label} |")
+        cell = f"[`{slug}.md`]({slug}.md)" if st != "planned" else f"`{slug}.md`"
+        a(f"| {i} | {cell} | {ttitle} | {scope} | 1,200-1,800 | {label} |")
     a("")
     a("## 4. How the topics fit together")
     a("")

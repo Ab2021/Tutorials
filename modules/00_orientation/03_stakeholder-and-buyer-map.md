@@ -1222,6 +1222,6 @@ All URLs accessed on 24 October 2026 unless otherwise stated.
 - Next topic: [`04_career-tracks-and-role-definitions.md`](04_career-tracks-and-role-definitions.md)
 - Related topic: [`05_the-project-charter.md`](05_the-project-charter.md)
 - Related topic: [`08_ethics-and-professional-conduct.md`](08_ethics-and-professional-conduct.md)
-- Module survey file: [`../../00_orientation_and_industry_map.md`](../../00_orientation_and_industry_map.md)
+- Module survey file: [`../../00_orientation_and_industry_map.md`](../../course/00_orientation_and_industry_map.md)
 - Labs: [`../../labs/`](../../labs/)
 - Cohort pipeline lab: [`../../labs/03_cohort_pipeline.ipynb`](../../labs/03_cohort_pipeline.ipynb)

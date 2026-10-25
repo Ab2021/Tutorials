@@ -1336,7 +1336,7 @@ All URLs accessed 24 October 2026.
 - Related sibling: [`02_claims-and-billing.md`](02_claims-and-billing.md)
 - Related sibling: [`05_signals-and-wearables.md`](05_signals-and-wearables.md)
 - Related sibling: [`10_data-quality-dimensions.md`](10_data-quality-dimensions.md)
-- Root survey file: [`../../02_biomedical_data_landscape.md`](../../02_biomedical_data_landscape.md)
+- Root survey file: [`../../02_biomedical_data_landscape.md`](../../course/02_biomedical_data_landscape.md)
 - Labs: [`../../labs/`](../../labs/)
 - Lab 2.4 in the survey file (source-selection matrix) uses the trial-versus-RWE comparison in section 3.3 as one of its scenarios.
 

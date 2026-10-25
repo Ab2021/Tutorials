@@ -1296,6 +1296,6 @@ AUROC alone has not won the argument.
 - Previous topic: [`04_preprocessing.md`](04_preprocessing.md)
 - Next topic: [`06_class-imbalance.md`](06_class-imbalance.md)
 - Calibration: [`08_calibration.md`](08_calibration.md)
-- Survey file: [`../../06_machine_learning_foundations.md`](../../06_machine_learning_foundations.md)
+- Survey file: [`../../06_machine_learning_foundations.md`](../../course/06_machine_learning_foundations.md)
 - Labs: [`../../labs/`](../../labs/)
 - Calibration lab: [`../../labs/06_calibration_decision_curve.ipynb`](../../labs/06_calibration_decision_curve.ipynb)

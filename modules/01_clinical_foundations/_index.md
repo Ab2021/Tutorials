@@ -1,7 +1,7 @@
 # Module 01 — Clinical Foundations for Data Scientists
 
 > **Part of:** Biomedical Data Science for Industry (2026), expanded edition.
-> **Survey file:** [`../../01_clinical_foundations.md`](../../01_clinical_foundations.md)
+> **Survey file:** [`../../course/01_clinical_foundations.md`](../../course/01_clinical_foundations.md)
 > **Folder:** `modules/01_clinical_foundations/`
 > **Version:** 2026.3
 

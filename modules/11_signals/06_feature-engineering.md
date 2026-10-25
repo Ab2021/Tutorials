@@ -1297,7 +1297,7 @@ All URLs accessed 25 October 2026.
 - Previous topic: [`05_respiration-and-other-signals.md`](05_respiration-and-other-signals.md)
 - Next topic: [`07_deep-learning-for-signals.md`](07_deep-learning-for-signals.md)
 - Related topic: [`08_digital-biomarkers.md`](08_digital-biomarkers.md)
-- Module survey file: [`../../11_physiological_signals_wearables.md`](../../11_physiological_signals_wearables.md)
+- Module survey file: [`../../course/11_physiological_signals_wearables.md`](../../course/11_physiological_signals_wearables.md)
 - Lab: [`../../labs/`](../../labs/)
 - Related topic: [`09_validation.md`](09_validation.md)
 - Related topic: [`10_deployment-on-device.md`](10_deployment-on-device.md)

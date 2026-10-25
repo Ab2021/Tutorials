@@ -1047,7 +1047,7 @@ Accessed 24 October 2026 unless otherwise stated.
 - Related topic: [`02_anatomy-physiology-and-vital-signs.md`](02_anatomy-physiology-and-vital-signs.md)
 - Related topic: [`03_laboratory-medicine.md`](03_laboratory-medicine.md)
 - Related topic: [`04_pharmacology-basics.md`](04_pharmacology-basics.md)
-- Survey file: [`../../01_clinical_foundations.md`](../../01_clinical_foundations.md)
+- Survey file: [`../../01_clinical_foundations.md`](../../course/01_clinical_foundations.md)
 - Labs: [`../../labs/`](../../labs/)
 - Cohort pipeline lab: [`../../labs/03_cohort_pipeline.ipynb`](../../labs/03_cohort_pipeline.ipynb)
 

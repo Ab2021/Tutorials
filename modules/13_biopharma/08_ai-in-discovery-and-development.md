@@ -548,6 +548,9 @@ keeps the conversation on the adequacy of the evidence rather than on the sophis
 and it makes the reviewer's objection specific: the disagreement is about an error, not about a
 preference for simpler methods.
 
+The structure also records what was not assessed, which is often the most useful part of the record
+for the next programme.
+
 ## 6. Worked example
 
 > **Note:** The model, sponsor, and data are fictional. The framework and the regulatory documents
@@ -769,9 +772,9 @@ Expected output (Python 3.12, NumPy 2.4, executed):
 ```text
 AUC worked example: 0.8125
 prevalence 0.15: PPV 0.397 NPV 0.961 enriched ORR 29.9% all-comers 22.5%
-prevalence 0.30: PPV 0.615 NPV 0.926 enriched ORR 36.4% all-comers 27.0%
-PSI, stable: 0.013
-PSI, shifted: 0.268
+prevalence 0.30: PPV 0.615 NPV 0.910 enriched ORR 36.4% all-comers 27.0%
+PSI, stable: 0.007
+PSI, shifted: 0.270
 ```
 
 Reading the output:
@@ -779,7 +782,7 @@ Reading the output:
 - The worked example's AUC is 0.8125, computed from 13 correctly ordered pairs out of 16.
 - The PPV doubles from 39.7% to 61.5% when prevalence rises from 15% to 30%, with the same
   sensitivity and specificity.
-- The PSI is 0.013 for a stable population and 0.268 for a shifted one. A common convention treats a
+- The PSI is 0.007 for a stable population and 0.270 for a shifted one. A common convention treats a
   PSI below 0.10 as no meaningful shift, 0.10-0.25 as moderate, and above 0.25 as major.
 
 The PSI thresholds are a convention, not a regulatory standard. The appropriate threshold depends on
@@ -1297,5 +1300,5 @@ subgroup failures are unsafe, or when drift cannot be monitored. Weak: when the 
 - Next topic: [`09_decentralized-trials.md`](09_decentralized-trials.md)
 - Related: [`03_biomarker-strategy.md`](03_biomarker-strategy.md)
 - Related: [`10_submission-data.md`](10_submission-data.md)
-- Survey file: [`../../13_biopharma_clinical_development.md`](../../13_biopharma_clinical_development.md)
+- Survey file: [`../../13_biopharma_clinical_development.md`](../../course/13_biopharma_clinical_development.md)
 - Labs: [`../../labs/`](../../labs/)

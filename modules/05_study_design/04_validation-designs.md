@@ -1295,6 +1295,6 @@ All URLs accessed 25 October 2026.
 - Previous topic: [`03_real-world-evidence.md`](03_real-world-evidence.md)
 - Next topic: [`05_bias-taxonomy.md`](05_bias-taxonomy.md)
 - Related topic: [`08_external-validation.md`](08_external-validation.md)
-- Module survey file: [`../../05_study_design_evidence.md`](../../05_study_design_evidence.md)
+- Module survey file: [`../../05_study_design_evidence.md`](../../course/05_study_design_evidence.md)
 - Labs: [`../../labs/`](../../labs/)
 - Calibration and decision curve lab: [`../../labs/06_calibration_decision_curve.ipynb`](../../labs/06_calibration_decision_curve.ipynb)

@@ -1601,6 +1601,6 @@ All URLs were accessed on 24 October 2026.
 - Rates and measures of association: [`07_epidemiology-basics.md`](07_epidemiology-basics.md)
 - Measurement error and precision: [`03_units-and-metrology.md`](03_units-and-metrology.md)
 - Assumption testing: [`10_the-assumptions-ledger.md`](10_the-assumptions-ledger.md)
-- Root survey file: [`../../01A_foundations_assumptions_and_units.md`](../../01A_foundations_assumptions_and_units.md)
+- Root survey file: [`../../01A_foundations_assumptions_and_units.md`](../../course/01A_foundations_assumptions_and_units.md)
 - Labs: [`../../labs/`](../../labs/) — `06_calibration_decision_curve.ipynb` applies calibration and
   decision-curve analysis to the concepts in sections 6 and 9.

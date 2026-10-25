@@ -1294,15 +1294,15 @@ All URLs were accessed on 25 October 2026.
 - Target trial emulation: [`07_target-trial-emulation.md`](07_target-trial-emulation.md) — the design that frames the score.
 - Sensitivity analysis: [`08_sensitivity-analysis.md`](08_sensitivity-analysis.md) — E-values and negative controls.
 - Reporting: [`10_reporting-statistical-results.md`](10_reporting-statistical-results.md) — balance tables and effect scales.
-- Survey file: [`../../04_statistics_causal_inference.md`](../../04_statistics_causal_inference.md)
+- Survey file: [`../../04_statistics_causal_inference.md`](../../course/04_statistics_causal_inference.md)
 - Labs: [`../../labs/`](../../labs/) — Lab 4.2 implements IPTW and balance diagnostics.
-- Foundations: [`../../01A_foundations_assumptions_and_units.md`](../../01A_foundations_assumptions_and_units.md) — assumptions ledger.
+- Foundations: [`../../01A_foundations_assumptions_and_units.md`](../../course/01A_foundations_assumptions_and_units.md) — assumptions ledger.
 - Estimation: [`01_estimation-and-inference.md`](01_estimation-and-inference.md) — robust intervals and effect scales.
 - Missing data: [`04_missing-data.md`](04_missing-data.md) — missing covariates in a score model.
-- Study design: [`../../05_study_design_evidence.md`](../../05_study_design_evidence.md) — design options before weighting.
+- Study design: [`../../05_study_design_evidence.md`](../../course/05_study_design_evidence.md) — design options before weighting.
 - Subgroups: [`09_subgroups-and-heterogeneity.md`](09_subgroups-and-heterogeneity.md) — effects in the target population.
-- Module 13: [`../../13_biopharma_clinical_development.md`](../../13_biopharma_clinical_development.md) — real-world evidence in development.
-- Module 25: [`../../25_trial_operations_hta_global_regulatory.md`](../../25_trial_operations_hta_global_regulatory.md) — HTA use of observational estimates.
+- Module 13: [`../../13_biopharma_clinical_development.md`](../../course/13_biopharma_clinical_development.md) — real-world evidence in development.
+- Module 25: [`../../25_trial_operations_hta_global_regulatory.md`](../../course/25_trial_operations_hta_global_regulatory.md) — HTA use of observational estimates.
 - Causal graphs: [`05_causal-inference-and-dags.md`](05_causal-inference-and-dags.md) — the covariate selection step.
 - Survival outcomes: [`03_survival-analysis.md`](03_survival-analysis.md) — weighted time-to-event analyses.
-- Quality reporting: [`../../18_quality_evaluation_reporting.md`](../../18_quality_evaluation_reporting.md) — evaluation standards.
+- Quality reporting: [`../../18_quality_evaluation_reporting.md`](../../course/18_quality_evaluation_reporting.md) — evaluation standards.

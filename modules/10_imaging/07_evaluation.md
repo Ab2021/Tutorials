@@ -1291,7 +1291,7 @@ analyses. A weak answer reports a p-value without counts.
 - Previous topic: [`06_leakage-and-shortcuts.md`](06_leakage-and-shortcuts.md)
 - Next topic: [`08_workflow-integration.md`](08_workflow-integration.md)
 - Related topic: [`04_labels-and-annotation.md`](04_labels-and-annotation.md)
-- Root survey: [`../../10_medical_imaging.md`](../../10_medical_imaging.md)
+- Root survey: [`../../10_medical_imaging.md`](../../course/10_medical_imaging.md)
 - Labs: [`../../labs/`](../../labs/)
 
 > **Note:** The estimand, the split, the reference, and the interval are the four items a reviewer checks first.

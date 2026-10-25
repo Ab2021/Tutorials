@@ -1290,7 +1290,7 @@ All URLs accessed 25 October 2026.
 - Previous topic: [`08_digital-biomarkers.md`](08_digital-biomarkers.md)
 - Next topic: [`10_deployment-on-device.md`](10_deployment-on-device.md)
 - Related topic: [`02_ecg.md`](02_ecg.md)
-- Module survey file: [`../../11_physiological_signals_wearables.md`](../../11_physiological_signals_wearables.md)
+- Module survey file: [`../../course/11_physiological_signals_wearables.md`](../../course/11_physiological_signals_wearables.md)
 - Lab: [`../../labs/`](../../labs/)
 - Reporting guideline: [`https://www.equator-network.org/reporting-guidelines/stard/`](https://www.equator-network.org/reporting-guidelines/stard/)
 - Related topic: [`04_ppg-and-wearables.md`](04_ppg-and-wearables.md)

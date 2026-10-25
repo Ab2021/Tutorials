@@ -1304,9 +1304,9 @@ All URLs were accessed on 25 October 2026.
 - Missing data: [`04_missing-data.md`](04_missing-data.md) — censoring is not the same as missingness.
 - Target trial emulation: [`07_target-trial-emulation.md`](07_target-trial-emulation.md) — time zero and immortal time.
 - Reporting: [`10_reporting-statistical-results.md`](10_reporting-statistical-results.md) — presenting curves and hazards.
-- Survey file: [`../../04_statistics_causal_inference.md`](../../04_statistics_causal_inference.md)
+- Survey file: [`../../04_statistics_causal_inference.md`](../../course/04_statistics_causal_inference.md)
 - Labs: [`../../labs/`](../../labs/) — Lab 4.4 covers Kaplan-Meier, Cox, and competing risks.
-- Foundations: [`../../01A_foundations_assumptions_and_units.md`](../../01A_foundations_assumptions_and_units.md) — time units and assumptions.
+- Foundations: [`../../01A_foundations_assumptions_and_units.md`](../../course/01A_foundations_assumptions_and_units.md) — time units and assumptions.
 - Estimation: [`01_estimation-and-inference.md`](01_estimation-and-inference.md) — intervals and coverage for survival probabilities.
 - Sensitivity analysis: [`08_sensitivity-analysis.md`](08_sensitivity-analysis.md) — informative censoring and unmeasured confounding.
-- Study design: [`../../05_study_design_evidence.md`](../../05_study_design_evidence.md) — endpoints and follow-up in trial protocols.
+- Study design: [`../../05_study_design_evidence.md`](../../course/05_study_design_evidence.md) — endpoints and follow-up in trial protocols.

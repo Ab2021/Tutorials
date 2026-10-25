@@ -1643,6 +1643,6 @@ All URLs were accessed on 24 October 2026.
 - Probability and intervals: [`02_probability-and-statistics-basics.md`](02_probability-and-statistics-basics.md)
 - Biological basis of the variables: [`05_biological-basics.md`](05_biological-basics.md)
 - Assumption recording: [`10_the-assumptions-ledger.md`](10_the-assumptions-ledger.md)
-- Root survey file: [`../../01A_foundations_assumptions_and_units.md`](../../01A_foundations_assumptions_and_units.md)
+- Root survey file: [`../../01A_foundations_assumptions_and_units.md`](../../course/01A_foundations_assumptions_and_units.md)
 - Labs: [`../../labs/`](../../labs/) — `03_cohort_pipeline.ipynb` builds a cohort and is the natural
   place to apply the denominator and case-definition checks in section 5.

@@ -1248,7 +1248,7 @@ Accessed 24 October 2026 unless otherwise stated.
 - Next topic: [`03_laboratory-medicine.md`](03_laboratory-medicine.md)
 - Related topic: [`07_cardiology-and-ecg-basics.md`](07_cardiology-and-ecg-basics.md)
 - Related topic: [`09_special-populations.md`](09_special-populations.md)
-- Survey file: [`../../01_clinical_foundations.md`](../../01_clinical_foundations.md)
+- Survey file: [`../../01_clinical_foundations.md`](../../course/01_clinical_foundations.md)
 - Labs: [`../../labs/`](../../labs/)
 - ECG quality lab: [`../../labs/11_ecg_quality.ipynb`](../../labs/11_ecg_quality.ipynb)
 

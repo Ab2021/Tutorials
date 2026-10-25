@@ -1298,7 +1298,7 @@ All URLs accessed 25 October 2026.
 - Previous topic: [`02_ecg.md`](02_ecg.md)
 - Next topic: [`04_ppg-and-wearables.md`](04_ppg-and-wearables.md)
 - Related topic: [`06_feature-engineering.md`](06_feature-engineering.md)
-- Module survey file: [`../../11_physiological_signals_wearables.md`](../../11_physiological_signals_wearables.md)
+- Module survey file: [`../../course/11_physiological_signals_wearables.md`](../../course/11_physiological_signals_wearables.md)
 - Lab: [`../../labs/`](../../labs/)
 - Related topic: [`07_deep-learning-for-signals.md`](07_deep-learning-for-signals.md)
 - Dataset: [`https://physionet.org/content/chbmit/1.0.0/`](https://physionet.org/content/chbmit/1.0.0/)

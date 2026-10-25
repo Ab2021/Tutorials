@@ -1297,5 +1297,5 @@ All URLs accessed 25 October 2026.
 - De-identification and PHI: [`08_deidentification.md`](08_deidentification.md)
 - Grounding and abstention: [`09_summarization-and-grounding.md`](09_summarization-and-grounding.md)
 - Evaluation and severity: [`07_evaluation.md`](07_evaluation.md)
-- Module survey: [`../../09_clinical_nlp.md`](../../09_clinical_nlp.md)
+- Module survey: [`../../09_clinical_nlp.md`](../../course/09_clinical_nlp.md)
 - Labs: [`../../labs/`](../../labs/)

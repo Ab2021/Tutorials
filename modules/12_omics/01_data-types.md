@@ -1495,6 +1495,6 @@ Vendor documentation:
 - Next topic: [`02_genomics-and-variants.md`](02_genomics-and-variants.md)
 - Related topic: [`03_transcriptomics.md`](03_transcriptomics.md)
 - Related topic: [`06_proteomics-and-metabolomics.md`](06_proteomics-and-metabolomics.md)
-- Survey file: [`../../12_omics_precision_medicine.md`](../../12_omics_precision_medicine.md)
+- Survey file: [`../../12_omics_precision_medicine.md`](../../course/12_omics_precision_medicine.md)
 - Labs: [`../../labs/`](../../labs/)
-- Lab 12.2, bulk RNA-seq differential expression, in the survey file: [`../../12_omics_precision_medicine.md`](../../12_omics_precision_medicine.md)
+- Lab 12.2, bulk RNA-seq differential expression, in the survey file: [`../../12_omics_precision_medicine.md`](../../course/12_omics_precision_medicine.md)

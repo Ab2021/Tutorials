@@ -1,7 +1,7 @@
 # Module 15 — Deployment and MLOps
 
 > **Part of:** Biomedical Data Science for Industry (2026), expanded edition.
-> **Survey file:** [`../../15_deployment_mlops.md`](../../15_deployment_mlops.md)
+> **Survey file:** [`../../course/15_deployment_mlops.md`](../../course/15_deployment_mlops.md)
 > **Folder:** `modules/15_mlops/`
 > **Version:** 2026.3
 
@@ -29,16 +29,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_the-production-loop.md`](01_the-production-loop.md) | The Production Loop | Train, validate, deploy, monitor, retrain, retire; where each stage fails. | 1,200-1,800 | planned |
-| 2 | [`02_deployment-patterns.md`](02_deployment-patterns.md) | Deployment Patterns | Batch, real-time, streaming, embedded, and shadow deployment. | 1,200-1,800 | planned |
-| 3 | [`03_packaging-and-reproducibility.md`](03_packaging-and-reproducibility.md) | Packaging and Reproducibility | Containers, lockfiles, model artifacts, and environment drift. | 1,200-1,800 | planned |
-| 4 | [`04_ci-cd-ct.md`](04_ci-cd-ct.md) | CI/CD/CT | Continuous integration, delivery, and training with clinical gates. | 1,200-1,800 | planned |
-| 5 | [`05_monitoring.md`](05_monitoring.md) | Monitoring | Service health, data quality, model performance, and outcome monitoring. | 1,200-1,800 | planned |
-| 6 | [`06_drift.md`](06_drift.md) | Drift | Covariate, label, concept, and population drift; detection and response. | 1,200-1,800 | planned |
-| 7 | [`07_incident-response.md`](07_incident-response.md) | Incident Response | Severity, triage, rollback, communication, and post-incident review. | 1,200-1,800 | planned |
-| 8 | [`08_rollout-and-rollback.md`](08_rollout-and-rollback.md) | Rollout and Rollback | Canary, shadow, blue-green, feature flags, and safe reversal. | 1,200-1,800 | planned |
-| 9 | [`09_model-governance.md`](09_model-governance.md) | Model Governance | Inventory, ownership, approvals, change control, and audit evidence. | 1,200-1,800 | planned |
-| 10 | [`10_cost-and-capacity.md`](10_cost-and-capacity.md) | Cost and Capacity | Serving economics, autoscaling, quotas, and capacity planning. | 1,200-1,800 | planned |
+| 1 | `01_the-production-loop.md` | The Production Loop | Train, validate, deploy, monitor, retrain, retire; where each stage fails. | 1,200-1,800 | planned |
+| 2 | `02_deployment-patterns.md` | Deployment Patterns | Batch, real-time, streaming, embedded, and shadow deployment. | 1,200-1,800 | planned |
+| 3 | `03_packaging-and-reproducibility.md` | Packaging and Reproducibility | Containers, lockfiles, model artifacts, and environment drift. | 1,200-1,800 | planned |
+| 4 | `04_ci-cd-ct.md` | CI/CD/CT | Continuous integration, delivery, and training with clinical gates. | 1,200-1,800 | planned |
+| 5 | `05_monitoring.md` | Monitoring | Service health, data quality, model performance, and outcome monitoring. | 1,200-1,800 | planned |
+| 6 | `06_drift.md` | Drift | Covariate, label, concept, and population drift; detection and response. | 1,200-1,800 | planned |
+| 7 | `07_incident-response.md` | Incident Response | Severity, triage, rollback, communication, and post-incident review. | 1,200-1,800 | planned |
+| 8 | `08_rollout-and-rollback.md` | Rollout and Rollback | Canary, shadow, blue-green, feature flags, and safe reversal. | 1,200-1,800 | planned |
+| 9 | `09_model-governance.md` | Model Governance | Inventory, ownership, approvals, change control, and audit evidence. | 1,200-1,800 | planned |
+| 10 | `10_cost-and-capacity.md` | Cost and Capacity | Serving economics, autoscaling, quotas, and capacity planning. | 1,200-1,800 | planned |
 
 ## 4. How the topics fit together
 

@@ -1357,6 +1357,6 @@ the same QC on every batch. A weak answer keeps a script in a shared drive.
 - Previous topic: [`01_modalities.md`](01_modalities.md)
 - Next topic: [`03_preprocessing.md`](03_preprocessing.md)
 - Related topic: [`06_leakage-and-shortcuts.md`](06_leakage-and-shortcuts.md)
-- Root survey: [`../../10_medical_imaging.md`](../../10_medical_imaging.md)
+- Root survey: [`../../10_medical_imaging.md`](../../course/10_medical_imaging.md)
 - Labs: [`../../labs/`](../../labs/)
 - DICOM standard: https://www.dicomstandard.org/

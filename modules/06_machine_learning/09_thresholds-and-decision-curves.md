@@ -1294,7 +1294,7 @@ The next topic examines how to explain the model that produces the risk.
 - Next topic: [`10_interpretability.md`](10_interpretability.md)
 - Metrics: [`07_metrics.md`](07_metrics.md)
 - Calibration: [`08_calibration.md`](08_calibration.md)
-- Survey file: [`../../06_machine_learning_foundations.md`](../../06_machine_learning_foundations.md)
+- Survey file: [`../../06_machine_learning_foundations.md`](../../course/06_machine_learning_foundations.md)
 - Labs: [`../../labs/`](../../labs/)
 - Calibration lab: [`../../labs/06_calibration_decision_curve.ipynb`](../../labs/06_calibration_decision_curve.ipynb)
 

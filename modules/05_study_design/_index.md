@@ -1,7 +1,7 @@
 # Module 05 — Study Design and Evidence Generation
 
 > **Part of:** Biomedical Data Science for Industry (2026), expanded edition.
-> **Survey file:** [`../../05_study_design_evidence.md`](../../05_study_design_evidence.md)
+> **Survey file:** [`../../course/05_study_design_evidence.md`](../../course/05_study_design_evidence.md)
 > **Folder:** `modules/05_study_design/`
 > **Version:** 2026.3
 

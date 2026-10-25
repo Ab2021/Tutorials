@@ -1420,6 +1420,6 @@ Regulatory:
 - Previous topic: [`01_data-types.md`](01_data-types.md)
 - Next topic: [`03_transcriptomics.md`](03_transcriptomics.md)
 - Related topic: [`10_clinical-genomics.md`](10_clinical-genomics.md)
-- Survey file: [`../../12_omics_precision_medicine.md`](../../12_omics_precision_medicine.md)
+- Survey file: [`../../12_omics_precision_medicine.md`](../../course/12_omics_precision_medicine.md)
 - Labs: [`../../labs/`](../../labs/)
-- Lab 12.1, variant annotation, in the survey file: [`../../12_omics_precision_medicine.md`](../../12_omics_precision_medicine.md)
+- Lab 12.1, variant annotation, in the survey file: [`../../12_omics_precision_medicine.md`](../../course/12_omics_precision_medicine.md)

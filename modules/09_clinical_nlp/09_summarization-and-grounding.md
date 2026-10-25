@@ -1296,5 +1296,5 @@ All URLs accessed 25 October 2026.
 - Next topic: [`10_llm-safety-in-clinical-text.md`](10_llm-safety-in-clinical-text.md)
 - Claim-level evaluation design: [`07_evaluation.md`](07_evaluation.md)
 - Annotation of claims: [`06_annotation.md`](06_annotation.md)
-- Module survey: [`../../09_clinical_nlp.md`](../../09_clinical_nlp.md)
+- Module survey: [`../../09_clinical_nlp.md`](../../course/09_clinical_nlp.md)
 - Labs: [`../../labs/`](../../labs/)

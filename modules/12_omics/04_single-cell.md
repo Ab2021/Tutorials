@@ -1295,6 +1295,6 @@ Regulatory:
 - Previous topic: [`03_transcriptomics.md`](03_transcriptomics.md)
 - Next topic: [`05_spatial-transcriptomics.md`](05_spatial-transcriptomics.md)
 - Related topic: [`07_multi-omics-integration.md`](07_multi-omics-integration.md)
-- Survey file: [`../../12_omics_precision_medicine.md`](../../12_omics_precision_medicine.md)
+- Survey file: [`../../12_omics_precision_medicine.md`](../../course/12_omics_precision_medicine.md)
 - Labs: [`../../labs/`](../../labs/)
-- Lab 12.3, single-cell clustering, in the survey file: [`../../12_omics_precision_medicine.md`](../../12_omics_precision_medicine.md)
+- Lab 12.3, single-cell clustering, in the survey file: [`../../12_omics_precision_medicine.md`](../../course/12_omics_precision_medicine.md)

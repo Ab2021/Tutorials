@@ -1,7 +1,7 @@
 # Module 21 — Datasets, Tools, and Benchmarks
 
 > **Part of:** Biomedical Data Science for Industry (2026), expanded edition.
-> **Survey file:** [`../../21_datasets_tools_benchmarks.md`](../../21_datasets_tools_benchmarks.md)
+> **Survey file:** [`../../course/21_datasets_tools_benchmarks.md`](../../course/21_datasets_tools_benchmarks.md)
 > **Folder:** `modules/21_datasets/`
 > **Version:** 2026.3
 
@@ -29,18 +29,18 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_five-gate-decision.md`](01_five-gate-decision.md) | The Five-Gate Dataset Decision | Access, licence, fitness, bias, and reproducibility gates. | 1,200-1,800 | planned |
-| 2 | [`02_access-and-licensing.md`](02_access-and-licensing.md) | Access and Licensing | Credentialing, DUAs, BAAs, and commercial restrictions. | 1,200-1,800 | planned |
-| 3 | [`03_ehr-claims-and-icu.md`](03_ehr-claims-and-icu.md) | EHR, Claims, and ICU Data | MIMIC, eICU, All of Us, NHANES, Marketscan-like sources, and their limits. | 1,200-1,800 | planned |
-| 4 | [`04_imaging-datasets.md`](04_imaging-datasets.md) | Imaging Datasets | Public and credentialed imaging collections and their label quality. | 1,200-1,800 | planned |
-| 5 | [`05_signal-datasets.md`](05_signal-datasets.md) | Signal Datasets | PhysioNet collections, wearable corpora, and annotation depth. | 1,200-1,800 | planned |
-| 6 | [`06_omics-datasets.md`](06_omics-datasets.md) | Omics Datasets | TCGA, GTEx, single-cell atlases, and access terms. | 1,200-1,800 | planned |
-| 7 | [`07_pathology-datasets.md`](07_pathology-datasets.md) | Pathology Datasets | Whole-slide collections and the annotation bottleneck. | 1,200-1,800 | planned |
-| 8 | [`08_text-and-llm-benchmarks.md`](08_text-and-llm-benchmarks.md) | Text and LLM Benchmarks | Clinical QA sets, summarization sets, and contamination risk. | 1,200-1,800 | planned |
-| 9 | [`09_public-health-datasets.md`](09_public-health-datasets.md) | Public Health Datasets | Surveillance, vital statistics, and geographic data. | 1,200-1,800 | planned |
-| 10 | [`10_pharma-and-safety-datasets.md`](10_pharma-and-safety-datasets.md) | Pharma and Safety Datasets | Trial data sharing, FAERS/AEMS, and pharmacovigilance corpora. | 1,200-1,800 | planned |
-| 11 | [`11_tool-stack.md`](11_tool-stack.md) | Tool Stack | What to use for each function and what to avoid. | 1,200-1,800 | planned |
-| 12 | [`12_benchmark-pitfalls.md`](12_benchmark-pitfalls.md) | Benchmark Pitfalls | Leaderboard chasing, contamination, and non-comparable splits. | 1,200-1,800 | planned |
+| 1 | `01_five-gate-decision.md` | The Five-Gate Dataset Decision | Access, licence, fitness, bias, and reproducibility gates. | 1,200-1,800 | planned |
+| 2 | `02_access-and-licensing.md` | Access and Licensing | Credentialing, DUAs, BAAs, and commercial restrictions. | 1,200-1,800 | planned |
+| 3 | `03_ehr-claims-and-icu.md` | EHR, Claims, and ICU Data | MIMIC, eICU, All of Us, NHANES, Marketscan-like sources, and their limits. | 1,200-1,800 | planned |
+| 4 | `04_imaging-datasets.md` | Imaging Datasets | Public and credentialed imaging collections and their label quality. | 1,200-1,800 | planned |
+| 5 | `05_signal-datasets.md` | Signal Datasets | PhysioNet collections, wearable corpora, and annotation depth. | 1,200-1,800 | planned |
+| 6 | `06_omics-datasets.md` | Omics Datasets | TCGA, GTEx, single-cell atlases, and access terms. | 1,200-1,800 | planned |
+| 7 | `07_pathology-datasets.md` | Pathology Datasets | Whole-slide collections and the annotation bottleneck. | 1,200-1,800 | planned |
+| 8 | `08_text-and-llm-benchmarks.md` | Text and LLM Benchmarks | Clinical QA sets, summarization sets, and contamination risk. | 1,200-1,800 | planned |
+| 9 | `09_public-health-datasets.md` | Public Health Datasets | Surveillance, vital statistics, and geographic data. | 1,200-1,800 | planned |
+| 10 | `10_pharma-and-safety-datasets.md` | Pharma and Safety Datasets | Trial data sharing, FAERS/AEMS, and pharmacovigilance corpora. | 1,200-1,800 | planned |
+| 11 | `11_tool-stack.md` | Tool Stack | What to use for each function and what to avoid. | 1,200-1,800 | planned |
+| 12 | `12_benchmark-pitfalls.md` | Benchmark Pitfalls | Leaderboard chasing, contamination, and non-comparable splits. | 1,200-1,800 | planned |
 
 ## 4. How the topics fit together
 

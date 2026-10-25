@@ -1654,6 +1654,6 @@ All URLs were accessed on 24 October 2026.
 - Dimensional checks of composite units: [`04_dimensional-analysis.md`](04_dimensional-analysis.md)
 - Physiological signals and timescales: [`05_biological-basics.md`](05_biological-basics.md)
 - Assumption recording: [`10_the-assumptions-ledger.md`](10_the-assumptions-ledger.md)
-- Root survey file: [`../../01A_foundations_assumptions_and_units.md`](../../01A_foundations_assumptions_and_units.md)
+- Root survey file: [`../../01A_foundations_assumptions_and_units.md`](../../course/01A_foundations_assumptions_and_units.md)
 - Labs: [`../../labs/`](../../labs/) — `11_ecg_quality.ipynb` covers ECG signal quality and
   `14B_quantization.ipynb` covers resolution and quantisation.

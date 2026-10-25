@@ -1,7 +1,7 @@
 # Module 02 — The Biomedical Data Landscape
 
 > **Part of:** Biomedical Data Science for Industry (2026), expanded edition.
-> **Survey file:** [`../../02_biomedical_data_landscape.md`](../../02_biomedical_data_landscape.md)
+> **Survey file:** [`../../course/02_biomedical_data_landscape.md`](../../course/02_biomedical_data_landscape.md)
 > **Folder:** `modules/02_data_landscape/`
 > **Version:** 2026.3
 

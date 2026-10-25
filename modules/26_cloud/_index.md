@@ -1,7 +1,7 @@
 # Module 26 — Cloud, Kubernetes, and Streaming Production Labs
 
 > **Part of:** Biomedical Data Science for Industry (2026), expanded edition.
-> **Survey file:** [`../../26_cloud_streaming_production_labs.md`](../../26_cloud_streaming_production_labs.md)
+> **Survey file:** [`../../course/26_cloud_streaming_production_labs.md`](../../course/26_cloud_streaming_production_labs.md)
 > **Folder:** `modules/26_cloud/`
 > **Version:** 2026.3
 
@@ -29,15 +29,15 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_architecture-patterns.md`](01_architecture-patterns.md) | Architecture Patterns | Reference architectures for clinical analytics and streaming. | 1,200-1,800 | planned |
-| 2 | [`02_containers.md`](02_containers.md) | Containers | Images, layers, security scanning, and reproducible builds. | 1,200-1,800 | planned |
-| 3 | [`03_kubernetes.md`](03_kubernetes.md) | Kubernetes | Deployments, services, probes, autoscaling, and network policy. | 1,200-1,800 | planned |
-| 4 | [`04_infrastructure-as-code.md`](04_infrastructure-as-code.md) | Infrastructure as Code | Terraform modules, state, and environment promotion. | 1,200-1,800 | planned |
-| 5 | [`05_streaming.md`](05_streaming.md) | Streaming | Kafka semantics, schemas, idempotence, deduplication, and DLQs. | 1,200-1,800 | planned |
-| 6 | [`06_observability.md`](06_observability.md) | Observability | Metrics, logs, traces, and clinical service SLOs. | 1,200-1,800 | planned |
-| 7 | [`07_security.md`](07_security.md) | Security | Secrets, identity, network segmentation, and supply chain. | 1,200-1,800 | planned |
-| 8 | [`08_cost-and-reliability.md`](08_cost-and-reliability.md) | Cost and Reliability | SLOs, error budgets, multi-AZ, and cost control. | 1,200-1,800 | planned |
-| 9 | [`09_reference-stack-walkthrough.md`](09_reference-stack-walkthrough.md) | Reference Stack Walkthrough | End-to-end deployment of the lab stack with acceptance criteria. | 1,200-1,800 | planned |
+| 1 | `01_architecture-patterns.md` | Architecture Patterns | Reference architectures for clinical analytics and streaming. | 1,200-1,800 | planned |
+| 2 | `02_containers.md` | Containers | Images, layers, security scanning, and reproducible builds. | 1,200-1,800 | planned |
+| 3 | `03_kubernetes.md` | Kubernetes | Deployments, services, probes, autoscaling, and network policy. | 1,200-1,800 | planned |
+| 4 | `04_infrastructure-as-code.md` | Infrastructure as Code | Terraform modules, state, and environment promotion. | 1,200-1,800 | planned |
+| 5 | `05_streaming.md` | Streaming | Kafka semantics, schemas, idempotence, deduplication, and DLQs. | 1,200-1,800 | planned |
+| 6 | `06_observability.md` | Observability | Metrics, logs, traces, and clinical service SLOs. | 1,200-1,800 | planned |
+| 7 | `07_security.md` | Security | Secrets, identity, network segmentation, and supply chain. | 1,200-1,800 | planned |
+| 8 | `08_cost-and-reliability.md` | Cost and Reliability | SLOs, error budgets, multi-AZ, and cost control. | 1,200-1,800 | planned |
+| 9 | `09_reference-stack-walkthrough.md` | Reference Stack Walkthrough | End-to-end deployment of the lab stack with acceptance criteria. | 1,200-1,800 | planned |
 
 ## 4. How the topics fit together
 

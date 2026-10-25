@@ -1296,5 +1296,5 @@ plan recorded. Weak: the programmer who built the package.
 - Previous topic: [`09_decentralized-trials.md`](09_decentralized-trials.md)
 - Related: [`05_cdisc-and-trial-standards.md`](05_cdisc-and-trial-standards.md)
 - Related: [`02_data-in-pharma.md`](02_data-in-pharma.md)
-- Survey file: [`../../13_biopharma_clinical_development.md`](../../13_biopharma_clinical_development.md)
+- Survey file: [`../../13_biopharma_clinical_development.md`](../../course/13_biopharma_clinical_development.md)
 - Labs: [`../../labs/`](../../labs/)

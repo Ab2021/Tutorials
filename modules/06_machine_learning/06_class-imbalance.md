@@ -1296,6 +1296,6 @@ decision rule. If the correction does not change any of the three, it is not nee
 - Previous topic: [`05_model-families.md`](05_model-families.md)
 - Next topic: [`07_metrics.md`](07_metrics.md)
 - Calibration: [`08_calibration.md`](08_calibration.md)
-- Survey file: [`../../06_machine_learning_foundations.md`](../../06_machine_learning_foundations.md)
+- Survey file: [`../../06_machine_learning_foundations.md`](../../course/06_machine_learning_foundations.md)
 - Labs: [`../../labs/`](../../labs/)
 - Calibration lab: [`../../labs/06_calibration_decision_curve.ipynb`](../../labs/06_calibration_decision_curve.ipynb)

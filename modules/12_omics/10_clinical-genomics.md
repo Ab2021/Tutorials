@@ -1300,6 +1300,6 @@ reporting policies described are examples, not recommendations for a specific ju
 - Previous topic: [`09_drug-discovery.md`](09_drug-discovery.md)
 - Related topic: [`02_genomics-and-variants.md`](02_genomics-and-variants.md)
 - Related topic: [`08_biomarker-discovery.md`](08_biomarker-discovery.md)
-- Survey file: [`../../12_omics_precision_medicine.md`](../../12_omics_precision_medicine.md)
+- Survey file: [`../../12_omics_precision_medicine.md`](../../course/12_omics_precision_medicine.md)
 - Labs: [`../../labs/`](../../labs/)
-- Lab 12.1, variant annotation, in the survey file: [`../../12_omics_precision_medicine.md`](../../12_omics_precision_medicine.md)
+- Lab 12.1, variant annotation, in the survey file: [`../../12_omics_precision_medicine.md`](../../course/12_omics_precision_medicine.md)

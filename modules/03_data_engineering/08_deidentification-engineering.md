@@ -1299,5 +1299,5 @@ All URLs accessed 25 October 2026.
 - Previous topic: [`07_data-versioning-and-lineage.md`](07_data-versioning-and-lineage.md)
 - Next topic: [`09_security-engineering.md`](09_security-engineering.md)
 - Related sibling: [`06_dicom-pipelines.md`](06_dicom-pipelines.md)
-- Root survey: [`../../03_data_engineering_interoperability.md`](../../03_data_engineering_interoperability.md)
+- Root survey: [`../../03_data_engineering_interoperability.md`](../../course/03_data_engineering_interoperability.md)
 - Labs: [`../../labs/`](../../labs/) — Lab 3.5 audits a synthetic dataset for identifiers.

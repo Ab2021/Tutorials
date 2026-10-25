@@ -1708,6 +1708,6 @@ All URLs were accessed on 24 October 2026.
 - Epidemiological measures built on these variables: [`07_epidemiology-basics.md`](07_epidemiology-basics.md)
 - Device measurement of physiological signals: [`08_engineering-and-device-basics.md`](08_engineering-and-device-basics.md)
 - Assumption recording: [`10_the-assumptions-ledger.md`](10_the-assumptions-ledger.md)
-- Root survey file: [`../../01A_foundations_assumptions_and_units.md`](../../01A_foundations_assumptions_and_units.md)
+- Root survey file: [`../../01A_foundations_assumptions_and_units.md`](../../course/01A_foundations_assumptions_and_units.md)
 - Labs: [`../../labs/`](../../labs/) — `03_cohort_pipeline.ipynb` builds a cohort from clinical data and
   is the natural place to apply the label-validity material in section 9.

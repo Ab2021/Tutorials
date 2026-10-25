@@ -1296,5 +1296,5 @@ All URLs accessed 25 October 2026.
 - Previous topic: [`06_sample-size-and-power.md`](06_sample-size-and-power.md)
 - Next topic: [`08_external-validation.md`](08_external-validation.md)
 - Related topic: [`01_from-claim-to-evidence.md`](01_from-claim-to-evidence.md)
-- Module survey file: [`../../05_study_design_evidence.md`](../../05_study_design_evidence.md)
+- Module survey file: [`../../05_study_design_evidence.md`](../../course/05_study_design_evidence.md)
 - Labs: [`../../labs/`](../../labs/)

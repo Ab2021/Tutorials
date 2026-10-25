@@ -1297,7 +1297,7 @@ Profile." NIST AI 600-1, July 2024. https://doi.org/10.6028/NIST.AI.600-1 (acces
 - Module index: [`_index.md`](_index.md)
 - Previous topic: [`01_neural-network-fundamentals.md`](01_neural-network-fundamentals.md)
 - Next topic: [`03_cnns-and-medical-vision.md`](03_cnns-and-medical-vision.md)
-- Module survey: [`../../07_deep_learning_multimodal_llms.md`](../../07_deep_learning_multimodal_llms.md)
+- Module survey: [`../../07_deep_learning_multimodal_llms.md`](../../course/07_deep_learning_multimodal_llms.md)
 - Labs: [`../../labs/`](../../labs/)
 - Lab 7.2, fine-tune a clinical language model: [`../../labs/`](../../labs/)
 - Module 06, calibration: [`../06_machine_learning/08_calibration.md`](../06_machine_learning/08_calibration.md)

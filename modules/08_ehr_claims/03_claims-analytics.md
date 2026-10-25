@@ -1268,7 +1268,7 @@ All URLs were accessed on 25 October 2026. Payment-model parameters are dated to
 - Previous topic: [`02_ehr-cohorts.md`](02_ehr-cohorts.md) — the population definition that claims analysis consumes.
 - Next topic: [`04_operational-models.md`](04_operational-models.md) — no-show, length of stay, readmission, and staffing models.
 - Related topic: [`07_revenue-cycle.md`](07_revenue-cycle.md) — denials, prior authorization, and cash flow.
-- Root survey file: [`../../08_ehr_claims_operations.md`](../../08_ehr_claims_operations.md)
+- Root survey file: [`../../08_ehr_claims_operations.md`](../../course/08_ehr_claims_operations.md)
 - Labs: [`../../labs/`](../../labs/)
 
 ### Reading path

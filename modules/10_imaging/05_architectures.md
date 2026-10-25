@@ -1293,7 +1293,7 @@ reports confidence intervals and compute. A weak answer compares two published n
 - Previous topic: [`04_labels-and-annotation.md`](04_labels-and-annotation.md)
 - Next topic: [`06_leakage-and-shortcuts.md`](06_leakage-and-shortcuts.md)
 - Related topic: [`07_evaluation.md`](07_evaluation.md)
-- Root survey: [`../../10_medical_imaging.md`](../../10_medical_imaging.md)
+- Root survey: [`../../10_medical_imaging.md`](../../course/10_medical_imaging.md)
 - Labs: [`../../labs/`](../../labs/)
 - MONAI: https://monai.io/
 

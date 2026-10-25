@@ -1,7 +1,7 @@
 # Module 03 — Data Engineering and Interoperability
 
 > **Part of:** Biomedical Data Science for Industry (2026), expanded edition.
-> **Survey file:** [`../../03_data_engineering_interoperability.md`](../../03_data_engineering_interoperability.md)
+> **Survey file:** [`../../course/03_data_engineering_interoperability.md`](../../course/03_data_engineering_interoperability.md)
 > **Folder:** `modules/03_data_engineering/`
 > **Version:** 2026.3
 

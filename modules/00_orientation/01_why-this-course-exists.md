@@ -1573,7 +1573,7 @@ Standards:
 - Related topic: [`05_the-project-charter.md`](05_the-project-charter.md)
 - Related topic: [`06_evidence-hierarchy-for-industry-claims.md`](06_evidence-hierarchy-for-industry-claims.md)
 - Related topic: [`07_regulatory-triage-map.md`](07_regulatory-triage-map.md)
-- Module survey file: [`../../00_orientation_and_industry_map.md`](../../00_orientation_and_industry_map.md)
+- Module survey file: [`../../00_orientation_and_industry_map.md`](../../course/00_orientation_and_industry_map.md)
 - Labs: [`../../labs/`](../../labs/)
 - Calibration and decision-curve lab: [`../../labs/06_calibration_decision_curve.ipynb`](../../labs/06_calibration_decision_curve.ipynb)
 - Cohort pipeline lab: [`../../labs/03_cohort_pipeline.ipynb`](../../labs/03_cohort_pipeline.ipynb)

@@ -1307,6 +1307,6 @@ All URLs accessed 25 October 2026. Where a document has a version or effective d
 - Next topic: [`02_trial-designs.md`](02_trial-designs.md)
 - Related topic: [`07_estimands.md`](07_estimands.md)
 - Related topic: [`10_protocol-writing.md`](10_protocol-writing.md)
-- Module survey file: [`../../05_study_design_evidence.md`](../../05_study_design_evidence.md)
+- Module survey file: [`../../05_study_design_evidence.md`](../../course/05_study_design_evidence.md)
 - Labs: [`../../labs/`](../../labs/)
 - Cohort pipeline lab: [`../../labs/03_cohort_pipeline.ipynb`](../../labs/03_cohort_pipeline.ipynb)

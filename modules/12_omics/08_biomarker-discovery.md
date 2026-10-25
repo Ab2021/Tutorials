@@ -1296,5 +1296,5 @@ Reporting guidelines:
 - Next topic: [`09_drug-discovery.md`](09_drug-discovery.md)
 - Related topic: [`03_transcriptomics.md`](03_transcriptomics.md)
 - Related topic: [`10_clinical-genomics.md`](10_clinical-genomics.md)
-- Survey file: [`../../12_omics_precision_medicine.md`](../../12_omics_precision_medicine.md)
+- Survey file: [`../../12_omics_precision_medicine.md`](../../course/12_omics_precision_medicine.md)
 - Labs: [`../../labs/`](../../labs/)

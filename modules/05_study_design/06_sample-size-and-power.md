@@ -1296,5 +1296,5 @@ All URLs accessed 25 October 2026.
 - Previous topic: [`05_bias-taxonomy.md`](05_bias-taxonomy.md)
 - Next topic: [`07_estimands.md`](07_estimands.md)
 - Related topic: [`02_trial-designs.md`](02_trial-designs.md)
-- Module survey file: [`../../05_study_design_evidence.md`](../../05_study_design_evidence.md)
+- Module survey file: [`../../05_study_design_evidence.md`](../../course/05_study_design_evidence.md)
 - Labs: [`../../labs/`](../../labs/)

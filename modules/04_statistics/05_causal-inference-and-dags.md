@@ -1293,12 +1293,12 @@ All URLs were accessed on 25 October 2026.
 - Propensity scores: [`06_propensity-scores-and-weighting.md`](06_propensity-scores-and-weighting.md) — a design-based estimator for the same estimand.
 - Target trial emulation: [`07_target-trial-emulation.md`](07_target-trial-emulation.md) — the design that makes the DAG operational.
 - Sensitivity analysis: [`08_sensitivity-analysis.md`](08_sensitivity-analysis.md) — E-values and negative controls.
-- Survey file: [`../../04_statistics_causal_inference.md`](../../04_statistics_causal_inference.md)
+- Survey file: [`../../04_statistics_causal_inference.md`](../../course/04_statistics_causal_inference.md)
 - Labs: [`../../labs/`](../../labs/) — Lab 4.1 builds a DAG and finds adjustment sets.
-- Foundations: [`../../01A_foundations_assumptions_and_units.md`](../../01A_foundations_assumptions_and_units.md) — assumptions ledger.
+- Foundations: [`../../01A_foundations_assumptions_and_units.md`](../../course/01A_foundations_assumptions_and_units.md) — assumptions ledger.
 - Survival analysis: [`03_survival-analysis.md`](03_survival-analysis.md) — time-to-event outcomes and competing risks.
 - Subgroups: [`09_subgroups-and-heterogeneity.md`](09_subgroups-and-heterogeneity.md) — effect modification and interaction.
 - Reporting: [`10_reporting-statistical-results.md`](10_reporting-statistical-results.md) — stating assumptions alongside estimates.
 - Estimation: [`01_estimation-and-inference.md`](01_estimation-and-inference.md) — intervals for standardized effects.
-- Study design: [`../../05_study_design_evidence.md`](../../05_study_design_evidence.md) — design options that block backdoor paths.
-- Module 18: [`../../18_quality_evaluation_reporting.md`](../../18_quality_evaluation_reporting.md) — evaluation and reporting standards.
+- Study design: [`../../05_study_design_evidence.md`](../../course/05_study_design_evidence.md) — design options that block backdoor paths.
+- Module 18: [`../../18_quality_evaluation_reporting.md`](../../course/18_quality_evaluation_reporting.md) — evaluation and reporting standards.

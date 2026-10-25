@@ -1296,6 +1296,6 @@ the argument.
 - Module map: [`_index.md`](_index.md)
 - Previous topic: [`02_labels-and-outcomes.md`](02_labels-and-outcomes.md)
 - Next topic: [`04_preprocessing.md`](04_preprocessing.md)
-- Survey file: [`../../06_machine_learning_foundations.md`](../../06_machine_learning_foundations.md)
+- Survey file: [`../../06_machine_learning_foundations.md`](../../course/06_machine_learning_foundations.md)
 - Labs: [`../../labs/`](../../labs/)
 - Cohort pipeline lab: [`../../labs/03_cohort_pipeline.ipynb`](../../labs/03_cohort_pipeline.ipynb)

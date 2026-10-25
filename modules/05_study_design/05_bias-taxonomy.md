@@ -1295,6 +1295,6 @@ All URLs accessed 25 October 2026.
 - Previous topic: [`04_validation-designs.md`](04_validation-designs.md)
 - Next topic: [`06_sample-size-and-power.md`](06_sample-size-and-power.md)
 - Related topic: [`03_real-world-evidence.md`](03_real-world-evidence.md)
-- Module survey file: [`../../05_study_design_evidence.md`](../../05_study_design_evidence.md)
+- Module survey file: [`../../05_study_design_evidence.md`](../../course/05_study_design_evidence.md)
 - Labs: [`../../labs/`](../../labs/)
 - Cohort pipeline lab: [`../../labs/03_cohort_pipeline.ipynb`](../../labs/03_cohort_pipeline.ipynb)

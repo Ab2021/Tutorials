@@ -1,7 +1,7 @@
 # Module 04 — Statistics and Causal Inference
 
 > **Part of:** Biomedical Data Science for Industry (2026), expanded edition.
-> **Survey file:** [`../../04_statistics_causal_inference.md`](../../04_statistics_causal_inference.md)
+> **Survey file:** [`../../course/04_statistics_causal_inference.md`](../../course/04_statistics_causal_inference.md)
 > **Folder:** `modules/04_statistics/`
 > **Version:** 2026.3
 

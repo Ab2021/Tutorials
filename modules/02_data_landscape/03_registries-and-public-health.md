@@ -1369,7 +1369,7 @@ All URLs accessed 24 October 2026.
 - Related sibling: [`01_ehr-data.md`](01_ehr-data.md)
 - Related sibling: [`10_data-quality-dimensions.md`](10_data-quality-dimensions.md)
 - Related sibling: [`09_licensing-and-access.md`](09_licensing-and-access.md)
-- Root survey file: [`../../02_biomedical_data_landscape.md`](../../02_biomedical_data_landscape.md)
+- Root survey file: [`../../02_biomedical_data_landscape.md`](../../course/02_biomedical_data_landscape.md)
 - Labs: [`../../labs/`](../../labs/)
 - Lab 2.4 in the survey file (source-selection matrix) and Lab 2.5 (data-quality profile) both draw on the completeness and stratification methods in section 5.
 

@@ -1294,7 +1294,7 @@ written as the prediction itself.
 - Next topic: [`12_fairness-and-subgroups.md`](12_fairness-and-subgroups.md)
 - Calibration: [`08_calibration.md`](08_calibration.md)
 - Metrics: [`07_metrics.md`](07_metrics.md)
-- Survey file: [`../../06_machine_learning_foundations.md`](../../06_machine_learning_foundations.md)
+- Survey file: [`../../06_machine_learning_foundations.md`](../../course/06_machine_learning_foundations.md)
 - Labs: [`../../labs/`](../../labs/)
 
 

@@ -745,9 +745,18 @@ A second calculation checks the ICC components, and a third reports the standard
 
 The split between the between-subject and within-subject sums of squares is the key to reading the ICC. A high ICC can mean good agreement or large between-subject variance; the components distinguish the two.
 
-A final note: the second block assumes the variables from the first block. Run the two in the same session, in order, or import the first block as a module.
+A final note: the second block repeats the data generation so it can be run independently of the first.
 
 ```python
+import math, random
+
+random.seed(3)
+n=120
+ref=[random.gauss(6000,1500) for _ in range(n)]
+test=[r*1.02+random.gauss(0,350) for r in ref]
+d=[test[i]-ref[i] for i in range(n)]
+sd=math.sqrt(sum((x-sum(d)/n)**2 for x in d)/(n-1))
+
 def icc_components(ref, test):
     n=len(ref); k=2
     grand=sum(ref+test)/(n*k)
@@ -1297,7 +1306,7 @@ All URLs accessed 25 October 2026.
 - Previous topic: [`07_deep-learning-for-signals.md`](07_deep-learning-for-signals.md)
 - Next topic: [`09_validation.md`](09_validation.md)
 - Related topic: [`06_feature-engineering.md`](06_feature-engineering.md)
-- Module survey file: [`../../11_physiological_signals_wearables.md`](../../11_physiological_signals_wearables.md)
+- Module survey file: [`../../course/11_physiological_signals_wearables.md`](../../course/11_physiological_signals_wearables.md)
 - Lab: [`../../labs/`](../../labs/)
 - Related topic: [`06_feature-engineering.md`](06_feature-engineering.md)
 - Related topic: [`10_deployment-on-device.md`](10_deployment-on-device.md)

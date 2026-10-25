@@ -1293,7 +1293,7 @@ All URLs accessed 25 October 2026.
 - Previous topic: [`04_ppg-and-wearables.md`](04_ppg-and-wearables.md)
 - Next topic: [`06_feature-engineering.md`](06_feature-engineering.md)
 - Related topic: [`08_digital-biomarkers.md`](08_digital-biomarkers.md)
-- Module survey file: [`../../11_physiological_signals_wearables.md`](../../11_physiological_signals_wearables.md)
+- Module survey file: [`../../course/11_physiological_signals_wearables.md`](../../course/11_physiological_signals_wearables.md)
 - Lab: [`../../labs/`](../../labs/)
 - Related topic: [`09_validation.md`](09_validation.md)
 - Related topic: [`07_deep-learning-for-signals.md`](07_deep-learning-for-signals.md)

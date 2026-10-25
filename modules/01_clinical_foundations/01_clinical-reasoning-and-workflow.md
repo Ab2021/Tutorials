@@ -1269,7 +1269,7 @@ Accessed 24 October 2026 unless otherwise stated.
 - Next topic: [`02_anatomy-physiology-and-vital-signs.md`](02_anatomy-physiology-and-vital-signs.md)
 - Related topic: [`03_laboratory-medicine.md`](03_laboratory-medicine.md)
 - Related topic: [`10_clinical-plausibility-checks.md`](10_clinical-plausibility-checks.md)
-- Survey file: [`../../01_clinical_foundations.md`](../../01_clinical_foundations.md)
+- Survey file: [`../../01_clinical_foundations.md`](../../course/01_clinical_foundations.md)
 - Labs: [`../../labs/`](../../labs/)
 - Cohort pipeline lab: [`../../labs/03_cohort_pipeline.ipynb`](../../labs/03_cohort_pipeline.ipynb)
 

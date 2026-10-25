@@ -1296,6 +1296,6 @@ they reach a report.
 - Labels and outcomes: [`02_labels-and-outcomes.md`](02_labels-and-outcomes.md)
 - Splitting and validation: [`03_splitting-and-validation.md`](03_splitting-and-validation.md)
 - Preprocessing: [`04_preprocessing.md`](04_preprocessing.md)
-- Survey file: [`../../06_machine_learning_foundations.md`](../../06_machine_learning_foundations.md)
+- Survey file: [`../../06_machine_learning_foundations.md`](../../course/06_machine_learning_foundations.md)
 - Labs: [`../../labs/`](../../labs/)
 - Calibration lab: [`../../labs/06_calibration_decision_curve.ipynb`](../../labs/06_calibration_decision_curve.ipynb)
