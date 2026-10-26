@@ -313,6 +313,26 @@ missing discharge event leaves a bed occupied in the census.
 derive one deterministically from the event content. That derivation becomes part of the contract
 and must be versioned, because changing it changes deduplication behaviour.
 
+**A useful test.** Ask the data owner: "if this event is written twice, what does the clinician see,
+and what does the invoice say?" If the two answers differ, idempotency alone is not sufficient; the
+counting semantics are part of the design. A duplicate admission note is noise. A duplicate
+professional fee line is a fraud indicator. A duplicate device observation may be indistinguishable
+from a genuine repeat measurement, which is why device streams usually need a device-supplied
+sequence number rather than a content hash.
+
+**Where idempotency lives.** There are four places to enforce it, and a design should name which
+one it uses:
+
+| Location | Mechanism | Strength | Weakness |
+|---|---|---|---|
+| Producer | Idempotent producer session | Prevents duplicate writes per producer session | Does not survive a producer restart without a transactional identifier |
+| Transport | Broker deduplication window | Bounded by broker configuration | Short window, not a business guarantee |
+| Consumer | Deduplication table keyed by event identifier | Survives restarts and replays | Requires shared state and transactional coupling to the output |
+| Sink | Unique constraint or upsert on a natural key | Strongest, enforced by the database | Requires a stable natural key |
+
+The weakest defensible design names one of these explicitly. The strongest names two: a sink
+constraint as the backstop, and a consumer deduplication check as the fast path.
+
 ### Step 5 — Choose the transport
 
 **Input.** Volume, peak factor, retention requirement, and the number of independent consumers.
@@ -414,6 +434,25 @@ brokers, 2 vCPU and 8 GiB each, 100 GB gp3 per broker, replication factor three"
 **Branch point.** If the required headroom exceeds the largest available instance, the design needs
 partitioning or tiered storage, not a bigger machine.
 
+**The three sizing formulas worth memorising.** Each is an approximation, and each states its
+dimension:
+
+```text
+partitions     = ceil(peak_events_per_second / (per_partition_events_per_second × target_utilisation))
+broker_disk_GB = daily_bytes × retention_days × replication_factor / 1e9 × safety_factor
+pod_count      = max(ceil(cpu_request_total / allocatable_cpu_per_node),
+                     ceil(memory_request_total / allocatable_memory_per_node))
+```
+
+The third formula is a lower bound. It ignores daemon overhead, fragmentation, and the fact that
+bin packing is not perfect. Section 6 of [`03_kubernetes.md`](03_kubernetes.md) works through the
+correction.
+
+**Edge case.** Provisioned throughput has a floor. A 100 GB gp3 volume includes 3,000 IOPS and
+125 MB/s at the published base rate; below that size the volume is cheaper but the throughput floor
+is still the same. Above it, IOPS and throughput are billed separately. A broker sized for
+throughput rather than capacity may be paying for IOPS while its disk is 12 percent full.
+
 ### Step 10 — Define failure and replay behaviour
 
 **Input.** The sizing sheet and the correctness classification.
@@ -427,6 +466,28 @@ The procedure must name the command or console action, the scope, and the verifi
 **Edge case.** Replay can overwhelm the downstream. A replay of seven days of events at full speed
 may saturate the serving database. The procedure must include a rate limit.
 
+**A replay procedure that is specific enough to run.** The following shape is the minimum. Adapt the
+commands to the platform, but keep the sequence.
+
+1. Record the incident identifier, the start offset and end offset or the time range, and the
+   reason for replay.
+2. Snapshot the current serving state, or confirm that the output is append-only and can be
+   superseded.
+3. Scale the consumer group down to one consumer, or use a separate consumer group writing to a
+   shadow table.
+4. Run the replay with an explicit rate limit. In Kafka, a separate consumer group reading the same
+   topic is safer than resetting the production group's offsets, because it leaves the production
+   path untouched.
+5. Compare row counts and a checksum of the replayed partition against the original.
+6. Promote the shadow output or reset the production offsets, with a recorded approval.
+7. Close the incident record with the replay duration, which becomes the measured recovery time.
+
+**What can go wrong when replay is skipped.** The pipeline processes on a best-effort basis, an
+upstream transform bug corrupts three weeks of derived data, and there is no raw copy. The team
+re-extracts from the source system, which has retained only 30 days. The recovery is partial, and
+nobody can say which patients were affected. This is the scenario that makes retention an
+architecture decision rather than a storage setting.
+
 ### Step 11 — Define the indicators and the objectives
 
 **Input.** The freshness budget and the failure behaviour.
@@ -436,6 +497,16 @@ may saturate the serving database. The procedure must include a rate limit.
 **Rationale.** An architecture that cannot be measured cannot be defended. At minimum: event-to-
 visible latency at p95, consumer lag in events, failed-record ratio, and availability of the
 serving endpoint.
+
+**Choosing the indicator, not the metric.** A metric is a number a system emits. An indicator is a
+number that reflects the user's experience. Consumer lag in events is a better indicator than
+consumer CPU, because lag measures the backlog the user is waiting behind. A record count is a
+better indicator of completeness than a job exit code, because a job can exit zero after writing
+nothing.
+
+**The error budget policy is part of the architecture.** If the budget is exhausted, releases stop
+and the team works on reliability. A team that has an SLO but no policy has a dashboard, not an
+objective.
 
 ### Step 12 — Record the decision and the reversal cost
 
