@@ -839,10 +839,10 @@ Expected output:
 
 ```text
 setting                             prev     PPV     NPV  alerts/case
-cardiology (development)            0.08   0.343   0.973         2.9
-elective surgery                    0.01   0.057   0.997        17.5
-inpatient oncology                  0.20   0.600   0.926         1.7
-elective surgery, spectrum shift    0.01   0.044   0.995        22.6
+cardiology (development)            0.08   0.343   0.973          2.9
+elective surgery                    0.01   0.057   0.997         17.5
+inpatient oncology                  0.20   0.600   0.926          1.7
+elective surgery, spectrum shift    0.01   0.044   0.995         22.6
 
 O:E surgery   0.125
 O:E oncology  2.5

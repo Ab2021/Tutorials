@@ -36,8 +36,8 @@ not the whole program.
 | 5 | [`05_clinical-background.md`](05_clinical-background.md) | Clinical Background | Texts and references for clinical vocabulary. | 1,200-1,800 | complete |
 | 6 | [`06_datasets-and-benchmarks.md`](06_datasets-and-benchmarks.md) | Datasets and Benchmarks | Where to find data and how to cite it. | 1,200-1,800 | complete |
 | 7 | [`07_industry-and-market.md`](07_industry-and-market.md) | Industry and Market | Market research, company filings, and credible industry reporting. | 1,200-1,800 | complete |
-| 8 | `08_communities-and-continuing-education.md` | Communities and Continuing Education | Societies, conferences, and ongoing learning. | 1,200-1,800 | planned |
-| 9 | `09_keeping-current.md` | Keeping Current | A maintenance routine for a fast-moving field. | 1,200-1,800 | planned |
+| 8 | [`08_communities-and-continuing-education.md`](08_communities-and-continuing-education.md) | Communities and Continuing Education | Societies, conferences, and ongoing learning. | 1,200-1,800 | complete |
+| 9 | [`09_keeping-current.md`](09_keeping-current.md) | Keeping Current | A maintenance routine for a fast-moving field. | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -67,9 +67,9 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 2 |
+| planned | 0 |
 | draft | 0 |
-| complete | 7 |
+| complete | 9 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.
 

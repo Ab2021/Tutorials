@@ -407,6 +407,24 @@ Record: the uncertainty.
 
 The procedure produces a dictionary entry that can be defended and a label that can be reused. It does not produce a clinically correct definition; that is the job of the body that issues definitions, and the procedure's job is to make sure the dataset uses one.
 
+### The five tests, restated for definition sources
+
+Every definition source admitted to the list passes the same five tests, whatever the specialty.
+
+| Test | Question for a definition source | Fail signal | Response |
+|---|---|---|---|
+| Authority | Is this the body that owns the definition | A specialty society paraphrasing a consensus body | Cite the owning body and the paraphrase separately |
+| Currency | Is this the version in force | A 2016 definition still cited after a revision | Record both and the era boundary |
+| Applicability | Does it fit this population and setting | A trial definition applied to claims data | State the population and the proxy |
+| Accessibility | Can a reader reach the primary text | A summary slide with no citation | Find the primary publication |
+| Provenance | Is the definition traceable to a cited source | A local pathway with no reference | Trace to the guideline or document the local origin |
+
+**Branch: the definition is superseded.** Keep the old definition only where the data or the regulation still require it, and label the era. A cohort that mixes eras should be reported as mixed rather than assigned to the newer definition.
+
+**Branch: the only accessible source is a secondary summary.** Use it to locate the primary text, not as the authority. If the primary text is paywalled, archive the passage used and record the access date.
+
+**Branch: the definition comes from a preprint or a conference abstract.** Treat it as an emerging proposal, not an in-force definition, and check whether a journal version has appeared.
+
 ### Where definitions enter a model
 
 | Entry point | What it affects | Failure if undocumented |

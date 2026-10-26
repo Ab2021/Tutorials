@@ -7,8 +7,8 @@
 > Version 2026.3
 
 > **Note:** This file is educational. It is not medical advice, not a diagnostic authority,
-> and not a substitute for the current WHO Classification of Tumours, College of American
-> Pathologists protocol, or institutional laboratory procedure. Every threshold below names
+> and not a substitute for the current World Health Organization (WHO) Classification of
+> Tumours, College of American Pathologists protocol, or institutional laboratory procedure. Every threshold below names
 > its source and version, and where a rule has changed the superseded and current versions
 > are both given.
 
@@ -107,10 +107,10 @@ By the end of this topic you can:
 | 2 | Compute quadratic weighted kappa (QWK) from a confusion matrix and explain why it is not comparable across category counts | Exercise 2; self-check 2 |
 | 3 | Detect slide, patient, and scanner leakage and quantify the inflation each produces | Exercise 3; interview question 4 |
 | 4 | Measure inter-pathologist agreement and use it as the ceiling for model claims | Exercise 4; self-check 4 |
-| 5 | Apply the ASCO/CAP HER2 immunohistochemistry (IHC) categories and in situ hybridisation (ISH) groups, including the work-up for groups 2 to 4 | Exercise 5; interview question 6 |
+| 5 | Apply the American Society of Clinical Oncology and College of American Pathologists (ASCO/CAP) HER2 immunohistochemistry (IHC) categories and in situ hybridisation (ISH) groups, including the work-up for groups 2 to 4 | Exercise 5; interview question 6 |
 | 6 | Explain how a WHO edition change reclassifies cases and how to version the diagnosis field | Exercise 6; self-check 6 |
 | 7 | Write a synoptic report extractor that respects core, conditional, and optional elements | Exercise 7; interview question 9 |
-| 8 | Place a pathology product on the FDA device path or the laboratory-developed test route, and state the accreditation constraints | Exercise 8; interview question 10 |
+| 8 | Place a pathology product on the US Food and Drug Administration (FDA) device path or the laboratory-developed test route, and state the accreditation constraints | Exercise 8; interview question 10 |
 
 Outcomes 1 and 3 are structural. They are separated because a learner can draw the hierarchy
 and still split by tile, which is the error the hierarchy exists to prevent.
@@ -247,7 +247,7 @@ model, and the consensus grade used as a feature when the model is supposed to p
 |---|---|---|---|
 | Histology | Tissue type and subtype | Treated as a free-text field | ICD-O morphology code |
 | Haematoxylin and eosin (H&E) | Routine stain showing nuclei and cytoplasm | Assumed comparable across laboratories | Stain protocol identifier |
-| Whole-slide image (WSI) | Digitised slide stored as a pyramidal image | Treated as a photograph with one resolution | DICOM Supplement 145; vendor formats |
+| Whole-slide image (WSI) | Digitised slide stored as a pyramidal image | Treated as a photograph with one resolution | DICOM (Digital Imaging and Communications in Medicine) Supplement 145; vendor formats |
 | Pyramidal image | Multi-resolution image with a base level and downsampled levels | Level index used without microns per pixel | Level 0 to n |
 | Microns per pixel (MPP) | Physical size of one pixel | Assumed constant across scanners | µm/pixel |
 | Tile | Fixed-size crop extracted from a slide | Called a patch, a tile, or a crop interchangeably | Pixels, at a stated MPP |
@@ -265,7 +265,7 @@ model, and the consensus grade used as a feature when the model is supposed to p
 | Attention weights | Instance weights learned by a MIL model | Read as a segmentation | Unitless weights |
 | Tumour proportion | Fraction of the slide that is tumour | Estimated visually without a method | Percent |
 | Gleason score | Sum of the two highest-grade patterns | Used after the ISUP grade group replaced it | 6 to 10 |
-| ISUP grade group | Grade groups 1 to 5 derived from Gleason | Called a Gleason score | Ordinal 1 to 5 |
+| ISUP grade group | International Society of Urological Pathology grade groups 1 to 5, derived from Gleason | Called a Gleason score | Ordinal 1 to 5 |
 | Nottingham grade | Breast carcinoma grade from tubules, nuclei, and mitoses | Pooled with other sites' grades | 1 to 3 |
 | Mitotic figure | Cell in mitosis | Counted per high-power field without an area | Count per mm squared |
 | HER2 | Human epidermal growth factor receptor 2 | Reported as positive or negative without the assay | IHC 0 to 3+; ISH group |
@@ -278,7 +278,7 @@ model, and the consensus grade used as a feature when the model is supposed to p
 | CAP protocol | College of American Pathologists cancer protocol | Assumed static | Versioned release |
 | CLIA | Clinical Laboratory Improvement Amendments | Treated as a certification of accuracy | US laboratory regulation |
 | Laboratory-developed test (LDT) | Test designed and validated in one laboratory | Assumed to be device-exempt | CLIA framework |
-| In vitro diagnostic (IVD) | Test used on specimens from the body | Used as a synonym for any lab test | EU IVDR 2017/746 |
+| In vitro diagnostic (IVD) | Test used on specimens from the body | Used as a synonym for any lab test | EU in vitro diagnostic regulation 2017/746 |
 | Digital pathology | Primary diagnosis from a WSI | Used for any image analysis | Regulatory category |
 | Scanner | Slide digitisation instrument | Treated as interchangeable across models | Make, model, firmware |
 | Batch effect | Technical variation between processing groups | Treated as biological signal | Batch identifier |
@@ -655,8 +655,9 @@ of 0.96 against the reference uropathologist. The buyer's question is whether th
 ready for a workflow in which it pre-orders cases for review.
 
 The evaluation set is 200 biopsies from 200 patients, graded on the five-category ISUP grade
-group scale: group 1 (Gleason 3+3), group 2 (3+4), group 3 (4+3), group 4 (8), and group 5
-(9 or 10). The reference distribution is 70, 60, 30, 20, and 20 cases.
+group scale: group 1 (GG1, Gleason 3+3), group 2 (GG2, 3+4), group 3 (GG3, 4+3), group 4
+(GG4, Gleason 8), and group 5 (GG5, Gleason 9 or 10). The reference distribution is 70, 60,
+30, 20, and 20 cases.
 
 ### 6.1 The patient-level confusion matrix
 
@@ -755,8 +756,9 @@ Specificity =  53 /  70 = 0.7571
 ```
 
 A team reporting "91.5 percent sensitivity for clinically significant cancer" has told the
-truth and has hidden the consequence. Convert the operating point to the deployment prevalence,
-which for a screening biopsy population is about 4 percent:
+truth and has hidden the consequence. Convert the operating point to the positive predictive
+value (PPV) at the deployment prevalence, which for a screening biopsy population is about 4
+percent:
 
 ```text
 PPV = (0.04 x 0.9154) / (0.04 x 0.9154 + 0.96 x 0.2429)
@@ -1039,7 +1041,7 @@ protocol text.
 
 | Standard | Scope | Binding or convention | What it does not constrain |
 |---|---|---|---|
-| DICOM Supplement 145 | Whole-slide imaging | Convention adopted by scanner vendors | Image quality or stain consistency |
+| Digital Imaging and Communications in Medicine (DICOM) Supplement 145 | Whole-slide imaging | Convention adopted by scanner vendors | Image quality or stain consistency |
 | Vendor pyramidal formats | Aperio SVS, Hamamatsu NDPI, generic TIFF | De facto | Metadata completeness |
 | ICC colour profiles | Colour consistency | Convention | Whether the scan is diagnostic |
 | CLIA | US laboratory operation | Binding regulation | Algorithm validity |

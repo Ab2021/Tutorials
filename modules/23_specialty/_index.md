@@ -29,13 +29,13 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | `01_oncology.md` | Oncology | Tumour biology, staging, RECIST, endpoints, and oncology data. | 1,200-1,800 | planned |
-| 2 | `02_cardiology.md` | Cardiology | Heart failure, ACS, arrhythmia, devices, and cardiology registries. | 1,200-1,800 | planned |
-| 3 | `03_pathology.md` | Pathology | Histology, whole-slide imaging, molecular pathology, and reporting. | 1,200-1,800 | planned |
-| 4 | `04_critical-care.md` | Critical Care | ICU physiology, ventilation, sepsis, and high-frequency data. | 1,200-1,800 | planned |
-| 5 | `05_pediatrics-and-obstetrics.md` | Pediatrics and Obstetrics | Growth, dosing, maternal-fetal data, and special consent. | 1,200-1,800 | planned |
-| 6 | `06_public-health.md` | Public Health | Population surveillance, equity, and policy analytics. | 1,200-1,800 | planned |
-| 7 | `07_cross-specialty-comparison.md` | Cross-Specialty Comparison | What transfers between specialties and what does not. | 1,200-1,800 | planned |
+| 1 | [`01_oncology.md`](01_oncology.md) | Oncology | Tumour biology, staging, RECIST, endpoints, and oncology data. | 1,200-1,800 | complete |
+| 2 | [`02_cardiology.md`](02_cardiology.md) | Cardiology | Heart failure, ACS, arrhythmia, devices, and cardiology registries. | 1,200-1,800 | complete |
+| 3 | [`03_pathology.md`](03_pathology.md) | Pathology | Histology, whole-slide imaging, molecular pathology, and reporting. | 1,200-1,800 | complete |
+| 4 | [`04_critical-care.md`](04_critical-care.md) | Critical Care | ICU physiology, ventilation, sepsis, and high-frequency data. | 1,200-1,800 | complete |
+| 5 | [`05_pediatrics-and-obstetrics.md`](05_pediatrics-and-obstetrics.md) | Pediatrics and Obstetrics | Growth, dosing, maternal-fetal data, and special consent. | 1,200-1,800 | complete |
+| 6 | [`06_public-health.md`](06_public-health.md) | Public Health | Population surveillance, equity, and policy analytics. | 1,200-1,800 | complete |
+| 7 | [`07_cross-specialty-comparison.md`](07_cross-specialty-comparison.md) | Cross-Specialty Comparison | What transfers between specialties and what does not. | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -63,9 +63,9 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 7 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 7 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.
 

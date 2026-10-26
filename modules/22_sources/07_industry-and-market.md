@@ -400,6 +400,24 @@ Record: the recommendation.
 
 The procedure produces a market sentence that a diligence team can check and a record of what the source does not support. It does not produce a market forecast, and it should not be presented as one.
 
+### The five tests, restated for market sources
+
+Market sources are evaluated with the same five tests as clinical ones, and the failure modes are different in each.
+
+| Test | Question for a market source | Fail signal | Response |
+|---|---|---|---|
+| Authority | Who produced the number, and what do they sell | An analyst firm selling into the category | Label the number as promotional |
+| Currency | What period do the underlying data cover | A recent report with year-old data | State both dates |
+| Applicability | Does the definition match the market you mean | A broad category used for a narrow product | Re-scope or state the mismatch |
+| Accessibility | Is the method published | A figure with no methodology note | Treat as an estimate without method |
+| Provenance | Can it be traced to a filing or statistic | No audited or official comparator | Mark as an unverified estimate |
+
+**Branch: the source is a paid analyst report.** It is admissible as a market estimate and as evidence of what buyers report, not as an audited figure. Record the edition and the licence terms.
+
+**Branch: the source is a press release summarising a report.** Use it to find the report; do not cite the release as the source. Press releases routinely drop the method and the sample.
+
+**Branch: the source is a company's own disclosure.** It is the best evidence for that company's revenue and the weakest for the market around it. Do not aggregate company figures into a market size without stating the aggregation rule.
+
 ### Market claim red flags
 
 | Red flag | What it suggests | What to ask |
@@ -1181,8 +1199,8 @@ Good for: filings, audited financials, and segment data. Not for: private compan
 **Kaufman Hall.** *National Hospital Flash Report.* https://www.kaufmanhall.com/
 Good for: hospital margin and volume trends from a panel. Not for: a national census or a causal claim.
 
-**KLAS Research.** Healthcare IT research. https://klasresearch.com/
-Good for: provider sentiment and vendor performance research. Not for: clinical effectiveness.
+**KLAS Research.** Healthcare IT research and methodology. https://klasresearch.com/
+Good for: provider sentiment, vendor performance, and how the panel is recruited. Not for: clinical effectiveness or a measured outcome.
 
 **Centers for Medicare and Medicaid Services.** Open Payments. https://openpaymentsdata.cms.gov/
 Good for: industry payments to clinicians. Not for: clinical evidence.
@@ -1202,8 +1220,8 @@ Good for: population health statistics and denominators. Not for: a market forec
 **Kaufman Hall.** Hospital finance data and methodology. https://www.kaufmanhall.com/
 Good for: understanding the panel and the reported metrics. Not for: a national census.
 
-**KLAS Research.** Methodology and research areas. https://klasresearch.com/
-Good for: understanding how provider sentiment data are collected. Not for: clinical evidence.
+**American Hospital Association.** Hospital statistics and annual survey. https://www.aha.org/
+Good for: hospital counts, utilisation summaries, and sector context. Not for: independent analysis, since the association also represents the sector it describes.
 
 **Rock Health.** Methodology and funding data definitions. https://rockhealth.com/
 Good for: the definition of the funding series and its inclusion criteria. Not for: company-level financials.

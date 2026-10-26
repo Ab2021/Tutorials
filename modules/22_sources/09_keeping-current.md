@@ -354,6 +354,58 @@ Record: the cost.
 
 The procedure produces a routine that is cheap enough to sustain and complete enough to catch the changes that matter. It does not eliminate the risk of a missed change, and it makes the risk visible and bounded.
 
+### The five tests applied at every review
+
+Maintenance is not only detection. At each review, every source on the list is re-tested with the same five questions that were used to admit it, because a source can pass on the day it is added and fail a year later.
+
+| Test | Question at review | What failure looks like | Response |
+|---|---|---|---|
+| Authority | Is the issuer still the body that owns this subject | A guidance has been taken over by another body | Re-attribute or replace |
+| Currency | Is this the version in force, and is a successor listed | A revision is dated after the last check | Re-verify and propagate |
+| Applicability | Does it still bear on a decision the team makes | The programme it supported has closed | Downgrade or retire |
+| Accessibility | Can a colleague still obtain it | A subscription has lapsed | Archive the passage or replace |
+| Provenance | Is the claim traceable to a primary document | The trail ends at a summary | Chase the primary source |
+
+The tests are ordered by cost, not by importance. Authority and currency are quick to check; provenance is slow and is reserved for sources that carry a claim into a document.
+
+**Branch: the source passes all five.** Record the date and leave it in place. A passing source still needs its cadence honoured, because the next review is the one that will catch the change.
+
+**Branch: the source fails authority.** If the issuing body has changed, the source is not simply stale; it may be wrong about who governs the subject. Replace it and check whether the successor has a different scope.
+
+**Branch: the source fails currency.** Establish whether a successor exists and whether it applies to work already done. The response is one of three: update and propagate, document the earlier basis, or pause the dependent work until the question is settled.
+
+**Branch: the source fails applicability.** A source that no longer bears on a decision is a candidate for retirement, and retirement is a legitimate outcome. Keeping it costs review time and dilutes attention.
+
+**Branch: the source fails accessibility.** If the team can no longer reach the document, the correct action is to archive what was relied on and find an accessible equivalent, not to keep citing a page nobody can open.
+
+**Branch: the source fails provenance.** A summary that cannot be traced is not usable as evidence, even if it is convenient. Either find the primary document or downgrade the claim it supports.
+
+### Edge cases at review
+
+| Edge case | Signal | Correct action | Common error |
+|---|---|---|---|
+| Retracted paper | Retraction notice or a status flag at the publisher | Remove the claim, replace the citation, note the date | Keeping the citation because the PDF is still online |
+| Superseded guidance | A successor is listed by the issuer | Re-read the successor and record the change | Citing the old version because it is familiar |
+| Paywalled standard | Access ends when a subscription lapses | Archive the clause relied on, or buy access | Citing a clause nobody on the team can check |
+| Dead link | The page returns an error or redirects | Find the new location or archive the last good copy | Leaving the link because it worked last year |
+| Predatory journal | Structural signals in the venue | Remove and replace, and check other citations from it | Keeping it because a colleague cited it |
+| Preprint versus peer-reviewed | A journal version now exists | Cite the published version and check for changed results | Citing the preprint after publication |
+| Version behind a DOI | The DOI resolves to a newer version | Record the version used and the date | Citing the DOI as if it pinned the content |
+| Withdrawn dataset | The maintainer announces retirement | Re-extract from the successor or document the freeze | Continuing to quote counts from a withdrawn release |
+
+### A decision table for the review
+
+| Finding | Evidence | Action | Owner |
+|---|---|---|---|
+| In force, no successor | Issuer's status page | Keep, record date | Source owner |
+| Successor published | Issuer's index | Re-verify, propagate | Source owner and artefact owner |
+| Withdrawn, no successor | Issuer's notice | Retire, document basis | Source owner |
+| Unreachable, archived copy available | Snapshot plus citation | Keep with archive reference | Source owner |
+| Unreachable, no copy | Failed retrieval twice | Retire, record gap | Register owner |
+| Disputed status | Two readers disagree | Escalate to regulatory owner | Regulatory owner |
+
+Three outcomes are not enough for this decision, because "keep" and "retire" leave out the common case in which the source is still valid but the team cannot reach it. The table therefore separates availability from validity, and the archive column carries the distinction.
+
 ### The quarterly checklist
 
 - Confirm that every source on the list still exists at the issuer.

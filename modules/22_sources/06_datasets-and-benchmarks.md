@@ -412,6 +412,24 @@ Record: the uncertainty.
 
 The procedure produces a citable dataset and a record that a reader can use to obtain the same version. It does not produce a good dataset; it produces a defensible use of one.
 
+### The five tests, restated for dataset sources
+
+The procedure above is specific to data, but each dataset source admitted to the list still passes the five tests used across the module.
+
+| Test | Question for a dataset source | Fail signal | Response |
+|---|---|---|---|
+| Authority | Is this the maintainer's own documentation | A course page describes the dataset | Cite the maintainer and the version |
+| Currency | Is this the version in use | A v2.2 count quoted after v3.1 | Re-extract or relabel the version |
+| Applicability | Does the population match the intended use | A single-centre cohort used for a national claim | State the population limit |
+| Accessibility | Can a reader obtain the same version under the same terms | Access approved for one team only | Record the access route and date |
+| Provenance | Is the version traceable and dated | No DOI, no version, no date | Obtain the DOI or record the download date |
+
+**Branch: the dataset is retracted or withdrawn.** Stop using it, record the withdrawal, and identify every result that depended on it. A withdrawn dataset does not become usable because a copy exists locally.
+
+**Branch: the dataset is a preprint or an unreviewed release.** It is admissible for exploration, not for a benchmark claim. Check for a reviewed description or a later version before citing a performance number.
+
+**Branch: the benchmark paper is superseded.** When a benchmark's evaluation protocol changes, numbers from the old protocol are not comparable to the new one, and the split should be stated.
+
 ### Version changes and their effects
 
 | Change type | Example | Effect on a result | Action |

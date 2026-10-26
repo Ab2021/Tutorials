@@ -427,6 +427,24 @@ Edge case: a major version change can alter defaults without changing the functi
 Check: is the software version pinned in the environment file.
 Record: the triggers.
 
+### The five tests, restated for methods sources
+
+The procedure above is domain-specific, but every methods source admitted to the list must still pass the five tests that govern the whole module.
+
+| Test | Question for a methods source | Fail signal | Response |
+|---|---|---|---|
+| Authority | Is this the method's originators or a later summary | A blog restates a paper | Chase the primary paper |
+| Currency | Is this the current version of the method or standard | A 2015 checklist cited as current | Replace with the current version |
+| Applicability | Does the method match the question and the data | A method for a different estimand | Reconsider the design |
+| Accessibility | Can the team read the method and its assumptions | Paywalled without an accessible preprint | Use the preprint and label it |
+| Provenance | Is the implementation traceable to a version | Package named without a version | Record the version and environment |
+
+**Branch: the source is a retracted methods paper.** Remove it, check whether the implementation depended on it, and re-run the affected analysis if it did. The citation may remain in a change note, never in the methods.
+
+**Branch: the source is a preprint.** It is admissible as a signal and as a pointer to an implementation, not as settled authority. Check for a journal version before relying on a numerical claim.
+
+**Branch: the source is a superseded reporting standard.** TRIPOD 2015 is the clearest case; TRIPOD+AI and its 2024 update supersede it for prediction-model work. Cite the standard that applies at the date of the analysis and say which one was used.
+
 ### Defaults that change results
 
 | Setting | Typical default | Why it matters | What to record |

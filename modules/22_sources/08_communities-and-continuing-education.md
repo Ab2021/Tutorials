@@ -392,6 +392,24 @@ Record: the review.
 
 The procedure produces a defensible use of community material and a learning plan with an output. It does not produce expertise, and it does not turn an abstract into evidence.
 
+### The five tests, restated for community artefacts
+
+A talk, a poster, a preprint, or a society statement is a source like any other, and the same five tests apply.
+
+| Test | Question for a community artefact | Fail signal | Response |
+|---|---|---|---|
+| Authority | Who produced it, and is the venue accountable | A session with no named committee | Use as a signal only |
+| Currency | Is there a later version | A preprint after the journal paper | Cite the journal version |
+| Applicability | Does it address your population and setting | A different setting and sample | State the difference |
+| Accessibility | Can a colleague obtain the artefact | Session not recorded, no paper | Request the material or drop it |
+| Provenance | Is there a retrievable, indexed record | No abstract number or DOI | Cite the meeting, year, and number |
+
+**Branch: the artefact is an abstract and no full paper exists.** It is citable as an abstract and not as a finding. Say so in the sentence that uses it.
+
+**Branch: the venue is predatory or the review policy is unpublished.** Do not spend the fee and do not cite the work as reviewed. Check whether a legitimate version exists.
+
+**Branch: the artefact is paywalled.** Conference recordings and society reports are often members-only; note the access route so a reader knows the artefact was obtainable at the time.
+
 ### Value by role
 
 | Role | Community value | Best format | Poor use of budget |
