@@ -1266,6 +1266,12 @@ Good for: the current MDCG documents and their endorsement dates. Not for: the l
 **U.S. Food and Drug Administration, Artificial Intelligence-Enabled Medical Devices list.** https://www.fda.gov/medical-devices/artificial-intelligence-enabled-medical-devices/list-artificial-intelligence-enabled-medical-devices
 Good for: the device-level list with decision dates and product codes. Not for: a comprehensive census; the agency notes the list is not exhaustive.
 
+**European Medicines Agency.** Regulatory guidelines and product information. https://www.ema.europa.eu/
+Good for: the EU medicines regime, which is separate from the device regime. Not for: MDR or IVDR obligations. Included because teams often conflate the two.
+
+**U.S. Government Publishing Office.** Federal Register. https://www.federalregister.gov/
+Good for: the official text and date of US rules, notices, and guidance availability. Not for: consolidated current text, which is at eCFR.
+
 **Medicines and Healthcare products Regulatory Agency.** https://www.gov.uk/government/organisations/medicines-and-healthcare-products-agency
 Good for: the UK regime, which diverges from the EU after Brexit. Not for: EU compliance, which requires the EU instruments.
 

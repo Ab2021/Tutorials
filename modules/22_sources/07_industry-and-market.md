@@ -1214,6 +1214,40 @@ Good for: the structure of filings and the sections that carry financial data. N
 **Federal Reserve Economic Data (FRED).** Economic time series. https://fred.stlouisfed.org/
 Good for: macroeconomic series and deflators for nominal-to-real comparisons. Not for: sector-specific market sizes.
 
+**U.S. Bureau of Economic Analysis.** National income and product accounts. https://www.bea.gov/
+Good for: deflators and aggregate spending series. Not for: clinical or device-specific categories.
+
+### Comparing a market claim before and after the check
+
+| Element | Before the check | After the check |
+|---|---|---|
+| Number | "$40B market" | "$40B global category spend, 2025 estimate" |
+| Method | Not stated | Top-down from a national spend figure |
+| Denominator | Implied | Global spend on clinical decision support |
+| Fit to decision | Assumed | Segment is $2.1B; product SAM is smaller |
+| Source interest | Not stated | Analyst report, client base undisclosed |
+| Uncertainty | None | Range from two methods |
+
+The table is the practical output of the procedure. The number survives; the claim around it changes.
+
+### A short worked currency check
+
+A deck says the market is "$40 billion, growing 30 percent a year". The source is a 2024 report projecting 2030.
+
+- Implied 2030 value at 30 percent for six years: 40 × 1.3^6 = 193, or about $193 billion.
+- If the report's 2030 figure is $120 billion, the implied rate is (120/40)^(1/6) − 1 = 20.1 percent.
+- The stated 30 percent and the endpoints do not reconcile.
+
+The error is not necessarily dishonest. It can be a different base year, a different scope, or a growth rate taken from another category. The check finds it in under a minute, and the corrected sentence uses the implied rate and the report's own endpoints.
+
+The same check applies to any growth claim: take the endpoints, compute the rate, and compare with the stated rate. If they differ, one of the three numbers is wrong or the period is different.
+
+- A rate without endpoints is a claim, not a calculation.
+- Endpoints without a period are a claim, not a calculation.
+- A period without a definition is a claim, not a calculation.
+
+Only the three together can be checked.
+
 ## 17. Links
 
 - Module index: [`_index.md`](_index.md)

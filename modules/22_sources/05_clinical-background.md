@@ -1247,6 +1247,12 @@ Good for: the AKI definition and staging. Not for: local laboratory calibration.
 **U.S. Food and Drug Administration.** Clinical decision support software guidance. https://www.fda.gov/regulatory-information/search-fda-guidance-documents/clinical-decision-support-software
 Good for: how the intended use of a clinical software function is described and assessed. Not for: the clinical definition of the condition it addresses.
 
+**U.S. Centers for Disease Control and Prevention.** ICD-10-CM official guidelines for coding and reporting. https://www.cdc.gov/nchs/icd/icd10cm.htm
+Good for: the coding conventions that determine how a diagnosis is recorded. Not for: the clinical criteria that define the diagnosis. The distinction is the core of this topic.
+
+**NLM UMLS Metathesaurus.** https://www.nlm.nih.gov/research/umls/
+Good for: cross-vocabulary concept identifiers and synonyms. Not for: a validated phenotype; the mapping is a starting point.
+
 **Health Level Seven International (HL7).** Fast Healthcare Interoperability Resources (FHIR). https://hl7.org/fhir/
 Good for: how clinical concepts are represented and exchanged. Not for: the definitions themselves; FHIR carries codes, not consensus criteria.
 
