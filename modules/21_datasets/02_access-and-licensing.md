@@ -1296,7 +1296,7 @@ All URLs accessed 26 October 2026. Fees, pauses, and eligibility rules change; v
 - Module map and topic table: [`_index.md`](_index.md)
 - Previous topic, the five-gate decision: [`01_five-gate-decision.md`](01_five-gate-decision.md)
 - EHR, claims, and ICU data: [`03_ehr-claims-and-icu.md`](03_ehr-claims-and-icu.md)
-- Benchmark pitfalls: [`12_benchmark-pitfalls.md`](12_benchmark-pitfalls.md)
+- Imaging datasets: [`04_imaging-datasets.md`](04_imaging-datasets.md)
 - Root survey file: [`../../course/21_datasets_tools_benchmarks.md`](../../course/21_datasets_tools_benchmarks.md)
 - Labs, including the license and access audit: [`../../labs/`](../../labs/)
 

@@ -55,7 +55,7 @@ to 90 hours per artifact, which is the budget this topic assumes.
 
 ### 1.3 What a portfolio is competing against
 
-Every candidate for a clinical data role can claim Python, SQL, and a model. The scarce signals
+Every candidate for a clinical data role can claim Python, structured query language, and a model. The scarce signals
 are: a decision you can name, a validation you can defend, a limitation you volunteered, and a
 repository a stranger can run. Those four are the portfolio's actual product. The model is the
 vehicle.
@@ -73,7 +73,7 @@ different artifacts, and a single model repository answers only the second and p
 first.
 
 Five slots also protect against a change of target. If the clinical data science market is slow
-in a given quarter, the causal artifact and the translation memo support an RWE application
+in a given quarter, the causal artifact and the translation memo support a real-world evidence (RWE) application
 without a rebuild. The portfolio is a small portfolio of options, not a monument.
 
 ### 1.5 What this topic covers
@@ -226,7 +226,7 @@ can they find the number that supports it?
 | Temporal validation | Validation on data collected after the development period | Confused with random split | Design |
 | External validation | Validation on a different site, system, or population | Claimed from a held-out year at the same site | Design |
 | Calibration | Agreement between predicted risk and observed frequency | Reported as a single slope without a plot | Slope, intercept |
-| Decision curve | Net benefit across threshold probabilities | Replaced by AUROC because it is easier | Net benefit |
+| Decision curve | Net benefit across threshold probabilities | Replaced by area under the receiver operating characteristic curve because it is easier | Net benefit |
 | AUROC | Area under the receiver operating characteristic curve; rank discrimination | Reported alone as evidence of usefulness | 0–1 |
 | AUPRC | Area under the precision-recall curve; sensitive to class imbalance | Compared across populations with different prevalence | 0–1 |
 | Subgroup analysis | Performance reported by clinically or demographically meaningful group | Added as an afterthought with no pre-specification | Stratified metrics |
@@ -310,7 +310,7 @@ field considers sufficient.
 | If your target is | Build these slots | Because the interviewer will probe |
 |---|---|---|
 | Clinical or health data science (provider) | 1, 3, 5 | Validation, workflow fit, and whether you can talk to a clinical committee |
-| RWE, epidemiology, HEOR | 2, 4, 5 | Confounding, data provenance, and payer or regulator decisions |
+| Real-world evidence, epidemiology, health economics and outcomes research | 2, 4, 5 | Confounding, data provenance, and payer or regulator decisions |
 | ML engineering, clinical AI | 1, 3, plus an incident write-up | Reliability, monitoring, and failure handling |
 | Bioinformatics | 3, 4, plus a discovery narrative | Reproducibility, batch effects, and biological interpretation |
 | Biostatistics | 2, 1, plus a protocol or SAP | Estimand, missing data, and pre-specification |
@@ -519,6 +519,29 @@ it signals that you do not finish or maintain. Six months is a reasonable review
 
 If an artifact is superseded, keep it and say so. A visible history of improvement is a signal
 of judgment, provided the current version is clearly marked.
+
+### Career-context branches
+
+**From academia.** A paper is not an artifact until it has a decision framing, a runnable package, and
+a limitation section. Convert one paper rather than starting a new project.
+
+**No clinical background.** Use public or synthetic data and claim method demonstration, not clinical
+validity. The limitation is stated in the title block, not the appendix.
+
+**Non-traditional degree.** The artifact substitutes for the credential screen; add a referral because
+the screen may still filter you before the artifact is opened.
+
+**Visa constraints.** Build artifacts that do not depend on employer data, and keep the timeline
+realistic: a portfolio built in four months is compatible with a search that starts after it.
+
+**Remote roles.** Run the stranger test remotely; a reproduction that works over a screen share is the
+version a remote reviewer will see.
+
+**Return after a gap.** One recent artifact is worth more than an explanation. Date it and put it
+first in the index.
+
+**Over-levelled target.** Match the artifact's scope to the level you are applying for; a mid-level
+artifact submitted for a senior role reads as evidence against the level.
 
 ### Branch points and edge cases
 
@@ -899,7 +922,7 @@ convention.
 | Datasheets for datasets (Gebru et al.) | Documentation convention | Motivation, composition, collection, preprocessing, uses, distribution, maintenance | Guarantee that the data are representative |
 | RAP guidance (UK Government Analysis Function; NHS Digital levels) | Quality convention | Version control, peer review, automation, testing, documentation | Define the scientific question |
 | FAIR principles | Data convention | Findability, accessibility, interoperability, reusability of data and metadata | Address privacy or consent |
-| HIPAA Privacy Rule (US) | Binding law | Use and disclosure of PHI; de-identification standards | Cover research ethics review |
+| Health Insurance Portability and Accountability Act (HIPAA) Privacy Rule (US) | Binding law | Use and disclosure of PHI; de-identification standards | Cover research ethics review |
 | GDPR (EU/UK) | Binding law | Lawful basis, data minimisation, rights, transfers | Cover clinical trial conduct |
 | PhysioNet credentialed access (for MIMIC and similar) | Contractual | Who may access data, for what, with what training and agreement | Grant permission to publish record-level data |
 | Open-source licences (MIT, Apache-2.0, CC-BY-4.0) | Contractual | Reuse, modification, attribution, patent grants | Grant ethics approval or data rights |

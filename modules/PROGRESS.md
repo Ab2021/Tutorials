@@ -27,15 +27,15 @@
 | 17 | Product, Economics, and Leadership | 9 | 9 | 9 | 12,302 |
 | 18 | Quality, Evaluation, and Reporting | 9 | 9 | 9 | 11,715 |
 | 19 | Capstone, Hackathons, and Competitions | 11 | 11 | 11 | 14,557 |
-| 20 | Career, Portfolio, and Interviews | 10 | 7 | 7 | 9,314 |
-| 21 | Datasets, Tools, and Benchmarks | 12 | 0 | 0 | 0 |
-| 22 | Sources and Further Reading | 9 | 0 | 0 | 0 |
+| 20 | Career, Portfolio, and Interviews | 10 | 10 | 10 | 13,312 |
+| 21 | Datasets, Tools, and Benchmarks | 12 | 12 | 12 | 15,606 |
+| 22 | Sources and Further Reading | 9 | 7 | 7 | 9,010 |
 | 23 | Specialty Electives | 7 | 0 | 0 | 0 |
 | 24 | Hardware and Robotics Labs | 9 | 0 | 0 | 0 |
 | 25 | Trial Operations, HTA, and Global Regulation | 7 | 0 | 0 | 0 |
 | 26 | Cloud, Kubernetes, and Streaming Production Labs | 9 | 0 | 0 | 0 |
 
-**Total topic files:** 272
+**Total topic files:** 294
 
-**Total topic lines:** 339,105
+**Total topic lines:** 367,719
 

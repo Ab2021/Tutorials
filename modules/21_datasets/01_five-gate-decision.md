@@ -1293,8 +1293,8 @@ All URLs accessed 26 October 2026. Versions, licences, and access conditions cha
 
 - Module map and topic table: [`_index.md`](_index.md)
 - Next topic, access and licensing: [`02_access-and-licensing.md`](02_access-and-licensing.md)
-- Benchmark pitfalls: [`12_benchmark-pitfalls.md`](12_benchmark-pitfalls.md)
 - EHR, claims, and ICU data: [`03_ehr-claims-and-icu.md`](03_ehr-claims-and-icu.md)
+- Imaging datasets: [`04_imaging-datasets.md`](04_imaging-datasets.md)
 - Root survey file: [`../../course/21_datasets_tools_benchmarks.md`](../../course/21_datasets_tools_benchmarks.md)
 - Labs, including the dataset audit and license audit: [`../../labs/`](../../labs/)
 

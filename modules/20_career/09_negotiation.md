@@ -83,7 +83,7 @@ they are both unethical and ineffective in a market where recruiters talk to eac
 |---:|---|---|
 | 1 | Build a market range from at least three named sources with their limitations | Exercise 1; self-check 1 |
 | 2 | Compute total first-year and four-year value for an offer with bonus, equity, and match | Exercise 2; self-check 2 |
-| 3 | Identify your BATNA and reservation price before the conversation | Exercise 3; self-check 3 |
+| 3 | Identify your best alternative to a negotiated agreement and reservation price before the conversation | Exercise 3; self-check 3 |
 | 4 | Ask for a specific adjustment with a reason, in under 60 seconds | Exercise 4; self-check 4 |
 | 5 | Choose among base, signing, equity, level, and scope levers for a given constraint | Exercise 5; self-check 5 |
 | 6 | Compare offers across geographies with a cost-of-living adjustment | Exercise 6; self-check 6 |
@@ -285,7 +285,8 @@ built from a handful of entries as a hint.
 ### Step 1b. Understand the recruiter's incentives
 
 The recruiter is measured on time-to-fill, acceptance rate, and sometimes cost. They want you to
-accept, and they usually have more information about the band than you do. They are not your
+accept, they usually have more information about the band than you do, and they are often the only
+person who will tell you what the approver cares about. They are not your
 adversary and they are not your advocate; they are a channel to the approver.
 
 Two practical consequences. First, ask the recruiter what the band is and where the offer sits within
@@ -333,9 +334,10 @@ not.
 
 If the BATNA is weak, strengthen it before the conversation: schedule another interview, ask for a
 decision from another process, or delay the start date. A BATNA with a date is stronger than one
-without: "the other process decides on the 14th" is leverage; "I am interviewing elsewhere" is not. Do not invent a BATNA. The recruiter may ask
-for the employer's name, the level, and the timeline, and a fabricated answer is difficult to
-sustain.
+without: "the other process decides on the 14th" is leverage; "I am interviewing elsewhere" is not.
+
+Do not invent a BATNA. The recruiter may ask for the employer's name, the level, and the timeline,
+and a fabricated answer is difficult to sustain.
 
 ### Step 5. Time the conversation
 

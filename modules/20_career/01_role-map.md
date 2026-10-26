@@ -10,7 +10,7 @@
 
 The biomedical data job market does not have a shared vocabulary. A "clinical data scientist"
 at a pharmaceutical company may spend their week writing data management plans for a Phase III
-trial, checking CDISC conformance, and responding to queries from sites. A "clinical data
+trial, checking Clinical Data Interchange Standards Consortium (CDISC) conformance, and responding to queries from sites. A "clinical data
 scientist" at a hospital may spend their week building a readmission model in Python and
 arguing with a sepsis committee about alert thresholds. The two jobs share a title and almost
 nothing else. A "biostatistician" in an academic medical centre designs observational studies
@@ -44,7 +44,7 @@ of persistence and technical depth. It is not evidence of the specific accountab
 
 **Clinicians moving into informatics** have the opposite problem. They have deep workflow
 knowledge and credibility with users, and they undersell it because they do not have a
-production code sample. They apply to data scientist roles where the first screen is a SQL
+production code sample. They apply to data scientist roles where the first screen is a structured query language (SQL)
 exercise and lose, when the better target is a clinical informatics or clinical AI product role
 where the workflow knowledge is the scarce input.
 
@@ -211,8 +211,9 @@ text, and auditability.
                  FAR FROM PATIENT
 ```
 
-The axes are not a hierarchy. A biostatistician writing a submission SAP and an ML engineer
-running a model service are both senior individual contributors with different accountabilities.
+RWE is real-world evidence; HEOR is health economics and outcomes research. The axes are not a
+hierarchy. A biostatistician writing a submission SAP and an ML engineer running a model service
+are both senior individual contributors with different accountabilities.
 The map is useful because it predicts which evidence a hiring manager will ask for. Near-patient
 roles ask for workflow evidence. Production roles ask for reliability evidence. Document roles
 ask for standards and audit evidence.
@@ -356,7 +357,7 @@ Worked conversion:
 
 | Raw item | Accountability statement |
 |---|---|
-| "Worked on sepsis prediction project" | "I designed and validated a sepsis risk model that changed the trigger for a daily huddle review for 1,100 ICU admissions, and the result was a 22 percent reduction in simulated alert volume at constant sensitivity." |
+| "Worked on sepsis prediction project" | "I designed and validated a sepsis risk model that changed the trigger for a daily huddle review for 1,100 intensive care unit (ICU) admissions, and the result was a 22 percent reduction in simulated alert volume at constant sensitivity." |
 | "Co-authored paper on readmissions" | "I owned the cohort definition and sensitivity analysis for a readmission study that changed the discharge planning team's inclusion criteria, and the result was a 9 percentage point reduction in the population flagged as high risk." |
 | "Maintained REDCap database" | "I owned the data quality programme for a 14-site registry that determined which sites entered the analysis, and the result was a query rate below 2 percent at database lock." |
 
@@ -472,7 +473,7 @@ A workable starter set of 14 requirement labels:
 | 2 | SQL | Named explicitly |
 | 3 | Statistics and study design | Hypothesis testing, regression, causal inference, trial design |
 | 4 | Machine learning | Model development, validation, scikit-learn or equivalent |
-| 5 | Clinical data standards | OMOP, FHIR, HL7, ICD, LOINC, SNOMED, CDISC |
+| 5 | Clinical data standards | Observational Medical Outcomes Partnership, Fast Healthcare Interoperability Resources, Health Level Seven, International Classification of Diseases, Logical Observation Identifiers Names and Codes, Systematized Nomenclature of Medicine, Clinical Data Interchange Standards Consortium |
 | 6 | Cloud platform | Azure, AWS, GCP, Snowflake, Databricks |
 | 7 | Production or MLOps | Deployment, CI/CD, monitoring, Docker, Kubernetes |
 | 8 | Domain knowledge | Clinical, claims, pharma, or device context |
@@ -757,8 +758,8 @@ The 288-hour budget is reallocated:
 | Build a DICOM-to-feature pipeline with a public dataset | 45 | Reproducible repository with tests and a README |
 | Add calibration, decision-curve, and subgroup analysis to the segmentation evaluation | 30 | Evaluation notebook and model card section |
 | Learn cloud deployment on one platform | 40 | Containerised inference endpoint with a latency measurement |
-| Clinical data standards primer (DICOM, LOINC, OMOP, FHIR basics) | 25 | One-page mapping memo showing how the pipeline would consume EHR data |
-| Regulatory reading (SaMD, GMLP, predetermined change control) | 20 | Two-page intended-use and risk summary |
+| Clinical data standards primer (DICOM, LOINC, OMOP, FHIR basics) | 25 | One-page mapping memo showing how the pipeline would consume electronic health record (EHR) data |
+| Regulatory reading (software as a medical device, Good Machine Learning Practice, predetermined change control) | 20 | Two-page intended-use and risk summary |
 | Portfolio site and case study writing | 30 | Two case studies in the Section 4.2 structure |
 | Applications (3 per week for 12 weeks) | 48 | 36 tailored applications |
 | Interview practice and mock cases | 30 | 6 mock interviews |
@@ -1456,39 +1457,38 @@ Weak: asserts confidence without evidence.
 
 All URLs accessed 26 October 2026.
 
-1. U.S. Bureau of Labor Statistics. *Occupational Outlook Handbook: Data Scientists.*
-   https://www.bls.gov/ooh/math/data-scientists.htm — median pay $120,230 (May 2025), 35 percent
-   projected growth 2025–2035, 275,600 jobs, 24,800 openings per year.
-2. U.S. Bureau of Labor Statistics. *Occupational Employment and Wage Statistics, May 2025.*
-   https://www.bls.gov/oes/ — distribution used for the 10th and 90th percentile figures.
-3. O*NET OnLine. *15-2051.00 Data Scientists.* https://www.onetonline.org/link/summary/15-2051.00
+1. U.S. Bureau of Labor Statistics. *Occupational Outlook Handbook: Data Scientists*
+   (https://www.bls.gov/ooh/math/data-scientists.htm) and *Occupational Employment and Wage
+   Statistics, May 2025* (https://www.bls.gov/oes/). Median $120,230; 35 percent growth
+   2025–2035; 275,600 jobs; 24,800 openings per year; 10th and 90th percentile figures.
+2. O*NET OnLine. *15-2051.00 Data Scientists.* https://www.onetonline.org/link/summary/15-2051.00
    — task and work activity ratings, Job Zone Four, education distribution.
-4. American Medical Informatics Association. *Careers in Health Informatics Project (CHIP),*
+3. American Medical Informatics Association. *Careers in Health Informatics Project (CHIP),*
    2022. https://brand.amia.org/m/97876be2d4ff41 — career stages, roles matrix, and the statement
    that titles are context dependent and idiosyncratic.
-5. AMIA. *Careers and Certifications* and *Clinical Informatics Subspecialty.*
+4. AMIA. *Careers and Certifications* and *Clinical Informatics Subspecialty.*
    https://amia.org/careers-certifications
-6. HIMSS. *Health Information and Technology Job Descriptions* and *Career Pathways.*
+5. HIMSS. *Health Information and Technology Job Descriptions* and *Career Pathways.*
    https://www.himss.org/resources/health-information-and-technology-job-descriptions/
-7. Baylor Scott & White Health. *Clinical Data Scientist* posting, 2026. Posted range
+6. Baylor Scott & White Health. *Clinical Data Scientist* posting, 2026. Posted range
    $90,000–$140,000. Board: https://www.linkedin.com/jobs/
-8. CVS Health. *Lead Data Scientist, Clinical Informatics* posting, 2026. Posted range
+7. CVS Health. *Lead Data Scientist, Clinical Informatics* posting, 2026. Posted range
    $130,000–$260,000.
-9. Karius. *Senior Clinical Data Scientist* posting, 2026. Posted range $134,000–$201,000.
-10. Sanofi. *RWE Scientist*, Barcelona, posting dated 13 October 2026. Posted range EUR
+8. Karius. *Senior Clinical Data Scientist* posting, 2026. Posted range $134,000–$201,000.
+9. Sanofi. *RWE Scientist*, Barcelona, posting dated 13 October 2026. Posted range EUR
     70,800–EUR 94,400. https://jobs.sanofi.com/
-11. Precision AQ. *Senior* and *Associate Research Scientist, Real World Evidence*, 2026.
+10. Precision AQ. *Senior* and *Associate Research Scientist, Real World Evidence*, 2026.
     Posted ranges $100,000–$125,000 and $66,000–$94,000.
     https://job-boards.greenhouse.io/precisionaq
-12. Repertoire Immune Medicines. *Senior Clinical Data Manager* posting, 2026. Posted range
+11. Repertoire Immune Medicines. *Senior Clinical Data Manager* posting, 2026. Posted range
     $131,000–$187,000. Definium Therapeutics, *Senior Manager, Clinical Data Management*, 2026,
     posted range $140,000–$175,000.
-13. Cleveland Clinic. *AI Product Manager* posting, 2026. Requirements summary.
-14. Lippincott. *Senior Technology Product Manager (AI)* posting, 2026. Posted range
+12. Cleveland Clinic. *AI Product Manager* posting, 2026. Requirements summary.
+13. Lippincott. *Senior Technology Product Manager (AI)* posting, 2026. Posted range
     $94,200–$164,450.
-15. Colorado Department of Labor and Employment, *Equal Pay for Equal Work Act*, and California
+14. Colorado Department of Labor and Employment, *Equal Pay for Equal Work Act*, and California
     Civil Rights Department, *Pay transparency (SB 1162)*. https://cdle.colorado.gov/
-16. U.S. Food and Drug Administration. *Software as a Medical Device (SaMD).*
+15. U.S. Food and Drug Administration. *Software as a Medical Device (SaMD).*
     https://www.fda.gov/medical-devices/digital-health-center-excellence/software-medical-device-samd
 
 ## 17. Links

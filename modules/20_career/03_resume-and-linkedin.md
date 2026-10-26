@@ -162,7 +162,7 @@ more it survives screening.
 | Rung | Form | Example | Reader inference |
 |---:|---|---|---|
 | 1 | Activity | "Responsible for data cleaning" | Can follow instructions |
-| 2 | Method | "Cleaned data using Python and SQL" | Has used tools |
+| 2 | Method | "Cleaned data using Python and structured query language" | Has used tools |
 | 3 | Output | "Built a cleaning pipeline for 14 sites" | Delivers artifacts |
 | 4 | Metric | "Reduced query rate from 8% to 2%" | Measures work |
 | 5 | Decision | "Changed site inclusion criteria based on the query pattern" | Owns judgment |
@@ -179,7 +179,7 @@ The same work is described differently by different functions.
 | Work | Academic dialect | Industry dialect |
 |---|---|---|
 | Analysed trial data | "Conducted statistical analysis of longitudinal outcomes" | "Owned the primary analysis for a 640-patient Phase II trial; the result supported the endpoint selection for Phase III" |
-| Built a model | "Developed a machine learning model achieving 0.87 AUROC" | "Built a readmission model that improved AUPRC from 0.21 to 0.29 over the incumbent screen; validated on the most recent 12 months" |
+| Built a model | "Developed a machine learning model achieving 0.87 area under the receiver operating characteristic curve (AUROC)" | "Built a readmission model that improved area under the precision-recall curve (AUPRC) from 0.21 to 0.29 over the incumbent screen; validated on the most recent 12 months" |
 | Managed data | "Maintained the study database" | "Owned data quality for a 14-site registry; query rate at lock was 1.8%, with zero critical findings at inspection" |
 | Wrote a protocol | "Contributed to study design" | "Drafted the estimand and sensitivity analysis section of the SAP for a 1,200-patient study" |
 
@@ -279,8 +279,9 @@ single posting overfits. Three postings give the stable vocabulary without the n
 team's phrasing.
 
 Extract from each posting: the job title, the first three responsibilities, the required tools,
-the domain terms (claims, EHR, CDISC, FHIR, HEOR), and the level signals. Terms appearing in two
-or more postings go on the must-match list. Terms appearing once go on the optional list.
+the domain terms (claims, electronic health records, CDISC, FHIR, health economics and outcomes
+research), and the level signals. Terms appearing in two or more postings go on the must-match
+list. Terms appearing once go on the optional list.
 
 ### Step 3. Normalise titles and dates
 
@@ -943,8 +944,8 @@ health condition in a CV is disclosing special-category data; that is sometimes 
 accommodation, but it should be a deliberate choice made through the employer's accommodation
 process rather than an incidental line in a document.
 
-In the United States, the HIPAA Privacy Rule does not generally apply to a CV, because a job
-applicant is not a covered entity disclosing PHI. It does apply to what you say about your work:
+In the United States, the Health Insurance Portability and Accountability Act (HIPAA) Privacy Rule does not generally apply to a CV, because a job
+applicant is not a covered entity disclosing protected health information. It does apply to what you say about your work:
 describing a patient case with identifiers is a disclosure problem for your employer, not for
 you as an applicant, but it will be treated as a governance failure by any employer who reads it.
 

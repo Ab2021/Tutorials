@@ -14,7 +14,7 @@ deteriorating." The interviewer is not looking for a complete architecture. They
 whether you can move from a clinical decision to a system that delivers it reliably, and whether
 you know where such systems break.
 
-Most candidates produce a diagram of boxes: ingest, feature store, model, API, dashboard. The
+Most candidates produce a diagram of boxes: ingest, feature store, model, application programming interface (API), dashboard. The
 diagram is not wrong and it is not a design. A design states the user, the decision, the time
 zero, the latency budget, the failure behaviour, the privacy boundary, the change-control process,
 and the cost. The boxes are the easy part; the constraints are the interview.
@@ -50,7 +50,7 @@ A design that ignores these is a generic ML system with clinical labels.
 
 ### 1.3 The failure that looks like a design
 
-The common weak answer: "We ingest EHR data into a data lake, compute features, train a model,
+The common weak answer: "We ingest electronic health record data into a data lake, compute features, train a model,
 serve it with an API, and show it in a dashboard. We use Kafka for streaming and Kubernetes for
 scaling." Every sentence is a technology choice and none is a decision. There is no user, no
 latency requirement, no failure mode, and no explanation of why Kafka is needed when the workload
@@ -64,8 +64,8 @@ is sufficient. The hard part is the interface timing, not the scale."
 ### 1.4 What this topic produces
 
 A design procedure you can execute in 45 minutes, a capacity and latency calculator you can run
-before the interview, a worked example with real arithmetic, and the standards vocabulary (FHIR,
-CDS Hooks, HTI-1, GMLP) that makes the design legible to a clinical informatics panel.
+before the interview, a worked example with real arithmetic, and the standards vocabulary (Fast Healthcare Interoperability Resources (FHIR),
+CDS Hooks, the ONC HTI-1 rule, Good Machine Learning Practice) that makes the design legible to a clinical informatics panel.
 
 ### 1.5 The 45-minute clock
 
@@ -509,6 +509,29 @@ would change. Interviewers remember candidates who can state what they rejected 
 | 4 to 12 hours | Score marked stale | Use only with clinical judgement; log |
 | Over 12 hours | Suppress the score | Fall back to the existing rule; alert the data team |
 
+### Career-context branches
+
+**From academia.** You may have built models and never operated one. Learn the failure table before
+the interview; it is the part of the design you cannot infer from modelling experience.
+
+**No clinical background.** Map the workflow before the architecture. A design that ignores who acts on
+the output is a data pipeline, not a clinical system.
+
+**Non-traditional degree.** Breadth is the advantage. Cover data, inference, control, and governance
+rather than going deep on one component.
+
+**Visa constraints.** No effect on the design; the employer's ability to sponsor may affect which
+employers are worth designing for.
+
+**Remote roles.** Design for a distributed on-call team: runbooks, escalation, and asynchronous
+monitoring matter more when the team is not in one room.
+
+**Return after a gap.** Refresh one cloud platform and one interface standard; the design patterns are
+stable, the tooling is not.
+
+**Over-levelled target.** Expect cost, change control, and regulatory questions. A design without
+those reads as mid-level.
+
 ### Branch points and edge cases
 
 **No cloud permitted.** Some health systems require on-premises processing. The design changes in
@@ -532,7 +555,7 @@ State the contract terms you need: transparency on inputs, notification of updat
 reporting, and the right to validate locally.
 
 **Research-only use.** If the output is not used for care, the design can be simpler, but the
-boundary must be explicit: no alerts to clinicians, no PHI leaving the environment, and a
+boundary must be explicit: no alerts to clinicians, no protected health information leaving the environment, and a
 documented intended use that says research.
 
 **A regulated device.** If the output directs a treatment decision, the design must accommodate the
@@ -622,7 +645,7 @@ reason.
 The fix was a time-zero table, one row per feature with the timestamp at which it becomes
 available, and a rule: any feature collected after the trigger is excluded, and any feature that
 arrives late triggers a recomputation, not a silent insertion. She redrew the data plane around
-that table, and the model's realistic performance dropped by about 4 AUROC points. That drop was
+that table, and the model's realistic performance dropped by about 4 points of area under the receiver operating characteristic curve points. That drop was
 the honest number.
 
 ### 6.4 Diagnostic 2: the first design had no degraded mode
@@ -949,7 +972,7 @@ that the plan promises.
 
 ### 8.4 Privacy and security
 
-In the United States, the HIPAA Security Rule requires administrative, physical, and technical
+In the United States, the Health Insurance Portability and Accountability Act Security Rule requires administrative, physical, and technical
 safeguards for electronic protected health information, including access control, audit controls,
 integrity, and transmission security. In the European Union, the GDPR adds lawful basis, data
 minimisation, and records of processing. A design should name the boundary, the access model, and

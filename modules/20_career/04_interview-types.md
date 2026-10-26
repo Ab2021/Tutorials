@@ -14,7 +14,7 @@ tests whether you can own the work. A technical screen tests whether your hands 
 your resume says they do. A case interview tests how you structure an ambiguous problem. A panel
 tests whether a group of people with different stakes can tolerate working with you.
 
-Candidates usually prepare content: statistics, SQL, project stories. That is necessary and
+Candidates usually prepare content: statistics, structured query language, project stories. That is necessary and
 insufficient, because each format has its own rules of evidence. A brilliant answer to a
 statistics question delivered as a lecture fails a case interview. A well-structured case answer
 with no numbers fails a technical screen. A strong technical candidate who cannot say why this
@@ -836,9 +836,9 @@ ALLOCATION OF 40 HOURS (proportional, floor 1.0)
 EFFECT OF LOWERING HIRING MANAGER FAILURE PROBABILITY 0.70 -> 0.40
   Recruiter screen       1.0 ->   1.0 (+0.0)
   Hiring manager        18.0 ->  12.8 (-5.2)
-  Technical screen        3.9 ->   4.8 (+1.0)
-  Clinical case           6.9 ->   8.5 (+1.7)
-  Panel presentation     10.3 ->  12.8 (+2.5)
+  Technical screen       3.9 ->   4.8 (+1.0)
+  Clinical case          6.9 ->   8.5 (+1.7)
+  Panel presentation    10.3 ->  12.8 (+2.5)
 ```
 
 Reading the output:

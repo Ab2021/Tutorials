@@ -162,7 +162,7 @@ The rules that follow:
 
 ### 3.3 Diagnose the situation
 
-The same plan does not fit every start. Michael Watkins' STARS framework distinguishes five
+The same plan does not fit every start. Michael Watkins' STARS framework (start-up, turnaround, accelerated growth, realignment, sustaining success) distinguishes five
 situations: start-up, turnaround, accelerated growth, realignment, and sustaining success. The
 situation determines whether the first 90 days should be about building, fixing, scaling, persuading,
 or refining.
@@ -287,7 +287,7 @@ before day one is the single highest-leverage onboarding action.
 Do three things:
 
 1. **Submit access requests early.** Ask your manager which systems you will need and who approves
-   each. Typical: EHR reporting, the data warehouse, the analytics environment, the ticket system,
+   each. Typical: electronic health record reporting, the data warehouse, the analytics environment, the ticket system,
    the collaboration suite. Each may have its own training prerequisite.
 
 | Access | Typical approver | Typical lead time | Common blocker |
@@ -297,7 +297,7 @@ Do three things:
 | Analytics environment | Platform team | 1 to 2 weeks | Licence allocation |
 | Claims or external data | Data use agreement owner | 4 to 12 weeks | Contract review |
 | Production deployment | Change advisory board | 2 to 4 weeks | Change freeze |
-2. **Complete mandatory training before day one if permitted.** HIPAA, research ethics, and
+2. **Complete mandatory training before day one if permitted.** Health Insurance Portability and Accountability Act training, research ethics, and
    information security modules are often online and can be done early.
 3. **Read the public record.** The annual report, quality reports, strategic plan, recent press
    releases, and any published analytics work. Write one page: the organisation's three priorities,
@@ -657,8 +657,10 @@ The reconciliation found two defects in the monthly readmission report:
 
 The 1.5-point correction is about 12 admissions a month that were being counted as unplanned
 readmissions. Over a year, that is about 144 events reclassified, which is large enough to change a
-quality report and small enough that no clinician had noticed. The care management team had been using the higher number to justify its staffing
-request, which made the correction politically sensitive. Ibrahim presented it with the method, the
+quality report and small enough that no clinician had noticed.
+
+The care management team had been using the higher number to justify its staffing request, which
+made the correction politically sensitive. Ibrahim presented it with the method, the
 counts, and a recommendation to restate the historical series, and let the director decide how to
 communicate it.
 
@@ -913,7 +915,7 @@ is assuming access will arrive when you need it.
 
 | Requirement | What it constrains | Typical evidence |
 |---|---|---|
-| HIPAA minimum necessary | Access to PHI limited to what the role requires | Role-based access request, approval |
+| HIPAA minimum necessary | Access to protected health information limited to what the role requires | Role-based access request, approval |
 | HIPAA workforce training | Anyone with PHI access must be trained | Completion record, often annual |
 | Audit logging | Access to PHI is logged and reviewable | System configuration, audit reports |
 | Business associate agreement | Vendors handling PHI on your behalf | Signed BAA |

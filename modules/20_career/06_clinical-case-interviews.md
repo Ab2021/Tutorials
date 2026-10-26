@@ -37,8 +37,8 @@ why.
 
 ### 1.2 The failure that looks like expertise
 
-The classic weak answer begins: "I would use XGBoost with features from the EHR, split 80/20, and
-optimise AUROC." It is technically coherent and answers a question nobody asked. It does not name
+The classic weak answer begins: "I would use XGBoost with features from the electronic health record (EHR), split 80/20, and
+optimise area under the receiver operating characteristic curve." It is technically coherent and answers a question nobody asked. It does not name
 the decision, the user, the outcome definition, the intervention, the capacity, or the harm. The
 interviewer's note is usually "went straight to the model" or "no clinical framing."
 
@@ -485,6 +485,29 @@ If you lose the thread, say so and restate the chain in one sentence: "The decis
 at discharge, the constraint is 60 slots, and I was choosing the threshold. Let me continue
 there." Interviewers score recovery, not flawlessness, and a candidate who names the recovery aloud is
 easier to score than one who silently restarts.
+
+### Career-context branches
+
+**From academia.** You may know the methods and lack the workflow. Shadow a clinical team for 20 hours
+before the interview, and say what you observed.
+
+**No clinical background.** State the boundary early: "I would confirm the clinical workflow with the
+care team." Then reason from the decision, which you can do without a licence.
+
+**Non-traditional degree.** The case rewards structure and arithmetic more than credentials. Lead with
+the decision and the capacity calculation.
+
+**Visa constraints.** No effect on the case; the process timeline may be longer, so schedule the case
+preparation later than the technical preparation.
+
+**Remote interviews.** Draw the chain on a shared screen and narrate it. The visual structure
+substitutes for the whiteboard.
+
+**Return after a gap.** Refresh the domain vocabulary and one public dataset; the structure is durable,
+the context is not.
+
+**Over-levelled target.** Expect questions about monitoring, change control, and cost, not only about
+the model. Prepare a stop criterion.
 
 ### Branch points and edge cases
 

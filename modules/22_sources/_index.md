@@ -29,13 +29,13 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | `01_how-to-read-this-list.md` | How to Read This List | Tiering, recency, and how to judge a source. | 1,200-1,800 | planned |
-| 2 | `02_supplied-clinical-library.md` | Supplied Clinical Library | The books in this package and what each is good for. | 1,200-1,800 | planned |
-| 3 | `03_regulation-and-policy.md` | Regulation and Policy | Primary regulatory sources and how to track changes. | 1,200-1,800 | planned |
-| 4 | `04_methods.md` | Methods | Statistics, causal inference, ML, and evaluation references. | 1,200-1,800 | planned |
-| 5 | `05_clinical-background.md` | Clinical Background | Texts and references for clinical vocabulary. | 1,200-1,800 | planned |
-| 6 | `06_datasets-and-benchmarks.md` | Datasets and Benchmarks | Where to find data and how to cite it. | 1,200-1,800 | planned |
-| 7 | `07_industry-and-market.md` | Industry and Market | Market research, company filings, and credible industry reporting. | 1,200-1,800 | planned |
+| 1 | [`01_how-to-read-this-list.md`](01_how-to-read-this-list.md) | How to Read This List | Tiering, recency, and how to judge a source. | 1,200-1,800 | complete |
+| 2 | [`02_supplied-clinical-library.md`](02_supplied-clinical-library.md) | Supplied Clinical Library | The books in this package and what each is good for. | 1,200-1,800 | complete |
+| 3 | [`03_regulation-and-policy.md`](03_regulation-and-policy.md) | Regulation and Policy | Primary regulatory sources and how to track changes. | 1,200-1,800 | complete |
+| 4 | [`04_methods.md`](04_methods.md) | Methods | Statistics, causal inference, ML, and evaluation references. | 1,200-1,800 | complete |
+| 5 | [`05_clinical-background.md`](05_clinical-background.md) | Clinical Background | Texts and references for clinical vocabulary. | 1,200-1,800 | complete |
+| 6 | [`06_datasets-and-benchmarks.md`](06_datasets-and-benchmarks.md) | Datasets and Benchmarks | Where to find data and how to cite it. | 1,200-1,800 | complete |
+| 7 | [`07_industry-and-market.md`](07_industry-and-market.md) | Industry and Market | Market research, company filings, and credible industry reporting. | 1,200-1,800 | complete |
 | 8 | `08_communities-and-continuing-education.md` | Communities and Continuing Education | Societies, conferences, and ongoing learning. | 1,200-1,800 | planned |
 | 9 | `09_keeping-current.md` | Keeping Current | A maintenance routine for a fast-moving field. | 1,200-1,800 | planned |
 
@@ -67,9 +67,9 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 9 |
+| planned | 2 |
 | draft | 0 |
-| complete | 0 |
+| complete | 7 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.
 

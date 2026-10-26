@@ -36,9 +36,9 @@ not the whole program.
 | 5 | [`05_technical-interviews.md`](05_technical-interviews.md) | Technical Interviews | SQL, statistics, ML, and coding under time pressure. | 1,200-1,800 | complete |
 | 6 | [`06_clinical-case-interviews.md`](06_clinical-case-interviews.md) | Clinical Case Interviews | Structuring a clinical analytics case out loud. | 1,200-1,800 | complete |
 | 7 | [`07_system-design.md`](07_system-design.md) | System Design | Designing a clinical data product in 45 minutes. | 1,200-1,800 | complete |
-| 8 | `08_behavioural-interviews.md` | Behavioural Interviews | STAR structures for safety, conflict, and failure questions. | 1,200-1,800 | planned |
-| 9 | `09_negotiation.md` | Negotiation | Level, scope, equity, and the questions to ask before accepting. | 1,200-1,800 | planned |
-| 10 | `10_onboarding.md` | Onboarding | A 90-day plan for a new biomedical data role. | 1,200-1,800 | planned |
+| 8 | [`08_behavioural-interviews.md`](08_behavioural-interviews.md) | Behavioural Interviews | STAR structures for safety, conflict, and failure questions. | 1,200-1,800 | complete |
+| 9 | [`09_negotiation.md`](09_negotiation.md) | Negotiation | Level, scope, equity, and the questions to ask before accepting. | 1,200-1,800 | complete |
+| 10 | [`10_onboarding.md`](10_onboarding.md) | Onboarding | A 90-day plan for a new biomedical data role. | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -69,9 +69,9 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 3 |
+| planned | 0 |
 | draft | 0 |
-| complete | 7 |
+| complete | 10 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.
 

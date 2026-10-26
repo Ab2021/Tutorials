@@ -233,8 +233,8 @@ need to be fluent in the subset and honest about the boundary.
 | Temporal split | Splitting by time rather than at random | Confused with a random split | Design |
 | Grouped split | Splitting so that a group (patient, site) appears in one set only | Omitted when patients repeat | Design |
 | Calibration | Agreement between predicted probabilities and observed frequencies | Confused with discrimination | Slope, intercept |
-| AUROC | Rank discrimination across thresholds | Reported as the only metric | 0–1 |
-| AUPRC | Precision-recall area, sensitive to prevalence | Compared across different prevalences | 0–1 |
+| AUROC | Area under the receiver operating characteristic curve; rank discrimination across thresholds | Reported as the only metric | 0–1 |
+| AUPRC | Area under the precision-recall curve, sensitive to prevalence | Compared across different prevalences | 0–1 |
 | Brier score | Mean squared error of predicted probabilities | Confused with log loss | Score |
 | Decision curve | Net benefit across threshold probabilities | Omitted because AUROC is easier | Net benefit |
 | Regularisation | Penalising model complexity (L1, L2) | Treated as a universal fix for overfitting | Penalty |
@@ -486,6 +486,29 @@ Close with four sentences: what you produced, the key assumption, the limitation
 would do next. Then ask one question about how the team would use the result. Do not add new
 analysis in the last five minutes; the risk of breaking a working artifact exceeds the value of
 one more insight.
+
+### Career-context branches
+
+**From academia.** SQL is the most common gap, because academic work rarely requires production
+queries. Drill the seven patterns before anything else.
+
+**No clinical background.** Use clinical-flavoured datasets in the sandbox so that the definitions
+(readmission, cohort, index event) are familiar before the interview.
+
+**Non-traditional degree.** Fundamentals beat trivia. A candidate who can explain grain and
+calibration is stronger than one who has memorised window-function syntax but cannot define the unit.
+
+**Visa constraints.** Preparation is unaffected; the timeline is not. Start the drill programme before
+the process starts, because visa timelines compress the later stages.
+
+**Remote interviews.** Practise in a shared browser editor, not your own IDE. The environment is part
+of the assessment.
+
+**Return after a gap.** Timed drills rebuild fluency faster than reading. Three weeks of 40-minute
+sessions is enough to recover most of it.
+
+**Over-levelled target.** Expect system design and judgment questions in addition to the technical
+screen; the technical stage is necessary but not decisive.
 
 ### Branch points and edge cases
 
@@ -942,7 +965,7 @@ Three semantics are worth knowing because they are dialect-independent and frequ
 
 ### 8.3 What is binding, and what is convention
 
-Binding: the data use agreement that governs the dataset, the privacy rules that govern PHI, and
+Binding: the data use agreement that governs the dataset, the privacy rules that govern protected health information, and
 the measure specifications that a regulator or payer uses to compute a rate that affects payment.
 If you are asked to compute a readmission rate for a payer, the specification is not a suggestion.
 
@@ -1295,7 +1318,7 @@ All URLs accessed 26 October 2026.
 ## 17. Links
 
 - Module index: [`_index.md`](_index.md)
-- Previous topic: [`04_interview-types.md`](04-interview-types.md)
+- Previous topic: [`04_interview-types.md`](04_interview-types.md)
 - Next topic: [`06_clinical-case-interviews.md`](06_clinical-case-interviews.md)
 - Related topic: [`02_portfolio.md`](02_portfolio.md)
 - Survey file: [`../../course/20_career_portfolio_interviews.md`](../../course/20_career_portfolio_interviews.md)
