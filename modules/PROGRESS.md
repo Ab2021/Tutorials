@@ -31,11 +31,11 @@
 | 21 | Datasets, Tools, and Benchmarks | 12 | 12 | 12 | 15,606 |
 | 22 | Sources and Further Reading | 9 | 9 | 9 | 11,864 |
 | 23 | Specialty Electives | 7 | 7 | 7 | 9,696 |
-| 24 | Hardware and Robotics Labs | 9 | 0 | 0 | 0 |
-| 25 | Trial Operations, HTA, and Global Regulation | 7 | 0 | 0 | 0 |
+| 24 | Hardware and Robotics Labs | 9 | 8 | 8 | 10,449 |
+| 25 | Trial Operations, HTA, and Global Regulation | 7 | 7 | 7 | 9,570 |
 | 26 | Cloud, Kubernetes, and Streaming Production Labs | 9 | 0 | 0 | 0 |
 
-**Total topic files:** 303
+**Total topic files:** 318
 
-**Total topic lines:** 380,269
+**Total topic lines:** 400,288
 

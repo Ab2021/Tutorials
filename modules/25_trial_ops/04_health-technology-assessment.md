@@ -708,13 +708,13 @@ observation.
 If the benefit duration is 6.5 years instead of 8, with the same utility:
 
 ```text
-New QALYs = 0.85 x annuity(6.5 years) = 0.85 x 5.903 = 5.018
-Incremental QALYs = 5.018 - 3.996 = 1.022
-ICER = $94,473 / 1.022 = $92,400
+New QALYs = 0.85 x annuity(6.5 years) = 0.85 x 5.721 = 4.863
+Incremental QALYs = 4.863 - 3.996 = 0.867
+ICER = $94,473 / 0.867 = $108,976
 ```
 
-The ICER rises from about $51,000 to about $92,400 and approaches the upper end of ICER's benchmark
-range. A one-year change in an unobserved survival assumption moves the product from clearly
+The ICER rises from about $51,000 to about $109,000, crossing the lower end of ICER's benchmark
+range. A reduction of 1.5 years in an unobserved survival assumption moves the product from clearly
 cost-effective to marginal.
 
 This is why HTA committees ask about extrapolation. The model's conclusion is often more sensitive

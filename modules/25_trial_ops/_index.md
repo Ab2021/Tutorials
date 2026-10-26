@@ -29,13 +29,13 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | `01_trial-operations.md` | Trial Operations | Start-up, site activation, enrollment, and close-out. | 1,200-1,800 | planned |
-| 2 | `02_site-and-monitoring.md` | Site and Monitoring | Risk-based monitoring, source data review, and query management. | 1,200-1,800 | planned |
-| 3 | `03_clinical-data-management.md` | Clinical Data Management | CRF design, edit checks, medical coding, and database lock. | 1,200-1,800 | planned |
-| 4 | `04_health-technology-assessment.md` | Health Technology Assessment | Evidence requirements, economic models, and submission dossiers. | 1,200-1,800 | planned |
-| 5 | `05_market-access.md` | Market Access | Pricing, reimbursement, and payer negotiation. | 1,200-1,800 | planned |
-| 6 | `06_global-regulation.md` | Global Regulation | EMA, MHRA, PMDA, NMPA, Health Canada, and TGA differences. | 1,200-1,800 | planned |
-| 7 | `07_pricing-and-contracting.md` | Pricing and Contracting | Value-based agreements and risk-sharing arrangements. | 1,200-1,800 | planned |
+| 1 | [`01_trial-operations.md`](01_trial-operations.md) | Trial Operations | Start-up, site activation, enrollment, and close-out. | 1,200-1,800 | complete |
+| 2 | [`02_site-and-monitoring.md`](02_site-and-monitoring.md) | Site and Monitoring | Risk-based monitoring, source data review, and query management. | 1,200-1,800 | complete |
+| 3 | [`03_clinical-data-management.md`](03_clinical-data-management.md) | Clinical Data Management | CRF design, edit checks, medical coding, and database lock. | 1,200-1,800 | complete |
+| 4 | [`04_health-technology-assessment.md`](04_health-technology-assessment.md) | Health Technology Assessment | Evidence requirements, economic models, and submission dossiers. | 1,200-1,800 | complete |
+| 5 | [`05_market-access.md`](05_market-access.md) | Market Access | Pricing, reimbursement, and payer negotiation. | 1,200-1,800 | complete |
+| 6 | [`06_global-regulation.md`](06_global-regulation.md) | Global Regulation | EMA, MHRA, PMDA, NMPA, Health Canada, and TGA differences. | 1,200-1,800 | complete |
+| 7 | [`07_pricing-and-contracting.md`](07_pricing-and-contracting.md) | Pricing and Contracting | Value-based agreements and risk-sharing arrangements. | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -63,9 +63,9 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 7 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 7 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.
 

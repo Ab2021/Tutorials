@@ -501,7 +501,29 @@ agency and version. A submission that passes one agency's validator can fail ano
 programme filing in multiple markets may need to maintain both formats for a period, which is a
 resource and quality-control cost rather than a scientific one.
 
-### 5.23 Global regulatory metrics
+### 5.23 Run a submission readiness review
+
+**Input:** each market's module status, the validation criteria, and the inspection status.
+
+**Output:** a readiness decision per market: file, file with conditions, or delay.
+
+**Rationale:** Filing a dossier that is not ready consumes the agency's validation capacity and
+restarts the clock. A readiness review is cheaper than a rejection.
+
+| Check | Ready | Not ready |
+|---|---|---|
+| Module 1 forms | Complete and signed | Missing local forms or translations |
+| Module 2 summaries | Written and quality-controlled | Draft or inconsistent with Module 5 |
+| Module 3 quality | Complete; sites inspection-ready | Open stability or validation issues |
+| Module 4 nonclinical | Complete | Outstanding study reports |
+| Module 5 clinical | Complete; datasets locked | Interim data or open queries on the endpoint |
+| eCTD validation | Passed the agency's validator | Errors in structure or file naming |
+| GMP | Sites inspected or scheduled | Inspection not requested |
+
+A market that fails more than one check should be delayed. A market that fails only a local
+administrative item may file with a commitment, if the agency allows it.
+
+### 5.24 Global regulatory metrics
 
 | Metric | Definition | Use |
 |---|---|---|
@@ -948,6 +970,8 @@ from the requirements that apply to its product.
 | Post-approval commitments unowned | No commitments register | Approval conditions forgotten | Compliance finding | Register with owners |
 | Local data transfer blocked | Samples cannot leave the country | Human genetic resource rules | Trial delay | Plan approvals early |
 | Agency advice ignored | Programme contradicts advice | Review questions | Delay or rejection | Document advice and response |
+| Local trial not feasible | No sites or patients in the country | Feasibility not assessed | Local data requirement unmet | Assess feasibility before committing |
+| Filing capacity exceeded | Same team assigned to seven dossiers | Parallel filings scheduled | Queueing delays every market | Stagger filings by capacity |
 
 ## 11. Assumptions and limits
 
@@ -972,3 +996,314 @@ another. The model therefore understates the effect of a delay in a lead market.
 The model also treats reliance as a simple dependency. In practice, a reliance application can be
 rejected for procedural reasons, or the reference approval itself can be conditional, which changes
 the reliance route. Those branches are not represented.
+
+## 12. Exercises
+
+### Exercise 1. Map three pathways (application, 45 minutes)
+
+A novel monoclonal antibody for a rare disease is ready for filing in the US, the EU, and Japan.
+
+**Deliverable:** a pathway table showing the procedure, the review clock, the local data requirement,
+and the expected approval month for each market.
+
+**Acceptance criteria:** each row names the legal basis; clock units are stated; the local data
+assumption is justified; the approval months are derived, not asserted.
+
+**Time:** 45 minutes.
+
+### Exercise 2. Compare clock and real time (calculation, 30 minutes)
+
+A dossier is filed in Canada with a 300-day review target and in Australia with a 255-working-day
+target. Assume a five-day working week, ten public holidays per year, and a two-month clock stop in
+Canada.
+
+**Deliverable:** the calendar-time estimate for each market, and a statement of which is faster.
+
+**Acceptance criteria:** working days converted correctly; the clock stop added; the difference
+between statutory and real time explained.
+
+**Time:** 30 minutes.
+
+### Exercise 3. Decide on local data (design, 45 minutes)
+
+A product has global phase 3 data, but the Japanese dose-response may differ because the body weight
+distribution is different.
+
+**Deliverable:** a recommendation on whether to run a bridging study, a full local trial, or neither,
+with the evidence and the timeline.
+
+**Acceptance criteria:** the ICH E5 framework is applied; the recommendation states the study design
+and duration; the cost and the delay are quantified.
+
+**Time:** 45 minutes.
+
+### Exercise 4. Build a sequence (application, 60 minutes)
+
+Using the durations in Section 6, add a scenario in which the EU is the lead market and the UK files
+via the IRP after the EU approval.
+
+**Deliverable:** a revised approval table, the new critical path, and the change in global completion.
+
+**Acceptance criteria:** dependencies are explicit; the critical path is traced; the change is
+compared with the US-led sequence.
+
+**Time:** 60 minutes.
+
+### Exercise 5. Compare reliance with a national route (calculation, 30 minutes)
+
+A reference approval is expected at month 9. The reliance route takes 4 months. The national route
+takes 7 months from month 0.
+
+**Deliverable:** the approval month under each route and the difference.
+
+**Acceptance criteria:** arithmetic shown; the conclusion states which route is faster and why; the
+non-time factors (cost, work, label) are noted.
+
+**Time:** 30 minutes.
+
+### Exercise 6. Critique a global filing plan (critique, 45 minutes)
+
+A plan states: "File in seven markets in Q2, using the same dossier, with approval expected within 12
+months everywhere."
+
+**Deliverable:** a critique identifying at least five incorrect assumptions and the consequence of
+each.
+
+**Acceptance criteria:** each critique is specific to a market; the consequence is a delay, a cost, or
+an approval risk; a correction is proposed.
+
+**Time:** 45 minutes.
+
+### Exercise 7. Plan post-approval commitments (design, 45 minutes)
+
+A product is approved with a conditional marketing authorisation in the EU and a post-marketing
+requirement in the US.
+
+**Deliverable:** a commitments register with the obligation, the market, the due date, the owner, and
+the evidence required.
+
+**Acceptance criteria:** each commitment has a date and an owner; the difference between a condition
+and a standard commitment is stated; the resourcing implication is identified.
+
+**Time:** 45 minutes.
+
+### Exercise 8. Write the strategy memo (design, 60 minutes)
+
+**Deliverable:** a two-page memo recommending a lead market and a sequence, with the evidence, the
+critical path, and the risks.
+
+**Acceptance criteria:** the recommendation is justified by the reliance relationships and the
+evidence; the critical path is identified; at least two risks have mitigations; the memo states what
+would change the recommendation.
+
+**Time:** 60 minutes.
+
+## 13. Self-check answers
+
+### 13.1 Exercise 1
+
+A strong table for the US, EU, and Japan:
+
+| Market | Procedure | Clock | Local data | Approval month |
+|---|---|---|---|---|
+| US | NDA standard | 10 months | None | 10 |
+| EU | Centralised | 210 active days | None | 10 with a 3-month stop |
+| Japan | PMDA standard | 12 months | Bridging study likely | 18 to 24 |
+
+The Japanese row is the one that changes the plan. A rare disease with a small global trial may not
+support a bridging study, and the agency may accept foreign data with a justification.
+
+### 13.2 Exercise 2
+
+```text
+Canada: 300 calendar days + 60-day clock stop = 360 days = about 11.8 months
+Australia: 255 working days / 5 = 51 weeks = 357 calendar days
+Add 10 public holidays as working days lost: 255 + 10 = 265 working days
+265 / 5 = 53 weeks = 371 calendar days = about 12.2 months
+```
+
+Canada is marginally faster on these assumptions. The difference is small, and the real difference
+is likely to come from the clock stop and the agency's questions, not from the statutory clock.
+
+### 13.3 Exercise 3
+
+A strong recommendation applies ICH E5:
+
+- the product is ethnically sensitive if its clearance or dose-response differs by body weight or
+  genotype;
+- a bridging study should be a PK or PK/PD study in Japanese subjects, typically 20 to 40 subjects,
+  designed to show similar exposure;
+- if the exposure is similar, the foreign efficacy data can be extrapolated;
+- if not, a dose-adjustment study or a local efficacy trial is needed.
+
+The bridging study adds about 6 to 12 months; a full local trial adds 24 months or more. The
+recommendation should quantify both and state the assumption about ethnic sensitivity.
+
+### 13.4 Exercise 4
+
+With the EU as lead, the EU approval is at month 10, the UK IRP is at month 14, and the US is at month
+10. China remains at month 31. The global completion is unchanged at 31 because China is still the
+constraint.
+
+The critical path is unchanged. Changing the lead market moves the first approval and the reliance
+dates but not the longest chain. A sequence optimisation that ignores the local trial is optimising
+the wrong part of the network.
+
+### 13.5 Exercise 5
+
+```text
+National route: month 0 + 7 = month 7
+Reliance route: month 9 + 4 = month 13
+Difference: 6 months slower
+```
+
+The reliance route is faster only if the reference approval arrives before month 3. The rule is:
+
+```text
+Reliance is faster if reference approval month + reliance duration < national duration
+```
+
+Here, 9 + 4 = 13 > 7, so the national route wins on time.
+
+### 13.6 Exercise 6
+
+A strong critique identifies:
+
+- local data requirements in Japan and China, which invalidate the 12-month assumption;
+- the UK's separate post-Brexit approval and the IRP dependency;
+- GMP inspection timelines for new facilities;
+- clock stops, which extend the statutory review;
+- the difference between filing and validation;
+- the resource constraint of filing in seven markets at once.
+
+Each critique should state the consequence: a two-year delay in China, a four-month delay for an
+inspection, or a validation failure that resets the clock.
+
+### 13.7 Exercise 7
+
+A strong register includes:
+
+| Obligation | Market | Due | Owner | Evidence |
+|---|---|---|---|---|
+| Confirmatory trial | EU | 24 months after approval | Medical affairs | Protocol and recruitment |
+| Post-marketing requirement | US | Per FDA letter | Regulatory affairs | Study report |
+| Periodic safety update | Both | Annual or per cycle | Pharmacovigilance | PSUR |
+| Risk management plan | EU | With variation | Regulatory affairs | Updated RMP |
+| Label update | Both | With variation | Regulatory affairs | Approved label |
+
+A conditional approval is a legal obligation, not an option. A missed commitment can lead to
+suspension.
+
+### 13.8 Exercise 8
+
+A strong memo states the lead market, the sequence, the critical path, and the risks. It should say
+why the lead market was chosen, for example because its approval unlocks the most reliance pathways
+and its review is achievable with the current data. It should identify the local trial as the
+critical path if one is required. It should state what would change the recommendation, such as a
+manufacturing delay or a new local data requirement.
+
+## 14. Interview questions
+
+**1. What is the difference between the CTD and a marketing application?**
+Strong: the CTD is a format; the application is a legal submission with regional modules and a
+decision. Weak: treats them as the same.
+
+**2. Why is the first approval not the global launch?**
+Strong: because later markets have their own review clocks, local data requirements, and reliance
+dependencies. Weak: assumes approvals are simultaneous.
+
+**3. When is reliance slower than a national route?**
+Strong: when the reference approval arrives late relative to the national clock. Weak: assumes
+reliance is always faster.
+
+**4. What does ICH E5 govern?**
+Strong: the acceptability of foreign clinical data and the assessment of ethnic factors, including
+bridging studies. Weak: confuses it with GCP.
+
+**5. Why might China add years to a programme?**
+Strong: local trial requirements and human genetic resource rules, which sit outside the review
+clock. Weak: cites the 200-day review and stops there.
+
+**6. What is the UK IRP?**
+Strong: a recognition route with 60-day and 110-day timetables, dependent on a reference regulator's
+approval. Weak: describes it as a national review.
+
+**7. How do you plan a GMP inspection?**
+Strong: identify inspection-critical sites, assess history, run a mock inspection, and put the
+inspection on the critical path. Weak: treats it as the quality team's problem.
+
+**8. What post-approval obligations should be planned at filing?**
+Strong: commitments, variations, PSURs, RMPs, and inspections, each with an owner and a date. Weak:
+says "post-marketing studies" without specifics.
+
+**9. How would you choose a lead market?**
+Strong: by the reliance pathways it unlocks, the evidence fit, and the review risk. Weak: by market
+size alone.
+
+## 15. Key terms
+
+| Term | Meaning | See |
+|---|---|---|
+| Bridging study | Study supporting extrapolation between regions | 5.17 |
+| CHMP | EMA scientific committee | 4 |
+| CTD | Common Technical Document | 3.1 |
+| eCTD | Electronic CTD | 5.22 |
+| EMA | European Medicines Agency | 8.3 |
+| GMP | Good manufacturing practice | 5.20 |
+| Health Canada | Canadian regulator | 8.7 |
+| IRP | UK International Recognition Procedure | 8.4 |
+| Local clinical data | Data generated in the applying country | 5.17 |
+| MAH | Marketing authorisation holder | 4 |
+| MHRA | UK regulator | 8.4 |
+| MHLW | Japanese ministry that grants approval | 8.5 |
+| NCA | National competent authority | 4 |
+| NMPA | Chinese regulator | 8.6 |
+| PMDA | Japanese review agency | 8.5 |
+| PRIME | EMA priority scheme | 8.3 |
+| Recognition | Accepting another regulator's decision | 4.2 |
+| Reliance | Using another regulator's assessment | 4.2 |
+| Sakigake | Japanese priority scheme | 8.5 |
+| TGA | Australian regulator | 8.7 |
+| Variation | Change to an approved application | 5.21 |
+
+## 16. Sources
+
+All URLs accessed 26 October 2026.
+
+1. ICH. *M4: Common Technical Document*.
+   https://www.ich.org/page/ctd
+2. ICH. *E5: Ethnic Factors in the Acceptability of Foreign Clinical Data*.
+   https://www.ich.org/page/efficacy-guidelines
+3. ICH. *E6(R3) Good Clinical Practice*, 6 January 2025.
+   https://database.ich.org/sites/default/files/ICH_E6%28R3%29_Step4_FinalGuideline_2025_0106.pdf
+4. European Medicines Agency. *Central authorisation of medicines*.
+   https://www.ema.europa.eu/en/about-us/what-we-do/authorisation-medicines
+5. European Medicines Agency. *PRIME: priority medicines*.
+   https://www.ema.europa.eu/en/human-regulatory-overview/PRIME-priority-medicines
+6. Medicines and Healthcare products Regulatory Agency. *International Recognition Procedure*,
+   updated 9 October 2026.
+   https://www.gov.uk/government/publications/international-recognition-procedure/international-recognition-procedure
+7. Medicines and Healthcare products Regulatory Agency. *MHRA's new International Recognition
+   Procedure goes live from 1 January 2024*.
+   https://www.gov.uk/government/news/mhras-new-international-recognition-procedure-irp-goes-live-from-1-january-2024
+8. Pharmaceuticals and Medical Devices Agency. *Review timelines and consultations*.
+   https://www.pmda.go.jp/english/
+9. National Medical Products Administration. *Provisions for Drug Registration*, 2022.
+   https://english.nmpa.gov.cn/2022-06/30/c_785628_8.htm
+10. Health Canada. *Drug submission review timelines*.
+    https://www.canada.ca/en/health-canada/services/drugs-health-products/drug-products/applications-submissions.html
+11. Therapeutic Goods Administration. *Prescription medicines registration process*.
+    https://www.tga.gov.au/how-we-regulate/ingredients-and-products/prescription-medicines
+12. US Government. *21 CFR Part 314*.
+    https://www.ecfr.gov/current/title-21/chapter-I/subchapter-D/part-314
+13. European Commission. *Regulation (EC) No 726/2004*.
+    https://eur-lex.europa.eu/eli/reg/2004/726/oj
+
+## 17. Links
+
+- Module index: [`_index.md`](_index.md)
+- Previous topic: [`05_market-access.md`](05_market-access.md)
+- Next topic: [`07_pricing-and-contracting.md`](07_pricing-and-contracting.md)
+- HTA: [`04_health-technology-assessment.md`](04_health-technology-assessment.md)
+- Module survey: [`../../course/25_trial_operations_hta_global_regulatory.md`](../../course/25_trial_operations_hta_global_regulatory.md)
+- Labs: [`../../labs/`](../../labs/)
