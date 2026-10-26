@@ -38,8 +38,8 @@ not the whole program.
 | 7 | [`07_revenue-cycle.md`](07_revenue-cycle.md) | Revenue Cycle | Coding, denials, prior authorization, and where analytics changes cash flow. | 1,200-1,800 | complete |
 | 8 | [`08_evaluating-operational-interventions.md`](08_evaluating-operational-interventions.md) | Evaluating Operational Interventions | Before/after, interrupted time series, difference-in-differences, and step-wedge. | 1,200-1,800 | complete |
 | 9 | [`09_case-studies.md`](09_case-studies.md) | Case Studies | Documented operational analytics programmes and what actually moved. | 1,200-1,800 | complete |
-| 10 | [`10_fraud-waste-and-abuse-analytics.md`](10_fraud-waste-and-abuse-analytics.md) | Fraud, Waste, and Abuse Analytics | Claims anomaly detection, peer profiling, Benford's Law, and False Claims Act evidence. | 1,200-1,800 | complete |
-| 11 | [`11_health-equity-and-sdoh-analytics.md`](11_health-equity-and-sdoh-analytics.md) | Health Equity and SDOH Analytics | Area Deprivation Index (ADI), Z-codes, Disparity Rate Ratio, and proxy bias avoidance. | 1,200-1,800 | complete |
+| 10 | [`10_fraud-waste-and-abuse-analytics.md`](10_fraud-waste-and-abuse-analytics.md) | Fraud, Waste, and Abuse (FWA) Analytics in Healthcare Claims | Healthcare Fraud, Waste, and Abuse (FWA) accounts for an estimated $100 billion to $300 billion annually in the Unite... | 1,200-1,800 | complete |
+| 11 | [`11_health-equity-and-sdoh-analytics.md`](11_health-equity-and-sdoh-analytics.md) | Health Equity and Social Determinants of Health (SDOH) Analytics | Clinical care accounts for an estimated 10% to 20% of modifiable health outcomes. The remaining 80% to 90% are driven... | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -56,7 +56,9 @@ any topic that names your current decision problem.
 06 Quality Measures ->
 07 Revenue Cycle ->
 08 Evaluating Operational Interventions ->
-09 Case Studies
+09 Case Studies ->
+10 Fraud, Waste, and Abuse (FWA) Analytics in Healthcare Claims ->
+11 Health Equity and Social Determinants of Health (SDOH) Analytics
 ```
 
 ## 5. What this module does not cover
@@ -71,7 +73,7 @@ any topic that names your current decision problem.
 |---|---:|
 | planned | 0 |
 | draft | 0 |
-| complete | 9 |
+| complete | 11 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.
 

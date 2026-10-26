@@ -29,15 +29,15 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | `01_product-discovery.md` | Product Discovery | Problem interviews, workflow observation, and finding a decision worth changing. | 1,200-1,800 | planned |
-| 2 | `02_value-quantification.md` | Value Quantification | Outcome value, cost avoided, revenue, and the assumptions behind each. | 1,200-1,800 | planned |
-| 3 | `03_health-economics.md` | Health Economics | Cost-effectiveness, ICER, QALYs, budget impact, and discounting. | 1,200-1,800 | planned |
-| 4 | `04_reimbursement.md` | Reimbursement | CPT, HCPCS, DRG, coverage decisions, and payment pathways for software. | 1,200-1,800 | planned |
-| 5 | `05_procurement.md` | Procurement | RFP, security review, contracting, and how health systems actually buy. | 1,200-1,800 | planned |
-| 6 | `06_adoption.md` | Adoption | Workflow fit, trust, training, and the predictors of sustained use. | 1,200-1,800 | planned |
-| 7 | `07_business-models.md` | Business Models | SaaS, per-seat, per-test, risk-sharing, and device-plus-service. | 1,200-1,800 | planned |
-| 8 | `08_leadership.md` | Leadership | Influence without authority, decision memos, and running a review. | 1,200-1,800 | planned |
-| 9 | `09_roadmap-and-prioritisation.md` | Roadmap and Prioritisation | Sequencing evidence, engineering, and commercial work under uncertainty. | 1,200-1,800 | planned |
+| 1 | [`01_product-discovery.md`](01_product-discovery.md) | Product Discovery | Problem interviews, workflow observation, and finding a decision worth changing. | 1,200-1,800 | complete |
+| 2 | [`02_value-quantification.md`](02_value-quantification.md) | Value Quantification | Outcome value, cost avoided, revenue, and the assumptions behind each. | 1,200-1,800 | complete |
+| 3 | [`03_health-economics.md`](03_health-economics.md) | Health Economics | Cost-effectiveness, ICER, QALYs, budget impact, and discounting. | 1,200-1,800 | complete |
+| 4 | [`04_reimbursement.md`](04_reimbursement.md) | Reimbursement | CPT, HCPCS, DRG, coverage decisions, and payment pathways for software. | 1,200-1,800 | complete |
+| 5 | [`05_procurement.md`](05_procurement.md) | Procurement | RFP, security review, contracting, and how health systems actually buy. | 1,200-1,800 | complete |
+| 6 | [`06_adoption.md`](06_adoption.md) | Adoption | Workflow fit, trust, training, and the predictors of sustained use. | 1,200-1,800 | complete |
+| 7 | [`07_business-models.md`](07_business-models.md) | Business Models | SaaS, per-seat, per-test, risk-sharing, and device-plus-service. | 1,200-1,800 | complete |
+| 8 | [`08_leadership.md`](08_leadership.md) | Leadership | Influence without authority, decision memos, and running a review. | 1,200-1,800 | complete |
+| 9 | [`09_roadmap-and-prioritisation.md`](09_roadmap-and-prioritisation.md) | Roadmap and Prioritisation | Sequencing evidence, engineering, and commercial work under uncertainty. | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -67,9 +67,9 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 9 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 9 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.
 

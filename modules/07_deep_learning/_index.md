@@ -40,9 +40,9 @@ not the whole program.
 | 9 | [`09_agents-and-tools.md`](09_agents-and-tools.md) | Agents and Tools | Tool use, planning, memory, and the failure modes of autonomous clinical agents. | 1,200-1,800 | complete |
 | 10 | [`10_evaluating-generative-models.md`](10_evaluating-generative-models.md) | Evaluating Generative Models | Task metrics, human review, hallucination rates, and red teaming. | 1,200-1,800 | complete |
 | 11 | [`11_compute-latency-and-cost.md`](11_compute-latency-and-cost.md) | Compute, Latency, and Cost | GPU economics, context length, batching, and serving trade-offs. | 1,200-1,800 | complete |
-| 12 | [`12_multi-agent-orchestration.md`](12_multi-agent-orchestration.md) | Multi-Agent Orchestration | Stateful multi-agent graphs, LangGraph, agent memory tiers, and prior auth workflows. | 1,200-1,800 | complete |
-| 13 | [`13_agentic-ai-safety-and-guardrails.md`](13_agentic-ai-safety-and-guardrails.md) | Agentic AI Safety and Guardrails | Clinical red-teaming, indirect prompt injection defense, and post-market discrepancy monitoring. | 1,200-1,800 | complete |
-| 14 | [`14_multimodal-fusion-architectures.md`](14_multimodal-fusion-architectures.md) | Multimodal Fusion Architectures | Cross-attention fusion, modality dropout, BioViL-T, and missing-modality robustness. | 1,200-1,800 | complete |
+| 12 | [`12_multi-agent-orchestration.md`](12_multi-agent-orchestration.md) | 12_multi-agent-orchestration | --- | 1,200-1,800 | complete |
+| 13 | [`13_agentic-ai-safety-and-guardrails.md`](13_agentic-ai-safety-and-guardrails.md) | 13_agentic-ai-safety-and-guardrails | --- | 1,200-1,800 | complete |
+| 14 | [`14_multimodal-fusion-architectures.md`](14_multimodal-fusion-architectures.md) | 14_multimodal-fusion-architectures | --- | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -61,7 +61,10 @@ any topic that names your current decision problem.
 08 Prompting and Retrieval-Augmented Generation ->
 09 Agents and Tools ->
 10 Evaluating Generative Models ->
-11 Compute, Latency, and Cost
+11 Compute, Latency, and Cost ->
+12 12_multi-agent-orchestration ->
+13 13_agentic-ai-safety-and-guardrails ->
+14 14_multimodal-fusion-architectures
 ```
 
 ## 5. What this module does not cover
@@ -76,7 +79,7 @@ any topic that names your current decision problem.
 |---|---:|
 | planned | 0 |
 | draft | 0 |
-| complete | 11 |
+| complete | 14 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.
 

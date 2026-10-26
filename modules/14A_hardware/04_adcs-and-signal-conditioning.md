@@ -743,20 +743,20 @@ print(f"  runtime (200 mAh)      {battery/j_day:8.2f} days")
 
 ```text
 RESOLUTION
-  span                     1.20 V
-  LSB                     71.53 nV
-  ideal SNR               146.24 dB
-  effective resolution    19.10 bits
-  system noise             3.01 uV RMS
-  system SNR              41.39 dB
-  system ENOB              6.58 bits
-  INL                      9.00 uV
+  span                       1.20 V
+  LSB                       71.53 nV
+  ideal SNR                146.24 dB
+  effective resolution      19.10 bits
+  system noise               3.01 uV RMS
+  system SNR                41.39 dB
+  system ENOB                6.58 bits
+  INL                        9.00 uV
 
 ALIAS
-  alias of 550 Hz         50.00 Hz
-  RC corner             1591.55 Hz
-  attenuation at 550 Hz    0.49 dB
-  transmitted amplitude  0.9452 V per V
+  alias of 550 Hz           50.00 Hz
+  RC corner               1591.55 Hz
+  attenuation at 550 Hz      0.49 dB
+  transmitted amplitude    0.9452 V per V
 
 JITTER (200 ps RMS)
        150 Hz:   134.49 dB

@@ -917,7 +917,7 @@ The distinction is factual, and it must be checked against the plan before the p
 
 In the European Union, Regulation (EU) 2017/745 governs the device and Regulation (EU) 2024/1689, the Artificial Intelligence Act, adds obligations for high-risk systems. A medical device that is a safety component, or is itself a device requiring third-party conformity assessment, is high-risk under Article 6(1).
 
-The Annex I applicability date was originally 2 August 2027; the AI Omnibus, adopted on 19 November 2025 with political agreement reported on 7 May 2026, moves it to 2 August 2028. Verify the current date before relying on it. MDCG 2025-6 (June 2025) remains the reference for the interaction between the two regulations.
+The Annex I applicability date was originally 2 August 2027; Regulation (EU) 2026/1744 (the Digital Omnibus on AI), in force 27 July 2026, moves it to 2 August 2028. Verify the current date before relying on it. MDCG 2025-6 (June 2025) remains the reference for the interaction between the two regulations.
 
 ### 8.6 What is binding and what is convention
 
@@ -945,7 +945,7 @@ The Annex I applicability date was originally 2 August 2027; the AI Omnibus, ado
 | Target measurement | Latency and energy, with conditions |
 | Change record | Classification and PCCP reference |
 
-### 8.9 What the standards do not say
+### 8.8 What "reproducible sparsity" requires
 
 - No standard defines a sparsity level, a pattern, or a storage format.
 - No standard requires a per-class evaluation, although ISO 14971's hazard analysis implies it for a diagnostic device.
@@ -954,7 +954,7 @@ The Annex I applicability date was originally 2 August 2027; the AI Omnibus, ado
 
 The absence means the team must define its own acceptance criteria and apply them consistently. A criterion invented after seeing the pruned results is not a criterion.
 
-### 8.8 What "reproducible sparsity" requires
+### 8.9 What the standards do not say
 
 A sparsity pattern is reproducible when another engineer can regenerate the exact mask from the record. That requires four items.
 

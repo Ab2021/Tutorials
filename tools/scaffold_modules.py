@@ -771,6 +771,34 @@ MANIFEST = [
 ]
 
 
+def extra_topics(folder: str, slugs: set[str]) -> list[tuple[str, str, str]]:
+    """Return (slug, title, scope) for numbered .md files absent from the manifest."""
+    d = os.path.join(MODULES_DIR, folder)
+    if not os.path.isdir(d):
+        return []
+    out = []
+    for fn in sorted(os.listdir(d)):
+        if not fn.endswith(".md") or fn == "_index.md":
+            continue
+        stem = fn[:-3]
+        if stem in slugs or not stem[:2].isdigit():
+            continue
+        with open(os.path.join(d, fn), "r", encoding="utf-8", errors="replace") as fh:
+            lines = fh.read().splitlines()
+        title = stem
+        scope = ""
+        for line in lines:
+            if line.startswith("# ") and title == stem:
+                title = line[2:].strip()
+            elif line.strip() and not line.startswith(("#", ">", "|", "```")):
+                scope = line.strip()
+                break
+        if len(scope) > 120:
+            scope = scope[:117].rstrip() + "..."
+        out.append((stem, title, scope))
+    return out
+
+
 def topic_status(folder: str, slug: str) -> tuple[str, int]:
     path = os.path.join(MODULES_DIR, folder, slug + ".md")
     if not os.path.exists(path):
@@ -820,6 +848,8 @@ def index_text(module) -> str:
     a("| # | File | Topic | Scope | Target | Status |")
     a("|---:|---|---|---|---:|---|")
     counts = {"planned": 0, "draft": 0, "complete": 0}
+    extras = extra_topics(folder, {s for s, _, _ in topics})
+    topics = list(topics) + extras
     for i, (slug, ttitle, scope) in enumerate(topics, start=1):
         st, n = topic_status(folder, slug)
         key = "planned" if st == "planned" else ("complete" if st == "complete" else "draft")
@@ -872,16 +902,19 @@ def status_text() -> str:
         present = 0
         lines_total = 0
         complete = 0
-        for slug, _, _ in topics:
+        files = [f[:-3] for f in sorted(os.listdir(folder_path))
+                 if f.endswith(".md") and f != "_index.md" and f[:2].isdigit()]
+        for slug in files:
             st, n = topic_status(folder, slug)
             if n > 0:
                 present += 1
                 lines_total += n
             if st == "complete":
                 complete += 1
+        planned = max(len(topics), len(files))
         total_files += present
         total_lines += lines_total
-        rows.append((mid, title, len(topics), present, complete, lines_total))
+        rows.append((mid, title, planned, present, complete, lines_total))
 
     out = []
     a = out.append

@@ -732,16 +732,16 @@ print(f"  model intensity       {ops/bytes_total:6.1f} ops/byte")
 COMPUTE
   SoC effective           5.00 TOPS
   SoC compute time        0.40 ms
-  NPU effective           0.154 TOPS
+  NPU effective          0.154 TOPS
   NPU compute time       13.02 ms
 
 MEMORY
-  SoC memory time         0.276 ms
-  NPU memory time          4.70 ms
+  SoC memory time        0.276 ms
+  NPU memory time         4.70 ms
 
 ENERGY
   SoC per inference       96.0 mJ
-  NPU per inference        3.10 mJ
+  NPU per inference       3.10 mJ
   ratio                   31.0
 
 BATCH
@@ -786,9 +786,9 @@ print(f"efficiency   {100*achieved/peak:8.1f} %")
 
 ```text
 traffic         128.0 MB
-achieved         60.95 GB/s
-peak             68.00 GB/s
-efficiency        89.6 %
+achieved        60.95 GB/s
+peak            68.00 GB/s
+efficiency       89.6 %
 ```
 
 A copy benchmark achieves about 90% of the peak. A model's access pattern may achieve less, especially if it is random or strided. The achieved bandwidth, not the peak, belongs in the roofline.

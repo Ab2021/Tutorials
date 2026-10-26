@@ -1,0 +1,10 @@
+{
+  "metrics.csv": {
+    "bytes": 48,
+    "sha256": "a884326bcc2188ce161caf0a59737c1374aa24bce64d37fceab3face294cfe5a"
+  },
+  "pipeline.py": {
+    "bytes": 35,
+    "sha256": "371afd302e005913288c9f40fbcae9f513be68fbdb18260354c4b135e8c483ad"
+  }
+}

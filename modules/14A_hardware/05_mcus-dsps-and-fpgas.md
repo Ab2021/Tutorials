@@ -744,15 +744,15 @@ MCU
   effective MAC/s         144.0 M
   compute time            13.89 ms
   energy per inference    0.694 mJ
-  sleep energy / 10 s     4.99 mJ
-  total / 10 s            5.69 mJ
+  sleep energy / 10 s      4.99 mJ
+  total / 10 s             5.69 mJ
 
 FPGA
   effective MAC/s          4.80 G
   compute time            0.417 ms
   energy per inference    0.208 mJ
-  sleep energy / 10 s   499.98 mJ
-  total / 10 s          500.19 mJ
+  sleep energy / 10 s    499.98 mJ
+  total / 10 s           500.19 mJ
 
 MCU with 500k MACs: 3.47 ms
 transfer 120 kB at 10 MB/s: 12.0 ms

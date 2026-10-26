@@ -727,10 +727,10 @@ The subgroup table tells a different story.
 
 | Group | FP32 approved | INT8 per-tensor | Difference | 95% CI | Margin | Result |
 |---|---:|---:|---:|---|---:|---|
-| Overall | 0.942 | 0.934 | -0.8 pp | [-1.6, 0.0] | -1.5 pp | Pass, narrowly |
-| Group A | 0.945 | 0.940 | -0.5 pp | [-1.3, 0.3] | -1.5 pp | Pass |
+| Overall | 0.942 | 0.934 | -0.8 pp | [-1.3, -0.3] | -1.5 pp | Pass |
+| Group A | 0.945 | 0.940 | -0.5 pp | [-1.0, 0.1] | -1.5 pp | Pass |
 | Group B | 0.931 | 0.918 | -1.3 pp | [-2.2, -0.4] | -1.0 pp | Fail |
-| Group C | 0.938 | 0.933 | -0.5 pp | [-1.4, 0.4] | -1.5 pp | Pass |
+| Group C | 0.938 | 0.933 | -0.5 pp | [-1.2, 0.2] | -1.5 pp | Pass |
 
 Group B fails its pre-specified margin. The overall result passes because Group B is a minority of the sample, and its loss is diluted by the larger groups. This is the exact pattern that aggregate reporting hides.
 
@@ -800,9 +800,9 @@ Expected output:
 
 ```text
 sensitivity        diff -0.0040 CI [-0.0114, +0.0034] margin -0.015 pass True
-specificity        diff -0.0030 CI [-0.0103, +0.0043] margin -0.015 pass True
+specificity        diff -0.0030 CI [-0.0091, +0.0031] margin -0.015 pass True
 worst subgroup     diff -0.0050 CI [-0.0142, +0.0042] margin -0.015 pass True
-calibration slope  diff -0.0400 CI [-0.0437, -0.0363] margin -0.080 pass True
+calibration slope  diff -0.0400 CI [-0.0467, -0.0333] margin -0.080 pass True
 ```
 
 The calibration slope interval is narrow because the code applies the proportion formula to a continuous quantity, which is not appropriate. For a continuous metric, use a paired bootstrap or a normal interval with the metric's own standard error. The example is included to show the structure, not to endorse the formula for every metric.
@@ -872,7 +872,7 @@ Expected output:
 ```text
 affine S=0.00185490 Z=33
 quantized [0, 15, 39, 44, 57, 81, 255]
-reconstructed [-0.06121, -0.03339, 0.01113, 0.0204, 0.04452, 0.08903, 0.41195]
+reconstructed [-0.061212, -0.033388, 0.011129, 0.020404, 0.044518, 0.089035, 0.411788]
 symmetric S=0.00324409
 ```
 
@@ -949,7 +949,7 @@ Regulation (EU) 2017/745, the Medical Devices Regulation, governs the device: cl
 
 Regulation (EU) 2024/1689, the Artificial Intelligence Act, adds obligations for high-risk AI systems. A medical device that is a safety component, or is itself a device requiring third-party conformity assessment, is high-risk under Article 6(1).
 
-The Annex I applicability date was originally 2 August 2027. The Commission's AI Omnibus, adopted on 19 November 2025 with political agreement reported on 7 May 2026, moves the Annex I date to 2 August 2028. Verify the current date before relying on it; the Medical Device Coordination Group guidance MDCG 2025-6 (June 2025) remains the reference for the interaction between the two regulations.
+The Annex I applicability date was originally 2 August 2027. Regulation (EU) 2026/1744 (the Digital Omnibus on AI), in force 27 July 2026, moves the Annex I date to 2 August 2028. Verify the current date before relying on it; the Medical Device Coordination Group guidance MDCG 2025-6 (June 2025) remains the reference for the interaction between the two regulations.
 
 For compression, the relevant obligations are transparency about the model and its limitations, human oversight, and post-market monitoring. A compressed model whose subgroup performance differs is a transparency issue, not only an engineering one.
 

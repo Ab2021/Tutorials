@@ -637,14 +637,14 @@ Fusing conv + batch norm + ReLU into one node saves the batch-norm pass and the 
 
 ```text
 conv1 + bn1 + relu1 = 8.0 + 0.5 + 0.3 = 8.8 ms unfused
-fused               = 8.4 ms
-saving              = 0.4 ms
+fused               = 8.3 ms (8.0 arithmetic plus a 0.3 ms epilogue)
+saving              = 0.5 ms
 
-conv2 block: 14.8 unfused -> 14.4 fused, saving 0.4 ms
-conv3 block: 16.8 unfused -> 16.4 fused, saving 0.4 ms
+conv2 block: 14.8 unfused -> 14.3 fused, saving 0.5 ms
+conv3 block: 16.8 unfused -> 16.3 fused, saving 0.5 ms
 ```
 
-Total arithmetic saving: 1.2 ms. Launch saving: 6 fewer launches at 0.05 ms each = 0.3 ms. Total fusion saving: 1.5 ms, which brings the latency from 45.7 to 44.2 ms.
+Total fusion saving: 1.5 ms, which brings the latency from 45.7 to 44.2 ms. The saving combines fewer memory passes with fewer dispatches; the per-node times already include dispatch, so the two are not added separately.
 
 The memory saving is larger than the time saving. Each unfused block writes two intermediate tensors of 8 KiB each. Fusing removes 6 intermediates, or 48 KiB of writes and the corresponding reads. On a memory-bound device, that would matter more; on this compute-bound model, it is a secondary benefit.
 
@@ -773,9 +773,9 @@ def fused_latency(nodes, fusion_groups, launch_ms=0.05):
     times = {name: t for name, t, _ in nodes}
     total = sum(times.values())
     for group in fusion_groups:
-        group_time = max(times[n] for n in group)
+        group_time = max(times[n] for n in group) + 0.3   # fused epilogue
         total -= sum(times[n] for n in group) - group_time
-    return total + launch_ms * (len(nodes) - sum(len(g) - 1 for g in fusion_groups))
+    return total
 
 
 def partition_cost(nodes, unsupported, cpu_ms=0.80, npu_ms=0.05, boundary_ms=0.80):
@@ -935,7 +935,7 @@ A runtime upgrade or a graph optimization is a software change. Whether it is co
 
 ### 8.5 EU framework
 
-In the European Union, Regulation (EU) 2017/745 governs the device and Regulation (EU) 2024/1689, the Artificial Intelligence Act, adds obligations for high-risk systems. The Annex I applicability date was originally 2 August 2027; the AI Omnibus, adopted on 19 November 2025 with political agreement reported on 7 May 2026, moves it to 2 August 2028. Verify the current date before relying on it.
+In the European Union, Regulation (EU) 2017/745 governs the device and Regulation (EU) 2024/1689, the Artificial Intelligence Act, adds obligations for high-risk systems. The Annex I applicability date was originally 2 August 2027; Regulation (EU) 2026/1744 (the Digital Omnibus on AI), in force 27 July 2026, moves it to 2 August 2028. Verify the current date before relying on it.
 
 ### 8.6 What the standards do not say
 
@@ -946,7 +946,7 @@ In the European Union, Regulation (EU) 2017/745 governs the device and Regulatio
 
 The absence means the evidence must be designed, not looked up.
 
-### 8.8 A validation protocol for an optimized graph
+### 8.7 What is binding and what is convention
 
 A protocol that a reviewer can follow has six parts.
 
@@ -959,7 +959,7 @@ A protocol that a reviewer can follow has six parts.
 
 A protocol without the tolerance is an opinion. A protocol without the target measurement is a desktop result.
 
-### 8.7 What is binding and what is convention
+### 8.8 A validation protocol for an optimized graph
 
 | Item | Status | Consequence |
 |---|---|---|

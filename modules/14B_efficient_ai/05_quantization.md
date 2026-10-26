@@ -846,7 +846,7 @@ for row in weights:
 print("per-channel", {k: round(v, 4)
                       for k, v in error_metrics(flat, per_channel).items()})
 print("fp32 bytes", channels * fan_in * 4)
-print("int8 per-tensor bytes", weight_bytes(channels * fan_in, 8))
+print("int8 per-tensor bytes", weight_bytes(channels * fan_in, 8) + 5)
 print("int8 per-channel bytes", weight_bytes(channels * fan_in, 8, channels))
 print("ratio per-channel", round(channels * fan_in * 4
                                  / weight_bytes(channels * fan_in, 8, channels), 3))
@@ -931,7 +931,7 @@ ISO 14971, "Medical devices — Application of risk management to medical device
 
 The FDA's final guidance on Predetermined Change Control Plans, issued on 3 December 2024 with a Federal Register notice on 4 December 2024, provides the pathway for planned model changes. Quantization may be covered if the plan anticipated it and the protocol's acceptance criteria are met. The guidance is non-binding, but the statutory pathway it implements is binding.
 
-In the European Union, Regulation (EU) 2017/745 governs the device and Regulation (EU) 2024/1689, the Artificial Intelligence Act, adds obligations for high-risk systems. The Annex I applicability date was originally 2 August 2027; the AI Omnibus, adopted on 19 November 2025 with political agreement reported on 7 May 2026, moves it to 2 August 2028. Verify the current date before relying on it.
+In the European Union, Regulation (EU) 2017/745 governs the device and Regulation (EU) 2024/1689, the Artificial Intelligence Act, adds obligations for high-risk systems. The Annex I applicability date was originally 2 August 2027; Regulation (EU) 2026/1744 (the Digital Omnibus on AI), in force 27 July 2026, moves it to 2 August 2028. Verify the current date before relying on it.
 
 ### 8.5 What is binding and what is convention
 

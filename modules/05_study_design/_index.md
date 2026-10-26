@@ -39,7 +39,7 @@ not the whole program.
 | 8 | [`08_external-validation.md`](08_external-validation.md) | External Validation | Site selection, transportability, recalibration, and reporting standards. | 1,200-1,800 | complete |
 | 9 | [`09_evidence-synthesis.md`](09_evidence-synthesis.md) | Evidence Synthesis | Systematic review, meta-analysis, indirect comparison, and network meta-analysis. | 1,200-1,800 | complete |
 | 10 | [`10_protocol-writing.md`](10_protocol-writing.md) | Protocol Writing | A protocol skeleton that a regulator, IRB, and statistician can all read. | 1,200-1,800 | complete |
-| 11 | [`11_target-trial-emulation.md`](11_target-trial-emulation.md) | Target Trial Emulation | The 7-step TTE protocol framework, ACNU design, immortal time bias avoidance, and FDA RWE standards. | 1,200-1,800 | complete |
+| 11 | [`11_target-trial-emulation.md`](11_target-trial-emulation.md) | 11_target-trial-emulation | --- | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -57,7 +57,8 @@ any topic that names your current decision problem.
 07 Estimands ->
 08 External Validation ->
 09 Evidence Synthesis ->
-10 Protocol Writing
+10 Protocol Writing ->
+11 11_target-trial-emulation
 ```
 
 ## 5. What this module does not cover
@@ -72,7 +73,7 @@ any topic that names your current decision problem.
 |---|---:|
 | planned | 0 |
 | draft | 0 |
-| complete | 10 |
+| complete | 11 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.
 

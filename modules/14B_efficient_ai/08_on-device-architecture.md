@@ -133,13 +133,13 @@ A model format is not a neutral container. It determines what the runtime can lo
 
 The choice is constrained by the team's training framework, the target's runtime, and the operators the model uses. A format that the runtime can load but cannot accelerate is a format that produces a slow device.
 
-### 3.8 The artifact is not the checkpoint
+### 3.4 The artifact is not the checkpoint
 
 A training checkpoint contains optimizer state, gradients, and a framework-specific graph. A deployment artifact contains a graph, weights, and metadata in a runtime-specific format. The conversion between them can change the graph, the precision, and the operator set.
 
 The conversion should be treated as a build step with its own tests: the exported artifact is loaded on the target, run on a reference input, and compared with the framework output. A conversion that succeeds is not a conversion that preserves behavior.
 
-### 3.4 Failure is a design input
+### 3.5 Failure is a design input
 
 Every device will fail. The architecture decides whether it fails safe.
 
@@ -151,7 +151,7 @@ Every device will fail. The architecture decides whether it fails safe.
 
 A device without a watchdog, a timeout, and a defined safe state is not architecturally complete, regardless of its model's accuracy.
 
-### 3.7 Boot and wake
+### 3.6 Boot and wake
 
 Boot and wake are different paths with different latency and different failure modes.
 
@@ -163,7 +163,7 @@ A clinical device that must respond immediately after power-on is bound by cold 
 
 The boot path also determines the update behavior: the bootloader must verify the image before jumping to it, and it must decide which slot to boot when both are marked valid or invalid.
 
-### 3.5 The update path
+### 3.7 The update path
 
 An update is a sequence of states, and each transition can fail.
 
@@ -183,7 +183,7 @@ The design requirements:
 - **Power-loss safety:** an interrupted write leaves the inactive slot invalid, and the bootloader boots the valid slot.
 - **Version reporting:** the device reports the firmware and model versions after boot.
 
-### 3.6 Telemetry without PHI
+### 3.8 Telemetry without PHI
 
 Monitoring needs data; privacy forbids identifying data. The resolution is to send features and events, not raw signals or identifiers.
 
@@ -609,7 +609,7 @@ The affine step is 1.75 times finer than the symmetric step, and the affine SQNR
 | Logs | 16 | Ring buffer |
 | **Total** | **738** | of 1,024 KiB |
 
-Free flash: 1,024 - 738 = 286 KiB, or 27.9%. The free space is the margin for model growth: a model can grow from 41 KiB to 184 KiB in each slot before the layout fails, which is more than four times its current size.
+Free flash: 1,024 - 737.7 = 286.3 KiB, or 28.0%. The free space is the margin for model growth: a model can grow from 41 KiB to 184 KiB in each slot before the layout fails, which is more than four times its current size.
 
 The A/B model slots cost 41 KiB, or 4.0% of flash. The cost is the price of a safe update. A single-slot design would save 41 KiB and risk a bricked device on a power loss during update.
 
@@ -692,7 +692,7 @@ The skew is a property of the weights. It does not change with the device archit
 
 ### 6.10 Varying one assumption
 
-**Model size: 41 KiB to 70 KiB.** Both slots become 70 KiB, and the flash total becomes 738 - 82 + 140 = 796 KiB, leaving 228 KiB. The layout still fits. At 184 KiB per slot, the total would be 1,024 KiB and the layout would fail; the maximum model size with A/B slots is therefore about 184 KiB, not the naive 286 KiB free.
+**Model size: 41 KiB to 70 KiB.** Both slots become 70 KiB, and the flash total becomes 738 - 82 + 140 = 796 KiB, leaving 228 KiB. The layout still fits. At 184 KiB per slot, the total would be exactly 1,024 KiB, leaving no headroom, and the layout would fail; the maximum model size with A/B slots is therefore about 184 KiB, not the naive 286 KiB free.
 
 **Arena: 96 KiB to 160 KiB.** The SRAM total becomes 200 KiB, leaving 56 KiB. That is still positive, but the headroom is only 21.9%, which is thin for a production device with runtime scratch allocations. A 160 KiB arena is a warning sign, not an immediate failure.
 
@@ -764,7 +764,7 @@ Expected output:
 
 ```text
 model KiB = 40.8
-flash used = 737.8 KiB free = 286.2 KiB (27.9%)
+flash used = 737.7 KiB free = 286.3 KiB (28.0%)
 sram used = 136 KiB free = 120 KiB (46.9%)
 max model per slot with A/B = 184.0 KiB
 max model without A/B = 368.0 KiB
@@ -780,7 +780,7 @@ print("pipeline ms =", total, "margin =", 250 - total,
       "(%.1f%%)" % (100 * (250 - total) / 250))
 print("model share = %.1f%%" % (100 * stages["inference"] / total))
 
-e_inf = 3.0 * 0.0082 * 0.0457
+e_inf = 3.0 * 0.0082 * 0.0457 * 1000
 e_cycle = e_inf + 0.675 + 3.240
 print("E inference = %.3f mJ, E cycle = %.3f mJ" % (e_inf, e_cycle))
 current_ma = e_cycle / 2.0 / 3.0
@@ -810,10 +810,10 @@ for model_kib in (40.8, 70, 120, 184):
 Expected output:
 
 ```text
-model  40.8 KiB -> used  737.8 free  286.2 (27.9%)
-model  70.0 KiB -> used  796.2 free  227.8 (22.2%)
-model 120.0 KiB -> used  896.2 free  127.8 (12.5%)
-model 184.0 KiB -> used 1024.2 free   -0.2 (-0.0%)
+model  40.8 KiB -> used  737.6 free  286.4 (28.0%)
+model  70.0 KiB -> used  796.0 free  228.0 (22.3%)
+model 120.0 KiB -> used  896.0 free  128.0 (12.5%)
+model 184.0 KiB -> used 1024.0 free    0.0 (0.0%)
 ```
 
 Quantization diagnostics:
@@ -932,7 +932,7 @@ The architecture determines what a PCCP can authorize. A device with A/B slots a
 
 ### 8.6 EU framework
 
-In the European Union, Regulation (EU) 2017/745 governs the device, and Regulation (EU) 2024/1689, the Artificial Intelligence Act, adds obligations for high-risk systems. The Annex I applicability date was originally 2 August 2027; the AI Omnibus, adopted on 19 November 2025 with political agreement reported on 7 May 2026, moves it to 2 August 2028. Verify the current date before relying on it.
+In the European Union, Regulation (EU) 2017/745 governs the device, and Regulation (EU) 2024/1689, the Artificial Intelligence Act, adds obligations for high-risk systems. The Annex I applicability date was originally 2 August 2027; Regulation (EU) 2026/1744 (the Digital Omnibus on AI), in force 27 July 2026, moves it to 2 August 2028. Verify the current date before relying on it.
 
 ### 8.7 What is binding and what is convention
 

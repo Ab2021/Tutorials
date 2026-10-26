@@ -832,7 +832,7 @@ print("student fp32 =", student_fp32, "B =", round(student_fp32 / 1024, 1), "KiB
 print("student int8 =", student_int8, "B =", round(student_int8 / 1024, 1), "KiB")
 print("ratio =", round(teacher_bytes / student_int8, 2))
 print("latency ms =", round(2_600_000 / 89_600_000 * 1000, 2))
-print("energy mJ =", round(3.0 * 0.0082 * 0.0290, 3))
+print("energy mJ =", round(3.0 * 0.0082 * 0.0290 * 1000, 3))
 ```
 
 Expected output:
@@ -964,7 +964,7 @@ Distillation is a larger change than quantization because it changes the archite
 
 In the European Union, Regulation (EU) 2017/745 governs the device and Regulation (EU) 2024/1689, the Artificial Intelligence Act, adds obligations for high-risk AI systems. A medical device that is a safety component, or is itself a device requiring third-party conformity assessment, is high-risk under Article 6(1).
 
-The applicability date for Annex I products was originally 2 August 2027; the Commission's AI Omnibus, adopted on 19 November 2025 with political agreement reported on 7 May 2026, moves it to 2 August 2028. Verify the current date before relying on it. MDCG 2025-6 (June 2025) remains the reference for the interaction between the two regulations.
+The applicability date for Annex I products was originally 2 August 2027; Regulation (EU) 2026/1744, in force 27 July 2026, moves it to 2 August 2028. Verify the current date before relying on it. MDCG 2025-6 (June 2025) remains the reference for the interaction between the two regulations.
 
 For distillation, the relevant obligations are transparency about the model's development, human oversight, and post-market monitoring. A student that differs from the teacher in subgroup performance is a transparency issue as well as an engineering one.
 
@@ -1031,7 +1031,7 @@ A distilled language model is a new clinical model. Factuality, grounding, omiss
 
 The last three rows are the ones a deployment team must not skip. The literature establishes the mechanism; it does not establish the safety of a particular student for a particular population.
 
-### 9.6 A medical distillation checklist
+### 9.5 Why the medical case differs
 
 The following checklist is derived from the evidence above and from the regulatory expectations in Section 8. It is not a standard; it is the minimum a reviewer is likely to ask for.
 
@@ -1050,7 +1050,7 @@ The following checklist is derived from the evidence above and from the regulato
 
 A team that can produce all twelve items has a distillation package. A team that can produce only the accuracy number has a result, not a device.
 
-### 9.5 Why the medical case differs
+### 9.6 A medical distillation checklist
 
 Three differences make medical distillation harder than benchmark distillation.
 

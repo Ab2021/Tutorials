@@ -374,16 +374,16 @@ The amplifier's CMRR is measured with a defined source imbalance, usually 1 kΩ.
 \text{CMRR}_{\text{eff}} = 20 \log_{10}\left(\frac{1}{\frac{1}{\text{CMRR}_{\text{amp}}} + \frac{\Delta Z}{Z_{\text{in,cm}}}}\right)
 \]
 
-For an amplifier with 100 dB CMRR and a 10 MΩ common-mode input impedance, the mismatch term dominates when \(\Delta Z / Z_{\text{in,cm}} > 10^{-5}\), or \(\Delta Z > 100\ \Omega\). Most electrode pairs exceed that.
+For an amplifier with 120 dB CMRR and a 10 MΩ common-mode input impedance, the mismatch term dominates when \(\Delta Z / Z_{\text{in,cm}} > 10^{-5}\), or \(\Delta Z > 100\ \Omega\). Most electrode pairs exceed that.
 
 | Mismatch ΔZ | Z_in,cm = 10 MΩ | Z_in,cm = 1 GΩ |
 |---:|---:|---:|
-| 10 Ω | 120 dB | 160 dB |
-| 100 Ω | 100 dB | 140 dB |
-| 1 kΩ | 80 dB | 120 dB |
-| 10 kΩ | 60 dB | 100 dB |
+| 10 Ω | 114.0 dB | 119.9 dB |
+| 100 Ω | 99.2 dB | 119.2 dB |
+| 1 kΩ | 79.9 dB | 114.0 dB |
+| 10 kΩ | 60.0 dB | 99.2 dB |
 
-The table shows why input impedance matters more than the amplifier's CMRR specification in a high-impedance system. An amplifier with 120 dB CMRR but a 10 MΩ input impedance gives 80 dB effective CMRR with a 1 kΩ mismatch. An amplifier with 100 dB CMRR and a 1 GΩ input impedance gives 120 dB effective CMRR with the same mismatch. The second amplifier is better for the application even though its datasheet number is lower.
+The table shows why input impedance matters more than the amplifier's CMRR specification in a high-impedance system. An amplifier with 120 dB CMRR but a 10 MΩ input impedance gives 79.9 dB effective CMRR with a 1 kΩ mismatch. The same amplifier with a 1 GΩ input impedance gives 114.0 dB, close to its own 120 dB limit. The higher input impedance is better for the application even though the amplifier's datasheet number is unchanged.
 
 The driven-right-leg loop changes the common-mode voltage, not the CMRR. If the loop reduces the common mode by 40 dB, the residual interference falls by 40 dB, regardless of the amplifier's CMRR. A design with a modest CMRR and a good RLD can outperform a design with an excellent CMRR and no RLD.
 
@@ -779,9 +779,9 @@ for dz in (10, 100, 1000, 10_000):
 **Expected output.**
 
 ```text
-mismatch     10 ohm: effective CMRR  120.0 dB
-mismatch    100 ohm: effective CMRR  100.0 dB
-mismatch   1000 ohm: effective CMRR   80.0 dB
+mismatch     10 ohm: effective CMRR  114.0 dB
+mismatch    100 ohm: effective CMRR   99.2 dB
+mismatch   1000 ohm: effective CMRR   79.9 dB
 mismatch  10000 ohm: effective CMRR   60.0 dB
 ```
 

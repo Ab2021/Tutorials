@@ -69,6 +69,21 @@ The model has five classification axes:
 
 A device can be FDA class II, EU class IIa, type BF, software class B, IP22, and CISPR B. Each value is chosen for a different reason, and each has its own evidence.
 
+### 3.6 The six axes are independent
+
+The independence is the key idea. A change on one axis does not automatically change another.
+
+| Change | Axis affected | Other axes |
+|---|---|---|
+| Add a cardiac catheter | Applied part (BF to CF) | FDA/EU may also change |
+| Add a therapy function | FDA/EU class, software class | Applied part may not change |
+| Move from hospital to home | Emissions, ingress, usability | FDA/EU class may not change |
+| Add a diagnostic claim | Clinical evidence, EU class | Applied part may not change |
+| Add a wireless radio | Emissions/immunity | Software class may change |
+| Change the enclosure | Ingress | Applied part may not change |
+
+A team that assumes "class II means no clinical evidence" or "type BF means safe" has collapsed the axes. The collapse is the source of most classification errors.
+
 ### 3.1 The FDA classes
 
 | Class | Risk | Pathway | Examples |
@@ -409,6 +424,32 @@ A review that answers all ten has covered the classification. A review that answ
 
 Each mistake is a schedule or safety risk. The fix is a classification record with a named reviewer.
 
+### 5.27 Combination products and multiple codes
+
+A device that combines a drug and a device, or two device types, may be a combination product. In the United States, the lead center (CDRH, CDER, or CBER) is assigned by the product's primary mode of action. In the EU, the combination may be regulated as a device with a medicinal substance, or as a medicinal product with a device.
+
+A device with multiple functions may have multiple product codes. The most stringent code governs the submission, and the evidence must cover all the functions. A device that adds a class III function to a class II base is a class III device for that function.
+
+### 5.28 Classification worksheet
+
+| Item | Entry | Basis |
+|---|---|---|
+| Intended use | Monitor sleep apnea at home | Clinical claim |
+| User | Patient, with clinician review | Home use |
+| Patient contact | Skin, nasal, finger | Applied part |
+| Duration | One night, repeated | Contact duration |
+| Energy | Battery, low voltage | Active device |
+| FDA class | II | Product code |
+| EU class | IIa | Annex VIII rules |
+| Applied part | BF | No cardiac path |
+| Software class | A/B | Harm analysis |
+| Ingress | IP22 | Cleaning method |
+| Emissions | CISPR B | Home environment |
+| Clinical | Literature + usability | Claim |
+| Post-market | PMS | Class |
+
+The worksheet is the record. A worksheet with an empty basis column is a classification without a rationale.
+
 ### 5.22 Applied-part leakage arithmetic
 
 The patient leakage limit is a current, not a voltage. For a type CF applied part, the limit is 10 µA at 50/60 Hz in normal condition. The current through the patient is the source voltage divided by the impedance of the path. A 250 V mains source with a 25 MΩ isolation impedance produces 10 µA, which is exactly the limit. A 10 MΩ isolation produces 25 µA, which fails.
@@ -606,6 +647,20 @@ The arithmetic shows that the class changes are not linear. A software class cha
 
 The pump's timeline is 1.9× the monitor's. The difference is the clinical evidence and the review, not the hardware. A team that plans the hardware and forgets the regulatory timeline will miss the launch.
 
+### 6.18 The cost of a class change
+
+| Change | Added hours | Added cost | Added calendar |
+|---|---:|---:|---:|
+| Software B to C | 100 | $15,000 | 4 weeks |
+| BF to CF | 40 | $6,000 | 3 weeks |
+| CISPR A to B | 20 | $3,000 | 2 weeks |
+| Add clinical trial | 400 | $60,000 | 24 weeks |
+| Class IIa to IIb | 120 | $18,000 | 8 weeks |
+
+The table shows that the clinical trial is the largest single cost, followed by the software class change. A team that plans a class change without these numbers will underestimate the launch.
+
+The numbers are illustrative; the ratios are the point. A software class change is cheaper than a clinical trial but more expensive than an EMC re-test. The class change should be decided before the design freeze, when the cost is still a design choice.
+
 ### 6.16 A third device: the implantable pacemaker
 
 An implantable pacemaker is FDA class III (PMA) and EU class III. The applied part is type CF, because it contacts the heart. The software class is C for the therapy control. The device is not user-serviceable; the battery must last years, and the firmware update, if any, is through a proprietary programmer.
@@ -674,6 +729,38 @@ The therapy-function ratio of 2.51 is the sensitivity result: adding a therapy f
 
 **A note on the estimate.** The hours are illustrative. A real estimate must use the laboratory's quotes, the number of units, the test duration, and the re-test allowance. A design that fails EMC once may need a board revision and a full re-test, which can add 50% to the EMC line.
 
+### 7.1 Class lookup
+
+The script prints the six classification axes for the sleep monitor. The dictionary is a record, not a classifier; each value has a basis in the classification worksheet.
+
+```python
+classes = {
+    "FDA": "II",
+    "EU": "IIa",
+    "applied part": "BF",
+    "software": "B",
+    "ingress": "IP22",
+    "emissions": "CISPR B",
+}
+for axis, value in classes.items():
+    print(f"{axis:14s} {value}")
+print(f"axes {len(classes)}")
+```
+
+**Expected output.**
+
+```text
+FDA            II
+EU             IIa
+applied part   BF
+software       B
+ingress        IP22
+emissions      CISPR B
+axes 6
+```
+
+The output is deliberately simple. The value of the record is not the print; it is the discipline of naming each axis and its basis. A device with six axes and six bases is a device that can survive an audit.
+
 ## 8. Data, standards, and regulatory context
 
 The classification systems are defined by regulations and standards. The table separates the binding regulations from the consensus standards.
@@ -732,6 +819,18 @@ The classifications do not specify:
 
 Those are determined by the risk analysis, the clinical evaluation, and the quality system. A class is a summary of the evidence, not a substitute for it.
 
+### 8.7 Global markets
+
+A device launched in multiple markets needs a classification for each. The FDA class, the EU class, the Health Canada class, the TGA class, and the PMDA class are different systems with different evidence. A device that is class II in the United States may be class IIb in the EU and class II in Canada.
+
+The differences are not only paperwork. A market may require a local clinical study, a local representative, or a different labelling. The global plan must include the classification and the evidence for each market, not only the home market.
+
+### 8.8 A note on the current regulation
+
+The MDR and the FDA regulations change. The MDR has been amended since 2017, and the FDA issues guidance and proposed rules. A classification that was correct at the design freeze may be wrong at launch.
+
+The regulatory team must monitor the changes and re-review the classification before the submission. The monitoring is a process, not a one-time check.
+
 ## 9. Industry practice and case evidence
 
 ### 9.1 Most monitoring devices are class II
@@ -778,6 +877,31 @@ Teams that avoid classification surprises tend to:
 
 The practices are ordinary. The failures they prevent are not.
 
+### 9.6 A note on product codes
+
+The FDA product code is a three-letter code that identifies a device type. A device may have multiple codes if it combines functions. The code determines the regulation, the class, and the predicate.
+
+A team that chooses a code by searching for a similar device may choose the wrong code. The code must be confirmed against the regulation and the device's intended use. A wrong code can lead to a wrong predicate and a wrong pathway.
+
+### 9.7 Examples of class assignments
+
+| Device | FDA | EU | Applied part | Software |
+|---|---|---|---|---|
+| Wearable ECG patch | II | IIa | BF | B |
+| Home sleep monitor | II | IIa | BF | B |
+| Infusion pump | II | IIb | BF/CF | C |
+| Ventilator | II | IIb | BF | C |
+| Pacemaker | III | III | CF | C |
+| Ultrasound | II | IIa | BF | B |
+
+The table is illustrative, not a classification. The actual class depends on the intended use and the current regulation.
+
+### 9.8 A note on the notified body
+
+A notified body is an independent organisation that assesses conformity. The notified body's scope must cover the device's technology and the classification. A notified body that is not designated for the device's code cannot issue the certificate.
+
+The choice of notified body is a project decision. The queue, the fee, and the scope vary. A device that is ready for submission but has no notified body with the right scope is not ready.
+
 ## 10. Failure modes and red flags
 
 | Failure | Early warning sign | Mechanism | Consequence | Mitigation |
@@ -796,6 +920,32 @@ The practices are ordinary. The failures they prevent are not.
 | Exemption assumed | No 510(k) filed | Exemption misread | Illegal marketing | Regulation check |
 
 The most dangerous failure is the wrong applied-part class, because it is a safety failure, not only a regulatory one. A type B device connected to a cardiac path can exceed the CF leakage limit and injure the patient.
+
+### 10.1 Ten red flags in classification records
+
+1. One class for the whole device.
+2. No stated intended use.
+3. No product code or regulation.
+4. No Annex VIII rule.
+5. Applied part chosen by preference, not contact.
+6. Software class equal to the device class.
+7. Home use without CISPR B.
+8. Clinical claim without clinical evidence.
+9. Post-market plan missing from the budget.
+10. Classification dated after the design freeze.
+
+Each is a prompt to review, not a conclusion.
+
+### 10.2 What to do when the class is disputed
+
+1. Re-read the intended use and the claim.
+2. Check the product code and the regulation.
+3. Check the Annex VIII rules.
+4. Document the basis for each axis.
+5. Ask regulatory and quality to review.
+6. If the dispute remains, request a pre-submission meeting with the agency.
+
+A dispute is cheaper before the submission than after. The pre-submission meeting is the formal way to resolve it.
 
 ## 11. Assumptions and limits
 
@@ -819,6 +969,19 @@ The dominant assumption is that the intended use is stable. A change in the inte
 A second limit is that the classification is jurisdiction-specific. A device that is class II in the United States may be class IIb in the EU, and the evidence may differ. A global launch needs a classification for each market.
 
 A third limit is that the classifications are simplified in this topic. The actual rules are detailed and change over time. The topic teaches the structure; the specific classification requires the current regulation and a regulatory professional.
+
+### 11.1 Assumption audit questions
+
+- Which assumption would change the clinical decision if it were false?
+- Which assumption has no regulatory basis?
+- Which assumption was true for a predicate but false for this device?
+- Which assumption depends on the intended use or the claim?
+- Which assumption is encoded in a product code or a rule?
+- Which assumption is specific to one market?
+- Which assumption is monitored after launch, and who acts when it fails?
+- Which assumption has a safe fallback?
+
+A review that cannot answer the last two has risks without controls.
 
 ## 12. Exercises
 
@@ -913,6 +1076,21 @@ A vendor says its device is "class II, so no clinical evidence is needed." Write
 | 7 | Effort estimate | Hours and cost |
 | 8 | Claim evaluation | Five questions |
 
+### 12.1 How the exercises map to a submission
+
+| Exercise | Submission section | Evidence |
+|---|---|---|
+| 1 | Device description | Class table |
+| 2 | Regulatory strategy | Pathway memo |
+| 3 | Electrical safety | Leakage calculation |
+| 4 | Software documentation | Class and lifecycle |
+| 5 | Risk analysis | Misclassification hazard |
+| 6 | Evidence matrix | Matrix |
+| 7 | Project plan | Hours and cost |
+| 8 | Claim review | Questions |
+
+The exercises are not academic. Each produces an artifact that a submission or a technical file would contain, in a simplified form.
+
 ## 13. Self-check answers
 
 **Answer 1 (Exercise 1).** FDA class II (510(k)), EU class IIa, type BF, software class B, IP22. Reasons: the device monitors a physiological signal, does not deliver therapy, contacts the skin but not the heart, and is used at home with a clinician review.
@@ -932,6 +1110,45 @@ A vendor says its device is "class II, so no clinical evidence is needed." Write
 **Answer 8 (Exercise 8).** Questions: (1) What is the intended use and the clinical claim? (2) What is the predicate, and is the equivalence supported? (3) What clinical evidence supports the claim? (4) What is the EU class, and does it require a notified body? (5) What post-market obligations apply? The class alone does not answer any of them.
 
 **Rubric for the design exercises.** A strong design states each class, its basis, its evidence, and its cost. A weak design names one class and assumes the others.
+
+**Numeric answer key.**
+
+| Item | Expected value | Tolerance |
+|---|---:|---|
+| Exercise 3: leakage | 8.33 µA | ±0.05 µA |
+| Exercise 3: margin | 1.67 µA | ±0.05 µA |
+| Exercise 7: total hours | 1,080 h | ±50 h |
+| Exercise 7: cost | $162,000 | ±$5,000 |
+| Section 6: evidence total | 558 h | ±1 h |
+| Section 6: cost | $83,700 | ±$100 |
+| Section 6: therapy ratio | 2.51 | ±0.02 |
+
+A correct method with a rounding difference receives full credit. A wrong unit receives partial credit only.
+
+**Time budget for the exercises.**
+
+| Exercise | Reading | Calculation | Writing | Total |
+|---|---:|---:|---:|---:|
+| 1 | 5 | 5 | 5 | 15 |
+| 2 | 5 | 10 | 10 | 25 |
+| 3 | 5 | 10 | 5 | 20 |
+| 4 | 5 | 10 | 5 | 20 |
+| 5 | 5 | 15 | 10 | 30 |
+| 6 | 5 | 20 | 10 | 35 |
+| 7 | 5 | 15 | 10 | 30 |
+| 8 | 5 | 10 | 10 | 25 |
+
+### 13.1 Rubric dimensions
+
+| Dimension | Novice | Competent | Expert |
+|---|---|---|---|
+| Axes | Names one class | Names three | Names all six with bases |
+| Evidence | Lists tests | Maps class to evidence | Quantifies hours and cost |
+| Applied part | Names BF | Explains leakage | Designs isolation |
+| Software | Names class | Maps lifecycle | Quantifies verification |
+| Regulatory | Names pathway | Explains predicate | Plans pre-submission |
+
+The rubric rewards the separation of axes and the quantification of evidence, not the memorisation of class numbers.
 
 ## 14. Interview questions
 
@@ -965,6 +1182,12 @@ A strong answer names the technical file, clinical evaluation, notified body, an
 **10. What would make you reject a classification?**
 A strong answer names an unsupported intended use, a missing rule, a wrong applied part, or an overclaim. A weak answer rejects on the class number.
 
+**11. How do you classify a device with two functions?**
+A strong answer classifies each function and applies the most stringent class; it also considers combination-product rules. A weak answer picks the higher number without a basis.
+
+**12. Why is the intended use the first step?**
+A strong answer explains that the intended use determines the class, the claim, and the evidence. A weak answer starts with the technology.
+
 ## 15. Key terms
 
 - **510(k)** — premarket notification.
@@ -996,6 +1219,26 @@ A strong answer names an unsupported intended use, a missing rule, a wrong appli
 - **Type B/BF/CF** — applied-part classifications.
 - **UDI** — unique device identification.
 - **Vigilance** — EU adverse-event reporting.
+- **Combination product** — device plus drug or biologic.
+- **Contact duration** — limited, prolonged, or long-term.
+- **Exemption** — class I devices not requiring a 510(k).
+- **Invasive device** — device that enters the body.
+- **Primary mode of action** — the main effect of a combination product.
+- **Product code** — FDA three-letter code.
+- **Reusable device** — device intended for reprocessing.
+- **Single-use device** — device intended for one use.
+- **TGA** — Australian regulator.
+- **Health Canada** — Canadian regulator.
+- **CDRH** — FDA Center for Devices and Radiological Health.
+- **CER** — clinical evaluation report.
+- **GSPR** — general safety and performance requirements.
+- **IFU** — instructions for use.
+- **MDR Annex VIII** — classification rules.
+- **PMDA** — Japan regulator.
+- **Pre-submission** — FDA meeting to discuss a planned submission.
+- **Technical file** — EU documentation of conformity.
+- **TGA** — Australian regulator.
+- **UDI** — unique device identification.
 
 ## 16. Sources
 
@@ -1025,6 +1268,25 @@ All URLs were accessed on 25 October 2026.
 14. U.S. Food and Drug Administration, *Overview of Device Regulation*. https://www.fda.gov/medical-devices/device-advice-comprehensive-regulatory-assistance/overview-device-regulation
 15. European Commission, *Medical Devices — Regulatory Framework*. https://health.ec.europa.eu/medical-devices-sector_en
 16. U.S. Food and Drug Administration, recall database. https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm
+17. Health Canada, *Medical Devices Regulations*. https://www.canada.ca/en/health-canada/services/drugs-health-products/medical-devices.html
+18. Therapeutic Goods Administration, *Medical devices*. https://www.tga.gov.au/
+19. Pharmaceuticals and Medical Devices Agency (Japan). https://www.pmda.go.jp/english/
+20. U.S. Food and Drug Administration, *Combination Products*. https://www.fda.gov/combination-products
+21. ISO 13485:2016, quality management. https://www.iso.org/standard/59752.html
+22. IEC 62366-1:2015+AMD1:2020, usability. https://webstore.iec.ch/en/publication/26570
+23. U.S. Food and Drug Administration, *Pre-Submission Program*. https://www.fda.gov/medical-devices/premarket-submissions-selecting-and-preparing-correct-submission/pre-submission-program
+24. European Commission, *Notified Bodies*. https://health.ec.europa.eu/medical-devices-topics-interest/notified-bodies_en
+25. IMDRF, *Medical Device Cybersecurity* guidance. https://www.imdrf.org/
+26. ISO 13485:2016, quality management systems.
+27. U.S. Food and Drug Administration, *Device Advice*. https://www.fda.gov/medical-devices/device-advice-comprehensive-regulatory-assistance
+28. European Commission, *MDR Guidance*. https://health.ec.europa.eu/medical-devices-sector/new-regulations/guidance-mdcg-endorsed-documents-and-other-guidance_en
+29. ISO 14971:2019, risk management.
+30. IEC 60601-1:2005, clause 8.7.3.
+31. IEC 62304:2006+AMD1:2015, software lifecycle.
+32. CISPR 11:2015, emissions.
+33. IEC 60529:1989, ingress protection.
+34. ISO 10993-1:2025, biocompatibility.
+35. FDA, 21 CFR Part 860.
 
 ## 17. Links
 

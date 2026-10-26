@@ -39,8 +39,8 @@ not the whole program.
 | 8 | [`08_eu-mdr-and-ivdr.md`](08_eu-mdr-and-ivdr.md) | EU MDR and IVDR | Classification, conformity assessment, notified bodies, and post-market obligations. | 1,200-1,800 | complete |
 | 9 | [`09_the-evidence-package.md`](09_the-evidence-package.md) | The Evidence Package | What goes in a submission and how the pieces support the claim. | 1,200-1,800 | complete |
 | 10 | [`10_post-market-surveillance.md`](10_post-market-surveillance.md) | Post-Market Surveillance | Complaints, MDR reporting, PSUR, and real-world performance monitoring. | 1,200-1,800 | complete |
-| 11 | [`11_in-silico-trials-and-simulation.md`](11_in-silico-trials-and-simulation.md) | In-Silico Trials and Simulation | ASME V&V 40 credibility, ISO/TR 23809, statistical shape modeling, and FDA CM&S dossier. | 1,200-1,800 | complete |
-| 12 | [`12_udi-and-pms-analytics.md`](12_udi-and-pms-analytics.md) | UDI and Post-Market Surveillance Analytics | Unique Device Identification (DI/PI), FDA GUDID, MAUDE text mining, and CUSUM quality control. | 1,200-1,800 | complete |
+| 11 | [`11_in-silico-trials-and-simulation.md`](11_in-silico-trials-and-simulation.md) | In-Silico Clinical Trials and Computational Modeling & Simulation | Medical device development faces severe economic, biological, and ethical barriers. Evaluating an intravascular stent... | 1,200-1,800 | draft (273 lines) |
+| 12 | [`12_udi-and-pms-analytics.md`](12_udi-and-pms-analytics.md) | Unique Device Identification and Post-Market Surveillance Analytics | Medical device regulation does not end with an FDA 510(k) clearance, De Novo authorization, or CE Mark. Under 21 CFR... | 1,200-1,800 | draft (295 lines) |
 
 ## 4. How the topics fit together
 
@@ -58,7 +58,9 @@ any topic that names your current decision problem.
 07 IEC 62304 Software Lifecycle ->
 08 EU MDR and IVDR ->
 09 The Evidence Package ->
-10 Post-Market Surveillance
+10 Post-Market Surveillance ->
+11 In-Silico Clinical Trials and Computational Modeling & Simulation ->
+12 Unique Device Identification and Post-Market Surveillance Analytics
 ```
 
 ## 5. What this module does not cover
@@ -72,7 +74,7 @@ any topic that names your current decision problem.
 | Status | Count |
 |---|---:|
 | planned | 0 |
-| draft | 0 |
+| draft | 2 |
 | complete | 10 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.

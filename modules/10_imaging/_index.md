@@ -39,9 +39,9 @@ not the whole program.
 | 8 | [`08_workflow-integration.md`](08_workflow-integration.md) | Workflow Integration | PACS, worklists, reading room latency, and radiologist trust. | 1,200-1,800 | complete |
 | 9 | [`09_regulatory-path.md`](09_regulatory-path.md) | Regulatory Path | FDA clearance routes for imaging AI and the evidence each requires. | 1,200-1,800 | complete |
 | 10 | [`10_foundation-models.md`](10_foundation-models.md) | Foundation Models | Vision encoders, multimodal reporting, and their evaluation gaps. | 1,200-1,800 | complete |
-| 11 | [`11_wsi-pipeline-infrastructure.md`](11_wsi-pipeline-infrastructure.md) | Whole-Slide Imaging Infrastructure | Pyramidal WSI formats (DICOM Supplement 145), tiling, Macenko stain normalization, and HistoQC. | 1,200-1,800 | complete |
-| 12 | [`12_pathology-foundation-models.md`](12_pathology-foundation-models.md) | Pathology Foundation Models and Pathomics | UNI, CONCH, GigaPath, Attention-MIL (CLAM), and H&E-based molecular mutation prediction. | 1,200-1,800 | complete |
-| 13 | [`13_digital-pathology-lab-operations.md`](13_digital-pathology-lab-operations.md) | Digital Pathology Lab Operations | Lab digitization, CLIA LDT vs. FDA IVD regulatory divide, LIMS HL7 integration, and telepathology. | 1,200-1,800 | complete |
+| 11 | [`11_wsi-pipeline-infrastructure.md`](11_wsi-pipeline-infrastructure.md) | Whole-Slide Imaging Pipeline Infrastructure | In computational pathology, biological tissue biopsies mounted on glass slides are digitized using high-resolution op... | 1,200-1,800 | draft (263 lines) |
+| 12 | [`12_pathology-foundation-models.md`](12_pathology-foundation-models.md) | Foundation Models for Pathology and Computational Pathomics | Until recently, computational pathology relied on supervised convolutional neural networks trained on relatively smal... | 1,200-1,800 | draft (275 lines) |
+| 13 | [`13_digital-pathology-lab-operations.md`](13_digital-pathology-lab-operations.md) | Digital Pathology Lab Operations and the Diagnostics Industry | In computational pathology, algorithms do not operate in a vacuum. A deep learning foundation model that achieves 0.9... | 1,200-1,800 | draft (265 lines) |
 
 ## 4. How the topics fit together
 
@@ -59,7 +59,10 @@ any topic that names your current decision problem.
 07 Evaluation ->
 08 Workflow Integration ->
 09 Regulatory Path ->
-10 Foundation Models
+10 Foundation Models ->
+11 Whole-Slide Imaging Pipeline Infrastructure ->
+12 Foundation Models for Pathology and Computational Pathomics ->
+13 Digital Pathology Lab Operations and the Diagnostics Industry
 ```
 
 ## 5. What this module does not cover
@@ -73,7 +76,7 @@ any topic that names your current decision problem.
 | Status | Count |
 |---|---:|
 | planned | 0 |
-| draft | 0 |
+| draft | 3 |
 | complete | 10 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.

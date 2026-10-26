@@ -29,8 +29,8 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | `01_the-evidence-chain.md` | The Evidence Chain | Claim to endpoint to dataset to analysis to report; where chains break. | 1,200-1,800 | planned |
-| 2 | `02_reporting-guidelines.md` | Reporting Guidelines | TRIPOD+AI, CONSORT-AI, STARD-AI, SPIRIT-AI, DECIDE-AI, and PROBAST. | 1,200-1,800 | planned |
+| 1 | [`01_the-evidence-chain.md`](01_the-evidence-chain.md) | The Evidence Chain | Claim to endpoint to dataset to analysis to report; where chains break. | 1,200-1,800 | complete |
+| 2 | [`02_reporting-guidelines.md`](02_reporting-guidelines.md) | Reporting Guidelines | TRIPOD+AI, CONSORT-AI, STARD-AI, SPIRIT-AI, DECIDE-AI, and PROBAST. | 1,200-1,800 | complete |
 | 3 | `03_appraising-clinical-ai-evidence.md` | Appraising Clinical AI Evidence | A structured appraisal worksheet with worked examples. | 1,200-1,800 | planned |
 | 4 | `04_model-cards-and-datasheets.md` | Model Cards and Datasheets | What to document and what readers actually need. | 1,200-1,800 | planned |
 | 5 | `05_reproducibility.md` | Reproducibility | Code, data, environment, and the difference between repeatable and reproducible. | 1,200-1,800 | planned |
@@ -67,9 +67,9 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 9 |
+| planned | 7 |
 | draft | 0 |
-| complete | 0 |
+| complete | 2 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.
 

@@ -29,16 +29,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | `01_privacy-principles.md` | Privacy Principles | Purpose limitation, minimization, consent, and the clinical exceptions. | 1,200-1,800 | planned |
-| 2 | `02_deidentification-and-anonymization.md` | De-identification and Anonymization | HIPAA Safe Harbor, expert determination, GDPR pseudonymization, and residual risk. | 1,200-1,800 | planned |
-| 3 | `03_privacy-enhancing-technologies.md` | Privacy-Enhancing Technologies | Differential privacy, federated learning, secure computation, and synthetic data. | 1,200-1,800 | planned |
-| 4 | `04_threat-modeling.md` | Threat Modeling | STRIDE, attack trees, insider risk, and the clinical threat surface. | 1,200-1,800 | planned |
-| 5 | `05_access-control-and-cryptography.md` | Access Control and Cryptography | RBAC, ABAC, key management, and encryption in practice. | 1,200-1,800 | planned |
-| 6 | `06_fairness.md` | Fairness | Definitions, measurement, mitigation, and the limits of each. | 1,200-1,800 | planned |
-| 7 | `07_ethics.md` | Ethics | Consent, equity, automation bias, and the ethics of deployment. | 1,200-1,800 | planned |
-| 8 | `08_governance.md` | Governance | Committees, data trusts, model review boards, and accountability. | 1,200-1,800 | planned |
-| 9 | `09_breach-and-incident.md` | Breach and Incident | Detection, notification, containment, and lessons. | 1,200-1,800 | planned |
-| 10 | `10_regulatory-map.md` | Regulatory Map | HIPAA, GDPR, EU AI Act, state law, and sector-specific rules. | 1,200-1,800 | planned |
+| 1 | [`01_privacy-principles.md`](01_privacy-principles.md) | Privacy Principles | Purpose limitation, minimization, consent, and the clinical exceptions. | 1,200-1,800 | complete |
+| 2 | [`02_deidentification-and-anonymization.md`](02_deidentification-and-anonymization.md) | De-identification and Anonymization | HIPAA Safe Harbor, expert determination, GDPR pseudonymization, and residual risk. | 1,200-1,800 | complete |
+| 3 | [`03_privacy-enhancing-technologies.md`](03_privacy-enhancing-technologies.md) | Privacy-Enhancing Technologies | Differential privacy, federated learning, secure computation, and synthetic data. | 1,200-1,800 | complete |
+| 4 | [`04_threat-modeling.md`](04_threat-modeling.md) | Threat Modeling | STRIDE, attack trees, insider risk, and the clinical threat surface. | 1,200-1,800 | complete |
+| 5 | [`05_access-control-and-cryptography.md`](05_access-control-and-cryptography.md) | Access Control and Cryptography | RBAC, ABAC, key management, and encryption in practice. | 1,200-1,800 | complete |
+| 6 | [`06_fairness.md`](06_fairness.md) | Fairness | Definitions, measurement, mitigation, and the limits of each. | 1,200-1,800 | complete |
+| 7 | [`07_ethics.md`](07_ethics.md) | Ethics | Consent, equity, automation bias, and the ethics of deployment. | 1,200-1,800 | complete |
+| 8 | [`08_governance.md`](08_governance.md) | Governance | Committees, data trusts, model review boards, and accountability. | 1,200-1,800 | complete |
+| 9 | [`09_breach-and-incident.md`](09_breach-and-incident.md) | Breach and Incident | Detection, notification, containment, and lessons. | 1,200-1,800 | complete |
+| 10 | [`10_regulatory-map.md`](10_regulatory-map.md) | Regulatory Map | HIPAA, GDPR, EU AI Act, state law, and sector-specific rules. | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -69,9 +69,9 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.
 

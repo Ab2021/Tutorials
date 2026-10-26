@@ -772,10 +772,10 @@ for minutes in (5, 10, 20, 30):
 **Expected output.**
 
 ```text
- 5 min:   43.5% of steady state
-10 min:   68.1% of steady state
+5 min:   43.5% of steady state
+10 min:   68.0% of steady state
 20 min:   89.8% of steady state
-30 min:   96.8% of steady state
+30 min:   96.7% of steady state
 ```
 
 A 5-minute test sees less than half the rise. A 30-minute test sees 96.8%, which is close enough for most purposes. The test duration should be at least three time constants, or 26.3 minutes.

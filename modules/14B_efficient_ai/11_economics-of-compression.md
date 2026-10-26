@@ -22,6 +22,31 @@ Three industry problems follow.
 
 This topic teaches the total-cost model: variable cost per unit, fixed cost, break-even volume, battery-life arithmetic, requalification cost, and the sensitivity analysis that shows which assumption the decision depends on.
 
+### 1.1 The four numbers that decide the case
+
+| Number | What it answers | Typical range |
+|---|---|---|
+| Variable cost per unit | What each unit costs to make and run | 15–150 USD |
+| Fixed cost | What the programme costs before the first sale | 50k–1M USD |
+| Break-even volume | How many units are needed to justify the fixed cost | 1k–50k units |
+| Battery life | What the power budget allows | 1–30 days |
+
+A decision memo that does not contain these four numbers is not an economic analysis. It is a preference with a cost attached.
+
+### 1.2 What this topic is not
+
+- It is not a financial model. It is a decision aid for an engineering choice.
+- It is not a substitute for a sales forecast. It uses the forecast; it does not create one.
+- It is not a regulatory analysis. It prices the regulatory work; Topic 09 defines it.
+
+The boundary matters because cost models are often asked to answer strategic questions they cannot. The model compares options; the organisation decides whether the product is worth building.
+
+### 1.3 The decision this topic supports
+
+The decision is: given a clinical requirement, a volume forecast, and a set of technical options, which option has the lowest total cost that still meets the non-cost constraints. The answer is a memo, not a number.
+
+The memo is what makes the model auditable. Without it, the cost model is a spreadsheet whose assumptions are invisible and whose conclusion cannot be challenged.
+
 ## 2. Learning outcomes
 
 By the end of this topic you can:
@@ -154,6 +179,22 @@ Cost is one dimension of the decision. Others are:
 
 A cost model that ignores these dimensions will recommend the cheaper option even when it is not deployable. The memo should state the non-cost constraints and their effect on the decision.
 
+### 3.6 The shape of the decision
+
+Most device decisions fall into one of three shapes.
+
+- **Volume-driven:** the fixed cost is large, the variable difference is large, and the decision is the break-even. The sensitivity is volume.
+- **Constraint-driven:** one option is eliminated by latency, privacy, or regulation, and the cost model only confirms the choice. The sensitivity is the constraint.
+- **Price-driven:** the cloud price is the dominant variable, and the decision flips with the contract. The sensitivity is the price.
+
+Naming the shape tells the team which number to investigate first. A volume-driven decision needs a better forecast; a price-driven decision needs a contract; a constraint-driven decision needs an engineering answer.
+
+### 3.7 The break-even is a line, not a point
+
+The break-even is a single number only when the other assumptions are fixed. If the cloud price, the requalification cost, and the volume are all uncertain, the break-even is a surface, and the decision is a region.
+
+A practical presentation shows three lines: a pessimistic, a base, and an optimistic break-even. If the forecast is above all three, the decision is robust. If it is between them, the decision depends on which assumption is right, and that assumption deserves the next unit of effort.
+
 ## 4. Definitions and vocabulary
 
 | Term | Definition | Common misuse | Unit |
@@ -197,6 +238,24 @@ Two definitions matter most.
 **Break-even is not profitability.** It is the volume at which two options have the same cost per unit. A product can break even on the manufacturing choice and still lose money on price, margin, or volume.
 
 **Amortization is not a cash flow.** Spreading a fixed cost over units is an accounting convenience. The cash is spent before the units are sold, and a product that sells fewer units than planned does not recover it.
+
+### 4.1 The formulas in one place
+
+| Formula | Use |
+|---|---|
+| `variable = BOM + test + inferences × price + connectivity` | Cloud option |
+| `variable = BOM + test` | Device option |
+| `fixed = NRE + changes × requalification` | Device option |
+| `N = (fixed_high - fixed_low) / (variable_low - variable_high)` | Break-even |
+| `TCO = variable + fixed / N` | Per-unit total cost |
+| `life = capacity × derate / current / 24` | Battery life |
+| `PV = cost / (1 + r)^t` | Discounted cost |
+
+### 4.2 Units and conventions
+
+Costs are in US dollars, at a stated year, excluding tax. Volumes are units over the product life, not annual units. Battery capacity is in mAh, current in mA, and life in days. A model that mixes annual and lifetime volumes produces a break-even that is wrong by the life factor.
+
+The convention should be stated at the top of the model, because a reader cannot infer it from the numbers.
 
 ## 5. The mechanics, step by step
 
@@ -435,6 +494,72 @@ The record includes:
 
 **Thermal throttling.** A device that throttles may need a larger battery or a better enclosure, both of which are BOM costs. The thermal design is part of the economic model.
 
+### 5.3 Hybrid options
+
+The choice is not always binary. A hybrid runs a small model on the device for triage and sends uncertain cases to the cloud for confirmation. The hybrid has three cost components:
+
+- The device BOM with the small model.
+- The cloud cost for the fraction of cases that are escalated.
+- The integration cost for both paths.
+
+If 10% of cases are escalated, the cloud cost falls by 90%, and the device model can be smaller because it only needs to triage. The hybrid often dominates both pure options, at the cost of complexity and a larger validation surface.
+
+| Option | Fixed | Variable | Latency | Complexity |
+|---|---:|---:|---|---|
+| Cloud | Low | High | High | Low |
+| Device | High | Low | Low | Medium |
+| Hybrid | Medium | Medium | Low for most, high for some | High |
+
+The hybrid's p99 is the p99 of the escalated path, not the median. A hybrid that escalates 10% of cases has a p99 that may be dominated by the cloud round trip, which is a clinical risk that the average cost hides.
+
+### 5.4 Discounting and the time value of money
+
+A cost incurred in year three is worth less than the same cost incurred today, because the money could have been invested. A simple model ignores this; a rigorous model discounts future costs.
+
+```text
+present_value = future_cost / (1 + r)^t
+```
+
+For a three-year life and a discount rate of 5%, a cost of 100 USD in year three has a present value of 86.38 USD. The effect is small for short lives and large for long ones.
+
+The discount rate is an assumption, and it should be stated. A model that ignores discounting overstates the cloud cost and biases the decision toward the device. A model that discounts at a high rate does the opposite.
+
+For most device decisions, the discounting effect is smaller than the uncertainty in the volume forecast. The right response is to state the assumption and run the sensitivity, not to build a detailed financial model.
+
+### 5.5 The cost of a field failure
+
+A field failure has a cost that is easy to omit and hard to estimate:
+
+- Service or replacement.
+- Regulatory reporting.
+- Reputation.
+- A field action, in the worst case.
+
+The expected cost is the probability times the cost. A device with a 0.1% annual failure rate and a 500 USD service cost has an expected cost of 0.50 USD per unit per year, or 1.50 USD over three years. A field action that affects 1% of units at 2,000 USD per unit has an expected cost of 20 USD per unit.
+
+The numbers are uncertain, but the omission is not neutral: it systematically favors the option with the higher hidden risk. The device option often has the higher risk because a model failure is harder to fix remotely.
+
+### 5.6 A cost-model checklist
+
+- The boundary is stated, with inclusions and exclusions.
+- The product life and volume are stated.
+- Variable costs include cloud and connectivity.
+- Fixed costs include requalification and market access.
+- Battery life is calculated from a duty-cycle budget.
+- The break-even is derived, not asserted.
+- The sensitivity analysis covers volume, price, and requalification.
+- The non-cost constraints are applied before the cost comparison.
+- The field-failure expected value is included or explicitly excluded.
+- The assumptions are recorded with their sources.
+
+A model that answers all ten is a decision aid. A model that answers three is a spreadsheet.
+
+### 5.7 What the model cannot decide
+
+The cost model cannot decide whether the product should exist, whether the clinical benefit justifies the price, or whether the organisation can execute the device programme. Those are strategic questions.
+
+It can decide the manufacturing and deployment choice, given the volume, the price, and the constraints. That is a narrower question, and it is the one the model is built for.
+
 ## 6. Worked example
 
 This is a constructed case. The costs are illustrative and chosen so that the arithmetic closes.
@@ -590,6 +715,24 @@ At the 50,000-unit forecast, the device option has a TCO of 25.40 USD per unit a
 The decision is sensitive to volume: below 4,698 units, the cloud option is cheaper. It is also sensitive to the cloud price: at 0.0001 USD per inference, the break-even rises to 25,737 units. The forecast of 50,000 units is well above both thresholds, so the decision is robust to plausible changes in those assumptions.
 
 The decision is not sensitive to the compression method's metadata or to the battery derating, which change the TCO by less than 5%.
+
+### 6.13 What the case does not show
+
+- **The cost of the cloud path's latency.** A 480 ms round trip may be acceptable or not, depending on the alert. The case treats it as a technical constraint, not a cost.
+- **The value of privacy.** On-device inference keeps raw data local. The case mentions it as a constraint; it does not monetize it.
+- **The cost of a field failure.** The case assumes none. A device failure is harder to fix than a cloud failure.
+- **The cost of capital.** The NRE is spent before revenue, and the case ignores the financing cost.
+- **The actual quotes.** The BOM and cloud prices are illustrative, not negotiated.
+
+### 6.14 What would change the decision
+
+The decision is robust to the compression metadata and the battery derating. It is sensitive to volume, cloud price, and requalification.
+
+- A volume below 4,698 units flips the decision to cloud.
+- A cloud price of 0.0001 USD per inference raises the break-even to 25,737 units, which is still below the forecast.
+- A requalification cost of 200,000 USD raises the break-even to 5,994 units, still below the forecast.
+
+The forecast would have to fall by more than 90% before the decision changed on volume alone. That is the kind of statement an economic memo should make: not "the device is cheaper", but "the device is cheaper unless the forecast is wrong by more than 90%".
 
 ## 7. Code, query, or calculation
 
@@ -756,7 +899,7 @@ The economic model should therefore include the PCCP preparation as a fixed cost
 
 ### 8.4 EU framework and market access
 
-In the European Union, Regulation (EU) 2017/745 governs the device, and Regulation (EU) 2024/1689, the Artificial Intelligence Act, adds obligations for high-risk systems. The Annex I applicability date was originally 2 August 2027; the AI Omnibus, adopted on 19 November 2025 with political agreement reported on 7 May 2026, moves it to 2 August 2028. Verify the current date before relying on it.
+In the European Union, Regulation (EU) 2017/745 governs the device, and Regulation (EU) 2024/1689, the Artificial Intelligence Act, adds obligations for high-risk systems. The Annex I applicability date was originally 2 August 2027; Regulation (EU) 2026/1744 (the Digital Omnibus on AI), in force 27 July 2026, moves it to 2 August 2028. Verify the current date before relying on it.
 
 Market access costs, including conformity assessment and clinical evaluation, are fixed costs that differ by market. A product launched in two markets has roughly twice the fixed cost, which raises the break-even.
 
@@ -791,6 +934,36 @@ A device with a field-update path has a lower cost of fixing a problem and a hig
 | Battery capacity | Datasheet | Derating at 0 °C |
 | Product life | Product plan | Years |
 | Volume | Sales forecast | Units |
+| Discount rate | Finance policy | Proportion |
+| Field failure probability | Reliability data | Proportion |
+| Service cost | Service plan | USD per event |
+
+### 8.8 What the standards do not say
+
+- No standard defines a cost model or a break-even method.
+- No standard requires a TCO analysis.
+- No standard prices a validation or a submission.
+- No standard says whether a PCCP is worth its preparation cost.
+
+The economics is management judgement, informed by the regulatory requirements. The standards define the work; the organisation defines the price.
+
+### 8.9 The cost of market access
+
+A device sold in two markets has two sets of fixed costs: clinical evaluation, conformity assessment, labeling, and post-market obligations. The variable cost may be similar, but the fixed cost roughly doubles.
+
+For a low-volume product, market access can be the dominant fixed cost, and the break-even against a cloud option (which may not need the same device certification) moves sharply. The model should treat each market as a separate fixed-cost line, not an average.
+
+### 8.10 What a reviewer will ask
+
+- What is the cost boundary, and why are the exclusions excluded?
+- What is the product life and the volume forecast?
+- What are the variable costs, with sources?
+- What are the fixed costs, including requalification and market access?
+- What is the break-even, and how was it derived?
+- What is the TCO at the forecast volume?
+- What does the sensitivity show?
+- Which non-cost constraints apply, and do they eliminate an option?
+- What is the residual risk, and who owns the decision?
 
 ## 9. Industry practice and case evidence
 
@@ -839,6 +1012,25 @@ The economic model should use a price from the vendor's list or contract, not a 
 
 **The latency value is clinical.** A 480 ms cloud round trip may be acceptable for a notification and unacceptable for an alarm. The latency constraint can eliminate an option before the cost model matters.
 
+### 9.6 The cost of a model change in practice
+
+A model change after launch consumes engineering, validation, regulatory, and quality time. The categories are stable even when the numbers are not.
+
+- **Engineering:** the change itself, the calibration, the export, the target measurement.
+- **Validation:** the held-out evaluation, the subgroup analysis, the report.
+- **Regulatory:** the classification, the plan amendment or submission, the labeling.
+- **Quality:** the document updates, the configuration record, the training.
+
+A change that is covered by a plan is cheaper than one that is not. That is the economic argument for preparing a PCCP before launch, even when no change is planned.
+
+### 9.7 Three common economic claims, examined
+
+- **"On-device is always cheaper at scale."** True only if the variable cost difference is positive and the volume exceeds the break-even. A device with a expensive BOM and a cheap cloud can be more expensive at every volume.
+- **"Cloud is cheaper because there is no hardware."** False when the device already exists for other reasons, or when connectivity and per-request costs exceed the BOM delta.
+- **"Compression pays for itself."** True when the memory saved removes a component or a validation; false when the compressed model still needs the same part and the same evidence.
+
+Each claim is a hypothesis about a specific cost structure. The model is how the hypothesis is tested.
+
 ## 10. Failure modes and red flags
 
 | Failure | Early warning sign | Mechanism | Consequence | Mitigation |
@@ -855,6 +1047,10 @@ The economic model should use a price from the vendor's list or contract, not a 
 | Price tier wrong | Using the 1M-request price | Volume mismatch | Understated cloud cost | Use the actual tier |
 | Model change cadence wrong | Annual updates assumed rare | Five changes in five years | Understated fixed cost | Use the plan |
 | Non-cost constraints ignored | Cost-only decision | Latency or privacy violation | Unshippable product | Decision matrix |
+| Market access cost averaged | One fixed cost for all markets | Understated certification | Wrong break-even | Separate lines per market |
+| Hybrid p99 ignored | Average cost only | Escalated path latency | Clinical miss | Measure the escalated p99 |
+| Battery life below requirement | Cell too small | Current budget | Redesign | Duty-cycle model |
+| Cloud latency not priced | Cost-only comparison | Clinical deadline missed | Unshippable product | Constraint first |
 
 ## 11. Assumptions and limits
 
@@ -872,6 +1068,10 @@ The economic model should use a price from the vendor's list or contract, not a 
 | Discount rate is zero | Simple comparison | Long life, high rate | State and test |
 | Field failure cost is zero | TCO | Recall or service | Expected value |
 | The options are technically feasible | Comparison | Latency or privacy violation | Engineering review |
+| The market-access cost is per market | Correct fixed cost | Averaged certification | Separate lines |
+| The hybrid escalation rate is known | Hybrid cost | Unknown case mix | Pilot measurement |
+| The battery meets the life requirement | Product viability | Current budget | Bench measurement |
+| The cloud latency meets the deadline | Deployability | Network variability | Target measurement |
 
 The central limit is that the cost model is only as good as its inputs, and most inputs are estimates. The sensitivity analysis is what makes the model useful: it shows which estimate the decision depends on, and therefore which estimate deserves more effort.
 
@@ -959,6 +1159,15 @@ A strong boundary includes BOM, cloud, connectivity, NRE, requalification, manuf
 **A10. Rubric for Exercise 8 (memo).**
 A strong memo states the boundary and the life, derives the break-even, shows the sensitivity, applies the non-cost constraints, and states the residual risk. A weak memo gives a cost comparison and a recommendation without assumptions.
 
+**A11. Why does a hybrid option complicate the p99?**
+Because the escalated cases take the cloud path, which has a much higher latency. The p99 is dominated by the escalated fraction, so the average cost and the p99 latency tell different stories.
+
+**A13. Why is a break-even a line rather than a point?**
+Because the other assumptions are uncertain. With a range of cloud prices and requalification costs, the break-even is a surface, and the decision is robust only if the forecast is above the whole surface.
+
+**A12. Why is the discount rate an assumption worth stating?**
+Because it changes the weight of future cloud costs. A zero rate overstates the cloud cost and biases toward the device; a high rate does the opposite. Stating it lets the reader judge the bias.
+
 ## 14. Interview questions
 
 **Q1. How do you decide between on-device and cloud inference?**
@@ -997,6 +1206,15 @@ A strong answer says it has a preparation cost and reduces the per-change cost, 
 **Q12. What would you reject in an economic analysis?**
 A strong answer rejects a BOM-only comparison, an unstated cloud price, an omitted requalification cost, a battery life without derating, and a single-point forecast without sensitivity. A weak answer rejects only an arithmetic error.
 
+**Q13. How does a hybrid option change the break-even?**
+A strong answer says the hybrid has a medium fixed cost and a medium variable cost, and its break-even against each pure option depends on the escalation rate. A weak answer treats it as a third independent option without the interaction.
+
+**Q14. What is the economic argument for a PCCP?**
+A strong answer says it has a preparation cost and lowers the per-change cost, so it pays back when the product changes more than once. A weak answer calls it a regulatory formality.
+
+**Q15. What would make you revisit the decision after launch?**
+A strong answer says a volume or cloud price that differs from the assumption by more than 20%, or a change in the requalification cost, and describes the review cadence. A weak answer says the decision is final.
+
 ## 15. Key terms
 
 - **Amortization** — spreading a fixed cost over units.
@@ -1028,6 +1246,18 @@ A strong answer rejects a BOM-only comparison, an unstated cloud price, an omitt
 - **Volume** — units sold over the product life.
 - **Warranty** — cost of replacement under warranty.
 - **Yield** — fraction of units that pass test.
+- **Present value** — discounted value of a future cost.
+- **Discount rate** — rate used to discount future costs.
+- **Escalation rate** — fraction of cases sent from device to cloud.
+- **Hybrid** — a device plus cloud architecture.
+- **Cost boundary** — the set of costs included in a comparison.
+- **Scenario analysis** — changing several assumptions together.
+- **Net present value** — sum of discounted future cash flows.
+- **Cost driver** — the variable that most affects total cost.
+- **Fixed-cost recovery** — earning back the fixed cost through volume.
+- **Contribution margin** — price minus variable cost.
+- **Lifecycle cost** — cost over the whole product life.
+- **Sensitivity table** — break-even under alternative assumptions.
 
 ## 16. Sources
 
@@ -1045,6 +1275,8 @@ All URLs accessed 25 October 2026.
 
 **Standards and regulation**
 - IEC 62304:2006+AMD1:2015. https://webstore.iec.ch/en/publication/22794
+- IEC 62366-1, Application of usability engineering to medical devices. https://www.iec.ch/
+- ISO 13485, Medical devices — Quality management systems. https://www.iso.org/standard/59752.html
 - ISO 14971:2019. https://www.iso.org/standard/72704.html
 - FDA, PCCP final guidance, 3 December 2024. https://www.fda.gov/regulatory-information/search-fda-guidance-documents/marketing-submission-recommendations-predetermined-change-control-plan-artificial-intelligence
 - FDA, "Cybersecurity in Medical Devices". https://www.fda.gov/medical-devices/digital-health-center-excellence/cybersecurity

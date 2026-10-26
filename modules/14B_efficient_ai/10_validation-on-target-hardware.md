@@ -928,7 +928,7 @@ The validation report is the evidence that the protocol's criteria were met. A r
 
 ### 8.6 EU framework
 
-In the European Union, Regulation (EU) 2017/745 governs the device, and Regulation (EU) 2024/1689, the Artificial Intelligence Act, adds obligations for high-risk systems. The Annex I applicability date was originally 2 August 2027; the AI Omnibus, adopted on 19 November 2025 with political agreement reported on 7 May 2026, moves it to 2 August 2028. Verify the current date before relying on it.
+In the European Union, Regulation (EU) 2017/745 governs the device, and Regulation (EU) 2024/1689, the Artificial Intelligence Act, adds obligations for high-risk systems. The Annex I applicability date was originally 2 August 2027; Regulation (EU) 2026/1744 (the Digital Omnibus on AI), in force 27 July 2026, moves it to 2 August 2028. Verify the current date before relying on it.
 
 ### 8.7 What is binding and what is convention
 
@@ -958,7 +958,7 @@ In the European Union, Regulation (EU) 2017/745 governs the device, and Regulati
 | Statistics | Margin, power, sample size, result |
 | Decision | Pass, fail, or inconclusive, with residual uncertainty |
 
-### 8.10 What a reviewer will ask
+### 8.9 What a reviewer will ask
 
 - Show the claim and the conditions, in writing, before the results.
 - Show the rig and the instrumentation, including the marker overhead.
@@ -971,7 +971,7 @@ In the European Union, Regulation (EU) 2017/745 governs the device, and Regulati
 - Show the emulator gap analysis.
 - Show the raw data and the analysis script.
 
-### 8.9 What the standards do not say
+### 8.10 What the standards do not say
 
 - No standard specifies a percentile, a sample size, or a bootstrap method.
 - No standard requires a thermal soak, although essential performance implies the conditions.

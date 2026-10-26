@@ -616,7 +616,7 @@ The baseline fails two of the three constraints before compression: 161.0 KiB ex
 
 **Route A: INT8 post-training quantization.** Parameters unchanged at 41,216. Bytes 41,216 + 600 metadata = 41,816. MACs unchanged at 4,096,000. Latency falls to 45.7 ms because the integer kernels perform about 3× more MACs per second than the float kernels on this core, and the layer remains compute-bound.
 
-**Route B: Distillation to 26,000 parameters, then INT8.** The student has 26,000 parameters and performs 2,600,000 MACs, a 36.5% reduction in both. Bytes 26,000 + 390 = 26,390. Latency 2,600,000 / 89,600,000 = 29.0 ms.
+**Route B: Distillation to 26,000 parameters, then INT8.** The student has 26,000 parameters and performs 2,600,000 MACs, a 36.5% reduction in both. Bytes 26,000 + 600 = 26,600. Latency 2,600,000 / 89,600,000 = 29.0 ms.
 
 **Route C: Structured pruning of 40% of channels, then INT8.** Parameters 41,216 × 0.60 = 24,730. MACs 4,096,000 × 0.55 = 2,252,800 (the MAC reduction exceeds the parameter reduction because channel removal also removes the input channels of the next layer). Bytes 24,730 + 360 = 25,090. Latency 2,252,800 / 89,600,000 = 25.1 ms.
 
@@ -630,7 +630,7 @@ The five routes are summarized below. Memory is weights only, INT8, with per-cha
 |---|---:|---:|---:|---:|---:|---:|
 | Baseline FP32 | 41,216 | 164,864 | 161.0 | 4,096,000 | 138.0 | 3.395 |
 | A: INT8 PTQ | 41,216 | 41,816 | 40.8 | 4,096,000 | 45.7 | 1.125 |
-| B: Distill + INT8 | 26,000 | 26,390 | 25.8 | 2,600,000 | 29.0 | 0.713 |
+| B: Distill + INT8 | 26,000 | 26,600 | 26.0 | 2,600,000 | 29.0 | 0.714 |
 | C: Structured prune + INT8 | 24,730 | 25,090 | 24.5 | 2,252,800 | 25.1 | 0.617 |
 | D: Unstructured 70% | 12,365 | 37,611 | 36.7 | 4,096,000 | 45.7 | 1.125 |
 | E: Low-rank rank 32 | 26,880 | 29,880 | 29.2 | 4,081,664 | 45.6 | 1.122 |
@@ -660,7 +660,7 @@ The affine step is 0.001855 and the symmetric step is 0.003244. On this layer, a
 ```text
 FP32 baseline:        41,216 × 4 = 164,864 B = 161.0 KiB
 Route A per-channel:  41,216 + 120 × 5 = 41,816 B = 40.8 KiB
-Route B:              26,000 + 120 × 5 = 26,390 B = 25.8 KiB
+Route B:              26,000 + 120 × 5 = 26,600 B = 26.0 KiB
 Route C:              24,730 +  72 × 5 = 25,090 B = 24.5 KiB
 Route D CSR:          12,365 + 24,730 + 516 = 37,611 B = 36.7 KiB
 Route E:              26,880 + 600 × 5 = 29,880 B = 29.2 KiB
@@ -947,7 +947,7 @@ The guidance is non-binding, but the statutory pathway it implements is binding.
 
 In the European Union, Regulation (EU) 2017/745, the Medical Devices Regulation, governs the device, and Regulation (EU) 2024/1689, the Artificial Intelligence Act, adds obligations for high-risk AI systems. A medical device that is a safety component, or is itself a device requiring third-party conformity assessment, is high-risk under Article 6(1).
 
-The applicability date for Annex I products was originally 2 August 2027. The Commission's AI Omnibus, adopted on 19 November 2025 with political agreement reported on 7 May 2026, moves the Annex I date to 2 August 2028. Verify the current date before relying on it; the Medical Device Coordination Group guidance MDCG 2025-6 (June 2025) remains the reference for the interaction between the two regulations.
+The applicability date for Annex I products was originally 2 August 2027. Regulation (EU) 2026/1744 (the Digital Omnibus on AI), in force 27 July 2026, moves the Annex I date to 2 August 2028. Verify the current date before relying on it; the Medical Device Coordination Group guidance MDCG 2025-6 (June 2025) remains the reference for the interaction between the two regulations.
 
 For compression, the relevant obligations are transparency, human oversight, and post-market monitoring. A compressed model whose performance differs by subgroup is a transparency and monitoring issue, not only an engineering one.
 
@@ -1252,6 +1252,7 @@ A strong answer requires per-stage accuracy, calibration and subgroup results, t
 - **Unstructured pruning** — removing individual weights.
 - **Weight sharing** — clustering weights into a codebook.
 - **Weight-only quantization** — quantizing weights but not activations.
+- **Zero point** — the integer code that represents real zero in affine quantization.
 
 ## 16. Sources
 

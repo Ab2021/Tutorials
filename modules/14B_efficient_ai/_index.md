@@ -29,17 +29,17 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | `01_the-deployment-pareto-frontier.md` | The Deployment Pareto Frontier | Accuracy, calibration, latency, memory, energy, and cost as joint constraints. | 1,200-1,800 | planned |
-| 2 | `02_target-hardware-and-performance.md` | Target Hardware and Performance | Profiling, roofline reasoning, and what each accelerator can actually do. | 1,200-1,800 | planned |
-| 3 | `03_the-compression-family.md` | The Compression Family | Distillation, quantization, pruning, low-rank, and when to use each. | 1,200-1,800 | planned |
-| 4 | `04_knowledge-distillation.md` | Knowledge Distillation | Soft targets, temperature, feature matching, and distillation failures. | 1,200-1,800 | planned |
-| 5 | `05_quantization.md` | Quantization | Affine and symmetric schemes, PTQ, QAT, calibration, and STE. | 1,200-1,800 | planned |
-| 6 | `06_pruning-and-sparsity.md` | Pruning and Sparsity | Structured versus unstructured, lottery tickets, and hardware support. | 1,200-1,800 | planned |
-| 7 | `07_inference-optimization.md` | Inference Optimization | Graph fusion, operator fallback, KV cache, and batching. | 1,200-1,800 | planned |
-| 8 | `08_on-device-architecture.md` | On-Device Architecture | Runtimes, model formats, and the deployment pipeline. | 1,200-1,800 | planned |
-| 9 | `09_medical-and-regulatory-constraints.md` | Medical and Regulatory Constraints | Change control, PCCP, and what compression does to a cleared claim. | 1,200-1,800 | planned |
-| 10 | `10_validation-on-target-hardware.md` | Validation on Target Hardware | p99 latency, energy per inference, thermal throttling, and HIL testing. | 1,200-1,800 | planned |
-| 11 | `11_economics-of-compression.md` | Economics of Compression | Cloud cost, device BOM, battery life, and the break-even calculation. | 1,200-1,800 | planned |
+| 1 | [`01_the-deployment-pareto-frontier.md`](01_the-deployment-pareto-frontier.md) | The Deployment Pareto Frontier | Accuracy, calibration, latency, memory, energy, and cost as joint constraints. | 1,200-1,800 | complete |
+| 2 | [`02_target-hardware-and-performance.md`](02_target-hardware-and-performance.md) | Target Hardware and Performance | Profiling, roofline reasoning, and what each accelerator can actually do. | 1,200-1,800 | complete |
+| 3 | [`03_the-compression-family.md`](03_the-compression-family.md) | The Compression Family | Distillation, quantization, pruning, low-rank, and when to use each. | 1,200-1,800 | complete |
+| 4 | [`04_knowledge-distillation.md`](04_knowledge-distillation.md) | Knowledge Distillation | Soft targets, temperature, feature matching, and distillation failures. | 1,200-1,800 | complete |
+| 5 | [`05_quantization.md`](05_quantization.md) | Quantization | Affine and symmetric schemes, PTQ, QAT, calibration, and STE. | 1,200-1,800 | complete |
+| 6 | [`06_pruning-and-sparsity.md`](06_pruning-and-sparsity.md) | Pruning and Sparsity | Structured versus unstructured, lottery tickets, and hardware support. | 1,200-1,800 | complete |
+| 7 | [`07_inference-optimization.md`](07_inference-optimization.md) | Inference Optimization | Graph fusion, operator fallback, KV cache, and batching. | 1,200-1,800 | complete |
+| 8 | [`08_on-device-architecture.md`](08_on-device-architecture.md) | On-Device Architecture | Runtimes, model formats, and the deployment pipeline. | 1,200-1,800 | complete |
+| 9 | [`09_medical-and-regulatory-constraints.md`](09_medical-and-regulatory-constraints.md) | Medical and Regulatory Constraints | Change control, PCCP, and what compression does to a cleared claim. | 1,200-1,800 | complete |
+| 10 | [`10_validation-on-target-hardware.md`](10_validation-on-target-hardware.md) | Validation on Target Hardware | p99 latency, energy per inference, thermal throttling, and HIL testing. | 1,200-1,800 | complete |
+| 11 | [`11_economics-of-compression.md`](11_economics-of-compression.md) | Economics of Compression | Cloud cost, device BOM, battery life, and the break-even calculation. | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,9 +71,9 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 11 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 11 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.
 
