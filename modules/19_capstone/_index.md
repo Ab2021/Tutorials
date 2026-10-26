@@ -29,14 +29,14 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | `01_capstone-architecture.md` | Capstone Architecture | Scope, team, data, evidence, and the twelve-week shape. | 1,200-1,800 | planned |
-| 2 | `02_milestone-plan.md` | Milestone Plan | Week-by-week gates, kill criteria, and deliverable definitions. | 1,200-1,800 | planned |
-| 3 | `03_team-roles.md` | Team Roles | Clinical, data, engineering, regulatory, and communication roles. | 1,200-1,800 | planned |
-| 4 | `04_capstone-archetypes.md` | Capstone Archetypes | Eight project shapes with different evidence burdens. | 1,200-1,800 | planned |
-| 5 | `05_brief-catalogue.md` | Brief Catalogue | The full set of capstone briefs with constraints and data options. | 1,200-1,800 | planned |
-| 6 | `06_hackathon-formats.md` | Hackathon Formats | How to run and compete in a 24-72 hour event without producing nonsense. | 1,200-1,800 | planned |
-| 7 | `07_competition-landscape.md` | Competition Landscape 2025-2026 | Public challenges, their datasets, and what winning solutions share. | 1,200-1,800 | planned |
-| 8 | `08_scoping-playbook.md` | Scoping Playbook | Turning an open problem into a defensible scope in two days. | 1,200-1,800 | planned |
+| 1 | [`01_capstone-architecture.md`](01_capstone-architecture.md) | Capstone Architecture | Scope, team, data, evidence, and the twelve-week shape. | 1,200-1,800 | complete |
+| 2 | [`02_milestone-plan.md`](02_milestone-plan.md) | Milestone Plan | Week-by-week gates, kill criteria, and deliverable definitions. | 1,200-1,800 | complete |
+| 3 | [`03_team-roles.md`](03_team-roles.md) | Team Roles | Clinical, data, engineering, regulatory, and communication roles. | 1,200-1,800 | complete |
+| 4 | [`04_capstone-archetypes.md`](04_capstone-archetypes.md) | Capstone Archetypes | Eight project shapes with different evidence burdens. | 1,200-1,800 | complete |
+| 5 | [`05_brief-catalogue.md`](05_brief-catalogue.md) | Brief Catalogue | The full set of capstone briefs with constraints and data options. | 1,200-1,800 | complete |
+| 6 | [`06_hackathon-formats.md`](06_hackathon-formats.md) | Hackathon Formats | How to run and compete in a 24-72 hour event without producing nonsense. | 1,200-1,800 | complete |
+| 7 | [`07_competition-landscape.md`](07_competition-landscape.md) | Competition Landscape 2025-2026 | Public challenges, their datasets, and what winning solutions share. | 1,200-1,800 | complete |
+| 8 | [`08_scoping-playbook.md`](08_scoping-playbook.md) | Scoping Playbook | Turning an open problem into a defensible scope in two days. | 1,200-1,800 | complete |
 | 9 | `09_deliverables.md` | Deliverables | Dossier, prototype, demo, and defense requirements. | 1,200-1,800 | planned |
 | 10 | `10_judging.md` | Judging | Rubric, calibration, and the failure modes of judges. | 1,200-1,800 | planned |
 | 11 | `11_demo-day.md` | Demo Day | Executive pitch structure and the questions you will be asked. | 1,200-1,800 | planned |
@@ -71,9 +71,9 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 11 |
+| planned | 3 |
 | draft | 0 |
-| complete | 0 |
+| complete | 8 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.
 

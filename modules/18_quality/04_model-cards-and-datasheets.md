@@ -717,43 +717,43 @@ import re
 
 CARD = """# Model card: screening classifier
 
-## Model details
+### Model details
 ScreenNet version 2.1 is a convolutional neural network released on 2026-03-01.
 The training procedure, hyperparameters, and compute environment are proprietary
 and are not disclosed in this card.
 
-## Intended use
+### Intended use
 Primary intended use is triage of adults aged 40 to 75 in primary care, before
 a specialist referral decision. Primary intended users are practice nurses with
 the standard training package. Out of scope: emergency department use,
 paediatric use, and use without a trained operator.
 
-## Factors
+### Factors
 Age, sex, ethnicity, camera model, and operator experience.
 
-## Metrics
+### Metrics
 Sensitivity 0.87 (95% CI 0.82-0.91) and specificity 0.91 (95% CI 0.88-0.93)
 at the deployed threshold of 0.45. AUROC 0.93 (95% CI 0.91-0.95) across the
 full evaluation set.
 
-## Evaluation data
+### Evaluation data
 Retrospective sample from three primary care sites, 12,400 images from 8,100
 patients collected between 2019 and 2021, split at the patient level with a
 70/30 train-test allocation.
 
-## Training data
+### Training data
 Electronic health record images from one health system, collected between 2018
 and 2020. Further detail is withheld.
 
-## Quantitative analyses
+### Quantitative analyses
 Performance by age band and sex is reported in the appendix, which is available
 to customers on request.
 
-## Ethical considerations
+### Ethical considerations
 False negatives may delay referral. The model is a class-leading solution
 with world-class accuracy and best-in-class fairness.
 
-## Caveats and recommendations
+### Caveats and recommendations
 Not evaluated in pregnancy or in patients with previous retinal surgery.
 Monitor referral rate and image rejection rate monthly.
 """
@@ -781,7 +781,7 @@ MARKETING = [
 
 
 def split_sections(text):
-    parts = re.split(r"^##\s+(.+)$", text, flags=re.M)
+    parts = re.split(r"^###\s+(.+)$", text, flags=re.M)
     sections = {}
     for i in range(1, len(parts), 2):
         sections[parts[i].strip()] = parts[i + 1].strip()

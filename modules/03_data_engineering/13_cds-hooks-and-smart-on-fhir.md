@@ -1174,9 +1174,9 @@ This feedback loop is vital for health system informatics teams to compute overr
 
 ## 17. Links
 
-- [01_healthcare-data-standards-and-ontologies.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/03_data_engineering/01_healthcare-data-standards-and-ontologies.md) - Standard medical vocabularies: SNOMED CT, LOINC, and RxNorm.
-- [02_fhir-fundamentals-and-resources.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/03_data_engineering/02_fhir-fundamentals-and-resources.md) - Core FHIR resource schemas and RESTful operations.
-- [11_fhir-bulk-export-and-analytics.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/03_data_engineering/11_fhir-bulk-export-and-analytics.md) - Asynchronous Bulk FHIR exports and high-volume NDJSON analytics.
-- [12_da-vinci-and-us-core-interoperability.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/03_data_engineering/12_da-vinci-and-us-core-interoperability.md) - US Core profiles and Da Vinci CRD, DTR, and PAS protocols.
-- [Module 07: Deep Learning](file:///D:/Biomedical/biomedical-data-science-2026/modules/07_deep_learning/_index.md) - Foundation models, agentic orchestration, and safety guardrails.
-- [Module 14: Devices and Regulation](file:///D:/Biomedical/biomedical-data-science-2026/modules/14_devices_regulation/_index.md) - FDA SaMD validation, clinical decision support regulation, and ONC certification.
+- 01_healthcare-data-standards-and-ontologies.md - Standard medical vocabularies: SNOMED CT, LOINC, and RxNorm.
+- 02_fhir-fundamentals-and-resources.md - Core FHIR resource schemas and RESTful operations.
+- [11_fhir-bulk-export-and-analytics.md](11_fhir-bulk-export-and-analytics.md) - Asynchronous Bulk FHIR exports and high-volume NDJSON analytics.
+- [12_da-vinci-and-us-core-interoperability.md](12_da-vinci-and-us-core-interoperability.md) - US Core profiles and Da Vinci CRD, DTR, and PAS protocols.
+- [Module 07: Deep Learning](../07_deep_learning/_index.md) - Foundation models, agentic orchestration, and safety guardrails.
+- [Module 14: Devices and Regulation](../14_devices_regulation/_index.md) - FDA SaMD validation, clinical decision support regulation, and ONC certification.

@@ -150,6 +150,12 @@ inputs suggests a concept change, which is the hardest to diagnose because nothi
 distribution looks wrong. The review should read the loops together, which is why a single dashboard
 with separate panels is more useful than a single composite score.
 
+A sixth property is that the loops must be read against the deployment's own history. A model
+deployed in January faces a different population in July, after the winter admissions and the new
+service line, and the comparison should be to the same period in the previous year where possible.
+Seasonality is a confounder in monitoring as much as in epidemiology, and a programme that compares
+July to January will find drift every year.
+
 A fourth model is the detection trade-off. Every statistical rule has a false-alarm rate and a
 detection delay, and the two trade against each other. A sensitive rule fires early and often; a
 specific rule fires late and rarely. The plan should state which error is more costly for each
@@ -204,6 +210,10 @@ expensive evaluations that are too late.
 workflow changes and is available immediately. A mortality rate is lagging because it requires
 outcomes and a design. A programme that monitors only lagging indicators learns about problems
 after they have harmed patients.
+
+**Seasonality.** A recurring pattern tied to the calendar, which can mimic drift if the comparison
+period differs. Any monitoring comparison should be to the same period in a prior year, or should
+adjust for the seasonal pattern, before a change is attributed to the model or the population.
 
 **Alert burden versus alert usefulness.** Alert burden is the volume of alerts per unit of clinical
 work. Alert usefulness is the share of alerts that lead to a correct action. A model can have a
@@ -377,6 +387,62 @@ The escalation path should name the role, not the person, so that it survives tu
 
 **Branch point:** if no role has the authority to suspend the model, the programme cannot act on
 its most important signal. Escalate the governance gap before launch.
+
+### Step 7a. Link complaints and regulatory reports to the metrics
+
+**Input:** the complaint log, the safety reporting system, and the monitoring dashboard.
+
+**Output:** a linkage rule that routes every complaint or report mentioning the model to the
+monitoring record, and a periodic reconciliation between the two.
+
+**Rationale:** Complaints and medical device reports are the richest source of information about
+use-related failure, and they are usually stored in a system that the analytics team never reads.
+A complaint that says "the alert did not fire" is a signal about sensitivity or input availability;
+a complaint that says "the alert fires for everyone" is a signal about threshold or prevalence. If
+the two systems are not linked, the monitoring programme sees the numbers and misses the narrative.
+
+**Branch point:** three linkage states.
+
+| State | Evidence | Action |
+|---|---|---|
+| Linked | Complaint references the model and the case is in the monitoring cohort | Investigate as a monitoring event |
+| Unlinked but relevant | Complaint mentions the model but the case is outside the cohort | Record and assess generalisability |
+| Absent | No complaints recorded | Check that the reporting channel exists before concluding there is no problem |
+
+The third state is the trap. An absence of complaints is not evidence of absence when the reporting
+channel is obscure. The programme should know the monthly volume of reports that mention the model,
+even when the volume is zero, because a channel that produces zero reports for a year is either
+unused or broken.
+
+**Reconciliation.** Once a quarter, compare the count of complaints and reports that mention the
+model with the count of monitoring events. A large discrepancy in either direction is a finding: too
+few linked complaints means the channel is not reaching users, and too many means the dashboard is
+missing a failure mode that users are noticing.
+
+### Step 7b. Decide the threshold for action
+
+**Input:** the baseline, the rule, and the consequence of each error.
+
+**Output:** a documented action threshold for each decision: investigate, recalibrate, restrict,
+suspend.
+
+**Rationale:** The threshold for action is not the same as the threshold for a signal. A signal
+initiates an investigation; an action threshold initiates a change to the product or its use. The two
+must be separate, or every statistical fluctuation becomes a product change.
+
+**Branch point:** four decision levels, each with a different trigger and authority.
+
+| Decision | Trigger | Evidence required | Authority |
+|---|---|---|---|
+| Investigate | Signal rule crossed | Metric and context | Model owner |
+| Recalibrate | Confirmed calibration drift with stable discrimination | Calibration analysis on labelled cases | Model owner and quality |
+| Restrict | Confirmed subgroup or population harm | Subgroup analysis with intervals | Clinical governance |
+| Suspend | Safety signal or confirmed material harm | Safety review | Medical safety officer |
+
+The action threshold should be set so that the expected number of false actions is tolerable. If a
+recalibration costs two weeks of engineering, the threshold should not be crossed by normal
+variation more than once or twice a year. That is a statement about the rule's false-alarm rate, and
+it should be computed rather than assumed.
 
 ### Step 8. Run the review meeting
 
@@ -648,6 +714,40 @@ have been adjusted without evidence that the adjustment works.
 The recommendation in each case names the specific failing control, because a generic
 "improve monitoring" is not actionable.
 
+### A monitoring plan for a comparable deployment
+
+The appraisal above is negative; the constructive output is the plan the site should have had. The
+plan below is sized for a 400-bed hospital with 25,000 admissions per year, a sepsis prevalence of
+7 percent, and a target alert rate of 8 percent. The arithmetic uses the same standard error
+approximation as section 7.
+
+Labelled cases accrue at about 1,400 per month. At that volume, the standard error of AUROC is
+approximately 0.018, so a 0.05 drop is detectable in about one month and a 0.02 drop requires about
+7 months. That difference determines the cadence: monthly AUROC is adequate for large failures and
+inadequate for small ones, so the plan pairs it with faster leading indicators.
+
+| Cadence | Metric | Rule | Owner | Action if triggered |
+|---|---|---|---|---|
+| Daily | Input completeness | Any required field below 95% complete for 2 days | Data lead | Halt scoring; fix pipeline |
+| Daily | Scoring latency | 99th percentile above 60 seconds | Engineering | Investigate; fail over |
+| Weekly | Alert rate | Outside 6-10% for 2 consecutive weeks | Clinical lead | Review threshold and prevalence |
+| Weekly | Override rate | Above 60% for 2 weeks | Clinical lead | Workflow review; alert content |
+| Monthly | AUROC | CUSUM against 0.82, k=0.015, h=0.06 | Model owner | Investigate; recalibrate |
+| Monthly | Calibration slope | Outside 0.8-1.2 | Model owner | Recalibrate |
+| Monthly | PPV at threshold | Below 10% | Clinical lead | Review threshold and case mix |
+| Quarterly | Subgroup AUROC | Gap above 0.05 with non-overlapping intervals | Clinical governance | Investigate; restrict or mitigate |
+| Quarterly | Complaint linkage | Reconciliation count mismatch | Quality | Audit reporting channel |
+| Annually | Whole plan | Metric relevance, thresholds, incidents | Quality | Revise plan |
+
+Three properties make the plan operational. Each row has an owner, so no metric is orphaned. Each
+rule is stated in a form that can be computed, so the review does not debate whether a change is
+real. And each action is a decision rather than an observation, so the meeting produces a record
+that can be audited.
+
+The plan also states what it does not cover: performance in patients excluded from the cohort, the
+fallback pathway when the model is unavailable, and the effect of co-interventions. Those gaps are
+recorded in the plan, which means they are known limitations rather than surprises.
+
 ### Two diagnostics that would change the verdict
 
 **Diagnostic 1: a documented pre-deployment local validation with AUROC 0.72 and a monitoring rule
@@ -854,6 +954,13 @@ apply. The monitoring programme should have a defined handoff to the regulatory 
 the reporting clock does not wait for the next monthly review. This is a legal determination and
 requires professional advice.
 
+**Complaint handling and medical device reporting.** ISO 13485 clause 8.2.2 requires a documented
+procedure for timely complaint handling, and the applicable vigilance regulation defines which
+complaints become reports. For a model, a complaint that the alert failed, fired late, or fired for
+an ineligible patient is a potential performance signal and should be triaged as one. The linkage
+between the complaint system and the monitoring record is therefore a quality-system requirement,
+not only an analytics convenience, and it is one of the first things an auditor will sample.
+
 **Contracts and data rights.** Monitoring rights are contractual. A deployment agreement should
 specify which data the buyer receives, at what grain, at what frequency, and for what purpose, and
 whether the vendor will supply model updates and their validation evidence. A contract that grants
@@ -900,6 +1007,14 @@ everything and decides nothing, because no metric has an owner or a threshold. S
 programme measures only AUROC, which requires labels and therefore arrives after the harm. Third,
 the programme is built by the vendor and operated by no one, because the contract did not assign
 responsibility.
+
+**Inference: real-world drift is usually a workflow story.** When a deployed model degrades, the
+first hypothesis is often a change in the patients. In practice, the more common sequence is a
+workflow change: a new triage protocol alters who is tested, a new order set changes when a
+laboratory value is recorded, or a new EHR release changes a field's coding. Each of these changes
+the input distribution and the label timing without changing the underlying disease. The monitoring
+programme should therefore treat workflow telemetry, order-set versions, and EHR release notes as
+monitoring data, not as background context.
 
 **Inference: what a workable programme looks like.** Five to nine metrics, each with a baseline, a
 rule, a cadence, an owner, and an action. A monthly meeting with authority to act. A weekly check of
@@ -986,7 +1101,13 @@ Deliverable: a one-page specification listing panels, metrics, reference lines, 
 ownership, plus a freshness indicator for each data feed. Acceptance criteria: every panel maps to
 a decision; each metric shows a baseline and a rule; staleness is visible. Time: 35 minutes.
 
-**Exercise 9. Design the annual review (design, 30 minutes).**
+**Exercise 9. Size the monitoring sample (application, 25 minutes).**
+Deliverable: a calculation of the labelled cases needed to detect a 0.05 and a 0.02 AUROC drop at a
+stated prevalence, and the implied cadence for a site with a stated monthly volume. Acceptance
+criteria: assumptions listed; arithmetic shown; the cadence recommendation follows from the numbers.
+Time: 25 minutes.
+
+**Exercise 10. Design the annual review (design, 30 minutes).**
 Deliverable: an agenda and a decision log template for the annual review of the monitoring
 programme itself. Acceptance criteria: the review covers metric relevance, thresholds, incidents,
 and governance; decisions are recorded with owners. Time: 30 minutes.
@@ -1024,6 +1145,14 @@ new baseline established from the post-change period.
 **A10. Why is the first year the highest-risk period?** Because 43.4 percent of AI device recalls
 occur within 12 months of clearance, and deployment exposes the model to a new population and
 workflow immediately.
+
+**A11. Why separate the signal threshold from the action threshold?** A signal is a hypothesis and
+should be cheap to raise; an action changes the product or its use and should require stronger
+evidence. Merging them either floods the change process with noise or suppresses early signals.
+
+**A12. What does a zero-complaint month tell you?** Not that there is no problem. It may mean the
+reporting channel is not reaching users. The programme should verify the channel by checking that
+reports about the model are being filed at a plausible rate.
 
 **Rubric for Exercise 7.** Full credit: six domains scored with evidence; at least one zero; the
 recommendation names the missing control and its owner. Partial: scores without evidence.
@@ -1085,7 +1214,17 @@ answer for all models.
 Strong answer: metrics and definitions, expected ranges, recommended thresholds, data requirements,
 reporting cadence, and escalation contacts. Weak answer: says a dashboard.
 
-**Q12. When would you withdraw a model?**
+**Q12. How do complaints feed a monitoring programme?**
+Strong answer: routes any report mentioning the model into the monitoring record, triages it as a
+performance signal, and reconciles counts quarterly to test whether the reporting channel works.
+Weak answer: treats complaints as a separate customer-service process.
+
+**Q13. How do you set an action threshold as opposed to a signal threshold?**
+Strong answer: the signal triggers an investigation; the action threshold triggers a product change,
+set from the cost of a false action and the rate at which normal variation would cross it. Weak
+answer: uses one threshold for everything.
+
+**Q14. When would you withdraw a model?**
 Strong answer: when a safety signal or a confirmed material performance gap cannot be mitigated
 quickly, with a communication and migration plan. Weak answer: says when accuracy drops.
 
@@ -1111,6 +1250,18 @@ quickly, with a communication and migration plan. Weak answer: says when accurac
 - **Baseline** — reference performance for monitoring.
 - **Escalation** — defined path from signal to authority.
 - **Re-baselining** — resetting the reference after a change.
+- **Action threshold** — the level that triggers a product decision.
+- **Complaint linkage** — routing user reports into the monitoring record.
+- **Detection target** — the shift size a rule is designed to catch.
+- **Data freshness** — whether a feed has updated within its expected interval.
+- **Vigilance** — regulatory reporting of safety events.
+- **Seasonality** — calendar-linked variation that mimics drift.
+- **Reconciliation** — periodic comparison of complaints and monitoring events.
+- **Fallback pathway** — the process used when the model is unavailable.
+- **Monitoring charter** — statement of purpose and decisions.
+- **Label latency** — delay between the event and outcome ascertainment.
+- **Signal threshold** — the level that triggers investigation.
+- **Review cadence** — the scheduled interval for examining metrics.
 
 ## 16. Sources
 

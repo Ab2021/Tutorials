@@ -1192,13 +1192,13 @@ $$\mathcal{L}(W, \sigma_1, \sigma_2, \sigma_3) = \frac{1}{2\sigma_1^2} \mathcal{
 
 ## 17. Links
 
-- [03_cnns-and-medical-vision.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/07_deep_learning/03_cnns-and-medical-vision.md) - Foundational medical imaging backbones and spatial patch processing.
-- [05_transformers.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/07_deep_learning/05_transformers.md) - Transformer architectures, scaled dot-product attention, and self-attention mechanics.
-- [06_medical-foundation-models.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/07_deep_learning/06_medical-foundation-models.md) - Medical vision-language pretraining and contrastive representation models.
-- [12_multi-agent-orchestration.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/07_deep_learning/12_multi-agent-orchestration.md) - Coordinating multimodal specialist agents within clinical workflows.
-- [13_agentic-ai-safety-and-guardrails.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/07_deep_learning/13_agentic-ai-safety-and-guardrails.md) - Deterministic circuit breakers and safety envelopes for multimodal decision support.
-- [Module 10: Medical Imaging](file:///D:/Biomedical/biomedical-data-science-2026/modules/10_imaging/_index.md) - DICOM pipelines, Whole-Slide Imaging, and pathology foundation models.
-- [Module 12: Omics and Precision Medicine](file:///D:/Biomedical/biomedical-data-science-2026/modules/12_omics/_index.md) - Genomic variant calling, RNA-seq transcriptomics, and spatial omics integration.
+- [03_cnns-and-medical-vision.md](03_cnns-and-medical-vision.md) - Foundational medical imaging backbones and spatial patch processing.
+- [05_transformers.md](05_transformers.md) - Transformer architectures, scaled dot-product attention, and self-attention mechanics.
+- [06_medical-foundation-models.md](06_medical-foundation-models.md) - Medical vision-language pretraining and contrastive representation models.
+- [12_multi-agent-orchestration.md](12_multi-agent-orchestration.md) - Coordinating multimodal specialist agents within clinical workflows.
+- [13_agentic-ai-safety-and-guardrails.md](13_agentic-ai-safety-and-guardrails.md) - Deterministic circuit breakers and safety envelopes for multimodal decision support.
+- [Module 10: Medical Imaging](../10_imaging/_index.md) - DICOM pipelines, Whole-Slide Imaging, and pathology foundation models.
+- [Module 12: Omics and Precision Medicine](../12_omics/_index.md) - Genomic variant calling, RNA-seq transcriptomics, and spatial omics integration.
 
 
 

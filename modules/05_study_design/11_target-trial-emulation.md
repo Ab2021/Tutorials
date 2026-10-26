@@ -1197,13 +1197,13 @@ No multivariable regression or propensity score can fully capture these unrecord
 
 ## 17. Links
 
-- [01_randomization-and-blinding.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/05_study_design/01_randomization-and-blinding.md) - Classical RCT randomization, allocation concealment, and blinding.
-- [02_observational-designs.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/05_study_design/02_observational-designs.md) - Cohort, case-control, and cross-sectional observational study structures.
-- [03_confounding-and-bias.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/05_study_design/03_confounding-and-bias.md) - Directed Acyclic Graphs (DAGs), confounding pathways, and colliders.
-- [04_propensity-scores.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/05_study_design/04_propensity-scores.md) - Propensity score matching, stratification, and balance diagnostics.
-- [Module 08: EHR and Claims](file:///D:/Biomedical/biomedical-data-science-2026/modules/08_ehr_claims/_index.md) - Longitudinal claims extraction, NDC drug coding, and clinical phenotyping.
-- [Module 13: Biopharma and Drug Discovery](file:///D:/Biomedical/biomedical-data-science-2026/modules/13_biopharma/_index.md) - Real-World Evidence submissions and regulatory post-marketing commitments.
-- [Module 14: Devices and Regulation](file:///D:/Biomedical/biomedical-data-science-2026/modules/14_devices_regulation/_index.md) - FDA pre-market approval and post-market safety surveillance.
+- 01_randomization-and-blinding.md - Classical RCT randomization, allocation concealment, and blinding.
+- 02_observational-designs.md - Cohort, case-control, and cross-sectional observational study structures.
+- 03_confounding-and-bias.md - Directed Acyclic Graphs (DAGs), confounding pathways, and colliders.
+- 04_propensity-scores.md - Propensity score matching, stratification, and balance diagnostics.
+- [Module 08: EHR and Claims](../08_ehr_claims/_index.md) - Longitudinal claims extraction, NDC drug coding, and clinical phenotyping.
+- [Module 13: Biopharma and Drug Discovery](../13_biopharma/_index.md) - Real-World Evidence submissions and regulatory post-marketing commitments.
+- [Module 14: Devices and Regulation](../14_devices_regulation/_index.md) - FDA pre-market approval and post-market safety surveillance.
 
 
 

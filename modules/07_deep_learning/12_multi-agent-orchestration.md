@@ -1259,10 +1259,10 @@ Decentralized peer-to-peer choreography allows agents to communicate directly vi
 
 ## 17. Links
 
-- [09_agents-and-tools.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/07_deep_learning/09_agents-and-tools.md) - Foundational agent tooling, ReAct patterns, and function calling.
-- [10_evaluating-generative-models.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/07_deep_learning/10_evaluating-generative-models.md) - Evaluation frameworks and hallucination benchmarks for generative models.
-- [11_compute-latency-and-cost.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/07_deep_learning/11_compute-latency-and-cost.md) - Inference latency optimization, model distillation, and token budgeting.
-- [13_agentic-ai-safety-and-guardrails.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/07_deep_learning/13_agentic-ai-safety-and-guardrails.md) - Safety architectures, dual-LLM guardrails, and deterministic circuit breakers.
-- [14_multimodal-fusion-architectures.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/07_deep_learning/14_multimodal-fusion-architectures.md) - Cross-attention multimodal fusion across EHR, medical imaging, and genomics.
-- [Module 03: Data Engineering](file:///D:/Biomedical/biomedical-data-science-2026/modules/03_data_engineering/_index.md) - FHIR Bulk Export, US Core, Da Vinci, and SMART on FHIR protocols.
-- [Module 14: Devices and Regulation](file:///D:/Biomedical/biomedical-data-science-2026/modules/14_devices_regulation/_index.md) - FDA SaMD validation, clinical trials, and post-market surveillance.
+- [09_agents-and-tools.md](09_agents-and-tools.md) - Foundational agent tooling, ReAct patterns, and function calling.
+- [10_evaluating-generative-models.md](10_evaluating-generative-models.md) - Evaluation frameworks and hallucination benchmarks for generative models.
+- [11_compute-latency-and-cost.md](11_compute-latency-and-cost.md) - Inference latency optimization, model distillation, and token budgeting.
+- [13_agentic-ai-safety-and-guardrails.md](13_agentic-ai-safety-and-guardrails.md) - Safety architectures, dual-LLM guardrails, and deterministic circuit breakers.
+- [14_multimodal-fusion-architectures.md](14_multimodal-fusion-architectures.md) - Cross-attention multimodal fusion across EHR, medical imaging, and genomics.
+- [Module 03: Data Engineering](../03_data_engineering/_index.md) - FHIR Bulk Export, US Core, Da Vinci, and SMART on FHIR protocols.
+- [Module 14: Devices and Regulation](../14_devices_regulation/_index.md) - FDA SaMD validation, clinical trials, and post-market surveillance.

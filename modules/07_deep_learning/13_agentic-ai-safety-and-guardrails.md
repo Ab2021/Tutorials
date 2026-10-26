@@ -1174,12 +1174,12 @@ To resolve alert fatigue:
 
 ## 17. Links
 
-- [09_agents-and-tools.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/07_deep_learning/09_agents-and-tools.md) - Core agent tooling, ReAct execution, and schema constraints.
-- [10_evaluating-generative-models.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/07_deep_learning/10_evaluating-generative-models.md) - Hallucination detection benchmarks and factual consistency metrics.
-- [11_compute-latency-and-cost.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/07_deep_learning/11_compute-latency-and-cost.md) - Inference latency budgeting and edge model optimization.
-- [12_multi-agent-orchestration.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/07_deep_learning/12_multi-agent-orchestration.md) - Constrained Graph-State Machines and consensus protocols.
-- [14_multimodal-fusion-architectures.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/07_deep_learning/14_multimodal-fusion-architectures.md) - Multimodal cross-attention fusion and safety verification across imaging and EHR.
-- [Module 03: Data Engineering](file:///D:/Biomedical/biomedical-data-science-2026/modules/03_data_engineering/_index.md) - FHIR Bulk Export, US Core interoperability, and SMART security profiles.
-- [Module 14: Devices and Regulation](file:///D:/Biomedical/biomedical-data-science-2026/modules/14_devices_regulation/_index.md) - FDA SaMD regulatory submissions, clinical trials, and post-market surveillance.
+- [09_agents-and-tools.md](09_agents-and-tools.md) - Core agent tooling, ReAct execution, and schema constraints.
+- [10_evaluating-generative-models.md](10_evaluating-generative-models.md) - Hallucination detection benchmarks and factual consistency metrics.
+- [11_compute-latency-and-cost.md](11_compute-latency-and-cost.md) - Inference latency budgeting and edge model optimization.
+- [12_multi-agent-orchestration.md](12_multi-agent-orchestration.md) - Constrained Graph-State Machines and consensus protocols.
+- [14_multimodal-fusion-architectures.md](14_multimodal-fusion-architectures.md) - Multimodal cross-attention fusion and safety verification across imaging and EHR.
+- [Module 03: Data Engineering](../03_data_engineering/_index.md) - FHIR Bulk Export, US Core interoperability, and SMART security profiles.
+- [Module 14: Devices and Regulation](../14_devices_regulation/_index.md) - FDA SaMD regulatory submissions, clinical trials, and post-market surveillance.
 
 

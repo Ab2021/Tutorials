@@ -1247,9 +1247,9 @@ Sizing the sample appropriately guarantees that the audit meets the statistical 
 
 ## 17. Links
 
-- [01_healthcare-data-standards-and-ontologies.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/03_data_engineering/01_healthcare-data-standards-and-ontologies.md) - Standard medical coding systems: CPT, HCPCS, and ICD-10.
-- [03_claims-data-fundamentals-and-structures.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/08_ehr_claims/03_claims-data-fundamentals-and-structures.md) - Structure and syntax of ANSI X12 837 claims and 835 remittances.
-- [11_health-equity-and-sdoh-analytics.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/08_ehr_claims/11_health-equity-and-sdoh-analytics.md) - Social determinants of health and algorithmic bias mitigation in claims.
-- [Module 05: Study Design and Causal Inference](file:///D:/Biomedical/biomedical-data-science-2026/modules/05_study_design/_index.md) - Target trial emulation and confounding control in retrospective observational data.
-- [Module 07: Deep Learning](file:///D:/Biomedical/biomedical-data-science-2026/modules/07_deep_learning/_index.md) - Graph neural networks and unsupervised anomaly detection architectures.
-- [Module 14: Devices and Regulation](file:///D:/Biomedical/biomedical-data-science-2026/modules/14_devices_regulation/_index.md) - Healthcare legal compliance, audit readiness, and FDA/CMS regulatory frameworks.
+- 01_healthcare-data-standards-and-ontologies.md - Standard medical coding systems: CPT, HCPCS, and ICD-10.
+- 03_claims-data-fundamentals-and-structures.md - Structure and syntax of ANSI X12 837 claims and 835 remittances.
+- [11_health-equity-and-sdoh-analytics.md](11_health-equity-and-sdoh-analytics.md) - Social determinants of health and algorithmic bias mitigation in claims.
+- [Module 05: Study Design and Causal Inference](../05_study_design/_index.md) - Target trial emulation and confounding control in retrospective observational data.
+- [Module 07: Deep Learning](../07_deep_learning/_index.md) - Graph neural networks and unsupervised anomaly detection architectures.
+- [Module 14: Devices and Regulation](../14_devices_regulation/_index.md) - Healthcare legal compliance, audit readiness, and FDA/CMS regulatory frameworks.

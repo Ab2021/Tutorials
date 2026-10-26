@@ -1158,11 +1158,11 @@ In HL7 FHIR US Core profiles, the **"Must Support"** flag imposes explicit bidir
 
 ## 17. Links
 
-- [01_healthcare-data-standards-and-ontologies.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/03_data_engineering/01_healthcare-data-standards-and-ontologies.md) - Standard medical ontologies: SNOMED CT, LOINC, and RxNorm.
-- [02_fhir-fundamentals-and-resources.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/03_data_engineering/02_fhir-fundamentals-and-resources.md) - Core FHIR data models and RESTful operations.
-- [11_fhir-bulk-export-and-analytics.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/03_data_engineering/11_fhir-bulk-export-and-analytics.md) - FHIR Bulk Data Access, SMART Backend Services, and NDJSON streaming.
-- [13_cds-hooks-and-smart-on-fhir.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/03_data_engineering/13_cds-hooks-and-smart-on-fhir.md) - Point-of-care Clinical Decision Support Hooks and SMART interactive app development.
-- [Module 08: EHR and Claims Analytics](file:///D:/Biomedical/biomedical-data-science-2026/modules/08_ehr_claims/_index.md) - Longitudinal claims mining, adjudication logic, and fraud detection.
-- [Module 14: Devices and Regulation](file:///D:/Biomedical/biomedical-data-science-2026/modules/14_devices_regulation/_index.md) - CMS-0057-F compliance enforcement, ONC certification, and healthcare privacy.
+- 01_healthcare-data-standards-and-ontologies.md - Standard medical ontologies: SNOMED CT, LOINC, and RxNorm.
+- 02_fhir-fundamentals-and-resources.md - Core FHIR data models and RESTful operations.
+- [11_fhir-bulk-export-and-analytics.md](11_fhir-bulk-export-and-analytics.md) - FHIR Bulk Data Access, SMART Backend Services, and NDJSON streaming.
+- [13_cds-hooks-and-smart-on-fhir.md](13_cds-hooks-and-smart-on-fhir.md) - Point-of-care Clinical Decision Support Hooks and SMART interactive app development.
+- [Module 08: EHR and Claims Analytics](../08_ehr_claims/_index.md) - Longitudinal claims mining, adjudication logic, and fraud detection.
+- [Module 14: Devices and Regulation](../14_devices_regulation/_index.md) - CMS-0057-F compliance enforcement, ONC certification, and healthcare privacy.
 
 

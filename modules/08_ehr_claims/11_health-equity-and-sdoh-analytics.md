@@ -1237,9 +1237,9 @@ CBPR shifts data science from "research on a community" to "partnership with a c
 
 ## 17. Links
 
-- [01_healthcare-data-standards-and-ontologies.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/03_data_engineering/01_healthcare-data-standards-and-ontologies.md) - Standard medical coding systems: ICD-10, LOINC, and SNOMED CT.
-- [03_claims-data-fundamentals-and-structures.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/08_ehr_claims/03_claims-data-fundamentals-and-structures.md) - Structure and syntax of ANSI X12 837 claims and remittance advice.
-- [10_fraud-waste-and-abuse-analytics.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/08_ehr_claims/10_fraud-waste-and-abuse-analytics.md) - Claims anomaly detection and peer-group risk adjustment.
-- [13_linguistic-equity-in-clinical-nlp.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/09_clinical_nlp/13_linguistic-equity-in-clinical-nlp.md) - Linguistic bias mitigation and multi-dialect clinical NLP.
-- [Module 05: Study Design and Causal Inference](file:///D:/Biomedical/biomedical-data-science-2026/modules/05_study_design/_index.md) - Target trial emulation, propensity score weighting, and causal confounding control.
-- [Module 14: Devices and Regulation](file:///D:/Biomedical/biomedical-data-science-2026/modules/14_devices_regulation/_index.md) - FDA SaMD validation, ONC HTI-1 compliance, and algorithmic transparency mandates.
+- 01_healthcare-data-standards-and-ontologies.md - Standard medical coding systems: ICD-10, LOINC, and SNOMED CT.
+- 03_claims-data-fundamentals-and-structures.md - Structure and syntax of ANSI X12 837 claims and remittance advice.
+- [10_fraud-waste-and-abuse-analytics.md](10_fraud-waste-and-abuse-analytics.md) - Claims anomaly detection and peer-group risk adjustment.
+- [13_linguistic-equity-in-clinical-nlp.md](../09_clinical_nlp/13_linguistic-equity-in-clinical-nlp.md) - Linguistic bias mitigation and multi-dialect clinical NLP.
+- [Module 05: Study Design and Causal Inference](../05_study_design/_index.md) - Target trial emulation, propensity score weighting, and causal confounding control.
+- [Module 14: Devices and Regulation](../14_devices_regulation/_index.md) - FDA SaMD validation, ONC HTI-1 compliance, and algorithmic transparency mandates.

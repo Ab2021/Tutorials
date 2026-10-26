@@ -407,6 +407,71 @@ The best events publish the rubric, provide curated data, and run a mentor brief
 mentors give consistent feedback. A team should ask for all three before the event, and should
 treat the answers as part of the rules.
 
+### Designing the judging criteria
+
+An organiser who writes a rubric is making four choices, and each changes what teams build.
+
+The first is the number of criteria. Four to six is workable; fewer collapses distinct qualities
+into one impression, and more than six makes consistent scoring impossible in the ten minutes a
+judge has per team. The MIT Hacking Medicine Brazil 2025 guidelines use four: impact, innovation,
+business model, and presentation. A health-system event might use need, feasibility, evidence,
+and pathway.
+
+The second is the weight on need. A rubric that weights need at 30 to 40 percent rewards teams
+that spend the first six hours interviewing. A rubric that weights it at 10 percent rewards teams
+that start coding, and the resulting prototypes are usually solutions in search of a problem.
+
+The third is whether evidence is a separate criterion. Folding evidence into "demo" rewards a
+polished prototype over a measured one. A separate criterion, even at 15 percent, forces teams to
+compute a baseline and report a number.
+
+The fourth is whether the rubric has a knock-out. A knock-out is a condition that caps the score
+regardless of other criteria, such as "no demonstration on held-out or synthetic data" or "claims
+a clinical function not supported by the evidence". Knock-outs are contentious and effective;
+they tell teams which failures are not recoverable by good presentation.
+
+The rubric should be published before the event and used by every judge. A rubric written after
+the pitches is a rationalisation of the judges' preferences, and teams can tell.
+
+### Team formation at the event
+
+Most events form teams on the first evening, which means the team composition is decided under
+time pressure and social pressure. Three practices improve the outcome.
+
+First, pitch problems rather than solutions. A person who pitches a solution recruits people to
+execute it; a person who pitches a problem recruits people to solve it. The second produces more
+diverse teams.
+
+Second, publish the skills needed per track and let people self-select. A track that needs a
+clinician, an engineer, and a designer will produce better teams if the organisers say so than if
+teams form by acquaintance.
+
+Third, cap the team size at five or six. A team of eight has twenty-eight pairwise channels and
+forty-eight hours; the coordination cost exceeds the added capacity for most tasks. A team of
+three has enough capacity for a narrow prototype and not enough for a full workflow.
+
+The composition that works most often is one domain expert, one engineer, one designer or
+communicator, and one person who can hold the scope. That is not a rule, but it is a reliable
+starting point, and it matches the role structure in Topic 03 at a smaller scale.
+
+### Time-boxing: why the checkpoints are where they are
+
+The checkpoint times are not arbitrary. They are the points at which the cost of changing your
+mind exceeds the benefit.
+
+Hour 2 is the last cheap moment to change the question, because no code exists and no data have
+been processed.
+Hour 9 is the last cheap moment to change the architecture, because an end-to-end path exists and
+can be re-pointed at a different model.
+Hour 18 is the last cheap moment to change the evidence, because a held-out result exists and the
+demo has not been built.
+Hour 42 is the last cheap moment to change the story, because the demo is done and only the
+framing remains.
+
+A team that misses a checkpoint has not failed; it has lost the option to change at that level.
+The correct response is to narrow at the next level rather than to go back. A team that reaches
+hour 18 without a held-out result should narrow the claim, not restart the analysis.
+
 ### The 24-hour sprint runbook
 
 A sprint is not a compressed grand hack. It has no time for need validation, so the problem must
@@ -595,6 +660,30 @@ pharmacist can reject it in seconds, and that the tool never writes to the recor
 
 The team placed second. The first-place team had a weaker model and a stronger need story, which
 is consistent with the rubric's weighting and with the format's incentives.
+
+### A demo that survives a question
+
+The difference between a demo that survives scrutiny and one that collapses is not polish. It is
+whether the demo contains the evidence for its own claim.
+
+A demo that collapses has four properties. It runs on an example the team chose during
+development. It shows an output without showing the input that produced it. It has no number on
+screen, so the only evidence is the presenter's assertion. And it cannot answer "what happens if
+I change this input?" without a code change.
+
+A demo that survives has the opposite properties. It runs on a case the presenter has not seen, or
+on a case selected by the judge. It shows the input, the output, and the reason for the output side
+by side. It displays the held-out metric and the sample size next to the result. And it accepts an
+edited input, because the pipeline is real rather than a recorded sequence.
+
+The worked example's demo has three of the four: synthetic patients selected at random from a
+fixture, the medication list and the flagged discrepancy side by side, and the metric with its
+interval on screen. It cannot accept an arbitrary new patient, because the fixture is fixed, and
+the team says so before a judge asks.
+
+That last behaviour is the one that matters most. A team that names the limitation before the
+question is demonstrating that it knows what the artefact can do. A team that is surprised by the
+question is demonstrating the opposite, and no amount of polish recovers.
 
 ### The hour-by-hour record
 
@@ -962,6 +1051,10 @@ hackathon placement is cited.
 | Unvalidated clinical claim | "Diagnoses" in the pitch | Enthusiasm | Judge challenge | Claim the prototype |
 | No debrief | Team disperses after judging | Fatigue | Learning lost | Debrief within 72 hours |
 
+The table is ordered roughly by how early the warning appears. The first four are visible before
+hour 20, which is where intervention is cheap. The last four appear in the final hours, where the
+only remaining response is to narrow the claim and tell the truth about what was not done.
+
 ## 11. Assumptions and limits
 
 | Assumption | Why it is needed | What breaks it | How to test it |
@@ -980,6 +1073,14 @@ The largest limit is that a hackathon cannot produce validation evidence, and a 
 will fail at both the demo and the evidence. The format's value is framing speed and prototype
 quality; the capstone's value is evidence. A programme needs both, and confusing them produces
 graduates who are confident about the wrong things.
+
+A second limit is that the simulation treats phases as sequential and independent. Real events
+have correlated failures, a network outage that delays three phases at once, and real teams
+parallelise some phases and serialise others. The simulation is a screening tool for the plan's
+shape, not a forecast of the event.
+
+A third limit is that the rubric weights in this topic are illustrative. An event's published
+weights override them, and a team should read the actual rubric before optimising anything.
 
 ## 12. Exercises
 
@@ -1187,6 +1288,9 @@ All URLs accessed 26 October 2026.
 - PhysioNet, CITI course instructions. https://www.physionet.org/about/citi-course/
 
 ## 17. Links
+
+The survey file carries the module's narrative and the competition status table; this topic
+supplies the operating procedure behind it.
 
 - Module map: [`_index.md`](_index.md)
 - Previous topic: [`05_brief-catalogue.md`](05_brief-catalogue.md)

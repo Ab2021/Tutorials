@@ -31,13 +31,13 @@ not the whole program.
 |---:|---|---|---|---:|---|
 | 1 | [`01_the-evidence-chain.md`](01_the-evidence-chain.md) | The Evidence Chain | Claim to endpoint to dataset to analysis to report; where chains break. | 1,200-1,800 | complete |
 | 2 | [`02_reporting-guidelines.md`](02_reporting-guidelines.md) | Reporting Guidelines | TRIPOD+AI, CONSORT-AI, STARD-AI, SPIRIT-AI, DECIDE-AI, and PROBAST. | 1,200-1,800 | complete |
-| 3 | `03_appraising-clinical-ai-evidence.md` | Appraising Clinical AI Evidence | A structured appraisal worksheet with worked examples. | 1,200-1,800 | planned |
-| 4 | `04_model-cards-and-datasheets.md` | Model Cards and Datasheets | What to document and what readers actually need. | 1,200-1,800 | planned |
-| 5 | `05_reproducibility.md` | Reproducibility | Code, data, environment, and the difference between repeatable and reproducible. | 1,200-1,800 | planned |
-| 6 | `06_quality-management.md` | Quality Management | QMS basics for analytics teams, SOPs, and CAPA. | 1,200-1,800 | planned |
-| 7 | `07_post-market-evaluation.md` | Post-Market Evaluation | Performance monitoring, drift, and real-world evidence generation. | 1,200-1,800 | planned |
-| 8 | `08_audit.md` | Audit | Preparing for an audit and what auditors ask for. | 1,200-1,800 | planned |
-| 9 | `09_documentation.md` | Documentation | Writing documents that survive staff turnover and inspections. | 1,200-1,800 | planned |
+| 3 | [`03_appraising-clinical-ai-evidence.md`](03_appraising-clinical-ai-evidence.md) | Appraising Clinical AI Evidence | A structured appraisal worksheet with worked examples. | 1,200-1,800 | complete |
+| 4 | [`04_model-cards-and-datasheets.md`](04_model-cards-and-datasheets.md) | Model Cards and Datasheets | What to document and what readers actually need. | 1,200-1,800 | complete |
+| 5 | [`05_reproducibility.md`](05_reproducibility.md) | Reproducibility | Code, data, environment, and the difference between repeatable and reproducible. | 1,200-1,800 | complete |
+| 6 | [`06_quality-management.md`](06_quality-management.md) | Quality Management | QMS basics for analytics teams, SOPs, and CAPA. | 1,200-1,800 | complete |
+| 7 | [`07_post-market-evaluation.md`](07_post-market-evaluation.md) | Post-Market Evaluation | Performance monitoring, drift, and real-world evidence generation. | 1,200-1,800 | complete |
+| 8 | [`08_audit.md`](08_audit.md) | Audit | Preparing for an audit and what auditors ask for. | 1,200-1,800 | complete |
+| 9 | [`09_documentation.md`](09_documentation.md) | Documentation | Writing documents that survive staff turnover and inspections. | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -67,9 +67,9 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 7 |
+| planned | 0 |
 | draft | 0 |
-| complete | 2 |
+| complete | 9 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.
 

@@ -1178,9 +1178,9 @@ def flatten_fhir_observation(obs: dict) -> dict:
 
 ## 17. Links
 
-- [01_healthcare-data-standards-and-ontologies.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/03_data_engineering/01_healthcare-data-standards-and-ontologies.md) - Foundational SNOMED CT, LOINC, and RxNorm terminologies.
-- [02_fhir-fundamentals-and-resources.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/03_data_engineering/02_fhir-fundamentals-and-resources.md) - Core FHIR data models, resource representations, and RESTful CRUD.
-- [12_da-vinci-and-us-core-interoperability.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/03_data_engineering/12_da-vinci-and-us-core-interoperability.md) - US Core profiles and Da Vinci payer-provider interoperability.
-- [13_cds-hooks-and-smart-on-fhir.md](file:///D:/Biomedical/biomedical-data-science-2026/modules/03_data_engineering/13_cds-hooks-and-smart-on-fhir.md) - Point-of-care Clinical Decision Support Hooks and SMART interactive apps.
-- [Module 08: EHR and Claims Analytics](file:///D:/Biomedical/biomedical-data-science-2026/modules/08_ehr_claims/_index.md) - Large-scale claims mining, OMOP CDM mapping, and longitudinal phenotyping.
-- [Module 14: Devices and Regulation](file:///D:/Biomedical/biomedical-data-science-2026/modules/14_devices_regulation/_index.md) - ONC certification criteria, FDA real-world evidence validation, and compliance auditing.
+- 01_healthcare-data-standards-and-ontologies.md - Foundational SNOMED CT, LOINC, and RxNorm terminologies.
+- 02_fhir-fundamentals-and-resources.md - Core FHIR data models, resource representations, and RESTful CRUD.
+- [12_da-vinci-and-us-core-interoperability.md](12_da-vinci-and-us-core-interoperability.md) - US Core profiles and Da Vinci payer-provider interoperability.
+- [13_cds-hooks-and-smart-on-fhir.md](13_cds-hooks-and-smart-on-fhir.md) - Point-of-care Clinical Decision Support Hooks and SMART interactive apps.
+- [Module 08: EHR and Claims Analytics](../08_ehr_claims/_index.md) - Large-scale claims mining, OMOP CDM mapping, and longitudinal phenotyping.
+- [Module 14: Devices and Regulation](../14_devices_regulation/_index.md) - ONC certification criteria, FDA real-world evidence validation, and compliance auditing.
