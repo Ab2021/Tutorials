@@ -779,6 +779,33 @@ nothing for the deadline. The technical chain is critical in every step.
 ### Block 2: effort loading against capacity
 
 ```python
+compressed = {
+    "charter": (1.0, []), "data_access": (2.0, ["charter"]),
+    "data_audit": (1.5, ["data_access"]), "baseline": (2.0, ["data_audit"]),
+    "analysis_plan": (1.0, ["data_audit"]), "candidate": (3.0, ["data_audit"]),
+    "validation": (2.0, ["candidate"]), "governance": (2.0, ["analysis_plan"]),
+    "system_demo": (2.0, ["baseline"]), "dossier": (2.5, ["governance"]),
+    "freeze": (1.0, ["dossier", "validation", "system_demo"]),
+}
+
+def cpm(t):
+    order, seen = [], set()
+    def visit(n):
+        if n in seen:
+            return
+        seen.add(n)
+        for p in t[n][1]:
+            visit(p)
+        order.append(n)
+    for n in t:
+        visit(n)
+    es, ef = {}, {}
+    for n in order:
+        es[n] = max([ef[p] for p in t[n][1]], default=0.0)
+        ef[n] = es[n] + t[n][0]
+    return es, ef
+
+es, ef = cpm(compressed)
 effort = {"charter": 16, "data_access": 24, "data_audit": 30, "baseline": 40,
           "analysis_plan": 14, "candidate": 56, "validation": 36, "governance": 26,
           "system_demo": 32, "dossier": 40, "freeze": 20}
@@ -833,10 +860,22 @@ triples = {
     "freeze":        (0.5, 1.0, 1.5, ["dossier", "validation", "system_demo"]),
 }
 
+def prepare(t):
+    order, seen = [], set()
+    def visit(n):
+        if n in seen:
+            return
+        seen.add(n)
+        for p in t[n][1]:
+            visit(p)
+        order.append(n)
+    for n in t:
+        visit(n)
+    return order
+
 def end_week(durations):
-    order, _ = prepare({k: (v[0], v[3]) for k, v in triples.items()})
     ef = {}
-    for n in order:
+    for n in prepare({k: (v[0], v[3]) for k, v in triples.items()}):
         ef[n] = max([ef[p] for p in triples[n][3]], default=0.0) + durations[n]
     return max(ef.values())
 

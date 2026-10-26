@@ -500,6 +500,9 @@ The most commonly skipped step is the distribution check, because it feels like 
 than judgement. It is the step that catches leniency, severity, and halo before they reach the
 ranking, and skipping it is why panels argue about individual scores instead of about patterns.
 
+A panel with limited time should compress the design steps, not the operation steps. The design can
+be agreed in one session; the operation is where the measurement properties are won or lost.
+
 ### Decision table: what to do when judges disagree
 
 | Pattern | Likely cause | Action | Record |
@@ -1001,6 +1004,7 @@ The mitigations are procedural rather than motivational. "Be objective" is not a
 | Deductions are pre-defined | Consistency depends on it | Ad hoc penalties | Schedule and record |
 | Multipliers are evidenced | Fairness depends on it | Impression only | Contribution log and defense |
 | Panels have time to calibrate | Quality depends on it | Schedule pressure | Ninety minutes in the agenda |
+| Anchor cases represent the range | Calibration transfers to live work | All anchors are strong submissions | Include one weak and one middling case |
 
 The largest limit is that a rubric measures what it measures. A rubric weighted toward evidence will
 not identify the team with the best product sense, and a rubric weighted toward adoption will not

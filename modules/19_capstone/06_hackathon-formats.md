@@ -868,9 +868,9 @@ Team A: 4.35
 Team B: 3.90
 Team C: 3.60
 under demo-heavy weights:
-Team A: 4.35
-Team B: 3.65
-Team C: 3.75
+Team A: 4.30
+Team B: 3.40
+Team C: 3.85
 ```
 
 The ranking of the top team is stable, but the second and third swap when the weights move toward

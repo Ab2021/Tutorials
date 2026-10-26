@@ -1020,6 +1020,7 @@ competition.
 | Compute estimates are achievable | Entry feasibility | Shared cluster queues | Measure a pilot run |
 | The metric matches a decision | Transfer depends on it | Benchmark task only | Map task to action |
 | Challenge data can be used afterwards | Capstone depends on it | Licence restricts use | Read the licence |
+| The leaderboard reflects the final ranking | Results are stable | Private-split shake-up | Compare public and private ranks |
 
 The largest limit is that this topic describes a moving landscape. Events open, close, and publish
 results on their own schedule, and any statement here is a snapshot at 26 October 2026. The

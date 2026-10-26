@@ -26,8 +26,8 @@
 | 16 | Privacy, Security, and Ethics | 10 | 10 | 10 | 13,038 |
 | 17 | Product, Economics, and Leadership | 9 | 9 | 9 | 12,302 |
 | 18 | Quality, Evaluation, and Reporting | 9 | 9 | 9 | 11,715 |
-| 19 | Capstone, Hackathons, and Competitions | 11 | 8 | 8 | 10,596 |
-| 20 | Career, Portfolio, and Interviews | 10 | 0 | 0 | 0 |
+| 19 | Capstone, Hackathons, and Competitions | 11 | 11 | 11 | 14,557 |
+| 20 | Career, Portfolio, and Interviews | 10 | 7 | 7 | 9,314 |
 | 21 | Datasets, Tools, and Benchmarks | 12 | 0 | 0 | 0 |
 | 22 | Sources and Further Reading | 9 | 0 | 0 | 0 |
 | 23 | Specialty Electives | 7 | 0 | 0 | 0 |
@@ -35,7 +35,7 @@
 | 25 | Trial Operations, HTA, and Global Regulation | 7 | 0 | 0 | 0 |
 | 26 | Cloud, Kubernetes, and Streaming Production Labs | 9 | 0 | 0 | 0 |
 
-**Total topic files:** 262
+**Total topic files:** 272
 
-**Total topic lines:** 325,830
+**Total topic lines:** 339,105
 

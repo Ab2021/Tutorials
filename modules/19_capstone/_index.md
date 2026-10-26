@@ -37,9 +37,9 @@ not the whole program.
 | 6 | [`06_hackathon-formats.md`](06_hackathon-formats.md) | Hackathon Formats | How to run and compete in a 24-72 hour event without producing nonsense. | 1,200-1,800 | complete |
 | 7 | [`07_competition-landscape.md`](07_competition-landscape.md) | Competition Landscape 2025-2026 | Public challenges, their datasets, and what winning solutions share. | 1,200-1,800 | complete |
 | 8 | [`08_scoping-playbook.md`](08_scoping-playbook.md) | Scoping Playbook | Turning an open problem into a defensible scope in two days. | 1,200-1,800 | complete |
-| 9 | `09_deliverables.md` | Deliverables | Dossier, prototype, demo, and defense requirements. | 1,200-1,800 | planned |
-| 10 | `10_judging.md` | Judging | Rubric, calibration, and the failure modes of judges. | 1,200-1,800 | planned |
-| 11 | `11_demo-day.md` | Demo Day | Executive pitch structure and the questions you will be asked. | 1,200-1,800 | planned |
+| 9 | [`09_deliverables.md`](09_deliverables.md) | Deliverables | Dossier, prototype, demo, and defense requirements. | 1,200-1,800 | complete |
+| 10 | [`10_judging.md`](10_judging.md) | Judging | Rubric, calibration, and the failure modes of judges. | 1,200-1,800 | complete |
+| 11 | [`11_demo-day.md`](11_demo-day.md) | Demo Day | Executive pitch structure and the questions you will be asked. | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,9 +71,9 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 3 |
+| planned | 0 |
 | draft | 0 |
-| complete | 8 |
+| complete | 11 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.
 

@@ -20,6 +20,30 @@ thinks matters.
 A team that spends four minutes on architecture and one minute on the decision has told the
 audience what it values, and the audience will believe it.
 
+A second constraint is that the audience is not the team.
+The team has lived with the project for twelve weeks and has forgotten which terms need defining,
+which numbers need context, and which trade-offs were obvious only in hindsight.
+The pitch must be written for someone who has five minutes of context and a decision to make, which
+is why the structure starts with the decision rather than with the data.
+
+A third constraint is that the room is mixed.
+A clinical director, an engineer, a compliance officer, and a payer are in the same audience, and
+each hears a different pitch.
+The clinical director listens for the workflow, the engineer for the pipeline, the compliance officer
+for the claim, and the payer for the cost.
+A pitch that addresses only one of them loses the other three, which is why the nine segments exist:
+each one is addressed to a different listener, and each one is short enough to be tolerated by the
+others.
+
+The practical consequence is that the pitch cannot be written by one person for one audience. It has
+to be read by someone outside the project, who can say which sentence assumed knowledge and which
+number needed context. That reader is the same stranger who runs the dossier test in Topic 09, and
+the two tests are worth doing on the same afternoon.
+
+The pitch also has a property the dossier does not: it cannot be skimmed. A reviewer can read a
+dossier out of order; an audience cannot rewind. Every sentence has to land in sequence, which is why
+the structure is fixed and the rehearsal is timed.
+
 The failure mode is not usually a bad slide. It is a pitch that answers a question nobody asked.
 The audience wants to know whether the decision is real, whether the evidence supports it, what
 happens when it is wrong, whether it can legally reach a patient, and who pays.
@@ -38,6 +62,19 @@ failure modes of a live demo.
 It assumes the dossier from Topic 09 and the rubric from Topic 10, and it treats the pitch as the
 last artefact in the chain rather than as a separate performance.
 
+The last point is worth emphasising because teams often treat demo day as a performance that is
+judged separately from the work.
+It is not. Every number in the pitch comes from the dossier, every claim is bounded by the model
+card, and every question is answerable from the repository. A pitch that is better than the dossier
+is a warning sign; a pitch that is worse is a missed opportunity.
+The goal is correspondence, not polish.
+
+There is also a practical reason to prepare the pitch early: it exposes gaps in the evidence.
+A team that cannot write the evidence sentence in week 9 has a problem with the validation, not with
+the writing, and the discovery is more useful in week 9 than in week 12.
+Writing the pitch is therefore a form of review, and the best teams write a draft before the dossier
+is finished.
+
 ## 2. Learning outcomes
 
 By the end of this topic you can:
@@ -54,6 +91,25 @@ By the end of this topic you can:
    single number.
 7. **Recover** from a demo, projector, or time failure with a prepared fallback.
 8. **Critique** another team's pitch against the structure and the five questions.
+
+Outcomes 1 to 3 are assessed in Exercises 1 to 3 and are visible in the first three minutes of the
+pitch.
+Outcomes 4 and 5 are assessed in Exercises 5 and 6 and tested in the question period.
+Outcomes 6 and 7 are assessed in Exercises 4 and 7 and rehearsed twice before the day.
+Outcome 8 is assessed in Exercise 8 and is the fastest way to improve one's own pitch.
+
+The outcomes are ordered by the sequence of the pitch itself, which is deliberate: a reader can use
+them as a checklist while watching a rehearsal and see immediately which segment is weak.
+
+A note on what is not an outcome: "deliver a confident performance" is not observable and not
+assessable. Confidence is a by-product of rehearsal, and the outcomes describe what rehearsal should
+produce.
+
+The outcomes are also a checklist for a listener. A mentor watching a rehearsal can mark each outcome
+present or absent in real time, and the marks are more useful than a general impression.
+
+The checklist is deliberately about content rather than delivery. Delivery improves with rehearsal
+automatically; content does not.
 
 ## 3. The core mental model
 
@@ -128,6 +184,21 @@ The distinction matters because the three formats reward different things. The d
 understanding, the launch rewards confidence, and the interview rewards narrative. The pitch rewards
 a clear decision and the evidence for it.
 
+### The pitch as a decision document
+
+A useful reframing: the pitch is a decision document that happens to be spoken.
+Its sections correspond to the sections a decision memo would have, compressed and delivered aloud.
+The decision and owner are the recommendation; the comparator and evidence are the analysis; the
+failure and regulatory segments are the risk section; the value case is the budget impact; the ask is
+the recommendation repeated.
+
+If the pitch were written instead of spoken, it would be about two pages. The ten minutes are not
+there because the content is large; they are there because a room full of people needs to hear the
+argument in a shared order.
+
+That shared order is the whole contribution of this topic. The content comes from the dossier; the
+order is what makes it a decision.
+
 ## 4. Definitions and vocabulary
 
 | Term | Definition | Common misuse | Unit or coding |
@@ -142,6 +213,11 @@ a clear decision and the evidence for it.
 | Regulatory paragraph | The regime, classification, and binding artefact in one paragraph | A legal opinion | Four sentences |
 | Value case | Cost, saving, and payback with assumptions | A revenue projection | Currency and months |
 | Break-even | The effect size at which costs equal savings | The expected effect | Effect size |
+| Leave-behind | The one-pager left with the audience | The slide deck | One page |
+| Q&A sheet | Prepared answers with numbers and artefacts | A script | One page |
+| Recovery | Continuing after a failure without losing the argument | Restarting | Technique |
+| Premise | The assumption embedded in a question | The question itself | Sentence |
+| Compression | The two-minute version of the pitch | A summary | Two minutes |
 | Hostile question | A question designed to expose a weakness | Any difficult question | Question type |
 | Bridging | Acknowledging a question and redirecting to relevant evidence | Dodging | Technique |
 | Bluffing | Answering without evidence | Confidence | Failure mode |
@@ -170,6 +246,11 @@ Every pitch should contain a sentence that says what the evidence does not show.
 counter-intuitive to volunteer a limitation, and it is the single most credible move in a
 ten-minute pitch, because it demonstrates that the team knows the difference between a result and a
 claim.
+
+A third definition is the compression.
+The two-minute version is not a summary; it is the argument with the supporting detail removed. If
+the two-minute version requires the audience to accept a premise, the ten-minute version must
+establish it, which is a useful test of whether the longer pitch has a spine.
 
 ## 5. The mechanics, step by step
 
@@ -711,6 +792,31 @@ cost_per_hour) = 500 / 15,960 = 3.1 percent. Any effect above 3.1 percent pays b
 running cost, and the pilot's purpose is to measure whether the effect is above the implementation
 threshold.
 
+### Reading the output
+
+The first block is a check, not a plan. A budget that sums to ten minutes with no slack is correct;
+a budget that sums to nine minutes has slack that the demo will absorb.
+
+The second block produces three numbers the pitch needs: the saving at the assumed effect, the
+payback, and the break-even. A team that presents only the first is presenting a benefit without a
+cost; a team that presents only the second is presenting a cost without a benefit.
+
+The full-programme payback of 206 months is not a failure of the arithmetic. It is a finding about
+the implementation cost relative to the effect, and it is the reason the ask is a pilot. A pitch that
+reports it honestly is more credible than one that reports a rounded 24 months by assuming a larger
+effect.
+
+### A note on the assumptions
+
+The 18 percent effect is an assumption, not a measurement, and the pitch should say so. The 38
+dollars per boarder-hour is an estimate from the finance team, and the pitch should say that too.
+Two assumptions, both named, are enough for a ten-minute audience; a sensitivity analysis belongs in
+the dossier.
+
+The break-even is the most useful number in the pitch because it converts the argument from "trust
+our estimate" to "here is the threshold the pilot must clear". An audience can evaluate a threshold;
+it cannot evaluate a prediction.
+
 ## 8. Data, standards, and regulatory context
 
 A pitch is communication, and communication about medical products is regulated in ways that a
@@ -761,6 +867,21 @@ correctly.
 No standard tells a team how to handle a hostile question, how to recover from a failed demo, or how
 to ask for a pilot. Those are craft, and they are learned by rehearsal and by watching other people
 do them badly.
+
+### A note on the room
+
+The regulatory and ethical constraints apply to the room as well as to the slides. A pitch delivered
+to an audience that includes patients, or that is recorded and posted publicly, reaches further than
+the team may have considered.
+
+A recorded pitch is a publication. A claim in a recorded pitch is a public claim, and it can be cited
+after the team has moved on. The safe rule is that every sentence in a recorded pitch should be one
+the team would be willing to defend in a year, which usually means the same claim boundary as the
+dossier.
+
+A pitch to a patient audience adds a further obligation: plain language, no false reassurance, and no
+description of a benefit that has not been measured. The same rule that applies to a clinical
+conversation applies to a public presentation about a clinical tool.
 
 | Instrument | Applies to a pitch | What it constrains |
 |---|---|---|
@@ -814,6 +935,30 @@ It is an inference that pitches which state a limitation before being asked are 
 The mechanism is that volunteering a boundary signals control, and the audience's prior is that
 every model has one. No controlled study of capstone pitches is cited.
 
+### What an audience actually remembers
+
+Ask any panel member a week after a demo day what they remember, and the answer is usually one of
+three things: a number, a failure case, or the ask.
+
+The number is remembered when it is comparative and concrete: "41 percent against 23 percent at the
+same call volume" survives; "an AUC of 0.71" does not.
+The failure case is remembered when it is specific and mitigated: "it flags a patient who is not
+readmitted about one time in six, and the coordinator rejects it in under a minute".
+The ask is remembered when it names a person and a decision: "the director approves a three-month
+pilot" survives; "we seek support" does not.
+
+A team that designs the pitch around those three memories has designed it around what the audience
+retains, which is the only thing that influences a decision after the room empties.
+
+### What the pitch cannot fix
+
+A pitch cannot rescue a weak comparator, a wide interval, or an unclear owner. It can present them
+honestly, and honesty is worth more than polish, but the underlying evidence is what the audience
+will test.
+
+This is why the topic comes last. The pitch is the final compression of work that either supports a
+claim or does not, and the ten minutes are spent revealing which.
+
 ## 10. Failure modes and red flags
 
 | Failure | Early warning sign | Mechanism | Consequence | Mitigation |
@@ -833,6 +978,21 @@ every model has one. No controlled study of capstone pitches is cited.
 | Logistics failure | No adapter test | Assumption | Late start | Test the room |
 | No follow-up | Pitch ends at the door | Relief | Interest decays | Note within 48 hours |
 
+The table is ordered by severity rather than frequency. The first four lose the decision; the middle
+five lose credibility; the last five lose polish.
+
+The first row is the most common and the most consequential. A pitch with no ask is not a weak pitch;
+it is a presentation, and the audience will treat it as one.
+
+The table's mitigations are all preparation. None of them is a technique for thinking quickly under
+pressure, because that technique does not exist; what exists is a script, a backup, and a rehearsal.
+
+Two rows are worth memorising. "No ask" loses the decision, and "bluffing" loses the room. Both are
+preventable with one sentence prepared in advance.
+
+The rows about the demo are the ones a team can test in advance, and therefore the ones with the
+least excuse. A demo that depends on a network is a choice, not an accident.
+
 ## 11. Assumptions and limits
 
 | Assumption | Why it is needed | What breaks it | How to test it |
@@ -845,6 +1005,7 @@ every model has one. No controlled study of capstone pitches is cited.
 | The room has a projector and audio | The demo depends on it | Hybrid or outdoor venue | Test in advance |
 | Questions are predictable | Preparation depends on it | Unusual audience | Prepare ten follow-ups |
 | Follow-up is possible | The ask depends on it | No contact route | Collect a contact |
+| The one-pager reaches the decider | The ask depends on it | Audience delegates | Send it to the named person |
 
 The largest limit is that a pitch is a compression, and compression loses information. The dossier
 exists because the pitch cannot carry the evidence, and a team that treats the pitch as the whole
@@ -853,6 +1014,24 @@ argument will overclaim by omission.
 A second limit is that the audience's decision may not be the one the team wants. A pitch for a pilot
 can be met with a request for a validation study, and that is a legitimate outcome. The team should
 prepare the response: "that is the right next step, and here is what it would take".
+
+A third limit is that rehearsal cannot simulate a hostile room. The first hostile question a team
+hears is usually on the day, and the protocol in Section 5 is the only preparation that survives the
+surprise.
+
+A fourth limit is that the pitch is a sample of the work, and a bad ten minutes can outweigh a good
+twelve weeks. That is unfair and it is the format. The mitigation is preparation, not resentment.
+
+A fifth limit is that some audiences are not deciding anything. A peer audience can critique but
+cannot approve, and a pitch that asks a peer audience for a pilot has misread the room. The ask
+should match the audience's authority, even when that means asking for a smaller thing.
+
+A sixth limit is that a ten-minute pitch cannot be both an argument and a demonstration of
+everything the team knows. The individual defense exists because the pitch cannot test understanding;
+a team that tries to prove its knowledge in the pitch usually proves less.
+
+A seventh limit is that the audience's memory is short and selective. The pitch is designed to leave
+three things behind, and a team that tries to leave ten leaves none.
 
 ## 12. Exercises
 
@@ -917,6 +1096,18 @@ Watch a public pitch and score it against the nine segments and the five questio
 improvement specified.
 **Time:** 30 minutes.
 
+**Assessment note.** Exercises 1, 2, and 5 have checkable outputs. Exercises 3, 4, and 7 are assessed
+on the artefact and the timing: whether the evidence sentence has all five elements, whether the demo
+runs offline, and whether the second run is within ten minutes.
+
+Exercise 7 is the one that separates a draft from a pitch. Most teams overrun by two minutes on the
+first run and discover that the segment they would cut is the ask, which is the argument for cutting
+in rehearsal rather than on stage.
+
+Exercise 8 is the cheapest improvement available. Watching three pitches with the nine-segment
+checklist teaches more about structure than reading about structure, because the missing segment is
+obvious in someone else's pitch and invisible in your own.
+
 ## 13. Self-check answers
 
 **1. Why write the ask first?**
@@ -958,6 +1149,19 @@ failure case shown deliberately.
 states the break-even. A weak case presents a single payback figure without the effect size or the
 running cost.
 
+**11. Rubric for Exercise 6.** A strong hostile answer acknowledges the concern in one clause, gives
+a number or an artefact, states the boundary, and offers a next step, in under sixty words. A weak
+answer defends the work or changes the subject.
+
+**12. Why is the two-minute version a test of the pitch?**
+Because compression removes supporting detail and leaves the argument. If the argument survives, the
+ten-minute pitch has a spine; if it collapses into a list of activities, the pitch was a tour.
+
+**13. What should the leave-behind contain?**
+The decision, the evidence sentence with its interval, the comparator, the failure and mitigation,
+the regulatory line, the value range, and the ask with a contact. It should be readable in ninety
+seconds a week later.
+
 ## 14. Interview questions
 
 **Q1. "Pitch your capstone in two minutes."**
@@ -995,6 +1199,18 @@ not work.
 **Q10. "What do you want from this conversation?"**
 Strong answer repeats the ask. Weak answer says feedback.
 
+**Q11. "What would you cut if you had five minutes?"**
+Strong answer names the segments and keeps the evidence and the ask. Weak answer says it would speak
+faster, which is not a cut.
+
+**Q12. "Who was in the room, and what did they decide?"**
+Strong answer names the people and the decision or non-decision. Weak answer describes the audience as
+"stakeholders".
+
+A strong answer to this set is always specific about the audience and the ask. A candidate who can
+say "the director could approve a pilot, and here is the evidence she would need" is demonstrating
+that the pitch was written for a decision rather than for a grade.
+
 ## 15. Key terms
 
 - **Adoption** — sustained use by the intended user.
@@ -1019,10 +1235,21 @@ Strong answer repeats the ask. Weak answer says feedback.
 - **Segment** — timed part of the pitch.
 - **Timekeeper** — person signalling segment boundaries.
 - **Value case** — cost, saving, payback, assumptions.
+- **Leave-behind** — one-pager left with the audience.
+- **Q&A sheet** — prepared answers with numbers and artefacts.
+- **Premise** — assumption embedded in a question.
+- **Compression** — the two-minute version of the pitch.
+
+The vocabulary is small because the pitch is short. A team that needs a longer glossary to describe
+its pitch is probably describing a dossier.
+
+Two terms in the list are frequently confused in rehearsal. The ask is a decision; the leave-behind
+is a document. A team that treats the one-pager as the ask has produced a document and no request.
 
 ## 16. Sources
 
-All URLs accessed 26 October 2026.
+All URLs accessed 26 October 2026. The pitch criteria and programme descriptions are cited as
+published; no prize, score, or winner is asserted beyond what the source states.
 
 - MIT Hacking Medicine Brazil 2025 guidelines (pitch evaluation criteria).
   https://www.eretz.bio/wp-content/uploads/2025/07/Guidelines-EN-MIT-HACKING-MEDICINE-BRASIL-2025-ENGLISH-2.pdf
@@ -1045,6 +1272,26 @@ All URLs accessed 26 October 2026.
   https://doi.org/10.1001/jamainternmed.2021.2626
 
 ## 17. Links
+
+The structure in this topic is the compression of the dossier in Topic 09 and the rubric in Topic 10.
+A team that has completed the self-assessment and read the rubric has the material for the pitch; the
+remaining work is selection and rehearsal.
+
+Module map: [`_index.md`](_index.md)
+Previous topic: [`10_judging.md`](10_judging.md)
+First topic: [`01_capstone-architecture.md`](01_capstone-architecture.md)
+Related topic: [`09_deliverables.md`](09_deliverables.md)
+Survey file: [`../../course/19_capstone_hackathons.md`](../../course/19_capstone_hackathons.md)
+Labs: [`../../labs/`](../../labs/)
+
+This is the last topic in the module. The next module turns the capstone into a portfolio, a
+narrative, and interview answers that survive technical and behavioural scrutiny.
+
+The pitch is also the artefact most likely to be reused: the two-minute version becomes an interview
+answer, and the ask becomes the first line of a cover letter.
+
+A team that has written the ask, rehearsed the failure case, and computed the break-even has
+something more durable than a demo. It has a way of talking about the work that survives the room.
 
 - Module map: [`_index.md`](_index.md)
 - Previous topic: [`10_judging.md`](10_judging.md)

@@ -789,7 +789,7 @@ ppv = tp_rate / alert_rate
 
 print(f"alert rate        {alert_rate:6.2%} of admissions")
 print(f"alerts per year   {alerts_yr:7.1f}")
-print(f"alerts per day    {alerts_yr / 365:7.2f}")
+print(f"alerts per day    {alerts_yr / 365:8.2f}")
 print(f"review minutes/d  {alerts_yr / 365 * work_min:7.1f}")
 print(f"PPV               {ppv:6.3f}")
 print(f"cases detected/yr {sens * prev * N:7.1f} of {prev * N:.1f}")
@@ -812,9 +812,9 @@ alert rate         9.01% of admissions
 alerts per year     378.6
 alerts per day        1.04
 review minutes/d     12.4
-PPV                 0.248
+PPV                0.248
 cases detected/yr    93.7 of 130.2
-observed sens       0.723  95% CI 0.641-0.793  width 0.152
+observed sens     0.723  95% CI 0.641-0.793  width 0.152
 ```
 
 The block makes one assumption explicit: alerts are counted per admission, not per patient-day.

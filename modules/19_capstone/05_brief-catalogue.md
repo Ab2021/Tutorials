@@ -1011,7 +1011,7 @@ That judgement belongs to the owner and the panel, and it is the one judgement t
 constraint checking can replace.
 
 A fourth limit is that the briefs were written at a particular moment in the field. A brief that
-was cutting-edge when written may be routine by the time a team starts, and a routine brief may
+was novel when written may be routine by the time a team starts, and a routine brief may
 become urgent after a policy change. The catalogue date matters, and a team should ask whether
 the question has already been answered by a public challenge or a paper.
 

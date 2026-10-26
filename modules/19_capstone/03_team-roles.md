@@ -791,6 +791,16 @@ true, and only the second one predicts the delivery date.
 ### Block 3: bus factor per artefact
 
 ```python
+avail = {"lead": 10, "data": 12, "model": 14, "evidence": 9, "clinical": 3}
+artefacts = {
+    "charter":         {"lead": "A", "data": "C", "model": "C", "evidence": "C", "clinical": "C"},
+    "data_provenance": {"lead": "C", "data": "A", "model": "I", "evidence": "C", "clinical": "I"},
+    "analysis_plan":   {"lead": "C", "data": "C", "model": "C", "evidence": "A", "clinical": "C"},
+    "validation":      {"lead": "I", "data": "C", "model": "A", "evidence": "C", "clinical": "C"},
+    "reg_memo":        {"lead": "C", "data": "I", "model": "I", "evidence": "A", "clinical": "C"},
+    "value_case":      {"lead": "A", "data": "I", "model": "C", "evidence": "C", "clinical": "C"},
+    "defense":         {"lead": "A", "data": "C", "model": "C", "evidence": "C", "clinical": "C"},
+}
 people = list(avail)
 for p in people:
     lost = [a for a, row in artefacts.items() if row[p] == "A"]

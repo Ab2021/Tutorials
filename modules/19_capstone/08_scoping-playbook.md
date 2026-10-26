@@ -766,7 +766,7 @@ wall = sum(blocks.values())
 capacity = people * days * hours_per_day
 print(f"wall clock {wall:.1f} h vs {days * hours_per_day} h available")
 print(f"slack {-wall + days * hours_per_day:.1f} h")
-print(f"person-hours planned {sum(blocks.values()) * 1.6:.0f} vs capacity {capacity} h")
+print(f"person-hours planned {sum(blocks.values()) * 1.6:.1f} vs capacity {capacity} h")
 ```
 
 Expected output:
