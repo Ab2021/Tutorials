@@ -316,7 +316,7 @@ revised. Every chart of provisional data should carry that sentence.
 ## 5. The mechanics, step by step
 
 This section is the procedure for producing a defensible surveillance indicator. It is
-written as nine steps, each with its input, output, rationale, branch points, and edge
+written as ten steps, each with its input, output, rationale, branch points, and edge
 cases. The running example is a weekly notifiable disease series, because it exposes
 every failure mode in Section 1.
 

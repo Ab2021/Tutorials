@@ -1272,7 +1272,7 @@ Good for: the EU medicines regime, which is separate from the device regime. Not
 **U.S. Government Publishing Office.** Federal Register. https://www.federalregister.gov/
 Good for: the official text and date of US rules, notices, and guidance availability. Not for: consolidated current text, which is at eCFR.
 
-**Medicines and Healthcare products Regulatory Agency.** https://www.gov.uk/government/organisations/medicines-and-healthcare-products-agency
+**Medicines and Healthcare products Regulatory Agency.** https://www.gov.uk/government/organisations/medicines-and-healthcare-products-regulatory-agency
 Good for: the UK regime, which diverges from the EU after Brexit. Not for: EU compliance, which requires the EU instruments.
 
 ## 17. Links

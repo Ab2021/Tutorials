@@ -483,6 +483,11 @@ Most of these checks take minutes and catch the failures that survive to review.
 
 The last of these is the hardest to catch, because everything about the citation is accurate. The sentence has drifted from the analysis, and the citation still points at the method.
 
+A useful test is to read the sentence with the citation removed. If the sentence still asserts a result, the citation is doing work; if the sentence becomes a description of a method, the citation was decoration.
+
+- Remove the citation and reread the sentence.
+- If the claim survives without support, find the support or cut the claim.
+
 ## 6. Worked example
 
 A product team writes: "The model has an AUC of 0.82 in external validation, so it is ready for clinical deployment." The sentence will appear in a health-system pitch. The team has the validation paper, a vendor summary, and a methods textbook on the shelf.
