@@ -62,12 +62,11 @@ The question has four clauses because a trial can fail any one of them independe
 enrols on time but generates unusable data has failed. A trial with perfect data that finishes two
 years late has also failed commercially.
 
-### 1.4 What this topic is not
+### 1.4 Scope
 
-This topic does not teach clinical judgement, therapeutic area knowledge, or the content of a
-specific sponsor's standard operating procedures (SOPs). It teaches the operating logic that is
-common across them, and the arithmetic that connects a protocol to a date and a budget. Regulatory
-content is educational and is not legal advice.
+This topic teaches the operating logic common to sponsor-led trials and the arithmetic that connects
+a protocol to a date and a budget. It does not teach clinical judgement, therapeutic area knowledge,
+or any sponsor's standard operating procedures (SOPs).
 
 ## 2. Learning outcomes
 
@@ -180,10 +179,8 @@ of activating it is paid in full.
 
 Delay cost has four components:
 
-1. **Fixed site costs.** Site payments often include a monthly or per-visit component that continues
-   while the site is open.
-2. **Fixed sponsor and vendor costs.** Internal full-time equivalents (FTEs), CRO management fees,
-   and technology licences accrue monthly.
+1. **Fixed site and vendor costs.** Site payments often include a monthly component that continues
+   while the site is open; internal full-time equivalents (FTEs), CRO fees, and licences accrue too.
 3. **Variable costs driven by the enrolment curve.** Laboratory kits, drug supply, and monitoring
    visits follow patients, not calendar time, so a delay with the same patient count does not
    multiply them.
@@ -710,11 +707,11 @@ The fixed operating cost is $600,000 per month (2026 US dollars), composed of si
 Variable costs driven by patient volume are unchanged because the patient count is unchanged.
 
 ```text
-Direct delay cost = (33.34 - 27.65) x $600,000 = 5.69 x $600,000 = $3,414,000
+Direct delay cost = (33.33 - 27.64) x $600,000 = 5.69 x $600,000 = $3,416,000
 ```
 
 The comparison is against a correctly specified plan that activates all sites in month 1 at 0.55
-patients per site per month, which completes in month 27.65. Against the original 24.2-month
+patients per site per month, which completes in month 27.64. Against the original 24.2-month
 promise, the gap is 9.1 months and $5,460,000.
 
 The milestone is deferred, not cancelled. At an 8% annual cost of capital, the carry on
@@ -724,7 +721,7 @@ $15,000,000 for the additional 5.69 months is:
 Carry = $15,000,000 x 0.08 x 5.69 / 12 = $569,000
 ```
 
-Total quantified exposure is approximately $3,983,000, before any allowance for lost competitive
+Total quantified exposure is approximately $3,985,000, before any allowance for lost competitive
 position.
 
 ### 6.5 Diagnostic 1: the denominator does not reconcile
@@ -756,12 +753,12 @@ remaining waves, which is the lever that moves the curve.
 
 | Scenario | Activation | Rate | Completion month | Difference from plan |
 |---|---|---|---:|---:|
-| Plan as promised | All 45 at month 1 | 0.55 | 27.65 | 0.00 |
-| Activation only | Three waves | 0.55 | 30.65 | +3.00 |
-| Activation and rate | Three waves | 0.50 | 33.34 | +5.69 |
+| Plan as promised | All 45 at month 1 | 0.55 | 27.64 | 0.00 |
+| Activation only | Three waves | 0.55 | 30.64 | +3.00 |
+| Activation and rate | Three waves | 0.50 | 33.33 | +5.69 |
 
-The decomposition is sequential, so the order matters. Reversing the order attributes 2.35 months to
-the rate and 3.34 months to activation. What is stable across both orderings is that activation
+The decomposition is sequential, so the order matters. Reversing the order attributes 2.70 months to
+the rate and 2.99 months to activation. What is stable across both orderings is that activation
 accounts for roughly half the gap. The lesson is not the exact split but the fact that two distinct
 causes exist and require two distinct responses.
 
@@ -778,10 +775,10 @@ Month 4: 21.00  cumulative 51.75
 Month 5: 22.50  cumulative 74.25
 Remaining: 667 - 74.25 = 592.75
 Months at steady state: 592.75 / 22.50 = 26.34
-Completion: 5 + 26.34 = 31.34
+Completion: 5 + 26.34 = 31.33
 ```
 
-Completion moves from 33.34 to 31.34, a saving of 2.00 months and $1,200,000 in fixed operating
+Completion moves from 33.33 to 31.33, a saving of 2.00 months and $1,200,000 in fixed operating
 cost. The milestone carry falls by $200,000. If the start-up investment costs less than $1,400,000
 and does not delay any other trial in the portfolio, it is worth doing on financial grounds alone.
 
@@ -802,3 +799,702 @@ Three things transfer to any trial:
 
 The example also shows the limit of deterministic arithmetic. It produces one date. The decision
 needs a distribution, which is what Section 7 builds.
+
+## 7. Code, query, or calculation
+
+The model below reproduces the worked example and adds a Monte Carlo layer. It uses only the Python
+standard library, so it runs in any environment with Python 3.9 or later.
+
+**Assumptions encoded:**
+
+- randomisation target = 600 / (1 - 0.10);
+- screening target = randomised / (1 - 0.28);
+- activation months are known for the deterministic case;
+- per-site rate is 0.50 patients per site per month in the base case;
+- site maturity is 50%, 80%, then 100% of steady state;
+- Monte Carlo activation jitter is normal with standard deviation 1.2 months, truncated at month 1;
+- Monte Carlo site rates are gamma distributed with shape 4 and the requested mean, giving a
+  right-skewed distribution in which some sites enrol far more than the mean and many enrol less;
+- fixed cost is $600,000 per month in 2026 US dollars.
+
+```python
+import random
+import statistics
+
+RAMP = (0.50, 0.80, 1.00)
+
+def completion_month(waves, rate, target, horizon=72):
+    """Deterministic month of reaching target. waves = [(start_month, n_sites)]."""
+    sites = []
+    for start, n in waves:
+        sites.extend([start] * n)
+    cumulative = 0.0
+    for month in range(1, horizon + 1):
+        increment = 0.0
+        for activation in sites:
+            if month >= activation:
+                k = month - activation
+                increment += rate * (RAMP[k] if k < len(RAMP) else 1.0)
+        previous = cumulative
+        cumulative += increment
+        if cumulative >= target:
+            return month - 1 + (target - previous) / increment
+    return float("inf")
+
+def simulate(waves, rate_mean, target, n_iter=5000, seed=20261026):
+    """Monte Carlo: activation jitter (sd 1.2 months) and gamma site rates."""
+    rng = random.Random(seed)
+    shape = 4.0
+    results = []
+    for _ in range(n_iter):
+        sites = []
+        for start, n in waves:
+            for _ in range(n):
+                sites.append((max(1.0, rng.gauss(start, 1.2)),
+                              rng.gammavariate(shape, rate_mean / shape)))
+        cumulative = 0.0
+        done = None
+        for month in range(1, 73):
+            increment = 0.0
+            for activation, rate in sites:
+                if month >= activation:
+                    k = int(month - activation)
+                    increment += rate * (RAMP[k] if k < len(RAMP) else 1.0)
+            previous = cumulative
+            cumulative += increment
+            if cumulative >= target:
+                done = month - 1 + (target - previous) / increment
+                break
+        results.append(done if done is not None else 99.0)
+    results.sort()
+    q = statistics.quantiles(results, n=10)
+    return {
+        "median": statistics.median(results),
+        "p10": q[0],
+        "p90": q[8],
+        "p_le_30": sum(1 for x in results if x <= 30) / n_iter,
+        "p_le_36": sum(1 for x in results if x <= 36) / n_iter,
+    }
+
+TARGET = 600 / 0.90          # 667 randomised
+SCREEN = TARGET / 0.72       # 927 screened
+
+PLAN = [(1, 45)]
+WAVES = [(1, 15), (4, 15), (7, 15)]
+FAST = [(1, 15), (2, 15), (3, 15)]
+
+print(f"randomised target {TARGET:.1f}  screened {SCREEN:.1f}")
+print(f"plan (all month 1, 0.55):      {completion_month(PLAN, 0.55, TARGET):.2f}")
+print(f"waves, 0.55:                   {completion_month(WAVES, 0.55, TARGET):.2f}")
+print(f"waves, 0.50:                   {completion_month(WAVES, 0.50, TARGET):.2f}")
+print(f"compressed waves, 0.50:        {completion_month(FAST, 0.50, TARGET):.2f}")
+
+base = simulate(WAVES, 0.50, TARGET)
+print("Monte Carlo, waves: median {median:.2f}  P10 {p10:.2f}  P90 {p90:.2f} "
+      "P(<=30) {p_le_30:.3f}  P(<=36) {p_le_36:.3f}".format(**base))
+fast = simulate(FAST, 0.50, TARGET)
+print("Monte Carlo, fast:  median {median:.2f}  P10 {p10:.2f}  P90 {p90:.2f} "
+      "P(<=30) {p_le_30:.3f}  P(<=36) {p_le_36:.3f}".format(**fast))
+
+base_case = completion_month(WAVES, 0.50, TARGET)
+plan_case = completion_month(PLAN, 0.55, TARGET)
+fixed = 600_000
+print(f"direct delay cost USD 2026: {(base_case - plan_case) * fixed:,.0f}")
+print(f"milestone carry at 8%:      {15_000_000 * 0.08 * (base_case - plan_case) / 12:,.0f}")
+```
+
+**Expected output:**
+
+```text
+randomised target 666.7  screened 925.9
+plan (all month 1, 0.55):      27.64
+waves, 0.55:                   30.64
+waves, 0.50:                   33.33
+compressed waves, 0.50:        31.33
+Monte Carlo, waves: median 33.96  P10 31.28  P90 36.98 P(<=30) 0.028  P(<=36) 0.812
+Monte Carlo, fast:  median 31.97  P10 29.30  P90 34.99 P(<=30) 0.178  P(<=36) 0.951
+direct delay cost USD 2026: 3,416,162
+milestone carry at 8%:      569,360
+```
+
+**What the output says:**
+
+1. The deterministic model reproduces the worked example to within a hundredth of a month. The
+   small difference from the hand calculation comes from interpolating within the month in which
+   the target is crossed.
+2. The Monte Carlo median, 33.96, is close to the deterministic 33.33, but the 90th percentile is
+   36.98. The tail is 3.6 months longer than the median, which is the range the programme should
+   plan cash for.
+3. The probability of completing within 30 months under the current plan is 2.8%. The probability
+   within 36 months is 81.2%. A commitment to 30 months would be a commitment the plan cannot
+   support.
+4. Compressing activation raises the probability of completing within 30 months from 2.8% to 17.8%
+   and the median falls by two months. It does not make 30 months likely, which is the honest
+   conclusion.
+
+**What to change first:** the seed, to check percentile stability; the rate distribution shape, to
+test whether heterogeneity drives the tail; and the activation standard deviation, which has little
+effect here compared with site-to-site rate variation. The model omits competing trials,
+seasonality, country differences, and the correlation between late activation and slow accrual.
+That last omission matters and biases the tail optimistically.
+
+## 8. Data, standards, and regulatory context
+
+Trial operations sits under a small number of binding instruments and a larger number of
+conventions. The distinction matters: a binding requirement can be inspected and sanctioned, a
+convention can be negotiated, and a sponsor's SOP is neither.
+
+### 8.1 Binding requirements
+
+| Instrument | What it binds | Operational consequence |
+|---|---|---|
+| ICH E6(R3) Good Clinical Practice | Trial conduct, sponsor and investigator responsibilities, data governance | Quality-by-design, risk-proportionate monitoring, traceable records |
+| ICH E8(R1) General Considerations for Clinical Studies | Study design and quality | Critical-to-quality factors must be identified before the protocol is final |
+| ICH E9(R1) Addendum on Estimands | Definition of the treatment effect | Intercurrent events determine what data must be collected and how |
+| 21 CFR Part 312 (US) | Investigational new drug applications | IND, safety reporting, record retention |
+| 21 CFR Part 812 (US) | Investigational device exemptions | Device accountability, investigator agreements |
+| 42 CFR Part 11 (US) | ClinicalTrials.gov registration and results | Registration within 21 days of first enrolment; results within 1 year of primary completion |
+| Regulation (EU) 536/2014 (Clinical Trials Regulation) | Trials conducted in the EU | Single application through CTIS; national assessment; transparency obligations |
+| ISO 14155:2020 | Clinical investigation of medical devices | Device-specific documentation, risk management, monitoring |
+| 21 CFR Part 11 (US) | Electronic records and signatures | Audit trails, access control, validation of EDC and eConsent |
+
+ICH E6(R3) was adopted at Step 4 on 6 January 2025. The European Medicines Agency (EMA) published
+the Step 5 version on 27 January 2025, and the Principles and Annex 1 took effect in the EU on
+23 July 2025. Annex 2, which covers non-traditional trial designs including decentralised and
+pragmatic elements, has a later EU effective date of 15 January 2027; a consolidated Step 5 version
+was published on 15 July 2026. A sponsor operating across jurisdictions should expect the same
+text to have different effective dates and should not assume that an inspection in one region
+applies the version in force in another.
+
+E6(R3) is principles-based. It does not prescribe a monitoring percentage, a query timeline, or a
+specific technology. It requires that the sponsor identify what matters for participant safety and
+reliable results, and that oversight be proportionate to risk. That is a requirement about
+reasoning, not about a checklist, and it is the reason risk-based monitoring appears in Section 5
+as a control system rather than a sampling rate.
+
+### 8.2 Registration and results
+
+In the United States, 42 CFR Part 11 implements FDAAA section 801. Registration is required no later
+than 21 calendar days after the first human participant is enrolled, and results are due no later
+than one year after the primary completion date. A certification can delay results submission in
+defined circumstances, with a cap of two years after the certification. Non-compliance is a
+prohibited act, with civil monetary penalties and consequences for federal funding.
+
+In the European Union, the Clinical Trials Regulation requires a summary of results and a plain
+language summary within a defined period after the end of the trial, published through CTIS. The
+transition period from the Clinical Trials Directive ended on 30 January 2025, with more than 5,000
+trials transitioned; trials still running after that date that were not transitioned require a new
+application. The practical consequence for operations is that the trial's public record is part of
+the close-out deliverable, not an afterthought for the communications team.
+
+### 8.3 Records and retention
+
+US regulation requires records to be retained for two years after a marketing application is
+approved or two years after the investigation is discontinued (21 CFR 312.62(c)). Other
+jurisdictions set different periods, and the applicable period is the longest one that applies to
+the site or the sponsor. The operational implication is that close-out does not end the record
+obligation: the trial master file must remain retrievable for the retention period, and sites must
+be told in writing what they are holding and for how long.
+
+### 8.4 Electronic records and data integrity
+
+Where electronic systems are used to create, modify, maintain, or transmit records, 21 CFR Part 11
+requires validated systems, secure access, audit trails, and controls over electronic signatures.
+The EU has an equivalent expectation through E6(R3) and the CTR's data integrity requirements. In
+practice the audit trail is the artefact that inspections test: it must show who changed what, when,
+and why, and it must not be possible for a user to disable it.
+
+Data integrity expectations are often stated as ALCOA+ principles: attributable, legible,
+contemporaneous, original, accurate, complete, consistent, enduring, and available. ALCOA+ is a
+convention, but it is the vocabulary inspectors use.
+
+### 8.5 Cross-border data
+
+Moving patient data across borders invokes separate legal regimes from the trial regulation: the
+General Data Protection Regulation (GDPR) in the EU, the Personal Information Protection Law (PIPL)
+in China, and sector-specific rules elsewhere. China additionally regulates the export of human
+genetic resources, which affects sample shipment as well as data. These are binding requirements
+with their own approval processes, and they can delay a trial independently of the regulator that
+approves the protocol.
+
+### 8.6 What the standards do not constrain
+
+ICH E6(R3) does not set an enrolment target, a site count, a monitoring frequency, a query
+turnaround time, or a budget. Those are sponsor decisions. The standards also do not determine
+whether the evidence will satisfy a health technology assessment body, which applies a different
+question and a different evidentiary standard. A trial can be fully GCP-compliant and still fail to
+support reimbursement.
+
+> **Note:** This section describes requirements as published at the access date. It is educational
+> material, not legal advice. A sponsor must confirm the current text and the applicable national
+> implementation before relying on any statement here.
+
+## 9. Industry practice and case evidence
+
+### 9.1 What the start-up data show
+
+The most detailed public benchmark of North American site start-up comes from a study of nine
+cardiovascular trials and approximately 2,200 sites (Goyal et al., 2021). The medians were:
+
+| Interval | Median | Interquartile range |
+|---|---:|---:|
+| Protocol delivery to first patient enrolled | 255 days | 177 to 350 days |
+| Site selection to activation | 171 days | 114 to 246 days |
+| Regulatory approval | 132 days | Not reported in the summary |
+| Contract execution | 143 days | Not reported in the summary |
+| Activation to first enrolment | 66 days | Not reported in the summary |
+
+Two findings from the same study are operationally important. Sites using a central IRB activated in
+199 days versus 287 days for local IRB review, a difference of nearly three months. The top decile
+of sites completed start-up in 106 days, which shows that the median is not a physical limit.
+
+A survey of more than 400 sponsors, biotechs, and CROs found the full site identification-to-
+activation process averaging five to six months, with CROs completing site activities six to eleven
+weeks faster than sponsors (Lamberti et al., 2018). A 2025 analysis of 308 site activations in the
+National Center for Advancing Translational Sciences Trial Innovation Network reported a median of
+133 days with a full accelerated start-up programme, 191 days without site navigators, and 277 days
+without a lean workflow (Hillery et al., 2025). The same paper notes a National Cancer Institute
+target of 90-day activation.
+
+These are observational benchmarks from particular settings, not guarantees. They are useful because
+they establish the order of magnitude and the spread. A plan that assumes 30-day activation is not
+ambitious; it is inconsistent with the published record unless the sites are already under master
+agreements and the product is already available.
+
+### 9.2 What the evidence implies for planning
+
+Three implications are well supported: model activation as a distribution; run contract and
+regulatory work in parallel; and pre-screen before activation, because the activation-to-FPI
+interval is about two months. The claim that central review is faster is moderate and
+setting-dependent. The claim that CROs activate faster than sponsors is low-confidence survey data.
+
+### 9.3 The RECOVERY counter-example
+
+The RECOVERY trial of COVID-19 treatments in the United Kingdom is a documented case of operational
+speed. It used a simplified protocol, a small data set collected at each visit, existing National
+Health Service infrastructure, and a randomisation system that sites could use without new
+technology. It enrolled more than 11,000 participants across 176 hospitals within roughly three
+months of opening.
+
+The inference often drawn is that the trial was fast because it was simple. That is partly right and
+partly misleading: it also benefited from a public health emergency, a large eligible population,
+and a single-payer system with existing research networks. A commercial trial cannot copy the
+context, but it can copy the design choices: the smallest data set that answers the question, and
+randomisation that does not require a new site system.
+
+> **Inference, not documented fact:** the claim that simplification caused most of the speed
+> advantage is an inference. The published record supports the timeline and the design; it does not
+> isolate the causal contribution of each design choice.
+
+## 10. Failure modes and red flags
+
+| Failure | Early warning sign | Mechanism | Consequence | Mitigation |
+|---|---|---|---|---|
+| Plan uses steady-state accrual from month 1 | Month-3 actual is 30% of plan | Activation curve ignored | Completion forecast short by months | Model activation explicitly |
+| Denominators confused | Site workload per patient does not reconcile | Screens, randomised, evaluable mixed | Sites under-resourced; screen failure surprises | Fix all three denominators before budgeting |
+| Site selected on relationship | Site has no prior trial in the indication | No catchment or capability evidence | Zero enrolment at a costly site | Require historical accrual evidence |
+| Contract terms reopened late | Legal review starts after site selection | Indemnity, publication, IP disputes | Activation delayed by months | Use master agreements; start legal early |
+| IP not available at activation | First shipment date after planned activation | Supply forecast against the plan, not the upper bound | Site idle; patients lost | Forecast supply at P90 enrolment |
+| Ethics and regulatory sequenced | Submission dates are not parallel | Misread dependencies | Start-up lengthened | Build a dependency map per country |
+| Screen failure above assumption | Screens high, randomisations low | Criteria interpreted strictly or population different | Enrolment shortfall; possible amendment | Review eligibility interpretation; monitor ratio |
+| Enrolment concentrated in few sites | Top three sites above 50% of total | Referral networks differ | Site closure becomes a crisis | Protect key sites; diversify |
+| Amendment without impact assessment | Enrolment pauses with no resumption date | Regulatory and training dependencies missed | Months lost; mixed population | Require an impact assessment before approval |
+| Close-out starting at LPLV | Query backlog rising through the last quarter | Close-out treated as an afterthought | Lock delayed | Plan the close-out queue from LPI |
+| Essential documents incomplete | Delegation logs unsigned at monitoring | Documentation deferred to close-out | Inspection finding; lock delay | Verify at each monitoring visit |
+| Cross-border transfer unplanned | Vendor cannot confirm hosting region | Legal mechanism not in place | Data cannot leave the site | Settle transfer at site selection |
+| Registry results late | No owner for the submission | Close-out ends at CSR | Non-compliance; public record incomplete | Assign registry owner at study start |
+| Over-enrolment beyond plan | Cumulative above the upper curve | No enrolment cap in the protocol | Statistical and supply consequences | Pre-specify an enrolment cap and stopping rule |
+
+## 11. Assumptions and limits
+
+| Assumption | Why it is needed | What breaks it | How to test |
+|---|---|---|---|
+| The per-site accrual rate is representative of the selected sites | Converts site count into monthly enrolment | Sites differ in catchment and motivation | Compare with prior trials at the same sites |
+| Screen-failure rate is constant over time | Converts randomised to screened target | Criteria reinterpreted after training; population shifts | Monitor monthly screen-to-randomise ratio |
+| Dropout is independent of treatment arm | Converts evaluable to randomised target | Differential toxicity or efficacy | Review blinded discontinuation rates |
+| Activation months are known | Builds the monthly curve | Contract, ethics, or supply delays | Track activation against plan weekly |
+| Fixed cost is constant per month | Prices delay | Site payments step down after enrolment; team size changes | Use a cost model with phases |
+| No competing trial affects the same patients | Keeps the eligible pool stable | A competitor opens in the same catchment | Monitor registry and site intelligence |
+| The protocol will not change materially | Keeps the curve and budget valid | Amendment mid-study | Pre-specify amendment scenarios |
+| Currency and inflation are stable | Keeps the budget comparable | Exchange-rate movement; local inflation | State currency and year; index if multi-year |
+| Regulatory clocks are as published | Sets the start date | Review clock restarts; questions extend the timetable | Build a per-country dependency plan |
+| Sites report screening accurately | Makes the funnel measurable | Screening logs incomplete | Audit screening logs at monitoring |
+
+### 11.1 Limits of the model
+
+The model in Section 7 is a planning tool, not a prediction of any specific trial. It omits the
+correlation between activation delay and accrual performance, which biases the tail optimistically.
+It treats sites as independent, which ignores that sites in the same region compete for the same
+patients. It assumes the protocol is fixed, which is false for any trial that amends.
+
+The cost model is a fixed monthly rate. Real trial budgets have step changes: site payments fall
+after the enrolment period, monitoring frequency changes, and the internal team is reassigned. A
+delay that crosses one of those step changes costs less than the linear model implies.
+
+Finally, the model says nothing about data quality. A trial that enrols on time but generates
+unusable data has not succeeded. The next two topics deal with that part of the system.
+
+## 12. Exercises
+
+### Exercise 1. Reconcile the denominators (application, 30 minutes)
+
+A protocol specifies 480 evaluable patients, 8% dropout, and a 30% screen-failure rate. The
+operations plan states "480 patients across 32 sites, 15 per site over 24 months".
+
+**Deliverable:** a one-page reconciliation showing the randomised target, the screened target, the
+screen-to-randomise ratio, and the screens per site. State whether the plan's per-site workload is
+adequate.
+**Acceptance criteria:** all three denominators named; arithmetic shown to one decimal place; a
+clear statement of which number the site budget should be built on.
+**Time:** 30 minutes.
+
+### Exercise 2. Build the activation and enrolment curve (application, 45 minutes)
+
+Use 32 sites in three waves of 12, 10, and 10 at months 1, 5, and 9. Steady-state accrual is 0.45
+patients per site per month, with the same 50/80/100% maturity ramp. The randomised target is the
+one you computed in Exercise 1.
+
+**Deliverable:** a month-by-month table for months 1 to 36 with active sites, monthly
+randomisations, and cumulative randomisations, plus the completion month.
+**Acceptance criteria:** the table is internally consistent (each cumulative equals the previous
+plus the increment); the completion month is derived from the table, not asserted; the calculation
+is reproducible from the table alone.
+**Time:** 45 minutes.
+
+### Exercise 3. Price the delay (calculation, 45 minutes)
+
+Using the completion month from Exercise 2 and a correctly specified plan that activates all 32
+sites in month 1 at 0.45 patients per site per month, compute the delay in months. Fixed operating
+cost is $410,000 per month (2026 US dollars). A milestone of $8,000,000 is deferred, and the cost of
+capital is 7%.
+
+**Deliverable:** direct delay cost, milestone carry, and total exposure, each with its formula.
+**Acceptance criteria:** currency and year stated; formula shown; the difference between direct cost
+and financing cost explained in one sentence.
+**Time:** 45 minutes.
+
+### Exercise 4. Diagnose a failing plan (critique, 60 minutes)
+
+A trial reports month-9 cumulative enrolment at 54% of plan. The operations lead proposes adding 20
+sites. You have the activation log, which shows 12 of 40 planned sites were activated more than 60
+days late, and the screen-failure rate, which is 34% against a planned 25%.
+
+**Deliverable:** a two-page diagnosis that separates activation variance, accrual variance, and
+screen-failure variance, and recommends one action with a justification.
+**Acceptance criteria:** each variance is quantified or explicitly marked as not quantifiable from
+the available data; the recommendation names the binding constraint; the memo states what evidence
+would change the conclusion.
+**Time:** 60 minutes.
+
+### Exercise 5. Design a contingency decision (design, 60 minutes)
+
+You are the programme lead for a trial that is 12 months into a 30-month enrolment window and is 25%
+behind. The options are: add 15 sites, extend the window by 6 months, broaden one eligibility
+criterion, or add a country.
+
+**Deliverable:** a decision memo with a comparison table scored on probability of meeting the
+readout date, direct cost, evidence risk, and reversibility, ending in a recommendation.
+**Acceptance criteria:** at least three options compared; each score has a stated basis; the evidence
+risk of broadening eligibility is described in clinical terms, not only financial ones; the
+recommendation states the trigger that would cause it to be revisited.
+**Time:** 60 minutes.
+
+### Exercise 6. Assess an amendment (design, 75 minutes)
+
+Mid-enrolment, the sponsor proposes to change the primary endpoint from progression-free survival
+assessed by the investigator to blinded independent central review, and to add a stratification
+factor.
+
+**Deliverable:** an impact assessment covering regulatory, ethics, re-consent, EDC and edit checks,
+statistical analysis, budget, and timeline, with a recommendation on timing.
+**Acceptance criteria:** each of the seven areas addressed; the effect on already-enrolled patients
+stated; the analysis consequence (mixed assessment methods) described; a realistic pause estimate
+given with its basis.
+**Time:** 75 minutes.
+
+### Exercise 7. Plan the close-out queue (application, 60 minutes)
+
+A trial has 45 sites and reaches LPLV on 30 June. Each close-out visit takes one monitor two days,
+and the team has four monitors available at 50% time. Query resolution at sites averages three weeks
+after the close-out visit. Database lock requires all sites closed and all queries resolved.
+
+**Deliverable:** a week-by-week close-out schedule and the earliest credible lock date, with
+assumptions stated.
+**Acceptance criteria:** capacity calculation shown; queue modelled rather than averaged; the lock
+date accounts for query resolution after the last visit; risks to the date identified.
+**Time:** 60 minutes.
+
+### Exercise 8. Map the downstream obligations (critique, 45 minutes)
+
+A trial completes its primary endpoint in March 2027. The sponsor plans to submit a marketing
+application in the United States and the European Union in 2028.
+
+**Deliverable:** a one-page obligation map covering registration updates, results submission in both
+regions, record retention, and the owner of each obligation.
+**Acceptance criteria:** each obligation has a trigger date, a legal basis, and an owner; the
+difference between the US one-year rule and the EU summary requirement is stated; no obligation is
+attributed to a regulator that does not hold it.
+**Time:** 45 minutes.
+
+## 13. Self-check answers
+
+### 13.1 Exercise 1
+
+```text
+Randomised target = 480 / (1 - 0.08) = 521.7 -> 522
+Screened target   = 522 / (1 - 0.30) = 745.7 -> 746
+Screen-to-randomise ratio = 746 / 522 = 1.43
+Screens per site = 746 / 32 = 23.3
+```
+
+The plan's 15 patients per site is a randomised figure. The site is actually being asked to screen
+23.3 patients to deliver 16.3 randomised patients per site (522/32). The plan understates screening
+workload by 43%, and the site budget should be built on 23.3 screens per site.
+
+### 13.2 Exercise 2
+
+With 12 sites at month 1, 10 at month 5, and 10 at month 9, at 0.45 per site per month:
+
+```text
+Month 1: 12 x 0.45 x 0.5 = 2.70    cumulative  2.70
+Month 2: 12 x 0.45 x 0.8 = 4.32    cumulative  7.02
+Month 3: 12 x 0.45       = 5.40    cumulative 12.42
+Month 4: 5.40                      cumulative 17.82
+Month 5: 5.40 + 10x0.45x0.5=2.25   cumulative 25.47
+Month 6: 5.40 + 3.60      = 9.00   cumulative 34.47
+Month 7: 5.40 + 4.50      = 9.90   cumulative 44.37
+Month 8: 9.90                      cumulative 54.27
+Month 9: 9.90 + 2.25      = 12.15  cumulative 66.42
+Month 10: 9.90 + 3.60     = 13.50  cumulative 79.92
+Month 11: 9.90 + 4.50     = 14.40  cumulative 94.32
+Month 12: 14.40                    cumulative 108.72
+```
+
+From month 12 the curve adds 14.40 per month. To reach 522:
+
+```text
+Remaining = 522 - 108.72 = 413.28
+Months = 413.28 / 14.40 = 28.70
+Completion = 12 + 28.70 = 40.70
+```
+
+The trial completes in month 40.7, not month 24. The plan is 16.7 months short, which is why the
+denominator check in Exercise 1 matters: the plan was built on 480 patients rather than 522
+randomised.
+
+### 13.3 Exercise 3
+
+All 32 sites active in month 1 at 0.45: month 1 contributes 7.20, month 2 contributes 11.52, and
+from month 3 the rate is 14.40 per month.
+
+```text
+Cumulative at month 3 = 7.20 + 11.52 + 14.40 = 33.12
+Remaining = 522 - 33.12 = 488.88
+Months = 488.88 / 14.40 = 33.95
+Plan completion = 3 + 33.95 = 36.95
+Delay = 40.70 - 36.95 = 3.75 months
+Direct cost = 3.75 x $410,000 = $1,537,500
+Milestone carry = $8,000,000 x 0.07 x 3.75 / 12 = $175,000
+Total exposure = $1,712,500
+```
+
+The direct cost is the operating expense of running the trial for 3.75 more months. The milestone
+carry is a financing cost: the same cash arrives later, so its present value falls. They are
+different in kind and should be reported separately.
+
+### 13.4 Exercise 4
+
+A strong answer separates three quantities:
+
+- **Screen-failure variance.** With 34% actual against 25% planned, the screening target rises by
+  (1-0.25)/(1-0.34) = 1.136, or 13.6%. If screens are on plan, randomisations are 11.9% below plan.
+- **Activation variance.** Twelve sites activated more than 60 days late. With a 0.45 per site per
+  month rate, 12 sites x 2 months x 0.45 = 10.8 lost randomisations, or about 2.4% of a 450-patient
+  target.
+- **Accrual variance.** Whatever remains after the first two are subtracted.
+
+If the total gap is 46%, and screen failure explains about 12 points and activation about 2 points,
+the residual is roughly 32 points, which points to per-site accrual. Adding 20 sites addresses the
+smallest component and will not close the gap inside the window. The binding constraint is site
+productivity, and the first action should be a site-level review of screening and referral.
+
+### 13.5 Exercise 5
+
+There is no single correct answer. A strong memo:
+
+- states the readout date and the cost of missing it;
+- notes that adding sites has a five-to-eight-month activation lag and helps only if more than 12
+  months remain;
+- prices the window extension as certain but expensive;
+- treats broadening eligibility as the only option that changes the population and the label, and
+  therefore carries an evidence risk that outlives the trial;
+- recommends the reversible option and names the trigger for revisiting it.
+
+### 13.6 Exercise 6
+
+A strong assessment notes:
+
+- **Regulatory.** A change to the primary endpoint and a new stratification factor is a substantial
+  amendment in the EU and a protocol amendment in the US; both require review before implementation
+  in the affected jurisdictions.
+- **Ethics and consent.** Participants must be informed of the change if it affects their
+  participation or the use of their data; re-consent may be required.
+- **EDC and edit checks.** A new assessment source (central review) adds an external data import,
+  reconciliation rules, and a new query pathway.
+- **Statistical.** Patients already assessed by the investigator have no central review. The
+  analysis must either treat the assessment method as a stratification variable or restrict the
+  primary analysis to centrally reviewed patients, which changes the sample size.
+- **Budget and timeline.** The pause, retraining, and system changes typically cost weeks to months.
+
+### 13.7 Exercise 7
+
+```text
+Monitor capacity = 4 monitors x 0.5 FTE x 5 days = 10 monitor-days per week
+Visits per week = 10 / 2 = 5 sites per week
+Queue = 45 / 5 = 9 weeks
+Last close-out visit = week 9 after 30 June
+Query resolution = 3 weeks after the last visit
+Earliest lock = 30 June + 9 weeks + 3 weeks = 30 June + 12 weeks = 22 September
+```
+
+The credible lock date is late September, assuming no site reschedules and no query reopens. The
+last site determines the date, and the last site is usually the one with the largest query backlog.
+
+### 13.8 Exercise 8
+
+A strong map includes:
+
+| Obligation | Trigger | Basis | Owner |
+|---|---|---|---|
+| Registry registration maintained | First enrolment | 42 CFR Part 11 | Regulatory operations |
+| US results submission | 1 year after primary completion (March 2028) | 42 CFR 11.44 | Regulatory operations |
+| EU summary of results | Within the CTR period after trial end | Regulation (EU) 536/2014 | Regulatory operations |
+| CSR | Before submission | ICH E3 | Medical writing |
+| Record retention | 2 years after US approval or discontinuation | 21 CFR 312.62(c) | TMF owner |
+| Site records | Per applicable national period | National law | Site |
+
+A weak map assigns the EU summary to the FDA or assumes that a 2028 submission resets the results
+clock; it does not.
+
+## 14. Interview questions
+
+**1. How do you tell whether an enrolment plan is achievable?**
+A strong answer reconstructs the denominators, checks whether the plan has an activation curve, and
+compares the implied per-site rate with historical performance at the same sites. A weak answer
+quotes the plan's own number back.
+
+**2. What is the difference between activation and first patient in?**
+Strong: activation is a verified permission to enrol; first patient in is an event that follows by
+weeks, and the gap is a distinct operational problem. Weak: treats them as the same date.
+
+**4. How would you price a six-month delay?**
+Strong: separates fixed operating cost per month, variable cost that does not scale with delay, and
+financing or milestone effects, and states the currency and year. Weak: multiplies total trial cost
+by the delay fraction.
+
+**5. What happens operationally when a protocol is amended mid-study?**
+Strong: describes the impact assessment, the regulatory category, re-consent, retraining, EDC
+changes, the enrollment pause, and the mixed-population consequence. Weak: describes it as a
+document update.
+
+**6. How do you decide whether a site should be closed for underperformance?**
+Strong: compares the site's expected remaining contribution with the cost and risk of keeping it
+open, considers the patients already enrolled, and checks contractual and ethics obligations.
+Weak: closes on a threshold without considering enrolled patients.
+
+**8. Which obligations survive trial close-out?**
+Strong: registry results, CSR, record retention, site notification, and any post-approval
+commitments, each with its own clock. Weak: says the CSR is the end.
+
+**9. How would you plan a trial in a country with a long regulatory clock?**
+Strong: starts the submission early, runs ethics and contracting in parallel, and plans a later
+activation wave rather than assuming a global month-1 start. Weak: adds a buffer to the whole
+timeline without changing the sequence.
+
+**10. When would you recommend stopping a trial for operational reasons?**
+Strong: when the probability of completing within the window is low under every available lever, or
+when the cost of the remaining options exceeds the value of the readout. Weak: when enrolment is
+behind plan, without quantifying whether any lever can recover it.
+
+## 15. Key terms
+
+| Term | Meaning | See |
+|---|---|---|
+| Accrual | Rate of randomisation per site per month | 3.4 |
+| Activation | Verified state in which a site may enrol | 3.3 |
+| CAPA | Corrective and preventive action | 5.11 |
+| Close-out visit | Final monitoring visit reconciling records and IP | 5.13 |
+| CSR | Clinical study report | 5.14 |
+| CTIS | Clinical Trials Information System for the EU | 8.2 |
+| DBL | Database lock | 5.14 |
+| DCT | Decentralised trial | 8.1 |
+| Deviation | Departure from the protocol | 4.3 |
+| Dropout | Loss before the primary endpoint | 6.2 |
+| EDC | Electronic data capture | 4 |
+| Eligibility rule table | Operational translation of eligibility criteria | 5.1 |
+| Essential documents | Records proving GCP conduct | 5.13 |
+| FPI | First patient in | 3.2 |
+| IP | Investigational product | 5.6 |
+| LPI | Last patient in | 3.2 |
+| LPLV | Last patient last visit | 3.2 |
+| Operational specification | The site-facing interpretation of the protocol | 5.1 |
+| Protocol amendment | Change to an approved protocol | 5.10 |
+| RBQM | Risk-based quality management | 5.9 |
+| Screen failure | Consented patient not randomised | 6.2 |
+| Screen-to-randomise ratio | Screens per randomised patient | 6.2 |
+| TMF | Trial master file | 5.13 |
+| Trigger | Pre-agreed threshold that authorises an action | 5.9 |
+
+## 16. Sources
+
+All URLs accessed 26 October 2026.
+
+1. ICH. *E6(R3) Good Clinical Practice, Step 4 Final Guideline*, 6 January 2025.
+   https://database.ich.org/sites/default/files/ICH_E6%28R3%29_Step4_FinalGuideline_2025_0106.pdf
+2. European Medicines Agency. *ICH E6 Good Clinical Practice*. 
+   https://www.ema.europa.eu/en/scientific-guidelines/ich-e6-good-clinical-practice
+3. Accelerating Clinical Trials in the EU. *Good clinical practice modernisation*.
+   https://accelerating-clinical-trials.europa.eu/our-work/good-clinical-practice-modernisation_en
+4. ICH. *Efficacy guidelines* (E8(R1), E9(R1), E3).
+   https://www.ich.org/page/efficacy-guidelines
+5. US Government. *42 CFR Part 11, Clinical Trials Registration and Results Information Submission*.
+   https://www.ecfr.gov/current/title-42/chapter-I/subchapter-A/part-11
+6. US Government. *21 CFR 312.62, Investigator recordkeeping and record retention*.
+   https://www.ecfr.gov/current/title-21/chapter-I/subchapter-D/part-312/subpart-D/section-312.62
+7. US Food and Drug Administration. *Oversight of Clinical Investigations: A Risk-Based Approach to
+   Monitoring* (2013) and *A Risk-Based Approach to Monitoring: Questions and Answers* (2023).
+   https://www.fda.gov/regulatory-information/search-fda-guidance-documents/oversight-clinical-investigations-risk-based-approach-monitoring
+8. US Food and Drug Administration. *Conducting Clinical Trials With Decentralized Elements*, final
+   guidance, September 2024.
+   https://www.fda.gov/regulatory-information/search-fda-guidance-documents/conducting-clinical-trials-decentralized-elements
+9. European Medicines Agency. *Clinical Trials Regulation becomes fully applicable*, 31 January
+    2025.
+    https://www.ema.europa.eu/en/news/clinical-trials-regulation-becomes-fully-applicable
+10. European Commission. *Clinical Trials Regulation (EU) No 536/2014*.
+    https://health.ec.europa.eu/medicinal-products/clinical-trials/clinical-trials-regulation_en
+11. Goyal N, et al. Assessment of North American Clinical Research Site Performance During the
+    Start-up of Large Cardiovascular Clinical Trials. *JAMA Network Open*. 2021;4(7):e2117963.
+    https://doi.org/10.1001/jamanetworkopen.2021.17963
+12. Lamberti MJ, et al. Assessing Study Start-up Practices, Performance, and Perceptions Among
+    Sponsors and Contract Research Organizations. *Therapeutic Innovation and Regulatory Science*.
+    2018. https://pubmed.ncbi.nlm.nih.gov/29714558/
+13. Hillery C, et al. Accelerating start-up cycles in investigator-initiated multicenter clinical
+    trials. *Journal of Clinical and Translational Science*. 2025.
+    https://www.cambridge.org/core/journals/journal-of-clinical-and-translational-science/article/accelerating-startup-cycles-in-investigatorinitiated-multicenter-clinical-trials/63330032F606C0527E8FEC91DDC7AF63
+14. International Organization for Standardization. *ISO 14155:2020, Clinical investigation of
+    medical devices*. https://www.iso.org/standard/71690.html
+15. ClinicalTrials.gov. https://clinicaltrials.gov/
+16. European Union. *General Data Protection Regulation (EU) 2016/679*.
+    https://eur-lex.europa.eu/eli/reg/2016/679/oj
+17. RECOVERY Collaborative Group. Dexamethasone in Hospitalized Patients with Covid-19.
+    *New England Journal of Medicine*. 2021;384:693-704. https://doi.org/10.1056/NEJMoa2021436
+
+## 17. Links
+
+- Module index: [`_index.md`](_index.md)
+- Next topic: [`02_site-and-monitoring.md`](02_site-and-monitoring.md)
+- Data management: [`03_clinical-data-management.md`](03_clinical-data-management.md)
+- Global regulation: [`06_global-regulation.md`](06_global-regulation.md)
+- Module survey: [`../../course/25_trial_operations_hta_global_regulatory.md`](../../course/25_trial_operations_hta_global_regulatory.md)
+- Labs: [`../../labs/`](../../labs/)
+- Related module: [`../13_biopharma/04_feasibility-and-recruitment.md`](../13_biopharma/04_feasibility-and-recruitment.md)
