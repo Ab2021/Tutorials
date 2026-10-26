@@ -498,6 +498,94 @@ The record includes:
 
 **Thermal throttling.** A latency claim measured at 22 °C may not hold at 40 °C. The target evidence must state the condition, and the claim must match it.
 
+### 5.3 What a PCCP does and does not cover
+
+A PCCP authorizes a **class of modifications**, not a model. It does not authorize:
+
+- A change outside the described method, even if the effect is smaller.
+- A change outside the stated bounds, such as a bit width below the described minimum.
+- A change to the intended use, the population, or the output interface.
+- A change that the impact assessment did not consider.
+- A cumulative drift beyond the approved claim, even if each change was covered.
+
+It does authorize:
+
+- The described method within the stated bounds.
+- The data and validation procedure in the protocol.
+- The update procedure in the protocol.
+- The labeling changes described in the plan.
+
+The distinction matters because teams often read a PCCP as a general permission to improve the model. It is a permission to make a specific kind of change under specific conditions. A change that is better than the plan anticipated is still outside the plan.
+
+### 5.4 Does quantization require a new submission?
+
+The question has no universal answer, and the honest response is a decision procedure.
+
+1. **Is the model part of the approved device?** If the model is a software item that produces clinical output, yes.
+2. **Does the change alter outputs beyond the approved tolerance?** If no, it is a documentation update. If yes, continue.
+3. **Does the approved plan describe this method and these bounds?** If yes, the change may be PCCP-covered. If no, continue.
+4. **Is the change within the approved performance claim and its confidence intervals?** If yes and the plan covers it, implement under the plan. If no, a new submission or a redesign is required.
+
+The common error is to skip question 2 by asserting that INT8 is "numerically equivalent". It is not; it is bounded, and the bound must be compared with the tolerance. The second common error is to skip question 3 by assuming that a plan about "model updates" covers quantization. The plan's wording is the authority.
+
+A useful test: if the change required a new calibration dataset and a new numerical comparison, it is a model change, not a build change. Whether it needs a submission depends on the plan and the claim.
+
+### 5.5 The evidence package for a numerically different model
+
+A model that differs numerically from the cleared one needs an evidence package that lets a reviewer conclude that the difference is acceptable. The package has six parts.
+
+- **Configuration:** the cleared model and the proposed model, with hashes, runtime versions, and calibration data versions.
+- **Analytical bound:** what the method changes and the maximum per-value effect.
+- **Numerical diff:** the output difference on a frozen reference set, including tails and borderline cases.
+- **Statistical comparison:** pre-specified metrics, margins, confidence intervals, and subgroups.
+- **Target evidence:** latency, energy, memory, and thermal behaviour on the production configuration.
+- **Risk and labeling:** the updated hazards, controls, residual risks, and claims.
+
+The package is not a single study. It is a chain of evidence, and the reviewer can reject it at any link. A missing analytical bound makes the numerical diff anecdotal; a missing subgroup makes the statistical comparison incomplete; a missing target measurement makes the latency claim unsupported.
+
+### 5.6 Change-control documentation
+
+The change record is the artifact that survives the project. It should contain:
+
+| Section | Content |
+|---|---|
+| Identification | Change ID, date, owner, device versions |
+| Description | Method, scope, parameters, data, what does not change |
+| Rationale | Why the change is needed |
+| Classification | Covered, not covered, or documentation only, with the plan clause |
+| Evidence | Analytical, numerical, statistical, target |
+| Risk impact | New hazards, changed residual risks |
+| Labeling impact | Claims, limitations, instructions |
+| Cumulative impact | Changes since approval and their combined effect |
+| Approval | Who approved, on what basis |
+| Deployment | Version, date, rollback plan |
+| Monitoring | Metrics, thresholds, cadence |
+
+A record that omits the classification or the cumulative impact is incomplete, even if the evidence is strong. The reviewer needs to know not only what was measured but why the measurement is sufficient.
+
+### 5.7 Performance-neutral versus behaviour-shifting compression
+
+Two compression changes can have the same average accuracy and different regulatory meanings.
+
+**Performance-neutral compression** changes the representation without changing the decisions. The outputs are identical within a tight tolerance on the reference set, the calibration is unchanged, and the subgroup results are unchanged. The change is a candidate for a documentation update or a narrow PCCP.
+
+**Behaviour-shifting compression** preserves the average metric but changes where the errors fall. Calibration may shift, a subgroup may degrade, or the tail may change. The average is unchanged; the device is not.
+
+The distinction is not about the method. The same INT8 conversion can be performance-neutral on one model and behaviour-shifting on another, depending on the weight distribution, the calibration data, and the clinical threshold.
+
+The test is a table, not a metric:
+
+| Dimension | Neutral | Shifting |
+|---|---|---|
+| Overall sensitivity | Within 0.2 pp | Within 0.2 pp |
+| Worst subgroup | Within 0.2 pp | Falls 1.0 pp or more |
+| ECE | Within 0.003 | Rises 0.010 or more |
+| Slope | Within 0.02 | Falls 0.05 or more |
+| Decision agreement | 99.9% | 98–99% with clustering in one class |
+
+A change that is neutral on all five is a strong candidate for a light pathway. A change that is shifting on any one needs the full evidence package, regardless of its average.
+
+
 ## 6. Worked example
 
 This is a constructed case. It is not legal advice, and the classification depends on the actual approved plan, which is hypothetical here.
@@ -630,6 +718,38 @@ If the plan had not included the method, the classification would be a new submi
 - **The labeling change.** The performance claims may need to be updated to reflect the new confidence intervals.
 - **The post-market data.** The monitoring plan is described but not executed.
 - **The jurisdiction-specific requirements.** The case is generic; the United States and the European Union have different pathways and different evidence expectations.
+
+### 6.12 A case that passes on average and fails a subgroup
+
+The per-tensor INT8 model has an overall sensitivity of 0.934 against the approved 0.942, a difference of -0.8 pp. The approved claim floor is 0.925, so the model passes the claim with 0.9 pp of margin. A team that reports only the overall metric would classify the change as acceptable.
+
+The subgroup table tells a different story.
+
+| Group | FP32 approved | INT8 per-tensor | Difference | 95% CI | Margin | Result |
+|---|---:|---:|---:|---|---:|---|
+| Overall | 0.942 | 0.934 | -0.8 pp | [-1.6, 0.0] | -1.5 pp | Pass, narrowly |
+| Group A | 0.945 | 0.940 | -0.5 pp | [-1.3, 0.3] | -1.5 pp | Pass |
+| Group B | 0.931 | 0.918 | -1.3 pp | [-2.2, -0.4] | -1.0 pp | Fail |
+| Group C | 0.938 | 0.933 | -0.5 pp | [-1.4, 0.4] | -1.5 pp | Pass |
+
+Group B fails its pre-specified margin. The overall result passes because Group B is a minority of the sample, and its loss is diluted by the larger groups. This is the exact pattern that aggregate reporting hides.
+
+The regulatory consequence is not "the model is slightly worse". It is:
+
+- The change is **not equivalent** for the intended population, because the intended population includes Group B.
+- The PCCP's performance-evaluation criterion is not met, so the change cannot be implemented under the plan.
+- The options are: improve the method (per-channel quantization raises Group B to 0.926), restrict the intended use to exclude Group B (a new submission and a labeling change), or abandon the change.
+- If the team implements the change anyway and reports only the overall metric, the submission contains a misleading analysis, which is a compliance problem independent of the model's performance.
+
+Per-channel quantization recovers Group B to 0.926, a difference of -0.5 pp with a CI of [-1.4, 0.4], which passes the -1.0 pp margin. The remedy is within the plan's description if the plan says "per-channel weight scales". If the plan says "per-tensor", the remedy is a different modification and requires an amendment.
+
+### 6.13 What the subgroup failure teaches
+
+- The overall metric is not the claim. The claim is about the population, and the population includes the subgroup.
+- A margin must be pre-specified per subgroup, not only overall. A single overall margin lets a small group fail silently.
+- The remedy must be within the approved modification. A better method that is outside the plan is still outside the plan.
+- The regulatory consequence of a hidden subgroup failure is larger than the performance loss. The misleading analysis is the bigger problem.
+
 
 ## 7. Code, query, or calculation
 
@@ -865,6 +985,16 @@ The FDA's cybersecurity guidance and the IEC 62443 series establish expectations
 | Labeling update | Claims, limitations, instructions |
 | Monitoring plan | Metrics, subgroups, thresholds, cadence |
 
+### 8.11 What the guidance does not settle
+
+- Whether a specific quantization change is substantial. The guidance gives a process, not a list.
+- How large a subgroup margin should be. That is a clinical judgement.
+- Whether a performance-neutral change needs any submission at all. It depends on the plan and the jurisdiction.
+- How cumulative impact should be measured when changes interact. The guidance requires the assessment, not the method.
+- Whether a runtime upgrade is a device change when the model file is unchanged. It depends on the effect.
+
+The gaps are not defects in the guidance; they are the space in which professional judgement operates. A team that expects a lookup table will be disappointed, and a team that documents its judgement will be prepared.
+
 ## 9. Industry practice and case evidence
 
 ### 9.1 What the guidance actually says
@@ -913,6 +1043,16 @@ The teams that handle compression changes well do three things.
 - **They keep the record.** The configuration, the data, the code, and the decision are recorded as they happen, so the submission is an assembly rather than an archaeology project.
 
 None of these is technically difficult. All of them are organizationally difficult, because they require the engineering team and the regulatory team to work in the same sequence.
+
+### 9.6 Two lessons from the subgroup case
+
+The subgroup failure is the most useful case in this topic because it separates three questions that teams conflate.
+
+- **Is the model good enough?** The overall metric says yes; the subgroup says no. The answer depends on the population in the claim.
+- **Is the change covered?** The plan covers per-channel scales, not per-tensor. The better method is covered; the faster one is not.
+- **Is the evidence honest?** An aggregate-only report would be technically true and substantively misleading. The regulatory risk is in the reporting, not only in the model.
+
+A team that answers all three separately makes a defensible decision. A team that answers only the first ships a device that passes its average and fails its population.
 
 ## 10. Failure modes and red flags
 
@@ -1110,6 +1250,17 @@ A strong answer rejects on subgroup harm, calibration shift at the threshold, an
 - **Subgroup** — population defined by a clinically relevant attribute.
 - **Substantial modification** — change that alters safety or effectiveness.
 - **Traceability** — ability to link requirements to evidence.
+- **Performance-neutral change** — a change that does not alter decisions within tolerance.
+- **Behaviour-shifting change** — a change that preserves the average but shifts errors.
+- **Subgroup margin** — the non-inferiority margin for a defined population.
+- **Model hash** — identifier of the exact weights under assessment.
+- **Protocol deviation** — a departure from the pre-specified protocol.
+- **Claim** — the performance statement in the labeling or submission.
+- **Verification** — evidence that a requirement is met.
+- **Validation** — evidence that the device meets its intended use.
+- **Vigilance** — reporting of adverse events to the regulator.
+- **Conformity assessment** — the process of demonstrating compliance.
+- **Notified body** — an organization that assesses conformity in the EU.
 
 ## 16. Sources
 

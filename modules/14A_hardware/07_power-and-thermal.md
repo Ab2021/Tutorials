@@ -1293,3 +1293,9 @@ Further sources:
 25. UN 38.3, lithium battery transport tests.
 26. IEC 62133-2:2017, battery safety tests.
 27. IEC 60601-1:2005, clause 11.1.2.2.
+
+- **Thermal runaway propagation** — spread of a cell failure to neighbouring cells.
+- **Vent gas** — gas released by a failing cell.
+- **Charge termination** — end of the charging profile.
+- **Battery management system** — circuit that monitors and protects the pack.
+- **Thermal fuse** — one-time disconnect at a temperature limit.
