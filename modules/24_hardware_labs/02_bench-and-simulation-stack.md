@@ -476,6 +476,8 @@ For each, record how the failure appears and how it is detected. A channel swap 
 
 **Rationale:** the stack is part of the result. A result without a stack record is a claim without a method.
 
+Teardown: power down the instruments, discharge any bulk capacitance, disconnect the probes, and return them to their cases. A bench left powered is a bench that someone else will find live.
+
 The stack record contains:
 
 - The measurement question and the decision rule.

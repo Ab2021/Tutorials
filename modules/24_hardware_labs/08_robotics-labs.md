@@ -491,6 +491,8 @@ Checks:
 
 **Rationale:** the report is the deliverable. It must be readable by a person who was not in the room.
 
+Teardown: command the arm to a park pose, disable the actuators, verify that the e-stop is latched, remove the payload, and disconnect power. The guard stays in place until the arm is stationary and the energy is removed.
+
 The report contains:
 
 - The task and the claim boundary.
@@ -655,7 +657,7 @@ The mean error is 1.36 mm, and the standard deviation is 0.26 mm. The error is l
 | **Total, quadrature** | **0.79 mm** | | |
 | **Measured mean** | **1.36 mm** | | |
 
-The quadrature sum is smaller than themeasured mean, which means the budget is missing a systematic term. The most likely missing term is the zero offset of the joint encoders, which was not calibrated. A systematic offset of 1 mm at the tool is consistent with a joint-zero error of about 0.1°.
+The quadrature sum is smaller than the measured mean, which means the budget is missing a systematic term. The most likely missing term is the zero offset of the joint encoders, which was not calibrated. A systematic offset of 1 mm at the tool is consistent with a joint-zero error of about 0.1°.
 
 The lesson is that the error stack must be validated against the measurement, not only constructed. A budget that sums to less than the measurement is a budget with a missing term.
 

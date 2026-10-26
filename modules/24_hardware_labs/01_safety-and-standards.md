@@ -1247,6 +1247,7 @@ A strong answer says safety is a claim about a defined use, a defined population
 - **Type B, BF, CF** — applied-part classifications with different leakage limits.
 - **Type test** — conformity test on a representative sample to a standard method.
 - **Uncertainty** — quantified doubt in a measured value.
+- **Safety function** — function that reduces risk to an acceptable level.
 
 ## 16. Sources
 
@@ -1272,7 +1273,7 @@ All URLs accessed 26 October 2026 unless otherwise stated.
 ### Occupational safety
 
 - OSHA 29 CFR 1910 Subpart S, Electrical. https://www.osha.gov/laws-regs/regulations/standardnumber/1910
-- OSHA 3404, Laboratory Safety Guidance. https://www.osha.gov/sites/default/files/publications/OSHA3404.pdf
+- OSHA 3404, Laboratory Safety Guidance (annotated copy hosted by the University of Wisconsin System). https://www.wisconsin.edu/ehs/download/laboratories/OSHA3404%20annotated%20UWSYS.pdf
 - OSHA 4472, Protecting Employees from Electric-Arc Flash Hazards. https://www.osha.gov/sites/default/files/publications/OSHA4472.pdf
 - OSHA 4474, Establishing Boundaries Around Arc Flash Hazards. https://www.osha.gov/sites/default/files/publications/OSHA4474.pdf
 - NFPA 70E, Standard for Electrical Safety in the Workplace. https://www.nfpa.org/

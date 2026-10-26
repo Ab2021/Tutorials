@@ -210,6 +210,26 @@ The table is the practical reason to build the chain from the start. A missing l
 
 The procedure below runs a lab from protocol to archived report. Each step states its input, output, and rationale. The procedure is written for a two-person team: one operator and one reviewer. The reviewer can be the partner for a small lab and must be independent for a verification lab.
 
+### Step 0. Check the equipment and the safety boundary
+
+**Input:** the lab protocol and the workspace.
+
+**Output:** a workspace that can record the run, and a confirmed safety boundary.
+
+**Rationale:** a record is only as good as the environment that produces it. A shared login, an uncontrolled clock, or a workspace with no backup is a data-integrity defect before the first measurement.
+
+| Item | Check | Why it matters |
+|---|---|---|
+| Identity | Each operator has a unique account | Attribution |
+| Clock | Synchronised to a reference, time zone recorded | Ordering of events |
+| Storage | Primary and backup location available | Availability |
+| Hash tool | Available and tested | Integrity |
+| Version control | Repository and commit access | Provenance |
+| Raw data folder | Read-only or append-only | Originality |
+| Safety boundary | No mains, no patient connection | Safety |
+
+The safety boundary is the one from Topic 1: extra-low voltage only, no mains conductor exposed, no patient connection. If the protocol requires either, stop and escalate to qualified supervision before proceeding. The record cannot make an unsafe experiment safe.
+
 ### Step 1. Write the question and the claim
 
 **Input:** the engineering question and the decision it informs.

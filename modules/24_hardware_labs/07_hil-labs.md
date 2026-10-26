@@ -1,6 +1,6 @@
 # Hardware-in-the-Loop Labs
 
-> Module 24 — Hardware, Robotics Labs
+> Module 24 — Hardware and Robotics Labs
 > Topic 7 of 9
 > Estimated study time: 5 hours
 > Prerequisites: 03, 04, 05
@@ -25,6 +25,8 @@ The rig is also a place where a team can fool itself. A scenario that is too cle
 This topic builds the HIL loop, the timing budget, the fault-injection matrix, and the traceability matrix. It assumes the firmware lab from Topic 5 and the sensor lab from Topic 4.
 
 A useful way to read the topic is as a sequence of questions: what is the claim, what is the rig, what is the delay, what is the fault, what is the evidence, and what is missing. Each section answers one of them.
+
+The sequence is also the order of a review. A reviewer who cannot answer the first question will not trust the answers to the rest.
 
 > **Safety statement for this module.** Hazards in these labs include electric shock, stored energy in capacitors and batteries, burns from soldering irons and hot water, cuts from strip tools and glass, eye injury from projectiles and ultraviolet light, pinch and crush injury from servo arms, and lithium battery fire. Required personal protective equipment (PPE) is safety glasses in every lab that solders, cuts, heats, or pressurises; a lab coat or equivalent coverage; closed shoes; and an electrostatic discharge (ESD) wrist strap whenever a bare board is handled. The electrical-safety boundary for this course is extra-low voltage only: a current-limited supply or a fused USB supply, with no mains conductor exposed on the bench. Any experiment that is mains-powered, that connects to a patient, or that uses an applied part requires qualified supervision and the institution's electrical-safety process. No lab in this module authorises such work. The HIL "patient" is a resistor network, a signal generator, or a recorded waveform, never a person.
 
@@ -474,6 +476,8 @@ The report contains:
 **Rationale:** the review catches the gaps that the team cannot see: a scenario that was not run, a fault that was not captured, a requirement without a result.
 
 The review checks the coverage, the calibration, the real-time evidence, the uncertainty, and the limitations.
+
+Teardown: stop the scenario runner, command the DUT to its safe state, remove the actuator load, disconnect the DAC and the capture leads, and power down the rig. The rig is left in a state that the next person can power up without surprises.
 
 ### 5.15 Acceptance criteria for the HIL lab
 
@@ -1252,6 +1256,7 @@ It is a statement of what the result does not prove: usability, clinical benefit
 - **Signal conditioning** — circuit that matches a signal to an input.
 - **Test oracle** — rule or data that decides the expected result.
 - **Validation** — evidence that the device meets user needs.
+- **Verification** — evidence that the output meets the input requirement.
 
 ## 16. Sources
 

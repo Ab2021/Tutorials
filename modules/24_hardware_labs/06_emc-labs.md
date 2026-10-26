@@ -250,7 +250,7 @@ The levels are from IEC 60601-1-2 Edition 4.1. The exact table, the modulation, 
 | ESD | IEC 61000-4-2 | ±8 kV contact, ±15 kV air | Same | Enclosure |
 | Radiated RF | IEC 61000-4-3 | 3 V/m | 10 V/m | Enclosure |
 | EFT | IEC 61000-4-4 | ±2 kV | ±2 kV | Mains and signal |
-| Surge | IEC 61000-5 | ±1 kV differential, ±2 kV common | Same | Mains |
+| Surge | IEC 61000-4-5 | ±1 kV differential, ±2 kV common | Same | Mains |
 | Conducted RF | IEC 61000-4-6 | 3 V RMS | 3 V RMS, 6 V ISM | Mains and signal |
 | Magnetic field | IEC 61000-4-8 | 30 A/m | 30 A/m | Enclosure |
 | Voltage dips | IEC 61000-4-11 | Defined dips | Defined dips | Mains |
@@ -794,9 +794,9 @@ measured emission and margin
    10000 kHz  measured  42.0  ambient  36.0  device  40.7  limit  60.0  margin +19.3 dB
 
 insertion loss at 1 MHz
-ferrite          12.0 dB  residual 0.300 mV input-referred
-shield           15.1 dB  residual 0.210 mV input-referred
-shield+choke     24.7 dB  residual 0.070 mV input-referred
+ferrite         12.0 dB  residual 0.300 mV input-referred
+shield          15.1 dB  residual 0.210 mV input-referred
+shield+choke    24.7 dB  residual 0.070 mV input-referred
 
 ESD model (IEC 61000-4-2-like, teaching approximation)
 peak current = 27.9 A at 3.5 ns

@@ -496,6 +496,8 @@ Record:
 
 The review checks that every requirement has a measurement, every fault has a capture, the safe state is verified for every output, the update survives power loss, and the build record is complete.
 
+Teardown: command the safe state, remove actuator power, disconnect the debug probe, verify that the watchdog is enabled for the next run, and store the board in an ESD bag.
+
 ### 5.15 Acceptance criteria for the firmware lab
 
 | # | Criterion | Evidence | Fail action |

@@ -910,16 +910,16 @@ max hysteresis = 0.0260 C
 
 uncertainty budget
 source                       u (C)
-reference certificate        0.0250
-reference resolution         0.0058
-repeatability                0.0058
-sensor resolution            0.0023
-fit residual                 0.0100
-drift                        0.0058
-self-heating                 0.0023
-combined                     0.0289
-with spatial                 0.0302
-expanded k=2                 0.0604
+reference certificate       0.0250
+reference resolution        0.0058
+repeatability               0.0058
+sensor resolution           0.0023
+fit residual                0.0100
+drift                       0.0058
+self-heating                0.0023
+combined                    0.0289
+with spatial                0.0302
+expanded k=2                0.0604
 
 gauge R&R (generated data)
 MS_part=0.37264  MS_op=0.00177  MS_int=0.00037  MS_e=0.00044
