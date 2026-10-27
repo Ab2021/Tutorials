@@ -87,7 +87,7 @@ By the end of this topic you can:
    why summary quantiles cannot be aggregated.
 5. **Instrument** an HTTP service with OpenTelemetry semantic conventions and state the metric name,
    unit, and attributes.
-6. **Design** a logging policy that supports debugging and audit without recording PHI.
+6. **Design** a logging policy that supports debugging and audit without recording protected health information (PHI).
 7. **Estimate** the cardinality and cost consequence of adding a label.
 8. **Diagnose** an alert that fires too often and a dashboard that reports a misleading percentile.
 
@@ -111,7 +111,7 @@ most common design error.
    └───────────────────────────┬─────────────────────────────────┘
                                ▼
    ┌─────────────────────────────────────────────────────────────┐
-   │ 3. Indicators: SLI queries over a window                    │
+   │ 3. Indicators: service level indicator (SLI) queries over a window                    │
    │    success ratio, latency percentile, lag, freshness        │
    └───────────────────────────┬─────────────────────────────────┘
                                ▼
@@ -254,7 +254,7 @@ downstream dependency. Each includes a different part of the path:
 
 | Point | Includes | Excludes | Best for |
 |---|---|---|---|
-| Load balancer | Client to edge, TLS termination | Ingress routing, application | External availability |
+| Load balancer | Client to edge, transport layer security (TLS) termination | Ingress routing, application | External availability |
 | Ingress controller | Routing, upstream timeout | Application processing | Routing errors |
 | Service pod | Application processing | Client network, ingress | Application latency |
 | Dependency client | Downstream call | Queueing before the call | Blame isolation |
@@ -464,7 +464,7 @@ measuring a symptom that a restart will not fix.
 
 **Output.** An append-only audit stream with its own retention and access control.
 
-**Rationale.** HIPAA requires audit controls at 45 CFR 164.312(b). An application log with a
+**Rationale.** Health Insurance Portability and Accountability Act (HIPAA) requires audit controls at 45 CFR 164.312(b). An application log with a
 seven-day retention does not satisfy a six-year retention policy for access records. The audit
 stream also needs integrity protection, so that an administrator cannot edit it.
 
@@ -831,20 +831,12 @@ error budgets, 30-day window
   SLO 99.500%    216.0 min       259,200 requests at 20 rps
   SLO 99.900%     43.2 min        51,840 requests at 20 rps
   SLO 99.950%     21.6 min        25,920 requests at 20 rps
-```
 
-The 99.9 percent row matches Section 6.2: 51,840 failed requests and 43.2 minutes. The check that
-catches an error in this arithmetic is dimensional: requests per second times seconds equals
-requests, and at a constant rate the minute budget and the request budget must agree.
-
-The full output continues:
-
-```text
 burn rate and time to exhaust the 99.9% budget
-  error_ratio= 0.100%  burn=  1.00x  exhaust_in=  720.00 h
-  error_ratio= 0.500%  burn=  5.00x  exhaust_in=  144.00 h
-  error_ratio= 1.000%  burn= 10.00x  exhaust_in=   72.00 h
-  error_ratio= 5.000%  burn= 50.00x  exhaust_in=   14.40 h
+  error_ratio=0.100%  burn=  1.00x  exhaust_in=  720.00 h
+  error_ratio=0.500%  burn=  5.00x  exhaust_in=  144.00 h
+  error_ratio=1.000%  burn= 10.00x  exhaust_in=   72.00 h
+  error_ratio=5.000%  burn= 50.00x  exhaust_in=   14.40 h
   error_ratio=10.000%  burn=100.00x  exhaust_in=    7.20 h
 
 multi-window alert thresholds (99.9% SLO)
@@ -869,6 +861,10 @@ alert precision
   fired= 8 real= 8  precision=100.0%  false_pages=0
   fired=50 real= 5  precision=10.0%  false_pages=45
 ```
+
+The 99.9 percent row matches Section 6.2: 51,840 failed requests and 43.2 minutes. The check that
+catches an error in this arithmetic is dimensional: requests per second times seconds equals
+requests, and at a constant rate the minute budget and the request budget must agree.
 
 The following Prometheus rule group is YAML. It is validated by parsing, not loaded into a running
 Prometheus.
@@ -1006,6 +1002,11 @@ The cost of that gauge is negligible: one series per table. The benefit is that 
 old is the number on this dashboard" has an answer. In a clinical setting that question is asked
 during every data quality review, and a pipeline that cannot answer it is trusted less than one that
 can.
+
+The same logic applies to model outputs. A freshness gauge on the prediction table answers "when was
+this score last recomputed", which is a different question from "when was the event received". Both
+belong on the dashboard, because a clinician reading a score needs to know both how old the
+observation is and how old the model's view of the patient is.
 
 ## 10. Failure modes and red flags
 

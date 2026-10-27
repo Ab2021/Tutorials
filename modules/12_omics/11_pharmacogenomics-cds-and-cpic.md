@@ -1094,23 +1094,24 @@ suggestions, and links. The `order-sign` hook is the usual trigger for a prescri
 because the order is complete but not yet committed.
 
 **SMART on FHIR.** Used when the card needs to launch an app for a richer workflow, such as a
-pharmacist review screen. It is not a substitute for CDS Hooks; the two solve different problems.### 8.6 Privacy, discrimination, and what the standards leave open
+pharmacist review screen. It is not a substitute for CDS Hooks; the two solve different problems.
+
+### 8.6 Privacy, discrimination, and what the standards leave open
 
 In the United States, GINA prohibits genetic discrimination in health insurance and employment.
 It does not cover life insurance, disability insurance, or long-term care insurance. A
 pharmacogenomic result is also protected health information under HIPAA, but downstream uses such
 as underwriting are governed by other rules that vary by state.
 
-The standards also leave open how to display "no recommendation", how to version a rule so that
-historical decisions can be reconstructed, what alert burden is acceptable, and how to resolve
-conflicts between CPIC and DPWG. Those are local design decisions and belong in the program's
-governance documents rather than in a vendor's default configuration.
+The standards also leave open how to display "no recommendation", how to version a rule, what
+alert burden is acceptable, and how to resolve CPIC and DPWG conflicts. Those are local decisions
+that belong in governance documents, not in a vendor's default configuration.
 
 ## 9. Industry practice and case evidence
 
 ### 9.1 What health systems actually deploy
 
-Three delivery models dominate. They differ in when the genotype is produced, not in the
+Three delivery models dominate, differing in when the genotype is produced rather than in the
 interpretation logic.
 
 | Model | When the sample is collected | Strength | Weakness |
@@ -1430,11 +1431,9 @@ classified under which version. A weak answer says "we update the JSON when CPIC
   number; used by CPIC for CYP2D6.
 - **Allele function** — the categorical effect of a star allele: normal, decreased, no function,
   increased, or uncertain.
-- **Actionability** — whether a result changes a decision in the current clinical context.
 - **CDS Hooks** — HL7 specification for workflow-triggered synchronous clinical decision support.
 - **ClinPGx** — integrated pharmacogenomics resource combining PharmGKB, CPIC, and PharmCAT.
 - **CLIA** — United States Clinical Laboratory Improvement Amendments; laboratory certification.
-- **Companion diagnostic** — a test approved for use with a specific drug.
 - **Copy number variant** — structural change altering the number of gene copies.
 - **CPIC** — Clinical Pharmacogenetics Implementation Consortium.
 - **Diplotype** — unordered pair of star alleles.
@@ -1443,30 +1442,24 @@ classified under which version. A weak answer says "we update the JSON when CPIC
 - **FHIR** — Fast Healthcare Interoperability Resources.
 - **GINA** — Genetic Information Nondiscrimination Act.
 - **Indeterminate** — phenotype assigned when allele function is uncertain.
-- **LDT** — laboratory developed test.
 - **Metabolizer phenotype** — standardized category from ultrarapid to poor.
-- **Phenoconversion** — change in effective phenotype caused by interactions or disease.
 - **PharmCAT** — open-source star allele and diplotype caller.
 - **PharmVar** — star allele nomenclature authority.
 - **Pre-emptive testing** — genotyping before a drug is needed.
 - **Recommendation strength** — CPIC grade of strong, moderate, or optional for a specific action.
 - **Reactive testing** — genotyping triggered by a prescription.
-- **Reference allele** — the allele against which others are named, usually \*1.
 - **Star allele** — named haplotype of a pharmacogene.
 - **Ultrarapid metabolizer** — phenotype with increased metabolic capacity.
 - **Variant allele fraction** — fraction of sequencing reads carrying an alternate allele.
-- **VCF** — variant call format.
 
 ## 16. Sources
 
 Accessed 26 October 2026 unless otherwise stated.
 
-- Clinical Pharmacogenetics Implementation Consortium. *CYP2C19 and Clopidogrel Therapy: 2022
-  Update*. https://doi.org/10.1002/cpt.2526. Full text:
-  https://pmc.ncbi.nlm.nih.gov/articles/PMC9287492/
-- Clinical Pharmacogenetics Implementation Consortium. *CYP2D6, OPRM1, and COMT Genotypes and Select
-  Opioid Therapy*, 2021. https://doi.org/10.1002/cpt.2149. Full text:
-  https://pmc.ncbi.nlm.nih.gov/articles/PMC8249478/
+- CPIC. *CYP2C19 and Clopidogrel Therapy: 2022 Update*. https://doi.org/10.1002/cpt.2526;
+  full text https://pmc.ncbi.nlm.nih.gov/articles/PMC9287492/
+- CPIC. *CYP2D6, OPRM1, and COMT Genotypes and Select Opioid Therapy*, 2021.
+  https://doi.org/10.1002/cpt.2149; full text https://pmc.ncbi.nlm.nih.gov/articles/PMC8249478/
 - Clinical Pharmacogenetics Implementation Consortium. *SLCO1B1, ABCG2, and CYP2C9 Genotypes and
   Statin-Associated Musculoskeletal Symptoms*, 2022. https://doi.org/10.1002/cpt.2557. Full text:
   https://pmc.ncbi.nlm.nih.gov/articles/PMC9035072/
@@ -1505,4 +1498,3 @@ Accessed 26 October 2026 unless otherwise stated.
 - Laboratory exercises and datasets: [`../../labs/`](../../labs/)
 - Cohort pipeline lab: [`../../labs/03_cohort_pipeline.ipynb`](../../labs/03_cohort_pipeline.ipynb)
 - Calibration and decision curve lab: [`../../labs/06_calibration_decision_curve.ipynb`](../../labs/06_calibration_decision_curve.ipynb)
-

@@ -503,6 +503,11 @@ patient count, and validation.
 **Rationale.** A spatial result without its resolution and reference is not reproducible. The
 reader cannot tell whether a 10% difference is one cell or a thousand.
 
+A report should also state the number of spots excluded at each quality step, because the
+excluded fraction is often related to the tissue region and therefore to the biology. A tumour
+with extensive necrosis will lose more spots than a cellular tumour, and a comparison that
+ignores the exclusion rate confounds necrosis with composition.
+
 **If skipped.** The result cannot be reproduced, and the failure is attributed to biology.
 
 ### 5.13 Benchmarks and what they mean
@@ -1005,4 +1010,382 @@ picture:
 Those gaps are why the diagnostics in sections 6.6 and 6.7 matter: in the absence of a standard,
 the analysis must demonstrate its own validity.
 
-<!--PART2-->
+## 9. Industry practice and case evidence
+
+### 9.1 How spatial data is used in industry
+
+Four use cases account for most commercial and academic work.
+
+| Use case | Typical platform | Decision it informs | Maturity |
+|---|---|---|---|
+| Tumour microenvironment characterization | Visium, CosMx, PhenoCycler | Target biology and biomarker hypothesis | Established in research |
+| Immunotherapy response stratification | Imaging panels with CD8, PD-L1, FOXP3 | Whether T cells are excluded from the tumour | Research; trial-embedded |
+| Spatial validation of a bulk biomarker | Visium or Xenium | Whether a bulk signal comes from a specific compartment | Established in research |
+| Drug distribution and target engagement | Imaging or capture with probe panels | Whether the drug reaches the target cells | Early |
+
+The common pattern is that spatial data is used to explain or validate a signal found by another
+method, not to discover a clinical biomarker from scratch. That is a realistic use: spatial context
+is expensive, and its value is highest when a cheaper assay has produced an ambiguous result.
+
+### 9.2 Documented platform and method performance
+
+The evidence about methods is unusually clear because several groups have run independent
+benchmarks.
+
+| Study | Scope | Documented finding |
+|---|---|---|
+| Li et al., Nature Methods, 2022 | 16 integration methods, 45 paired datasets, 32 simulated | Cell2location, SpatialDWLS, and RCTD ranked highest for deconvolution; Tangram, gimVI, and SpaGE highest for expression prediction |
+| Li et al., Nature Communications, 2023 | 18 methods, 50 datasets | CARD, Cell2location, and Tangram among the strongest, with performance depending on the scenario |
+| Yan and Sun, Bioinformatics, 2023 | 14 methods, 4 datasets | Cell2location above RCTD above SpatialDWLS; Tangram fastest and most memory-efficient |
+| Spotless, eLife, 2024 | 11 methods, 63 silver and 3 gold standards | Cell2location and RCTD top; an NNLS baseline beat about half of the dedicated methods |
+
+Two inferences follow, and both are labelled as inference rather than fact. First, method choice
+should be justified per dataset rather than by reputation, because rankings change with the
+scenario. Second, a transparent baseline belongs in every comparison, because a complex method
+that does not beat NNLS has not earned its complexity.
+
+A caveat that the benchmarks state explicitly: performance degrades when a cell type is dominant,
+when a cell type is rare, when the panel has few genes, and when the reference and the spatial data
+come from different platforms. Those are exactly the conditions of most clinical tissue.
+
+### 9.3 Histology prediction models
+
+A separate line of work predicts expression from H&E images. ST-Net (He et al., 2020) trained a
+convolutional network to predict spatial gene expression from breast cancer histology patches.
+HisToGene (Gao et al., 2021) added a transformer architecture with spatial context. The results are
+suggestive and should be treated carefully: a model that predicts a gene from morphology is
+learning a correlation between morphology and expression, and the correlation can be driven by
+tissue type, processing, or the tumour region rather than by a causal relationship.
+
+The practical value is in triage, not replacement. A model that flags regions likely to express a
+marker can guide where to run an expensive assay. It cannot substitute for the assay when a
+clinical decision depends on the result.
+
+### 9.4 What is not yet standard
+
+- No spatial transcriptomics assay is a companion diagnostic for a therapy as of this writing.
+- No consensus standard defines how to report deconvolution uncertainty.
+- No health system has published a prospective trial in which a spatial biomarker changed
+  treatment and improved an outcome.
+- Reimbursement pathways for spatial assays are not established in most jurisdictions.
+
+A program that plans to use spatial data for a clinical decision should budget for the validation
+that these gaps imply.
+
+## 10. Failure modes and red flags
+
+| Failure | Early warning sign | Mechanism | Consequence | Mitigation |
+|---|---|---|---|---|
+| Registration misalignment | Boundary markers appear in the wrong compartment | Rigid transform fitted to poor landmarks | Signal attributed to the wrong tissue | Landmark residual in micrometres; non-rigid fit if structured |
+| Reference missing a cell type | Large residual at a held-out marker | Model has no compartment for a present cell | Proportions absorbed by the nearest profile | Held-out marker residuals; expand the reference |
+| Reference from a mismatched platform | Systematic bias in one cell type | Nuclear versus cytoplasmic capture differs | Proportions shifted by a constant factor | Platform-matched reference; benchmark on synthetic mixtures |
+| Collinear reference profiles | Unstable proportions between runs | Two cell types have similar signatures | Arbitrary split between types | Merge the types or use a hierarchical prior |
+| Normalization confounding depth | Proportions correlate with total counts | Counts normalized without depth correction | Composition read from library size | Depth-aware normalization; include depth as a covariate |
+| Spot treated as a replicate | p-values far smaller than the patient count implies | Pseudoreplication | False patient-level claims | Aggregate to patient; mixed models |
+| Panel missing the marker | Marker absent from all spots | Targeted panel design | False conclusion that the marker is not expressed | Check panel content before the study |
+| Segmentation errors | Transcripts assigned to the wrong cell | Nuclei overlap or boundaries are ambiguous | Cell-level counts contaminated | Inspect segmentation masks; compare with markers |
+| Low-count spots included | Noisy proportions at the tissue edge | Normalization amplifies noise | Spurious heterogeneity | Filter by counts and tissue coverage |
+| Tissue artifact read as biology | A stripe or bubble pattern in the map | Fold, bubble, or drying artifact | A "spatial gradient" that is technical | Inspect the H&E; plot residuals by array position |
+| Batch effect across slides | Patients cluster by slide | Staining and capture variation | Confounded comparison | Include slide as a random effect; stain in one batch |
+| Overinterpreting Moran's I | Clustering reported as a mechanism | Autocorrelation conflates architecture and biology | A gradient claim with no mechanism | Compare with the histology boundary |
+| One patient, many spots | A "cohort" of one | No patient-level replication | Irreproducible subtype claim | Pre-specify the patient count |
+| No orthogonal validation | Result never compared with pathology | Model and reference errors go undetected | A confident artifact | Pathologist review; second assay |
+
+## 11. Assumptions and limits
+
+| Assumption | Why it is needed | What breaks it | How to test it |
+|---|---|---|---|
+| The image and grid are aligned | All spatial attribution depends on it | Tissue deformation, landmark error | Residual at held-out landmarks |
+| The reference represents the tissue | Deconvolution is a projection onto the reference | Missing cell type, disease-specific state | Held-out marker residuals |
+| Reference and spatial data measure the same transcript population | Counts per cell must be comparable | Nuclei versus whole cells, different probes | Synthetic mixture recovery |
+| Cell-type signatures are stable across spots | One reference is applied everywhere | Spatial variation in expression state | Residual autocorrelation |
+| Spots are independent conditional on covariates | Standard errors require it | Spatial autocorrelation | Moran's I on residuals |
+| The panel covers the biology of interest | Only measured genes can be analyzed | Targeted panel design | Panel content review |
+| Segmentation is accurate | Cell-level counts depend on boundaries | Overlapping nuclei, low signal | Mask inspection; marker concordance |
+| The section represents the tumour | A slide is a sample of a three-dimensional tissue | Intratumour heterogeneity | Multiple sections or blocks |
+| The patient is the unit for clinical claims | Replication requires independent patients | One patient per condition | Pre-specified patient count |
+| Normalization removes technical variation | Composition should reflect biology | Capture efficiency gradients | Plot proportions against depth |
+
+## 12. Exercises
+
+### Exercise 1. Compute cells per spot
+
+**Task.** A Visium spot has a diameter of 55 micrometres. Assume a cell cross-section of 10
+micrometres in diameter and a tissue cellularity of 60%. Estimate the number of cells per spot.
+
+**Deliverable.** The arithmetic and a statement of the assumptions.
+
+**Acceptance criteria.** Spot area 2,375.8 square micrometres; cell area 78.5 square micrometres;
+perfect-packing bound 30.3 cells; at 60% cellularity, about 18 cells. The answer states that the
+bound ignores extracellular matrix and that observed counts are often lower.
+
+**Time.** 20 minutes.
+
+### Exercise 2. Register a section from landmarks
+
+**Task.** Three landmarks map spot coordinates (0,0), (6.5,0), and (0,6.5) to pixels (100,120),
+(3600,130), and (110,3380). Fit an affine transform and compute the residual at (6.5,6.5), which
+is measured at (3608,3392). Use a pixel size of 0.5 micrometres.
+
+**Deliverable.** The transform parameters and the residual in micrometres.
+
+**Acceptance criteria.** Scale factors approximately 538.5 and 501.5 pixels per millimetre;
+residual 2.83 pixels, or 1.41 micrometres, which is 2.6% of the spot diameter. The answer
+classifies the residual as acceptable.
+
+**Time.** 30 minutes.
+
+### Exercise 3. Deconvolve by hand
+
+**Task.** Using the reference and counts in section 6, solve the two-compartment model and report
+the proportions. Then compute the residual at CD8A and interpret it.
+
+**Deliverable.** The two equations, the solution, and the interpretation.
+
+**Acceptance criteria.** Tumour 5.96 cells and fibroblast 1.65 cells; proportions 78.3% and 21.7%;
+CD8A residual +80 counts, equivalent to 0.53 T cells, which indicates a missing compartment.
+
+**Time.** 30 minutes.
+
+### Exercise 4. Test the reference assumption
+
+**Task.** Recompute Exercise 3 with a tumour reference COL1A1 value of 60 instead of 10, and state
+how the conclusion changes.
+
+**Deliverable.** The new solution and a two-sentence interpretation.
+
+**Acceptance criteria.** Fibroblast 0.90 cells and tumour 5.98 cells; fibroblast fraction falls
+from 21.7% to 13.1%; the answer states that no residual diagnostic detects the change because the
+fit still reproduces its own genes.
+
+**Time.** 25 minutes.
+
+### Exercise 5. Compute Moran's I on a small grid
+
+**Task.** For the four-by-four grid in section 6, compute Moran's I with rook contiguity instead of
+queen contiguity, and compare with the value reported in the text.
+
+**Deliverable.** The calculation and the comparison.
+
+**Acceptance criteria.** The value is close to but not identical to +0.4836, and the answer states
+that the weight definition changes the statistic while the qualitative conclusion of clustering
+does not change. A correct answer notes the different total weight W.
+
+**Time.** 35 minutes.
+
+### Exercise 6. Diagnose a pseudoreplication error
+
+**Task.** A paper reports that a spatial niche is associated with response, using 12 responders and
+10 non-responders, with a p-value computed over 84,000 spots. Identify the error, state the correct
+test, and describe what the authors should report.
+
+**Deliverable.** A 300-word statistical review.
+
+**Acceptance criteria.** The review identifies pseudoreplication, proposes a patient-level summary
+and a test with 22 observations, and asks for the per-patient effect sizes and a confidence
+interval. It notes that the spot-level p-value is not interpretable as patient-level evidence.
+
+**Time.** 30 minutes.
+
+### Exercise 7. Design a validation study
+
+**Task.** Design a study to test whether a deconvolution-based fibroblast fraction predicts
+resistance to checkpoint blockade. Specify the cohort, the assay, the reference, the endpoint, and
+the analysis.
+
+**Deliverable.** A two-page protocol.
+
+**Acceptance criteria.** The protocol specifies a patient-level endpoint, a pre-specified
+threshold, an ancestry- and platform-matched reference, a held-out marker diagnostic, an orthogonal
+validation in a subset, and a sample size justified by the expected effect.
+
+**Time.** 60 minutes.
+
+### Exercise 8. Critique a spatial claim
+
+**Task.** A press release states that a company's spatial platform "maps the tumour
+microenvironment at single-cell resolution across the whole transcriptome". Write a critique.
+
+**Deliverable.** A 300-word critique with at least three specific questions.
+
+**Acceptance criteria.** The critique distinguishes capture-based whole-transcriptome assays at
+multi-cell resolution from imaging panels at single-cell resolution with targeted panels, and asks
+about bin size, segmentation, panel content, and validation. It does not accept the combination of
+"single-cell" and "whole transcriptome" without evidence.
+
+**Time.** 30 minutes.
+
+## 13. Self-check answers
+
+**Exercise 1.** Spot area = pi x 27.5 squared = 2,375.8 square micrometres. Cell area = pi x 5
+squared = 78.54 square micrometres. Perfect-packing bound = 2,375.8 / 78.54 = 30.25 cells. At 60%
+cellularity, 0.60 x 30.25 = 18.15 cells. The realised count is lower because cells are not
+discs, nuclei are smaller than cells, and the capture area includes extracellular matrix. A
+reported cell count of 18 should be described as an estimate with an upper bound of about 30.
+
+**Exercise 2.** The transform is x_pix = 538.462 x + 1.538 y + 100 and y_pix = 1.538 x + 501.538 y
++ 120. At (6.5, 6.5), predicted x = 3,500 + 10 + 100 = 3,610, predicted y = 10 + 3,260 + 120 =
+3,390. The measured point is (3,608, 3,392), so the residual is the square root of (2 squared plus
+2 squared), which is 2.83 pixels. At 0.5 micrometres per pixel, that is 1.41 micrometres, or 2.6%
+of the 55 micrometre spot. The residual is acceptable for spot-level analysis.
+
+**Exercise 3.** The equations are 1,200 = 200t + 5f and 720 = 10t + 400f. From the first,
+t = 6 - 0.025f. Substituting gives 720 = 60 - 0.25f + 400f, so 660 = 399.75f and f = 1.651. Then
+t = 5.959. The proportions are 78.3% tumour and 21.7% fibroblast. The CD8A prediction is zero and
+the observation is 80 counts, a residual of 80 counts, which is 80/150 = 0.53 T cells. The
+two-compartment model is missing a compartment.
+
+**Exercise 4.** With COL1A1 at 60 for tumour cells, the equations are 1,200 = 200t + 5f and
+720 = 60t + 400f. Substituting t = 6 - 0.025f gives 720 = 360 - 1.5f + 400f, so 360 = 398.5f and
+f = 0.903. Then t = 5.977. The fibroblast fraction is 0.903 / 6.881 = 13.1%. The tumour fraction
+rises to 86.9%. No residual diagnostic detects the change, because both fitted genes are
+reproduced exactly. The reference value is an assumption that must be reported.
+
+**Exercise 5.** With rook contiguity, corner cells have two neighbours, edge cells three, and
+interior cells four, giving a total weight of 4 x 2 + 8 x 3 + 4 x 4 = 48, compared with 84 for
+queen contiguity. The numerator also changes because diagonal pairs are excluded. The resulting I
+is close to but not identical to the queen value, and the conclusion of positive spatial
+clustering is unchanged. The exact value depends on the grid and the weights, which is why the
+weight definition must be reported.
+
+**Exercise 6.** Rubric. Full credit requires identifying pseudoreplication, proposing a
+patient-level summary such as the mean niche score per patient, testing with 22 observations, and
+asking for per-patient effect sizes with a confidence interval. A review that proposes a mixed
+model with a patient random effect but retains the spot-level p-value as the headline fails.
+
+**Exercise 7.** Rubric. Full credit requires a patient-level endpoint, a pre-specified analysis, a
+matched reference, a held-out marker diagnostic, orthogonal validation, and a sample size
+justified by an expected effect. A protocol that uses spot-level tests or omits the reference
+provenance fails.
+
+**Exercise 8.** Rubric. Full credit distinguishes sequencing capture from imaging, asks about bin
+size and segmentation, asks whether the panel is whole transcriptome or targeted, and asks for
+validation against pathology. A critique that only disputes the word "single-cell" misses the
+transcriptome claim.
+
+## 14. Interview questions
+
+**1. Why can a 55 micrometre spot not be treated as a single cell?**
+A strong answer gives the geometric estimate, about 10 to 30 cells at the packing bound and fewer
+in practice, and states that the measurement is a mixture. A weak answer says the spot is "small".
+
+**2. What does deconvolution estimate, and what does it assume?**
+A strong answer describes the linear mixture model with non-negative weights and names the
+reference, the platform match, and the missing-cell-type assumption. A weak answer describes it as
+"separating cell types" without the model.
+
+**3. How do you check a deconvolution result?**
+A strong answer names held-out marker residuals, synthetic mixtures with known proportions, and
+comparison with pathology. A weak answer says "look at the heatmap".
+
+**4. What is the difference between Visium and Xenium?**
+A strong answer contrasts capture-based whole-transcriptome measurement at multi-cell resolution
+with imaging-based targeted panels at sub-cellular resolution. A weak answer treats them as
+competing products with the same output.
+
+**5. What does Moran's I tell you, and what does it not tell you?**
+A strong answer says it measures spatial clustering against a null of randomness and does not
+establish mechanism or independence. A weak answer interprets it as a p-value for biology.
+
+**6. Why is a spot not a replicate?**
+A strong answer explains spatial autocorrelation and the patient as the independent unit. A weak
+answer says "because they are correlated" without connecting it to inference.
+
+**7. How would you detect a registration error?**
+A strong answer uses landmarks held out from the fit and expresses the residual relative to the
+spot diameter, and notes that structured residuals suggest non-rigid deformation. A weak answer
+says "check the overlay by eye".
+
+**8. What happens if the reference lacks a cell type?**
+A strong answer explains that the signal is absorbed by the nearest profile and detected by a
+residual at a held-out marker. A weak answer says the method "handles it".
+
+**9. When is an NNLS baseline preferable to a Bayesian method?**
+A strong answer cites the benchmark finding that NNLS beats about half of dedicated methods and
+argues for a transparent baseline when the panel is small or compute is limited. A weak answer
+assumes newer is better.
+
+**10. What would make a spatial biomarker clinically ready?**
+A strong answer requires analytical validation, patient-level prospective evidence, a specified
+use, and a regulatory path. A weak answer says "a significant association with response".
+
+## 15. Key terms
+
+- **Affine transform** — six-parameter linear mapping between coordinates.
+- **Bin** — aggregated capture square at a chosen resolution.
+- **Capture spot** — barcoded region on a sequencing array.
+- **CARD** — spatial deconvolution method using reference and spatial correlation.
+- **Cell2location** — Bayesian deconvolution method with uncertainty estimates.
+- **Deconvolution** — estimation of cell-type proportions from mixed expression.
+- **FFPE** — formalin-fixed paraffin-embedded tissue.
+- **Held-out marker** — marker excluded from a fit and used as an independent check.
+- **Immune desert** — absence of cytotoxic T cells from tumour and stroma.
+- **Immune excluded** — T cells present but confined to the stroma.
+- **Landmark** — corresponding point used to fit a registration.
+- **MERSCOPE** — imaging-based spatial platform.
+- **Moran's I** — spatial autocorrelation statistic.
+- **Neighbourhood enrichment** — test of co-localization beyond expectation.
+- **Niche** — recurring spatial combination of cell types.
+- **NNLS** — non-negative least squares.
+- **Non-rigid registration** — warping transform allowing local deformation.
+- **Pseudoreplication** — treating non-independent units as replicates.
+- **RCTD** — robust cell type decomposition method.
+- **Reference profile** — per-cell-type expression signature.
+- **Registration** — alignment of image and capture coordinates.
+- **Segmentation** — assignment of transcripts to cell boundaries.
+- **Spatial autocorrelation** — similarity of nearby values.
+- **SpatialData** — open container for spatial omics data.
+- **Spatial transcriptomics** — RNA measurement with retained coordinates.
+- **Tangram** — mapping method aligning single-cell and spatial data.
+- **Tumour microenvironment** — cellular and extracellular context of a tumour.
+- **Visium** — sequencing-based capture platform.
+- **Visium HD** — 2 micrometre barcoded capture platform.
+- **Whole-slide image** — digitized histology slide.
+- **Xenium** — imaging-based in-situ hybridization platform.
+
+## 16. Sources
+
+Accessed 26 October 2026 unless otherwise stated.
+
+- 10x Genomics. *Visium Spatial Platform*. https://www.10xgenomics.com/platforms/visium
+- 10x Genomics. *Visium HD Spatial Gene Expression 2.0 User Guide*, 2026.
+  https://cdn.10xgenomics.com/image/upload/v1775578153/support-documents/CG001679_VisiumHD_GeneExpression_2.0_UG_Rev_A.pdf
+- 10x Genomics. *Xenium Analyzer Specifications*, 2024.
+  https://cdn.10xgenomics.com/image/upload/v1712007637/support-documents/CG000630_XeniumAnalyzer_Specifications_RevE.pdf
+- Stahl, P. L., et al. *Visualization and Analysis of Gene Expression in Tissue Sections by
+  Spatial Transcriptomics*. Science 353, 78-82, 2016. https://doi.org/10.1126/science.aaf2403
+- Li, B., et al. *Benchmarking Spatial and Single-Cell Transcriptomics Integration Methods for
+  Transcript Distribution Prediction and Cell Type Deconvolution*. Nature Methods, 2022.
+  https://doi.org/10.1038/s41592-022-01480-9
+- Li, H., et al. *A Comprehensive Benchmarking with Practical Guidelines for Cellular
+  Deconvolution of Spatial Transcriptomics*. Nature Communications, 2023.
+  https://doi.org/10.1038/s41467-023-37168-7
+- Yan, X., and Sun, X. *Benchmarking and Integration of Methods for Deconvoluting Spatial
+  Transcriptomic Data*. Bioinformatics 39, 2023. https://doi.org/10.1093/bioinformatics/btac805
+- Sang-aram, S., et al. *Spotless: A Reproducible Pipeline for Benchmarking Cell Type
+  Deconvolution in Spatial Transcriptomics*. eLife, 2024.
+  https://doi.org/10.7554/eLife.88431
+- Cable, D. M., et al. *Robust Decomposition of Cell Type Mixtures in Spatial Transcriptomics*.
+  Nature Biotechnology 40, 517-526, 2022. https://doi.org/10.1038/s41587-021-00830-w
+- Kleshchevnikov, V., et al. *Cell2location Maps Fine-Grained Cell Types in Spatial
+  Transcriptomics*. Nature Biotechnology 40, 661-671, 2022.
+  https://doi.org/10.1038/s41587-021-01001-7
+- He, B., et al. *Integrating Spatial Gene Expression and Breast Morphology via Deep Learning*.
+  Nature Biomedical Engineering 4, 827-834, 2020. https://doi.org/10.1038/s41551-020-0577-8
+- Moses, L., and Pachter, L. *Museum of Spatial Transcriptomics*. Nature Methods 19, 534-546,
+  2022. https://doi.org/10.1038/s41592-022-01409-2
+- SpatialData documentation. https://spatialdata.scverse.org/
+- Palla, G., et al. *Squidpy: A Scalable Framework for Spatial Omics Analysis*. Nature Methods 19,
+  171-178, 2022. https://doi.org/10.1038/s41592-021-01358-2
+
+## 17. Links
+
+- Module index: [`_index.md`](_index.md)
+- Previous topic: [`12_polygenic-risk-scores.md`](12_polygenic-risk-scores.md)
+- Next topic: [`14_ai-for-protein-engineering.md`](14_ai-for-protein-engineering.md)
+- Related topic: [`05_spatial-transcriptomics.md`](05_spatial-transcriptomics.md)
+- Related topic: [`04_single-cell.md`](04_single-cell.md)
+- Module survey: [`../../course/12_omics_precision_medicine.md`](../../course/12_omics_precision_medicine.md)
+- Laboratory exercises and datasets: [`../../labs/`](../../labs/)
+- Cohort pipeline lab: [`../../labs/03_cohort_pipeline.ipynb`](../../labs/03_cohort_pipeline.ipynb)
+

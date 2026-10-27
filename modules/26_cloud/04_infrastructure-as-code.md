@@ -57,7 +57,7 @@ requires identification, control, and status accounting of configuration items, 
 requires change control. An IaC repository with reviewed pull requests, tagged releases, and a
 recorded plan is a natural configuration management system. A console-driven environment is not.
 
-The HIPAA Security Rule does not mention IaC. It does require audit controls at 45 CFR 164.312(b)
+The Health Insurance Portability and Accountability Act (HIPAA) Security Rule does not mention IaC. It does require audit controls at 45 CFR 164.312(b)
 and integrity protection at 164.312(c)(1). CloudTrail records API calls, including those made by
 Terraform, so the combination of IaC and CloudTrail gives a change history that a console-only
 workflow also has, but without the intended-state record that explains why the change was made.
@@ -73,7 +73,7 @@ By the end of this topic you can:
 1. **Configure** a remote state backend with encryption, versioning, and locking, and explain what
    each provides.
 2. **Pin** provider and module versions and state the consequence of a floating constraint.
-3. **Compute** a subnet plan from a VPC CIDR using `cidrsubnet`, and detect overlap between
+3. **Compute** a subnet plan from a virtual private cloud (VPC) CIDR using `cidrsubnet`, and detect overlap between
    environments.
 4. **Read** a `terraform plan` and identify which changes force replacement and why.
 5. **Estimate** the monthly cost of an environment from its instance types, NAT gateway count, and
@@ -95,7 +95,7 @@ are what actually exists. Every Terraform operation is a reconciliation between 
    configuration (git)            state (remote backend)         remote objects (AWS)
    ┌──────────────────┐          ┌────────────────────┐         ┌──────────────────┐
    │ resource blocks  │          │ resource addresses │         │ VPC, subnets     │
-   │ module calls     │          │ attribute values   │         │ S3 bucket, KMS   │
+   │ module calls     │          │ attribute values   │         │ S3 bucket + KMS  │
    │ variables        │          │ dependency graph   │         │ EKS cluster      │
    └────────┬─────────┘          └─────────┬──────────┘         └────────┬─────────┘
             │                              │                             │
@@ -115,7 +115,7 @@ that.
 ### 3.1 State is the source of truth, and it is sensitive
 
 State maps resource addresses to remote identifiers and caches attribute values. Some of those
-values are secrets: database passwords, generated keys, TLS private keys. State is therefore a
+values are secrets: database passwords, generated keys, transport layer security (TLS) private keys. State is therefore a
 secret store by accident, and must be protected as one.
 
 | State property | Why it matters | Control |
@@ -359,7 +359,7 @@ impossible. Allocate from a plan, not ad hoc. Section 7 includes a check.
 **Input.** A project name and an environment.
 
 **Output.** A KMS key and alias, a versioned and encrypted S3 bucket with public access blocked, a
-lifecycle rule, and an immutable ECR repository with scan on push.
+lifecycle rule, and an immutable Elastic Container Registry (ECR) repository with scan on push.
 
 **Rationale.** Each resource in `labs/cloud/terraform/modules/storage/main.tf` closes a specific
 failure. Versioning protects against overwrite and deletion. Server-side encryption with a customer
@@ -379,7 +379,7 @@ resource "aws_s3_bucket_public_access_block" "raw" {
 
 **Branch point.** A customer managed key adds a monthly key charge and per-request charges, and
 adds an operational dependency: if the key is disabled, the data is unreadable. An AWS managed key
-is cheaper and less controllable. For PHI, the customer managed key is usually the right choice
+is cheaper and less controllable. For protected health information (PHI), the customer managed key is usually the right choice
 because it supports key policies and revocation.
 
 **Edge case.** `deletion_window_in_days = 7` is the minimum. A deleted key cannot be recovered after
@@ -534,6 +534,7 @@ A module is only reusable if its interface is honest. Before publishing one inte
 | Resource names derived from inputs | Predictable naming | Collisions between environments |
 | `prevent_destroy` on stateful resources | Accidental deletion | Data loss |
 | A README with an example call | Usability | Copy-paste from another module |
+| An output for every value a caller needs | Composition | Duplicated resources |
 
 The lab modules follow most of these. `modules/network` and `modules/storage` take `project` and
 `env`; `modules/eks` takes the VPC outputs rather than looking them up. None of them configures a
@@ -989,6 +990,11 @@ incidents than teams that gate on test coverage, because the failure is in the p
 the code. The gate is cheap to add: a script that parses `terraform show -json tfplan` and fails if
 any stateful resource type appears with a replacement action. The list of stateful types is short:
 buckets, databases, key stores, file systems, and anything with `prevent_destroy` set.
+
+The gate has one false-positive class worth planning for: a resource that is replaced on purpose,
+such as a launch template during a node group upgrade. Allow an explicit override with a written
+reason, and require the reason to name the migration procedure. An override that says "planned" is
+not a reason.
 
 The second corollary concerns state growth. A module that creates one resource per tenant produces a
 state file that grows with the customer base, and a plan that slows down proportionally. Splitting

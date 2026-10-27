@@ -213,7 +213,7 @@ sits between the two estimates.
 
 | Question | Metric | What a good value means | What it does not mean |
 |---|---|---|---|
-| Can the score rank people? | Area under the curve, or R-squared | Higher-risk people tend to have events first | The ranking is useful at a decision threshold |
+| Can the score rank people? | Area under the curve (AUC), or R-squared | Higher-risk people tend to have events first | The ranking is useful at a decision threshold |
 | Are the predicted risks correct? | Calibration slope and intercept, observed versus expected | Predicted 5% means about 5% observed | The model changes any decision |
 | Does the score improve decisions? | Net reclassification improvement, decision curve net benefit | More benefit than the alternatives across thresholds | The improvement is large enough to justify cost |
 
@@ -1002,7 +1002,6 @@ assessment. The details depend on the intended use statement.
 Those decisions belong to the program, and they should be written down before the first report is
 issued.
 
-<!--PART2-->
 ## 9. Industry practice and case evidence
 
 ### 9.1 How scores reach patients

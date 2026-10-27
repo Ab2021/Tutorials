@@ -35,7 +35,7 @@ that must be writable. Those two files are the specification this topic teaches 
 | "Works on my machine" | Dependency drift between laptop and server | Image digest identifies the exact filesystem |
 | Silent dependency change | `pip install` resolves differently six months later | Lockfile with hashes, pinned base digest |
 | Privilege sprawl | Service runs as a system account with broad rights | Non-root user, dropped capabilities, read-only root |
-| Unknowable contents | Nobody can list the installed packages | SBOM generated at build, stored with the digest |
+| Unknowable contents | Nobody can list the installed packages | software bill of materials (SBOM) generated at build, stored with the digest |
 
 Containers alone deliver only the first row. The other three require the build discipline in
 Section 5.
@@ -52,7 +52,7 @@ architecture properties, and they are set in the Dockerfile.
 
 `labs/cloud/k8s/03-deployment.yaml` pins `ghcr.io/example/biomed-risk:0.1.0` and sets
 `imagePullPolicy: IfNotPresent`. The tag is a version, not a digest, and it is hosted on a registry
-that the Terraform stack does not create. A production configuration uses the ECR repository from
+that the Terraform stack does not create. A production configuration uses the Elastic Container Registry (ECR) repository from
 `labs/cloud/terraform/modules/storage/main.tf`, references the image by digest, and uses an
 image pull secret or node role scoped to that repository. The lab's container security context is
 sound and worth copying; its registry wiring is not.
@@ -528,7 +528,7 @@ it badly. The deployment manifest is the other half of the contract, and
 
 ## 6. Worked example
 
-A risk-scoring service is deployed to a three-node EKS cluster. The image is 1.2 GB compressed. Each
+A risk-scoring service is deployed to a three-node Amazon Elastic Kubernetes Service (EKS) cluster. The image is 1.2 GB compressed. Each
 node is `t3.medium` with 2 vCPU, 4 GiB of memory, and a 20 GiB gp3 root volume, the default for an
 EKS managed node group. The Deployment requests two replicas with `maxSurge: 1` and
 `maxUnavailable: 0`.
@@ -542,7 +542,7 @@ EKS managed node group. The Deployment requests two replicas with `maxSurge: 1` 
 | Node root volume | 20 GiB gp3 | EKS managed node group default |
 | Node count | 3 | `node_desired_size = 2`, `node_max_size = 4`; assume 3 after one scale-out |
 | Registry bandwidth per node | 500 Mbit/s | Assumed cluster network |
-| Effective pull efficiency | 40 percent of link rate | Assumed, includes TLS and registry overhead |
+| Effective pull efficiency | 40 percent of link rate | Assumed, includes transport layer security (TLS) and registry overhead |
 | Replicas | 2 | `labs/cloud/k8s/03-deployment.yaml` |
 | Startup time after pull | 20 s | Assumed, model load included |
 | Readiness delay | 10 s | `initialDelaySeconds: 5` plus probe period |
@@ -861,6 +861,12 @@ EXPOSE 8000 22
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0"]
 ```
 
+Run it against that file:
+
+```bash
+python lint.py Dockerfile.demo
+```
+
 Actual output:
 
 ```text
@@ -936,17 +942,17 @@ digest is portable across conforming registries.
 What the specification does not define: signing, scanning, admission policy, or provenance. Those
 are supplied by other projects and by the registry.
 
-### 8.2 HIPAA Security Rule
+### 8.2 Health Insurance Portability and Accountability Act (HIPAA) Security Rule
 
 The technical safeguards at 45 CFR 164.312 constrain containers indirectly:
 
 | Clause | Constraint | Container consequence |
 |---|---|---|
-| 164.312(a)(1) Access control | Limit access to electronic PHI | Non-root user, no shared credentials in the image |
+| 164.312(a)(1) Access control | Limit access to electronic protected health information (PHI) | Non-root user, no shared credentials in the image |
 | 164.312(a)(2)(i) Unique user identification | Identify each user | Service identity, not a shared account baked into an image |
 | 164.312(b) Audit controls | Record access and activity | No PHI in image logs; ship logs to an audited sink |
 | 164.312(c)(1) Integrity | Protect against improper alteration | Immutable tags, digest pinning, read-only root filesystem |
-| 164.312(e)(1) Transmission security | Protect PHI in transit | TLS between services; the lab does not provide this |
+| 164.312(e)(1) Transmission security | Protect PHI in transit | transport layer security (TLS) between services; the lab does not provide this |
 
 Encryption and decryption at 164.312(a)(2)(iv) is an addressable specification. Addressable means
 the covered entity must assess it, implement it if reasonable and appropriate, and document the

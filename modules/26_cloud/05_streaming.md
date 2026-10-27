@@ -56,7 +56,7 @@ regulatory parameter, not a capacity parameter.
 producer creates the topic with three partitions and replication factor one. That configuration
 survives no broker failure and provides no redundancy. A production configuration uses at least
 three brokers across three availability zones, replication factor three, `min.insync.replicas` of
-two, TLS, authentication, and a schema registry. Section 5 states each change.
+two, transport layer security (TLS), authentication, and a schema registry. Section 5 states each change.
 
 > **Note:** The lab stack is a teaching scaffold. It is not a compliant deployment and the sample
 > events contain synthetic identifiers only.
@@ -199,7 +199,7 @@ an effective minimum retention of about one day.
 Three distinctions carry the operational weight.
 
 **Lag is not latency.** A consumer with zero lag can still take ten seconds to process the next
-record. A consumer with high lag may still meet its latency SLO if the backlog is drained in a burst.
+record. A consumer with high lag may still meet its latency service level objective (SLO) if the backlog is drained in a burst.
 
 **Idempotence is per producer session.** A producer with `enable.idempotence=true` suppresses
 duplicates caused by its own retries. A new producer instance gets a new producer identifier and
@@ -294,7 +294,7 @@ optional with a default, or release it in two steps: add optional, deploy consum
 
 **Rationale.** `labs/cloud/kafka/producer.py` sets:
 
-```python
+```text
 Producer({
     "bootstrap.servers": args.bootstrap,
     "enable.idempotence": True,
@@ -938,8 +938,8 @@ transmission, and the access control standard at 164.312(a)(1) requires limiting
 | Control | Kafka mechanism | Lab status |
 |---|---|---|
 | Encryption in transit | TLS listeners, TLS for inter-broker | Not configured |
-| Encryption at rest | Broker volume encryption, KMS | Not configured |
-| Authentication | SASL, mTLS | Not configured |
+| Encryption at rest | Broker volume encryption, key management service (KMS) | Not configured |
+| Authentication | SASL, mutual transport layer security (mTLS) | Not configured |
 | Authorization | ACLs per topic and group | Not configured |
 | Audit | Broker audit log, client principal logging | Not configured |
 
@@ -1021,7 +1021,7 @@ The following are inferences, labelled as such:
 | New event ID per retry | Duplicates with different IDs | Identifier generated at send time | Undetectable duplicates | Derive ID from source event |
 | Auto-commit enabled | Records lost on crash | Offsets committed before processing | Silent data loss | Manual commit after write |
 | No deduplication store | Replay duplicates output | At-least-once plus non-idempotent write | Duplicate rows | Unique constraint on event ID |
-| Poison record without DLQ | Partition lag grows, consumer logs repeat | Infinite retry | Partition stalls | Dead-letter and commit |
+| Poison record without dead-letter queue (DLQ) | Partition lag grows, consumer logs repeat | Infinite retry | Partition stalls | Dead-letter and commit |
 | DLQ without retention | DLQ grows unbounded | No cleanup policy | Disk exhaustion | Retention and depth alert |
 | Rebalance loop | Repeated `PreparingRebalance` | `max.poll.interval.ms` exceeded | Lag grows with busy consumers | Reduce batch, offload work |
 | Too few partitions | Consumers idle at the limit | Parallelism capped | Cannot scale | Size for peak consumers |

@@ -19,7 +19,7 @@ API token; `labs/cloud/k8s/08-networkpolicy.yaml` starts from default-deny; and
 `labs/cloud/terraform/modules/storage/main.tf` blocks public access on the bucket, encrypts with a
 customer managed key, and marks the registry repository immutable. The gaps are equally real: the
 deployment references an image by tag rather than digest, `02-secret.example.yaml` is a template with
-placeholder values, there is no TLS between pods, the network policy allows HTTPS to any address,
+placeholder values, there is no transport layer security (TLS) between pods, the network policy allows HTTPS to any address,
 and `cluster_endpoint_public_access = true` in `labs/cloud/terraform/modules/eks/main.tf`.
 
 The purpose of this topic is to let you tell those apart, in a review, with evidence.
@@ -29,10 +29,10 @@ The purpose of this topic is to let you tell those apart, in a review, with evid
 | Threat | Concrete form | Primary control |
 |---|---|---|
 | Credential theft | Long-lived cloud key in a CI variable | Workload identity, short-lived tokens |
-| Lateral movement | Compromised pod reaches the database | Network segmentation, mTLS |
-| Supply-chain compromise | Malicious dependency in a base image | SBOM, signing, scanning |
+| Lateral movement | Compromised pod reaches the database | Network segmentation, mutual transport layer security (mTLS) |
+| Supply-chain compromise | Malicious dependency in a base image | software bill of materials (SBOM), signing, scanning |
 | Data exfiltration | Public bucket, over-broad egress | Bucket policy, egress restriction |
-| Insider access | Engineer reads PHI without a business need | Least privilege, audit |
+| Insider access | Engineer reads protected health information (PHI) without a business need | Least privilege, audit |
 | Secret leakage | Token in a manifest committed to git | External secret store, scanning |
 | Container escape | Root container with capabilities | Non-root, dropped caps, seccomp |
 | Denial of service | Unbounded request rate | Rate limits, quotas |
@@ -42,7 +42,7 @@ Each row is a control that can be tested. "We follow best practices" is not a te
 ### 1.2 Why a checklist is not enough
 
 A team can satisfy a checklist and remain exposed. The common pattern is controls that exist but are
-not enforced: a NetworkPolicy object in a cluster whose CNI ignores it, an image scan that reports
+not enforced: a NetworkPolicy object in a cluster whose container network interface (CNI) ignores it, an image scan that reports
 findings nobody gates on, a secret rotated on a schedule but copied into three environments, or an
 IAM role with the right name and `Action: "*"`.
 
@@ -51,7 +51,7 @@ each step, and Section 6 shows two diagnostics that reveal controls that look pr
 
 ### 1.3 The regulatory frame
 
-The HIPAA Security Rule at 45 CFR Part 164 Subpart C requires administrative, physical, and technical
+The Health Insurance Portability and Accountability Act (HIPAA) Security Rule at 45 CFR Part 164 Subpart C requires administrative, physical, and technical
 safeguards for electronic PHI. The technical safeguards at 164.312 are the ones most relevant to a
 cloud platform, but the administrative safeguards at 164.308 are what make them operate: risk
 analysis, sanction policy, access management, and incident response.
@@ -403,7 +403,7 @@ it as an attestation or store it under a path that includes the digest.
 
 **Output.** A gate that blocks on a stated severity, with a documented waiver path.
 
-**Rationale.** `labs/cloud/terraform/modules/storage/main.tf` enables `scan_on_push` on the ECR
+**Rationale.** `labs/cloud/terraform/modules/storage/main.tf` enables `scan_on_push` on the Elastic Container Registry (ECR)
 repository. That is ECR basic scanning, which covers operating-system packages and runs at most once
 per image per 24 hours. Enhanced scanning, through Amazon Inspector, covers language packages and
 can rescan continuously.
@@ -823,7 +823,7 @@ credential exposure, 20 requests/s
 reachable directed pod pairs
   tiers=3 pods/tier=12 edges=2  flat= 1260  segmented=  684  reduction=45.7%
   tiers=4 pods/tier=10 edges=3  flat= 1560  segmented=  660  reduction=57.7%
-  tiers=5 pods/tier=8 edges=4  flat= 1560  segmented=  536  reduction=65.6%
+  tiers=5 pods/tier= 8 edges=4  flat= 1560  segmented=  536  reduction=65.6%
 
 after two regressions: 3 failures
   FAIL IDENTITY-1  service account token is mounted by default
@@ -967,6 +967,11 @@ continuous rescanning.
 These are public events, not healthcare-platform post-mortems. The specific lessons drawn are
 inferences.
 
+The common thread is access, not exploitation. In each case an identity or a trust relationship was
+used as intended by an attacker, and the controls that would have limited the damage were
+segmentation, least privilege, and detection. Container hardening would not have prevented any of
+them, which is why Section 5 puts identity and segmentation before image controls.
+
 ### 9.3 Inference
 
 The following are inferences, labelled as such:
@@ -986,6 +991,11 @@ workload role is a bounded change, it removes a static credential, and it is eas
 practical order is identity, then secrets, then segmentation, then supply chain. That ordering also
 matches the exposure arithmetic in Section 6, where the credential lifetime dominates.
 
+The order has an exception. If the platform already has a compromised-credential incident behind it,
+segmentation moves first, because it limits what a stolen credential can reach. The general rule is
+about building capability; the exception is about containing a known problem. State which situation
+you are in before recommending an order, because the two lead to different first steps.
+
 ## 10. Failure modes and red flags
 
 | Failure | Early warning sign | Mechanism | Consequence | Mitigation |
@@ -1004,6 +1014,10 @@ matches the exposure arithmetic in Section 6, where the credential lifetime domi
 | Audit log deletable | Same admin can delete logs | No separation | Evidence lost | Separate log account |
 | KMS key deletable | No break-glass restriction | Broad `kms:*` | Data unrecoverable | Restrict deletion, enable rotation |
 | Token in logs | Authorization header logged | Debug logging | Credential leak | Header redaction |
+| Unpinned image in production | Tag in the pod spec | Registry tag repointed | Unreviewed code runs | Digest plus admission policy |
+| Over-broad namespace policy | One policy for all pods | Convenience | No real segmentation | Per-workload policies |
+| Audit destination writable | Administrators can delete records | No separation of duties | Evidence destroyed | Append-only store in a separate account |
+| Egress endpoint unprotected | Traffic reaches an internal service directly | No private endpoint policy | Bypass of the intended path | Endpoint policy and security group |
 
 ## 11. Assumptions and limits
 
@@ -1019,6 +1033,10 @@ matches the exposure arithmetic in Section 6, where the credential lifetime domi
 | KMS key access is restricted | Data protection | Broad key policy | Review key policy |
 | The pod cannot reach metadata | Node role isolation | No egress rule for 169.254.169.254 | Exec and curl the metadata endpoint |
 | Human access uses SSO with MFA | Authentication claim | Local cluster users | List cluster auth mappings |
+| The registry is private | Supply-chain claim | Public image reference | `docker pull` without credentials |
+| Policy applies to all namespaces | No bypass | Cluster-scoped policy absent | Create a test namespace and apply a pod |
+| The audit destination is append-only | Evidence integrity | Write access for administrators | Attempt to delete an audit object |
+| The private endpoint policy is scoped | No bypass of the intended path | Open endpoint policy | Describe the endpoint policy |
 
 ## 12. Exercises
 

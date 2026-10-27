@@ -30,7 +30,7 @@ A biomedical data team is usually asked one of four questions, and each has a di
 
 | Question asked | Typical requester | Shape that usually fits |
 |---|---|---|
-| "Why is the sepsis alert late?" | Clinical operations | Streaming or event-driven, with a latency SLO |
+| "Why is the sepsis alert late?" | Clinical operations | Streaming or event-driven, with a latency service level objective (SLO) |
 | "Why did last night's cohort extract fail?" | Research or analytics | Batch, with idempotent retry and lineage |
 | "Why can two systems disagree about whether a patient is admitted?" | Informatics governance | Event-driven with a single source of truth and an outbox |
 | "Why does this dashboard cost more than the team that built it?" | Finance or platform owner | Batch or micro-batch, with retention and scan pruning |
@@ -44,7 +44,7 @@ fills every weekend.
 Architecture determines what evidence you can produce. A batch pipeline that writes an immutable
 landing object per run can reconstruct exactly which input produced which output. A streaming
 pipeline that overwrites a serving row in place cannot, unless it was designed with an append-only
-history. The HIPAA Security Rule requires audit controls at 45 CFR 164.312(b) and integrity
+history. The Health Insurance Portability and Accountability Act (HIPAA) Security Rule requires audit controls at 45 CFR 164.312(b) and integrity
 protection at 164.312(c)(1); neither clause names an architecture, but both constrain what the
 architecture must retain.
 
@@ -206,7 +206,7 @@ authorization on both client and inter-broker traffic. Section 5 returns to this
 | Backfill | Reprocessing historical data to populate or correct | Replay | Job run over a date range |
 | Latency budget | The allowed time from event to observable effect, at a stated percentile | Average latency | Seconds, p50/p95/p99 |
 | Service level indicator (SLI) | A measured quantity that reflects service quality | A target | Ratio or duration |
-| Service level objective (SLO) | A target range for an SLI | A guarantee | Percentage over a window |
+| Service level objective (SLO) | A target range for a service level indicator (SLI) | A guarantee | Percentage over a window |
 | Error budget | The allowed amount of SLO violation in a window | Downtime allowance in general | Minutes or event count |
 | Recovery time objective (RTO) | Maximum acceptable time to restore service | Backup frequency | Duration |
 | Recovery point objective (RPO) | Maximum acceptable data loss measured in time | Backup retention | Duration |
@@ -698,7 +698,7 @@ service rate μ = 3.0 events/second
 utilisation ρ = 2.083 / 3.0 = 0.694
 mean wait in queue (M/D/1) = ρ / (2μ(1 − ρ))
                           = 0.694 / (2 × 3.0 × 0.306)
-                          = 0.378 seconds
+                          = 0.379 seconds
 ```
 
 The wait is well inside a five-second budget. At the mean rate the wait is negligible.
@@ -875,23 +875,23 @@ if __name__ == "__main__":
     main()
 ```
 
-Expected output:
+Actual output:
 
 ```text
 daily volume            36.000 MB/day
-retained with RF=3       0.756 GB
-partitions                     3
-queue wait at peak         0.378 s
-streaming                 202.70 USD/month
-batch                       9.94 USD/month
-ratio                      20.4x
+retained with RF=3      0.756 GB
+partitions                   3
+queue wait at peak       0.379 s
+streaming               202.70 USD/month
+batch                     9.95 USD/month
+ratio                     20.4x
 
 peak_factor  partitions  peak_eps  wait_s
-          2           1     0.694   0.000
-          6           3     2.083   0.378
-         10           5     3.472   0.263
-         20          10     6.944   0.252
-         40          20    13.889   0.248
+          2           1     0.694   1.136
+          6           3     2.083   0.379
+         10           5     3.472   0.227
+         20          10     6.944   0.114
+         40          20    13.889   0.057
 
 availability budget
   SLO 99.9000%    43.2 minutes/month
@@ -1013,7 +1013,7 @@ default-deny and why mutual transport layer security (mTLS) belongs in a product
 
 The AWS Well-Architected Framework has six pillars: operational excellence, security, reliability,
 performance efficiency, cost optimization, and sustainability. The Healthcare Industry Lens,
-published 17 November 2022, applies the pillars to healthcare workloads and treats HIPAA and PHI as
+published 17 November 2022, applies the pillars to healthcare workloads and treats HIPAA and protected health information (PHI) as
 the central regulatory driver. Its data protection guidance ties encryption at rest and in transit
 to the Business Associate Addendum, and its isolation guidance recommends separate accounts and
 organisational units for health data with tagging for attribute-based access control.
@@ -1092,7 +1092,7 @@ because of Kafka" should be treated as unsourced unless a named report is produc
 | Synchronous call in the ingest path | Ingest availability equals downstream availability | Availability coupling | Source system backlog during downstream outage | Buffer with a log or queue, or accept the coupling explicitly |
 | No replay procedure | Nobody can answer "reprocess Tuesday" | Retention or tooling missing | Incident recovery depends on vendor support | Write and rehearse the procedure quarterly |
 | Schema change without compatibility mode | Consumers fail after a producer deploy | Breaking field change | Pipeline halt, dead-letter flood | Registry with backward-transitive compatibility |
-| Trust boundary assumed at the cluster edge | Any pod can reach any pod | Flat pod network | Lateral movement after a compromise | Default-deny network policy with an enforcing CNI |
+| Trust boundary assumed at the cluster edge | Any pod can reach any pod | Flat pod network | Lateral movement after a compromise | Default-deny network policy with an enforcing container network interface (CNI) |
 | Single-zone data path | Zone maintenance causes an outage | No cross-zone replication | SLO breach during routine maintenance | Three zones, synchronous replication, minimum in-sync replicas |
 | Unbounded dead-letter queue | DLQ grows silently | Poison records retried forever | Hidden data loss, disk growth | Alert on DLQ depth and age; triage procedure |
 | Cost labels absent | Cannot attribute spend to a service | Shared untagged resources | No ability to right-size | Tag at creation, enforce with policy |
@@ -1267,7 +1267,7 @@ only if per-patient ordering can be reconstructed downstream.
 
 The cluster-internal boundary has no control in the lab stack beyond the network policy. That is a
 real gap: the policy restricts which pods can talk, but the traffic is plaintext and the identity is
-the pod's network address. A production design adds mTLS with workload identity.
+the pod's network address. A production design adds mutual transport layer security (mTLS) with workload identity.
 
 ### 13.6 ADR rubric
 
@@ -1389,7 +1389,7 @@ All sources accessed 26 October 2026.
    https://docs.aws.amazon.com/wellarchitected/latest/framework/the-pillars-of-the-framework.html
 7. AWS. *Healthcare Industry Lens*.
    https://docs.aws.amazon.com/wellarchitected/latest/healthcare-industry-lens/healthcare-industry-lens.html
-8. AWS. *Amazon EKS — Kubernetes version lifecycle*.
+8. AWS. *Amazon Elastic Kubernetes Service (EKS) — Kubernetes version lifecycle*.
    https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html
 9. AWS. *EC2 On-Demand pricing*, US East (Ohio), Linux. Price List API, retrieved 26 October 2026.
    https://aws.amazon.com/ec2/pricing/on-demand/

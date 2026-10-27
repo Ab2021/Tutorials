@@ -31,7 +31,7 @@ example.
 | "The new version never rolled out" | `maxUnavailable: 0` plus insufficient spare capacity | Section 5, Step 5 |
 | "Some pods are pending forever" | Sum of requests exceeds allocatable CPU | Section 5, Step 2 |
 | "The pod keeps restarting" | Liveness probe too aggressive during startup | Section 5, Step 4 |
-| "Node maintenance is stuck" | PDB cannot be satisfied, eviction returns 429 | Section 5, Step 9 |
+| "Node maintenance is stuck" | PodDisruptionBudget (PDB) cannot be satisfied, eviction returns 429 | Section 5, Step 9 |
 | "One zone has all the replicas" | No topology spread constraint | Section 5, Step 10 |
 | "The service cannot reach the database" | Default-deny egress without an allow rule | Section 5, Step 11 |
 | "Autoscaling does nothing" | Metrics server absent, or no CPU requests | Section 5, Step 8 |
@@ -42,7 +42,7 @@ manifests.
 ### 1.2 The version problem in the reference stack
 
 `labs/cloud/terraform/variables.tf` defaults `cluster_version` to `"1.30"`. As of 26 October 2026,
-Amazon EKS lists 1.34, 1.35, 1.36, and 1.37 in standard support, and 1.31, 1.32, and 1.33 in extended
+Amazon Elastic Kubernetes Service (EKS) lists 1.34, 1.35, 1.36, and 1.37 in standard support, and 1.31, 1.32, and 1.33 in extended
 support. Version 1.30 is past the end of extended support and is not listed at all. A cluster
 created with the default would either be rejected or auto-upgraded. Raise the default before
 running the lab; the manifest content is unaffected, but the version claim in the lab is stale.
@@ -203,7 +203,7 @@ Most incident time is spent guessing without these four commands.
 | PDB | PodDisruptionBudget, limiting voluntary evictions | An availability guarantee | Object |
 | Eviction API | API used by drain to respect PDBs | Pod deletion | API |
 | Topology spread constraint | Rule for distributing pods across zones or nodes | Affinity | Object |
-| NetworkPolicy | L3/L4 allow rules enforced by the CNI | A firewall for the cluster edge | Object |
+| NetworkPolicy | L3/L4 allow rules enforced by the container network interface (CNI) | A firewall for the cluster edge | Object |
 | CNI | Container Network Interface plugin | The cluster network | Plugin |
 | ServiceAccount | Identity for pods | A user account | Object |
 | RBAC | Role-based access control | Authentication | Object |
@@ -335,7 +335,7 @@ progressing, and the error is capacity, not the strategy.
 
 **Branch point.** With a tight capacity budget, `maxSurge: 0` and `maxUnavailable: 1` allows the
 rollout to proceed by taking capacity down first. It is faster and less available. The choice
-depends on the SLO, not on preference.
+depends on the service level objective (SLO), not on preference.
 
 **Edge case.** A `preStop` sleep longer than the remaining grace period causes the kubelet to
 SIGKILL the process mid-drain. Keep `preStop` plus application shutdown below
@@ -354,7 +354,7 @@ port indirection means the Service and the probes refer to a name, so a port cha
 **Branch point.** If the client is outside the cluster, an Ingress or a load balancer is needed. An
 Ingress requires an ingress controller; the lab assumes NGINX and does not install it.
 
-### Step 7 — Configure ingress and TLS
+### Step 7 — Configure ingress and transport layer security (TLS)
 
 **Input.** The hostname, the TLS certificate source, and the ingress class.
 
@@ -550,7 +550,7 @@ many nodes are needed, what the HPA will do under load, and whether maintenance 
 | Total requests, memory | 13,312 MiB | 6×512 + 4×1024 + 3×2048 |
 | HPA | min 2, max 6, target 70 percent CPU | `labs/cloud/k8s/06-hpa.yaml` |
 | PDB | `minAvailable: 1` | `labs/cloud/k8s/07-pdb.yaml` |
-| Availability SLO | 99.9 percent | Proposed |
+| Availability service level objective (SLO) | 99.9 percent | Proposed |
 
 All costs are USD, us-east-2, for 730 hours.
 
@@ -897,16 +897,16 @@ spec:
 
 ### 8.1 Kubernetes is not a compliance control
 
-No clause of the HIPAA Security Rule names Kubernetes. The Rule constrains outcomes, and a cluster
+No clause of the Health Insurance Portability and Accountability Act (HIPAA) Security Rule names Kubernetes. The Rule constrains outcomes, and a cluster
 can help or hinder them:
 
 | Clause | Constraint | Kubernetes mechanism | Limit |
 |---|---|---|---|
-| 164.312(a)(1) Access control | Limit access to electronic PHI | RBAC, NetworkPolicy, Pod Security | RBAC controls the API, not the data path |
+| 164.312(a)(1) Access control | Limit access to electronic protected health information (PHI) | RBAC, NetworkPolicy, Pod Security | RBAC controls the API, not the data path |
 | 164.312(a)(2)(i) Unique user identification | Identify each user | ServiceAccount per workload | A service account is not a human user |
 | 164.312(b) Audit controls | Record activity | API audit log, application logs | Audit log retention is a platform decision |
 | 164.312(c)(1) Integrity | Protect against alteration | Read-only root filesystem, immutable images | Does not cover data at rest |
-| 164.312(e)(1) Transmission security | Protect PHI in transit | NetworkPolicy, service mesh mTLS | NetworkPolicy is not encryption |
+| 164.312(e)(1) Transmission security | Protect PHI in transit | NetworkPolicy, service mesh mutual transport layer security (mTLS) | NetworkPolicy is not encryption |
 
 The distinction between a control that contributes and a control that satisfies is the one
 auditors test.
@@ -1202,9 +1202,9 @@ or a failed ConfigMap mount.
 
 ### 13.8 Lab to production
 
-The changes include: replace the `ghcr.io` tag with an ECR digest; replace the example secret with a
+The changes include: replace the `ghcr.io` tag with an Elastic Container Registry (ECR) digest; replace the example secret with a
 secrets-manager integration or an external secrets operator; add TLS issuance and renewal; narrow
-the `0.0.0.0/0` egress rule; add a Pod Identity or IRSA association to the service account; add a
+the `0.0.0.0/0` egress rule; add a Pod Identity or IAM Roles for Service Accounts (IRSA) association to the service account; add a
 startup probe; set a numeric `runAsUser`; raise the cluster version from 1.30; add a ResourceQuota;
 and add a policy engine for admission. The item that cannot be fixed in the manifest alone is
 encryption in transit inside the cluster, which requires a service mesh or a CNI with transparent

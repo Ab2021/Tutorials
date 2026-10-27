@@ -37,7 +37,7 @@ not the whole program.
 | 6 | [`06_emc-labs.md`](06_emc-labs.md) | EMC Labs | Emissions, immunity, and pre-compliance testing. | 1,200-1,800 | complete |
 | 7 | [`07_hil-labs.md`](07_hil-labs.md) | Hardware-in-the-Loop Labs | Closed-loop testing, fault injection, and latency measurement. | 1,200-1,800 | complete |
 | 8 | [`08_robotics-labs.md`](08_robotics-labs.md) | Robotics Labs | Kinematics, control, registration, and safety envelopes. | 1,200-1,800 | complete |
-| 9 | `09_evidence-dossier.md` | Evidence Dossier | Turning lab results into a defensible evidence package. | 1,200-1,800 | planned |
+| 9 | [`09_evidence-dossier.md`](09_evidence-dossier.md) | Evidence Dossier | Turning lab results into a defensible evidence package. | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -67,9 +67,9 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 1 |
+| planned | 0 |
 | draft | 0 |
-| complete | 8 |
+| complete | 9 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.
 
