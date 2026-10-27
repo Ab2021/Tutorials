@@ -44,7 +44,7 @@ not the whole program.
 | 13 | [`13_spatial-omics-and-pathology-integration.md`](13_spatial-omics-and-pathology-integration.md) | Spatial Omics and Pathology Integration | Pathology and molecular biology have spent a century looking at the same tissue through | 1,200-1,800 | complete |
 | 14 | [`14_ai-for-protein-engineering.md`](14_ai-for-protein-engineering.md) | AI for Protein Engineering and Structural Biology | A protein's function is determined by its three-dimensional structure, and for fifty years the | 1,200-1,800 | complete |
 | 15 | [`15_crispr-and-gene-therapy-pipelines.md`](15_crispr-and-gene-therapy-pipelines.md) | CRISPR and Gene Therapy Data Pipelines | In December 2023 the United States Food and Drug Administration (FDA) approved two cell-based | 1,200-1,800 | complete |
-| 16 | [`16_microbiome-analytics.md`](16_microbiome-analytics.md) | Microbiome Analytics and Metagenomics | The human gut contains roughly 10^13 to 10^14 microbial cells and a metagenome with millions of | 1,200-1,800 | draft (998 lines) |
+| 16 | [`16_microbiome-analytics.md`](16_microbiome-analytics.md) | Microbiome Analytics and Metagenomics | The human gut contains roughly 10^13 to 10^14 microbial cells and a metagenome with millions of | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -82,8 +82,8 @@ any topic that names your current decision problem.
 | Status | Count |
 |---|---:|
 | planned | 0 |
-| draft | 1 |
-| complete | 15 |
+| draft | 0 |
+| complete | 16 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.
 

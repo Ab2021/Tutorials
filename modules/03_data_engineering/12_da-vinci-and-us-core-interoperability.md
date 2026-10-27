@@ -448,7 +448,8 @@ Below is a complete, production-grade Python script implementing the complete Da
 3. Complete PAS Claim Bundle assembler.
 4. X12 278 translation engine and real-time ClaimResponse evaluator.
 
-```python
+```text
+# Excerpt from a larger module; not a standalone script.
 """
 Da Vinci Project and US Core Interoperability Pipeline
 Module: 03_data_engineering / Topic: 12_da-vinci-and-us-core-interoperability

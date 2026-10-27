@@ -431,7 +431,8 @@ All 42 post-weighting SMDs are $< 0.015$, confirming excellent common support an
 
 Below is a complete, production-grade Python script executing a full Target Trial Emulation pipeline using synthetic clinical cohorts, propensity score modeling, stabilized IPTW weighting, covariate balance auditing, and weighted Cox survival analysis.
 
-```python
+```text
+# Excerpt from a larger module; not a standalone script.
 """
 Target Trial Emulation Pipeline
 Module: 05_study_design / Topic: 11_target-trial-emulation

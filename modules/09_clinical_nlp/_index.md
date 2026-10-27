@@ -39,9 +39,9 @@ not the whole program.
 | 8 | [`08_deidentification.md`](08_deidentification.md) | De-identification | PHI categories, automated de-identification, and residual risk measurement. | 1,200-1,800 | complete |
 | 9 | [`09_summarization-and-grounding.md`](09_summarization-and-grounding.md) | Summarization and Grounding | Abstractive summarization, faithful citation, and hallucination detection. | 1,200-1,800 | complete |
 | 10 | [`10_llm-safety-in-clinical-text.md`](10_llm-safety-in-clinical-text.md) | LLM Safety in Clinical Text | Prompt injection, leakage, unsafe advice, and human-in-the-loop design. | 1,200-1,800 | complete |
-| 11 | [`11_ambient-ai-and-documentation.md`](11_ambient-ai-and-documentation.md) | Ambient Clinical AI and Autonomous Documentation | In 2026, **ambient clinical documentation**—the automated, real-time capture of the patient-clinician spoken conversa... | 1,200-1,800 | draft (253 lines) |
-| 12 | [`12_icsr-and-pharmacovigilance-nlp.md`](12_icsr-and-pharmacovigilance-nlp.md) | NLP for Pharmacovigilance and ICSR Automation | Post-marketing safety surveillance (pharmacovigilance, PV) is a legally mandated, high-stakes regulatory function in... | 1,200-1,800 | draft (283 lines) |
-| 13 | [`13_linguistic-equity-in-clinical-nlp.md`](13_linguistic-equity-in-clinical-nlp.md) | Linguistic Equity and Multilingual Clinical NLP | The vast majority of foundational clinical language models—including ClinicalBERT, GatorTron, Med-PaLM, and biomedica... | 1,200-1,800 | draft (270 lines) |
+| 11 | [`11_ambient-ai-and-documentation.md`](11_ambient-ai-and-documentation.md) | Ambient Clinical AI and Documentation | A clinician talks with a patient for twelve minutes. A microphone captures the conversation. A | 1,200-1,800 | complete |
+| 12 | [`12_icsr-and-pharmacovigilance-nlp.md`](12_icsr-and-pharmacovigilance-nlp.md) | NLP for Pharmacovigilance and ICSR Automation | A patient takes a new medicine, develops jaundice three weeks later, and is admitted to hospital. | 1,200-1,800 | complete |
+| 13 | [`13_linguistic-equity-in-clinical-nlp.md`](13_linguistic-equity-in-clinical-nlp.md) | Linguistic Equity and Multilingual Clinical NLP | A symptom-extraction model reports recall 0.89 on the validation set. The number is true and | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -60,7 +60,7 @@ any topic that names your current decision problem.
 08 De-identification ->
 09 Summarization and Grounding ->
 10 LLM Safety in Clinical Text ->
-11 Ambient Clinical AI and Autonomous Documentation ->
+11 Ambient Clinical AI and Documentation ->
 12 NLP for Pharmacovigilance and ICSR Automation ->
 13 Linguistic Equity and Multilingual Clinical NLP
 ```
@@ -76,8 +76,8 @@ any topic that names your current decision problem.
 | Status | Count |
 |---|---:|
 | planned | 0 |
-| draft | 3 |
-| complete | 10 |
+| draft | 0 |
+| complete | 13 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.
 

@@ -187,7 +187,7 @@ Missing from the modules though present in the research brief: HIPAA Security Ru
 
 ### H11. Make cross-references clickable and bidirectional
 
-Convert "Module NN" to `[Module NN](NN_file.md)` at least in the footer "Next:" lines and in the prerequisite headers. Add reverse links in the dataset catalogue to the modules that use each dataset. This is mechanical and would materially improve usability.
+Convert "Module NN" to ``[Module NN](NN_file.md)`` at least in the footer "Next:" lines and in the prerequisite headers. Add reverse links in the dataset catalogue to the modules that use each dataset. This is mechanical and would materially improve usability.
 
 ### H12. Book chapter mapping
 

@@ -219,7 +219,8 @@ This section delineates the fourteen discrete engineering steps required to conf
 - **Input**: Inbound JSON payload received by the cloud CDS service.
 - **Output**: Executed clinical decision logic output.
 - **Algorithmic Logic**: The microservice parses the draft order from `context.draftOrders` and historical medications from `prefetch.activeMeds`. It evaluates the clinical drug interaction matrix:
-  ```python
+  ```text
+# Excerpt from a larger module; not a standalone script.
   if is_oral_anticoagulant(draft_order) and has_active_med(prefetch, "Fluconazole"):
       emit_warning_card(...)
   ```
@@ -383,7 +384,8 @@ The service emits a critical warning card with a one-click system action and a S
 
 Below is a complete, production-grade Python implementation of a high-performance CDS Hook microservice built using FastAPI and Pydantic. It handles discovery (`/cds-services`), executes the renal dosing rule on `order-select`, constructs compliant CDS Cards with System Actions, and handles SMART launch links.
 
-```python
+```text
+# Excerpt from a larger module; not a standalone script.
 """
 Production CDS Hooks Service Implementation
 Module: 03_data_engineering / Topic: 13_cds-hooks-and-smart-on-fhir

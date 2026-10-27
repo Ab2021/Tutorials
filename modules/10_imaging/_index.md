@@ -39,9 +39,9 @@ not the whole program.
 | 8 | [`08_workflow-integration.md`](08_workflow-integration.md) | Workflow Integration | PACS, worklists, reading room latency, and radiologist trust. | 1,200-1,800 | complete |
 | 9 | [`09_regulatory-path.md`](09_regulatory-path.md) | Regulatory Path | FDA clearance routes for imaging AI and the evidence each requires. | 1,200-1,800 | complete |
 | 10 | [`10_foundation-models.md`](10_foundation-models.md) | Foundation Models | Vision encoders, multimodal reporting, and their evaluation gaps. | 1,200-1,800 | complete |
-| 11 | [`11_wsi-pipeline-infrastructure.md`](11_wsi-pipeline-infrastructure.md) | Whole-Slide Imaging Pipeline Infrastructure | In computational pathology, biological tissue biopsies mounted on glass slides are digitized using high-resolution op... | 1,200-1,800 | draft (263 lines) |
-| 12 | [`12_pathology-foundation-models.md`](12_pathology-foundation-models.md) | Foundation Models for Pathology and Computational Pathomics | Until recently, computational pathology relied on supervised convolutional neural networks trained on relatively smal... | 1,200-1,800 | draft (275 lines) |
-| 13 | [`13_digital-pathology-lab-operations.md`](13_digital-pathology-lab-operations.md) | Digital Pathology Lab Operations and the Diagnostics Industry | In computational pathology, algorithms do not operate in a vacuum. A deep learning foundation model that achieves 0.9... | 1,200-1,800 | draft (265 lines) |
+| 11 | [`11_wsi-pipeline-infrastructure.md`](11_wsi-pipeline-infrastructure.md) | Whole-Slide Imaging Pipeline Infrastructure | A pathology laboratory produces glass slides. A scanner turns each slide into a file that is | 1,200-1,800 | complete |
+| 12 | [`12_pathology-foundation-models.md`](12_pathology-foundation-models.md) | Pathology Foundation Models | A pathology foundation model is a vision encoder pretrained on millions of tissue images without | 1,200-1,800 | complete |
+| 13 | [`13_digital-pathology-lab-operations.md`](13_digital-pathology-lab-operations.md) | Digital Pathology Lab Operations | A pathology laboratory is a production system with a regulatory obligation. Tissue arrives, | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -61,8 +61,8 @@ any topic that names your current decision problem.
 09 Regulatory Path ->
 10 Foundation Models ->
 11 Whole-Slide Imaging Pipeline Infrastructure ->
-12 Foundation Models for Pathology and Computational Pathomics ->
-13 Digital Pathology Lab Operations and the Diagnostics Industry
+12 Pathology Foundation Models ->
+13 Digital Pathology Lab Operations
 ```
 
 ## 5. What this module does not cover
@@ -76,8 +76,8 @@ any topic that names your current decision problem.
 | Status | Count |
 |---|---:|
 | planned | 0 |
-| draft | 3 |
-| complete | 10 |
+| draft | 0 |
+| complete | 13 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.
 

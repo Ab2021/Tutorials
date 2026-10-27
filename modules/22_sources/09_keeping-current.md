@@ -1329,7 +1329,7 @@ Every entry above resolves to the organisation or document named, and every URL 
 - Survey file: [`../../course/22_sources_and_further_reading.md`](../../course/22_sources_and_further_reading.md)
 - Labs: [`../../labs/`](../../labs/)
 - Module 20, career: [`../20_career/`](../20_career/)
-- Module 13, evaluation: [`../13_evaluation/`](../13_evaluation/)
+- Module 15, evaluation and monitoring: [`../15_mlops/`](../15_mlops/)
 - Module 02, data landscape: [`../02_data_landscape/`](../02_data_landscape/)
 - Module 19, capstone: [`../19_capstone/`](../19_capstone/)
 

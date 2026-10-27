@@ -39,9 +39,9 @@ not the whole program.
 | 8 | [`08_ai-in-discovery-and-development.md`](08_ai-in-discovery-and-development.md) | AI in Discovery and Development | Where models are used, validated, and rejected. | 1,200-1,800 | complete |
 | 9 | [`09_decentralized-trials.md`](09_decentralized-trials.md) | Decentralised Trials | Remote consent, ePRO, wearables, and the data integrity questions. | 1,200-1,800 | complete |
 | 10 | [`10_submission-data.md`](10_submission-data.md) | Submission Data | eCTD structure, datasets, and what reviewers actually check. | 1,200-1,800 | complete |
-| 11 | [`11_digital-twins-in-clinical-trials.md`](11_digital-twins-in-clinical-trials.md) | Patient-Level Digital Twins for Clinical Trial Simulation | In clinical drug development, the randomized, double-blind, placebo-controlled trial remains the gold standard for de... | 1,200-1,800 | draft (241 lines) |
-| 12 | [`12_statistical-pharmacovigilance.md`](12_statistical-pharmacovigilance.md) | Statistical Pharmacovigilance and Safety Signal Detection | Pre-approval clinical trials (Phases I–III) are fundamentally underpowered to detect rare, life-threatening adverse d... | 1,200-1,800 | draft (261 lines) |
-| 13 | [`13_pass-and-active-safety-surveillance.md`](13_pass-and-active-safety-surveillance.md) | Post-Authorization Safety Studies and Active Safety Surveillance | Spontaneous adverse event reporting systems (like FDA FAERS and WHO VigiBase, covered in Topic 12) are **passive surv... | 1,200-1,800 | draft (304 lines) |
+| 11 | [`11_digital-twins-in-clinical-trials.md`](11_digital-twins-in-clinical-trials.md) | Patient-Level Digital Twins and In Silico Trials | A Phase III trial is an expensive way to answer a question that is often narrower than the one the | 1,200-1,800 | complete |
+| 12 | [`12_statistical-pharmacovigilance.md`](12_statistical-pharmacovigilance.md) | Statistical Pharmacovigilance and Safety Signal Detection | A Phase III programme enrols a few thousand patients and follows them for months. It can detect an | 1,200-1,800 | complete |
+| 13 | [`13_pass-and-active-safety-surveillance.md`](13_pass-and-active-safety-surveillance.md) | Post-Authorisation Safety Studies and Active Safety Surveillance | Spontaneous reporting, covered in Topic 12, has no denominator. It can tell a safety team that an | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -60,9 +60,9 @@ any topic that names your current decision problem.
 08 AI in Discovery and Development ->
 09 Decentralised Trials ->
 10 Submission Data ->
-11 Patient-Level Digital Twins for Clinical Trial Simulation ->
+11 Patient-Level Digital Twins and In Silico Trials ->
 12 Statistical Pharmacovigilance and Safety Signal Detection ->
-13 Post-Authorization Safety Studies and Active Safety Surveillance
+13 Post-Authorisation Safety Studies and Active Safety Surveillance
 ```
 
 ## 5. What this module does not cover
@@ -76,8 +76,8 @@ any topic that names your current decision problem.
 | Status | Count |
 |---|---:|
 | planned | 0 |
-| draft | 3 |
-| complete | 10 |
+| draft | 0 |
+| complete | 13 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.
 

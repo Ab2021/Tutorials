@@ -269,7 +269,8 @@ This section presents the fourteen formal steps governing an enterprise Bulk FHI
 - **Input**: Array of file download URLs from manifest.
 - **Output**: High-throughput parallel data stream feeding worker nodes.
 - **Algorithmic Logic**: Dispatch concurrent download tasks across a cluster of ingestion workers. Each worker streams an NDJSON file using chunked HTTP transfer encoding (`transfer-encoding: chunked`). Workers process lines sequentially:
-  ```python
+  ```text
+# Excerpt from a larger module; not a standalone script.
   for line in response.iter_lines():
       resource = json.loads(line)
       process_record(resource)
@@ -483,7 +484,8 @@ Below is a complete, production-grade Python implementation of an asynchronous B
 3. Streaming NDJSON parser with schema flattening.
 4. Direct DuckDB columnar ingestion and SQL analytics.
 
-```python
+```text
+# Excerpt from a larger module; not a standalone script.
 """
 Production FHIR Bulk Data Extraction and Analytics Pipeline
 Module: 03_data_engineering / Topic: 11_fhir-bulk-export-and-analytics

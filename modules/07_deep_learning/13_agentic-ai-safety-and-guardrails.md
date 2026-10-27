@@ -410,7 +410,8 @@ The attending surgeon and orthopedic clinical pharmacist receive the intercepted
 
 Below is a complete, production-grade Python implementation of the Tripartite Guardrail Sandwich Architecture with dual-LLM classification, deterministic physiological circuit breakers, fact-anchoring verification, and mock FHIR integration.
 
-```python
+```text
+# Excerpt from a larger module; not a standalone script.
 """
 Enterprise Clinical Agent Safety and Guardrail Framework
 Module: 07_deep_learning / Topic: 13_agentic-ai-safety-and-guardrails

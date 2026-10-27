@@ -39,7 +39,8 @@ that is wrong.
 The regulatory position has changed in the last decade. The United States Food and Drug
 Administration (FDA) published final guidance in November 2023 on assessing the credibility of
 computational modeling and simulation in medical device submissions, following a 2021 draft and
-building on the consensus standard ASME V&V 40-2018. Both documents say the same thing in
+building on the consensus standard ASME V&V 40-2018, published by the American Society of
+Mechanical Engineers. Both documents say the same thing in
 different words: credibility is not a property of a model. It is a property of a model used for a
 particular purpose to inform a particular decision. The same solver can be credible for ranking
 five design options and not credible for supporting a labelling claim, because the consequences of
@@ -99,13 +100,13 @@ The two ledgers are the reason the same model can be adequate in one room and in
 another.
 
 ```text
-                     DESIGN DECISION LEDGER          CLAIM LEDGER
-   Question          which of five designs is best?  is the device safe across the label?
-   Cost of error     rework, weeks, internal money    false public statement, injury, recall
-   Audience          the team                         regulator, clinician, plaintiff
-   What you need     a correct RANKING                a defensible BOUND, including the tail
-   Falsified by      a better design appearing        one patient outside the envelope
-   Standard of proof better than the alternatives    preponderance, documented in advance
+                       DESIGN DECISION LEDGER          CLAIM LEDGER
+   Question            which of five designs is best?  is the device safe across the label?
+   Cost of error       rework, weeks, internal money    false public statement, injury, recall
+   Audience            the team                         regulator, clinician, plaintiff
+   What you need       a correct RANKING                a defensible BOUND, including the tail
+   Falsified by        a better design appearing        one patient outside the envelope
+   Standard of proof   better than the alternatives    preponderance, documented in advance
 ```
 
 A ranking only has to be right about the ordering. A bound has to be right about the magnitude,
@@ -122,7 +123,7 @@ routinely fails the second.
                              |                 +-- calibration              "tuned on what?"
                              |                 +-- validation               "agrees with independent data?"
                              |                 +-- applicability            "envelope covers the claim?"
-                             |                 +-- uncertainty                "how wide, and why?"
+                             |                 +-- uncertainty              "how wide, and why?"
                              v
                   who, what, when, which population, which output
 ```
@@ -249,7 +250,8 @@ is not ready to be assessed. Everything downstream inherits the ambiguity.
 The procedure below takes a model from a decision to a documented credibility judgement. It follows
 the nine-step structure of the FDA 2023 guidance and the risk-informed logic of ASME V&V 40-2018,
 with the data-science steps inserted where they belong. Each step states its input, its output, the
-reason it exists, the procedure, the branch points, and the edge cases.
+reason it exists, the procedure, and its branch points, and four decision tables cover the steps
+where more than two outcomes are possible.
 
 The steps are ordered because later steps consume earlier outputs. In particular, the context of
 use from step 2 is the object against which every later choice is judged, and the risk rating from
@@ -589,20 +591,19 @@ device does not exist.
 
 ### 6.1 The decision and the claim
 
-A sponsor makes a self-expanding transcatheter aortic valve in six sizes: 20, 22, 24, 26, 28, and
-30 mm. The current label covers annulus diameters from 21.0 to 27.0 mm. The sponsor wants to widen
-the label to 19.0 to 31.0 mm, which would cover a substantially larger fraction of the referral
-population, and wants to do it without a new clinical study.
+A sponsor makes a self-expanding transcatheter aortic valve in six sizes from 20 to 30 mm in 2 mm
+steps. The label covers annulus diameters from 21.0 to 27.0 mm. The sponsor wants to widen it to 19.0
+to 31.0 mm, which would cover a substantially larger fraction of the referral population, without a
+new clinical study.
 
-The device has an existing finite element model of deployment: the valve frame is expanded inside
-a patient-specific aortic root, contact and oversizing are simulated, and the output is a predicted
-probability of procedural success. Procedural success is defined in the clinical study as device
-implanted in the intended position with no more than mild paravalvular leak and no annulus rupture.
+The device has a finite element model of deployment: the frame is expanded inside a patient-specific
+aortic root, contact and oversizing are simulated, and the output is a predicted probability of
+procedural success, defined clinically as the device implanted in the intended position with no more
+than mild paravalvular leak and no annulus rupture.
 
-The sponsor's regulatory argument is: "Simulation predicts procedural success in 94.6 percent of
-the intended-use population, which exceeds the 93 percent threshold the clinical study met."
-
-That sentence contains a context of use, a number, and a population. The rest of this case is about
+The sponsor's regulatory argument is: "Simulation predicts procedural success in 94.6 percent of the
+intended-use population, which exceeds the 93 percent threshold the clinical study met." That
+sentence contains a context of use, a number, and a population. The rest of this case is about
 whether the number belongs to the population it is attached to.
 
 ### 6.2 What was built
@@ -620,14 +621,11 @@ generated. Annulus calcification was assigned from a regression on diameter, wit
 calcification index of 0.72 because the segmentation pipeline could not reliably grade heavier
 calcification.
 
-**The comparison cohort.** A registry of 512 patients treated with the predicate device across
-seven centres, with measured annulus diameter and a calcification index graded on the same scale.
-This registry was not used to build the shape model.
+**The comparison cohort.** A registry of 512 patients treated with the predicate device across seven
+centres, with measured diameter and calcification on the same scale. It was not used to build the
+shape model.
 
 ### 6.3 The coverage arithmetic
-
-The first check is whether the virtual cohort resembles the registry on the two covariates that
-drive the result.
 
 | Quantity | Observed registry, n = 512 | Simulated cohort, n = 1,000 |
 |---|---:|---:|
@@ -656,17 +654,14 @@ statistic the cohort looks excellent. The variance ratio is another matter:
 variance ratio = 1.648 / 1.949 = 0.846
 ```
 
-The simulated cohort has 85 percent of the observed spread. The means agree because the shape
-model was built on the same population; the spread does not, because the modes were clipped at two
-standard deviations. A normal variable clipped at plus or minus two standard deviations loses
-roughly five percent of its mass at each tail and about 15 percent of its variance, which is what
-the 0.846 shows.
+The simulated cohort has 85 percent of the observed spread. The means agree because the shape model
+was built on the same population; the spread does not, because the modes were clipped at two standard
+deviations, and a normal variable clipped there loses about 15 percent of its variance.
 
-The distributional distance confirms it, but only just. The two-sample Kolmogorov-Smirnov statistic
-is 0.0703 against a 5 percent critical value of 0.0739 for these sample sizes. It does not reject.
-That is the trap: a test designed to detect a general distributional difference has low power
-against a pure scale difference at these sample sizes, so a non-significant result is not evidence
-of coverage.
+The distributional distance confirms it only just: the Kolmogorov-Smirnov statistic is 0.0703 against
+a 5 percent critical value of 0.0739, so it does not reject. That is the trap. A test for a general
+distributional difference has low power against a pure scale difference at these sample sizes, so a
+non-significant result is not evidence of coverage.
 
 The coverage calculation is more direct. It asks what fraction of observed patients fall inside the
 support the simulated cohort actually spans, defined as its 1st to 99th percentile:
@@ -682,8 +677,8 @@ exactly the patients the label expansion is meant to cover.
 
 ### 6.4 The bias arithmetic
 
-The quantity of interest is the mean predicted probability of procedural success, evaluated on the
-cohort. The model is the same in both columns; only the population differs.
+The quantity of interest is the mean predicted probability of procedural success. The model is the
+same in both columns; only the population differs.
 
 ```text
 mean predicted success, simulated cohort = 0.9461
@@ -691,10 +686,10 @@ mean predicted success, observed  cohort = 0.8889
 optimism                                 = 0.9461 - 0.8889 = +0.0572
 ```
 
-Five point seven percentage points. It is worth decomposing, because the two components have
-different fixes. The method is a one-at-a-time substitution: evaluate the model on simulated
-geometry with calcification held at a reference value, then on reference geometry with simulated
-calcification, and difference each against the observed counterpart.
+Five point seven percentage points, and the decomposition matters because the two components have
+different fixes. The method is a one-at-a-time substitution: evaluate on simulated geometry with
+calcification held at 0.30, then on reference geometry with simulated calcification, and difference
+each against the observed counterpart.
 
 ```text
 geometry component, calcification fixed at 0.30 : +0.0523
@@ -722,9 +717,8 @@ around the wrong number.
 
 ### 6.5 Diagnostic 1: the pooled coverage number hides the tail
 
-A team that reports only the pooled coverage of 0.867 will conclude that the cohort is roughly
-adequate and move on. The diagnostic is to compute the predicted success rate by decile of the
-observed population rather than in aggregate.
+A team that reports only the pooled coverage of 0.867 concludes that the cohort is roughly adequate.
+The diagnostic is to compute predicted success by decile of the observed population.
 
 | Decile of observed diameter | Range (mm) | Mean calcification | Predicted success |
 |---:|---|---:|---:|
@@ -739,15 +733,14 @@ observed population rather than in aggregate.
 | 9 | 26.09 to 27.04 | 0.426 | 0.931 |
 | 10 | 27.05 to 31.07 | 0.489 | 0.342 |
 
-Nine deciles run between 0.93 and 0.97. The tenth runs at 0.342. The aggregate of 0.889 is a
-weighted average of a device that works and a device that does not, and the average conceals both.
+Nine deciles run between 0.93 and 0.97; the tenth runs at 0.342. The aggregate of 0.889 averages a
+device that works with a device that does not, and conceals both.
 
-The mechanism is visible in the size table. The largest available size is 30 mm. For an annulus of
-31.07 mm the achievable oversizing with a 30 mm device is negative, so no size is valid and the
-predicted success is zero. For an annulus of 29 mm the oversizing with a 30 mm device is 3.4
-percent, far below the 13 percent target, and the predicted success falls steeply. The label
-expansion to 31 mm asks the device to treat annuli for which the commercial size range has no
-adequate answer, and the virtual cohort, clipped at 27.49 mm, never tested one.
+The mechanism is in the size table. The largest size is 30 mm: at 31.07 mm the achievable oversizing
+is negative, so no size is valid and success is zero, and at 29 mm the oversizing is 3.4 percent
+against a 13 percent target, so success falls steeply. The expansion asks the device to treat annuli
+for which the size range has no adequate answer, and the cohort, clipped at 27.49 mm, never tested
+one.
 
 The lesson generalises: a coverage statistic computed on the pooled distribution answers a question
 about the average patient. A claim about a labelled range is a question about the boundary.
@@ -755,11 +748,9 @@ about the average patient. A claim about a labelled range is a question about th
 ### 6.6 Diagnostic 2: the validation set leaked into calibration
 
 The second diagnostic concerns the bench validation of the frame model. The bench method measures
-radial force at controlled compression, with three repeats per specimen, giving a repeatability
-standard deviation of 0.34 N. Forty-eight specimens were tested and split into 24 for calibration
-and 24 for validation, stratified by compression to keep the ranges comparable.
-
-Four model forms were fitted to the calibration set and compared:
+radial force at controlled compression with three repeats per specimen, giving a repeatability
+standard deviation of 0.34 N. Forty-eight specimens were split into 24 for calibration and 24 for
+validation, stratified by compression. Four model forms were fitted to the calibration set:
 
 | Form | Calibration RMSE (N) | Validation RMSE (N) |
 |---|---:|---:|
@@ -782,15 +773,11 @@ fit is biased low by approximately the factor
 sqrt((n - p) / n) = sqrt((24 - 5) / 24) = sqrt(0.7917) = 0.890
 ```
 
-so a correct five-parameter model fitted to a reference with 0.34 N repeatability should show a
-calibration RMSE near 0.34 x 0.890 = 0.302 N and a validation RMSE near or above 0.34 N. The
-reported 0.3373 N sits between the two, which is the signature of a number that is partly fit and
-partly validated.
-
-The diagnostic is cheap and does not require the raw data: ask for the repeatability of the
-reference method and compare it with the reported agreement. If the reported agreement is tighter,
-the set leaked. The follow-up question is which dataset influenced which decision, and the answer
-is usually model-form selection rather than parameter fitting.
+so a correct five-parameter model should show a calibration RMSE near 0.34 x 0.890 = 0.302 N and a
+validation RMSE at or above 0.34 N. The reported 0.3373 N sits between the two, the signature of a
+number that is partly fit and partly validated. The diagnostic needs no raw data: ask for the
+repeatability of the reference method and compare. The follow-up question is which dataset influenced
+which decision.
 
 ### 6.7 Vary one assumption
 
@@ -802,7 +789,7 @@ Re-running the cohort generation at truncations of 1.5, 2.0, 2.5 and 3.0 standar
 everything else fixed, gives simulated success rates of 0.9569, 0.9461, 0.8789 and 0.8100 against the
 unchanged observed 0.8889. The optimism runs from +0.068 to -0.079 and reverses sign at 2.5 standard
 deviations. The model, the device and the threshold did not change; only the sampling range did, and
-it moved the answer by 13.7 percentage points between the narrowest and widest settings. That is why
+it moved the answer by 14.7 percentage points between the narrowest and widest settings. That is why
 the truncation must be justified against the target population rather than against physical
 plausibility: a shape that is implausible for a living patient is not implausible as a stress case,
 and the claim is about patients.
@@ -818,19 +805,10 @@ mean predicted success, simulated   : 0.9572
 optimism in range                   : +0.0048
 ```
 
-The optimism falls from 5.7 points to 0.5 points. Inside the labelled range the cohort is
-adequate and the simulation is defensible; outside it, it is not. The conclusion therefore is not
-that the model is unfit. The conclusion is that the model supports the existing label and does not
-support the expansion, and the gap is concentrated in the population the expansion was meant to
-serve: 11.5 percent of observed patients lie outside 21.0 to 27.0 mm.
-
-### 6.8 What the case does not show
-
-The case does not show that the model is wrong. Every verification and validation result in it is
-respectable. It shows that a correct model applied to a population it does not represent produces a
-confident and incorrect answer, and that the error is invisible in the statistics a modelling team
-typically reports: the mean difference, the goodness of fit, and the pooled coverage. It also does
-not show how to fix the device; it shows which of the available fixes the evidence supports.
+The optimism falls from 5.7 points to 0.5 points. Inside the labelled range the simulation is
+defensible; outside it is not. The conclusion is not that the model is unfit, but that it supports
+the existing label and not the expansion, and the gap sits in the population the expansion was meant
+to serve: 11.5 percent of observed patients lie outside 21.0 to 27.0 mm.
 
 ## 7. Code, query, or calculation
 
@@ -1072,7 +1050,8 @@ models are outside its scope.
 > testing is citing something that does not exist.
 
 Sector standards do reference the verification and validation framework, and they are the ones a
-reviewer will expect to see named:
+reviewer will expect to see named. The table includes standards from the International Organization
+for Standardization (ISO) and ASTM International (ASTM):
 
 | Standard | Scope | What it constrains | What it does not |
 |---|---|---|---|

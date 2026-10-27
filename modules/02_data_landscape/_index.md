@@ -39,7 +39,7 @@ not the whole program.
 | 8 | [`08_standards-and-terminologies.md`](08_standards-and-terminologies.md) | Standards and Terminologies | HL7 v2, FHIR, OMOP, LOINC, SNOMED CT, ICD, RxNorm, and how they relate. | 1,200-1,800 | complete |
 | 9 | [`09_licensing-and-access.md`](09_licensing-and-access.md) | Licensing and Access | DUAs, BAAs, data-use tiers, credentialed access, and the cost of getting data wrong. | 1,200-1,800 | complete |
 | 10 | [`10_data-quality-dimensions.md`](10_data-quality-dimensions.md) | Data Quality Dimensions | Completeness, accuracy, timeliness, consistency, validity, and fitness for purpose. | 1,200-1,800 | complete |
-| 11 | [`11_global-health-and-lmic-data.md`](11_global-health-and-lmic-data.md) | Global Health and LMIC Data Systems | Over **85% of the world's population** resides in Low- and Middle-Income Countries (LMICs) across sub-Saharan Africa,... | 1,200-1,800 | draft (262 lines) |
+| 11 | [`11_global-health-and-lmic-data.md`](11_global-health-and-lmic-data.md) | Global Health and LMIC Data Systems | Most clinical data science is built on data from high-income hospitals. A 2024 review of 159 artificial intelligence-... | 1,200-1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -72,8 +72,8 @@ any topic that names your current decision problem.
 | Status | Count |
 |---|---:|
 | planned | 0 |
-| draft | 1 |
-| complete | 10 |
+| draft | 0 |
+| complete | 11 |
 
 Regenerate this table with `python tools/scaffold_modules.py --status`.
 

@@ -7,19 +7,19 @@
 | 00 | Orientation and Industry Map | 10 | 10 | 10 | 12,028 |
 | 01 | Clinical Foundations for Data Scientists | 10 | 10 | 10 | 11,431 |
 | 01A | Foundations, Assumptions, and Units | 10 | 10 | 10 | 16,699 |
-| 02 | The Biomedical Data Landscape | 11 | 11 | 10 | 14,271 |
-| 03 | Data Engineering and Interoperability | 13 | 13 | 13 | 16,684 |
+| 02 | The Biomedical Data Landscape | 11 | 11 | 11 | 15,418 |
+| 03 | Data Engineering and Interoperability | 13 | 13 | 13 | 16,689 |
 | 04 | Statistics and Causal Inference | 10 | 10 | 10 | 13,058 |
-| 05 | Study Design and Evidence Generation | 11 | 11 | 11 | 14,238 |
+| 05 | Study Design and Evidence Generation | 11 | 11 | 11 | 14,239 |
 | 06 | Machine Learning Foundations | 13 | 13 | 13 | 16,917 |
-| 07 | Deep Learning, Multimodal Models, and LLMs | 14 | 14 | 14 | 18,003 |
+| 07 | Deep Learning, Multimodal Models, and LLMs | 14 | 14 | 14 | 18,004 |
 | 08 | EHR, Claims, and Health System Operations | 11 | 11 | 11 | 14,229 |
-| 09 | Clinical NLP | 13 | 13 | 10 | 13,862 |
-| 10 | Medical Imaging and Pathology AI | 13 | 13 | 10 | 13,999 |
-| 11 | Physiological Signals and Wearables | 11 | 11 | 10 | 13,306 |
-| 12 | Omics and Precision Medicine | 16 | 16 | 15 | 21,418 |
-| 13 | Biopharma and Clinical Development | 13 | 13 | 10 | 13,877 |
-| 14 | Medical Devices, SaMD, and Regulation | 12 | 12 | 10 | 14,831 |
+| 09 | Clinical NLP | 13 | 13 | 13 | 17,437 |
+| 10 | Medical Imaging and Pathology AI | 13 | 13 | 13 | 17,488 |
+| 11 | Physiological Signals and Wearables | 11 | 11 | 11 | 14,405 |
+| 12 | Omics and Precision Medicine | 16 | 16 | 16 | 21,785 |
+| 13 | Biopharma and Clinical Development | 13 | 13 | 13 | 17,209 |
+| 14 | Medical Devices, SaMD, and Regulation | 12 | 12 | 12 | 17,075 |
 | 14A | Medical Hardware, Sensors, Chips, and Robotics | 14 | 14 | 14 | 18,223 |
 | 14B | Efficient AI and On-Device Inference | 11 | 11 | 11 | 14,331 |
 | 15 | Deployment and MLOps | 10 | 10 | 10 | 13,293 |
@@ -37,5 +37,5 @@
 
 **Total topic files:** 328
 
-**Total topic lines:** 420,067
+**Total topic lines:** 435,327
 
