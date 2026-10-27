@@ -35,12 +35,12 @@ not the whole program.
 | 2 | [`02_decision-stack.md`](02_decision-stack.md) | The Decision Stack | Strategic, tactical, operational, and execution decisions with cadence and horizon. | 1,200–1,800 | complete |
 | 3 | [`03_network-entities.md`](03_network-entities.md) | Network Entities and Product Flow | Nodes, lanes, DCs, plants, suppliers, customers, and the bill of materials. | 1,200–1,800 | complete |
 | 4 | [`04_planning-processes.md`](04_planning-processes.md) | Planning Processes: S&OP, IBP, and Execution | Who meets, when, with what number, and what they can actually change. | 1,200–1,800 | complete |
-| 5 | [`05_inventory-and-service.md`](05_inventory-and-service.md) | Inventory Types and Service Metrics | Cycle, safety, in-transit, and obsolete stock; CSL, fill rate, OTIF. | 1,200–1,800 | planned |
-| 6 | [`06_cost-and-working-capital.md`](06_cost-and-working-capital.md) | Cost Taxonomy and Working Capital | Ordering, holding, shortage, transport, DIO, DSO, DPO, and cash conversion. | 1,200–1,800 | planned |
-| 7 | [`07_manufacturing-basics.md`](07_manufacturing-basics.md) | Manufacturing: BOM, Routing, MRP, Capacity | How a product is built and how the plan explodes into components and load. | 1,200–1,800 | planned |
+| 5 | [`05_inventory-and-service.md`](05_inventory-and-service.md) | Inventory Types and Service Metrics | Cycle, safety, in-transit, and obsolete stock; CSL, fill rate, OTIF. | 1,200–1,800 | complete |
+| 6 | [`06_cost-and-working-capital.md`](06_cost-and-working-capital.md) | Cost Taxonomy and Working Capital | Ordering, holding, shortage, transport, DIO, DSO, DPO, and cash conversion. | 1,200–1,800 | complete |
+| 7 | [`07_manufacturing-basics.md`](07_manufacturing-basics.md) | Manufacturing: BOM, Routing, MRP, Capacity | How a product is built and how the plan explodes into components and load. | 1,200–1,800 | complete |
 | 8 | [`08_transport-and-incoterms.md`](08_transport-and-incoterms.md) | Transportation Modes and Incoterms 2020 | Mode economics, responsibility transfer, and landed-cost composition. | 1,200–1,800 | planned |
 | 9 | [`09_warehousing-and-sourcing.md`](09_warehousing-and-sourcing.md) | Warehousing and Sourcing | Receiving to shipping, and the Kraljic portfolio as a sourcing lens. | 1,200–1,800 | planned |
-| 10 | [`10_archetypes-and-metric-conflicts.md`](10_archetypes-and-metric-conflicts.md) | Supply Chain Archetypes and Metric Conflicts | Efficient versus responsive chains and the metrics that trade against each other. | 1,200–1,800 | planned |
+| 10 | [`10_archetypes-and-metric-conflicts.md`](10_archetypes-and-metric-conflicts.md) | Supply Chain Archetypes and Metric Conflicts | Efficient versus responsive chains and the metrics that trade against each other. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 

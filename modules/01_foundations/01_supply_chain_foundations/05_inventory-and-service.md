@@ -25,11 +25,10 @@ working-capital problem. The second has a product problem, a forecasting problem
 disposal problem wearing a working-capital costume. The metric is identical. The interventions
 are not.
 
-This distinction matters more in the 2024–2026 period than it did in the preceding decade.
-The pandemic build-up, the 2022–2024 destocking, and the 2025 tariff frontloading each moved
-inventory from a background assumption to a board-level topic. When inventory is on the board
-agenda, "reduce it" becomes a target, and targets applied to an undifferentiated number produce
-predictable damage. Section 9 gives the macro evidence. Section 10 gives the damage.
+This distinction became operational in 2024–2026. The pandemic build-up, the 2022–2024
+destocking, and the 2025 tariff frontloading moved inventory onto the board agenda, where
+"reduce it" becomes a target and targets applied to an undifferentiated number produce
+predictable damage. Sections 9 and 10 give the evidence and the damage.
 
 The second half of the topic is service, because inventory is the cost of service and service is
 the reason inventory exists. "Service level" is not one metric. It is a family of at least eight
@@ -38,20 +37,19 @@ same stock. A company can report 95% cycle service level and deliver a 78% fill 
 numbers can be correct. Section 6 works that example numerically.
 
 **Why this matters to a data scientist specifically.** You will be asked to "optimise inventory"
-or "predict stock-outs." Both requests are underspecified in a way that determines whether the
-work is useful. Optimise which inventory: cycle, safety, pipeline, or obsolete? Predict
-stock-outs at what grain: SKU-location-day, order line, or customer? Measured how: a cycle that
-ends short, a unit that cannot ship, an order that arrives incomplete? The metric you accept
-becomes the objective function, and the model will then be judged on whichever metric the business
-already reported, which may not be the one you optimised.
+or "predict stock-outs." Both requests are underspecified in a way that decides whether the work
+is useful. Optimise which inventory: cycle, safety, pipeline, or obsolete? Predict stock-outs at
+what grain: SKU-location-day, order line, or customer? Measured how: a cycle that ends short, a
+unit that cannot ship, an order that arrives incomplete? The metric you accept becomes the
+objective function, and the model is judged on whichever metric the business already reported.
 
 Two recurring failures show the shape of the problem:
 
 1. **An inventory reduction that removes the cheapest stock.** A programme targets 15% inventory
-   reduction. The quickest lever is order quantity: halve the lot size, halve the cycle stock.
-   The balance sheet improves within a quarter. Ordering and freight costs rise, and the
-   programme reports the inventory win without the cost. Safety stock, which sits in policy
-   parameters nobody has reviewed since 2019, is untouched.
+   reduction; the quickest lever is order quantity, so halving the lot size halves cycle stock.
+   The balance sheet improves within a quarter, ordering and freight costs rise, and the
+   programme reports the win without the cost. Safety stock, in parameters nobody has reviewed
+   since 2019, is untouched.
 2. **A service metric that measures the wrong event.** A supplier reports 97% on-time in-full
    (OTIF) against its own confirmation date and 89% against the retailer's must-arrive-by date.
    Both are computed correctly. The retailer's chargebacks are based on the second.
@@ -80,7 +78,7 @@ By the end of this topic you can:
    **critique** an inventory-reduction proposal for whether it removes redundant stock or merely
    the stock that is easiest to measure.
 
-Each outcome maps to an exercise in section 12 and a self-check item in section 13.
+Each outcome maps to an exercise in section 12, with grading criteria or a model answer.
 
 ## 3. The core mental model
 
@@ -351,9 +349,8 @@ Then test whether a normal distribution is defensible. Two diagnostics:
   consistent with a Poisson process; a VMR well above 1 indicates over-dispersion, for which the
   negative binomial is the standard alternative.
 
-Section 9.4 gives the evidence for why this matters. The practical version: a normal safety stock
-on a lumpy item systematically under-protects, because the tail that causes stock-outs is longer
-than the normal allows.
+The practical version of section 9.4: a normal safety stock on a lumpy item systematically
+under-protects, because the tail that causes stock-outs is longer than the normal allows.
 
 ### Step 4 — Estimate the lead-time distribution, not just the mean
 
@@ -365,11 +362,11 @@ lead time, which combines both sources. If demand and lead time are independent:
 sigma_L = sqrt( L x sigma_d^2 + mu_d^2 x sigma_LT^2 )
 ```
 
-where `L` is the mean lead time in periods, `sigma_d` is the per-period demand standard
-deviation, `mu_d` is the per-period mean demand, and `sigma_LT` is the standard deviation of the
-lead time in periods. Many implementations use only the first term, which is correct only when
-lead time is deterministic. For an imported item with a four-week nominal lead time and a
-two-week standard deviation, the second term usually dominates.
+where `L` is the mean lead time in periods, `sigma_d` the per-period demand standard deviation,
+`mu_d` the per-period mean demand, and `sigma_LT` the lead-time standard deviation. Many
+implementations use only the first term, correct only when lead time is deterministic. For an
+imported item with a four-week nominal lead time and a two-week standard deviation, the second
+term usually dominates.
 
 ### Step 5 — Choose the service metric and the target, and name the owner
 
@@ -408,24 +405,23 @@ often implemented incorrectly, usually by substituting the fill rate into the CS
 ### Step 7 — Compute the reorder point or the order-up-to level
 
 Continuous review: `ROP = mu_L + SS`. Periodic review: the order-up-to level covers the review
-period plus the lead time, so `S = mu_(L+R) + z x sigma_(L+R)`. Using a continuous-review formula
-in a periodic-review system under-protects by the review period, which for a monthly ordered item
-is a month of exposure.
+period plus the lead time, so `S = mu_(L+R) + z x sigma_(L+R)`. A continuous-review formula in a
+periodic-review system under-protects by the review period, a month of exposure for a monthly
+ordered item.
 
 ### Step 8 — Set the order quantity from the real constraints
 
 The economic order quantity (EOQ) is a starting point, not an answer. In practice the quantity is
 constrained by case pack, pallet, truckload, minimum order quantity, supplier production run,
-shelf life, or a contractual commitment. Compute the EOQ, then find the binding constraint. The
-quantity you actually use determines cycle stock, which is half the order quantity on average.
+shelf life, or a contractual commitment. Compute the EOQ, then find the binding constraint; the
+quantity you use determines cycle stock, half the order quantity on average.
 
 ### Step 9 — Compute cycle stock and pipeline
 
-Cycle stock averages `Q/2` under steady demand. Pipeline averages `mu_d x L`, which is the mean
-lead-time demand. Note the identity: pipeline equals `mu_L`, the same quantity that appears in
-the reorder point. The reorder point is therefore pipeline plus safety stock, which is why a
-planner can describe the reorder point as "cover the lead time plus a buffer" and be exactly
-right.
+Cycle stock averages `Q/2` under steady demand. Pipeline averages `mu_d x L`, the mean lead-time
+demand, which is the same quantity as `mu_L` in the reorder point. The reorder point is therefore
+pipeline plus safety stock, which is why a planner can describe it as "cover the lead time plus a
+buffer" and be exactly right.
 
 ### Step 10 — Reconcile the four numbers
 
@@ -536,7 +532,7 @@ experiences 99.55% service.
 
 ### 6.4 SKU B, where the gap reverses and reaches 78%
 
-SKU B is the case the task of this topic is really about. Same target, 95% CSL.
+SKU B is the case this topic exists to explain. Same target, 95% CSL.
 
 ```text
 mu_L    = 15 x 8                   =  120.0 units
@@ -571,12 +567,12 @@ CSL  = 0.9866  (98.66%)
 SS   = 2.214 x 127.3               = 281.9 units
 ```
 
-So the direction of the gap is not a universal law. It depends entirely on the ratio of order
-quantity to lead-time demand variability. For a 95% target, the two metrics coincide when
-`Q / sigma_L = G(1.645) / 0.05 = 0.4176`. Below that ratio, CSL flatters; above it, CSL
-understates. SKU A has a ratio of 4.62. SKU B has a ratio of 0.094.
+So the direction of the gap is not a universal law; it depends on the ratio of order quantity to
+lead-time demand variability. For a 95% target the metrics coincide at
+`Q / sigma_L = G(1.645) / 0.05 = 0.4176`; below that CSL flatters, above it CSL understates.
+SKU A has a ratio of 4.62, SKU B 0.094.
 
-### 6.6 Two interventions, priced
+### 6.5 Two interventions, priced
 
 Take SKU A and evaluate two proposals that a cost-reduction programme might make.
 
@@ -977,11 +973,10 @@ SS   = 0.746 x 240                 = 179.0 units
 CSL  = Phi(0.746)                  = 0.772  (77.2%)
 ```
 
-The 97.5% CSL target costs 470 units of safety stock; the 98% fill-rate target costs 179. The
-fill target is cheaper because the lot is 1,600 units against a lead-time standard deviation of
-240, a ratio of 6.7. The company is buying protection it does not need if the promise is
-unit-based. A common wrong answer uses `z = 2.054` (the inverse normal of 0.98) for the fill-rate
-target, giving 493 units and the wrong conclusion.
+The 97.5% CSL target costs 470 units of safety stock; the 98% fill-rate target costs 179, because
+the lot is 1,600 units against a lead-time standard deviation of 240. The company is buying
+protection it does not need if the promise is unit-based. A common wrong answer uses `z = 2.054`,
+the inverse normal of 0.98, giving 493 units and the wrong conclusion.
 
 **Exercise 4 model answer.**
 
@@ -1002,6 +997,15 @@ in-full after five days converts a failure into a success with a lag. Excluding 
 orders removes the shipments the supplier controls most directly. A plausible range for the
 customer's experience is 86% to 92%; the correct answer is a range with reasoning, not a point.
 
+**Exercise 6 model answer.**
+
+Write-down is `400 x (30 - 12) = EUR 7,200` on the aged portion; the remaining 600 units are
+carried at cost. Annual carrying cost of the batch is `1,000 x 30 x 0.25 = EUR 7,500`, of which
+the aged portion is EUR 3,000. Holding the aged units sixty more days costs about
+`3,000 x 60/365 = EUR 493` plus the risk of zero recovery. Break-even probability solves
+`p x 30 = 12 + 493/400`, giving `p = 44%`. Below that, disposal now is the better financial
+decision. The write-down needs finance approval; disposal usually needs commercial approval too.
+
 **Exercise 7 rubric.**
 
 A strong answer rejects the normal: mean 8 against standard deviation 30 gives a CV of 3.75, so
@@ -1021,18 +1025,8 @@ DIO, seller owns (DDP): 12,000,000 / 284,931            = 42.1 days
 difference     = 0.4 days
 ```
 
-The difference is small here because the pipeline is small relative to total inventory. Where
-inventory is mostly imported goods in transit, the difference can be several days, and the
-Incoterm becomes a working-capital decision.
-
-**Exercise 6 model answer.**
-
-Write-down is `400 x (30 - 12) = EUR 7,200` on the aged portion; the remaining 600 units are
-carried at cost. Annual carrying cost of the batch is `1,000 x 30 x 0.25 = EUR 7,500`, of which
-the aged portion is EUR 3,000. Holding the aged units sixty more days costs about
-`3,000 x 60/365 = EUR 493` plus the risk of zero recovery. Break-even probability solves
-`p x 30 = 12 + 493/400`, giving `p = 43%`. Below that, disposal now is the better financial
-decision. The write-down needs finance approval; disposal usually needs commercial approval too.
+The difference is small because the pipeline is small relative to total inventory; where most
+inventory is imported goods in transit, it can reach several days.
 
 ## 14. Interview questions
 
