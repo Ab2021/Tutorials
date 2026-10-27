@@ -200,10 +200,9 @@ data has a residual weekday artefact that moves from month to month. This is ari
 opinion, and it is the reason "monthly" is a different measurement instrument from "4-week
 period", not merely a coarser one.
 
-The practical consequence: **you cannot compare a variance computed on one bucket with a
-variance computed on another.** A coefficient of variation on weekly data and a coefficient of
-variation on monthly data are measurements of different signals. Topic 09 will make the same
-point about error metrics.
+**You cannot compare a variance computed on one bucket with a variance computed on another.** A
+coefficient of variation on weekly data and one on monthly data measure different signals.
+Topic 09 makes the same point about error metrics.
 
 ## 4. Definitions and vocabulary
 
@@ -422,9 +421,8 @@ the step is skipped.
 - If skipped: growth is reported at 2.65% when the business grew 1.50%, and the incentive plan
   pays on the difference.
 
-The twelve steps are ordered so that each one is cheap and each one makes the next one possible.
 The expensive failures come from doing step 10 before step 9, which is the default in every
-organisation that has more than one reporting system.
+organisation with more than one reporting system.
 
 ## 6. Worked example
 
@@ -498,7 +496,7 @@ Monday's run puts it.
 
 The financial consequence is not hypothetical. A single container at 1,850 cases against a
 weekly volume of 41,000 cases is 4.5% of that week. If it is the last container of the fiscal
-year, it moves the year's total by 1,850 units and the year's growth rate by 0.04 percentage
+year, it moves the year's total by 1,850 cases and the year's growth rate by 0.04 percentage
 points — and it moves the *following* year's opening week by the same amount in the opposite
 direction, so a bad boundary decision is a permanent level shift in two series.
 
@@ -655,10 +653,10 @@ early January can belong to week 52 or 53 of the previous ISO year. Specifically
 falls on a Friday, Saturday, or Sunday, it belongs to the previous ISO year. This is not an edge
 case to be handled later; it happens in three years out of seven.
 
-**RFC 3339 makes the offset mandatory for a reason.** The standard states that unqualified local
-time is unacceptable for the internet because it cannot be interpreted unambiguously in most of
-the world. A timestamp column without a zone is not a lenient version of a timestamp. It is a
-different, weaker type that cannot answer the question it appears to answer.
+**RFC 3339 makes the offset mandatory for a reason.** It states that unqualified local time is
+unacceptable for the internet because it cannot be interpreted unambiguously in most of the
+world. A timestamp column without a zone is not a lenient timestamp; it is a weaker type that
+cannot answer the question it appears to answer.
 
 ### 8.2 Fiscal and tax conventions
 
@@ -669,13 +667,12 @@ different, weaker type that cannot answer the question it appears to answer.
 | IRS Publication 538 | United States | The 52-53-week year: same weekday each year, last or nearest occurrence to month end | B |
 | IAS 34 | IFRS reporters | Interim reporting, including comparability of interim periods | B |
 
-The tax rules are worth reading because they show how much freedom a company has and where the
-constraints are. Under the United States rules, a 52-53-week year must end on the same weekday
-every year, on either the last occurrence of that weekday in a chosen month or the occurrence
-nearest the month end. The year may end up to six days before month end, or within about three
-days of it. Short periods of 359 days or more are treated as full years, and periods of six days
-or fewer are attached to the following year. Those are the degrees of freedom a retail calendar
-is built inside.
+The tax rules show how much freedom a company has. Under the United States rules a 52-53-week
+year must end on the same weekday every year, on either the last occurrence of that weekday in a
+chosen month or the occurrence nearest the month end, so the year may end up to six days before
+month end or within about three days of it. Periods of 359 days or more count as full years, and
+periods of six days or fewer attach to the following year. Those are the degrees of freedom a
+retail calendar is built inside.
 
 What the rules do **not** do is tell you which variant to use. 4-5-4, 4-4-5, and 5-4-4 all fit
 within a 52-53-week election. The choice is a merchandising decision, made because the buying
@@ -696,15 +693,9 @@ releases, because jurisdictions change their offset rules, their DST dates, and 
 their entire zone. A pipeline that pins a tz database version and never updates will compute
 correct historical offsets and incorrect future appointments.
 
-Two implications for a supply chain dataset:
-
-- **Historical events need the offset that was in force, not the offset in force now.** If the
-  offset is recomputed at query time from a current tz release, a legislative change can rewrite
-  the bucket assignment of historical shipments. Storing the offset at write time makes history
-  immutable.
-- **Future appointments need the zone identifier, not the offset.** A delivery slot booked for
-  next March must be stored as a local time plus a zone, so that the correct offset is applied
-  when the date arrives and the rules for that year are known.
+The practical rule: a future appointment needs the zone identifier rather than the offset, so
+that a delivery slot booked for next March is stored as a local time plus a zone and the correct
+offset is applied when the date arrives and that year's rules are known.
 
 The database itself does not resolve ambiguity. The IANA documentation is explicit that local
 times which do not exist, and local times which occur twice, are properties of every zone with
@@ -788,14 +779,9 @@ and weekly by roughly 4 points, largely through better model selection at the co
 This is one dataset, published by a consultancy, with no independent replication. It should be
 read as an existence proof that coarse buckets can win, not as a base rate.
 
-> **Note:** These two results are not in conflict so much as measuring different things. One
-> asks whether information is lost by aggregating before modelling; the other asks which bucket
-> a model selection procedure happens to do well on. For a planning decision, the first question
-> governs. For a reporting comparison, the second may.
-
-What the evidence does not support is a general rule that finer is better. It supports a narrower
-claim: aggregation destroys information, and whether that loss costs you depends on whether the
-destroyed pattern was actionable.
+> **Note:** These results measure different things. One asks whether information is lost by
+> aggregating before modelling; the other asks which bucket a model selection procedure happens
+> to do well on. For a planning decision the first question governs.
 
 ## 10. Failure modes and red flags
 
@@ -815,19 +801,11 @@ destroyed pattern was actionable.
 | Daily plan built by dividing a monthly forecast | Daily values are constant within the month | False granularity: monthly information at daily resolution | Narrow confidence intervals, poor execution | Disaggregate only with an explicit day-of-week profile |
 | Server time zone used as the business zone | Warehouse in one zone, planning in another, no documented rule | Default inherited from infrastructure | Boundary records assigned by accident | One named reporting zone per metric |
 
-Two of these deserve expansion.
-
 **The week-number join is the highest-consequence failure on the list**, because it passes the
 check that most organisations actually run. An annual reconciliation compares totals, and a
 total is exactly what a boundary error preserves. The error lives in the distribution across
 buckets, which nobody reconciles. The test that catches it is to plot the series and look for a
 spike or a gap at the fiscal year end, and to check that every ISO week appears exactly once.
-
-**Leap day is the smallest and most persistent.** A daily average computed over a leap year is
-divided by 366 rather than 365, which biases every daily figure downward by 0.27%. That is small
-enough to be invisible and large enough to matter when compounded into an annual cost, a
-capacity plan, or a rate card. The fix is trivial — count the days in the period rather than
-assuming 365 — and the reason it persists is that the assumption is never written down.
 
 ## 11. Assumptions and limits
 
@@ -851,12 +829,6 @@ aligned and still incomparable because the product mix changed, a promotion move
 distribution centre opened. Correct calendars are a necessary condition, not a sufficient one.
 The remaining work is the subject of Topics 06 and 07, and of the segmentation material later in
 the program.
-
-**The date spine is only as good as its generation rule.** A calendar table is a piece of
-software with a version, and it can be wrong. The common defects are duplicate rows for a date,
-overlapping week ranges, and a fiscal year with the wrong number of weeks. Every one of them is
-detectable with three assertions — one row per date, no overlapping intervals, and a week count
-of 52 or 53 — and almost none of them are tested in production.
 
 ## 12. Exercises
 
@@ -1042,15 +1014,11 @@ target itself.
 ```
 
 Both origin dates are Thursdays, seven days apart. The destination dates are eight days apart,
-because the first falls before the local midnight and the second after it. The daily report at
-the destination assigns a despatch from the same hour of the same weekday to two different
-calendar days for three weeks a year — the window between the American transition on 8 March
-and the European transition on 29 March, during which the transatlantic offset difference is
-five hours rather than six.
-
-The general lesson: a one-hour offset change is enough to move an event across a date, week, and
-month boundary simultaneously when the event sits near midnight. Events do not cluster away from
-midnight. End-of-shift confirmations and batch interfaces cluster exactly there.
+because the first falls before the local midnight and the second after it. For three weeks a
+year — between the American transition on 8 March and the European one on 29 March, when the
+transatlantic difference is five hours rather than six — the same hour of the same weekday
+lands on two different calendar days. A one-hour offset change is enough to move an event across
+a date, week, and month boundary at once, and end-of-shift confirmations cluster exactly there.
 
 **Exercise 4 — the date spine.**
 
@@ -1067,12 +1035,6 @@ The assertion results:
 | Every week has exactly 7 rows | Fail | Week 2026-W01 contributes only 1–4 January, four rows |
 | Week count is 52 or 53 | Pass, 53 | ISO 2026 is a 53-week year |
 
-The third assertion fails because the window starts mid-week. That is not a defect in the spine;
-it is a defect in the assertion, which should be stated as "every week has 7 rows unless it is a
-boundary week of the window". The exercise is designed to show that a test which fails for a
-benign reason is as dangerous as one that passes for a false reason. Patching the window to start
-on 2025-12-29 fixes the test and silently changes the analysis period.
-
 **Exercise 7 — reconciling the two calendars.**
 
 | Strategy | Annual total (cases) | Error vs 1,060,000 | Weekly series |
@@ -1082,17 +1044,9 @@ on 2025-12-29 fixes the test and silently changes the analysis period.
 | Date spine, uniform daily split | 1,060,000 | 0 | No spike; boundary weeks split |
 
 The clamp join is the instructive one. It gets the annual total exactly right and produces the
-worst weekly series of the three. Any control that compares totals will approve it. A model
-trained on it will learn that the last week of every year is twice as large as every other week,
-and will forecast a spike that does not exist.
-
-The date-spine allocation for the fiscal boundary week:
-
-```text
-   2027-W04, 20,000 cases, uniform daily = 20,000 / 7 = 2,857.14
-   fiscal 2026 share (6 days) = 17,142.9 cases
-   fiscal 2027 share (1 day)  =  2,857.1 cases
-```
+worst weekly series of the three, because any control that compares totals will approve it. A
+model trained on it learns that the last week of every year is twice the size of every other
+week, and forecasts a spike that does not exist.
 
 The residual assumption is uniform daily despatch. If no despatch occurs on Sunday, the true
 share of the Sunday in fiscal 2027 is zero and the error is 2,857 cases, or 14.3% of a week. The
@@ -1111,48 +1065,42 @@ A model answer reports three things.
 | Seasonal shape | Week-of-year visible | Month-of-year visible | Month-of-year visible, distorted |
 
 The mechanism to state: aggregation is a moving average, and a moving average is a low-pass
-filter. Averaging over 28 days removes a 7-day cycle exactly, because 28 is a multiple of 7. It
-removes it because the four Mondays, four Tuesdays, and so on each contribute equally. Averaging
-over 30 days removes most of it and leaves a beat whose phase advances through the calendar,
-which is the weekday artefact that makes calendar-month retail data hard to compare.
+filter. Averaging over 28 days removes a 7-day cycle exactly, because 28 is a multiple of 7 and
+the four Mondays, four Tuesdays, and so on each contribute equally. Averaging over 30 days
+removes most of it and leaves a beat whose phase advances through the calendar, which is the
+weekday artefact that makes calendar-month retail data hard to compare.
 
 The claim that must not be made: that a weekly pattern can be recovered from monthly data by
 disaggregation. It can be *imposed* from an assumed profile, which is a model, and the model will
 be right only if the profile is stable and known. In a promotion-heavy business it is neither.
 
 **Exercise 5 rubric.** A strong answer names one reporting zone and justifies it by where the
-decisions are made, not by where the servers are. It states the cut-off as a UTC instant derived
-from that zone, and it states the DST rule that applies when the zone's offset changes. It handles
-the three boundary cases differently and says why: a 00:30 despatch in the Netherlands is the
-previous day in New York, a 00:30 despatch in Singapore is the previous day in New York and the
-previous afternoon in the Netherlands. It states a restatement window in days and says what
-readers of a restated report are told. A weak answer picks UTC as the reporting zone "to avoid
-time zones", which removes the local-date problem by removing the business meaning, and then
-reports a weekly total that no operations manager recognises.
+decisions are made rather than where the servers are. It states the cut-off as a UTC instant
+derived from that zone, states the DST rule that applies when the offset changes, and handles the
+three boundary cases differently: a 00:30 despatch in the Netherlands is the previous day in New
+York; in Singapore it is the previous day in New York and the previous afternoon in the
+Netherlands. It states a restatement window in days. A weak answer picks UTC "to avoid time
+zones", which removes the local-date problem by removing the business meaning.
 
-**Exercise 6 rubric.** A strong critique names at least two mechanisms: the ISO or fiscal week
-53 duplicate produced by a join, and a genuine seasonal peak that happens to fall in the same
-week every year. It distinguishes them with arithmetic: a week-53 artefact appears once every
-five or six years, whereas a seasonal peak appears every year, and the chart is described as
-showing the spike every year, which rules the join artefact out and points to seasonality or to
-a year-end promotional calendar. It then asks the question that decides the claim: is the spike
-present in the daily data, and is it present in the same week of the fiscal calendar or the same
-week of the Gregorian calendar? A weak critique says "correlation is not causation" and stops.
+**Exercise 6 rubric.** A strong critique names at least two mechanisms: the week-53 duplicate
+produced by a join, and a genuine seasonal peak that falls in the same week every year. It
+distinguishes them with arithmetic: the join artefact appears once every five or six years,
+whereas the chart shows the spike every year, which rules the artefact out and points to
+seasonality or a year-end promotional calendar. It then asks whether the spike is present in the
+daily data and in the same fiscal week or the same Gregorian week. A weak critique says
+"correlation is not causation" and stops.
 
-**Exercise 9 rubric.** A strong audit classifies the column by test rather than by name. The
-decisive tests are: does the column contain values that differ by exactly one hour across a
-transition date; does it contain any value with an offset suffix; and does a sort of the column
-place an event that happened after another event before it. It then shows a query that is wrong
-under the finding, for example a `date_trunc('week', ts)` that uses the server's zone. The repair
-recommendation distinguishes historical reconstruction, which needs the offset recovered from
-the system that wrote the row, from going-forward policy, which needs the offset stored at write
-time. A weak audit reports the column type from the schema and stops.
+**Exercise 9 rubric.** A strong audit classifies the column by test rather than by name: do
+values differ by exactly one hour across a transition date; is there any offset suffix; does a
+sort place a later event before an earlier one. It then shows a query that is wrong under the
+finding, such as a `date_trunc('week', ts)` using the server's zone, and separates historical
+repair from going-forward policy. A weak audit reports the schema type and stops.
 
 **Exercise 10 rubric.** A strong ledger entry has tests that can be run tonight. "Check that the
-fiscal calendar has no duplicate dates" is executable. "Confirm with finance that the calendar is
-correct" is not. The bucket definition should read like a specification: seven-day buckets
-beginning Sunday 00:00 in `America/New_York`, cut off at Saturday 23:59:59 local, half-open
-intervals, restated for five business days. A weak entry states the bucket length and nothing else.
+fiscal calendar has no duplicate dates" is executable; "confirm with finance that the calendar is
+correct" is not. The bucket definition reads like a specification: seven-day buckets beginning
+Sunday 00:00 in `America/New_York`, cut off at Saturday 23:59:59 local, half-open intervals,
+restated for five business days. A weak entry states the bucket length and nothing else.
 
 ## 14. Interview questions
 
@@ -1227,33 +1175,16 @@ year end; verify that every week in the source year appears exactly once in the 
 compare the number of weeks per year against 52 or 53. It notes that an annual total
 reconciliation will not catch it. A weak answer says "check for outliers".
 
-**11. "A dashboard and a finance report disagree on last month's volume by 3%. Where do you
-look first?"**
-
-A strong answer looks at the cut-off instant and the reporting zone before looking at the data,
-then at whether one is restated and the other frozen, then at whether one includes a partial
-period. It notes that a 3% gap is the right order of magnitude for a boundary effect and too
-small for a data loss. A weak answer starts by reconciling row counts.
-
-**12. "What would you put in a calendar specification for a dataset?"**
-
-A strong answer lists bucket length, boundary rule, cut-off instant with zone, interval
-convention, late-arrival policy, restatement policy, and the time zone identifier, each with a
-test. It mentions that the specification is versioned because the calendar itself changes. A
-weak answer lists the date format.
-
 ## 15. Key terms
 
 - **Calendar time** — the Gregorian date and clock reading, with no business meaning attached.
 - **Business time** — the fiscal or retail period label a company reports in.
 - **Event time** — the instant a physical event occurred, unambiguous on a global timeline.
 - **Record time** — the instant a database row was written; the basis of as-of reporting.
-- **Valid time / system time** — when a fact is true in the world, versus when it is current in
-  the database.
 - **Time bucket** — a contiguous interval used for aggregation.
 - **Bucket boundary** — the rule assigning an instant on the edge to one bucket.
 - **Cut-off** — the instant after which a record is excluded from a report run.
-- **As-of date** — the system time that defines a report's contents.
+- **Planning bucket** — the interval a plan is expressed in, chosen from the decision cadence.
 - **Fiscal year** — the accounting year, not necessarily the calendar year.
 - **4-5-4** — the NRF retail calendar: months of 4, 5, and 4 weeks within each 13-week quarter.
 - **4-4-5 / 5-4-4** — variants placing the five-week month third or first in each quarter.
@@ -1262,12 +1193,10 @@ weak answer lists the date format.
 - **Restatement** — re-labelling weeks so a 53-week year compares with a 52-week year.
 - **Like-for-like (LFL)** — a comparison over equal-length periods with equal calendar
   composition.
-- **Comparable sales** — retail growth over stores open in both periods, usually equal-week.
 - **ISO 8601** — the notation standard for dates, times, and week dates.
 - **ISO week date** — `YYYY-Www-D`, where the year is the ISO week-year.
 - **Week 01** — the ISO week containing the year's first Thursday, equivalently 4 January.
 - **ISO week-year** — the year owning the week, which may differ from the Gregorian year.
-- **Ordinal date** — year plus day-of-year, `YYYY-DDD`.
 - **UTC** — Coordinated Universal Time, the reference timeline.
 - **Offset** — the difference between local time and UTC at a specific instant.
 - **Time zone** — a region's legislated offset history and transition rules.
@@ -1275,24 +1204,11 @@ weak answer lists the date format.
 - **DST** — daylight saving time, a seasonal offset change.
 - **Spring-forward gap** — a local time range that does not exist.
 - **Fall-back fold** — a local time range that occurs twice.
-- **Epoch timestamp** — an integer count of seconds or milliseconds since a fixed instant.
 - **RFC 3339** — the timestamp format requiring an explicit offset.
 - **Naive datetime** — a wall-clock reading with no offset and no zone.
-- **Granularity** — the finest distinction a dataset can represent.
-- **Temporal hierarchy** — the nested set of aggregation levels for a series.
-- **Planning bucket** — the interval a plan is expressed in, chosen from the decision cadence.
-- **Frozen horizon** — the part of the plan that cannot change; a constraint on bucket choice.
-- **Week-ending date** — the last day of a week, used as a retail bucket key.
-- **Trading day** — a day on which the business books volume.
-- **Trading-day adjustment** — a correction for the number of trading days in a period.
-- **Holiday shift** — a public holiday moving between periods across years.
-- **Leap day** — 29 February; biases daily averages if not counted explicitly.
-- **Year-over-year (YoY)** — comparison with the same period one year earlier.
-- **Trailing twelve months (TTM)** — a rolling twelve-month window.
 - **Date spine** — one row per date, carrying every calendar label as a column.
 - **Late-arriving data** — records whose event time precedes the as-of date but whose record time
   follows it.
-- **Bitemporal** — a model that carries both valid time and system time.
 
 ## 16. Sources
 
@@ -1362,13 +1278,11 @@ weak answer lists the date format.
   by roughly 4, attributed largely to model selection. Grade D — one dataset, vendor-published,
   no replication.
 
-**Note on citations and grades.** Two sources do not fit the five-level scheme cleanly and are
-labelled explicitly above: the Erasmus working paper, which is academic but not confirmed
-peer-reviewed, and the NRF calendar, which is an industry convention with wide adoption rather
-than a standard or a regulation. The DataWorks FAQ is included because it is widely cited and
-because its 4-4-5 naming is itself evidence of the conflation problem. Vendor documentation is
-reported as the vendor states it; parameter names and defaults change between releases. No
-figure in this topic is presented as a base rate.
+**Note on citations and grades.** Two sources do not fit the scheme cleanly and are labelled
+above: the Erasmus working paper (academic, peer-review status unconfirmed) and the NRF calendar
+(an industry convention, not a standard). The DataWorks FAQ is cited because its 4-4-5 naming is
+itself evidence of the conflation problem. Vendor documentation is reported as the vendor states
+it; defaults change between releases. No figure here is presented as a base rate.
 
 ## 17. Links
 

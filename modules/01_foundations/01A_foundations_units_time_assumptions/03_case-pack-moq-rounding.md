@@ -436,10 +436,9 @@ effect.
 | Ordering cost | €180 per order | Buyer time, receiving, inspection |
 
 > **Note:** the pallet layer is stated as 48 *cases*, not 48 units. A literal layer of 48 units
-> cannot be built from 250-unit cases, and a master-data field that says "48" without a unit is
-> exactly the defect the predecessor topic described. If the field really meant units, the pack
-> and the layer are mutually inconsistent and one of them is wrong. Section 10 lists this as a
-> red flag.
+> cannot be built from 250-unit cases, and a master-data field reading "48" without a unit is
+> exactly the defect the predecessor topic described. If the field meant units, the pack and the
+> layer are mutually inconsistent and one is wrong.
 
 The MOQ of 1,000 is below the weekly requirement of 1,200, so it does not bind in the base case.
 It is retained because section 6.6 shows what happens when demand falls and it does.
@@ -611,8 +610,8 @@ holds 330 kg of protection and in fact holds a rounding artifact of 580 kg, cons
 not demand requires it and replenished next order regardless of the buffer.
 
 The remedy is not to raise the safety stock, which increases the inventory the residue already
-dominates. It is to order Y in a way that matches consumption: fewer, larger orders aggregated
-across the items sharing the pallet, a negotiated lower MOQ, or a smaller pack.
+dominates, but to order Y in a way that matches consumption: aggregate orders across the items
+sharing the pallet, negotiate a lower MOQ, or use a smaller pack.
 
 ### 6.9 The pallet and truck cascade, and why it is not applied to one item
 
@@ -624,9 +623,9 @@ annual demand: 20.0 for the truck against `1,250 / 62,400 = 0.02` for the weekly
 is why the pack costs 4.2% per order rather than 2,000%.
 
 The rule follows: transport units are rounded at the level of the *consignment*, which contains
-many items, not at the level of the *item*. A truck is a constraint on the shipment, not on the
-stock-keeping unit. Applying a vehicle constraint to one item is a category error that produces
-the twenty-year order, and it happens whenever a planner copies a "full truckload" field into
+many items, not at the level of the *item*. A truck constrains the shipment, not the
+stock-keeping unit, and applying a vehicle constraint to one item is the category error that
+produces the twenty-year order — usually because a planner copied a "full truckload" field into
 an item-level rounding value.
 
 ## 7. Code, query, or calculation
@@ -679,10 +678,10 @@ setting.
 | ISO 8000-110 | Master-data quality | Syntactic and semantic quality of attributes, including pack data | B |
 | FDA unique device identification (UDI) | Medical device identification | Device identifier and production identifier at the packaging level | B |
 
-The GTIN rule is the one that bites hardest on this topic. A case pack is not a parameter that
-can be edited in place; a change to it creates a new trade item at the case level. Any historical
-analysis that spans the change joins two different products, and any rounding rule keyed on the
-old pack is now applied to a quantity that no longer exists physically.
+The GTIN rule bites hardest here. A case pack is not a parameter that can be edited in place; a
+change creates a new trade item at the case level. Historical analysis spanning the change joins
+two different products, and a rounding rule keyed on the old pack is applied to a quantity that
+no longer exists physically.
 
 ### 8.2 What enterprise systems actually store
 
@@ -744,8 +743,6 @@ available.
   centre that breaks bulk is a design choice with a cost.
 - "MOQ equals one pallet" is a supplier's habit in many categories, not a law, and renegotiating
   it is a legitimate output of the analysis in section 6.
-- "Round up" is a default, not a rule. It is safe for service, expensive for cash, and somebody
-  should own the trade-off.
 - "One order per week per item" is an artefact of the planning calendar, not of the product, and
   is the subject of Topic 04.
 
@@ -800,8 +797,7 @@ analysis that treats the pack as immovable has conceded the most valuable degree
 The MOQ literature is unambiguous that the classical economic order quantity is often
 inapplicable. Alnahhal and colleagues (2024), reviewing the state of the art in *Sustainability*,
 state that suppliers may enforce an MOQ much larger than the EOQ, and that when the EOQ falls
-below the MOQ there is no point in the EOQ calculation — the MOQ governs. Grade A, peer-reviewed
-review.
+below the MOQ the calculation is pointless because the MOQ governs. Grade A, peer-reviewed review.
 
 The technical treatment is harder than practitioner discussion suggests. Zhao and Katehakis
 (2006) show the optimal policy under an MOQ is non-monotone, which is why simple rules are used.
@@ -814,10 +810,10 @@ well-chosen simple policy is close enough that the argument should be about the 
 
 Bertazzi (2003) analyses rounding the continuous economic lot size to a discrete set of reorder
 intervals. The classic power-of-two result gives a worst-case cost ratio of about 1.06, and the
-paper examines how naive rounding performs against that bound. Grade A, peer-reviewed. This is
-the formal version of section 6.4: rounding a lot size near a good value costs a few percent,
-while rounding one chosen for another purpose can cost far more, because the cost function is
-flat only near its minimum.
+paper examines how naive rounding performs against that bound. Grade A, peer-reviewed. This is the
+formal version of section 6.4: rounding a lot near a good value costs a few percent, while
+rounding one chosen for another purpose costs far more, since the cost function is flat only near
+its minimum.
 
 ### 9.6 MOQ and expiry in pharmaceutical distribution
 
@@ -855,7 +851,6 @@ per order on `N` orders a year is `r × N` units a year, and no case study is ne
 | BOM exploded from the forecast, not the rounded parent | Component shortages at build time | Components bought for 1,200 while the line builds 1,250 | Line stoppage; expediting cost | Explode from the rounded parent quantity |
 | Rounding factors added instead of multiplied | Reported overage is below the observed purchase value | Additive intuition applied to a multiplicative process | Understated cost; wrong policy choice | Compute cumulative factors as a product |
 | Transport unit used as an item-level rounding value | One item's order equals a truck or pallet for months of demand | Vehicle constraint applied to a stock-keeping unit | Absurd lot sizes; obsolescence; storage overflow | Round consignments, not items, at the transport level |
-| Order multiple changed without a pack review | Order quantities shift by a constant amount across a category | A configuration change applied globally | Silent cost change attributed to demand | Change control on rounding fields; log the effective date |
 | Horizon exception such as "last lot exact" | Most orders respect the rule; the final one does not | Horizon-level exception in the planning engine | Reconciliation breaks at the horizon boundary | Document the exception; test the final bucket explicitly |
 | Residue never attributed | Overbuild is "normal" and no report shows its cause | The rounded quantity overwrites the exact one | No feedback, no learning, no owner | Persist exact, rounded, rule, and residue on every line |
 
@@ -866,15 +861,14 @@ is systematic and directional. It is also the easiest to detect: compare the dis
 order quantities with that of requirements. If every order is a multiple of a round number while
 the requirements are not, the field is being used as a grid.
 
-**Residue larger than safety stock** most often produces a wrong remedy. The service problem is
-real, so the obvious response is to raise safety stock, which worsens the inventory without
-fixing the service, because the buffer was never the binding quantity. Compute both numbers in
-the same unit and compare them before changing a parameter.
+**Residue larger than safety stock** most often produces a wrong remedy: the service problem is
+real, so the obvious response is to raise safety stock, which worsens inventory without fixing
+service because the buffer was never binding. Compare both numbers in the same unit first.
 
 **The transport unit as an item-level increment** produces absurd results that are usually
 caught, but the near-miss is common: a "full pallet" increment applied to an item whose weekly
 demand is a fraction of a pallet. The order is not twenty years of demand but twenty weeks, and
-nobody notices because the item is cheap. The test is the exposure ratio, not the currency value.
+nobody notices because the item is cheap. Test the exposure ratio, not the currency value.
 
 ## 11. Assumptions and limits
 
@@ -887,7 +881,6 @@ nobody notices because the item is cheap. The test is the exposure ratio, not th
 | Unit cost and holding rate are constant | Converts quantity to cash | Volume discounts, perishability, obsolescence | Segment the holding rate where material |
 | Ordering cost is independent of lot size | EOQ and break-even arithmetic | Fixed costs that scale with quantity | Check whether receiving cost varies with order size |
 | Lead time is zero or constant in the comparison | Isolates the rounding effect | Real lead times, variability, and review periods | Add lead time and re-simulate; the ranking may change |
-| The residue is held for one replenishment cycle | Converts residue to holding cost | Residue that persists across cycles and accumulates | Track inventory over a longer horizon |
 | Bill-of-material usage rates are exact | Component requirements are computed from them | Scrap, yield loss, substitution | Compare planned and actual issues |
 | Component rounding is independent across items | Simplifies the portfolio effect | A common parent rounding factor correlates them | Compute the correlation of residues across components |
 | The integer plan and the continuous optimum use the same cost basis | The gap is meaningful | Costs that exist only in the integer plan, such as freight | Include the incremental costs in both |
@@ -929,10 +922,10 @@ explained rather than reported; annualisation on orders per year, not on the req
 
 ### Exercise 3 — Simulate three policies (calculation, 60 minutes)
 
-Weekly demand is 1,000 units. The case pack is 300, the MOQ is 1,000, holding cost is €0.05 per
+Weekly demand is 1,000 units, the case pack is 300, the MOQ is 1,000, holding cost is €0.05 per
 unit per week, and ordering cost is €150. Simulate twelve weeks under (A) lot-for-lot with the
-MOQ floor rounded to the case, (B) a fixed lot of 2,400 ordered when opening stock cannot cover
-the week, and (C) a fixed lot of 4,000 on the same rule.
+MOQ floor rounded to the case, (B) a fixed lot of 2,400 and (C) a fixed lot of 4,000, both ordered
+when opening stock cannot cover the week.
 
 **Deliverable:** three week-by-week tables with opening, receipt, demand, and closing; average
 closing inventory, holding, ordering, and total for each; a service comment for each.
@@ -974,9 +967,9 @@ than certain; the ask expressed as a number the supplier can accept or reject.
 
 ### Exercise 7 — Classify a portfolio (design, 60 minutes)
 
-Take twenty items with demand and pack data. Compute the rounding exposure ratio — lot size
-divided by annual demand — using the case pack as the lot where no other data exists. Sort the
-items and propose a policy per quartile.
+Take twenty items with demand and pack data. Compute the rounding exposure ratio, lot size divided
+by annual demand, using the case pack as the lot where no other data exists; sort the items and
+propose a policy per quartile.
 
 **Deliverable:** a table of twenty items with annual demand, lot size, ratio, unit cost, and
 proposed policy; a sorted list; a policy per quartile.
@@ -1006,9 +999,9 @@ effective dating addressed; the test reproduces the over-order between grid poin
 
 ### Exercise 10 — Diagnose the case (critique, 40 minutes)
 
-A distributor reports inventory up 14% and fill rate down from 96% to 92%. Purchasing blames
-forecast error and supplier delays. Order quantities cluster at 1,000, 2,000, and 3,000 units
-while weekly requirements range from 250 to 1,600, and safety stock was raised twice.
+A distributor reports inventory up 14% and fill rate down from 96% to 92%, blaming forecast error
+and supplier delays. Order quantities cluster at 1,000, 2,000, and 3,000 units while weekly
+requirements range from 250 to 1,600, and safety stock was raised twice.
 
 **Deliverable:** a one-page diagnosis naming the most likely mechanism, two alternatives, and
 two discriminating measurements.
@@ -1139,9 +1132,9 @@ requirements, and fill rate by item class split at the grid points.
 
 **1. "What is the difference between a case pack, an order multiple, and an MOQ?"**
 
-Strong: the case pack is physical, the multiple is a system grid, the MOQ is a contractual floor,
-and a 1,200 requirement becomes 1,250 under the pack, 2,000 under a 1,000 multiple, 1,200 under a
-1,000 MOQ. Weak: calls all three "the smallest amount you can order", the error being tested.
+Strong: the case pack is physical, the multiple a system grid, the MOQ a contractual floor, and a
+1,200 requirement becomes 1,250, 2,000, and 1,200 respectively. Weak: calls all three "the
+smallest amount you can order", the error being tested.
 
 **2. "Why is a fractional plan a problem if the model is correct?"**
 
@@ -1163,8 +1156,8 @@ case because the item stops being ordered. Weak: gives only the ceiling answer.
 **5. "How does rounding compound through a bill of materials?"**
 
 Strong: the rounded parent drives the component requirement, each component has its own factor,
-and the factors multiply — with an example where the product exceeds the sum; the errors are
-correlated because they share the parent, so they do not average out. Weak: says errors add up.
+the factors multiply, and an example shows the product exceeding the sum; the errors are
+correlated through the shared parent, so they do not average out. Weak: says errors add up.
 
 **6. "When is rounding free and when is it expensive?"**
 
