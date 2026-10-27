@@ -447,8 +447,8 @@ It is retained because section 6.6 shows what happens when demand falls and it d
 ### 6.2 The continuous benchmark
 
 Before any rounding, compute the economic order quantity (EOQ) with the standard square-root
-formula. It assumes a constant demand rate, a fixed cost per order, and a holding cost
-proportional to quantity and time.
+formula, which assumes constant demand, a fixed cost per order, and holding cost proportional to
+quantity and time.
 
 ```text
 EOQ = sqrt(2 × D × K / h) = sqrt(2 × 62,400 × 180 / 3.12)
@@ -1208,7 +1208,6 @@ which adds rounding events and can raise the annual residue.
 - **Rounding profile** — a scaled rule with thresholds at which the increment changes.
 - **MOQ** — minimum order quantity; a threshold, not a grid.
 - **Minimum lot size** — the smallest lot the planning system will propose.
-- **Maximum lot size** — the largest lot in one proposal; excess is split.
 - **Lot size** — the quantity produced or ordered in one lot.
 - **Lot-for-lot** — ordering exactly the net requirement each period.
 - **Fixed order quantity** — a policy of ordering the same quantity every time.
@@ -1227,13 +1226,11 @@ which adds rounding events and can raise the annual residue.
 - **Rounding residue** — the quantity added or removed by one rounding operation.
 - **Compounded residue** — the multiplicative accumulation of several rounding operations.
 - **Divisibility** — the property that a quantity can be split into whole units without loss.
-- **Granularity** — the smallest representable increment at a stated level.
 - **Executable plan** — a plan whose quantities can be picked, packed, shipped, and invoiced.
 - **Rounding exposure ratio** — lot size divided by demand over the same period.
 - **Cycle stock** — inventory that exists because supply arrives in lots.
 - **Safety stock** — inventory held against variability in demand or lead time.
 - **Sawtooth** — the inventory profile produced by periodic replenishment in lots.
-- **Order batching** — combining requirements to reduce order frequency.
 
 ## 16. Sources
 
