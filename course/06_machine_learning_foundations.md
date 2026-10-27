@@ -634,4 +634,4 @@ The ethical core is that these models allocate attention and resources. A late-d
 
 ---
 
-> **Next:** `07_time_series_forecasting.md` — from prediction on independent rows to prediction along a calendar, with benchmarks, backtests, and honest error metrics.
+> **Next:** [Module 07](07_time_series_forecasting.md) — from prediction on independent rows to prediction along a calendar, with benchmarks, backtests, and honest error metrics.

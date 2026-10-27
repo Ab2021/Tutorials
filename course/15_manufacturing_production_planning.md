@@ -34,6 +34,7 @@ By the end of this module, you can:
 - Interpret control charts, compute Cp and Cpk, and connect process capability to defect economics.
 - Design a condition-monitoring and remaining-useful-life workflow, and state its failure modes.
 - Place a planning model correctly against ISA-95 and judge when a simulation or digital twin is worth building.
+- Run an S&OP reconciliation that turns a demand-supply gap into costed options, a recommendation, and a recorded decision.
 
 ## 3. Mental model
 
@@ -477,6 +478,74 @@ Expected output: `OPTIMAL | makespan = 11.0`, with J3 on M1 0–4 and M2 4–7, 
 
 The interesting part is the bound. Machine 1 carries 4 + 2 + 4 = 10 hours of work, so no schedule finishes before time 10. The solver returns 11 because job 1 needs three hours on machine 0 before it can touch machine 1, and job 2 needs two hours on machine 0 before it can start — so the first four hours of machine 1 can only be occupied by job 3. The gap between the load bound and the achieved makespan is the **scheduling loss**: capacity you already own and cannot use.
 
+### 4.16 S&OP, IBP, and S&OE — the planning operating model
+
+The techniques above produce plans. S&OP is the monthly process that decides which plan the business will commit to. It sits above the MPS and is not a manufacturing-only ritual: the same cycle runs in retail, pharma, and consumer goods, with different owners and constraints.
+
+| Process | Horizon | Cadence | Core question | Decision |
+|---|---|---|---|---|
+| Strategic planning | 1–5 years | Annual/quarterly | What network and capacity do we need? | Capex, footprint |
+| S&OP / IBP | 3–18 months | Monthly | Does demand reconcile with supply and finance? | Volume, mix, inventory, service |
+| S&OE | 0–13 weeks | Weekly/daily | Where are we off plan, and what do we do now? | Expedite, allocate, re-sequence |
+| MPS / scheduling | Days–weeks | Weekly/daily | What do we build, in what order? | Production orders |
+
+**The five-step monthly cycle.** Each step has a different analytic job and a different owner.
+
+| Step | Owner | Analytic output | Common defect |
+|---|---|---|---|
+| 1. Data and demand review | Demand planning | Statistical baseline, consensus forecast, bias and FVA | Overrides without reason codes |
+| 2. Supply review | Supply/production planning | Constrained capacity, inventory projection, service risk | Unconstrained plan presented as feasible |
+| 3. Reconciliation | S&OP lead | Gap to plan, scenarios, margin impact | Meeting that produces no options |
+| 4. Financial integration (IBP) | Finance | Revenue, margin, working capital, cash | Finance arrives after the decision |
+| 5. Executive review | GM/COO | Decision log, commitments, assumptions | Re-litigating the forecast instead of choosing |
+
+**Worked reconciliation.** The consensus demand plan is 100,000 units for the quarter at a €40 price and €24 variable cost, so contribution is €16 per unit. The constrained supply plan is 92,000 units. The gap is 8,000 units, worth €128,000 of contribution at risk.
+
+| Option | Units recovered | Incremental cost per unit | Net contribution effect |
+|---|---:|---:|---:|
+| Overtime on line 2 | 4,000 | €3 | +€52,000 |
+| Expedite components | 3,000 | €5 | +€33,000 |
+| Allocate the residual shortfall | 1,000 | — | −€16,000 |
+| Do nothing | 0 | — | −€128,000 |
+
+The recommendation is not "close the gap." It is "spend €27,000 of incremental cost to recover 7,000 units and €85,000 of net contribution, and accept a 1,000-unit shortfall allocated by the agreed rule." The options, the residual, and the allocation rule are the decision. A plan that reports only the gap has not done the job.
+
+**S&OE is where the plan meets the week.** Track exceptions, not averages:
+
+- Orders that cannot be confirmed against the plan.
+- Supply that will miss its commit date.
+- Inventory projected below safety stock within the lead time.
+- Service failures by customer or channel.
+- The top five actions and their owners for the next seven days.
+
+**Maturity, honestly assessed.**
+
+| Stage | Characteristic | Analytics implication |
+|---|---|---|
+| 1. Siloed | Functions plan separately | Build one shared demand signal first |
+| 2. Consensus | Monthly demand consensus exists | Add supply constraints and bias tracking |
+| 3. Integrated | Supply and demand reconciled with scenarios | Add margin and what-if analysis |
+| 4. Financial | IBP links volume to revenue, margin, cash | Add driver-based financial projection |
+| 5. Adaptive | Continuous signals and rapid re-planning | Add S&OE, event triggers, and simulation |
+
+Most organisations claim stage 3 and operate at stage 2. The diagnostic is simple: can the team show a decision log where a documented option was chosen over the statistical forecast? If not, the process is a reporting meeting.
+
+**Metrics that matter.** Forecast value added over the naive baseline; forecast bias by family; plan attainment; service level; inventory versus plan; margin and cash impact of the committed plan; and the share of decisions recorded with an owner and a review date.
+
+**Failure modes specific to S&OP.**
+
+| Failure | Early warning | Consequence | Mitigation |
+|---|---|---|---|
+| Forecast review, not decision review | Ninety minutes on accuracy | No commitment | Agree the decision agenda in advance |
+| Sandbagging | Demand plan systematically below sales | Excess inventory or missed revenue | Bias tracking and incentive alignment |
+| Unconstrained supply plan | No capacity or material check | Chronic missed commitments | Publish the constrained plan |
+| Finance absent | No margin or cash view | Plan cannot be funded | Integrate the financial bridge |
+| Override without reason | Planner edits, no code | No learning | Reason codes and FVA |
+| Scenario sprawl | Fifty what-ifs | No decision | Pre-register three options |
+| S&OE separate from S&OP | Weekly firefighting | Same issues recur monthly | Feed exceptions into the monthly cycle |
+
+The analytics contribution is not a better forecast alone. It is a traceable chain from signal to constrained plan to financial impact to a recorded decision, with the assumptions visible enough to challenge.
+
 ## 5. Data, standards, and workflow
 
 | Data object | Grain | Source | Requirement |
@@ -675,6 +744,9 @@ Two ethical points deserve naming. A schedule that improves throughput by runnin
 | 10 | A supplier reports Cpk 1.33. What do you ask next? | Sample size, subgroup definition, normality, whether the process is in control, and which characteristic. |
 | 11 | How would you validate a predictive-maintenance model? | Split by asset, define the failure event, score asymmetrically, and compare the resulting maintenance policy against a fixed interval. |
 | 12 | Where does MES sit in ISA-95, and what crosses level 3↔4? | Level 3; production orders down, production performance and genealogy up. |
+| 13 | What is the difference between S&OP and S&OE? | S&OP is monthly, reconciles demand, supply, and finance over 3–18 months, and commits a plan; S&OE is weekly, manages exceptions against that plan. |
+| 14 | The demand plan is 100 and supply is 92. What do you present? | Costed options, a recommended spend, the residual shortfall, and the allocation rule — not the gap alone. |
+| 15 | How do you tell whether an S&OP process is real? | A decision log shows documented options chosen; otherwise it is a reporting meeting. |
 
 ## 13. Key terms
 
@@ -709,6 +781,13 @@ Two ethical points deserve naming. A schedule that improves throughput by runnin
 | C-MAPSS | NASA turbofan degradation simulation benchmark dataset |
 | ISA-95 | IEC 62264 hierarchy and object model for enterprise-control integration |
 | MES | Manufacturing execution system; level-3 execution and tracking |
+| S&OP | Sales and operations planning; monthly demand-supply reconciliation |
+| IBP | Integrated business planning; S&OP extended into financial planning |
+| S&OE | Sales and operations execution; weekly short-horizon exception management |
+| Consensus forecast | Agreed demand plan after statistical and human input |
+| Forecast value added | Accuracy gain over a naive baseline, attributed to a process step |
+| Plan attainment | Share of committed plan actually delivered |
+| Constrained plan | Supply plan that respects capacity and material limits |
 
 ## 14. Sources and further reading
 

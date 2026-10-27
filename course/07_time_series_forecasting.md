@@ -694,4 +694,4 @@ Two professional obligations follow. **Never present a forecast as a commitment*
 
 ---
 
-> **Next:** `08_hierarchical_intermittent_probabilistic_forecasting.md` — reconciliation, intermittent-demand methods, predictive distributions, and the scoring rules that make a hierarchy coherent.
+> **Next:** [Module 08](08_hierarchical_intermittent_probabilistic_forecasting.md) — reconciliation, intermittent-demand methods, predictive distributions, and the scoring rules that make a hierarchy coherent.

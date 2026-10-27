@@ -42,7 +42,7 @@
 | Classical bi-seasonal MSTL was never statistically beaten by foundation models in a five-market electricity-price study | arXiv:2506.08113 | 2025 | Domain-specific |
 | Zero-shot foundation models were beaten by linear and seasonal-naive baselines on real cloud workloads | arXiv:2502.12944 | 2025 | Domain-specific |
 
-**Teaching use:** Module 07 insists on naive and seasonal-naive baselines; Module 08 treats foundation models as candidates, not defaults; Module 18 teaches leakage audits for pretrained models; Module 24 requires benchmark provenance.
+**Teaching use:** Module 07 insists on naive and seasonal-naive baselines; Module 08 treats foundation models as candidates, not defaults; Module 18 teaches leakage audits for pretrained models; Module 27 requires benchmark provenance.
 
 **URLs**
 - https://statmodeling.stat.columbia.edu/wp-content/uploads/2021/10/M5_accuracy_competition.pdf
@@ -107,7 +107,7 @@
 | OECD G7 report catalogues algorithm-facilitated cartels, hub-and-spoke, vertical agreements, and autonomous tacit collusion | OECD | Oct 2025 |
 | California and New York algorithmic-pricing laws took effect; RealPage constitutional challenges pending | State legislation and litigation | 2026 |
 
-**Teaching use:** Module 16 must teach pricing optimization with a legal and ethical boundary. A model that recommends a price using a competitor's non-public signal is a legal risk, not a clever feature. Module 22 covers governance.
+**Teaching use:** Module 16 must teach pricing optimization with a legal and ethical boundary. A model that recommends a price using a competitor's non-public signal is a legal risk, not a clever feature. Module 26 covers governance.
 
 **URLs**
 - https://www.justice.gov/opa/pr/justice-department-reaches-proposed-settlement-greystar-largest-us-landlord-end-its
@@ -165,7 +165,7 @@
 | CSRD thresholds rise to >€450m turnover and >1,000 employees from FY2027 | Directive (EU) 2026/470 | 26 Feb 2026 |
 | CBAM definitive period starts 1 Jan 2026 with a 50-tonne threshold and first surrender 30 Sep 2027 | European Commission | 2026 |
 
-**Teaching use:** Module 22 and Module 29 teach emissions accounting as a data problem: activity data, emission factors, boundaries, allocation, and assurance. Warn against spend-based estimates presented as supplier-specific measurements.
+**Teaching use:** Module 26 and Module 29 teach emissions accounting as a data problem: activity data, emission factors, boundaries, allocation, and assurance. Warn against spend-based estimates presented as supplier-specific measurements.
 
 **URLs**
 - https://finance.ec.europa.eu/financial-markets/company-reporting-and-auditing/company-reporting/corporate-sustainability-reporting_en

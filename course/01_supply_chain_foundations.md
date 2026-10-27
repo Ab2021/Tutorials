@@ -617,4 +617,4 @@ The grader plays the role of a planning director and a finance partner. Every nu
 
 ---
 
-> **Next:** `01A_foundations_units_time_assumptions.md` — the quantitative anchor: units, calendars, lead-time definitions, forecast-error metrics, distributions, and the assumptions ledger that every later model depends on.
+> **Next:** [Module 01A](01A_foundations_units_time_assumptions.md) — the quantitative anchor: units, calendars, lead-time definitions, forecast-error metrics, distributions, and the assumptions ledger that every later model depends on.

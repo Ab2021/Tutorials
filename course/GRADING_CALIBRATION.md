@@ -1,14 +1,14 @@
 # Grading Calibration
 
 > **Purpose:** Make grading consistent across instructors, cohorts, and terms.
-> **Version:** 2026.1.0
+> **Version:** 2026.5.0
 > **Use with:** `INSTRUCTOR_KIT.md`, the module rubrics, and `COMPETENCY_MAP.md`
 
 ---
 
 ## 1. Why calibration is necessary
 
-Two instructors grading the same capstone can differ by a full letter grade without disagreeing about the facts. One rewards model sophistication; another rewards decision relevance. One treats a missing baseline as a minor omission; another treats it as disqualifying.
+Two instructors grading the same domain project can differ by a full letter grade without disagreeing about the facts. One rewards model sophistication; another rewards decision relevance. One treats a missing baseline as a minor omission; another treats it as disqualifying.
 
 Calibration aligns three things:
 
@@ -101,6 +101,26 @@ A submission at 70 is not a failure. It is a correct piece of work that would ne
 | Developing | Reads slides without ownership |
 | Insufficient | Cannot explain the analysis or its sources |
 
+### 4.7 Domain fulfillment design
+
+| Level | Evidence |
+|---|---|
+| Exemplary | Names the node, promise, cost-to-serve, and returns loop; quantifies the service-cost frontier and the failure mode at peak |
+| Strong | A defensible node placement or routing policy with a promise and cost estimate |
+| Competent | A fulfillment model with no promise or unit-economics link |
+| Developing | A generic network diagram relabeled as e-commerce |
+| Insufficient | Assumes infinite capacity, free delivery, or zero returns |
+
+### 4.8 Recommendation and ranking quality
+
+| Level | Evidence |
+|---|---|
+| Exemplary | Offline and online evaluation; popularity and random baselines; constraint-aware re-ranking; feedback-loop and cold-start analysis |
+| Strong | A ranking model with Recall@k or NDCG and a business constraint |
+| Competent | A model evaluated only on offline accuracy |
+| Developing | A recommender with no baseline or no exposure analysis |
+| Insufficient | Optimizes clicks while ignoring stockouts, margin, or fairness |
+
 ## 5. Conflict rules
 
 When criteria conflict, apply these rules in order:
@@ -120,7 +140,7 @@ When criteria conflict, apply these rules in order:
 | Ignoring censoring | Stockout rows look like low demand | Ask how zero sales were treated |
 | Over-crediting dashboards | Visual polish reads as insight | Ask what decision changed |
 | Penalizing simple methods | Simple looks unsophisticated | Ask whether it beat the baseline |
-| Inconsistent capstone scope | Teams choose different sizes | Use the scope card |
+| Inconsistent domain-project scope | Teams choose different sizes | Use the scope card |
 | Grading the team, not the individual | Group work hides contribution | Use the individual defense |
 | Late-rubric drift | Criteria reinterpreted mid-term | Anchor before grading |
 
@@ -164,7 +184,7 @@ Recalibrate when:
 - A new instructor joins.
 - A rubric changes.
 - More than 20% of submissions fall in one level.
-- A capstone archetype changes.
+- A domain-project archetype changes.
 
 Record changes in `CHANGELOG.md`.
 

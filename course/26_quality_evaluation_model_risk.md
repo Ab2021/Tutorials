@@ -1,9 +1,9 @@
-# Module 24 — Quality, Evaluation, and Model Risk
+# Module 26 — Quality, Evaluation, and Model Risk
 
 > **Program:** Supply Chain Analytics, AI, Data Science, and Forecasting (2026 Edition)
 > **Time:** 26 hours (14 lecture, 8 lab, 4 case clinic)
 > **Track fit:** Common core; required for all tracks
-> **Prerequisites:** Modules 06, 07, 10, 21
+> **Prerequisites:** Modules 06, 07, 10, 25
 > **Tools:** Model inventory template, model card, backtesting harness, issue log
 > **Industry question:** "How do we know this model is still fit for the decision, and who is accountable when it is not?"
 
@@ -320,7 +320,7 @@ Planning models are not bank models, but the SR 11-7 structure — inventory, ti
 
 ## 7. Labs
 
-### Lab 24.1 — Model inventory and tiering
+### Lab 26.1 — Model inventory and tiering
 
 Inventory ten models in a realistic planning stack. Assign tier, owner, and next review. Justify each tier.
 
@@ -328,13 +328,13 @@ Inventory ten models in a realistic planning stack. Assign tier, owner, and next
 
 **Acceptance criteria:** Decisions are named; materiality and complexity are scored; the riskiest model is identified.
 
-### Lab 24.2 — Conceptual soundness review
+### Lab 26.2 — Conceptual soundness review
 
 Take a demand model and write a soundness review: target, horizon, assumptions, method, inputs, and failure regimes.
 
 **Deliverable:** Two-page review with findings.
 
-### Lab 24.3 — Challenger validation
+### Lab 26.3 — Challenger validation
 
 Compare a production model with a challenger on rolling-origin folds. Report WAPE, bias, pinball, and slice performance. Decide whether the challenger is better.
 
@@ -342,19 +342,19 @@ Compare a production model with a challenger on rolling-origin folds. Report WAP
 
 **Acceptance criteria:** Same folds and data; uncertainty reported; decision rule stated before results.
 
-### Lab 24.4 — Data-quality audit
+### Lab 26.4 — Data-quality audit
 
 Run completeness, accuracy, timeliness, consistency, and representativeness tests on a demand dataset. Quantify each gap.
 
 **Deliverable:** Data-quality scorecard and remediation list.
 
-### Lab 24.5 — Model card and reproducibility audit
+### Lab 26.5 — Model card and reproducibility audit
 
 Write a model card and attempt to reproduce the model from its artifacts. Record every gap.
 
 **Deliverable:** Model card and reproducibility memo.
 
-### Lab 24.6 — Vendor model evaluation
+### Lab 26.6 — Vendor model evaluation
 
 Score a vendor model against the ten vendor questions. Identify the top three risks and the contractual protections required.
 
@@ -401,6 +401,7 @@ Produce a validation dossier for one planning model.
 - **Labor:** workforce planning models can affect people; document intended use and appeal paths.
 - **Vendor contracts:** right to audit, change notification, data ownership, and exit are risk controls.
 - **Human oversight:** an override path is not a rubber stamp; it needs authority, information, and accountability.
+- **Responsible AI:** fairness across suppliers, stores, and customers; transparency about intended use and limits; accountability for automated decisions; privacy of customer and worker data; and a documented redress path when a model affects a person. These are controls, not a statement of values.
 
 ## 11. Failure modes and red flags
 
@@ -489,4 +490,4 @@ Produce a validation dossier for one planning model.
 - Great Expectations or dbt tests for data quality.
 - Git and container images for reproducibility.
 
-> **Next:** [Module 25](25_capstone_hackathons.md) applies validation and value discipline in the capstone.
+> **Next:** [Module 27](27_datasets_tools_benchmarks.md) grounds the model in datasets, tools, and benchmark evidence.

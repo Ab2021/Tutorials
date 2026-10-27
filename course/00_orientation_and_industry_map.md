@@ -37,7 +37,7 @@ By the end of this module, you can:
 - Map a proposed project to a decision, user, planning horizon, outcome, cost structure, and economic buyer.
 - Identify the minimum data, method, and evidence package for a forecasting, inventory, network, transport, or pricing project.
 - Recognize the major legal and regulatory regimes that can apply to a supply chain data product and when to involve legal, compliance, procurement, and security stakeholders.
-- Choose a track and capstone direction.
+- Choose a track and a domain-project direction.
 - Write a one-page project charter that survives scrutiny from a planner, an engineering lead, a finance partner, and a compliance officer.
 - Evaluate a vendor or analyst claim critically: population, comparator, endpoint, validation design, and deployment context.
 
@@ -129,7 +129,7 @@ A credible industry project has:
 |---|---:|---|---|---|
 | 1 | 1–12 | 00–06 incl. 01A | Supply chain, data, statistical, and ML foundations | Reproducible forecast and decision report |
 | 2 | 13–26 | 07–17 incl. 14A | Forecasting, inventory, optimization, domain analytics | Forecast dossier, planning model, track playbook |
-| 3 | 27–40 | 18–28 | AI, production, governance, product, capstone | Deployed prototype, evidence dossier, defense |
+| 3 | 27–40 | 18–30 | AI, channels, domain analytics, governance | Domain prototype, evidence dossier, defense |
 
 ### 4.2 Module dependency map
 
@@ -152,25 +152,35 @@ A credible industry project has:
  ├── 02 Data landscape
  │    └── 03 Data engineering
  │         ├── 09 Demand sensing
- │         ├── 19 Control towers
- │         └── 21 MLOps
+ │         └── 19 Control towers
  ├── 04 Statistics and causal inference
  │    ├── 05 Experimentation and evidence
  │    ├── 16 Pricing
- │    └── 24 Quality and model risk
+ │    └── 26 Quality and model risk
  ├── 06 ML foundations
  │    ├── 07 Time series forecasting
  │    ├── 08 Hierarchical and probabilistic forecasting
  │    ├── 18 Deep learning and foundation models
  │    └── 20 Simulation and optimization under uncertainty
+ ├── 07 Forecasting
+ │    └── 21 E-commerce
+ │         ├── 22 Quick commerce
+ │         └── 23 Omnichannel
  ├── 10 Inventory
  │    └── 11 Network design
+ ├── 17 Assortment
+ │    └── 24 Recommendations
  ├── 14 Procurement
  │    └── 14A Resilience and disruption
  ├── 18 Foundation models and agents
  │    └── 19 Control towers
- └── 21 MLOps
-      └── 25 Capstone
+ ├── 20, 21–24
+ │    └── 25 Product and economics
+ │         └── 26 Model risk
+ ├── 27 Datasets
+ │    └── 28 Domain cases
+ │         └── 29 Sector electives
+ └── 30 Production labs
 ```
 
 ### 4.3 Weekly rhythm
@@ -188,15 +198,15 @@ A 17–19 hour week for 40 weeks is roughly **700–760 hours**. The core module
 
 ### 4.4 Tracks
 
-| Track | Required | Recommended | Capstone archetypes |
+| Track | Required | Recommended | Domain-project archetypes |
 |---|---|---|---|
-| Retail & E-commerce | Core 00–06 incl. 01A; 07–10, 16, 17, 21–25 | 11–14A, 18–20, 26–28 | Demand sensing, assortment, markdown, delivery promise, returns |
-| Manufacturing & Industrial | Core 00–06 incl. 01A; 07–11, 15, 21–25 | 12–14A, 18–20, 26–28 | S&OP, scheduling, maintenance, supplier risk, resilience |
-| Logistics & Distribution | Core 00–06 incl. 01A; 07, 08, 10–13, 19, 21–25 | 09, 14–18, 20, 26–28 | Routing, control tower, warehouse labor, freight procurement, ETA |
+| Retail & E-commerce | Core 00–06 incl. 01A; 07–10, 16, 17, 21–25 | 11–14A, 18–20, 26–29 | Demand sensing, assortment, markdown, delivery promise, returns, dark-store economics, recommendation evaluation |
+| Manufacturing & Industrial | Core 00–06 incl. 01A; 07–11, 15, 23, 25–29 | 12–14A, 18–22, 30 | S&OP, scheduling, maintenance, supplier risk, resilience |
+| Logistics & Distribution | Core 00–06 incl. 01A; 07, 08, 10–13, 19, 21–23, 25–29 | 09, 14–18, 20, 24, 30 | Routing, control tower, warehouse labor, freight procurement, ETA, on-demand dispatch |
 
-### 4.5 The capstone
+### 4.5 The domain project
 
-The capstone is an evidence-backed planning product with a working prototype. It is not a notebook with a good score. It requires a charter, data provenance, a reproducible method with a baseline, temporal validation, cost and service impact, a risk and legal triage, a deployment plan, and a defense. Details are in Module 25.
+The domain project is an evidence-backed planning product with a working prototype. It is not a notebook with a good score. It requires a charter, data provenance, a reproducible method with a baseline, temporal validation, cost and service impact, a risk and legal triage, a deployment plan, and a defense. Choose a domain in Module 21 (e-commerce), 22 (quick commerce), 23 (omnichannel), or 24 (recommendations), ground the case in Module 28, and govern it with Module 26. The brief bank and rubric are in Module 28 §8–9.
 
 ## 5. The decision frame
 
@@ -241,7 +251,7 @@ Supply chain analytics competes on five outcomes, and they trade off:
 4. **Sustainability**: emissions, waste, packaging, circularity.
 5. **Resilience**: time-to-recover, time-to-survive, concentration, flexibility.
 
-A model that improves one and silently worsens another is not an improvement. Every capstone must report the trade-off it chose and the one it protected.
+A model that improves one and silently worsens another is not an improvement. Every domain project must report the trade-off it chose and the one it protected.
 
 ## 6. Industry roles and workflows
 
@@ -414,7 +424,7 @@ Take Modules 00, 01, 01A, 02, 03, 06, 07, and 08. Add Module 10 if you are in pl
 
 ### 10.3 If you are teaching
 
-Use Module 00 as the first lecture and the charter as the first assignment. Pair each technical module with a case clinic from the same domain. Use Module 25 for the capstone brief and rubric.
+Use Module 00 as the first lecture and the charter as the first assignment. Pair each technical module with a case clinic from the same domain. Use Module 28 for the domain-project brief and rubric.
 
 ## 11. Failure modes and red flags
 
@@ -499,7 +509,7 @@ Use Module 00 as the first lecture and the charter as the first assignment. Pair
 
 **Objective:** Write a charter for a real or realistic decision.
 
-**Data:** Your own project idea or a case from Module 25.
+**Data:** Your own project idea or a case from Module 28.
 
 **Steps:**
 

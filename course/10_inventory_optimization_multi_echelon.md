@@ -38,6 +38,7 @@ By the end of this module, you can:
 - Design a segmented policy using ABC/XYZ or DDMRP, and defend the segmentation to operations.
 - Handle shelf life, MOQ, case pack, and capacity constraints inside a policy rather than after it.
 - Simulate a policy, validate it against theory, and report service, cost, and working capital together.
+- Build a time-phased DRP plan and choose an explicit allocation rule for a short supply.
 
 ## 3. Mental model
 
@@ -424,6 +425,42 @@ if __name__ == "__main__":
 
 Expected behaviour: raising `s` from 80 to 120 raises the fill rate and average on-hand together; doubling `Q` to 400 cuts the order count roughly in half and raises average cycle stock by about 100 units while barely moving the fill rate. Those three comparisons — service, cycle stock, order frequency — are the ones a planner will ask about, and they should be produced from one simulation run rather than three models.
 
+### 4.15 Distribution requirements planning and deployment
+
+Multi-echelon inventory sets the policy. **Distribution requirements planning (DRP)** executes it: it takes the demand plan at each downstream node, nets against on-hand and in-transit, and produces a time-phased replenishment plan upstream. It is MRP read from the market backward instead of from the factory forward.
+
+| Step | Calculation | Data required |
+|---|---|---|
+| 1. Gross requirement | Forecast plus customer orders plus safety stock target | Demand plan, orders |
+| 2. Projected on-hand | Prior on-hand + scheduled receipts − gross requirement | Inventory, in-transit |
+| 3. Net requirement | Max(0, gross requirement + safety stock − projected on-hand) | Policy parameters |
+| 4. Planned receipt | Net requirement rounded to pack or truck | MOQ, case pack |
+| 5. Planned order | Receipt offset by transit and order lead time | Lane lead time |
+
+**Worked deployment.** A regional DC has 1,200 units on hand, 800 inbound, and a 300-unit safety stock target. Available to deploy is 1,200 + 800 − 300 = 1,700 units.
+
+| Node | Requirement | Allocation | Ending cover |
+|---|---:|---:|---:|
+| North | 500 | 500 | Full |
+| South | 400 | 400 | Full |
+| East | 300 | 300 | Full |
+| Total | 1,200 | 1,200 | 500 units unallocated |
+
+If only 900 units are available for the same 1,200 units of requirement, the allocation rule becomes the decision:
+
+| Rule | North | South | East | Consequence |
+|---|---:|---:|---:|---|
+| Pro-rata | 375 | 300 | 225 | Shared pain; predictable |
+| Priority tier | 500 | 400 | 0 | Protects key accounts; one node fails |
+| Equal days of cover | Varies | Varies | Varies | Service equalized by time, not units |
+| Margin-weighted | Varies | Varies | Varies | Maximizes contribution; may breach service policy |
+
+The rule must be agreed before the shortage, written down, and applied consistently. An optimizer that silently maximizes margin is making a commercial policy decision that nobody approved.
+
+**Deployment versus allocation.** Deployment is the routine push of available stock to nodes against their plan. Allocation is the exception decision when supply is short. Mixing the two produces a system that looks fair in normal weeks and arbitrary in a crisis. Keep separate rules, separate owners, and a visible record of every exception.
+
+**DRP failure modes.** Using the sales forecast rather than the replenishment-relevant demand; ignoring in-transit; netting safety stock twice; rounding at the wrong level; and letting a central planner override node priorities without a reason code. Each produces either excess stock at one node or a shortage at another, and the cause is usually invisible in the aggregate service number.
+
 ## 5. Data, standards, and workflow
 
 | Data object | Grain | Source | Requirement |
@@ -642,6 +679,11 @@ The ethical question in inventory is distributional: an optimisation that maximi
 | DIO | Days inventory outstanding |
 | FEFO | First-expired, first-out issuing |
 | ABC/XYZ | Value and variability segmentation |
+| DRP | Distribution requirements planning; time-phased replenishment from nodes upstream |
+| Deployment | Routine push of available stock to downstream nodes against plan |
+| Allocation | Exception rule for dividing short supply among competing nodes |
+| Fair-share allocation | Pro-rata division of available stock by requirement |
+| Days of cover | On-hand divided by average daily demand |
 
 ## 14. Sources and further reading
 

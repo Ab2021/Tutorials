@@ -1,11 +1,12 @@
 # Course Outline — Supply Chain Analytics, AI, Data Science, and Forecasting (2026)
 
-> **Master table of contents.** Use this file to navigate the 31 modules. Each module contains industry context, learning outcomes, concepts, case studies, labs, assignments, rubrics, regulatory considerations, failure modes, interview questions, key terms, and sources.
+> **Master table of contents.** Use this file to navigate the 48 module files. Each module contains industry context, learning outcomes, concepts, case studies, labs, assignments, rubrics, regulatory considerations, failure modes, interview questions, key terms, and sources.
 
-**Version:** 2026.1.0
+**Version:** 2026.5.0
 **Source cutoff:** 27 October 2026
-**Format:** 40 weeks, three terms, three tracks, 31 modules (00–28 plus 01A and 14A, plus advanced electives 29–30)
-**Capstone:** 10–12 weeks, evidence dossier and defense
+**Format:** 40 weeks, three terms, three tracks, 48 module files (00–30 plus 01A and 14A, plus domain electives 31–40 and engineering electives 41–45)
+**Coverage:** every canonical topic is mapped in [`TOPIC_COVERAGE_MAP.md`](TOPIC_COVERAGE_MAP.md); known gaps are stated in its section 12.
+**Domain project:** 10–12 weeks, 13-artifact evidence dossier, and individual defense (Modules 21–28)
 
 ---
 
@@ -15,7 +16,7 @@
 |---|---:|---|---|---|
 | 1 | 1–12 | 00–06 incl. 01A | Supply chain, data, statistical, and ML foundations | Reproducible forecast and decision report |
 | 2 | 13–26 | 07–17 incl. 14A | Forecasting, inventory, optimization, and domain analytics | Forecast dossier, planning model, and track playbook |
-| 3 | 27–40 | 18–28 | AI, production, governance, product, capstone | Deployed prototype, evidence dossier, defense |
+| 3 | 27–40 | 18–30 | AI, channels, domain analytics, governance | Domain prototype, evidence dossier, defense |
 
 ### 1.1 Weekly rhythm
 
@@ -30,11 +31,11 @@
 
 ### 1.2 Tracks
 
-| Track | Required | Recommended | Capstone archetypes |
+| Track | Required | Recommended | Domain-project archetypes |
 |---|---|---|---|
-| Retail & E-commerce Analytics | Core (00–06 incl. 01A); 07–10, 16, 17, 21–25 | 11–14A, 18–20, 26–28 | Demand sensing, assortment, markdown, delivery promise, returns, fulfillment |
-| Manufacturing & Industrial Operations | Core (00–06 incl. 01A); 07–11, 15, 21–25 | 12–14A, 18–20, 26–28 | S&OP, scheduling, maintenance, supplier risk, network resilience, carbon |
-| Logistics & Distribution | Core (00–06 incl. 01A); 07, 08, 10–13, 19, 21–25 | 09, 14–18, 20, 26–28 | Routing, control tower, warehouse labor, freight procurement, ETA prediction |
+| Retail & E-commerce Analytics | Core (00–06 incl. 01A); 07–10, 16, 17, 21–25 | 11–14A, 18–20, 26–29 | Demand sensing, assortment, markdown, delivery promise, returns, dark-store economics, recommendation evaluation |
+| Manufacturing & Industrial Operations | Core (00–06 incl. 01A); 07–11, 15, 23, 25–29 | 12–14A, 18–22, 30 | S&OP, scheduling, maintenance, supplier risk, network resilience, carbon |
+| Logistics & Distribution | Core (00–06 incl. 01A); 07, 08, 10–13, 19, 21–23, 25–29 | 09, 14–18, 20, 24, 30 | Routing, control tower, warehouse labor, freight procurement, ETA prediction, on-demand dispatch |
 
 ### 1.3 Module dependency map
 
@@ -57,28 +58,38 @@
  ├── 02 Data landscape
  │    └── 03 Data engineering
  │         ├── 09 Demand sensing
- │         ├── 19 Control towers
- │         └── 21 MLOps
+ │         └── 19 Control towers
  ├── 04 Statistics and causal inference
  │    ├── 05 Experimentation and evidence
  │    ├── 16 Pricing
- │    └── 24 Quality and model risk
+ │    └── 26 Quality and model risk
  ├── 06 ML foundations
  │    ├── 07 Time series forecasting
  │    ├── 08 Hierarchical and probabilistic forecasting
  │    ├── 18 Deep learning and foundation models
  │    └── 20 Simulation and optimization under uncertainty
+ ├── 07 Forecasting
+ │    └── 21 E-commerce
+ │         ├── 22 Quick commerce
+ │         └── 23 Omnichannel
  ├── 10 Inventory
  │    └── 11 Network design
+ ├── 17 Assortment
+ │    └── 24 Recommendations
  ├── 14 Procurement
  │    └── 14A Resilience and disruption
  ├── 18 Foundation models and agents
  │    └── 19 Control towers
- └── 21 MLOps
-      └── 25 Capstone
+ ├── 20, 21–24
+ │    └── 25 Product and economics
+ │         └── 26 Model risk
+ ├── 27 Datasets and benchmarks
+ │    └── 28 Domain cases
+ │         └── 29 Sector electives
+ └── 30 Production labs
 ```
 
-Recommended order: 00 → 01 → 01A → 02 → 03 → 04 → 05 → 06 → 07 → 08 → 09 → 10 → 11 → 12 → 13 → 14 → 14A → 15 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → 26 → 27 → 28 → 29–30 (optional). Track electives may run in parallel after Module 06.
+Recommended order: 00 → 01 → 01A → 02 → 03 → 04 → 05 → 06 → 07 → 08 → 09 → 10 → 11 → 12 → 13 → 14 → 14A → 15 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → 26 → 27 → 28 → 29 → 30. Modules 21–24 may run in parallel after 07 and 10; Module 24 additionally assumes 17.
 
 ---
 
@@ -605,7 +616,7 @@ Assessment: basket analysis, clustering study, assortment plan, cannibalization 
 
 ---
 
-## 4. Term 3 — AI, Production, Governance, and Capstone
+## 4. Term 3 — AI, Channels, and Domain Analytics
 
 ### Module 18 — Deep Learning, Foundation Models, LLMs, and Agents
 
@@ -682,58 +693,96 @@ Key topics:
 
 Assessment: simulation model, validation report, stochastic optimization, twin business case.
 
-### Module 21 — Deployment and MLOps for Planning Systems
+### Module 21 — E-commerce Supply Chain Analytics
 
-**File:** `21_deployment_mlops_planning_systems.md`
+**File:** `21_ecommerce_supply_chain_analytics.md`
 **Time:** 30 hours
-**Core artifact:** Deployment and monitoring plan
+**Core artifact:** E-commerce fulfillment strategy
 
 Key topics:
 
-- Batch, real-time, streaming, and edge deployment.
-- Forecasting pipelines and scheduling.
-- Feature stores and training-serving consistency.
-- Model registry, versioning, and approval.
-- CI/CD/CT for models and data.
-- Integration with ERP, APS, WMS, TMS, and planning tools.
-- Monitoring: data quality, drift, accuracy, bias, cost, and adoption.
-- Retraining cadence and champion-challenger.
-- Shadow mode and phased rollout.
-- Human-in-the-loop overrides.
-- Incident response and rollback.
-- Change management and planner training.
-- Total cost of ownership.
-- Lab: containerize a forecast service, add monitoring, and simulate an incident.
+- E-commerce fulfillment models: own DC, ship-from-store, 3PL, drop-ship, marketplace, dark store.
+- Demand forecasting at SKU × node × day with promotions and the long tail.
+- Inventory placement under promise and cost constraints.
+- Delivery promise design and its causal effect on conversion.
+- Carrier selection, rate cards, dimensional weight, and accessorials.
+- Returns, reverse logistics, and disposition economics.
+- Peak planning and capacity simulation.
+- Unit economics per order and contribution margin.
+- Marketplace and cross-border landed cost.
+- Customer experience metrics and their operational causes.
+- Lab: node-level forecast, placement model, promise test, peak simulation.
 
-Assessment: deployed pipeline, monitoring dashboard, shadow evaluation, incident report.
+Assessment: fulfillment strategy, placement model, unit-economics analysis, peak plan.
 
-### Module 22 — Privacy, Security, Ethics, and Responsible AI
+### Module 22 — Quick Commerce, Food Delivery, and On-Demand Logistics
 
-**File:** `22_privacy_security_ethics_responsible_ai.md`
-**Time:** 26 hours
-**Core artifact:** Risk and governance assessment
+**File:** `22_quick_commerce_on_demand_delivery.md`
+**Time:** 30 hours
+**Core artifact:** City quick-commerce operating plan
 
 Key topics:
 
-- Sensitive data: customer, pricing, supplier, employee, location.
-- GDPR, CCPA/CPRA, and data-processing agreements.
-- Data sharing with suppliers, 3PLs, and platforms.
-- Threat modeling with STRIDE.
-- Adversarial ML: forecast poisoning, price scraping, supplier data manipulation.
-- Fairness: supplier treatment, delivery equity, labor scheduling.
-- Antitrust and algorithmic pricing.
-- Sustainability claims and greenwashing.
-- EU AI Act, NIST AI RMF, ISO 42001, ISO/IEC 27001.
-- Model governance and decision rights.
-- Human oversight and automation bias.
-- Whistleblowing and escalation.
-- Lab: threat model a planning platform and audit a pricing model for legal risk.
+- Dark stores, micro-fulfillment, and 10–30 minute promises.
+- Slot-level demand forecasting with weather and local events.
+- Assortment and replenishment for small, perishable ranges.
+- Food waste, shelf life, and FEFO.
+- Courier supply, demand, incentives, and two-sided matching.
+- ETA prediction and uncertainty communication.
+- Batching, dispatch, and routing under time windows.
+- Food safety, cold chain, and HACCP.
+- Courier welfare, algorithmic management, and labor classification.
+- Store-level P&L and break-even density.
+- Lab: slot forecast, dispatch simulation, ETA model, store P&L.
 
-Assessment: threat model, fairness audit, AI Act triage, governance memo.
+Assessment: operating plan, dispatch model, ETA evaluation, unit economics.
 
-### Module 23 — Product, Economics, and Leadership
+### Module 23 — Omnichannel Fulfillment, Returns, and the Customer Promise
 
-**File:** `23_product_economics_leadership.md`
+**File:** `23_omnichannel_fulfillment_returns.md`
+**Time:** 28 hours
+**Core artifact:** Omnichannel fulfillment and returns model
+
+Key topics:
+
+- Inventory visibility, phantom inventory, and available-to-promise.
+- Distributed order management and routing rules.
+- Ship-from-store, BOPIS, curbside, and endless aisle economics.
+- Promise accuracy and its link to conversion and contacts.
+- Returns networks and disposition economics.
+- Return fraud detection and proportionate controls.
+- Channel P&L and cross-subsidy.
+- Customer service and promise-failure analytics.
+- Packaging, transport, and returns sustainability.
+- Lab: ATP simulation, routing comparison, returns disposition, promise failure analysis.
+
+Assessment: omnichannel model, routing study, returns plan, channel P&L.
+
+### Module 24 — Recommendation Systems and Personalization
+
+**File:** `24_recommendation_systems_personalization.md`
+**Time:** 30 hours
+**Core artifact:** Recommender evaluation and inventory-aware design
+
+Key topics:
+
+- Retrieval, ranking, substitution, and cross-sell tasks.
+- Popularity, content-based, collaborative, matrix factorization, and two-tower models.
+- Sequential and session-based recommendation.
+- Cold start, sparsity, and feedback loops.
+- Offline ranking metrics and online experimentation.
+- Position bias, exposure bias, and propensity weighting.
+- Inventory-aware ranking, margin constraints, and diversity.
+- Substitution and return-aware objectives.
+- LLM-based recommenders, retrieval, and catalog validation.
+- Privacy, fairness, and self-preferencing.
+- Lab: baseline recommender, ALS, constraint re-ranking, online test design.
+
+Assessment: recommender evaluation, constraint design, experiment plan, ethics review.
+
+### Module 25 — Product, Economics, and Leadership
+
+**File:** `25_product_economics_leadership.md`
 **Time:** 26 hours
 **Core artifact:** Value case and adoption plan
 
@@ -755,9 +804,9 @@ Key topics:
 
 Assessment: stakeholder map, ROI model, adoption plan, executive memo.
 
-### Module 24 — Quality, Evaluation, and Model Risk
+### Module 26 — Quality, Evaluation, and Model Risk
 
-**File:** `24_quality_evaluation_model_risk.md`
+**File:** `26_quality_evaluation_model_risk.md`
 **Time:** 26 hours
 **Core artifact:** Model card and validation dossier
 
@@ -779,50 +828,6 @@ Key topics:
 - Lab: validate a demand model against a challenger and write the dossier.
 
 Assessment: validation report, model card, reproducibility audit, issue log.
-
-### Module 25 — Capstone and Hackathons
-
-**File:** `25_capstone_hackathons.md`
-**Time:** 80–120 hours
-**Core artifact:** Capstone evidence dossier and demo
-
-Key topics:
-
-- Capstone architecture and milestones.
-- Team roles and RACI.
-- Ten archetypes: demand, inventory, network, transportation, warehouse, procurement, pricing, control tower, LLM, resilience.
-- 40 project briefs across retail, manufacturing, logistics, pharma, automotive, semiconductor, humanitarian, and fashion.
-- 24-hour, 48-hour, one-week, and 12-week formats.
-- Competition landscape and benchmark rules.
-- Scoping, validation, and leakage playbook.
-- Evidence dossier.
-- Judging rubric.
-- Demo day and executive pitch.
-- Data access and mentorship.
-- Templates and checklists.
-
-Assessment: charter, weekly milestones, dossier, demo, defense.
-
-### Module 26 — Career, Portfolio, and Interviews
-
-**File:** `26_career_portfolio_interviews.md`
-**Time:** 14 hours
-**Core artifact:** Portfolio and interview plan
-
-Key topics:
-
-- Role map: demand planner, supply chain analyst, data scientist, OR scientist, ML engineer, product manager, consultant.
-- Three portfolio artifacts.
-- Case-study structure.
-- Resume and LinkedIn.
-- Interview types: SQL, case, forecasting, optimization, systems, behavioral.
-- Take-home strategy.
-- System design for planning systems.
-- Negotiation.
-- 90-day onboarding plan.
-- Lab: mock interviews and portfolio review.
-
-Assessment: portfolio, mock interviews, case study, negotiation plan.
 
 ### Module 27 — Datasets, Tools, and Benchmarks
 
@@ -848,26 +853,26 @@ Key topics:
 
 Assessment: dataset audit, license audit, benchmark critique, resource library.
 
-### Module 28 — Sources and Further Reading
+### Module 28 — Domain Case Library and Sector Playbooks
 
-**File:** `28_sources_and_further_reading.md`
-**Time:** Self-paced
-**Core artifact:** Annotated bibliography
+**File:** `28_domain_case_library.md`
+**Time:** 18–24 hours
+**Core artifact:** Sector playbook and case notes
 
 Key topics:
 
-- Standards bodies: GS1, ASCM, ISO, IEC, ISA, UN/CEFACT.
-- Regulation: EU AI Act, CSDDD, CSRD, CBAM, DSCSA, EU FMD, UFLPA.
-- Foundational operations literature.
-- Forecasting literature and competitions.
-- Optimization and simulation literature.
-- Industry research: Gartner, CSCMP, MIT CTL, McKinsey, BCG, Deloitte.
-- Datasets and benchmarks.
-- Professional communities: INFORMS, POMS, MSOM, DSI, CSCMP.
-- Source-evaluation checklist.
-- Keeping current.
+- Case anatomy: context, decision, data, intervention, evidence, outcome, transfer.
+- Evidence grades A–E and how to label company and vendor claims.
+- The five-question transfer test.
+- Retail, e-commerce, CPG, manufacturing, logistics, pharma, humanitarian, and AI cases.
+- Deep dives: M5, UPS ORION, Zillow Offers, Red Sea diversion.
+- Counter-cases and survivorship bias.
+- Building a sector playbook.
+- Teaching a case and writing a decision memo.
+- Source hygiene and re-checking.
+- Lab: case note, transfer test, playbook, counter-case.
 
-Assessment: annotated bibliography and source log.
+Assessment: case notes, transfer memo, sector playbook, teaching session.
 
 ---
 
@@ -896,21 +901,54 @@ Six primers. Each covers the decision and buyer, data and standards, methods and
 
 Ten labs: discrete-event simulation, MILP network design, VRP, inventory simulation, end-to-end forecasting pipeline, streaming events with Kafka, containerized planning service on Kubernetes, infrastructure as code with Terraform, observability and cost monitoring, and disaster recovery.
 
+### Domain electives (Modules 31–40)
+
+These are full-depth industry modules, not primers. Each is 26 hours with a worked example, five labs, an assignment, a rubric, failure modes, and a sector-specific regulatory lens. They sit after the core and assume its methods.
+
+| Module | Title | File |
+|---:|---|---|
+| 31 | Aftermarket, Spare Parts, and Service Supply Chains | `31_aftermarket_spare_parts_service.md` |
+| 32 | Food, Agriculture, and Perishable Supply Chains | `32_food_agriculture_perishables.md` |
+| 33 | Healthcare Provider and Life Sciences Operations | `33_healthcare_provider_life_sciences.md` |
+| 34 | Energy, Utilities, and Capital Project Supply Chains | `34_energy_utilities_capital_projects.md` |
+| 35 | Public Sector, Defence, and Humanitarian Logistics | `35_public_sector_defence_humanitarian.md` |
+| 36 | Global Freight, Ports, and Trade Policy | `36_global_freight_ports_trade_policy.md` |
+| 37 | Circular Economy and Reverse Logistics Networks | `37_circular_economy_reverse_networks.md` |
+| 38 | Process Industries, Commodities, and Bulk Supply Chains | `38_process_industries_commodities.md` |
+| 39 | Mining, Metals, and Forestry Supply Chains | `39_mining_metals_forestry.md` |
+| 40 | Telecom, Technology Hardware, and Aerospace Supply Chains | `40_telecom_technology_hardware.md` |
+
+**Selection guidance.** Choose 31 for asset and service businesses; 32 for food and fresh; 33 for health systems and life sciences; 34 for utilities, energy, and EPC; 35 for government, defence, and aid; 36 for importers, exporters, and freight; 37 for returns and sustainability; 38 for chemicals, cement, paper, and bulk food processing; 39 for mining, metals, and forestry; 40 for telecom, electronics, and aerospace.
+
+### Cross-cutting engineering electives (Modules 41–45)
+
+These are full-depth engineering modules that cut across every sector. Each is 26 hours with a worked example, five labs, an assignment, a rubric, failure modes, and a regulatory lens.
+
+| Module | Title | File |
+|---:|---|---|
+| 41 | Maritime, Rail, and Air Cargo Operations Engineering | `41_maritime_rail_air_operations.md` |
+| 42 | Treasury, Credit, and Financial Supply Chain Modelling | `42_treasury_credit_financial_supply_chain.md` |
+| 43 | Security Engineering for Supply Chains | `43_security_engineering_supply_chain.md` |
+| 44 | MLOps and Production Analytics Engineering | `44_mlops_production_analytics.md` |
+| 45 | Plant Layout, Facility Design, and Detailed Engineering Interfaces | `45_plant_layout_detailed_engineering.md` |
+
+**Selection guidance.** Choose 41 for carriers, terminals, ports, and rail operators; 42 for treasury, credit, procurement finance, and working-capital roles; 43 for security, risk, OT, and third-party assurance; 44 for any team taking models from notebook to production; 45 for facilities, warehousing, manufacturing engineering, and capital projects.
+
 ---
 
 ## 5. Assessment summary
 
 | Assessment | Weight | Individual/team | Module |
 |---|---:|---|---|
-| Weekly labs | 20% | Individual | 01–24 incl. 01A, 14A |
-| Case critiques | 15% | Individual | 01–24; brief 25 §11A.3 |
-| Midterm forecast dossier | 20% | Team | 00–08 incl. 01A; brief 25 §11A.1 |
-| Track playbook | 15% | Team | 07–17 incl. 14A; brief 25 §11A.2 |
-| Capstone | 30% | Team + individual defense | 25 |
+| Weekly labs | 25% | Individual | 01–26 incl. 01A, 14A |
+| Case critiques | 20% | Individual | 28; cases across 01–26 |
+| Midterm forecast dossier | 20% | Team | 00–08 incl. 01A |
+| Track playbook | 20% | Team | 07–17 incl. 14A |
+| Domain project | 15% | Team + individual defense | 21–28 (or a 31–45 elective with approval) |
 
-Passing requires at least 50% on the individual capstone defense. Full briefs and rubrics are in Module 25, §11A.
+Passing requires at least 50% on the individual domain-project defense. Briefs and rubrics are in Module 28, §8–9.
 
-## 6. Capstone evidence dossier
+## 6. Integrative domain project dossier
 
 Required artifacts:
 
@@ -923,7 +961,7 @@ Required artifacts:
 7. Inventory, service, cost, or carbon impact estimate.
 8. Regulatory, legal, and ethical triage memo.
 9. Model card and data dictionary.
-10. Deployment architecture and monitoring plan.
+10. Deployment and monitoring plan.
 11. Value case and adoption plan.
 12. 10-minute executive pitch.
 13. 20-minute technical defense.
@@ -951,13 +989,13 @@ Required artifacts:
 
 ## 9. Program outcomes
 
-Graduates can frame a supply chain decision, acquire and govern planning data, build and backtest forecasts, translate forecasts into inventory and capacity policies, formulate and solve optimization models, design resilience and risk analytics, evaluate AI and LLM tools, deploy and monitor planning systems, quantify value, communicate across functions, and deliver a decision-ready capstone.
+Graduates can frame a supply chain decision, acquire and govern planning data, build and backtest forecasts, translate forecasts into inventory and capacity policies, formulate and solve optimization models, design resilience and risk analytics, evaluate AI and LLM tools, design e-commerce, quick-commerce, omnichannel, and recommendation systems, quantify value, communicate across functions, and deliver a decision-ready domain project.
 
 ---
 
 > **Start:** `README.md`
 > **Orientation:** `00_orientation_and_industry_map.md`
-> **Capstone:** `25_capstone_hackathons.md`
+> **Domain cases:** `28_domain_case_library.md`
 > **Datasets:** `27_datasets_tools_benchmarks.md`
 
 ---

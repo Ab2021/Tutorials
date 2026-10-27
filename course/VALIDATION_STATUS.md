@@ -1,7 +1,7 @@
 # Validation Status
 
 > **Program:** Supply Chain Analytics, AI, Data Science, and Forecasting (2026 Edition)
-> **Version:** 2026.1.0
+> **Version:** 2026.5.0
 > **Source cutoff:** 27 October 2026
 
 ---
@@ -14,12 +14,15 @@ This file states what is complete, drafted, or pending, and the boundary of the 
 
 | Area | Status | Notes |
 |---|---|---|
-| Program architecture | Complete | 40 weeks, three terms, three tracks, 31 modules |
-| Module survey files | Drafted | 31 module files; lengths vary by design |
+| Program architecture | Complete | 40-week core plus 15 advanced electives, three terms, three tracks, 48 module files |
+| Module survey files | Drafted | 48 module files; lengths vary by design |
+| Module index folders | Complete | 48 module folders inside 7 part folders under `modules/`, each with an `_index.md` topic map; 7 part indexes; 476 topic units indexed |
+| Topic-level files | Not written | Topic rows are planned at 1,200–1,800 words each; see `modules/README.md` |
+| Topic coverage audit | Complete | `TOPIC_COVERAGE_MAP.md` maps 93 topics and states the remaining out-of-scope gaps |
 | README and outline | Complete | Navigation, outcomes, tracks, assessment |
 | Research source pack | Complete | `_research/industry_brief.md`, dated sources |
 | Competency map | Drafted | Crosswalk complete; external review pending |
-| Assessment rubrics | Drafted | Module-level and capstone rubrics present |
+| Assessment rubrics | Drafted | Module-level rubrics and a domain-project rubric are present |
 | Instructor kit | Drafted | Teaching notes and lab index |
 | Grading calibration | Drafted | Anchor descriptors; not calibrated with real cohorts |
 | Learner pilot | Not started | No cohort has completed the program |
@@ -73,7 +76,7 @@ A future edition may be labelled "pilot-tested" when:
 
 - At least one cohort of 10–25 learners completes the core modules.
 - Pre/post competency assessments show measurable improvement.
-- Lab completion and capstone quality are reviewed against the rubric.
+- Lab completion and domain-project quality are reviewed against the rubric.
 - At least three external practitioners review the track playbooks.
 - Regulatory content is reviewed by a qualified professional.
 - Known errors are corrected and logged.
@@ -87,7 +90,7 @@ A future edition may be labelled "externally reviewed" when at least two indepen
 - Market sizes, freight rates, and adoption percentages are dated snapshots.
 - The program does not include a full production data platform or licensed solver environment.
 - Some labs require datasets that must be downloaded and may change.
-- The capstone depends on access to a real or realistic decision and data.
+- The domain project depends on access to a real or realistic decision and data.
 
 ## 8. Change control
 
@@ -104,3 +107,6 @@ A future edition may be labelled "externally reviewed" when at least two indepen
 | Date | Reviewer | Scope | Outcome |
 |---|---|---|---|
 | 2026-10-27 | Internal production pass | Structure, sources, consistency | Draft complete; external review pending |
+| 2026-10-27 | Curriculum restructure | Domain modules 21–24 and 28 added; five modules removed | Numbering, links, outline, and competency map updated |
+| 2026-10-27 | Domain coverage pass | Modules 31–40 added: aftermarket, food/agriculture, healthcare, energy/projects, public sector, global freight, circular, process industries, mining/forestry, telecom/technology | Outline, README, competency map, coverage map, and module folders updated; core numbering unchanged |
+| 2026-10-27 | Engineering coverage pass | Modules 41–45 added: maritime/rail/air operations, treasury/credit, security engineering, MLOps, plant layout and detailed engineering | 48 modules, 476 topic units, 93 coverage topics; all governance files and module folders updated |

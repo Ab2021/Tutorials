@@ -1,9 +1,9 @@
-# Module 23 — Product, Economics, and Leadership
+# Module 25 — Product, Economics, and Leadership
 
 > **Program:** Supply Chain Analytics, AI, Data Science, and Forecasting (2026 Edition)
 > **Time:** 26 hours (14 lecture, 8 lab, 4 case clinic)
 > **Track fit:** Common core; required for all tracks
-> **Prerequisites:** Modules 00, 07, 10, 21
+> **Prerequisites:** Modules 00, 07, 10, 21–24
 > **Tools:** Spreadsheet or Python, a value-case template, an ERP or P&L extract
 > **Industry question:** "Who pays for this work, what decision changes, what is it worth, and who has to adopt it?"
 
@@ -20,7 +20,7 @@ Industry cares about four questions:
 3. **Adoption:** Who uses the output, in which workflow, with what authority to override?
 4. **Risk:** What happens if the model is wrong, the vendor fails, or the benefit is double-counted?
 
-This module teaches the commercial and organizational work that turns a model into a funded, adopted, and measured capability. It is the bridge between Module 21 (deployment) and Module 24 (model risk).
+This module teaches the commercial and organizational work that turns a model into a funded, adopted, and measured capability. It is the bridge between the domain modules (21–24) and Module 26 (model risk).
 
 ## 2. Learning outcomes
 
@@ -179,6 +179,19 @@ A vendor quote is usually 30–50% of TCO. Ask for the rest.
 | DPO up | Payment-term analytics | Supplier viability, law |
 
 Extending DPO is not free. It transfers cost to suppliers, can breach payment regulations, and raises supply risk. Model the second-order effect.
+
+**Supply chain finance instruments.** Working capital can be released by financing the chain, not only by stretching terms.
+
+| Instrument | Mechanism | Analytics question | Risk |
+|---|---|---|---|
+| Reverse factoring | Buyer's credit rating prices supplier receivables | Which suppliers gain most, and at what fee? | Masks supplier fragility; accounting disclosure |
+| Dynamic discounting | Supplier takes an early-payment discount | What discount rate beats the buyer's cost of capital? | Buyer cash availability |
+| Inventory financing | Lender funds inventory, often warehouse-receipt based | Which SKUs are financeable and at what haircut? | Collateral valuation and control |
+| Trade credit insurance | Insurer covers buyer default | Which receivables justify the premium? | Coverage exclusions |
+| Purchase-order finance | Lender funds a confirmed order | Which orders are bankable? | Performance risk |
+| Equipment or fleet finance | Asset-backed funding | Lease versus buy under utilization | Residual-value risk |
+
+The analytics contribution is a comparison of the effective annualized cost of each instrument against the value of the cash released, including the risk transferred. A programme that improves DPO but pushes a strategic supplier into distress has not improved the chain; it has moved the problem.
 
 ### 4.6 Cost-to-serve
 
@@ -360,7 +373,7 @@ Use this composite only as a teaching case; it is not a citation.
 
 ## 7. Labs
 
-### Lab 23.1 — Stakeholder and decision map
+### Lab 25.1 — Stakeholder and decision map
 
 Choose a real or realistic initiative. Map user, buyer, beneficiary, and blocker. For each, write what they need to say yes.
 
@@ -368,7 +381,7 @@ Choose a real or realistic initiative. Map user, buyer, beneficiary, and blocker
 
 **Acceptance criteria:** Roles are distinct; evidence needs are specific; the blocker has a mitigation.
 
-### Lab 23.2 — ROI and TCO model
+### Lab 25.2 — ROI and TCO model
 
 Build a three-case (low, base, high) NPV model with build, integration, change, run, and exit costs. Include a ramp and a discount rate.
 
@@ -376,7 +389,7 @@ Build a three-case (low, base, high) NPV model with build, integration, change, 
 
 **Acceptance criteria:** Cash flow timing is explicit; hard and soft benefits are separated; payback and NPV reconcile; assumptions are listed.
 
-### Lab 23.3 — Cost-to-serve
+### Lab 25.3 — Cost-to-serve
 
 Using order, line, stop, and return data, allocate activity costs to 50 customers. Identify the five most and least profitable after cost-to-serve.
 
@@ -384,7 +397,7 @@ Using order, line, stop, and return data, allocate activity costs to 50 customer
 
 **Acceptance criteria:** Drivers are justified; allocation is documented; recommendations name the trade-off.
 
-### Lab 23.4 — Executive memo
+### Lab 25.4 — Executive memo
 
 Write a one-page memo recommending or rejecting the initiative. Include the decision, value range, key risk, and what would change your mind.
 
@@ -392,7 +405,7 @@ Write a one-page memo recommending or rejecting the initiative. Include the deci
 
 **Acceptance criteria:** SCQA structure; numbers reconcile to the model; the recommendation is explicit.
 
-### Lab 23.5 — Vendor evaluation
+### Lab 25.5 — Vendor evaluation
 
 Build a weighted scorecard for three real vendors in one segment. Include TCO, roadmap, data ownership, exit, and reference checks.
 
@@ -528,4 +541,4 @@ Build a full value case and adoption plan for a forecasting, inventory, or netwo
 - ERP and finance extracts from your organization.
 - Vendor RFP templates from procurement.
 
-> **Next:** [Module 24](24_quality_evaluation_model_risk.md) turns the value case into a governed, validated model.
+> **Next:** [Module 26](26_quality_evaluation_model_risk.md) turns the value case into a governed, validated model.

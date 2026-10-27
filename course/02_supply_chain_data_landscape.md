@@ -556,4 +556,4 @@ The memo must be readable by a planning director who does not know the systems b
 
 ---
 
-> **Next:** `03_data_engineering_interoperability.md` — turning this landscape into reproducible pipelines: layered architecture, SQL patterns, EDI parsing, data contracts, quality gates, and a demand-and-inventory mart.
+> **Next:** [Module 03](03_data_engineering_interoperability.md) — turning this landscape into reproducible pipelines: layered architecture, SQL patterns, EDI parsing, data contracts, quality gates, and a demand-and-inventory mart.

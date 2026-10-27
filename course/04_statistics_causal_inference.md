@@ -619,4 +619,4 @@ Two ethical points deserve emphasis. Selection bias in supplier scorecards is a 
 
 ---
 
-> **Next:** `05_experimentation_pilots_evidence.md` — how to design the experiment or pilot that produces the counterfactual this module assumes.
+> **Next:** [Module 05](05_experimentation_pilots_evidence.md) — how to design the experiment or pilot that produces the counterfactual this module assumes.

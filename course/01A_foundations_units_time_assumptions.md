@@ -847,4 +847,4 @@ The deliverable must be reproducible: another analyst should be able to rerun th
 
 ---
 
-> **Next:** `02_supply_chain_data_landscape.md` — where these units, timestamps, and assumptions actually live: the systems, master data, transaction records, telemetry, and external signals that feed a planning model.
+> **Next:** [Module 02](02_supply_chain_data_landscape.md) — where these units, timestamps, and assumptions actually live: the systems, master data, transaction records, telemetry, and external signals that feed a planning model.

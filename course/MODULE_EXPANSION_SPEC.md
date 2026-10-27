@@ -1,8 +1,8 @@
 # Module Expansion Specification
 
-> **Purpose:** Define how each of the 31 modules is expanded from a survey file into a folder of detailed, topic-by-topic Markdown files.
+> **Purpose:** Define how each of the 48 modules is expanded from a survey file into a folder of detailed, topic-by-topic Markdown files.
 >
-> **Version:** 2026.1
+> **Version:** 2026.5
 > **Applies to:** every folder under `modules/`
 > **Status:** Production spec for the expanded edition.
 
@@ -25,21 +25,27 @@ The survey file is not deleted. It becomes the index and the place where the mod
 
 ```
 modules/
-  07_time_series_forecasting/
-    _index.md                      module map, topic table, status
-    01_forecastability.md
-    02_components-and-decomposition.md
-    03_benchmarks.md
-    04_exponential-smoothing.md
-    05_arima.md
-    06_regression-with-exogenous-variables.md
-    07_backtesting.md
-    08_error-metrics.md
-    ...
-    _assets/                       optional: figures, diagrams, CSV
+  02_methods/                      one of seven part folders
+    _index.md                      part map: purpose, modules, sequence
+    07_time_series_forecasting/
+      _index.md                    module map, topic table, status
+      01_forecastability.md
+      02_components-and-decomposition.md
+      03_benchmarks.md
+      04_exponential-smoothing.md
+      05_arima.md
+      06_regression-with-exogenous-variables.md
+      07_backtesting.md
+      08_error-metrics.md
+      ...
+      _assets/                     optional: figures, diagrams, CSV
 ```
 
 Rules:
+
+Modules sit inside one of seven part folders — `01_foundations`, `02_methods`, `03_commerce`,
+`04_value_governance`, `05_labs_electives`, `06_domain_electives`, `07_engineering_electives`.
+See `../modules/README.md` for the mapping. Within a part:
 
 1. One folder per module, named `<id>_<short_slug>` using the same numeric id as the root file (`00`, `01A`, `14A`, `29`).
 2. `_index.md` is mandatory. It lists every topic file, its scope, its target length, and its status.
@@ -189,7 +195,7 @@ Only `complete` and above count toward the module's line total.
 
 - At most **two** topic-writing agents run at once.
 - Each agent owns exactly one module folder. No two agents write the same folder.
-- An agent must not edit the root survey file, `README.md`, `COURSE_OUTLINE.md`, or any governance file. It writes only inside its assigned `modules/<folder>/`.
+- An agent must not edit the root survey file, `README.md`, `COURSE_OUTLINE.md`, or any governance file. It writes only inside its assigned `modules/<part>/<folder>/`.
 - An agent must not invent citations, reviewers, regulatory approvals, or case outcomes.
 - An agent that cannot reach 1,000 honest lines on a topic must report the shortfall rather than pad.
 - After an agent finishes, the index status is updated by the orchestrator, not the agent.
@@ -198,13 +204,13 @@ Only `complete` and above count toward the module's line total.
 
 ```bash
 # Per-module line count
-find modules/07_time_series_forecasting -name '*.md' | xargs wc -l | tail -1
+find modules/02_methods/07_time_series_forecasting -name '*.md' | xargs wc -l | tail -1
 
 # Every topic file meets the floor
 find modules -name '[0-9][0-9]_*.md' -exec sh -c 'n=$(wc -l < "$1"); [ "$n" -lt 1000 ] && echo "$1 $n"' _ {} \;
 
 # Template section presence
-for f in modules/*/[0-9][0-9]_*.md; do
+for f in modules/*/*/[0-9][0-9]_*.md; do
   c=$(grep -c '^## ' "$f")
   [ "$c" -lt 17 ] && echo "$f has $c sections"
 done
@@ -220,4 +226,4 @@ done
 
 ## 12. Progress tracking
 
-`modules/PROGRESS.md` is the single source of truth for expansion status. It is regenerated from the folder contents, not hand-maintained.
+`modules/PROGRESS.md` (to be generated at the modules root) is the single source of truth for expansion status. It is regenerated from the folder contents, not hand-maintained.

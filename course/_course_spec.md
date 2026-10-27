@@ -59,22 +59,41 @@ The organizing question is not "Which forecasting model should I use?" It is:
 | `18_deep_learning_foundation_models_llm_agents.md` | 18 | 550–700 | content agent |
 | `19_control_towers_visibility_events.md` | 19 | 460–580 | content agent |
 | `20_digital_twins_simulation_optimization_uncertainty.md` | 20 | 500–640 | content agent |
-| `21_deployment_mlops_planning_systems.md` | 21 | 480–620 | content agent |
-| `22_privacy_security_ethics_responsible_ai.md` | 22 | 440–560 | content agent |
-| `23_product_economics_leadership.md` | 23 | 440–560 | content agent |
-| `24_quality_evaluation_model_risk.md` | 24 | 430–550 | content agent |
-| `25_capstone_hackathons.md` | 25 | 650–820 | lead/agent |
-| `26_career_portfolio_interviews.md` | 26 | 380–500 | content agent |
+| `21_ecommerce_supply_chain_analytics.md` | 21 | 480–600 | content agent |
+| `22_quick_commerce_on_demand_delivery.md` | 22 | 460–580 | content agent |
+| `23_omnichannel_fulfillment_returns.md` | 23 | 450–570 | content agent |
+| `24_recommendation_systems_personalization.md` | 24 | 480–600 | content agent |
+| `25_product_economics_leadership.md` | 25 | 440–560 | content agent |
+| `26_quality_evaluation_model_risk.md` | 26 | 430–550 | content agent |
 | `27_datasets_tools_benchmarks.md` | 27 | 500–700 | content agent |
-| `28_sources_and_further_reading.md` | 28 | 380–520 | lead/agent |
+| `28_domain_case_library.md` | 28 | 460–580 | content agent |
 | `29_industry_electives.md` | 29 | 800–1,100 | content agent |
 | `30_simulation_optimization_production_labs.md` | 30 | 550–750 | content agent |
+| `31_aftermarket_spare_parts_service.md` | 31 | 420–560 | content agent |
+| `32_food_agriculture_perishables.md` | 32 | 420–560 | content agent |
+| `33_healthcare_provider_life_sciences.md` | 33 | 420–560 | content agent |
+| `34_energy_utilities_capital_projects.md` | 34 | 420–560 | content agent |
+| `35_public_sector_defence_humanitarian.md` | 35 | 420–560 | content agent |
+| `36_global_freight_ports_trade_policy.md` | 36 | 420–560 | content agent |
+| `37_circular_economy_reverse_networks.md` | 37 | 420–560 | content agent |
+| `38_process_industries_commodities.md` | 38 | 420–560 | content agent |
+| `39_mining_metals_forestry.md` | 39 | 420–560 | content agent |
+| `40_telecom_technology_hardware.md` | 40 | 420–560 | content agent |
+| `41_maritime_rail_air_operations.md` | 41 | 420–560 | content agent |
+| `42_treasury_credit_financial_supply_chain.md` | 42 | 420–560 | content agent |
+| `43_security_engineering_supply_chain.md` | 43 | 420–560 | content agent |
+| `44_mlops_production_analytics.md` | 44 | 420–560 | content agent |
+| `45_plant_layout_detailed_engineering.md` | 45 | 420–560 | content agent |
 
-Target package total: **≥ 18,000 lines**, excluding this specification and research notes.
+Modules 31–40 are **advanced domain electives**; Modules 41–45 are **cross-cutting engineering electives**. All are full-depth modules, not primers, and they do not change the 40-week core sequence or the numbering of Modules 00–30.
+
+Target package total: **≥ 27,000 lines**, excluding this specification and research notes.
+
+> **Coverage audit:** `TOPIC_COVERAGE_MAP.md` maps 93 canonical topics to modules and states the remaining out-of-scope gaps. It is the authoritative coverage claim and must be updated with any restructuring.
 
 ## 4. Module template
 
-Every module file uses this section order. Headings may be expanded with `###` subsections but not removed. Modules 25, 28, 29, and 30 may substitute sections where the module's form requires it (brief bank, bibliography, elective primers, lab manual), but a section index must say so.
+Every module file uses this section order. Headings may be expanded with `###` subsections but not removed. Modules 29 and 30 may substitute sections where the module's form requires it (elective primers, lab manual), but a section index must say so. Module 28 is a case library that follows the standard section order.
 
 ```markdown
 # Module NN — Title
@@ -162,36 +181,31 @@ Grouped: standards and regulation; peer-reviewed; industry; datasets and tools. 
 | 16 | Pricing, promotions, and revenue management | 30 | Elasticity and markdown study |
 | 17 | Assortment, category, and retail analytics | 28 | Assortment plan |
 
-### Term 3 — AI, production, governance, and capstone (Weeks 27–40)
+### Term 3 — AI, channels, and domain analytics (Weeks 27–40)
 
 | Module | Title | Hours | Core artifact |
 |---|---|---:|---|
 | 18 | Deep learning, foundation models, LLMs, and agents | 34 | LLM or foundation-model evaluation |
 | 19 | Control towers, visibility, and event intelligence | 28 | Control-tower design |
 | 20 | Digital twins, simulation, and optimization under uncertainty | 32 | Simulation study |
-| 21 | Deployment and MLOps for planning systems | 30 | Deployment and monitoring plan |
-| 22 | Privacy, security, ethics, and responsible AI | 26 | Risk and governance assessment |
-| 23 | Product, economics, and leadership | 26 | Value case and adoption plan |
-| 24 | Quality, evaluation, and model risk | 26 | Model card and validation dossier |
-| 25 | Capstone and hackathons | 80–120 | Capstone dossier and demo |
-| 26 | Career, portfolio, and interviews | 14 | Portfolio and interview plan |
+| 21 | E-commerce supply chain analytics | 30 | E-commerce fulfillment design |
+| 22 | Quick commerce and on-demand delivery | 30 | Quick-commerce operating model |
+| 23 | Omnichannel fulfillment and returns | 28 | Omnichannel routing policy |
+| 24 | Recommendation systems and personalization | 30 | Ranking evaluation and re-ranking policy |
+| 25 | Product, economics, and leadership | 26 | Value case and adoption plan |
+| 26 | Quality, evaluation, and model risk | 26 | Model card and validation dossier |
 | 27 | Datasets, tools, and benchmarks | 18 | Personal resource library |
-| 28 | Sources and further reading | self-paced | Annotated bibliography |
-
-### Advanced electives (post-core; optional)
-
-| Module | Title | Hours | Core artifact |
-|---|---|---:|---|
-| 29 | Industry electives: CPG, pharma and cold chain, automotive, semiconductor, humanitarian, fashion | 24 | Specialty primer and lab |
-| 30 | Simulation, optimization, and real-time production labs | 28 | Production and disaster-recovery report |
+| 28 | Domain case library and sector playbooks | 24 | Case portfolio and sector playbook |
+| 29 | Industry electives | 24 | Sector primer and lab |
+| 30 | Simulation, optimization, and production labs | 28 | Lab portfolio and disaster-recovery report |
 
 ## 6. Tracks
 
-| Track | Required | Recommended | Capstone archetypes |
+| Track | Required | Recommended | Domain-project archetypes |
 |---|---|---|---|
-| Retail & E-commerce Analytics | Core 00–06 incl. 01A; 07–10, 16, 17, 21–25 | 11–14, 18–20, 26–28 | Demand sensing, assortment, markdown, fulfillment promise, returns |
-| Manufacturing & Industrial Operations | Core 00–06 incl. 01A; 07–11, 15, 21–25 | 12–14A, 18–20, 26–28 | S&OP, production scheduling, predictive maintenance, supplier risk, network resilience |
-| Logistics & Distribution | Core 00–06 incl. 01A; 07, 08, 10–13, 19, 21–25 | 09, 14–20, 26–28 | Routing, control tower, warehouse labor, freight procurement, ETA prediction |
+| Retail & E-commerce Analytics | Core 00–06 incl. 01A; 07–10, 16, 17, 21–25 | 11–14, 18–20, 26–29 | Demand sensing, assortment, markdown, fulfillment promise, returns, dark-store economics, recommendation evaluation |
+| Manufacturing & Industrial Operations | Core 00–06 incl. 01A; 07–11, 15, 23, 25–29 | 12–14A, 18–20, 21, 22, 30 | S&OP, production scheduling, predictive maintenance, supplier risk, network resilience |
+| Logistics & Distribution | Core 00–06 incl. 01A; 07, 08, 10–13, 19, 21–23, 25–29 | 09, 14–20, 24, 30 | Routing, control tower, warehouse labor, freight procurement, ETA prediction, on-demand dispatch |
 
 ## 7. Evidence rules
 

@@ -533,7 +533,7 @@ A workable delivery workflow, in order: (1) map the source system and its owner;
 **Stretch goal:** Emit a 997 acknowledgement with correct `AK1`/`AK2`/`AK5`/`AK9` segments.
 
 ### Lab 3.4 — Demand-and-inventory mart with tests and a schedule
-**Objective:** Deliver the module's capstone artifact, a mart a forecasting team can consume.
+**Objective:** Deliver the module's final artifact: a mart a forecasting team can consume.
 **Data:** Raw orders, shipments, and at least 90 days of daily inventory snapshots.
 **Steps:** (1) Build a date spine covering the full history, including a 53-week boundary. (2) Aggregate demand to item-location-week and compute fill rate and weeks of cover. (3) Join in-transit inventory at week end. (4) Add dbt tests for uniqueness, not-null, non-negative demand, and referential integrity to the item dimension. (5) Add a freshness check and an orchestration directed acyclic graph (DAG) with a documented backfill command. (6) Write the data contract for the mart.
 **Deliverable:** A repository with models, tests, contract, DAG, and a README stating grain, keys, units, and limitations.
@@ -647,4 +647,4 @@ Design and build a **reproducible supply chain data product** for a scenario of 
 
 ---
 
-> **Next:** `04_statistics_causal_inference.md` — from trustworthy data to trustworthy inference: estimation, uncertainty, confounding, and causal designs for supply chain decisions.
+> **Next:** [Module 04](04_statistics_causal_inference.md) — from trustworthy data to trustworthy inference: estimation, uncertainty, confounding, and causal designs for supply chain decisions.

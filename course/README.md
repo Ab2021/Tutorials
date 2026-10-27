@@ -20,9 +20,9 @@ A 40-week, three-term program covering:
 - Network design, transportation, routing, warehousing, procurement, manufacturing, pricing, and assortment.
 - Deep learning, time-series foundation models, LLMs, and agents.
 - Control towers, digital twins, simulation, and optimization under uncertainty.
-- MLOps, monitoring, model risk, privacy, security, and responsible AI.
-- Product, economics, adoption, and leadership.
-- A capstone with realistic industry constraints and hackathon-style sprints.
+- E-commerce, quick commerce, food delivery, omnichannel fulfillment, returns, and recommendation systems.
+- Model risk, evaluation, product economics, adoption, and leadership.
+- A domain project with realistic industry constraints and sector playbooks.
 
 The organizing question is not "Which model should I use?" It is:
 
@@ -52,14 +52,14 @@ The organizing question is not "Which model should I use?" It is:
 | Deep learning, foundation models, LLMs, agents | 18 |
 | Control towers, visibility, events | 19 |
 | Digital twins, simulation, optimization under uncertainty | 20 |
-| Deployment, MLOps, planning-system integration | 21 |
-| Privacy, security, fairness, responsible AI | 22 |
-| Product, economics, adoption, leadership | 23 |
-| Quality, evaluation, model risk | 24 |
-| Capstone, hackathons, assessments | 25 |
-| Career, portfolio, interviews | 26 |
+| E-commerce supply chain, fulfillment, unit economics | 21 |
+| Quick commerce, food delivery, on-demand logistics | 22 |
+| Omnichannel fulfillment, returns, customer promise | 23 |
+| Recommendation systems and personalization | 24 |
+| Product, economics, adoption, leadership | 25 |
+| Quality, evaluation, model risk | 26 |
 | Datasets, benchmarks, tools | 27 |
-| Sources and further reading | 28 |
+| Domain case library and sector playbooks | 28 |
 | Industry electives | 29 |
 | Simulation and production labs | 30 |
 
@@ -69,12 +69,12 @@ The organizing question is not "Which model should I use?" It is:
 |---|---|---|
 | Analysts entering supply chain | Modules 00–06 incl. 01A | Supply chain analyst / demand planner |
 | Data scientists entering retail or logistics | Modules 00–08 | Demand forecasting or fulfillment data scientist |
-| ML engineers entering planning technology | Modules 00, 03, 06–08, 18, 20, 21 | Planning ML engineer / applied scientist |
+| ML engineers entering planning technology | Modules 00, 03, 06–08, 18, 20, 26 | Planning ML engineer / applied scientist |
 | Operations researchers | Modules 01A, 04, 10–12, 15, 20 | Supply chain OR scientist |
-| Demand and supply planners | Modules 01A, 07–10, 21, 23 | Planning lead / analytics translator |
-| Product managers and consultants | Modules 00, 01, 14A, 19, 22–24 | Supply chain product lead / strategy |
+| Demand and supply planners | Modules 01A, 07–10, 21–23, 25 | Planning lead / analytics translator |
+| Product managers and consultants | Modules 00, 01, 14A, 19, 21–26 | Supply chain product lead / strategy |
 | Industrial and manufacturing engineers | Modules 01, 13, 15, 20, 30 | Manufacturing analytics lead |
-| Instructors | README, Module 00, Module 25 | Ready-to-adapt course design |
+| Instructors | README, Module 00, Module 28 | Ready-to-adapt course design |
 
 ## 3. Program at a glance
 
@@ -84,14 +84,14 @@ The organizing question is not "Which model should I use?" It is:
 | Format | Lecture + lab + case clinic + project studio |
 | Total guided time | 700–760 core hours; electives add up to 52 more if both are taken |
 | Tracks | Retail & E-commerce; Manufacturing & Industrial; Logistics & Distribution |
-| Capstone | 10–12 weeks, team-based, externally reviewed |
+| Domain project | 10–12 weeks, team-based, externally reviewed |
 | Prerequisites | Python, SQL basics, probability/statistics, spreadsheet fluency |
 | Supply chain prerequisite | None; Module 01 provides the minimum viable vocabulary, Module 01A supplies units and assumptions |
-| Assessment | Labs, case critiques, forecast dossier, track playbook, capstone defense |
+| Assessment | Labs, case critiques, forecast dossier, track playbook, domain-project defense |
 | Source cutoff | 27 October 2026 |
 | Language | English |
 | License | Course text: CC BY-NC-SA 4.0 unless otherwise noted; code samples: MIT |
-| Package size | 31 modules (00–28 plus 01A and 14A, plus electives 29–30), 1 research source pack, 18,000+ lines |
+| Package size | 48 module files (00–30 plus 01A and 14A, plus electives 31–45), 48 module index folders, 1 research source pack, 27,000+ lines |
 
 ### 3.1 2026 industry signals that shape the curriculum
 
@@ -99,17 +99,17 @@ These are teaching anchors, not forecasts. Verify before citing; details and URL
 
 | Signal | Why it is in the course |
 |---|---|
-| Gartner expects 70% of large organizations to adopt AI-based forecasting or touchless planning by 2030, while surveys show only about 8–11% have agentic AI embedded | The gap between intent and deployment is the central commercial problem (Modules 18, 21, 23) |
-| M5 showed cross-learning ML pipelines beating statistical benchmarks, but foundation-model benchmarks show no universal winner and serious contamination risk | Benchmark discipline, baselines, and leakage audits are core skills (Modules 07, 08, 18, 24) |
+| Gartner expects 70% of large organizations to adopt AI-based forecasting or touchless planning by 2030, while surveys show only about 8–11% have agentic AI embedded | The gap between intent and deployment is the central commercial problem (Modules 18, 21, 25) |
+| M5 showed cross-learning ML pipelines beating statistical benchmarks, but foundation-model benchmarks show no universal winner and serious contamination risk | Benchmark discipline, baselines, and leakage audits are core skills (Modules 07, 08, 18, 26) |
 | Freight rates and routings remain volatile; Red Sea transits are recovering but not normalized | Network and transport assumptions must be scenario-based and date-stamped (Modules 11, 12, 14A) |
 | 94% of trade executives expect flat or growing trade in 2026, but 90% expect barriers to rise | Resilience, nearshoring, and dual sourcing are planning requirements (Modules 11, 14A, 29) |
-| EU CBAM entered its definitive period on 1 January 2026; CSRD/CSDDD thresholds and dates changed under Omnibus | Carbon and due-diligence data are supply chain data problems (Modules 22, 29) |
-| EU AI Act high-risk obligations for embedded systems are phased to 2028, with Annex III uses from December 2027 | AI governance must be designed into planning tools (Modules 21, 22, 24) |
-| Algorithmic pricing enforcement continues across hub-and-spoke and information-sharing theories | Pricing optimization has a legal boundary (Modules 16, 22) |
+| EU CBAM entered its definitive period on 1 January 2026; CSRD/CSDDD thresholds and dates changed under Omnibus | Carbon and due-diligence data are supply chain data problems (Modules 14A, 29) |
+| EU AI Act high-risk obligations for embedded systems are phased to 2028, with Annex III uses from December 2027 | AI governance must be designed into planning tools (Modules 18, 26) |
+| Algorithmic pricing enforcement continues across hub-and-spoke and information-sharing theories | Pricing optimization has a legal boundary (Modules 16, 28) |
 | Warehouse robotics scaled past one million units at Amazon; Ocado automates a large share of grocery picking | Automation economics, not robot counts, determines value (Module 13) |
 | Digital twin adoption is constrained by integration and complexity; only a minority achieve closed-loop capability | Simulation must earn its place against a simpler model (Module 20) |
 | Control towers are shifting from visibility to agent-assisted orchestration | Decision rights and alert quality matter more than dashboards (Module 19) |
-| Employers reward evidence, deployment, planning judgment, and commercial literacy over generic model-building | The portfolio and capstone emphasize decision-ready artifacts (Modules 25, 26) |
+| Employers reward evidence, deployment, planning judgment, and commercial literacy over generic model-building | The portfolio and domain project emphasize decision-ready artifacts (Modules 25, 28) |
 
 ## 4. Learning outcomes
 
@@ -123,12 +123,12 @@ Graduates can:
 6. **Translate** forecast distributions into inventory policies, safety stock, and service-level trade-offs.
 7. **Formulate and solve** network, transportation, production, and inventory optimization models.
 8. **Evaluate** models for accuracy, bias, calibration, stability, cost impact, and planner usability.
-9. **Engineer** production planning pipelines with versioning, monitoring, drift detection, and change control.
+9. **Engineer** reproducible planning pipelines with versioning, monitoring, and change control.
 10. **Navigate** AI, privacy, competition, customs, and sustainability obligations at a working level.
 11. **Quantify** value using service, cost, working capital, carbon, and adoption analysis.
 12. **Communicate** to planners, operators, engineers, executives, and suppliers without losing truth.
 13. **Govern** data and models with attention to supplier power, labor effects, delivery equity, and security.
-14. **Deliver** a decision-ready capstone under realistic time, data, and organizational constraints.
+14. **Deliver** a decision-ready domain project under realistic time, data, and organizational constraints.
 15. **State, document, and test** the demand, supply, cost, capacity, behavioral, and model assumptions behind a plan.
 
 ## 5. Curriculum map
@@ -163,21 +163,21 @@ Graduates can:
 | 16 | Pricing, promotions, and revenue management | 30 | Elasticity and markdown study |
 | 17 | Assortment, category, and retail analytics | 28 | Assortment plan |
 
-### Term 3 — AI, production, governance, and capstone (Weeks 27–40)
+### Term 3 — AI, channels, and domain analytics (Weeks 27–40)
 
 | Module | Title | Hours | Core artifact |
 |---|---|---:|---|
 | 18 | Deep learning, foundation models, LLMs, and agents | 34 | Foundation-model or LLM evaluation |
 | 19 | Control towers, visibility, and event intelligence | 28 | Control-tower design |
 | 20 | Digital twins, simulation, and optimization under uncertainty | 32 | Simulation study |
-| 21 | Deployment and MLOps for planning systems | 30 | Deployment and monitoring plan |
-| 22 | Privacy, security, ethics, and responsible AI | 26 | Risk and governance assessment |
-| 23 | Product, economics, and leadership | 26 | Value case and adoption plan |
-| 24 | Quality, evaluation, and model risk | 26 | Model card and validation dossier |
-| 25 | Capstone and hackathons | 80–120 | Capstone dossier and demo |
-| 26 | Career, portfolio, and interviews | 14 | Portfolio and interview plan |
+| 21 | E-commerce supply chain analytics | 30 | E-commerce fulfillment strategy |
+| 22 | Quick commerce, food delivery, and on-demand logistics | 30 | City operating plan |
+| 23 | Omnichannel fulfillment, returns, and customer promise | 28 | Omnichannel and returns model |
+| 24 | Recommendation systems and personalization | 30 | Recommender evaluation |
+| 25 | Product, economics, and leadership | 26 | Value case and adoption plan |
+| 26 | Quality, evaluation, and model risk | 26 | Model card and validation dossier |
 | 27 | Datasets, tools, and benchmarks | 18 | Personal resource library |
-| 28 | Sources and further reading | self-paced | Annotated bibliography |
+| 28 | Domain case library and sector playbooks | 18–24 | Sector playbook and case notes |
 
 ### Advanced electives (post-core; optional)
 
@@ -185,8 +185,23 @@ Graduates can:
 |---|---|---:|---|
 | 29 | Industry electives: CPG, pharma and cold chain, automotive, semiconductor, humanitarian, fashion | 24 | Specialty primer and lab |
 | 30 | Simulation, optimization, and real-time production labs | 28 | Production and disaster-recovery report |
+| 31 | Aftermarket, spare parts, and service supply chains | 26 | Service spares and availability study |
+| 32 | Food, agriculture, and perishable supply chains | 26 | Perishable inventory and waste study |
+| 33 | Healthcare provider and life sciences operations | 26 | Provider supply chain design |
+| 34 | Energy, utilities, and capital project supply chains | 26 | Project or outage supply plan |
+| 35 | Public sector, defence, and humanitarian logistics | 26 | Public or humanitarian supply plan |
+| 36 | Global freight, ports, and trade policy | 26 | Landed cost and lane design |
+| 37 | Circular economy and reverse logistics networks | 26 | Reverse network and disposition study |
+| 38 | Process industries, commodities, and bulk supply chains | 26 | Process planning model |
+| 39 | Mining, metals, and forestry supply chains | 26 | Resource supply chain design |
+| 40 | Telecom, technology hardware, and aerospace supply chains | 26 | Technology program supply design |
+| 41 | Maritime, rail, and air cargo operations engineering | 26 | Terminal or corridor operations plan |
+| 42 | Treasury, credit, and financial supply chain modelling | 26 | Financial supply chain design |
+| 43 | Security engineering for supply chains | 26 | Security architecture and risk case |
+| 44 | MLOps and production analytics engineering | 26 | Production analytics system |
+| 45 | Plant layout, facility design, and detailed engineering interfaces | 26 | Facility design and engineering interface pack |
 
-These are optional depth modules. Taking both extends the program beyond 40 weeks; taking one can replace a track elective or follow the core.
+These are optional depth modules. Modules 29–30 extend the method and production side; Modules 31–40 are **domain electives** that add industry vocabulary, constraints, data, and cases after the core; Modules 41–45 are **cross-cutting engineering electives** covering operations, finance, security, analytics platforms, and facility design. Taking all of them extends the program well beyond 40 weeks; taking one or two can replace a track elective or follow the core. None renumbers Modules 00–30.
 
 ## 6. Tracks
 
@@ -201,7 +216,8 @@ Recommended emphasis:
 - Module 13: fulfillment, ship-from-store, BOPIS, returns.
 - Module 16–17: pricing, markdowns, assortment, basket analytics.
 - Module 19: delivery promise and control tower.
-- Capstone examples: demand sensing for fresh, markdown optimization, assortment localization, delivery ETA, returns reduction.
+- Module 21–24: e-commerce, quick commerce, omnichannel, recommendation systems.
+- Domain-project examples: demand sensing for fresh, markdown optimization, assortment localization, delivery ETA, returns reduction, dark-store economics.
 
 ### 6.2 Manufacturing and Industrial Operations
 
@@ -214,7 +230,7 @@ Recommended emphasis:
 - Module 15: MPS, MRP, finite scheduling, OEE, maintenance.
 - Module 20: simulation and optimization under uncertainty.
 - Module 29: automotive and semiconductor primers.
-- Capstone examples: S&OP redesign, capacity planning, predictive maintenance, supplier resilience, CBAM readiness.
+- Domain-project examples: S&OP redesign, capacity planning, predictive maintenance, supplier resilience, CBAM readiness.
 
 ### 6.3 Logistics and Distribution
 
@@ -227,11 +243,11 @@ Recommended emphasis:
 - Module 19: control tower, exception management, event intelligence.
 - Module 14A: disruption and network criticality.
 - Module 30: streaming and production labs.
-- Capstone examples: route optimization, freight procurement, warehouse capacity, control tower, delivery promise.
+- Domain-project examples: route optimization, freight procurement, warehouse capacity, control tower, delivery promise.
 
-## 7. The capstone
+## 7. The domain project
 
-The capstone is the center of gravity. It is not a Kaggle submission. It is an **evidence-backed planning product** with a working prototype.
+The domain project is the center of gravity. It is not a Kaggle submission. It is an **evidence-backed planning product** with a working prototype, set in a named sector.
 
 Required components:
 
@@ -248,7 +264,7 @@ Required components:
 11. Value case and adoption plan.
 12. 10-minute executive pitch and 20-minute technical defense.
 
-See `25_capstone_hackathons.md` for briefs, milestones, rubrics, and hackathon formats.
+See `28_domain_case_library.md` for case notes, sector playbooks, and the project rubric.
 
 ## 8. Assessment philosophy
 
@@ -282,7 +298,7 @@ Every rubric includes a "competent" level that is achievable without perfection,
 - M5, Favorita, Rossmann, UCI Online Retail II, DataCo for teaching.
 - Cloud: AWS, Azure, or GCP; one with a managed warehouse and stream service.
 
-### MLOps and governance
+### Monitoring, model risk, and governance
 
 - MLflow or Weights & Biases, DVC, Great Expectations, Evidently.
 - SHAP, Fairlearn, Optuna.
@@ -340,26 +356,43 @@ Every rubric includes a "competent" level that is achievable without perfection,
 | `18_deep_learning_foundation_models_llm_agents.md` | Sequence models, TSFMs, LLMs, agents |
 | `19_control_towers_visibility_events.md` | Visibility, ETA, exceptions, decision rights |
 | `20_digital_twins_simulation_optimization_uncertainty.md` | DES, ABM, stochastic optimization, RL |
-| `21_deployment_mlops_planning_systems.md` | Serving, monitoring, integration, incident response |
-| `22_privacy_security_ethics_responsible_ai.md` | Privacy, threat modeling, fairness, AI governance |
-| `23_product_economics_leadership.md` | Value, TCO, adoption, vendor landscape, leadership |
-| `24_quality_evaluation_model_risk.md` | Validation, model cards, audit, controls |
-| `25_capstone_hackathons.md` | Briefs, milestones, rubrics, hackathon playbook |
-| `26_career_portfolio_interviews.md` | Portfolio, interviews, negotiation |
+| `21_ecommerce_supply_chain_analytics.md` | Fulfillment models, placement, promise, returns, unit economics |
+| `22_quick_commerce_on_demand_delivery.md` | Dark stores, dispatch, ETA, food waste, courier economics |
+| `23_omnichannel_fulfillment_returns.md` | ATP, routing, BOPIS, returns, channel P&L |
+| `24_recommendation_systems_personalization.md` | Retrieval, ranking, constraints, evaluation, fairness |
+| `25_product_economics_leadership.md` | Value, TCO, adoption, vendor landscape, leadership |
+| `26_quality_evaluation_model_risk.md` | Validation, model cards, audit, controls |
 | `27_datasets_tools_benchmarks.md` | Curated datasets, tools, benchmark cautions |
-| `28_sources_and_further_reading.md` | Annotated sources |
+| `28_domain_case_library.md` | Sector cases, playbooks, evidence grading |
 | `29_industry_electives.md` | CPG, pharma/cold chain, automotive, semiconductor, humanitarian, fashion |
 | `30_simulation_optimization_production_labs.md` | DES, MILP, VRP, streaming, K8s, Terraform, DR |
+| `31_aftermarket_spare_parts_service.md` | Installed base, critical spares, METRIC, repair loop, field service, availability contracts |
+| `32_food_agriculture_perishables.md` | Harvest, shelf life, FEFO, cold chain, traceability, food waste |
+| `33_healthcare_provider_life_sciences.md` | Item master, par, OR case carts, UDI, shortages, recalls, trial supply |
+| `34_energy_utilities_capital_projects.md` | Critical spares, outages, long-lead equipment, bulk logistics, schedule risk, resilience |
+| `35_public_sector_defence_humanitarian.md` | Public procurement, PBL, stockpiles, humanitarian pipeline, last mile, donor reporting |
+| `36_global_freight_ports_trade_policy.md` | Incoterms, landed cost, ports, demurrage, freight rates, chokepoints, trade policy |
+| `37_circular_economy_reverse_networks.md` | Disposition, grading, reverse networks, refurbishment, packaging reuse, circular metrics |
+| `38_process_industries_commodities.md` | Yield, blending, campaigns, bulk storage, hedging, laytime, debottlenecking |
+| `39_mining_metals_forestry.md` | Reserves, grade, blending, pit-to-port, offtake, forestry, social licence |
+| `40_telecom_technology_hardware.md` | Configuration, allocation, NPI, network rollout, AOG, obsolescence, export control |
+| `41_maritime_rail_air_operations.md` | Berth and crane capacity, yard and gate, rail paths, shunting, ULD, recovery |
+| `42_treasury_credit_financial_supply_chain.md` | CCC, cash forecast, PD/LGD/EL, trade finance, reverse factoring, FX, NPV |
+| `43_security_engineering_supply_chain.md` | STRIDE, attack trees, OT and Purdue, zero trust, TPRM, SBOM, cargo crime, ALE |
+| `44_mlops_production_analytics.md` | Versioning, tracking, PIT features, orchestration, serving, drift, governance |
+| `45_plant_layout_detailed_engineering.md` | SLP, capacity sizing, docks, handling, P&ID, MTO revision control, safety |
+| `TOPIC_COVERAGE_MAP.md` | Topic-to-module coverage audit and known gaps |
+| `modules/` | 48 module folders in 7 part folders; each part and each module has an `_index.md` topic map and target sizes |
 | `_research/` | Dated source packs |
 
 ## 12. How to use the package
 
 ### Self-study
 
-1. Read Module 00 and complete the charter.
+1. Read Module 00 and complete the charter. Open `modules/README.md` to see the topic-level map.
 2. Work through Modules 01 → 01A → 02–06 in order.
 3. Choose a track and complete the required modules.
-4. Do at least one full capstone brief.
+4. Do at least one full domain-project brief.
 5. Assemble the portfolio artifacts listed in Module 00.
 
 ### Teaching
@@ -368,13 +401,13 @@ Every rubric includes a "competent" level that is achievable without perfection,
 2. Map modules to your academic calendar.
 3. Replace datasets with local, ethically approved data where possible.
 4. Invite planning, operations, finance, and legal guest reviewers.
-5. Use the capstone rubric as the final assessment.
+5. Use the domain-project rubric as the final assessment.
 
 ### Corporate
 
 1. Run Module 00 as an executive alignment session.
 2. Select modules based on the business unit.
-3. Use a real internal planning decision as the capstone.
+3. Use a real internal planning decision as the domain project.
 4. Require a data-access and legal review at week 4.
 5. Measure success by a decision-ready artifact, not attendance.
 
@@ -455,23 +488,23 @@ The course is **not** accredited, vendor-certified, or pilot-tested. See `VALIDA
 - [ ] Set up Python, Git, Docker, DuckDB, and a notebook environment.
 - [ ] Download M5 or Favorita and read its license.
 - [ ] Choose a track.
-- [ ] Join or form a capstone team.
+- [ ] Join or form a domain-project team.
 - [ ] Interview one demand planner and one supply planner.
 - [ ] Create a decision log.
 - [ ] Identify one real planning decision you want to improve.
 
 ### 17.1 Quality checks performed
 
-- [ ] All 31 module files present.
-- [ ] README, outline, and footer next-module links resolve.
-- [ ] Code fences balanced.
-- [ ] Required module sections checked.
-- [ ] Source pack preserved in `_research/`.
+- [x] All 48 module files present.
+- [x] README, outline, and footer next-module links resolve.
+- [x] Code fences balanced.
+- [x] Required module sections checked.
+- [x] Source pack preserved in `_research/`.
 - [ ] Regulatory dates reviewed and dated.
-- [ ] Dataset licenses marked "verify" where uncertain.
-- [ ] No placeholder text or fabricated winners.
-- [ ] Track and capstone mappings cross-checked.
-- [ ] Known limitations documented.
+- [x] Dataset licenses marked "verify" where uncertain.
+- [x] No placeholder text or fabricated winners.
+- [x] Track and domain-project mappings cross-checked.
+- [x] Known limitations documented.
 
 ## 18. Contact and contribution
 

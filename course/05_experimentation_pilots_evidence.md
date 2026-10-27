@@ -637,4 +637,4 @@ Two ethical obligations are specific to experimentation. **Do not run a test who
 
 ---
 
-> **Next:** `06_machine_learning_foundations.md` — how to build a prediction model that is calibrated, leakage-free, and tied to a decision threshold.
+> **Next:** [Module 06](06_machine_learning_foundations.md) — how to build a prediction model that is calibrated, leakage-free, and tied to a decision threshold.

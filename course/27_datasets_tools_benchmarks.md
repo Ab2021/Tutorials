@@ -71,6 +71,8 @@ A dataset is not "good" in the abstract. It is fit for a decision or it is not.
 
 ## 4. Dataset catalogue
 
+Licence terms change. The catalogue records access routes, not legal permission: treat every entry as `[VERIFY]` and check the current licence, redistribution terms, and training-use clause before commercial use. Entries marked "Registration" or "Public" describe the access path, not the rights granted.
+
 ### 4.1 Retail and demand
 
 | Dataset | Grain and scale | Period | Access | Known issues | Best use |
@@ -119,6 +121,20 @@ A dataset is not "good" in the abstract. It is fit for a decision or it is not.
 | TSFM-Bench | Time-series foundation models | Zero/few/full-shot comparison | Contamination risk |
 | GIFT-Eval | Held-out foundation-model evaluation | Reduces leakage | Newer, evolving |
 
+### 4.5 Dataset-to-decision map
+
+| Decision | Minimum dataset | Useful additions | Common mismatch |
+|---|---|---|---|
+| Weekly SKU forecast | 2–3 years of daily sales, stockout flags, calendar | Promotions, price, weather | Using shipment data as demand |
+| New-item forecast | Attribute-rich catalogue, analogous launches | Early sales, distribution | No analogue set; launch bias |
+| Inventory policy | Demand and lead-time distributions | Supplier reliability, MOQ | Assuming normal demand |
+| Network design | Demand by region, freight rates, capacities | Service targets, carbon factors | Static costs, no seasonality |
+| Routing | Stops, windows, travel matrix | Traffic, access, breaks | Euclidean distances |
+| Maintenance | Sensor history, failure events | Work orders, operating conditions | Censored failure records |
+| Supplier risk | Spend, dependency, financial data | Tier-n mapping, news signals | Treating spend as risk |
+
+The map is a starting point, not a rule. The point is to name the minimum evidence before opening a notebook, so that a missing column is discovered before a model is built.
+
 ## 5. Benchmark pitfalls
 
 ### 5.1 The six ways a benchmark misleads
@@ -153,6 +169,42 @@ What does not transfer automatically:
 TSFM-Bench (KDD 2025) found no single dominant model across 21 datasets; zero-shot models beat task-specific models on 10 of 21; scaling laws did not hold strictly; LLM-based models generally underperformed. A 2025 audit found serious contamination risk. A separate electricity-price study found a classical bi-seasonal MSTL model was never statistically beaten.
 
 The correct conclusion is not "foundation models are bad." It is: **evaluate them against strong local baselines, on your data, with a contamination audit.**
+
+### 5.4 Licence and provenance audit
+
+Before a dataset enters a lab or a vendor evaluation, answer these questions in writing.
+
+| Question | Why it matters | Stop signal |
+|---|---|---|
+| Who owns the data and under what terms? | Use may be restricted to research | No named owner or terms |
+| Does the licence permit commercial use? | A PoC may become a product | "Research only" or unstated |
+| Does it permit redistribution of derivatives? | Models and features may count | No-derivatives clause |
+| Can the data be used to train a model? | Terms may forbid training | Training explicitly excluded |
+| Is personal data present? | Privacy obligations attach | Unresolved identifiers |
+| Was consent obtained for this use? | Secondary use may be unlawful | Consent for another purpose |
+| Is the collection method documented? | Bias and censoring follow method | "Scraped" with no detail |
+| Is the period and geography stated? | Transfer depends on context | Missing metadata |
+| Are known defects listed? | Otherwise you rediscover them | No data card |
+| Is there a version and access date? | Reproduction requires both | Mutable URL, no version |
+
+Record the answers on the data card (Section 7.2) and keep the card with the model. When a dataset is withdrawn or relicensed, the card is how you find every model that depends on it.
+
+### 5.5 Benchmark reproduction checklist
+
+A benchmark result is only useful if another person can reproduce it. Before citing a number:
+
+1. Pin the dataset version and access date.
+2. Record the exact split, including the validation window.
+3. Record preprocessing, including outlier and stockout handling.
+4. Record the metric definition and the aggregation weights.
+5. Record seeds and the number of runs.
+6. Record the hardware and wall-clock time.
+7. Report the baseline, not only the proposed model.
+8. Report variance across seeds or folds.
+9. State whether the test period could have been in pretraining data.
+10. Publish code or a container that reruns the result.
+
+If any of the ten is missing, describe the result as "reported" rather than "reproduced."
 
 ## 6. Tool stack
 
@@ -219,6 +271,54 @@ The correct conclusion is not "foundation models are bad." It is: **evaluate the
 | Fairlearn | Fairness metrics |
 | Docker / Kubernetes | Packaging and deployment |
 | Terraform | Infrastructure as code |
+
+### 6.6 Tool selection by constraint
+
+Tool choice follows the binding constraint, not the leaderboard. The same team may run three different stacks in one year because the constraints differ by decision.
+
+| Binding constraint | First choice | Acceptable alternative | Avoid |
+|---|---|---|---|
+| 50,000 SKUs, weekly, one laptop | LightGBM with cross-learning; statsforecast for baselines | statsforecast + reconciliation | Per-SKU deep models |
+| Regulatory explainability | Seasonal naive, ETS, linear regression with documented features | Gradient boosting with SHAP and a model card | Opaque ensembles with no attribution |
+| Sub-second API latency | Precomputed batch forecasts served from a cache | Small gradient boosting model with fixed features | Large deep model per request |
+| Hard combinatorial constraints | CP-SAT for scheduling; MIP for network design | Constraint programming in a commercial solver | Greedy heuristics presented as optimal |
+| 300-stop routes, daily | OR-Tools routing with a time limit | Commercial routing engine | Hand-built nearest neighbour |
+| Stochastic service targets | Discrete-event simulation with replications | Scenario analysis on historical data | Single-point spreadsheet |
+| Streaming exceptions | Kafka plus a stateful consumer | Micro-batch every minute | Nightly batch presented as real-time |
+| Small team, no platform staff | Managed warehouse and managed orchestrator | DuckDB + cron + object storage | Self-hosted Kubernetes |
+| Multi-tenant enterprise | Commercial planning suite with APIs | Open-source core plus integration work | Forking an abandoned project |
+| Research reproduction | Pinned container, fixed seeds, public data | Versioned environment file | "Works on my machine" |
+
+Two rules follow from the table:
+
+1. **Choose the simplest tool that satisfies the binding constraint.** A gradient boosting model that runs in a known pipeline beats a foundation model that needs a new platform, unless accuracy is the binding constraint and the gain is measured.
+2. **Write down the constraint before choosing.** If the team cannot state the latency, scale, licence, and explainability requirements, the tool decision is premature.
+
+### 6.7 Build versus buy
+
+| Situation | Build | Buy |
+|---|---|---|
+| Decision is core and differentiating | Yes | No |
+| Commodity capability (forecasting baseline, routing engine) | Only if constraints are unusual | Yes |
+| Data is the moat, not the algorithm | Yes, thin | Yes for the engine |
+| Regulatory approval needs full transparency | Yes, or buy with audit rights | Only with source access |
+| Team has no platform staff | No | Yes |
+| Vendor lock-in risk is high | Yes, with open formats | Only with exit clause |
+
+The test is not "can we build it?" It is "will building it produce a durable advantage, and can we maintain it for five years?" Most supply chain teams should buy the solver, the warehouse, and the orchestrator, and build the demand model, the policy logic, and the decision layer that encode their domain.
+
+### 6.8 Total cost of ownership
+
+| Cost line | Typical share | Hidden component |
+|---|---:|---|
+| Licence or subscription | 20–35% | Seat tiers, volume overage |
+| Compute and storage | 15–25% | Backfill and experimentation |
+| Implementation | 15–25% | Data integration, testing |
+| People | 25–40% | Ongoing model and platform ownership |
+| Change management | 5–15% | Training, process redesign |
+| Exit or migration | 0–10% | Data extraction, revalidation |
+
+A three-year TCO that omits people and change management understates cost by roughly half. Any business case that compares a vendor licence to zero internal cost is not a comparison.
 
 ## 7. Dataset selection framework
 
@@ -328,7 +428,7 @@ For each tool, record:
 - Strength and limitation.
 - One lab or project where you used it.
 
-Then write a 700-word memo recommending a dataset and stack for one capstone archetype, with a risk section.
+Then write a 700-word memo recommending a dataset and stack for one domain-project archetype, with a risk section.
 
 ## 10. Assessment rubric
 
@@ -422,4 +522,4 @@ Then write a 700-word memo recommending a dataset and stack for one capstone arc
 - MLflow. https://mlflow.org/
 - Evidently. https://www.evidentlyai.com/
 
-> **Next:** [Module 28](28_sources_and_further_reading.md) teaches source evaluation and keeps the library honest.
+> **Next:** [Module 28](28_domain_case_library.md) turns the benchmarks into sector-specific playbooks and worked cases.
