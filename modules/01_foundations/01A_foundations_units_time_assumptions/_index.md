@@ -31,8 +31,8 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_unit-of-measure-hierarchy.md`](01_unit-of-measure-hierarchy.md) | The Unit-of-Measure Hierarchy | Each, inner pack, case, layer, pallet, and the conversions that lose information. | 1,200–1,800 | planned |
-| 2 | [`02_container-loading.md`](02_container-loading.md) | Container Loading: Which Constraint Binds? | Weight, cube, floor space, and the minimum of the three. | 1,200–1,800 | planned |
+| 1 | [`01_unit-of-measure-hierarchy.md`](01_unit-of-measure-hierarchy.md) | The Unit-of-Measure Hierarchy | Each, inner pack, case, layer, pallet, and the conversions that lose information. | 1,200–1,800 | complete |
+| 2 | [`02_container-loading.md`](02_container-loading.md) | Container Loading: Which Constraint Binds? | Weight, cube, floor space, and the minimum of the three. | 1,200–1,800 | complete |
 | 3 | [`03_case-pack-moq-rounding.md`](03_case-pack-moq-rounding.md) | Case Pack, MOQ, and Integer Rounding | Why a fractional plan is not executable and how rounding compounds. | 1,200–1,800 | planned |
 | 4 | [`04_calendars-weeks-time-zones.md`](04_calendars-weeks-time-zones.md) | Calendars, Weeks, Time Zones, and Buckets | Fiscal calendars, 4-4-5, ISO weeks, cutoffs, and planning buckets. | 1,200–1,800 | planned |
 | 5 | [`05_lead-time-definitions.md`](05_lead-time-definitions.md) | Lead-Time Definitions | Nominal, actual, promised, replenishment, and the distribution behind the average. | 1,200–1,800 | planned |

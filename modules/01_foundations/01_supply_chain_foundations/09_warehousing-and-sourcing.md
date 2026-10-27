@@ -47,8 +47,7 @@ Three failures show the shape of the problem:
    The winner is also the only qualified source, holds the tooling, and has no alternate. A leverage
    metric has been optimised on a bottleneck item.
 
-None of these is a modelling error in the narrow sense. Each is a failure to know what the number
-measures, which is the subject of this topic.
+None is a modelling error in the narrow sense; each is a failure to know what the number measures.
 
 ## 2. Learning outcomes
 
@@ -58,10 +57,10 @@ By the end of this topic you can:
    and **name** the queue that forms at each stage.
 2. **Explain** why picking dominates warehouse labour cost and why travel dominates picking, using
    the standard time decomposition.
-3. **Compute** annual pick labour hours and headcount from order volume, lines per order, a pick
-   rate, a paid-to-productive ratio, and an absence factor, stating every assumption.
+3. **Compute** annual pick labour hours and headcount from volume, lines per order, pick rate, a
+   paid-to-productive ratio, and an absence factor, stating every assumption.
 4. **Build** an automation payback and net present value (NPV) calculation with explicit capital,
-   recurring cost, and labour assumptions, and **identify** the wage at which the case fails.
+   recurring cost, and labour assumptions, and **identify** the wage at which it fails.
 5. **Distinguish** design capacity from demonstrated capacity and **explain** why vendor rates
    require a haircut before use in a business case.
 6. **Segment** a spend population using the Kraljic portfolio, **state** how each axis was
@@ -69,8 +68,7 @@ By the end of this topic you can:
    staticness, and absence of execution guidance.
 7. **Compare** single and dual sourcing on total cost of ownership (TCO) rather than unit price, and
    **state** what the comparison omits.
-8. **Diagnose** a warehouse or sourcing metric that has been gamed, mis-scoped, or measured on the
-   wrong denominator.
+8. **Diagnose** a warehouse or sourcing metric that has been gamed or measured on a wrong denominator.
 
 Each outcome maps to an exercise in section 12 and a self-check item in section 13.
 
@@ -144,15 +142,14 @@ The standard decomposition of picker time, as reported in the order-picking lite
 > can also dominate in specific operations. Use the decomposition to ask which activity you would
 > have to change, not to assert that travel is exactly half in your building.
 
-The consequence is counter-intuitive to people who have not worked in a DC. Making a picker faster
-at the pick — the 15% — improves throughput by at most 15%. Making the picker walk less improves it
-by up to 50%. This is why slotting, batching, and goods-to-person are the three levers that matter,
-and why "pick faster" programmes plateau.
+The consequence is counter-intuitive if you have not worked in a DC. Making a picker faster at the
+pick — the 15% — improves throughput by at most 15%. Making the picker walk less improves it by up
+to 50%. That is why slotting, batching, and goods-to-person are the levers that matter, and why
+"pick faster" programmes plateau.
 
-It also explains the shape of the automation market. Every mainstream warehouse automation category
-is an attack on travel or on search: goods-to-person brings the inventory to a stationary picker;
-pick-to-light removes search; batch and cluster picking remove travel by consolidating trips; voice
-removes the head-down screen time and frees the eyes and hands but does not remove walking.
+It also explains the shape of the automation market. Every mainstream category attacks travel or
+search: goods-to-person brings inventory to a stationary picker, pick-to-light removes search, batch
+and cluster picking consolidate trips, and voice frees the eyes and hands without removing walking.
 
 ### 3.3 The sourcing lens: the Kraljic portfolio
 
@@ -218,17 +215,11 @@ Section 6 uses demonstrated capacity and states why.
 
 ### 3.5 Where analytics enters
 
-| Analytic task | Object it acts on | Decision it changes | Failure if the process model is wrong |
-|---|---|---|---|
-| Labour forecasting | Pick hours by hour | Shift schedule | Forecast volume, not workload |
-| Slotting optimisation | Pick face assignment | Where SKUs live | Optimises travel, ignores replenishment |
-| Pick-path optimisation | Route within an order | Batch and route design | Saves seconds; layout dominates |
-| Automation business case | Capital vs labour | Whether to mechanise | Uses design rate, ignores wage level |
-| Throughput simulation | Stage capacity | Where to add capacity | Models the wrong bottleneck |
-| Spend classification | Purchase line items | Category structure | Taxonomy that reflects the chart of accounts |
-| Supplier segmentation | Supplier–item pairs | Management model | Scores spend as profit impact |
-| Should-cost modelling | Cost breakdown | Negotiation target | Uses price history as cost |
-| Supplier risk scoring | Supplier and site | Dual-source decision | Measures financial risk, not capacity risk |
+Every analytic task in this topic attaches to one of these objects: pick hours and the shift schedule,
+slot locations and the slotting rule, stage capacity and the constraint, spend lines and the category
+structure, supplier–item pairs and the management model. The failure is the same in each case. The
+model is built on the process as described in the system rather than the process as performed, and
+sections 9 and 10 catalogue the specific forms.
 
 ## 4. Definitions and vocabulary
 
@@ -379,8 +370,7 @@ consistent with the promise made to customers.
 
 ### Phase D — The sourcing process
 
-Sourcing is a cycle, not an event. The steps below assume a category that has been through at least
-one full cycle.
+Sourcing is a cycle, not an event. These steps assume a category that has been through one full cycle.
 
 **Step 14. Spend is analysed and classified.** Data: purchase line items normalised to supplier, item,
 business unit, and period. Branch: **what is the taxonomy?** A tree built from the chart of accounts
@@ -490,10 +480,9 @@ Operating assumptions after automation:
 | Total labour hours per day | 108.0 | |
 
 The vendor's specification for this class of station is 500 lines per hour. The 320 used here is a
-demonstrated rate from a site with a similar order profile, and it is already below the 400–425 that
-a 15–20% haircut on the mechanical rate would imply. The additional gap reflects order mix: a
-2.4-line average order with variable item sizes produces more station-side handling than the
-single-line, single-item runs used for acceptance testing.
+demonstrated rate from a similar site, already below the 400–425 that a 15–20% haircut on the
+mechanical rate implies. The further gap is order mix: a 2.4-line average with variable item sizes
+produces more station-side handling than the single-line runs used for acceptance testing.
 
 ### 6.4 Payback and NPV at the base case
 
@@ -539,7 +528,7 @@ replaces has changed, and that single number flips the decision.
 | Base: €18.50, 320 lines/h | 1,687 | 1,222 | 3.95 | +1,687 |
 | Low wage: €12.00, 320 lines/h | 1,094 | 629 | 7.68 | −1,474 |
 | Low rate: €18.50, 260 lines/h | 1,583 | 1,118 | 4.32 | +1,134 |
-| Both: €12.00, 260 lines/h | 1,027 | 562 | 8.59 | −1,832 |
+| Both: €12.00, 260 lines/h | 1,027 | 562 | 8.60 | −1,833 |
 
 The breakeven loaded wage, holding everything else at base, is the wage at which NPV is zero:
 
@@ -578,11 +567,10 @@ On unit price, Supplier A wins by 28 cents. On TCO, Supplier A still wins, but b
 about 4 cents per unit, or €48,000 per year, as the price of not having a single point of failure on
 a component worth €5.3m of annual spend.
 
-That is the whole argument, and it is a judgement rather than a calculation. The calculation gives
-the price of the insurance. Whether the insurance is worth it depends on what a stoppage would cost,
-which is a separate model with much wider error bars. Presenting the premium and the exposure
-separately is honest. Netting them into a single "risk-adjusted TCO" number hides the judgement
-inside an assumption.
+That is the whole argument, and it is a judgement rather than a calculation. The calculation gives the
+price of the insurance; whether it is worth paying depends on what a stoppage would cost, which is a
+separate model with much wider error bars. Presenting the premium and the exposure separately is
+honest. Netting them into one "risk-adjusted TCO" hides the judgement inside an assumption.
 
 ### 6.8 What an analyst should have asked
 
@@ -709,13 +697,11 @@ calling the result a strategy.
 
 ### 8.5 What is convention rather than requirement
 
-- A 10–15% personal, fatigue, and delay allowance is a convention with roots in time study, not a
-  regulatory minimum.
-- ABC thresholds of 80/15/5 for velocity classification are inherited, not optimal.
-- "One dock door per 10,000 square feet" is a rule of thumb from a particular building era.
-- A quarterly re-slot is a convention; the right cadence depends on how fast the mix moves.
-- "Three quotes" as a sourcing policy is a procurement convention, not evidence that the third
-  quote is competitive.
+- A 10–15% personal, fatigue, and delay allowance is a convention from time study, not a regulatory
+  minimum.
+- ABC thresholds of 80/15/5, a quarterly re-slot, and "one dock door per 10,000 square feet" are
+  inherited rules of thumb, not optima.
+- "Three quotes" is a procurement convention, not evidence that the third quote is competitive.
 
 ## 9. Industry practice and case evidence
 
@@ -730,10 +716,10 @@ Four 2025 sources, all with different sampling frames, converge on a consistent 
 | UKG, September 2025 | 400 HR and operations leaders at firms above $1bn revenue | 22% report turnover above 45%; 79% say labour is not aligned to demand; real hourly earnings up 4.8% year on year | C |
 | CleoHR Frontline Hiring Index, 2025 | Frontline hiring data | Warehouse and logistics turnover reported at 73%; 43% of frontline workers leave within 90 days | C |
 
-The spread between "55% below 15%" and "22% above 45%" is not a contradiction. It is a sampling
-difference: the trade survey samples operations that respond to trade surveys, and the HR survey
-samples large firms with high-churn urban sites. Any model that assumes a single turnover rate for
-"the warehouse industry" is assuming away the variance that drives the decision.
+The spread between "55% below 15%" and "22% above 45%" is a sampling difference, not a contradiction:
+the trade survey samples operations that answer trade surveys, and the HR survey samples large firms
+with high-churn urban sites. Assuming one turnover rate for "the industry" assumes away the variance
+that drives the decision.
 
 Replacement cost estimates vary even more widely: about 16% of annual wages for hourly workers in one
 staffing source, roughly 30% in a Department of Labor figure, 30–150% in a vendor analysis, and a
@@ -804,10 +790,9 @@ Adoption of the artifact is much higher than adoption of the behaviour it implie
 | 41% of procurement leaders are renegotiating with existing suppliers; 74% are actively developing alternate sources | Deloitte 2025 Global CPO Survey, 250+ CPOs | C |
 | Strategic supplier relationship management is the largest internal capability gap, cited by 32% | ProcureCon CPO Report 2025 | C |
 
-The gap between 94% segmentation and 42% treatment strategies is the most useful number in the table.
-It says that most organisations can produce the two-by-two and few can act on it. That is precisely
-the critique the academic literature makes: the matrix classifies, and classification is the easy
-part.
+The gap between 94% segmentation and 42% treatment strategies is the most useful number in the table:
+most organisations can produce the two-by-two, and few can act on it. That is the academic critique
+in one line — the matrix classifies, and classification is the easy part.
 
 ### 9.5 The critique of the portfolio model
 
@@ -849,11 +834,10 @@ Dual sourcing is often presented as free resilience. The research is more condit
   advantageous when disruption probability is high and local production cost is moderate, but noted
   that supplier pricing behaviour erodes the advantage. (Grade A)
 
-The practical reading: dual sourcing buys a reduction in the variance of outcomes at a known and
-usually small unit-cost premium, and it costs qualification effort, lost volume leverage, and
-increased management overhead. It is worth it for bottleneck and strategic items with real
-disruption exposure, and it is usually not worth it for leverage items where the second source is
-a price negotiation tactic rather than a genuine capability.
+The practical reading: dual sourcing buys a reduction in outcome variance at a known and usually
+small unit-cost premium, and it costs qualification effort, lost volume leverage, and management
+overhead. It is worth it for bottleneck and strategic items with real disruption exposure, and
+usually not for leverage items where the second source is a negotiation tactic, not a capability.
 
 ## 10. Failure modes and red flags
 
@@ -930,14 +914,13 @@ the likely binding constraint identified with a reason; one information record l
 
 ### Exercise 2 — Pick labour arithmetic (calculation, 30 minutes)
 
-A DC ships 12,000 orders per day, 1.8 lines per order, at 48 lines per productive hour. The
-paid-to-productive ratio is 1.22, shifts are 7.5 paid hours, absence cover is 10%, and the loaded
-rate is €17.00 per hour over 320 operating days.
+A DC ships 12,000 orders per day at 1.8 lines per order and 48 lines per productive hour, with a
+paid-to-productive ratio of 1.22, 7.5-hour shifts, 10% absence cover, €17.00 loaded, over 320 days.
 
 **Deliverable:** lines per day, productive hours, paid hours, FTEs, scheduled headcount, annual
 hours, and annual cost, with units at every step.
-**Acceptance criteria:** every intermediate number shown; the absence factor applied to headcount and
-not to hours; a one-sentence statement of which assumption you would test first and why.
+**Acceptance criteria:** every intermediate number shown; absence applied to headcount, not hours; the
+assumption you would test first named with a reason.
 
 ### Exercise 3 — Automation payback and breakeven wage (calculation, 45 minutes)
 
@@ -994,21 +977,21 @@ justified; vendor claims labelled as such; a statement of what evidence would ch
 
 ### Exercise 8 — Cost of turnover (calculation and design, 40 minutes)
 
-For a DC with 120 warehouse associates, an annual separation rate of 40%, and a loaded wage of
-€32,000, build a cost-of-turnover model with at least five components.
+For a DC with 120 associates, 40% annual separations, and a €32,000 loaded wage, build a
+cost-of-turnover model with five components.
 
 **Deliverable:** annual turnover cost, cost per separation, and the three interventions with the
 largest expected effect per euro.
-**Acceptance criteria:** components are additive and non-overlapping; vacancy overtime is included;
-the estimate is presented as a range, not a point; each intervention has a measurable success metric.
+**Acceptance criteria:** components additive and non-overlapping; vacancy overtime included; a range
+rather than a point; a measurable success metric per intervention.
 
 ### Exercise 9 — Category strategy memo (design, 60 minutes)
 
-Write a one-page category strategy for a bottleneck item in a supply chain you know. Include the
-make-versus-buy question.
+Write a one-page category strategy for a bottleneck item you know, including the make-versus-buy
+question.
 
 **Deliverable:** the segment justification, the strategy, the sourcing lever, the make-versus-buy
-analysis, the risk of the recommended path, and the metric that would show it working.
+analysis, the risk of the path, and the metric that would show it working.
 **Acceptance criteria:** the justification names the specific constraint that makes the item a
 bottleneck; the make-versus-buy analysis includes a capability argument, not only a cost argument;
 the risk section names what would make the strategy wrong.
@@ -1027,15 +1010,13 @@ annual paid hours    = 549.0 x 320 = 175,680
 annual cost          = 175,680 x 17.00 = EUR 2,986,560
 ```
 
-The assumption to test first is the 48 lines per productive hour. It is the largest single driver of
-the answer and the one most likely to have been measured on a different picking method or order
-profile. A 10% error moves annual cost by about €299,000, which is larger than the entire effect of
-the absence factor.
+The assumption to test first is 48 lines per productive hour: it drives the answer and is the most
+likely to have been measured on a different method or profile. A 10% error moves annual cost by about
+€299,000, more than the entire effect of the absence factor.
 
-A common error is to apply the 10% absence factor to hours rather than to headcount. Applying it to
-hours gives 499.1 paid hours and 66.5 FTEs, which understates scheduled headcount by about 14 people
-and understates cost by roughly €500,000 at this scale. Absence is a property of the schedule, not of
-the task.
+A common error is applying absence to hours rather than headcount. That gives 499.1 paid hours and
+66.5 FTEs, understating headcount by about 14 people and cost by roughly €500,000. Absence is a
+property of the schedule.
 
 **Exercise 3 arithmetic.**
 
@@ -1059,11 +1040,10 @@ breakeven wage = (3,200,000 / 5.335 + 310,000) / 60,000
                = EUR 15.16 per hour
 ```
 
-At €16 the project clears the hurdle by a modest margin; at €13 it destroys about €0.69m of value.
-The breakeven wage of €15.16 means the same equipment is a good decision in one labour market and a
-bad one 200 kilometres away. The implication for site selection is direct: if the network has
-flexibility over where the DC sits, the automation case and the network decision should be evaluated
-together, not sequentially.
+At €16 the project clears the hurdle by a modest margin; at €13 it destroys about €0.69m. The
+breakeven wage of €15.16 means the same equipment is a good decision in one labour market and a bad
+one 200 kilometres away. Where the network can choose where the DC sits, the automation case and the
+network decision should be evaluated together.
 
 **Exercise 4 rubric.** A strong answer states the scoring rule before showing the result. Profit impact
 is scored on something defensible — annual spend, spend as a share of item cost, or margin at risk —
@@ -1157,41 +1137,37 @@ variable and mentions labour availability and turnover as secondary drivers. A w
 
 **6. "What is the productivity paradox in warehouse automation?"**
 
-A strong answer notes that measured productivity can rise while total cost per unit does not, because
-work moves to another task code, because the automation's own support labour is excluded, or because
-the constraint was elsewhere. It mentions that aggregate evidence on robotisation and employment is
-close to zero on average with large heterogeneity. A weak answer treats the paradox as a myth or as a
-conspiracy.
+A strong answer notes that measured productivity can rise while cost per unit does not, because work
+moves to another task code, support labour is excluded, or the constraint was elsewhere. It adds that
+aggregate evidence is near zero with wide heterogeneity; a weak answer calls the paradox a myth.
 
 **7. "Walk me through the Kraljic matrix."**
 
-A strong answer names the two axes, the four quadrants, and the strategy for each. It immediately
-adds the three standard critiques: the axes are subjective, the matrix is static while categories
-move, and it says nothing about execution. A weak answer draws the boxes and stops, which is the
-level of most slideware.
+A strong answer names the axes, the quadrants, and the strategy for each, then adds the three
+critiques: subjective axes, a static model for moving categories, and no execution guidance. A weak
+answer draws the boxes and stops.
 
 **8. "An item is single-sourced and expensive. What quadrant is it in, and what do you do?"**
 
 A strong answer separates spend from risk: expensive alone does not make an item strategic; single
-source with no qualified alternate makes it bottleneck, or strategic if the value is also high. It
-recommends qualifying an alternate or designing out the dependency, and notes that a price negotiation
-is the wrong first move on a bottleneck. A weak answer says "strategic, so partner", which is the
-most common misfiling.
+source with no qualified alternate makes it bottleneck, or strategic if value is also high.
+Qualifying an alternate or designing out the dependency follows, and a price negotiation is the wrong
+first move. A weak answer says "strategic, so partner".
 
 **9. "How do you decide between single and dual sourcing?"**
 
 A strong answer frames it as the price of insurance: the unit-cost premium against the exposure
-avoided, with qualification cost and lost volume leverage included. It notes that dual sourcing can
-be a prisoner's dilemma among competitors and that a nominal second source without volume is not a
-second source. A weak answer says "dual sourcing is more resilient" as though it were free.
+avoided, with qualification cost and lost volume leverage included. It notes that dual sourcing can be
+a prisoner's dilemma and that a nominal second source without volume is not a second source. A weak
+answer calls dual sourcing free resilience.
 
 **10. "How would you detect that a warehouse incentive scheme is being gamed?"**
 
-A strong answer triangulates: compare the engineered-standard performance measure against cost per
-unit shipped and against perfect order rate. If the standard improves while cost per unit is flat,
-work has moved rather than disappeared. It names the specific mechanisms — time shifting to indirect
-codes, cherry-picking, scan manipulation — and the design response: team measures, quality gates,
-and transparent standards. A weak answer says "audit the data", which does not say what to compare.
+A strong answer triangulates: compare the engineered-standard measure against cost per unit shipped
+and against perfect order rate. If the standard improves while cost per unit is flat, work has moved
+rather than disappeared. It names the mechanisms — time shifting, cherry-picking, scan manipulation —
+and the response: team measures, quality gates, transparent standards. A weak answer says "audit the
+data".
 
 ## 15. Key terms
 
@@ -1200,26 +1176,18 @@ and transparent standards. A weak answer says "audit the data", which does not s
 - **Cross-docking** — inbound to outbound with no putaway; **flow-through** — case picking for stores.
 - **Slotting** — assigning SKUs to pick-face locations by velocity and affinity.
 - **Pick face** — the location picked from; **reserve** — bulk storage that replenishes it.
-- **Honeycombing** — unusable space left by partial pallets.
 - **Discrete picking** — one order at a time; **batch** — several orders, sorted later.
 - **Zone picking** — one picker per area; **wave** — orders released in scheduled groups.
-- **Cluster picking** — one picker, several containers, one stop.
-- **Put wall** — sorting wall that distributes batch-picked items to orders.
 - **Goods-to-person (G2P)** — inventory travels to a stationary picker.
 - **AS/RS** — automated storage and retrieval, usually shuttle or crane based.
 - **AMR** — autonomous mobile robot; **AGV** — guided vehicle on fixed paths.
 - **Pick-to-light / voice / RF** — pick confirmation technologies with different error profiles.
 - **Engineered labour standard** — time for a defined task at a defined pace, with allowances.
-- **Allowance** — added time for personal needs, fatigue, and delay.
-- **Learning curve** — the rate at which a new worker approaches standard.
 - **UPH / lines per hour** — productivity units; not comparable across order profiles.
-- **Dock-to-stock** — elapsed time from unload to available-to-promise.
 - **Inventory accuracy** — recorded versus physical quantity at location level.
-- **Perfect order** — complete, on time, undamaged, correctly documented.
 - **Design capacity** — ideal rate; **demonstrated** — best sustained rate in a live operation.
 - **Kraljic portfolio** — segmentation of purchases by profit impact and supply risk.
 - **Leverage / strategic / bottleneck / non-critical** — the four sourcing segments.
-- **Spend under management** — share of spend covered by a category strategy.
 - **Should-cost** — independent estimate of what an item ought to cost.
 - **TCO** — total cost of ownership across the life of the item.
 - **Supplier preferencing** — the supplier's ranking of its customers.
@@ -1283,8 +1251,8 @@ and transparent standards. A weak answer says "audit the data", which does not s
   picked per hour per person, sector range 5.6–41.7.
 - Deloitte, *2025 Global CPO Survey* (250+ chief procurement officers, 40 countries).
 - State of Flux, *2024 Global SRM Research: Return on Relationships*.
-- Vantage Partners, *SRM and Supply Management Best Practices and Benchmarking Study* (900+
-  respondents). The "customer of choice" and 50% value findings are respondent-reported.
+- Vantage Partners, *SRM Benchmarking Study* (900+ respondents). The "customer of choice" and 50%
+  value findings are respondent-reported.
 - CleoHR, *2025 Frontline Hiring Index*. Turnover and cost-per-hire figures for frontline roles.
 - UKG, *Do More with the Same in Logistics and Distribution*, 2025.
 
@@ -1294,9 +1262,8 @@ and transparent standards. A weak answer says "audit the data", which does not s
   (101 respondents, fielded August 2025). Trade survey.
 - Transport Intelligence, global warehousing cost indices, Q1 2025.
 - Savills, "Warehousing costs: a global perspective," June 2025.
-- The Fulfillment Advisor, *2025 Warehousing Market Report* (600+ US warehouses). Operator-level
-  cost benchmarks: $9.30 per square foot per year all-in, $20.17 per pallet per month, $3.20 per
-  B2C order for pick and pack.
+- The Fulfillment Advisor, *2025 Warehousing Market Report* (600+ US warehouses): $9.30 per square
+  foot per year all-in, $20.17 per pallet per month, $3.20 per B2C order for pick and pack.
 - Cleverence, "Quantifying ROI of AMRs in High-Volume Fulfillment," 2025. AMR pricing of
   $25,000–40,000 per unit and a 2.4-year illustrative payback. Vendor analysis.
 - AutomationInside, "Intralogistics Automation ROI: Calculating the Payback of AMRs," October 2025.
@@ -1312,9 +1279,9 @@ and transparent standards. A weak answer says "audit the data", which does not s
   21 October 2025. Reported, based on internal documents; not independently verified.
 
 **Note on citations.** Survey and vendor figures are reported as the sources state them and are not
-independently verified. Where a number is contested or methodologically weak, the text grades it and
-says so rather than quoting precision the evidence cannot support. Several figures in section 6 are
-illustrative and constructed for teaching; they are labelled as such.
+independently verified. Where a number is contested or methodologically weak, the text grades it
+rather than quoting precision the evidence cannot support. Figures in section 6 are illustrative and
+constructed for teaching.
 
 ## 17. Links
 
@@ -1326,7 +1293,5 @@ illustrative and constructed for teaching; they are labelled as such.
 - Survey file: [`../../../course/01_supply_chain_foundations.md`](../../../course/01_supply_chain_foundations.md)
 - Deeper treatment of warehousing, fulfilment, and labour: [`../../../course/13_warehousing_fulfillment_labor.md`](../../../course/13_warehousing_fulfillment_labor.md)
 - Return to the part map: [`../_index.md`](../_index.md)
-
-Next in sequence, both indexed as planned and not yet on disk: Topic 08, Transportation Modes and
-Incoterms 2020, and Topic 10, Supply Chain Archetypes and Metric Conflicts. See `_index.md` for
-their scope and status.
+- Next topic, transportation and Incoterms: [`08_transport-and-incoterms.md`](08_transport-and-incoterms.md)
+- Then supply chain archetypes and metric conflicts: [`10_archetypes-and-metric-conflicts.md`](10_archetypes-and-metric-conflicts.md)

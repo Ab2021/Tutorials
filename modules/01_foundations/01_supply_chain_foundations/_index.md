@@ -38,8 +38,8 @@ not the whole program.
 | 5 | [`05_inventory-and-service.md`](05_inventory-and-service.md) | Inventory Types and Service Metrics | Cycle, safety, in-transit, and obsolete stock; CSL, fill rate, OTIF. | 1,200–1,800 | complete |
 | 6 | [`06_cost-and-working-capital.md`](06_cost-and-working-capital.md) | Cost Taxonomy and Working Capital | Ordering, holding, shortage, transport, DIO, DSO, DPO, and cash conversion. | 1,200–1,800 | complete |
 | 7 | [`07_manufacturing-basics.md`](07_manufacturing-basics.md) | Manufacturing: BOM, Routing, MRP, Capacity | How a product is built and how the plan explodes into components and load. | 1,200–1,800 | complete |
-| 8 | [`08_transport-and-incoterms.md`](08_transport-and-incoterms.md) | Transportation Modes and Incoterms 2020 | Mode economics, responsibility transfer, and landed-cost composition. | 1,200–1,800 | planned |
-| 9 | [`09_warehousing-and-sourcing.md`](09_warehousing-and-sourcing.md) | Warehousing and Sourcing | Receiving to shipping, and the Kraljic portfolio as a sourcing lens. | 1,200–1,800 | planned |
+| 8 | [`08_transport-and-incoterms.md`](08_transport-and-incoterms.md) | Transportation Modes and Incoterms 2020 | Mode economics, responsibility transfer, and landed-cost composition. | 1,200–1,800 | complete |
+| 9 | [`09_warehousing-and-sourcing.md`](09_warehousing-and-sourcing.md) | Warehousing and Sourcing | Receiving to shipping, and the Kraljic portfolio as a sourcing lens. | 1,200–1,800 | complete |
 | 10 | [`10_archetypes-and-metric-conflicts.md`](10_archetypes-and-metric-conflicts.md) | Supply Chain Archetypes and Metric Conflicts | Efficient versus responsive chains and the metrics that trade against each other. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
@@ -71,13 +71,14 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
-Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
-as each file is produced at its target length. The survey file linked above is complete at survey
-depth and can be used on its own.
+All ten topic files are written and meet the quality bar in `MODULE_EXPANSION_SPEC.md` §5: at
+least 1,000 lines, all 17 sections present, arithmetic checked, sources real and graded. The
+module total is 13,169 lines. Status moves from `complete` to `reviewed` when a
+second reader signs off, and to `revised` after corrections.
 
 ## 7. Sources for this module
 

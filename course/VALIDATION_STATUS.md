@@ -17,7 +17,7 @@ This file states what is complete, drafted, or pending, and the boundary of the 
 | Program architecture | Complete | 40-week core plus 15 advanced electives, three terms, three tracks, 48 module files |
 | Module survey files | Drafted | 48 module files; lengths vary by design |
 | Module index folders | Complete | 48 module folders inside 7 part folders under `modules/`, each with an `_index.md` topic map; 7 part indexes; 476 topic units indexed |
-| Topic-level files | Not written | Topic rows are planned at 1,200–1,800 words each; see `modules/README.md` |
+| Topic-level files | In progress | Modules 01 and 02 complete: 20 of 476 topic units, 26,069 lines. Module 01A in production. The remaining 456 are `planned` at 1,000–1,800 lines each; see `modules/README.md` |
 | Topic coverage audit | Complete | `TOPIC_COVERAGE_MAP.md` maps 93 topics and states the remaining out-of-scope gaps |
 | README and outline | Complete | Navigation, outcomes, tracks, assessment |
 | Research source pack | Complete | `_research/industry_brief.md`, dated sources |

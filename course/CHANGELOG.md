@@ -2,6 +2,83 @@
 
 All substantive changes to the curriculum are recorded here.
 
+## 2026.7.0 — 27 October 2026
+
+### Added — Module 02 written in full
+- Module 02 (`01_foundations/02_supply_chain_data_landscape/`) is now written in full: ten topic
+  files, 12,900 lines, each with all 17 required sections.
+- `01_systems-of-record.md` — what ERP, WMS, TMS, OMS, POS, PLM, and CRM each record and, more
+  importantly, what each cannot answer.
+- `02_master-data.md` — item, location, supplier, customer, and BOM masters; the identifier
+  stack that joins them; the arithmetic of why duplicate item masters do not double statistical
+  safety stock.
+- `03_transaction-data.md` — orders, shipments, receipts, invoices, and inventory snapshots at
+  their correct grain; the header–line–allocation hierarchy.
+- `04_reference-and-external.md` — calendar, weather, macroeconomic, trade, and geospatial
+  sources, with their known defects.
+- `05_telemetry-iot-vision.md` — sensor, telematics, RFID, and image data as evidence, including
+  the difference between a sensor reading and a decision-grade measurement.
+- `06_data-movement.md` — EDI, API, flat file, and event transport, and how each constrains
+  latency, completeness, and schema stability.
+- `07_access-and-licensing.md` — access pathways, commercial licences, privacy, and contractual
+  limits on use.
+- `08_data-quality-dimensions.md` — completeness, validity, consistency, timeliness, uniqueness,
+  and accuracy against ISO/IEC 25012 and ISO 8000 framing.
+- `09_master-data-drift.md` — the module's worked case: five drift types, supersession chains,
+  bitemporal capture, and a 36-month pack-change reconstruction with the phantom-case
+  arithmetic shown.
+- `10_source-selection-trust.md` — the hierarchy of trust, per-field source of record, and the
+  source-selection record that closes the module.
+
+### Changed
+- Module 02 status table reports 10 `complete` and the module total.
+- `modules/01_foundations/_index.md` and `VALIDATION_STATUS.md` updated to 20 of 476 topic units.
+
+### Notes
+- Several candidate statistics were removed rather than repeated after the underlying study
+  could not be retrieved: the "$3.1 trillion cost of bad data" figure, the "15–25% of revenue"
+  claim, the "80% of analyst time spent cleaning" claim, and the "3% of data meets quality
+  standards" vendor survey are all present only as graded E or D entries marked "do not use".
+- The NRF retail calendar is recorded as 4-5-4 throughout; the widespread "4-4-5" usage is
+  described as a variant, not as the standard.
+
+## 2026.6.0 — 27 October 2026
+
+### Added — expanded topic files, first module
+- Module 01 (`01_foundations/01_supply_chain_foundations/`) is now written in full: ten topic
+  files, 13,169 lines, each with all 17 required sections.
+- `01_three-flows-one-network.md` — physical, information, and financial flows; push–pull
+  boundaries; bullwhip mechanics; cash conversion cycle arithmetic; GS1/EPCIS/Incoterms/IFRS 15
+  interfaces.
+- `02_decision-stack.md` — strategic, tactical, operational, and execution layers; time fences;
+  decision rights; decision latency; agentic planning and decision governance.
+- `03_network-entities.md` — party, location, item, and logistics-unit identity; unit-of-measure
+  conversion; BOM structures; network topology; multi-tier visibility.
+- `04_planning-processes.md` — S&OP, IBP, S&OE; the planning calendar; consensus forecasting and
+  forecast value added; maturity models and their misuse.
+- `05_inventory-and-service.md` — the inventory taxonomy; Little's law; CSL versus fill rate
+  divergence; intermittent-demand distributions; obsolete and at-risk stock.
+- `06_cost-and-working-capital.md` — the full cost taxonomy; holding-cost composition; DIO/DSO/DPO
+  with correct denominators; supply chain finance and term stretching; total landed cost.
+- `07_manufacturing-basics.md` — manufacturing archetypes; MPS/MRP/capacity; BOM accuracy and
+  error propagation; routing and queue time; OEE and its misuse; ISA-95 data ownership.
+- `08_transport-and-incoterms.md` — mode economics; the eleven Incoterms 2020 rules; landed-cost
+  composition; duty and CBAM; carrier liability regimes.
+- `09_warehousing-and-sourcing.md` — warehouse process flow and labour arithmetic; automation
+  payback; the Kraljic portfolio and its critiques; category strategy.
+- `10_archetypes-and-metric-conflicts.md` — functional/innovative and efficient/responsive
+  alignment; Goodhart-style definition gaming; paired metrics; cost-of-compromise arithmetic.
+
+### Changed
+- The module index status table now reports 10 `complete`, 0 `planned`, and the module total.
+- `VALIDATION_STATUS.md` records topic-level production as in progress: 10 of 476 units written.
+
+### Notes
+- Style follows the clinical-foundations exemplar: theory-dense, one short code or calculation
+  block per file, evidence graded A–E. Several subagent drafts corrected claims that could not be
+  sourced at first hand (Walmart OTIF targets, Incoterms revision status, OEE benchmarks,
+  forecast-averaging claims) rather than repeating them.
+
 ## 2026.5.0 — 27 October 2026
 
 ### Changed — structural reorganization

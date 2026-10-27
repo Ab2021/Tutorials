@@ -31,16 +31,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_systems-of-record.md`](01_systems-of-record.md) | Systems of Record | ERP, WMS, TMS, OMS, POS, PLM, CRM, and what each system can and cannot answer. | 1,200–1,800 | planned |
-| 2 | [`02_master-data.md`](02_master-data.md) | Master Data | Item, location, supplier, customer, BOM, and the identifiers that join them. | 1,200–1,800 | planned |
-| 3 | [`03_transaction-data.md`](03_transaction-data.md) | Transaction Data | Orders, shipments, receipts, invoices, inventory snapshots, and their grain. | 1,200–1,800 | planned |
-| 4 | [`04_reference-and-external.md`](04_reference-and-external.md) | Reference Data and External Signals | Calendar, weather, macro, trade, and geospatial sources. | 1,200–1,800 | planned |
-| 5 | [`05_telemetry-iot-vision.md`](05_telemetry-iot-vision.md) | Telemetry, IoT, and Computer Vision | Sensor, telematics, RFID, and image data as planning evidence. | 1,200–1,800 | planned |
-| 6 | [`06_data-movement.md`](06_data-movement.md) | Data Movement: EDI, API, Flat File, Event | How each transport constrains latency, completeness, and schema stability. | 1,200–1,800 | planned |
-| 7 | [`07_access-and-licensing.md`](07_access-and-licensing.md) | Access Pathways, Licensing, and Personal Data | Commercial data, partner data, privacy, and contractual limits on use. | 1,200–1,800 | planned |
-| 8 | [`08_data-quality-dimensions.md`](08_data-quality-dimensions.md) | Data-Quality Dimensions | Completeness, validity, consistency, timeliness, uniqueness, and accuracy. | 1,200–1,800 | planned |
-| 9 | [`09_master-data-drift.md`](09_master-data-drift.md) | Master-Data Drift, Worked | Item changes, pack-size changes, and the forecast history that silently breaks. | 1,200–1,800 | planned |
-| 10 | [`10_source-selection-trust.md`](10_source-selection-trust.md) | Source Selection and the Hierarchy of Trust | Choosing a source for a decision and documenting its known defects. | 1,200–1,800 | planned |
+| 1 | [`01_systems-of-record.md`](01_systems-of-record.md) | Systems of Record | ERP, WMS, TMS, OMS, POS, PLM, CRM, and what each system can and cannot answer. | 1,200–1,800 | complete |
+| 2 | [`02_master-data.md`](02_master-data.md) | Master Data | Item, location, supplier, customer, BOM, and the identifiers that join them. | 1,200–1,800 | complete |
+| 3 | [`03_transaction-data.md`](03_transaction-data.md) | Transaction Data | Orders, shipments, receipts, invoices, inventory snapshots, and their grain. | 1,200–1,800 | complete |
+| 4 | [`04_reference-and-external.md`](04_reference-and-external.md) | Reference Data and External Signals | Calendar, weather, macro, trade, and geospatial sources. | 1,200–1,800 | complete |
+| 5 | [`05_telemetry-iot-vision.md`](05_telemetry-iot-vision.md) | Telemetry, IoT, and Computer Vision | Sensor, telematics, RFID, and image data as planning evidence. | 1,200–1,800 | complete |
+| 6 | [`06_data-movement.md`](06_data-movement.md) | Data Movement: EDI, API, Flat File, Event | How each transport constrains latency, completeness, and schema stability. | 1,200–1,800 | complete |
+| 7 | [`07_access-and-licensing.md`](07_access-and-licensing.md) | Access Pathways, Licensing, and Personal Data | Commercial data, partner data, privacy, and contractual limits on use. | 1,200–1,800 | complete |
+| 8 | [`08_data-quality-dimensions.md`](08_data-quality-dimensions.md) | Data-Quality Dimensions | Completeness, validity, consistency, timeliness, uniqueness, and accuracy. | 1,200–1,800 | complete |
+| 9 | [`09_master-data-drift.md`](09_master-data-drift.md) | Master-Data Drift, Worked | Item changes, pack-size changes, and the forecast history that silently breaks. | 1,200–1,800 | complete |
+| 10 | [`10_source-selection-trust.md`](10_source-selection-trust.md) | Source Selection and the Hierarchy of Trust | Choosing a source for a decision and documenting its known defects. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,13 +71,14 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
-Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
-as each file is produced at its target length. The survey file linked above is complete at survey
-depth and can be used on its own.
+All ten topic files are written and meet the quality bar in `MODULE_EXPANSION_SPEC.md` §5: at
+least 1,000 lines, all 17 sections present, arithmetic checked, sources real and graded. The
+module total is 12,900 lines. Status moves from `complete` to `reviewed` when a second reader
+signs off, and to `revised` after corrections.
 
 ## 7. Sources for this module
 

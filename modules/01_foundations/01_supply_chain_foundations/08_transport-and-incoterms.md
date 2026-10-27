@@ -100,24 +100,24 @@ Incoterm chooses where each ladder ends.
    SELLER'S PREMISES            ORIGIN PORT/TERMINAL          DESTINATION           BUYER'S PREMISES
    (works, factory)             (export clearance)            (import clearance)    (named place)
 
-   EXW   cost  S|                                             
+   EXW   cost  S|
          risk  S|
-                                                                                    
+
    FCA   cost  S|=========>|T
          risk  S|=========>|T
-                                                                                    
+
    FOB   cost  S|=========>|=====>|V
          risk  S|=========>|=====>|V
-                                                                                    
+
    CFR   cost  S|=========>|=====>|V================>|T======>|
          risk  S|=========>|=====>|V
-                                                                                    
+
    CIF   cost  S|=========>|=====>|V================>|T======>|
          risk  S|=========>|=====>|V
-                                                                                    
+
    DAP   cost  S|=========>|=====>|V================>|T======>|=========>|B
          risk  S|=========>|=====>|V================>|T======>|=========>|B
-                                                                                    
+
    DDP   cost  S|=========>|=====>|V================>|T======>|=========>|B=====>|
          risk  S|=========>|=====>|V================>|T======>|=========>|B=====>|
 
@@ -593,34 +593,34 @@ wrong.
 
 ### 6.5 Why the cheaper invoice is the more expensive landed cost
 
-The bridge from the invoice comparison to the landed-cost comparison:
-
 | Driver | Amount (EUR) | Favours |
 |---|---:|---|
-| Invoice premium paid under DAP | 5,040 | FCA |
-| Ocean freight: spot at USD 5,600 against the seller's contract rate of USD 3,400 | 2,037 | DAP |
+| Ocean freight: buyer's spot at USD 5,600 against the seller's contract rate of USD 3,400 | 2,037 | DAP |
 | Insurance: buyer's retail premium against the seller's master policy | 18 | DAP |
 | Demurrage, 8 days | 1,680 | DAP |
 | Detention, 6 days | 870 | DAP |
-| Unloading at Venlo, borne by the buyer under DAP | -180 | FCA |
-| Seller's margin embedded in the DAP logistics content | -247 | FCA |
-| Duty: higher dutiable value under DAP | -74 | FCA |
+| Duty: DAP's slightly lower dutiable value | 74 | DAP |
 | Working capital: 79 days against 45 days | 3,519 | DAP |
+| Unloading at Venlo, which DAP places on the buyer | -180 | FCA |
+| Seller's margin on the embedded logistics | -247 | FCA |
 | **Net difference in favour of DAP** | **7,771** | |
 
-Reading the bridge in order of size: **working capital at EUR 3,519** is the largest driver and
-the one nobody models, because the whole difference comes from the payment trigger — FCA starts
-the clock at the bill of lading, DAP at delivery, and that 34-day gap is worth more than the
-entire ocean freight. **Demurrage and detention at EUR 2,550** is second and is a process failure,
-not a price difference: the buyer's broker queried the declared value because the FCA invoice had
-not been grossed up to CIF, the container sat eight days, and the same error produced six days of
-detention on the empty. **Freight at EUR 2,037** is a pure scale effect, since the seller moves 40
-containers a month against the buyer's two. **Duty, negative EUR 74**, favours FCA, because the
-DAP price embeds a logistics margin that becomes part of the customs value.
+Note what is not in the table: the EUR 5,040 invoice premium. It is not a driver. It decomposes
+into the seller's embedded logistics of 4,793 and a margin of 247, and the embedded logistics
+cancels line for line against what the buyer would have paid, except where the two parties' rates
+differ. The premium is an artefact of comparing prices on different bases, which is exactly why
+the invoice comparison is the wrong one.
 
-The general lesson is not "use DAP". It is that **the term changes which party's cost structure
-applies to five of the nine cost drivers, and the biggest of those drivers is the timing of cash,
-not the price of freight.**
+Reading the drivers in order of size: **working capital at EUR 3,519** is the largest and the one
+nobody models, because the whole difference comes from the payment trigger — FCA starts the clock
+at the bill of lading, DAP at delivery, and that 34-day gap is worth more than the entire ocean
+freight. **Demurrage and detention at EUR 2,550** is second and is a process failure, not a price
+difference: the buyer's broker queried the declared value because the FCA invoice had not been
+grossed up to CIF, the container sat eight days, and the same error produced six days of detention
+on the empty. **Freight at EUR 2,037** is a pure scale effect, since the seller moves 40 containers
+a month against the buyer's two. **Duty at EUR 74** is the smallest and favours DAP, because the
+seller's contract freight is lower than the buyer's spot rate and therefore produces a marginally
+lower dutiable value.
 
 ### 6.6 The reversal condition
 

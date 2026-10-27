@@ -1134,7 +1134,7 @@ check of row counts and nulls only.
 
 - IAS 2 *Inventories* (IFRS Foundation); ASC 330 *Inventory* (FASB); Incoterms 2020 (ICC).
 - GS1, EPCIS and CBV Implementation Guideline, EPCIS 2.0 and CBV 2.0 aligned with ISO/IEC 19987
-  and 19988:2024. https://www.gs1.org/standards/epcis-and-cbv-implementation-guideline/current-standardd
+  and 19988:2024. Consult the current edition at gs1.org; the guideline is revised periodically.
 - GS1 US, "EPCIS Recommendations for FSMA 204 Critical Tracking Events," Release 2.0, May 2025.
 - U.S. Census Bureau, "Manufacturing and Trade Inventories and Sales, November 2025."
   https://www2.census.gov/mtis/historical/mtis2511.pdf
@@ -1153,7 +1153,7 @@ check of row counts and nulls only.
   figures gated and not quoted here. https://ibf.org/knowledge/reports/research-report13
 - Walmart supplier compliance, as reported by Forbes (1 February 2024) and 5G Sales (2025).
   https://www.forbes.com/sites/stevebanker/2024/02/01/walmart-lowers-its-shipping-requirements-but-suppliers-still-struggle/
-- Target compliance programme, SPS Commerce help centre.
+- Target supplier compliance programme, as summarised in SupplyPike's vendor-compliance guidance.
   https://help.supplypike.com/en/articles/8300994-understanding-target-s-compliance-program
 
 **Vendor and analyst material (Grade D unless stated)**
