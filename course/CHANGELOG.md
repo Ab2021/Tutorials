@@ -2,6 +2,53 @@
 
 All substantive changes to the curriculum are recorded here.
 
+## 2026.8.0 — 2 November 2026
+
+### Added — Module 01A written in full
+- Module 01A (`01_foundations/01A_foundations_units_time_assumptions/`) is now written in full:
+  eleven topic files, 14,344 lines, each with all 17 required sections.
+- `01_unit-of-measure-hierarchy.md` — each, inner pack, case, layer, and pallet; which conversions
+  are reversible and which destroy information.
+- `02_container-loading.md` — weight, cube, and floor-space constraints and how to identify which
+  one binds; stowage factor and broken stowage.
+- `03_case-pack-moq-rounding.md` — case pack, order multiple, and MOQ; why a fractional plan is not
+  executable and how rounding compounds across levels.
+- `04_calendars-weeks-time-zones.md` — fiscal calendars, the NRF 4-5-4 retail calendar, ISO 8601
+  week numbering, IANA time zones and DST edge cases, cutoffs, and planning buckets.
+- `05_lead-time-definitions.md` — nominal, actual, promised, and replenishment lead time; the
+  distribution behind the average and the cost of inflated planned lead times.
+- `06_currency-and-fx.md` — transaction, functional, and presentation currency; IAS 21 closing
+  versus average rates; transaction, translation, and economic exposure; constant-currency
+  reporting.
+- `07_hierarchy-design.md` — product, location, customer, and time hierarchies; the fan trap and
+  the chasm trap; additive, semi-additive, and non-additive measures; reconciliation tests.
+- `08_measurement-error-bias.md` — accuracy, precision, trueness, and resolution as distinct
+  quantities; cycle-count sampling and record-accuracy protocols; errors-in-variables and
+  attenuation bias.
+- `09_forecast-error-metrics.md` — MAE, RMSE, MAPE, sMAPE, MASE, bias, and tracking signal; what
+  each one weights and how the choice changes the model selected.
+- `10_intermittent-metrics.md` — demand classification by inter-demand interval and squared
+  coefficient of variation; why percentage errors explode near zero; the metrics that survive.
+- `11_demand-lead-time-distributions.md` — normal, gamma, lognormal, Poisson, and compound
+  distributions; lead-time demand when both demand and lead time vary.
+
+### Changed
+- Module 01A status table reports 11 `complete` and the module total.
+- `modules/01_foundations/_index.md` reports three modules complete; `VALIDATION_STATUS.md` now
+  records 31 of 476 topic units and 40,413 lines.
+
+### Notes
+- Two files were repaired during production: a `../../` cross-module link in
+  `08_measurement-error-bias.md` that resolved to a non-existent path was corrected to `../`.
+- Several candidate figures were softened rather than repeated after the underlying source could
+  not be retrieved first hand: the St. John (1985) 41% inflated-lead-time cost, the Nielsen et al.
+  (2017) 35% variance share, the ADI/CV² cut-offs attributed to Syntetos, Boylan and Croston
+  (2005), and the Hyndman and Koehler (2006) M3 rescoring pair counts. Each is either presented as
+  a teaching example or described only by direction, with a §16 note saying so.
+- The synthetic cases in topics 08, 09, and 11 (Ravenhill Distribution, the eight-error
+  scoreboard, and the four-family quantile table) are labelled as constructed teaching examples,
+  not published results.
+
 ## 2026.7.0 — 27 October 2026
 
 ### Added — Module 02 written in full

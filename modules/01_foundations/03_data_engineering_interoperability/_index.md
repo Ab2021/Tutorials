@@ -31,13 +31,13 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_layered-architecture.md`](01_layered-architecture.md) | Layered Architecture and the Medallion Pattern | Raw, staging, conformed, and mart layers with clear contracts between them. | 1,200–1,800 | planned |
-| 2 | [`02_batch-microbatch-streaming.md`](02_batch-microbatch-streaming.md) | Batch, Micro-Batch, and Streaming | Latency choices and their consequences for planning and execution. | 1,200–1,800 | planned |
-| 3 | [`03_ingestion-patterns.md`](03_ingestion-patterns.md) | Ingestion Patterns | Full, incremental, change-data-capture, and file-drop ingestion with idempotency. | 1,200–1,800 | planned |
-| 4 | [`04_sql-supply-chain-patterns.md`](04_sql-supply-chain-patterns.md) | SQL Patterns That Carry Supply Chain Semantics | As-of joins, snapshot logic, allocation, and slowly changing dimensions. | 1,200–1,800 | planned |
-| 5 | [`05_python-structure-tests.md`](05_python-structure-tests.md) | Python Project Structure, Types, and Tests | A layout and test strategy that survives handover. | 1,200–1,800 | planned |
-| 6 | [`06_dbt-models-tests.md`](06_dbt-models-tests.md) | dbt Models, Tests, and Documentation | Staging, intermediate, and mart models with freshness and uniqueness tests. | 1,200–1,800 | planned |
-| 7 | [`07_orchestration.md`](07_orchestration.md) | Orchestration and Scheduling | Dependencies, backfills, retries, and the planning cutoff. | 1,200–1,800 | planned |
+| 1 | [`01_layered-architecture.md`](01_layered-architecture.md) | Layered Architecture and the Medallion Pattern | Raw, staging, conformed, and mart layers with clear contracts between them. | 1,200–1,800 | complete |
+| 2 | [`02_batch-microbatch-streaming.md`](02_batch-microbatch-streaming.md) | Batch, Micro-Batch, and Streaming | Latency choices and their consequences for planning and execution. | 1,200–1,800 | complete |
+| 3 | [`03_ingestion-patterns.md`](03_ingestion-patterns.md) | Ingestion Patterns | Full, incremental, change-data-capture, and file-drop ingestion with idempotency. | 1,200–1,800 | complete |
+| 4 | [`04_sql-supply-chain-patterns.md`](04_sql-supply-chain-patterns.md) | SQL Patterns That Carry Supply Chain Semantics | As-of joins, snapshot logic, allocation, and slowly changing dimensions. | 1,200–1,800 | complete |
+| 5 | [`05_python-structure-tests.md`](05_python-structure-tests.md) | Python Project Structure, Types, and Tests | A layout and test strategy that survives handover. | 1,200–1,800 | complete |
+| 6 | [`06_dbt-models-tests.md`](06_dbt-models-tests.md) | dbt Models, Tests, and Documentation | Staging, intermediate, and mart models with freshness and uniqueness tests. | 1,200–1,800 | complete |
+| 7 | [`07_orchestration.md`](07_orchestration.md) | Orchestration and Scheduling | Dependencies, backfills, retries, and the planning cutoff. | 1,200–1,800 | complete |
 | 8 | [`08_edi-x12-edifact.md`](08_edi-x12-edifact.md) | EDI: X12 and EDIFACT | 850, 855, 856, 810, 846, 852, 940, 945, and their EDIFACT analogues. | 1,200–1,800 | planned |
 | 9 | [`09_gs1-epcis.md`](09_gs1-epcis.md) | GS1 Identifiers and EPCIS 2.0 | GTIN, GLN, SSCC, and event data that supports traceability. | 1,200–1,800 | planned |
 | 10 | [`10_apis-contracts-mdm.md`](10_apis-contracts-mdm.md) | APIs, Data Contracts, and MDM | Schema ownership, entity resolution, and breaking-change control. | 1,200–1,800 | planned |

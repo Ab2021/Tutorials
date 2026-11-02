@@ -35,13 +35,13 @@ not the whole program.
 | 2 | [`02_container-loading.md`](02_container-loading.md) | Container Loading: Which Constraint Binds? | Weight, cube, floor space, and the minimum of the three. | 1,200–1,800 | complete |
 | 3 | [`03_case-pack-moq-rounding.md`](03_case-pack-moq-rounding.md) | Case Pack, MOQ, and Integer Rounding | Why a fractional plan is not executable and how rounding compounds. | 1,200–1,800 | complete |
 | 4 | [`04_calendars-weeks-time-zones.md`](04_calendars-weeks-time-zones.md) | Calendars, Weeks, Time Zones, and Buckets | Fiscal calendars, 4-5-4, ISO weeks, cutoffs, and planning buckets. | 1,200–1,800 | complete |
-| 5 | [`05_lead-time-definitions.md`](05_lead-time-definitions.md) | Lead-Time Definitions | Nominal, actual, promised, replenishment, and the distribution behind the average. | 1,200–1,800 | planned |
-| 6 | [`06_currency-and-fx.md`](06_currency-and-fx.md) | Currency, FX, and Constant Currency | Transaction versus reporting currency and the effect of rate changes on comparisons. | 1,200–1,800 | planned |
-| 7 | [`07_hierarchy-design.md`](07_hierarchy-design.md) | Hierarchy Design | Product, location, customer, and time hierarchies that reconcile without double counting. | 1,200–1,800 | planned |
-| 8 | [`08_measurement-error-bias.md`](08_measurement-error-bias.md) | Measurement Error, Accuracy, Precision, and Bias | The four words that are not synonyms and the errors they hide. | 1,200–1,800 | planned |
-| 9 | [`09_forecast-error-metrics.md`](09_forecast-error-metrics.md) | Forecast Error Metrics | MAE, RMSE, MAPE, sMAPE, MASE, bias, and the cost of each choice. | 1,200–1,800 | planned |
-| 10 | [`10_intermittent-metrics.md`](10_intermittent-metrics.md) | Why MAPE Fails on Intermittent Demand | Division by small denominators and the metrics that survive zero demand. | 1,200–1,800 | planned |
-| 11 | [`11_demand-lead-time-distributions.md`](11_demand-lead-time-distributions.md) | Demand and Lead-Time Distributions | Normal, gamma, lognormal, Poisson, and compound distributions in planning. | 1,200–1,800 | planned |
+| 5 | [`05_lead-time-definitions.md`](05_lead-time-definitions.md) | Lead-Time Definitions | Nominal, actual, promised, replenishment, and the distribution behind the average. | 1,200–1,800 | complete |
+| 6 | [`06_currency-and-fx.md`](06_currency-and-fx.md) | Currency, FX, and Constant Currency | Transaction versus reporting currency and the effect of rate changes on comparisons. | 1,200–1,800 | complete |
+| 7 | [`07_hierarchy-design.md`](07_hierarchy-design.md) | Hierarchy Design | Product, location, customer, and time hierarchies that reconcile without double counting. | 1,200–1,800 | complete |
+| 8 | [`08_measurement-error-bias.md`](08_measurement-error-bias.md) | Measurement Error, Accuracy, Precision, and Bias | The four words that are not synonyms and the errors they hide. | 1,200–1,800 | complete |
+| 9 | [`09_forecast-error-metrics.md`](09_forecast-error-metrics.md) | Forecast Error Metrics | MAE, RMSE, MAPE, sMAPE, MASE, bias, and the cost of each choice. | 1,200–1,800 | complete |
+| 10 | [`10_intermittent-metrics.md`](10_intermittent-metrics.md) | Why MAPE Fails on Intermittent Demand | Division by small denominators and the metrics that survive zero demand. | 1,200–1,800 | complete |
+| 11 | [`11_demand-lead-time-distributions.md`](11_demand-lead-time-distributions.md) | Demand and Lead-Time Distributions | Normal, gamma, lognormal, Poisson, and compound distributions in planning. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -73,13 +73,14 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 11 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 11 |
 
-Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
-as each file is produced at its target length. The survey file linked above is complete at survey
-depth and can be used on its own.
+All eleven topic files are written and meet the quality bar in `MODULE_EXPANSION_SPEC.md` §5: at
+least 1,000 lines, all 17 sections present, arithmetic checked, sources real and graded. The
+module total is 14,344 lines. Status moves from `complete` to `reviewed` when a second reader
+signs off, and to `revised` after corrections.
 
 ## 7. Sources for this module
 
