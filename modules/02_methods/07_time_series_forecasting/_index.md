@@ -27,13 +27,18 @@ not the whole program.
 | Assessment | Forecast benchmark report (Week 9) |
 | Survey file | `07_time_series_forecasting.md` |
 
+> **Note:** Module 06 is deferred at the user's request as of 2 November 2026 and is not written
+> in this edition. The topics below therefore assume Module 01A (units, calendars, and the
+> distribution families) and Module 04 topic 04 (regression with seasonality and lags), and state
+> any machine-learning idea they need in place rather than assuming it.
+
 ## 3. Topics
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_forecastability-benchmarks.md`](01_forecastability-benchmarks.md) | Forecastability and Benchmarks First | Naive and seasonal-naive baselines and the share of series that are forecastable. | 1,200–1,800 | planned |
-| 2 | [`02_exponential-smoothing.md`](02_exponential-smoothing.md) | Exponential Smoothing | Level, trend, seasonality, damping, and the state-space view. | 1,200–1,800 | planned |
-| 3 | [`03_arima-sarimax.md`](03_arima-sarimax.md) | ARIMA, SARIMA, and SARIMAX | Differencing, orders, seasonality, and exogenous regressors. | 1,200–1,800 | planned |
+| 1 | [`01_forecastability-benchmarks.md`](01_forecastability-benchmarks.md) | Forecastability and Benchmarks First | Naive and seasonal-naive baselines and the share of series that are forecastable. | 1,200–1,800 | complete |
+| 2 | [`02_exponential-smoothing.md`](02_exponential-smoothing.md) | Exponential Smoothing | Level, trend, seasonality, damping, and the state-space view. | 1,200–1,800 | complete |
+| 3 | [`03_arima-sarimax.md`](03_arima-sarimax.md) | ARIMA, SARIMA, and SARIMAX | Differencing, orders, seasonality, and exogenous regressors. | 1,200–1,800 | complete |
 | 4 | [`04_regression-lags-fourier.md`](04_regression-lags-fourier.md) | Regression with Lags, Fourier Terms, and Exogenous Variables | Calendar and causal features without leaking the future. | 1,200–1,800 | planned |
 | 5 | [`05_hierarchy-aggregation.md`](05_hierarchy-aggregation.md) | Hierarchy and Aggregation | Where to forecast and how aggregation changes error. | 1,200–1,800 | planned |
 | 6 | [`06_intermittent-demand.md`](06_intermittent-demand.md) | Intermittent Demand | Croston, SBA, TSB, and classification before method choice. | 1,200–1,800 | planned |

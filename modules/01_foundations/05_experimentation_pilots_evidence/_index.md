@@ -31,16 +31,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_claim-hypothesis-design.md`](01_claim-hypothesis-design.md) | From Claim to Hypothesis to Design | Turning a business claim into a testable estimand and a decision rule. | 1,200–1,800 | planned |
-| 2 | [`02_randomisation-units.md`](02_randomisation-units.md) | Randomisation Units | Customer, store, SKU, lane, DC, and the unit that matches the decision. | 1,200–1,800 | planned |
-| 3 | [`03_ab-cluster-designs.md`](03_ab-cluster-designs.md) | A/B, A/B/n, and Cluster Randomisation | Design effects when the unit of assignment is not the unit of analysis. | 1,200–1,800 | planned |
-| 4 | [`04_geo-experiments.md`](04_geo-experiments.md) | Geo Experiments | Market-level tests when customer-level randomisation is impossible. | 1,200–1,800 | planned |
-| 5 | [`05_switchback-pilots.md`](05_switchback-pilots.md) | Switchback and Operational Pilot Designs | Time-based alternation in stores, DCs, and lanes. | 1,200–1,800 | planned |
-| 6 | [`06_power-mde.md`](06_power-mde.md) | Power, MDE, and Sample Size | What the pilot can detect and what it must not pretend to detect. | 1,200–1,800 | planned |
-| 7 | [`07_interference-spillover.md`](07_interference-spillover.md) | Interference and Spillover | Marketplace, network, and fulfillment effects that break independence. | 1,200–1,800 | planned |
-| 8 | [`08_sequential-testing.md`](08_sequential-testing.md) | Sequential Testing, Peeking, and False Discovery | Always-valid inference and the cost of early stopping. | 1,200–1,800 | planned |
+| 1 | [`01_claim-hypothesis-design.md`](01_claim-hypothesis-design.md) | From Claim to Hypothesis to Design | Turning a business claim into a testable estimand and a decision rule. | 1,200–1,800 | complete |
+| 2 | [`02_randomisation-units.md`](02_randomisation-units.md) | Randomisation Units | Customer, store, SKU, lane, DC, and the unit that matches the decision. | 1,200–1,800 | complete |
+| 3 | [`03_ab-cluster-designs.md`](03_ab-cluster-designs.md) | A/B, A/B/n, and Cluster Randomisation | Design effects when the unit of assignment is not the unit of analysis. | 1,200–1,800 | complete |
+| 4 | [`04_geo-experiments.md`](04_geo-experiments.md) | Geo Experiments | Market-level tests when customer-level randomisation is impossible. | 1,200–1,800 | complete |
+| 5 | [`05_switchback-pilots.md`](05_switchback-pilots.md) | Switchback and Operational Pilot Designs | Time-based alternation in stores, DCs, and lanes. | 1,200–1,800 | complete |
+| 6 | [`06_power-mde.md`](06_power-mde.md) | Power, MDE, and Sample Size | What the pilot can detect and what it must not pretend to detect. | 1,200–1,800 | complete |
+| 7 | [`07_interference-spillover.md`](07_interference-spillover.md) | Interference and Spillover | Marketplace, network, and fulfillment effects that break independence. | 1,200–1,800 | complete |
+| 8 | [`08_sequential-testing.md`](08_sequential-testing.md) | Sequential Testing, Peeking, and False Discovery | Always-valid inference and the cost of early stopping. | 1,200–1,800 | complete |
 | 9 | [`09_mmm-incrementality.md`](09_mmm-incrementality.md) | Marketing Mix Modelling and Incrementality | What MMM can and cannot identify without an experiment. | 1,200–1,800 | planned |
-| 10 | [`10_vendor-evidence-appraisal.md`](10_vendor-evidence-appraisal.md) | Vendor and Analyst Evidence Appraisal | Sample, comparator, endpoint, duration, and conflict of interest. | 1,200–1,800 | planned |
+| 10 | [`10_vendor-evidence-appraisal.md`](10_vendor-evidence-appraisal.md) | Vendor and Analyst Evidence Appraisal | Sample, comparator, endpoint, duration, and conflict of interest. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,13 +71,14 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
-Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
-as each file is produced at its target length. The survey file linked above is complete at survey
-depth and can be used on its own.
+All ten topic files are written and meet the quality bar in `MODULE_EXPANSION_SPEC.md` §5: at
+least 1,000 lines, all 17 sections present, arithmetic checked, sources real and graded. The
+module total is 12,955 lines. Every relative link in the module resolves. Status moves from
+`complete` to `reviewed` when a second reader signs off, and to `revised` after corrections.
 
 ## 7. Sources for this module
 

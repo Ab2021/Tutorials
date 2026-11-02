@@ -33,14 +33,14 @@ not the whole program.
 |---:|---|---|---|---:|---|
 | 1 | [`01_estimands-question-types.md`](01_estimands-question-types.md) | Estimands and Question Types | Descriptive, predictive, and causal questions and the estimand each implies. | 1,200–1,800 | complete |
 | 2 | [`02_probability-bootstrap.md`](02_probability-bootstrap.md) | Probability, Sampling, Bootstrap, and Intervals | Uncertainty that survives non-normal, dependent supply chain data. | 1,200–1,800 | complete |
-| 3 | [`03_hypothesis-tests.md`](03_hypothesis-tests.md) | Hypothesis Tests and Multiple Comparisons | p-values, effect sizes, and the false discovery problem in metric dashboards. | 1,200–1,800 | planned |
-| 4 | [`04_regression-time-series.md`](04_regression-time-series.md) | Regression with Time Series, Seasonality, and Holidays | Fourier terms, holiday effects, and distributed lags. | 1,200–1,800 | planned |
-| 5 | [`05_autocorrelation-robust-errors.md`](05_autocorrelation-robust-errors.md) | Autocorrelation, Heteroskedasticity, and Robust Errors | Why naive standard errors overstate confidence. | 1,200–1,800 | planned |
-| 6 | [`06_dags.md`](06_dags.md) | DAGs: Confounding, Colliders, Mediators, Bad Controls | Drawing the causal story before choosing the regression. | 1,200–1,800 | planned |
-| 7 | [`07_experiments-quasi.md`](07_experiments-quasi.md) | Experiments versus Quasi-Experiments | When randomisation is possible and what to do when it is not. | 1,200–1,800 | planned |
-| 8 | [`08_difference-in-differences.md`](08_difference-in-differences.md) | Worked Example: Difference-in-Differences | Parallel trends, event time, and a credible counterfactual. | 1,200–1,800 | planned |
-| 9 | [`09_elasticity-endogeneity.md`](09_elasticity-endogeneity.md) | Worked Example: Price Elasticity and Endogeneity | Simultaneity, omitted variables, and instrument or panel strategies. | 1,200–1,800 | planned |
-| 10 | [`10_sensitivity-omitted-bias.md`](10_sensitivity-omitted-bias.md) | Sensitivity and Omitted-Variable Bias | How fragile is the estimate, and what would overturn it? | 1,200–1,800 | planned |
+| 3 | [`03_hypothesis-tests.md`](03_hypothesis-tests.md) | Hypothesis Tests and Multiple Comparisons | p-values, effect sizes, and the false discovery problem in metric dashboards. | 1,200–1,800 | complete |
+| 4 | [`04_regression-time-series.md`](04_regression-time-series.md) | Regression with Time Series, Seasonality, and Holidays | Fourier terms, holiday effects, and distributed lags. | 1,200–1,800 | complete |
+| 5 | [`05_autocorrelation-robust-errors.md`](05_autocorrelation-robust-errors.md) | Autocorrelation, Heteroskedasticity, and Robust Errors | Why naive standard errors overstate confidence. | 1,200–1,800 | complete |
+| 6 | [`06_dags.md`](06_dags.md) | DAGs: Confounding, Colliders, Mediators, Bad Controls | Drawing the causal story before choosing the regression. | 1,200–1,800 | complete |
+| 7 | [`07_experiments-quasi.md`](07_experiments-quasi.md) | Experiments versus Quasi-Experiments | When randomisation is possible and what to do when it is not. | 1,200–1,800 | complete |
+| 8 | [`08_difference-in-differences.md`](08_difference-in-differences.md) | Worked Example: Difference-in-Differences | Parallel trends, event time, and a credible counterfactual. | 1,200–1,800 | complete |
+| 9 | [`09_elasticity-endogeneity.md`](09_elasticity-endogeneity.md) | Worked Example: Price Elasticity and Endogeneity | Simultaneity, omitted variables, and instrument or panel strategies. | 1,200–1,800 | complete |
+| 10 | [`10_sensitivity-omitted-bias.md`](10_sensitivity-omitted-bias.md) | Sensitivity and Omitted-Variable Bias | How fragile is the estimate, and what would overturn it? | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,13 +71,14 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
-Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
-as each file is produced at its target length. The survey file linked above is complete at survey
-depth and can be used on its own.
+All ten topic files are written and meet the quality bar in `MODULE_EXPANSION_SPEC.md` §5: at
+least 1,000 lines, all 17 sections present, arithmetic checked, sources real and graded. The
+module total is 12,975 lines. Every relative link in the module resolves. Status moves from
+`complete` to `reviewed` when a second reader signs off, and to `revised` after corrections.
 
 ## 7. Sources for this module
 

@@ -9,11 +9,10 @@
 
 ## 1. Why this topic exists
 
-A replenishment dashboard has 240 tiles. Each tile is a supplier–lane–metric comparison: mean lead
-time, fill rate, forecast bias, expedite spend, inventory days of cover. The tiles are coloured by
-a p-value. Twelve are red this week. A category manager asks which three to act on, and nobody in
-the room can answer, because the dashboard has produced a number that looks like a verdict and is
-not one.
+A replenishment dashboard has 240 tiles, each a supplier–lane–metric comparison across lead time,
+fill rate, forecast bias, expedite spend, and days of cover. The tiles are coloured by a p-value;
+twelve are red this week. A category manager asks which three to act on, and nobody can answer,
+because the dashboard has produced a number that looks like a verdict and is not one.
 
 Under a global null — no real change anywhere — 240 independent tests at alpha 0.05 produce about
 12 red tiles. That is not a malfunction. It is the design. The dashboard is a machine for
@@ -66,11 +65,10 @@ under dependence, and Topic 10 asks how fragile a finding is.
 
 By the end of this topic you can:
 
-1. **Define** a p-value correctly, in one sentence, including the null model and the "at least as
-   extreme" clause, and **name** the three things it is routinely said to be but is not.
-2. **Distinguish** statistical significance from operational significance, and **convert** an
-   effect estimate and interval into a decision against a stated threshold in units, euros, or
-   days of cover.
+1. **Define** a p-value correctly, including the null model and the "at least as extreme" clause,
+   and **name** the three things it is routinely said to be but is not.
+2. **Distinguish** statistical from operational significance, and **convert** an effect and interval
+   into a decision against a stated threshold in units, euros, or days of cover.
 3. **Explain** why a one-sided test chosen after inspecting the data is not a one-sided test, and
    **compute** the effect of that choice on a reported p-value.
 4. **Define** a comparison family for a given dashboard, and **compute** the family-wise error rate
@@ -79,17 +77,15 @@ By the end of this topic you can:
    which error rate each controls and under what dependence assumptions.
 6. **Write** a pre-analysis plan for a metric change or pilot that fixes the primary metric, the
    family, the tails, and the decision threshold before the data arrive.
-7. **Design and interpret** an equivalence or non-inferiority test, including the choice and
-   justification of the margin, and **explain** why a non-significant difference is not evidence of
-   no difference.
+7. **Design and interpret** an equivalence or non-inferiority test, including the margin, and
+   **explain** why a non-significant difference is not evidence of no difference.
 
 Each outcome maps to an exercise in section 12 and a self-check item in section 13.
 
 ## 3. The core mental model
 
 Hold four pictures: a null world that manufactures winners at a fixed rate, a p-value as a position
-in that world, a decision that lives on two axes rather than one, and a family that is the real unit
-of error control.
+in that world, a decision on two axes rather than one, and a family as the real unit of error control.
 
 ### 3.1 The null world is a machine that manufactures winners
 
@@ -124,9 +120,8 @@ they are 100 draws from a machine calibrated to produce five false winners.
                                    = 0.9941
 ```
 
-The arithmetic is the whole argument. With 12 comparisons, the probability of at least one false
-positive is `1 - 0.95^12 = 0.4596`. With 20 it is 0.6415. With 100 it is 0.9941. Any process that
-reports "the significant one" out of a large family is reporting a draw from this machine.
+The arithmetic is the argument: with 12 comparisons the probability of at least one false positive is
+`0.4596`, with 20 it is `0.6415`, and with 100 it is `0.9941`. Reporting "the significant one" is reporting a draw from this machine.
 
 ### 3.2 A p-value is a position, not a probability about hypotheses
 
@@ -244,16 +239,12 @@ module exists to prevent.
 | One-sided test | A test whose rejection region lies in one tail, with direction fixed before analysis | Chosen after seeing the sign of the effect | Direction stated in the analysis plan |
 | Two-sided test | A test whose rejection region lies in both tails | Used by default without asking whether the opposite direction is possible | Two tails, alpha split across them |
 | Effect size | The magnitude of the estimated quantity, in its natural unit | Reported as a p-value or as "significant" | Units of the outcome: days, EUR, units, pp |
-| Standardized effect size | Effect divided by a standard deviation, such as Cohen's d | Compared across contexts where the standard deviation means different things | Standard deviation units, dimensionless |
-| Raw effect | The unstandardized difference, such as 3.2 days or EUR 18 | Omitted in favour of the standardized version | Outcome units |
 | Minimum detectable effect (MDE) | The smallest true effect a design can detect with stated power at a stated alpha | Confused with the observed effect or with the operational threshold | Outcome units, at stated alpha and power |
 | Statistical significance | A p-value below the pre-specified alpha | Reported as "important" or "proven" | Boolean at a stated alpha |
 | Operational significance | An effect large enough to change a decision against a pre-agreed threshold | Asserted after the result is known | Boolean at a stated threshold in outcome units |
 | Confidence interval (CI) | A procedure that captures the parameter at a stated rate over repeated samples | Read as a probability statement about this interval | Endpoints in outcome units, with coverage stated |
-| Coverage | Long-run fraction of intervals, built by a stated procedure, that contain the true value | Attributed to one realised interval | Proportion in [0, 1] |
 | Multiplicity | The inflation of error rates when many hypotheses are tested and some are selected for reporting | Treated as a problem only when tests are formally counted | Count m of hypotheses in the family |
 | Family | The set of comparisons over which an error rate is controlled | Left undefined next to a reported p-value | Declared set of m hypotheses |
-| Comparison | One test within a family | Counted inconsistently across reports | One hypothesis, one p-value |
 | Family-wise error rate (FWER) | Probability of at least one false rejection anywhere in the family | Confused with the per-test error rate | Probability in [0, 1] |
 | False discovery rate (FDR) | Expected proportion of false rejections among the rejections made | Read as the probability that any particular rejection is false | Expected proportion in [0, 1] |
 | False discovery proportion (FDP) | Realised proportion of false rejections among rejections, V/max(R, 1) | Confused with its expectation, the FDR | Proportion in [0, 1] |
@@ -282,7 +273,6 @@ module exists to prevent.
 | Primary metric | The single outcome that carries the decision and the error budget | One of twelve metrics reported with equal weight | Named in the analysis plan |
 | Secondary or exploratory metric | An outcome reported for context, not used for the confirmatory claim | Used to rescue a failed primary result | Labelled as exploratory |
 | Guardrail metric | A metric that must not worsen, tested for non-inferiority rather than superiority | Corrected as if it were a success metric | Non-inferiority margin in outcome units |
-| s-value | The surprisal value, -log2(p), expressing evidence in bits | Presented as a probability | Bits |
 
 Three of these deserve expansion.
 
@@ -457,13 +447,9 @@ interval exceeds `-delta`. The test is one-sided by construction.
 Read the test as an interval rule: for equivalence the whole interval must sit inside the margin;
 for non-inferiority its lower bound must clear `-delta`.
 
-Three rules govern the margin.
-
-1. **Fix it before seeing the data.** A margin chosen to fit the observed interval is not a margin.
-2. **Justify it in outcome units.** "Two percentage points of fill rate" is a business statement
-   about service; "0.2 standard deviations" is not, unless the mapping is supplied.
-3. **Do not confuse non-significance with equivalence.** A wide interval that contains zero and
-   also contains a harmful effect establishes nothing.
+Three rules govern the margin: fix it before seeing the data, justify it in outcome units rather
+than standard deviations, and never read non-significance as equivalence, since a wide interval can
+contain both zero and a harmful effect.
 
 A report that survives audit states the estimand, the family and `m`, the test and tail, alpha, the
 effect with its interval, the threshold and its owner, and the decision. Archive the plan and every
@@ -504,10 +490,9 @@ next to the p-value. The multiplicity problem is still present: twelve tests wer
 
 ### 6.3 Raw significance
 
-Six of the twelve have `p < 0.05`. Under a global null, the expected number is
-`12 x 0.05 = 0.6`, and the probability of at least one is `1 - 0.95^12 = 0.4596`. Six is far above
-what the null would produce, so there is probably some real signal in the set. That is not the same
-as saying that each of the six is real, or that the six are the right six to act on.
+Six of the twelve have `p < 0.05`. Under a global null the expected number is `12 x 0.05 = 0.6` and
+the probability of at least one is `1 - 0.95^12 = 0.4596`. Six is far above that, so some signal is
+likely, but not that each of the six is real or that the six are the right ones to act on.
 
 ### 6.4 Bonferroni, by hand
 
@@ -580,17 +565,11 @@ And among the non-rejections:
 | Perfect order | 0.1204 | No | -1.1 pp vs 1.0 pp | Inconclusive: the interval spans trivial and material |
 | Inventory days | 0.0487 | No | +1.8 d vs 2.0 d | No immediate action; the interval includes 3.6 d |
 
-Two lessons.
-
-First, the BH rejection set and the action set are not the same. The expedite result is real and
-below the line; acting on it would spend management attention for EUR 18 when the review costs more
-than the saving. The fill-rate result is not in the BH set and is operationally material; the right
-response is a targeted follow-up, not a dismissal. Statistical correction controls a claim about a
-family; it does not make a decision.
-
-Second, the ordering matters. A dashboard sorted by p puts expedite spend above fill rate. A
-dashboard sorted by `effect / threshold` puts fill rate first. The second sort is the one that
-matches the decision.
+Two lessons. First, the BH rejection set and the action set are not the same: expedite spend is real
+and below the line, while fill rate is outside the BH set and operationally material, so the right
+response is targeted follow-up rather than dismissal. Second, sorting matters: a dashboard sorted by
+p puts expedite spend first, and one sorted by `effect / threshold` puts fill rate first. The second
+sort matches the decision.
 
 ### 6.8 The one-sided temptation
 
@@ -664,7 +643,6 @@ p = np.array([0.0008, 0.0044, 0.0105, 0.0289, 0.0410, 0.0487,
               0.0712, 0.1204, 0.2010, 0.3305, 0.4780, 0.6902])
 m, alpha = len(p), 0.05
 s = np.sort(p)
-
 bonf = s <= alpha / m
 holm = np.zeros(m, dtype=bool)
 for i in range(m):
@@ -727,8 +705,7 @@ metric definition.
 | ISO 8601 | Date and time representation | The window over which a metric is computed | B |
 
 These standards constrain vocabulary and measurement, not inference. They will not tell you which
-correction to use. They will tell you whether two reports are using the same word for the same
-object, which is the prior question.
+correction to use, only whether two reports mean the same object by the same word.
 
 ### 8.4 Professional standards rather than regulation
 
@@ -824,10 +801,8 @@ There is no published, audited measurement of false discovery rates in commercia
 dashboards. Vendor case studies report improvements, not the number of metrics tested. Companies do
 not publish their scorecard families. Any claim of the form "dashboard X reduced false positives by
 Y%" should be treated as a vendor claim, grade D, until the family, the base rate, and the
-correction are disclosed.
-
-This absence is itself a finding. The methods are mature and the tools are available; what is
-missing is the reporting convention that would make the error rate observable.
+correction are disclosed. The absence is itself a finding: the methods are mature and the tools are
+available, but the reporting convention that would make the error rate observable is missing.
 
 ## 10. Failure modes and red flags
 
@@ -848,18 +823,12 @@ missing is the reporting convention that would make the error rate observable.
 
 Two deserve expansion.
 
-**The family defined after selection** is the most common and the hardest to see. A team runs 240
-tiles, notices that 12 are red, and then applies a correction to those 12. The correction is
-arithmetically valid for a family of 12 and substantively meaningless, because the 12 were chosen
-for being red. The only defensible family is the 240, or a pre-declared subset of 12 that would have
-been reported regardless of colour.
-
-**The winner's curse in rankings** is the operational version of the same problem. A supplier
-league table ranks 40 suppliers on a noisy metric. The top supplier is top partly because the
-estimate is high, and the estimate is high partly because the noise was favourable. The next
-measurement will be lower even if nothing changes. Any volume reallocation based on the ranking
-overpays for the selection effect. Shrinkage estimators and replication are the remedies; neither is
-common in scorecards.
+**The family defined after selection** is the hardest to see: a team runs 240 tiles, notices 12 red
+ones, and corrects those 12. The arithmetic is valid for a family of 12 and meaningless, because the
+12 were chosen for being red. **The winner's curse in rankings** is the operational version. A
+supplier league table ranks 40 suppliers on a noisy metric; the top supplier is top partly because
+the noise was favourable, and the next measurement will be lower even if nothing changes. Shrinkage
+and replication are the remedies, and neither is common in scorecards.
 
 ## 11. Assumptions and limits
 
@@ -981,19 +950,7 @@ the data; at least one plausible deviation is anticipated with a rule for handli
 dated and versioned.
 **Time:** 50 minutes.
 
-### Exercise 8 — Critique a vendor claim (critique, 40 minutes)
-
-Find a vendor or analyst claim that a product "reduces false positives" or "ensures statistical
-rigour". Evaluate it against the family definition, the base rate, and the correction.
-
-**Deliverable:** a one-page appraisal with an evidence grade and the questions the vendor did not
-answer.
-**Acceptance criteria:** the claim is quoted exactly; the grade uses A–E with a justification; at
-least three missing disclosures are named; the appraisal distinguishes a product feature from
-evidence of an effect.
-**Time:** 40 minutes.
-
-### Exercise 9 — Choose FWER or FDR (design, 40 minutes)
+### Exercise 8 — Choose FWER or FDR (design, 40 minutes)
 
 For each decision, state the error rate you would control and why: (a) terminating a supplier for
 safety non-compliance; (b) screening 200 store–SKU pairs for a replenishment pilot; (c) publishing a
@@ -1005,7 +962,7 @@ false claim.
 non-inferiority tests; at least one answer uses FWER and at least one uses FDR.
 **Time:** 40 minutes.
 
-### Exercise 10 — Write the reporting standard (design, 60 minutes)
+### Exercise 9 — Write the reporting standard (design, 60 minutes)
 
 Draft a one-page standard for how your team reports hypothesis tests in dashboards.
 
@@ -1051,10 +1008,9 @@ chosen alpha, which was not doubled.
 0.0367, 0.0700, 0.0780, 0.0800, 0.1029, 0.1625, 0.3000, 0.6400`. The third is below 0.05 and the
 fourth above, confirming k = 3.
 
-**Holm adjusted p-values** (running maximum of `(m - j + 1) p(j)` from the left): `0.0200, 0.0468,
-0.0880, 0.1960, 0.2340, 0.2400, 0.2880, 0.3900, 0.5400, 0.6400`. The second value, `0.0468`, is
-below 0.05, which confirms the Holm count of 2. The third, `0.0880`, is above, which confirms the
-stop.
+**Holm adjusted p-values** (running maximum of `(10 - j + 1) p(j)` from the left) are `0.0200,
+0.0468, 0.0880, 0.1960, 0.2340, 0.2400, 0.2880, 0.3900, 0.5400, 0.6400`; the second is below 0.05
+and the third above, confirming the count of 2.
 
 A common error is to reject every row that passes its own BH threshold. That coincides with the
 block rule only when the passing set is a prefix; when a later row passes after an earlier failure,
@@ -1148,7 +1104,7 @@ guarantee, and a run that produces ten is not evidence of a broken simulation.
 | Decision rule | 15 | States what result leads to act, wait, or stop |
 | Deviations | 10 | At least one plausible deviation anticipated with a handling rule |
 
-**Exercise 10 — reporting standard (100 points).**
+**Exercise 9 — reporting standard (100 points).**
 
 | Criterion | Weight | What earns full marks |
 |---|---:|---|
@@ -1324,10 +1280,9 @@ Grades the claim D until those are disclosed. Weak: accepts the claim because th
   effect of metric count on per-metric alpha and sample size.
 
 **Note on citations.** Only sources returned by research for this topic are cited. Vendor
-documentation is graded D and dated at access. No published, audited measurement of false discovery
-rates in commercial supply chain dashboards was found; section 9.4 says so rather than substituting
-a vendor claim. Figures attributed to reviews are reported as those reviews state them and were not
-independently replicated.
+documentation is graded D and dated at access. No audited measurement of false discovery rates in
+commercial supply chain dashboards was found; section 9.4 says so. Figures attributed to reviews are
+reported as those reviews state them and were not independently replicated.
 
 ## 17. Links
 

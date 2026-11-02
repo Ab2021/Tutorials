@@ -54,14 +54,14 @@ Modules 02 and 04 can be taken in parallel after 01A. Module 03 assumes 02. Modu
 
 | Status | Count |
 |---|---:|
-| planned | 2 |
-| complete | 4 |
+| planned | 1 |
+| complete | 6 |
 
-The seven survey files in `../../course/` are complete at survey depth. Four modules are also
+The seven survey files in `../../course/` are complete at survey depth. Six modules are also
 written at topic depth: Module 01 (ten files, 13,169 lines), Module 01A (eleven files, 14,344
-lines), Module 02 (ten files, 12,900 lines), and Module 03 (eleven files, 14,231 lines). Module 04
-is in production and is counted here as planned until all ten of its files are on disk. Module 05
-has topic files indexed but not yet written.
+lines), Module 02 (ten files, 12,900 lines), Module 03 (eleven files, 14,231 lines), Module 04
+(ten files, 12,975 lines), and Module 05 (ten files, 12,955 lines). Module 00 is indexed but not
+yet written at topic depth.
 
 ## 6. Sources
 

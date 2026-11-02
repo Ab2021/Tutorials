@@ -2,6 +2,87 @@
 
 All substantive changes to the curriculum are recorded here.
 
+## 2026.11.0 — 2 November 2026
+
+### Added — Module 05 written in full
+- Module 05 (`01_foundations/05_experimentation_pilots_evidence/`) is now written in full: ten
+  topic files, 12,955 lines, each with all 17 required sections and every relative link resolving.
+- `01_claim-hypothesis-design.md` — claim → question → estimand → design → metric → decision rule,
+  with the threshold arithmetic that turns an effect into a decision.
+- `02_randomisation-units.md` — assignment unit versus analysis unit versus decision unit, and the
+  contamination that follows a mismatched choice.
+- `03_ab-cluster-designs.md` — two-arm, multi-arm, factorial, and cluster designs, the analysis each
+  demands, and the operational constraints that rule a design out.
+- `04_geo-experiments.md` — matched-market and donor-pool designs, placebo tests, and why geo power
+  is usually terrible.
+- `05_switchback-pilots.md` — time-based alternation, carryover and washout, the pilot effect, and a
+  schedule construction the reader can redraw.
+- `06_power-mde.md` — the four-quantity arithmetic, design effects, effective sample size, and how to
+  say honestly that a pilot was not powered for the question asked of it.
+- `07_interference-spillover.md` — SUTVA and its two failures, concrete supply-chain spillover
+  channels, the sign of the bias each induces, and partial-interference designs.
+- `08_sequential-testing.md` — alpha spending, always-valid inference, and the multiple-looks
+  arithmetic behind early stopping.
+- `09_mmm-incrementality.md` — what a marketing-mix model can and cannot identify, and the
+  experiment-calibrated architecture that is the honest version.
+- `10_vendor-evidence-appraisal.md` — the six appraisal questions, survivorship and regression to the
+  mean in published results, and a scoring sheet usable in a procurement meeting.
+
+### Changed
+- Module 05 status table reports 10 `complete` and the module total.
+- `modules/01_foundations/_index.md` reports six modules complete; `VALIDATION_STATUS.md` now records
+  62 of 476 topic units and 80,574 lines.
+- Forward references that were written as "(planned)" because their targets did not yet exist have
+  been converted to live links now that every Module 05 topic is on disk.
+- One brief error was corrected in production rather than propagated: the Part I index sits at
+  `../_index.md` from a module folder, not `../../_index.md`, which resolves to a nonexistent
+  `modules/_index.md`. Two writers caught it independently and verified the resolving path.
+
+### Notes
+- **Module 06 remains deferred at the user's request** (2 November 2026). Module 07 is the next
+  module in production; its index lists Module 06 as a prerequisite, which will need a stated
+  substitute when that module opens.
+
+## 2026.10.0 — 2 November 2026
+
+### Added — Module 04 written in full
+- Module 04 (`01_foundations/04_statistics_causal_inference/`) is now written in full: ten topic
+  files, 12,975 lines, each with all 17 required sections and every relative link resolving.
+- `01_estimands-question-types.md` — descriptive, predictive, and causal questions; the estimand as
+  population, unit, outcome, time, intervention, and comparison; the target-trial framing.
+- `02_probability-bootstrap.md` — intervals that survive skewed and dependent data; the bootstrap's
+  three conditions; block and cluster resampling; prediction versus confidence intervals.
+- `03_hypothesis-tests.md` — p-values, effect sizes, multiplicity; family-wise error versus false
+  discovery rate; Benjamini–Hochberg by hand; equivalence testing.
+- `04_regression-time-series.md` — harmonic seasonality, moving holidays, distributed lags, trend
+  specification, and diagnostics before interpretation.
+- `05_autocorrelation-robust-errors.md` — serial correlation, heteroskedasticity, clustering, HAC
+  errors, and the design-effect arithmetic behind the effective sample size.
+- `06_dags.md` — backdoor adjustment, collider bias, mediation, over-control, and two worked
+  adjustment-set derivations.
+- `07_experiments-quasi.md` — cluster, stepped-wedge, and switchback designs; the quasi-experimental
+  family and the assumption each buys; a constraint-to-design decision table.
+- `08_difference-in-differences.md` — the 2x2 arithmetic, event studies, staggered adoption and the
+  Goodman-Bacon weighting problem, with the corrected estimators named.
+- `09_elasticity-endogeneity.md` — simultaneity, the identification problem, instruments and the
+  local average treatment effect, and a worked case where the naive estimate has the wrong sign.
+- `10_sensitivity-omitted-bias.md` — the omitted-variable bias formula, robustness values, E-values,
+  coefficient stability, and the module's closing argument about assumption chains.
+
+### Changed
+- Module 04 status table reports 10 `complete` and the module total.
+- `modules/01_foundations/_index.md` reports five modules complete; `VALIDATION_STATUS.md` now
+  records 52 of 476 topic units and 67,619 lines.
+
+### Notes
+- One agent corrected three citation attributions that were wrong in its brief rather than
+  propagating them: the Table 2 fallacy paper (Westreich and Greenland, not Hernán and Robins), the
+  DAGitty methods paper's venue, and the reference for the definition of a confounder
+  (VanderWeele and Shpitser). Each correction is recorded in the file's own source note.
+- **Module 06 is deferred at the user's request** (2 November 2026) and will not be written in this
+  pass. Its index and survey file stand; its topic rows remain `planned` so the gap is visible
+  rather than silently absent.
+
 ## 2026.9.0 — 2 November 2026
 
 ### Added — Module 03 written in full

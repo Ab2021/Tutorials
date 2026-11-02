@@ -12,6 +12,12 @@
 This is the analytical core of the program: the methods that convert data into a decision. It
 runs in four blocks.
 
+> **Note:** Module 06 (machine learning foundations) is deferred at the user's request as of
+> 2 November 2026 and is not written in this edition. Its index and survey file stand as the map
+> of what it would cover. Module 07 and later modules therefore cite Module 06 as a nominal
+> prerequisite they cannot assume; where the forecasting material needs a machine-learning idea,
+> the topic files state it directly rather than pointing at a module the reader will not have.
+
 | Block | Modules | What it decides |
 |---|---|---|
 | Predict | 06, 07, 08, 09 | How much will be demanded, with what uncertainty, at what level of the hierarchy |
