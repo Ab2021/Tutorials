@@ -2,6 +2,52 @@
 
 All substantive changes to the curriculum are recorded here.
 
+## 2026.9.0 — 2 November 2026
+
+### Added — Module 03 written in full
+- Module 03 (`01_foundations/03_data_engineering_interoperability/`) is now written in full:
+  eleven topic files, 14,231 lines, each with all 17 required sections and every relative link
+  resolving.
+- `01_layered-architecture.md` — raw, staging, conformed, and mart layers; contracts and owners at
+  each boundary; the medallion pattern and its critiques.
+- `02_batch-microbatch-streaming.md` — the latency ladder, freshness as a budget, watermarks and
+  late data, exactly-once versus effectively-once, and which decisions justify which latency.
+- `03_ingestion-patterns.md` — full, incremental, CDC, and file-drop ingestion; high-water marks,
+  tombstones, schema drift, idempotent loads, and replay.
+- `04_sql-supply-chain-patterns.md` — as-of joins, bitemporal questions, snapshot grain, allocation
+  by window function, SCD traps, and gap-and-island stockout spells.
+- `05_python-structure-tests.md` — layout, types, dependency pinning, and a test strategy whose
+  unit tests encode supply chain invariants.
+- `06_dbt-models-tests.md` — the model DAG, materialisations, incremental models, and tests that
+  encode invariants rather than syntax.
+- `07_orchestration.md` — dependencies, backfills, retries, DST hazards, and the planning cutoff as
+  a hard deadline.
+- `08_edi-x12-edifact.md` — the transaction set and its EDIFACT analogues, envelope nesting, the
+  acknowledgement chain, and partner implementation-guide variance.
+- `09_gs1-epcis.md` — the identifier stack, the four event types plus association events,
+  aggregation as the case-to-pallet link, and the regulatory hooks.
+- `10_apis-contracts-mdm.md` — APIs as interfaces, contract clauses, versioning and deprecation,
+  and entity resolution with its false-merge and false-split costs.
+- `11_quality-quarantine-lineage.md` — test severity, quarantine, replay testing, column-level
+  lineage, and the module's closing reproducibility argument.
+
+### Changed
+- Module 03 status table reports 11 `complete` and the module total.
+- `modules/01_foundations/_index.md` reports four modules complete; `VALIDATION_STATUS.md` now
+  records 42 of 476 topic units and 54,644 lines.
+
+### Notes
+- Cross-topic forward links were written as plain text marked "planned" while the target did not
+  yet exist, so no file ever shipped with a dead link; all eleven files now resolve every relative
+  link.
+- Two claim clusters were reduced to graded vendor entries rather than repeated as fact: the EDI
+  market figures (78% of B2B transactions, 20 billion transactions, USD 6.4 trillion) which trace
+  to a single vendor blog, and the EPCIS adoption percentages, which measure general GS1
+  standards use rather than EPCIS. Both are marked "do not cite as a measurement".
+- The Arden Cold Chain, Calder Health, Calder Foods, and Kestrel Health cases, and every cost and
+  incident figure attached to them, are constructed teaching examples and are labelled as such in
+  the files.
+
 ## 2026.8.0 — 2 November 2026
 
 ### Added — Module 01A written in full

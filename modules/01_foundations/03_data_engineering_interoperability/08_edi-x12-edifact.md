@@ -39,15 +39,14 @@ Three failures show the shape of the problem, and each is a different kind of ca
    to another number that is also wrong.
 2. **The sell-through file that omitted a region.** A retailer sends weekly 852 Product Activity
    Data. One week the file covers 94% of stores because a regional extract job failed. The
-   supplier's replenishment model reads the missing stores as zero sales, concludes that demand
-   collapsed, and cuts the next order. Two weeks later the same stores show a spike as their
-   stock is replenished from the retailer's own distribution centre. The model learns a
-   seasonality that never happened.
+   supplier's model reads the missing stores as zero sales, concludes that demand collapsed, and
+   cuts the next order. Two weeks later those stores show a spike as their stock is replenished
+   from the retailer's own distribution centre. The model learns a seasonality that never happened.
 3. **The acknowledgement that was read as consent.** A buyer transmits an 850 purchase order and
-   receives a 997 Functional Acknowledgment. The order-management team marks the order
-   confirmed. It is not confirmed. The 997 says the seller's translator parsed the file. The
-   seller may reject the order commercially the next day with an 855 that nobody is watching for,
-   because the integration was built to wait for the 997 and stop.
+   receives a 997 Functional Acknowledgment. The order team marks the order confirmed. The 997
+   says only that the seller's translator parsed the file. The seller may reject the order
+   commercially the next day with an 855 that nobody is watching for, because the integration was
+   built to wait for the 997 and stop.
 
 The common thread is that each failure involves a document whose *scope* was misunderstood. A 997
 is scoped to syntax. An 856 is scoped to a declared shipment. An 852 is scoped to the reporting
@@ -56,33 +55,25 @@ implementation guide and the trading-partner agreement carry it, and neither is 
 warehouse unless somebody put it there.
 
 **What the prerequisite gave you, and what this topic adds.** Topic 02.06, *Data Movement: EDI,
-API, Flat File, Event*, established the transport bargain: EDI buys standardisation at the cost
-of batching and partner variation. It traced the five-stage path from application to translator
-to network to translator to application, and it made the essential distinction between a 997 and
-business acceptance. This topic assumes that path and goes inside the documents. It asks which
-decision each transaction set serves, how the envelope makes a document traceable, what the
-acknowledgement chain actually certifies at each level, how two partners can implement the same
-standard differently, and why the 856 in particular is the hinge between information flow and
-physical flow.
+API, Flat File, Event*, established the transport bargain and the distinction between a 997 and
+business acceptance. Topic 03.03, *Ingestion Patterns*, established idempotency, watermarking,
+and file-drop discipline. EDI is the hardest test of those patterns, because the same business
+event arrives more than once by design (original and replacement documents), ordering is
+guaranteed only within an interchange, and a duplicate is not always an error. Distinguishing a
+replacement from a retransmission is a semantic problem, and semantics live in the document.
 
-Topic 03.03, *Ingestion Patterns*, established idempotency, watermarking, and file-drop
-discipline. EDI is the hardest test of those patterns, because the same business event arrives
-more than once by design (original and replacement documents), because ordering is guaranteed
-only within an interchange, and because a duplicate is not always an error. A replacement 856 is
-a legitimate second message about the same shipment. Distinguishing it from a retransmission is a
-semantic problem, and semantics live in the document, not in the transport.
+This topic goes inside the documents. It asks which decision each transaction set serves, how the
+envelope makes a document traceable, what the acknowledgement chain certifies at each level, how
+two partners can implement the same standard differently, and why the 856 is the hinge between
+information flow and physical flow.
 
 **Why this is an analytics topic and not only an integration topic.** Every downstream model
 consumes EDI-derived facts whether or not the analyst knows it. Forecast labels come from
-shipments, which are 856 or 810 artefacts. Sell-through features come from 852. Service-level
-metrics come from receipt timestamps that were created by a 856-triggered receiving transaction.
-Supplier scorecards come from 855 response latency. If you cannot say which document produced a
-column, you cannot say what the column measures, and a model built on an unexamined column is a
-model built on a convention that somebody else chose.
-
-This topic is deliberately theory-heavy. The mechanics of a translator are learnable in a week.
-The judgement about which document is authoritative for which fact takes longer, and it is the
-judgement that prevents the three failures above.
+shipments, which are 856 or 810 artefacts. Sell-through features come from 852. Service metrics
+come from receipt timestamps created by a 856-triggered receiving transaction. Supplier scorecards
+come from 855 response latency. If you cannot say which document produced a column, you cannot say
+what the column measures. That is why the mechanics matter less than the judgement about which
+document is authoritative for which fact.
 
 ## 2. Learning outcomes
 
@@ -123,23 +114,13 @@ description of what the sender believes is in the trailer. An invoice asserts an
 inventory advice asserts a quantity at a moment the sender chose. None of these is a measurement.
 Each is a speech act by an organisation with an interest in what you do next.
 
-This gives EDI three properties that distinguish it from an API response:
-
-- **It is document-scoped.** The unit is a complete business document with a beginning and an
-  end, a control number, and a declared count of its own contents. You can tell whether you have
-  the whole thing. You usually cannot tell that about an API page.
-- **It is partner-narrowed.** The standard defines the grammar; the trading partner's
-  implementation guide defines the dialect. A field that is optional in the standard can be
-  mandatory from one retailer and forbidden by another.
-- **It is obligation-bearing.** The document is referenced in a contract. Someone can be charged
-  back, fined, or paid on the basis of it. That is why it persists, and why errors have financial
-  consequences rather than merely analytical ones.
+This gives EDI three properties that distinguish it from an API response, each with a cost:
 
 | Property | What it buys you | What it costs you | Typical analyst error |
 |---|---|---|---|
-| Document-scoped | Completeness is checkable per document | Batching; a document is only as fresh as its batch | Treating a daily 852 as continuous demand |
-| Partner-narrowed | Precision where it matters commercially | Map proliferation; silent divergence | Assuming the standard is the specification |
-| Obligation-bearing | Legal weight and audit trail | Errors propagate into money, not just metrics | Treating a chargeback as a data-quality quirk |
+| Document-scoped: one complete document with its own control number and count | Completeness is checkable per document | Batching; a document is only as fresh as its batch | Treating a daily 852 as continuous demand |
+| Partner-narrowed: the guide, not the standard, defines the dialect | Precision where it matters commercially | Map proliferation; silent divergence | Assuming the standard is the specification |
+| Obligation-bearing: the document is referenced in a contract | Legal weight and audit trail | Errors propagate into money, not just metrics | Treating a chargeback as a data-quality quirk |
 
 ### 3.2 The envelope, drawn once
 
@@ -175,19 +156,13 @@ differ; the logic does not.
      |  <------------------- CONTRL (EDIFACT) ---------------|  one message, both levels
 ```
 
-Read the diagram in three directions:
-
-- **Downwards, the envelope widens.** A segment belongs to a transaction set, which belongs to a
-  group, which belongs to an interchange. Each level has its own header and trailer, and each
-  trailer repeats a count and a control number.
-- **Outwards, the identifiers chain.** ISA13 must equal IEA02. GS06 must equal GE02. ST02 must
-  equal SE02. These are not decoration. They are how a receiver knows that the document it read
-  is the document that was sent, and how a sender knows which document an acknowledgement refers
-  to.
-- **Backwards, acknowledgements retrace the path.** A 997 references the group control number,
-  not the interchange. A TA1 references the interchange. A CONTRL can address all three levels.
-  Each acknowledgement therefore has a different granularity, and treating them as
-  interchangeable is the single most common EDI semantic error.
+Read the diagram in three directions. **Downwards, the envelope widens:** a segment belongs to a
+transaction set, which belongs to a group, which belongs to an interchange, and each trailer
+repeats a count. **Outwards, the identifiers chain:** ISA13 must equal IEA02, GS06 must equal
+GE02, and ST02 must equal SE02, which is how a receiver knows the document it read is the one
+that was sent. **Backwards, acknowledgements retrace the path:** a 997 references the group
+control number, a TA1 references the interchange, and a CONTRL can address all three levels.
+Treating those granularities as interchangeable is the single most common EDI semantic error.
 
 > **Note:** The envelope is also the unit of atomicity. A receiver may accept one functional
 > group and reject another inside the same interchange. It may accept one transaction set and
@@ -279,18 +254,14 @@ quantity is not demand.
 | UN/EDIFACT | United Nations rules for Electronic Data Interchange for Administration, Commerce and Transport, the international EDI standard maintained by UN/CEFACT | Treated as interchangeable with X12 | Directory such as D96A, D01B, D21A |
 | GS1 EANCOM | The GS1 subset of UN/EDIFACT for retail and consumer goods, restricted to GS1 identifiers and a defined message set | Treated as a separate standard rather than a subset | EANCOM edition and syntax version |
 | Transaction set | One complete business document inside an X12 functional group | Confused with a file or an interchange | Three-digit code, for example 850 |
-| Message | The EDIFACT equivalent of a transaction set | Called a "file" | Six-letter code, for example ORDERS |
 | Segment | One line of an EDI document, made of a tag and a sequence of elements | Called a field or a row | Three-character tag, for example BEG |
 | Data element | One value inside a segment, identified by position | Called a column | Position number, for example BEG02 |
 | Qualifier | A code that tells the receiver how to interpret the value that follows or precedes it | Ignored as boilerplate | Code from a partner or standard list |
-| Composite | A data element made of sub-elements separated by a component separator | Parsed as a single string | Sub-element positions, for example C040 |
-| Loop | A repeating group of segments representing a related entity, such as an order line | Treated as a table join that always exists | Loop identifier, for example LIN |
 | Envelope | The header and trailer segments that wrap and identify a document or group | Confused with the message content | ISA/GS/ST or UNB/UNH |
 | Interchange | The outermost X12 or EDIFACT envelope, one transmission between two parties | Used loosely to mean "a file" | ISA ... IEA, or UNB ... UNZ |
 | Functional group | A set of transaction sets of the same type inside one interchange | Assumed to be one document | GS ... GE, or UNG ... UNE |
 | Control number | A sender-assigned identifier repeated in the matching trailer | Treated as a database key with meaning | ISA13 (9 digits), GS06 (1–9 digits), ST02 |
 | Implementation guide | A trading partner's specification of exactly which segments, elements, codes, and lengths it will accept for a transaction set | Assumed to be the standard | Versioned document, often called an IG or TR3 |
-| TR3 | Technical Report Type 3: the X12 committee's implementation-guide format, used for 005010 guides | Used as a synonym for any mapping document | Guide number such as 005010X231 |
 | 850 | X12 Purchase Order | Called "the order file" | Transaction set 850 |
 | 855 | X12 Purchase Order Acknowledgment | Assumed to be automatic | Transaction set 855 |
 | 856 | X12 Ship Notice/Manifest, the advance ship notice (ASN) | Treated as proof of delivery | Transaction set 856 |
@@ -433,63 +404,54 @@ something is missing.
 
 The 999 was introduced in the X12 004061 subrelease and became widely known through the
 005010X231 guide for health care insurance, published in 2007. It exists because base X12 syntax
-is not enough to express "this segment is valid X12 but not permitted by this partner's guide."
-The 997 cannot report that class of error; the 999 can. In retail and consumer goods, the 997
-remains far more common.
+cannot express "this segment is valid X12 but not permitted by this partner's guide." The 997
+cannot report that class of error; the 999 can. In retail, the 997 remains far more common.
 
-EDIFACT folds both roles into CONTRL, which is why comparisons between the two standards often
-go wrong. A single CONTRL can report an interchange-level problem and a message-level problem in
-one document. There is also a vocabulary difference worth flagging: one comparison source states
-that EDIFACT has no "accepted with errors" status equivalent to the X12 middle state, so a
-partially accepted interchange may carry an overall accepted status with an error code
-alongside. Confirm the exact semantics against the partner's CONTRL guide before building logic
-on the status code alone.
+EDIFACT folds both roles into CONTRL, so a single message can report an interchange-level and a
+message-level problem at once. One comparison source states that EDIFACT has no "accepted with
+errors" status equivalent to the X12 middle state, so a partially accepted interchange may carry
+an overall accepted status with an error code alongside. Confirm the semantics against the
+partner's CONTRL guide before building logic on the status code alone.
 
 > **Note:** Never acknowledge an acknowledgement. A 997 must not acknowledge another 997 or a
-> 999, and a CONTRL must not trigger a CONTRL. Implementations that violate this rule create an
-> infinite loop that is easy to start and expensive to stop, because both parties' monitors
-> report healthy traffic throughout.
+> 999, and a CONTRL must not trigger a CONTRL. Violating this creates an infinite loop that is
+> easy to start and expensive to stop, while both parties' monitors report healthy traffic.
 
 **Step 7. The translator writes to an application interface, and the acknowledgement returns.**
 
-The receiving translator hands the document to order management, the warehouse system, or
-accounts payable, and the envelope disappears. The application usually keeps the document number
-and control number and drops the rest, which is why nobody can later say which guide version
-produced a field, whether the document was a replacement, or whether it was a test. The 997 then
-travels back on the same transport, referencing the group control number rather than the
-interchange control number.
+The translator hands the document to order management, the warehouse system, or accounts
+payable, and the envelope disappears. The application keeps the document number and control
+number and drops the rest, which is why nobody can later say which guide version produced a
+field, whether the document was a replacement, or whether it was a test. The 997 then travels
+back on the same transport, referencing the group control number rather than the interchange.
 
 *What breaks:* the acknowledgement is generated but not routed, or routed to a mailbox nobody
 monitors. The sender's integration reports success because it received an AS2 receipt; the
-receiver's integration reports success because it generated a 997. Both are green and the business
-document is rejected.
+receiver's reports success because it generated a 997. Both are green and the document is rejected.
 
 ### Phase D — the commercial response
 
 **Step 9. The seller responds with an 855 or ORDRSP.**
 
-The 855 reports one of a small set of outcomes per line: accepted as ordered, accepted with a
-change, backordered, or rejected. It may also propose a substitute item. The response is the
-first document in the chain that carries a commercial judgement rather than a technical one.
+The 855 reports one outcome per line: accepted as ordered, accepted with a change, backordered,
+or rejected. It may also propose a substitute item. It is the first document in the chain to
+carry a commercial judgement rather than a technical one.
 
-*What breaks:* the buyer's integration is built to wait for the 997 and treat it as the terminal
-event. The 855 arrives into a queue with no consumer. Orders that were partially accepted are
-planned as if fully accepted, and the shortfall appears only when the 856 declares a smaller
-shipment.
+*What breaks:* the buyer's integration waits for the 997 and treats it as terminal. The 855
+arrives into a queue with no consumer, orders that were partially accepted are planned as fully
+accepted, and the shortfall appears only when the 856 declares a smaller shipment.
 
 A related pair is easy to miss: the 860 Purchase Order Change and the 865 Purchase Order Change
-Acknowledgment. A change is not a new order. Systems that treat every 850 as a new order and
-ignore 860 will double-count quantity whenever a buyer amends an order rather than cancelling
-and reissuing it.
+Acknowledgment. A change is not a new order, and systems that treat every 850 as new will
+double-count quantity whenever a buyer amends an order rather than reissuing it.
 
 ### Phase E — physical execution
 
 **Step 10. The seller builds the shipment and the 856 declares it.**
 
-The 856 is a hierarchical document. A typical structure has four levels: shipment, order, pack
-(a pallet or carton, identified by an SSCC), and item (a GTIN with a quantity and unit of
-measure). The hierarchy is expressed with HL segments, each carrying a hierarchical ID, a parent
-ID, and a level code.
+The 856 is hierarchical. A typical structure has four levels: shipment, order, pack (a pallet or
+carton identified by an SSCC), and item (a GTIN with quantity and unit of measure). Each HL
+segment carries a hierarchical ID, a parent ID, and a level code.
 
 | Level | Typical segments | What it declares |
 |---|---|---|
@@ -504,29 +466,28 @@ section 6.
 
 **Step 11. The warehouse executes a 940 and confirms with a 945.**
 
-In a outsourced or dedicated warehouse, the depositor sends a 940 Warehouse Shipping Order and
-the warehouse returns a 945 Warehouse Shipping Advice stating what it actually shipped. The 945
-is the warehouse's assertion, not the carrier's, and not the customer's receipt.
+The depositor sends a 940 Warehouse Shipping Order; the warehouse returns a 945 Warehouse
+Shipping Advice stating what it actually shipped. The 945 is the warehouse's assertion, not the
+carrier's, and not the customer's receipt.
 
-*What breaks:* the 940 is treated as a shipment in the depositor's inventory system. Stock leaves
-the ledger when the order is sent rather than when the 945 confirms it, and the gap is invisible
-because both documents reference the same order number.
+*What breaks:* the 940 is treated as a shipment, so stock leaves the ledger when the order is sent
+rather than when the 945 confirms it. The gap is invisible because both documents reference the
+same order number.
 
 **Step 12. The goods arrive and are received.**
 
 Receiving compares the physical count with the 856. If the ASN is trusted, the count is a
 verification; if the ASN is treated as truth, there is no count at all.
 
-*What breaks:* the receiver posts the ASN quantity, not the counted quantity, and the discrepancy
-is discovered at the physical inventory, weeks later, as shrinkage.
+*What breaks:* the receiver posts the ASN quantity, and the discrepancy surfaces at the physical
+inventory weeks later as shrinkage.
 
 ### Phase F — the money
 
 **Step 13. The invoice is issued and matched.**
 
 The 810 states a quantity and an amount. The buyer performs a three-way match against the
-purchase order and the receipt. If all three agree, payment is released, often through an 820
-Payment Order/Remittance Advice.
+purchase order and the receipt, and releases payment, often through an 820 Payment Order.
 
 *What breaks:* the invoice is generated from the order rather than the shipment or the receipt.
 Then all three documents agree with each other and none agrees with the physical world, because
@@ -566,31 +527,23 @@ The lesson is not that one guide is better. It is that **the map is the unit of 
 the standard.** A team that says "we support 850" has said almost nothing. The useful statement
 is "we support 43 partner-specific 850 variants, of which 6 are maintained by hand."
 
-Public estimates of how far this goes are weak: one industry analysis cites a company needing 47
-map variants for a standard 850, and another notes that a single retailer may run different
-schemas across divisions. Both are practitioner claims rather than measurements (Grade D), but
-the direction is consistent with every practitioner account: variance grows with the number of
-partners, not the number of document types.
-
-A second variance axis is version. X12 004010 remains widespread in retail and manufacturing;
-005010 is dominant in health care and common in newer implementations; later versions exist but
-adoption is uneven. EDIFACT directories such as D96A remain in production decades after
-publication, and EANCOM pins both a directory and a syntax version. A version upgrade is
-therefore a programme, not a patch, and it is usually triggered by a partner rather than chosen.
+Public estimates of how far this goes are weak: one analysis cites 47 map variants for a single
+850, and another notes that one retailer may run different schemas across divisions. Both are
+practitioner claims rather than measurements (Grade D), but the direction is consistent: variance
+grows with the number of partners, not the number of document types. Version is a second axis.
+X12 004010 remains widespread in retail, 005010 dominates health care, and EDIFACT directories
+such as D96A remain in production decades after publication. A version upgrade is therefore a
+programme, not a patch, and it is usually triggered by a partner rather than chosen.
 
 > **Note:** A partner can make an optional segment mandatory, forbid a code the standard allows,
-> or change a length. That is legitimate. It means a "standards-compliant" file can fail the
-> partner's validation, and a file that fails the standard can pass a lenient partner. Test
-> against the guide, never against the standard alone.
+> or change a length. A "standards-compliant" file can therefore fail the partner's validation,
+> and a file that fails the standard can pass a lenient partner. Test against the guide.
 
 ### 5.2 What actually lands in your warehouse
 
-The analyst rarely sees segments. They see the translator's output: a set of flattened tables,
-often one per document type, with names like `edi_850_header`, `edi_850_line`, or a canonical
-`purchase_order` table with a `source_system` column.
-
-Whatever the shape, six provenance columns are worth demanding, because without them the data
-cannot be interpreted later:
+The analyst rarely sees segments. They see the translator's output: flattened tables, often one
+per document type, named like `edi_850_header` or `edi_850_line`. Whatever the shape, six
+provenance columns are worth demanding, because without them the data cannot be interpreted later:
 
 | Column | Why it is needed | What goes wrong without it |
 |---|---|---|
@@ -709,6 +662,8 @@ Three design choices would have prevented it:
    receiving; it is data entry with extra steps.
 
 ### 6.6 Lessons
+
+| Lesson | Generalisation |
 |---|---|
 | The ASN described a load that no longer existed | A document generated before the physical event is a forecast, not a record |
 | Every acknowledgement was positive | Syntax acknowledgements cannot detect semantic error |
@@ -858,12 +813,11 @@ regimes with different definitions of when a transaction exists.
 
 ### 8.5 What is convention rather than requirement
 
-- A 997 for every document is a partner convention, not a standard rule.
-- A 24-hour 856 window before delivery is a retailer programme requirement, not an EDI rule.
-- The `*` element separator and `>` segment terminator are conventional, not mandated.
-- Daily 852 files are a retail habit, not a property of the message.
-- "One map per document type" is an organisational simplification; the technical reality is one
-  map per partner per document per version.
+A 997 for every document is a partner convention, not a standard rule. A 24-hour 856 window is a
+retailer programme requirement, not an EDI rule. The `*` element separator and `>` segment
+terminator are conventional, not mandated. Daily 852 files are a retail habit, not a property of
+the message. And "one map per document type" is an organisational simplification: the technical
+reality is one map per partner per document per version.
 
 An analyst who can separate the standard from the convention can tell which "requirements" are
 negotiable and which are structural. That distinction is worth more in an integration review
@@ -933,11 +887,6 @@ and not sufficient. A clean 856 with an unreadable pallet label becomes a manual
 perfect label with a late 856 becomes a receiving queue. Automation only removes manual counting
 when the document, the label, and the master data all hold at once.
 
-Two practitioner claims are worth recording because they recur, and worth grading low because
-they are never sourced: that a company needed 47 map variants for one transaction set, and that
-roughly 40% of enterprises take more than 30 days to onboard a single trading partner. Both are
-plausible. Neither is a measurement you should put in a business case without your own data.
-
 ## 10. Failure modes and red flags
 
 | Failure | Early warning sign | Mechanism | Consequence | Mitigation |
@@ -956,19 +905,13 @@ plausible. Neither is a measurement you should put in a business case without yo
 | Guide change without map update | Sudden rejections after a partner portal announcement | Partner adds a mandatory segment or code | Document rejection, or silent truncation | Subscribe to guide change notices; diff and retest quarterly |
 | 940 or 945 treated as delivery | Inventory leaves the ledger before the carrier moves | Warehouse documents conflated with transport events | Inventory understated in transit | Separate warehouse confirmation from delivery confirmation |
 
-Two of these are worth a note.
-
-**Test traffic in production** is rare but spectacular. A partner's test team points at the
-production mailbox, a few hundred test orders enter the demand history, and every downstream
-forecast learns a spike. The tell is usually a run of quantities that are too round, ship-to
-addresses that are the partner's own offices, and item numbers that do not exist in the item
-master. A filter on ISA15 takes one line to implement and is omitted more often than it should
-be.
-
+Two of these are worth a note. **Test traffic in production** is rare but spectacular: a partner's
+test team points at the production mailbox, a few hundred test orders enter the demand history,
+and every forecast learns a spike. A filter on ISA15 takes one line and is omitted too often.
 **Unit-of-measure mismatch** is the most expensive per incident because it scales. A factor-of-12
 error on a case-versus-each confusion does not produce a small discrepancy that somebody
-investigates; it produces an inventory position that is wrong by an order of magnitude, and the
-first person to notice is usually a customer.
+investigates; it produces an inventory position wrong by an order of magnitude, and the first
+person to notice is usually a customer.
 
 ## 11. Assumptions and limits
 
@@ -985,16 +928,12 @@ first person to notice is usually a customer.
 | Acknowledgements are monitored by a human or an alert | The chain only works if somebody looks | Green dashboards with no business metric | Reconcile acks to documents; alert on absence |
 | Retained documents are retrievable for the audit period | Disputes are settled from the record | Translator purges after load | Confirm retention with the integration owner, in writing |
 
-Two limits of this topic are worth stating.
-
-**It describes the document layer, not the whole integration.** Master data synchronisation,
-onboarding, partner certification, and chargeback management are adjacent disciplines. A clean
-mapping on top of bad item master data still produces unmatched lines, and this topic cannot fix
-that. Topic 03.10 takes up master data and contracts.
-
-**It is written from the receiving analyst's side.** Suppliers experience the same documents with
-different incentives: an 850 is revenue, an 855 is a commitment, and a chargeback is a cost of
-doing business. The document mechanics are symmetric; the interpretation is not.
+Two limits are worth stating. **This describes the document layer, not the whole integration:**
+master data synchronisation, onboarding, and chargeback management are adjacent disciplines, and a
+clean mapping on top of bad item master data still produces unmatched lines. **It is written from
+the receiving analyst's side:** suppliers see the same documents with different incentives, since
+an 850 is revenue, an 855 is a commitment, and a chargeback is a cost of doing business. The
+mechanics are symmetric; the interpretation is not.
 
 ## 12. Exercises
 
@@ -1003,9 +942,8 @@ doing business. The document mechanics are symmetric; the interpretation is not.
 Choose a supply chain you know. For each of the eight core documents, name the decision it
 triggers, the role that acts on it, and the failure that occurs if it is missing.
 
-**Deliverable:** one table with eight rows and a one-sentence justification per row.
-**Acceptance criteria:** each decision is stated as an action by a role, not a department; at
-least two rows identify a decision that would silently default rather than fail loudly.
+**Deliverable:** a table with eight rows, each naming the decision, the acting role, and the failure if it is missing.
+**Acceptance criteria:** decisions name a role acting, not a department; two rows identify a silent default.
 
 ### Exercise 2 — Acknowledgement coverage audit (calculation, 40 minutes)
 
@@ -1014,10 +952,8 @@ rejection. It sends 1,100 orders and receives 900 855s. Compute the syntax accep
 acknowledgement coverage rate, and the business acknowledgement rate. State which number an
 integration dashboard would most likely display.
 
-**Deliverable:** three rates with numerators and denominators, plus one sentence on what the
-dashboard would hide.
-**Acceptance criteria:** correct arithmetic; the distinction between "parsed" and "accepted" is
-explicit; the hidden number is named.
+**Deliverable:** three rates with numerators and denominators, plus one sentence on what the dashboard would hide.
+**Acceptance criteria:** correct arithmetic; "parsed" versus "accepted" is explicit; the hidden number is named.
 
 ### Exercise 3 — Read the excerpt (diagnosis, 40 minutes)
 
@@ -1040,9 +976,8 @@ CTT*4~
 SE*14*0001~
 ```
 
-**Deliverable:** three findings, each with the segment, the defect, and the wrong inference.
-**Acceptance criteria:** at least one finding concerns a hierarchy pointer; at least one concerns
-a qualifier position; the segment-count check is performed and stated.
+**Deliverable:** three findings, each with its segment, its defect, and the wrong inference a lenient parser makes.
+**Acceptance criteria:** one finding concerns a hierarchy pointer, one a qualifier position; the segment count is checked and stated.
 
 ### Exercise 4 — Discrepancy arithmetic (calculation, 45 minutes)
 
@@ -1050,10 +985,8 @@ An 856 declares 18 pallets, 720 cases, and 24 SSCCs. The dock counts 17 pallets 
 Case cost is EUR 41.50, case pack is 6 eaches, and retail price is EUR 9.95 per each. Daily demand
 is 12 cases.
 
-**Deliverable:** shortfall in cases and percent, value at cost, value at retail, days of cover
-lost, correct invoice amount, and the SSCC-to-pallet inference.
-**Acceptance criteria:** every figure has units; the difference between a correction and a cost
-is stated; the SSCC count is interpreted rather than ignored.
+**Deliverable:** case shortfall and percent, value at cost and at retail, days of cover lost, correct invoice amount, and the SSCC-to-pallet inference.
+**Acceptance criteria:** every figure carries units; correction versus cost is stated; the SSCC count is interpreted, not ignored.
 
 ### Exercise 5 — Control-number reconciliation (design and calculation, 50 minutes)
 
@@ -1061,20 +994,16 @@ A receiver logs ISA13 values from 000004100 to 000004199 inclusive. It finds 97 
 interchanges, of which 2 are duplicates. Design a daily control and compute the gap rate. Assume
 14 documents per interchange, 30% of documents are orders, and average order value is EUR 18,000.
 
-**Deliverable:** the gap count, the gap rate, the duplicate rate, the unaccounted document count,
-and a one-paragraph control design with an alert threshold.
-**Acceptance criteria:** the inclusive range is handled correctly; exposure is labelled as
-exposure rather than loss; the threshold is justified.
+**Deliverable:** gap count, gap rate, duplicate rate, unaccounted document count, and a control design with an alert threshold.
+**Acceptance criteria:** the inclusive range is handled correctly; exposure is labelled exposure, not loss; the threshold is justified.
 
 ### Exercise 6 — Two-guide variance diff (analysis, 60 minutes)
 
 Obtain two public implementation guides for the same transaction set from different sectors.
 Produce a variance table covering segment usage, qualifier values, code lists, and date handling.
 
-**Deliverable:** a variance table with at least eight rows and a one-page note on which
-differences would break a single map.
-**Acceptance criteria:** every difference cites a guide and a version; at least one difference is
-a mandatory-versus-optional reversal; the note distinguishes syntax from semantics.
+**Deliverable:** a variance table of at least eight rows and a one-page note on which differences break a single map.
+**Acceptance criteria:** each difference cites a guide and version; one is a mandatory-versus-optional reversal; syntax and semantics are distinguished.
 
 ### Exercise 7 — Sell-through evidence audit (critique, 45 minutes)
 
@@ -1082,10 +1011,8 @@ You are given weekly 852 data and a daily 846 feed for a VMI programme. State wh
 cannot conclude about demand, and design three checks that would catch a population or period
 change.
 
-**Deliverable:** a two-column list of valid and invalid inferences, plus three checks with
-expected results.
-**Acceptance criteria:** at least one invalid inference concerns the store population; at least
-one concerns returns; each check has a pass and a fail condition.
+**Deliverable:** a two-column list of valid and invalid inferences, plus three checks with expected results.
+**Acceptance criteria:** one invalid inference concerns store population, one concerns returns; each check has a pass and a fail condition.
 
 ### Exercise 8 — Warehouse reconciliation (design, 40 minutes)
 
@@ -1093,8 +1020,7 @@ Design the control that reconciles 940 orders to 945 advices for a third-party w
 state what the control cannot prove.
 
 **Deliverable:** a reconciliation specification with keys, tolerated differences, and escalation.
-**Acceptance criteria:** the key includes the warehouse order number and line; the control states
-that a 945 is not a delivery; at least one tolerated difference is justified.
+**Acceptance criteria:** the key includes warehouse order number and line; a 945 is stated not to be a delivery; one tolerance is justified.
 
 ### Exercise 9 — Receiving policy memo (design, 50 minutes)
 
@@ -1102,17 +1028,7 @@ Write a one-page policy for how your receiving operation should use an 856, cove
 counting, replacements, and discrepancy escalation.
 
 **Deliverable:** a policy with a decision rule for each of the four topics and a named owner.
-**Acceptance criteria:** the policy states that the ASN is an expectation and the scan is the
-record; replacement handling is specified; the escalation threshold is numeric.
-
-### Exercise 10 — EDI or API (argument, 40 minutes)
-
-For three interfaces — order capture, shipment tracking, and invoice submission — argue the
-boundary between EDI and API, using obligation, auditability, latency, and partner capability.
-
-**Deliverable:** a three-row table with a recommendation and a condition under which it reverses.
-**Acceptance criteria:** each recommendation names the decision it serves; at least one
-recommendation is a hybrid; the reversal condition is specific.
+**Acceptance criteria:** the ASN is an expectation and the scan the record; replacement handling is specified; the escalation threshold is numeric.
 
 ## 13. Self-check answers
 
@@ -1206,7 +1122,6 @@ outcome, and states the condition under which its recommendation would reverse.
 | 7, sell-through audit | Valid: units sold in the reported population and period. Invalid: total market demand, unreported stores, stale weeks | Treats the 852 total as demand and ignores the store population |
 | 8, warehouse control | Keys on order and line, tolerates pack rounding, escalates any 940 with no 945, and says a 945 is not a delivery | Reconciles totals only, hiding line-level substitutions |
 | 9, receiving policy | ASN sets expectation, scan sets the record, replacement supersedes by timestamp and purpose code, numeric escalation threshold | Says "verify against the ASN" without saying which quantity is posted |
-| 10, EDI or API | EDI where obligation and audit dominate, hybrid where freshness dominates, reversal condition named | Recommends APIs everywhere on the grounds of modernity |
 
 ## 14. Interview questions
 
@@ -1245,41 +1160,28 @@ A strong answer names the 852 or SLSRPT, states the population and period caveat
 shipments to the retailer are not sales to the customer. A weak answer treats the order or
 shipment quantity as demand.
 
-**7. "Why is EDI still here if we have APIs?"**
-
-A strong answer gives mandate, obligation, audit, batch alignment, and coordination cost, and
-describes the API-at-the-edge, EDI-in-the-core pattern. A weak answer calls EDI legacy and
-predicts replacement without engaging with why buyers require it.
-
-**8. "What is a control number for?"**
+**7. "What is a control number for?"**
 
 A strong answer says it binds a document to its trailer and its acknowledgement, and that the
 sequence enables gap detection. A weak answer calls it a unique ID and stops.
 
-**9. "How would you detect a missing EDI document?"**
+**8. "How would you detect a missing EDI document?"**
 
 A strong answer reconciles control-number sequences per partner and direction, and also reconciles
 document counts against the expected set by type. A weak answer says "check the logs," which
 detects errors but not absence.
 
-**10. "What is the difference between an 846 and an 852?"**
+**9. "What is the difference between an 846 and an 852?"**
 
 A strong answer says 846 reports stock position from the holder and 852 reports sales and
 activity from the party nearer the consumer, and that neither is a continuous balance. A weak
 answer says both are inventory feeds.
 
-**11. "What is a qualifier, and why does it matter?"**
+**10. "What is a qualifier, and why does it matter?"**
 
 A strong answer explains that the qualifier supplies the meaning of the adjacent value, and that
 a dropped qualifier leaves a valid-looking value with the wrong meaning. A weak answer describes
 it as a code field.
-
-**12. "How would you model EDI data in a warehouse?"**
-
-A strong answer keeps document-level provenance, separates the document from the business entity,
-deduplicates on partner plus control numbers, and models replacements explicitly. A weak answer
-says "flatten the segments into columns," which loses exactly the information needed to
-interpret them.
 
 ## 15. Key terms
 
@@ -1382,7 +1284,7 @@ disagreement is itself an illustration of section 5.1.
 - Module index and topic map: [`_index.md`](_index.md)
 - Prerequisite, data movement: [`../02_supply_chain_data_landscape/06_data-movement.md`](../02_supply_chain_data_landscape/06_data-movement.md)
 - Prerequisite, ingestion patterns: [`03_ingestion-patterns.md`](03_ingestion-patterns.md)
-- Next in sequence, GS1 identifiers and EPCIS: `09_gs1-epcis.md` (planned)
+- Next in sequence, GS1 identifiers and EPCIS: [`09_gs1-epcis.md`](09_gs1-epcis.md)
 - Related, APIs, contracts, and master data: `10_apis-contracts-mdm.md` (planned)
 - Related, layered architecture and provenance: [`01_layered-architecture.md`](01_layered-architecture.md)
 - Related, SQL patterns for snapshots and as-of joins: [`04_sql-supply-chain-patterns.md`](04_sql-supply-chain-patterns.md)

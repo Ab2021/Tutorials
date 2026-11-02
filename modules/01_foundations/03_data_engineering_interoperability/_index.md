@@ -38,10 +38,10 @@ not the whole program.
 | 5 | [`05_python-structure-tests.md`](05_python-structure-tests.md) | Python Project Structure, Types, and Tests | A layout and test strategy that survives handover. | 1,200–1,800 | complete |
 | 6 | [`06_dbt-models-tests.md`](06_dbt-models-tests.md) | dbt Models, Tests, and Documentation | Staging, intermediate, and mart models with freshness and uniqueness tests. | 1,200–1,800 | complete |
 | 7 | [`07_orchestration.md`](07_orchestration.md) | Orchestration and Scheduling | Dependencies, backfills, retries, and the planning cutoff. | 1,200–1,800 | complete |
-| 8 | [`08_edi-x12-edifact.md`](08_edi-x12-edifact.md) | EDI: X12 and EDIFACT | 850, 855, 856, 810, 846, 852, 940, 945, and their EDIFACT analogues. | 1,200–1,800 | planned |
-| 9 | [`09_gs1-epcis.md`](09_gs1-epcis.md) | GS1 Identifiers and EPCIS 2.0 | GTIN, GLN, SSCC, and event data that supports traceability. | 1,200–1,800 | planned |
-| 10 | [`10_apis-contracts-mdm.md`](10_apis-contracts-mdm.md) | APIs, Data Contracts, and MDM | Schema ownership, entity resolution, and breaking-change control. | 1,200–1,800 | planned |
-| 11 | [`11_quality-quarantine-lineage.md`](11_quality-quarantine-lineage.md) | Quality Tests, Quarantine, Versioning, and Lineage | Failing loudly, isolating bad rows, and reproducing any past plan. | 1,200–1,800 | planned |
+| 8 | [`08_edi-x12-edifact.md`](08_edi-x12-edifact.md) | EDI: X12 and EDIFACT | 850, 855, 856, 810, 846, 852, 940, 945, and their EDIFACT analogues. | 1,200–1,800 | complete |
+| 9 | [`09_gs1-epcis.md`](09_gs1-epcis.md) | GS1 Identifiers and EPCIS 2.0 | GTIN, GLN, SSCC, and event data that supports traceability. | 1,200–1,800 | complete |
+| 10 | [`10_apis-contracts-mdm.md`](10_apis-contracts-mdm.md) | APIs, Data Contracts, and MDM | Schema ownership, entity resolution, and breaking-change control. | 1,200–1,800 | complete |
+| 11 | [`11_quality-quarantine-lineage.md`](11_quality-quarantine-lineage.md) | Quality Tests, Quarantine, Versioning, and Lineage | Failing loudly, isolating bad rows, and reproducing any past plan. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -73,13 +73,14 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 11 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 11 |
 
-Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
-as each file is produced at its target length. The survey file linked above is complete at survey
-depth and can be used on its own.
+All eleven topic files are written and meet the quality bar in `MODULE_EXPANSION_SPEC.md` §5: at
+least 1,000 lines, all 17 sections present, arithmetic checked, sources real and graded. The
+module total is 14,231 lines. Every relative link in the module resolves. Status moves from
+`complete` to `reviewed` when a second reader signs off, and to `revised` after corrections.
 
 ## 7. Sources for this module
 
