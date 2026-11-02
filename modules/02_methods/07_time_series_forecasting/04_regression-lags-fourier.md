@@ -163,20 +163,17 @@ the box determines the method, the error contribution, and the conversation you 
 | Forecastable | Temperature, category demand, footfall, exchange rate, housing starts | Plug in an external forecast or your own model, with its error | Forecast error of the driver, amplified by the coefficient |
 | Simultaneous | Competitor reaction, own reactive price, service level, availability | Cannot be used at face value; instrument it, or treat it as a scenario | Bias, not variance, if ignored |
 
-Two consequences follow immediately.
-
 **The first box is where the value is.** Calendar and contract are the only inputs you can know
-exactly at any horizon. That is why calendar effects are the highest-return feature engineering in
-supply chain forecasting, and also why they are the most over-claimed: a model that "captures
-seasonality" has usually captured the day of week and the public holidays, which is real value and
-not the same thing as understanding demand.
+exactly at any horizon, which is why calendar effects are the highest-return feature engineering in
+supply chain forecasting and also the most over-claimed: a model that "captures seasonality" has
+usually captured the day of week and the public holidays, which is real value and not the same thing
+as understanding demand.
 
 **The fourth box is where the arguments are.** A simultaneous regressor is not useless for
-forecasting. It is useless for *intervention*. If you forecast price and demand jointly, and you
-never change the price rule, a regression on realised price can predict acceptably, because it is
-estimating a conditional expectation that is stable under the historical policy. The moment you use
-the model to ask "what if we raise price by 5%", the coefficient is answering a different question
-from the one you are asking. Section 5 Phase D step 22 states the test that distinguishes the two uses.
+forecasting; it is useless for *intervention*. If you never change the price rule, a regression on
+realised price can predict acceptably, because it estimates a conditional expectation that is stable
+under the historical policy. The moment you ask "what if we raise price by 5%", the coefficient is
+answering a different question. Section 5 Phase D step 22 states the test that separates the two uses.
 
 ### 3.3 Why the reported error is usually too small
 
@@ -195,9 +192,9 @@ the linear Gaussian case the two are related by a single term:
    At h = 13 with a forecast temperature path, the second term can dominate.
 ```
 
-This is not a technicality. It determines whether a prediction interval is 6% wide or 15% wide at the
-horizon the planner actually cares about, and it is the reason an interval that looks calibrated on
-one-step residuals will systematically under-cover at multi-step horizons.
+This is not a technicality: it determines whether an interval is 6% wide or 15% wide at the horizon
+the planner cares about, and why an interval calibrated on one-step residuals under-covers at
+multi-step horizons.
 
 > **Note:** When the regressors are stochastic, the forecast error distribution is not normal even if
 > everything else is Gaussian. The classical reference is Feldstein (1971) on the forecast error of
@@ -391,17 +388,16 @@ how a good forecast becomes a bad decision.
 
 ### Phase E — Estimate with an honest error structure
 
-**Step 23. Decide between regression with ARMA errors and a pure OLS with HAC errors.** Regression
-with ARMA errors models the residual autocorrelation explicitly, which improves multi-step forecasts
-because the error forecast is added to the regression forecast. HAC (heteroskedasticity- and
-autocorrelation-consistent) standard errors correct the inference but leave the point forecast
-unchanged. Use the first when the residual dynamics matter for the forecast; use the second when you
-only need honest standard errors.
+**Step 23. Decide between regression with ARMA errors and OLS with HAC errors.** ARMA errors model
+the residual autocorrelation explicitly and improve multi-step forecasts, because the error forecast
+is added to the regression forecast. HAC (heteroskedasticity- and autocorrelation-consistent)
+standard errors correct the inference and leave the point forecast unchanged. Use the first when the
+residual dynamics matter; the second when you only need honest standard errors.
 
 **Step 24. Do not difference the outcome reflexively.** Differencing removes the level information
-that a regression on price, weather, and promotion needs. If the outcome and a regressor are both
-trending, the choice is between a trend term, a cointegration model, and a regression in differences,
-and the choice must be stated. Module 04 topic 04 gives the test sequence.
+that a regression on price, weather, and promotion needs. With two trending series the choice is
+between a trend term, a cointegration model, and a regression in differences, and the choice must be
+stated. Module 04 topic 04 gives the test sequence.
 
 **Step 25. Check the residual autocorrelation before interpreting anything.** Plot the ACF, run
 Ljung-Box at the seasonal lag and twice it, and report the statistic. Residual autocorrelation at lag
@@ -413,8 +409,7 @@ treatment.
 
 **Step 26. Produce one declared path per regressor per horizon.** Not a value, a path. For contracted
 price, the path is the contract. For promotion, the frozen plan. For weather, an archived forecast or
-a seasonal-normal profile with a stated error. For a competitor index, your own model with its own
-error.
+a seasonal normal with a stated error. For a competitor index, your own model with its own error.
 
 **Step 27. Record the owner of each path.** The planner owns the promotion path, procurement owns the
 price path, the meteorologist or the vendor owns the weather path. A path with no owner is a guess
@@ -432,14 +427,13 @@ distribution over paths. Name the scenarios by the decision they test: "price he
 ### Phase G — Produce the distribution
 
 **Step 30. Simulate rather than add variances.** Draw the regressor paths from their stated
-distributions, evaluate the model on each draw, and take quantiles of the resulting outcome
-distribution. This handles non-linear specifications, correlated regressors, and the non-normality
-that stochastic regressors induce. Adding `beta' Sigma_x beta` to the residual variance is a linear
-approximation and is acceptable only for a quick check.
+distributions, evaluate the model on each draw, and take quantiles. This handles non-linear
+specifications, correlated regressors, and the non-normality that stochastic regressors induce.
+Adding `beta' Sigma_x beta` to the residual variance is a linear approximation for a quick check.
 
 **Step 31. Separate the variance components and report them.** Model residual, regressor path,
-revision, and parameter uncertainty. The shares tell the business where to invest: if the path
-dominates, improve the driver forecast; if the residual dominates, the model is missing structure.
+revision, and parameter uncertainty. The shares say where to invest: if the path dominates, improve
+the driver forecast; if the residual dominates, the model is missing structure.
 
 **Step 32. Check the interval against realised errors at each horizon.** A 90% interval should contain
 about 90% of realised outcomes at each `h`, not 90% overall. Calibration that holds on average and
@@ -452,8 +446,8 @@ forecast from origin `t0` must be the path that was available at `t0`, not the r
 the path that a later, better-informed model would have produced.
 
 **Step 34. Use vintages for revised series.** If the warehouse holds only the latest revision, say so
-and bound the bias. A backtest on revised data is an upper bound on accuracy, and the gap is usually
-larger than the improvement the project is claiming.
+and bound the bias: a backtest on revised data is an upper bound on accuracy, and the gap is usually
+larger than the improvement the project claims.
 
 **Step 35. Re-fit inside each fold.** Scaling parameters, Box-Cox lambda, the harmonic order `K`, the
 holiday window, and the lag length are all estimated quantities. Selecting them on the whole sample
@@ -553,10 +547,9 @@ AICc selects `K = 3` and BIC selects `K = 3`, which is reassuring on 156 observa
 is priced as worse by both criteria. Nineteen parameters against 156 observations is already a
 parameter-to-observation ratio of about one in eight, so the cap is doing real work.
 
-> **Note:** The seasonal shape here has a summer peak and a smaller pre-Christmas peak. `K = 3` is
-> enough to represent both because they are smooth. A one-week spike that is not a holiday — a
-> competitor's stock-out, for instance — cannot be represented by any `K` below the Nyquist limit, and
-> should not be: it is an event, not a season.
+> **Note:** The seasonal shape has a summer peak and a smaller pre-Christmas peak, and `K = 3`
+> represents both because they are smooth. A one-week spike that is not a holiday cannot be
+> represented by any `K` below the Nyquist limit, and should not be: it is an event, not a season.
 
 ### 6.5 The distributed lag on price and promotion
 
@@ -654,9 +647,8 @@ on a period in which price moved within a narrow contractual band, the realised 
 simultaneous, and no instrument has been used. The elasticity is a forecasting parameter, not a
 causal one, and the difference is the subject of section 5 Phase D step 22.
 
-It also cannot say anything about a price outside the observed range. The contract has never been
-above 2.79, and a log-log specification will happily extrapolate to 3.50 with a straight line that no
-observation supports.
+It also cannot say anything about a price outside the observed range: the contract has never been
+above 2.79, and a log-log specification will extrapolate to 3.50 along a line no observation supports.
 
 ## 7. Code, query, or calculation
 
@@ -731,9 +723,8 @@ and validated on the other has a one-week misalignment that looks like a demand 
 
 The practical consequence is stark. If the warehouse keeps only the latest revision, an honest
 backtest of a model that uses revised regressors cannot be run without reconstructing history, and
-the reconstruction is usually impossible. In that situation the correct professional move is to say
-so: report the backtest as an upper bound, state the direction of the bias, and quantify it on the one
-or two series where a vintage happens to exist.
+that is usually impossible. The correct professional move is to say so: report the backtest as an
+upper bound, state the direction of the bias, and quantify it where a vintage does exist.
 
 ### 8.3 Weather and external drivers
 
@@ -838,15 +829,14 @@ libraries ask for "as-of" filtering of exogenous covariates in backtesting, whic
 that the default implementations do not enforce the availability boundary. Grade D for tool
 documentation, E for course notes, A for the formal leakage paper.
 
-One number from the practitioner material is worth repeating because it is the pattern rather than the
-magnitude: in the documented cases, every leaky feature outperformed the honest model in validation,
-and the weather covariate contributed far less in production than in the leaky backtest. That is the
-signature to look for.
+One pattern from the practitioner material is worth repeating: in the documented cases, every leaky
+feature outperformed the honest model in validation and contributed far less in production. That is
+the signature to look for.
 
 ## 10. Failure modes and red flags
 
-The first four failures are silent: the regression output looks healthy, the R-squared is high, and
-the coefficients have the expected signs. The red flag is in the design, not the output.
+The first four failures are silent: the output looks healthy, the R-squared is high, and the signs are
+expected. The red flag is in the design, not the output.
 
 | # | Failure mode | What it looks like | Why it happens | Red flag visible in a meeting or dataset | Repair |
 |---:|---|---|---|---|---|
@@ -972,13 +962,13 @@ three invalidating assumptions named. **Time:** 40 minutes.
 
 ### Answer 1 — classification
 
-A strong submission has at least one regressor in each box and is specific about the path. A typical
-set for a grocery category: day of week and Easter (known exactly, zero error); competitor price
-(known with revision, error equal to the restatement dispersion, path lagged by the audit lag);
-temperature (forecastable, error from the meteorological service's published skill); own promotional
-price (simultaneous if markdowns are reactive, known exactly if the plan is frozen). The dropped
-regressor is usually realised average selling price or ending inventory, and the submission should say
-which and why. A weak submission classifies everything as "external" and gives no path owner.
+A strong submission has at least one regressor in each box and is specific about the path. For a
+grocery category: day of week and Easter (known exactly, zero error); competitor price (known with
+revision, error from the restatement dispersion, path lagged by the audit lag); temperature
+(forecastable, error from the meteorological service's published skill); own promotional price
+(simultaneous if markdowns are reactive, known exactly if the plan is frozen). The dropped regressor
+is usually realised average selling price or ending inventory. A weak submission classifies
+everything as "external" and gives no path owner.
 
 ### Answer 2 — basis and K
 
@@ -1006,9 +996,9 @@ days, and two price lags account for nine parameters before the harmonics.
                                 = -663.45 + 34 + 4.43 = -625.02
 ```
 
-`K = 3` minimises and `K = 4` is penalised, matching section 6.4. A submission that reports AICc
-without the `2p(p+1)/(n-p-1)` correction, or that changes the parameter count between rows, does not
-count: the correction is 1.8 at `K = 1` and 4.4 at `K = 4`, which is enough to change a close call.
+`K = 3` minimises and `K = 4` is penalised, matching section 6.4. A submission that omits the
+`2p(p+1)/(n-p-1)` correction, or changes the parameter count between rows, does not count: the
+correction is 1.8 at `K = 1` and 4.4 at `K = 4`, enough to change a close call.
 
 ### Answer 3 — proximity regressor
 
@@ -1023,11 +1013,9 @@ window runs from the 25th of the previous month to the 8th of the current month.
    share_current  = 8 / 15 = 0.5333
 ```
 
-Both shares sum to one across the two affected months. Centre on the mean share over the full
-calendar, not on 0.5: if the first Monday falls early in the month in most years, the current-month
-mean share is well above 0.5 and using 0.5 biases the intercept. State whether the regressor measures
-intensity (proportionality: each period gets its share of the total effect) or days (count: each
-period gets its day count), because the two coefficients carry different units.
+Both shares sum to one. Centre on the mean share over the full calendar, not on 0.5, because the
+current-month mean share is well above 0.5 and using 0.5 biases the intercept. State whether the
+regressor measures intensity (proportionality) or days (count): the two carry different units.
 
 ### Answer 4 — cumulative effect
 
@@ -1060,11 +1048,9 @@ The channels present, in likely order of magnitude:
 3. **Selection leakage.** If `K`, the lag length, or the holiday window were chosen on the full sample
    before the backtest, the reported error is optimistic. Ask for the selection log and the fold
    boundaries.
-4. **Competitor price lag.** Two weeks may be correct, but the audit's publication lag must be checked
-   against it. If the audit is published five days after week end, a two-week lag is honest; a
-   one-week lag is not.
-5. **Revised competitor price.** If the audit is occasionally restated, the backtest uses the
-   restatement. Small, but it should be stated.
+4. **Competitor price lag.** Two weeks may be correct, but the audit's publication lag must be
+   checked against it: a two-week lag is honest if the audit appears five days after week end, a
+   one-week lag is not. Occasional restatements of the audit are a fifth, smaller channel.
 
 The requests are: the archived temperature forecasts by issue date, the markdown log, the model
 selection log with fold boundaries, and the competitor audit publication timestamps.
@@ -1081,10 +1067,9 @@ selection log with fold boundaries, and the competitor audit publication timesta
 ```
 
 The coefficient is applied to the path error before squaring, which is the step most submissions miss.
-The independence assumption is doing work: if the two path errors are correlated, the cross term
-`2 beta_1 beta_2 cov(x_1, x_2)` must be included, and it can be negative. With a residual of 6% and a
-path share of 14%, the unconditional error is about 8% larger than the conditional one, which matters
-for a safety-stock calculation but not for a capacity plan.
+The independence assumption is doing work: if the path errors are correlated, the cross term
+`2 beta_1 beta_2 cov(x_1, x_2)` must be included, and it can be negative. With a 6% residual and a 14%
+path share, the unconditional error is 8% larger than the conditional one.
 
 ### Answer 7 — the wrong sign
 
@@ -1099,27 +1084,23 @@ estimate by instrumental variables, or find a period in which price changed for 
 For the omitted variable, add the quality or pack variable and see whether the sign flips. For
 composition, rebuild the price variable at constant mix.
 
-In the meantime, report the coefficient as unidentified and do not use the model for price scenarios.
-Use it only for forecasting under the historical price policy, and say so.
+In the meantime, report the coefficient as unidentified, use the model only for forecasting under the
+historical price policy, and say so.
 
 ### Answer 8 — the note
 
 Conditional: "Given the contract price of EUR 2.49, the frozen promotion plan with one full-depth week
 in week 4, and a seasonal-normal temperature path, volume for weeks 1 to 13 is forecast at 1,910 units
-per week. The 90% interval, conditional on those paths, is 1,735 to 2,100 units per week, a
-conditional error of 10.8% at the median."
+per week, with a 90% interval, conditional on those paths, of 1,735 to 2,100 units (10.8% error)."
 
 Unconditional: "Including the error in the temperature path, the 90% interval widens to 1,700 to 2,145
-units per week, a 12.2% error. The forecast assumes the contract price holds for the full horizon, the
-promotion runs as planned, and temperature remains within its historical range. It would be
-invalidated by a contract renegotiation, a promotion cancellation, or a heat event outside the
-observed range, and it should not be used to evaluate a price change."
+units per week, a 12.2% error. The forecast assumes the contract price holds, the promotion runs as
+planned, and temperature stays within its historical range; a contract renegotiation, a promotion
+cancellation, or a heat event outside the range would invalidate it, and it should not be used to
+evaluate a price change."
 
 Both paragraphs must carry units and intervals, and the second must name three assumptions. A
 submission that reports one interval and calls it "the" forecast fails.
-
-A weak protocol says "use rolling origin" and stops. It loses marks for not addressing the vintage gap
-and for not stating who owns the path.
 
 ## 14. Interview questions
 
@@ -1192,9 +1173,8 @@ observations is easy with a simultaneous regressor. Weak: "t = 8 is significant,
 ## 15. Key terms
 
 - **Forecast origin** — the point in time whose information set bounds the forecast.
-- **Forecast horizon** — the number of steps between origin and target.
-- **Information set** — everything knowable at the origin, including publication lags.
-- **Availability type** — known exactly, known with revision, forecastable, or simultaneous.
+- **Information set** — everything knowable at the origin, including publication lags; the
+  **forecast horizon** is the number of steps between origin and target.
 - **Regressor path** — the sequence of regressor values used across the horizon.
 - **Conditional forecast** — a forecast holding the regressor path fixed.
 - **Unconditional forecast** — a forecast integrating over the path distribution.
@@ -1213,15 +1193,12 @@ observations is easy with a simultaneous regressor. Weak: "t = 8 is significant,
 - **Moving holiday** — a holiday whose calendar date changes year to year.
 - **Holiday window** — the span of days around an event over which its effect acts.
 - **Proximity regressor** — the share of a window falling in a period.
-- **Calendar effect** — variation attributable to the arrangement of days rather than to demand.
-- **Leakage** — use of information not available at the origin.
-- **Target leakage** — leakage where a regressor is a function of the outcome.
-- **Data vintage** — a series as it stood at a particular date.
-- **Point-in-time** — a data architecture preserving every vintage.
-- **Scenario forecast** — a forecast under a named, non-probabilistic path.
+- **Leakage** — use of information not available at the origin; **target leakage** is the case where a
+  regressor is a function of the outcome.
+- **Data vintage** — a series as it stood at a particular date; **point-in-time** is the architecture
+  that preserves every vintage.
 - **Elasticity** — proportional change in outcome per proportional change in a regressor.
-- **Endogeneity** — correlation between a regressor and the error term.
-- **Simultaneity** — endogeneity arising because outcome and regressor are jointly determined.
+- **Endogeneity** — correlation between a regressor and the error term; **simultaneity** is the joint-determination case.
 
 ## 16. Sources
 

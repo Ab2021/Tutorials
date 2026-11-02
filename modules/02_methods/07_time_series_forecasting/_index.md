@@ -39,9 +39,9 @@ not the whole program.
 | 1 | [`01_forecastability-benchmarks.md`](01_forecastability-benchmarks.md) | Forecastability and Benchmarks First | Naive and seasonal-naive baselines and the share of series that are forecastable. | 1,200–1,800 | complete |
 | 2 | [`02_exponential-smoothing.md`](02_exponential-smoothing.md) | Exponential Smoothing | Level, trend, seasonality, damping, and the state-space view. | 1,200–1,800 | complete |
 | 3 | [`03_arima-sarimax.md`](03_arima-sarimax.md) | ARIMA, SARIMA, and SARIMAX | Differencing, orders, seasonality, and exogenous regressors. | 1,200–1,800 | complete |
-| 4 | [`04_regression-lags-fourier.md`](04_regression-lags-fourier.md) | Regression with Lags, Fourier Terms, and Exogenous Variables | Calendar and causal features without leaking the future. | 1,200–1,800 | planned |
+| 4 | [`04_regression-lags-fourier.md`](04_regression-lags-fourier.md) | Regression with Lags, Fourier Terms, and Exogenous Variables | Calendar and causal features without leaking the future. | 1,200–1,800 | complete |
 | 5 | [`05_hierarchy-aggregation.md`](05_hierarchy-aggregation.md) | Hierarchy and Aggregation | Where to forecast and how aggregation changes error. | 1,200–1,800 | planned |
-| 6 | [`06_intermittent-demand.md`](06_intermittent-demand.md) | Intermittent Demand | Croston, SBA, TSB, and classification before method choice. | 1,200–1,800 | planned |
+| 6 | [`06_intermittent-demand.md`](06_intermittent-demand.md) | Intermittent Demand | Croston, SBA, TSB, and classification before method choice. | 1,200–1,800 | complete |
 | 7 | [`07_forecast-combination.md`](07_forecast-combination.md) | Forecast Combination | Why averaging beats model selection more often than expected. | 1,200–1,800 | planned |
 | 8 | [`08_rolling-origin-backtesting.md`](08_rolling-origin-backtesting.md) | Rolling-Origin Backtesting | Expanding and sliding origins, horizon effects, and test discipline. | 1,200–1,800 | planned |
 | 9 | [`09_error-metrics-cost.md`](09_error-metrics-cost.md) | Error Metrics and Their Cost Interpretation | Choosing a metric that maps to the decision's cost. | 1,200–1,800 | planned |
