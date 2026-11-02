@@ -31,8 +31,8 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_estimands-question-types.md`](01_estimands-question-types.md) | Estimands and Question Types | Descriptive, predictive, and causal questions and the estimand each implies. | 1,200–1,800 | planned |
-| 2 | [`02_probability-bootstrap.md`](02_probability-bootstrap.md) | Probability, Sampling, Bootstrap, and Intervals | Uncertainty that survives non-normal, dependent supply chain data. | 1,200–1,800 | planned |
+| 1 | [`01_estimands-question-types.md`](01_estimands-question-types.md) | Estimands and Question Types | Descriptive, predictive, and causal questions and the estimand each implies. | 1,200–1,800 | complete |
+| 2 | [`02_probability-bootstrap.md`](02_probability-bootstrap.md) | Probability, Sampling, Bootstrap, and Intervals | Uncertainty that survives non-normal, dependent supply chain data. | 1,200–1,800 | complete |
 | 3 | [`03_hypothesis-tests.md`](03_hypothesis-tests.md) | Hypothesis Tests and Multiple Comparisons | p-values, effect sizes, and the false discovery problem in metric dashboards. | 1,200–1,800 | planned |
 | 4 | [`04_regression-time-series.md`](04_regression-time-series.md) | Regression with Time Series, Seasonality, and Holidays | Fourier terms, holiday effects, and distributed lags. | 1,200–1,800 | planned |
 | 5 | [`05_autocorrelation-robust-errors.md`](05_autocorrelation-robust-errors.md) | Autocorrelation, Heteroskedasticity, and Robust Errors | Why naive standard errors overstate confidence. | 1,200–1,800 | planned |

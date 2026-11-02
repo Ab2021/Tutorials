@@ -31,15 +31,6 @@ Three question types are in play, and they are not a hierarchy:
 - **What would happen if we intervened?** A causal question. It asks for a comparison between two
   states of the world that cannot both be observed, in the same units, over the same window.
 
-Each tolerates different data and different errors. A descriptive estimate can survive noisy
-measurement, because noise that is unbiased cancels across a census and can be reconciled; it
-cannot survive a change in the definition of what is being counted. A predictive model can survive
-confounding, because a confounded feature is still a useful feature; it cannot survive a change in
-the distribution it was trained on. A causal estimate can survive a good deal of measurement error
-in the outcome, which attenuates the estimate without reversing its sign; it cannot survive
-confounding, because no amount of data repairs a comparison between groups that were never
-comparable.
-
 The organising concept is the **estimand**: a precise statement of the quantity to be estimated,
 fixed before the data are touched. The word is not a synonym for "metric" or "target". It names the
 population, the unit, the outcome, the time window, the intervention, and the comparison, and it
@@ -63,16 +54,15 @@ in week three.
 
 This topic is first in the module because every later topic assumes its vocabulary. Topic 02
 builds uncertainty around an estimate; you cannot say what an interval is an interval *for* until
-you have said what is being estimated. Topic 06 draws causal graphs; a graph is a claim about which
-comparisons are valid, which is an estimand decision. Topic 07 chooses between experiments and
-quasi-experiments; that choice is determined by the estimand, not by convenience. Topic 10 asks how
-fragile an estimate is; fragility is only meaningful relative to a stated target.
+you have said what is being estimated. Topic 06 draws causal graphs, and a graph is a claim about
+which comparisons are valid, which is an estimand decision. Topic 07's choice between experiments
+and quasi-experiments is determined by the estimand, not by convenience. Topic 10 asks how fragile
+an estimate is, and fragility is only meaningful relative to a stated target.
 
 The practical goal is narrower than the philosophy. By the end you should be able to take a
 sentence a business partner has said, decide which of the three question types it is, write the
-estimand in six slots, and say what would have to be true for the answer to be right — in about
-ten minutes, before anyone opens a notebook. That skill prevents more wasted modelling than any
-technique in the rest of this program.
+estimand in six slots, and say what would have to be true for the answer to be right — in ten
+minutes, before anyone opens a notebook.
 
 ## 2. Learning outcomes
 
@@ -86,15 +76,10 @@ By the end of this topic you can:
    **explain** where the two framings differ and why.
 4. **Run** the target trial thought experiment for a proposed intervention and **identify** the
    point at which the observational data cannot emulate the trial.
-5. **Distinguish** an estimand from an estimator and an estimate, and **diagnose** which of the
-   three a given project description has actually specified.
-6. **Detect** prediction-versus-causation confusion in a written claim, including the common
-   supply chain form in which forecast accuracy is offered as evidence that an intervention
-   worked.
-7. **Apply** a mismatch checklist to a project proposal and **reject or repair** it before any
-   model is fitted.
-8. **State** the identification assumptions a causal estimand requires and **name** the diagnostic
-   that would show each one failing.
+5. **Distinguish** an estimand from an estimator and an estimate, and **detect** the common supply
+   chain confusion in which forecast accuracy is offered as evidence that an intervention worked.
+6. **Apply** a mismatch checklist to a project proposal, **reject or repair** it before any model is
+   fitted, and **name** the identification assumption and diagnostic behind each causal claim.
 
 Each outcome maps to an exercise in section 12 and a self-check item in section 13.
 
@@ -178,36 +163,18 @@ professional failure in this module.
 | Predictive | The forecast is wrong on the deployment distribution, or right for the wrong reason | Confounding; collinearity; proxy variables | Distribution shift; leakage; target constructed after the fact | Rolling-origin backtest, holdout, decision-loss evaluation |
 | Causal | The contrast is between groups that were not comparable, or the intervention is not well defined | Classical measurement error in the outcome; modest overlap problems | Confounding; positivity violations; interference; inconsistent treatment definitions | Experiment, difference-in-differences, instrument, regression discontinuity |
 
-Read the third column twice. It says that the three types accept different imperfections. A
-descriptive estimate tolerates noise but not a shifted boundary. A predictive model tolerates a
-confounded feature but not a shifted population. A causal estimate tolerates a noisy ruler but not
-a rigged comparison. An analyst who applies one standard of rigour to all three will either
-over-engineer the descriptive work or under-engineer the causal work, and the second is the
-expensive mistake.
+Read the third column twice. A descriptive estimate tolerates noise but not a shifted boundary. A
+predictive model tolerates a confounded feature but not a shifted population. A causal estimate
+tolerates a noisy ruler but not a rigged comparison. An analyst who applies one standard of rigour
+to all three will over-engineer the descriptive work and under-engineer the causal work, and the
+second is the expensive mistake.
 
 ### 3.2 Why "should we" is not automatically causal
 
-A common misreading of the three-way split is that decision questions are causal questions. They
-are not, always. Consider "which of these two suppliers should we use next quarter?" If the choice
-does not change the suppliers' behaviour, the required object is a prediction of each supplier's
-lead time and defect rate, combined with a loss function over the consequences. No counterfactual
-is needed. Now consider "should we change the receiving process?" The choice changes the process,
-so the required object is causal: what would throughput be under the new process.
-
-The test is mechanical. **Does the action change the outcome, or only select among outcomes that
-will happen anyway?** If it selects, you need prediction plus a loss. If it changes, you need
-causation. Confusing the two produces the strange failure in which a team runs an expensive
-experiment to answer a question that a good forecast would have settled, or ships a forecast to
-answer a question that only an experiment could settle.
-
-### 3.3 The three doors are not a sequence
-
-A project often needs all three, in a specific order, and the order matters. A demand planning
-system needs a descriptive estimate of history, a predictive model of future demand, and — if it
-is to recommend a price change — a causal estimate of the price response. These are three
-deliverables with three estimands, and they should be documented separately. When they are merged
-into one "model", the causal component quietly inherits the predictive component's validation
-standard, which is how a system ends up optimising a price against a correlation.
+A decision question is causal only if the action changes the outcome. "Which supplier should we
+use?" selects among outcomes that will occur anyway, so it needs a prediction plus a loss. "Should
+we change the receiving process?" changes the process, so it needs a causal estimate. The test is
+mechanical: **does the action change the outcome, or only select among outcomes?**
 
 ## 4. Definitions and vocabulary
 
@@ -216,7 +183,6 @@ standard, which is how a system ends up optimising a price against a correlation
 | Estimand | The precise quantity to be estimated, defined before data are analysed | Used as a synonym for "metric" or "KPI" | Structured statement, no unit of its own |
 | Estimator | The procedure or algorithm that produces an estimate of the estimand | Named when the estimand was requested | Method name |
 | Estimate | The numerical value produced by an estimator on a dataset | Presented as if it were the estimand | Same unit as the estimand |
-| Question type | Descriptive, predictive, or causal; determined by whether a counterfactual is required | Assumed from the job title of the requester | Categorical |
 | Descriptive question | Asks for a fact about a defined population, period, and definition | Treated as a trivial precursor to "real" analysis | Categorical |
 | Predictive question | Asks for a statement about an unobserved observation, conditional on stated information | Confused with a causal question when phrased as "will X cause Y" | Categorical |
 | Causal question | Asks for a contrast between potential outcomes under two or more well-defined interventions | Confused with a descriptive comparison of groups | Categorical |
@@ -228,10 +194,8 @@ standard, which is how a system ends up optimising a price against a correlation
 | Unit of assignment | The entity to which the intervention is applied | Assumed to equal the unit of analysis | Entity key |
 | Target population | The set of units to which the estimand is intended to generalise | Left as "our customers" | Eligibility criteria |
 | Time zero | The moment at which eligibility is assessed and follow-up begins | Set to the first observed transaction | Date or timestamp |
-| Follow-up horizon | The period over which the outcome is measured | Chosen to fit available data | Duration, with a start rule |
 | Outcome variable | The measured quantity, including its instrument and aggregation | Named without its measurement rule | Unit plus definition |
 | Population-level summary | The summary measure that makes two conditions comparable (mean difference, ratio, quantile difference) | Replaced by "the effect" | Contrast with a scale |
-| Contrast | The comparison between summary values under two conditions | Omitted, leaving a naked number | Difference, ratio, or other functional |
 | Intercurrent event | An event after time zero that affects the interpretation of the outcome, such as non-execution or a competing event | Ignored, or handled ad hoc in the analysis | Event definition plus date |
 | Treatment policy strategy | Analyse outcomes regardless of whether the intervention was received as planned | Confused with "intention to treat" in all respects | Strategy label |
 | Hypothetical strategy | Estimate the outcome that would have been observed had the intercurrent event not occurred | Assumed to be obtainable from the observed data without assumptions | Strategy label |
@@ -249,18 +213,12 @@ standard, which is how a system ends up optimising a price against a correlation
 | Confounder | A variable that affects both the treatment and the outcome | Confused with any correlate of the outcome | Causal-graph node |
 | Collider | A variable affected by both treatment and outcome; conditioning on it induces association | Controlled for because it "seems relevant" | Causal-graph node |
 | Mediator | A variable on the causal path from treatment to outcome | Controlled for when the total effect is wanted | Causal-graph node |
-| Selection on observables | The assumption that all confounders are measured | Asserted from data availability | Assumption |
-| Prediction interval | An interval for a future observation, wider than a confidence interval for a mean | Reported as a confidence interval | Outcome units |
-| Calibration | Agreement between predicted probabilities or intervals and observed frequencies | Replaced by a single accuracy score | Proportion, or reliability slope |
-| Distribution shift | A change in the joint distribution of features and outcome between training and deployment | Detected only after performance falls | Divergence measure |
-| Leakage | Information in the training data that would not be available at prediction time | Discovered only in production | Feature audit |
 | Incrementality | The part of an outcome that would not have occurred without the intervention | Equated with observed lift | Outcome units |
 | Baseline | The counterfactual level against which an intervention's outcome is compared | Taken as the pre-period actual | Outcome units |
 | Lift | The difference between observed and baseline outcome | Reported without the baseline's definition | Outcome units or percent |
 | Decision rule | The mapping from an estimate to an action, fixed in advance | Invented after seeing the estimate | If-then specification |
 | Loss function | The cost of each possible error, used to choose among models or actions | Assumed symmetric | Currency per unit of error |
 | Sensitivity analysis | An analysis that probes whether conclusions hold under departures from assumptions | Run only when the main result is doubted | Analysis label |
-| Pre-specification | Fixing the estimand, analysis, and decision rule before seeing outcome data | Confused with "we discussed it internally" | Documented plan |
 
 Four of these deserve expansion, because they carry most of the misunderstanding.
 
@@ -275,25 +233,22 @@ When a regulator or an auditor asks "what are you estimating", answering with th
 more serious one, because it hides the choice that mattered.
 
 **Counterfactual and baseline.** A counterfactual is a potential outcome under a specified
-intervention; it is a defined quantity that is missing. A baseline is whatever number the analyst
-chose to compare against. They coincide only when the baseline is a credible estimate of the
-counterfactual. In practice, "baseline" is often the pre-period actual, which conflates the
-intervention's effect with everything else that changed between the two periods. The whole of
-causal design is the business of making a baseline into a counterfactual.
+intervention; a baseline is whatever number the analyst chose to compare against. They coincide
+only when the baseline is a credible estimate of the counterfactual. In practice the baseline is
+often the pre-period actual, which conflates the intervention's effect with everything else that
+changed. Causal design is the business of making a baseline into a counterfactual.
 
 **Intercurrent event.** The ICH term for anything after time zero that affects the interpretation
 of the outcome: a patient stopping treatment, a store not executing a display, a supplier
-substituting a part, a promotion running out of stock. It is not missing data and it is not a
-protocol deviation in the ordinary sense. It is a fork in what the question means, and the
-addendum's contribution is to force an explicit choice among five strategies for handling it.
+substituting a part, a promotion running out of stock. It is not missing data. It is a fork in what
+the question means, and the addendum forces an explicit choice among five handling strategies.
 Supply chain analytics is full of intercurrent events and almost never names them.
 
-**Confounder, collider, mediator.** These are three positions a variable can occupy relative to
-treatment and outcome, and the correct analytic response differs for each: adjust for a
-confounder, do not adjust for a collider, and adjust for a mediator only if you want a direct
-rather than a total effect. Topic 06 treats the graph machinery. Here the point is that the
-distinction is an estimand question before it is a modelling question, because "the effect of X on
-Y" is ambiguous until you say whether you mean the total effect or the effect net of M.
+**Confounder, collider, mediator.** Three positions a variable can occupy relative to treatment
+and outcome: adjust for a confounder, do not adjust for a collider, and adjust for a mediator only
+if you want a direct rather than a total effect. Topic 06 treats the graph machinery. Here the point
+is that the distinction is an estimand question before it is a modelling one, because "the effect
+of X on Y" is ambiguous until you say whether you mean the total or the effect net of M.
 
 ## 5. The mechanics, step by step
 
@@ -304,20 +259,12 @@ analysis. Nine steps, roughly ten minutes of thinking, and it must happen before
 
 ### 5.1 Step 1 — Name the decision and the decision-maker
 
-An analytics question that does not change a decision is a curiosity. The first step is not a
-formality: it determines the population, the horizon, and the loss.
-
-Ask: **what will someone do differently if the answer is A rather than B?** If the answer is
-"nothing", stop. If the answer is "they will feel informed", stop. If the answer is "they will
+An analytics question that does not change a decision is a curiosity. Ask: **what will someone do
+differently if the answer is A rather than B?** If the answer is "nothing", stop. If it is "they will
 renegotiate the supplier contract in March", you have a population (that supplier's lanes), a
-horizon (through the contract term), and a loss (the cost of a wrong renegotiation).
-
-Two follow-ups make the decision concrete. **Who acts?** A role, not a department. **When?** A
-date, because a causal estimate delivered after the decision has the same value as no estimate.
-
-> **Note:** "Name the decision" is not a demand that every analysis be immediately actionable.
-> Descriptive reporting often supports a decision that is diffuse and slow. The demand is that
-> you can *state* the decision, not that it is imminent.
+horizon (through the contract term), and a loss (the cost of a wrong renegotiation). Name the role
+that acts, and the date by which the answer is needed: a causal estimate delivered after the
+decision has the same value as no estimate.
 
 ### 5.2 Step 2 — Classify the question by its counterfactual
 
@@ -336,15 +283,10 @@ comparing what happened with what would have happened under a different action?*
 | "Which supplier should we use?" | Predictive plus a loss | The choice selects among outcomes that will occur anyway | Predicted outcomes and a cost model |
 | "Should we change the receiving process?" | Causal | The choice changes the process | A target trial and an identification strategy |
 
-The distinction between rows five and eight is the one most often missed. Both are phrased as
-questions about suppliers and both sound like decisions. Only the fifth changes the world.
-
-Beware three linguistic traps. **"Will X cause Y?"** is causal, not predictive, even though it is
-in the future tense; the future tense describes when the outcome is measured, not what is being
-estimated. **"What is the impact of X?"** is causal, and "impact" is doing the work that "effect"
-should do. **"What drives Y?"** is ambiguous between prediction (which features are associated),
-mechanism (which pathways), and intervention (what would change Y if we moved it). Ask which one
-before answering.
+Rows eight and nine are the pair most often confused: both are operational decisions, and only the
+ninth changes the world. Three linguistic traps recur. **"Will X cause Y?"** is causal despite the
+future tense. **"What is the impact of X?"** is causal, with "impact" doing the work "effect"
+should do. **"What drives Y?"** is ambiguous between association, mechanism, and intervention.
 
 ### 5.3 Step 3 — Write the six slots
 
@@ -362,18 +304,17 @@ compute the same quantity.
 
 Two slots carry disproportionate weight in supply chain work.
 
-**Unit of analysis versus unit of assignment.** A promotion is assigned to a store and measured
-on baskets. A supplier policy is assigned to a lane and measured on orders. A routing change is
+**Unit of analysis versus unit of assignment.** A promotion is assigned to a store and measured on
+baskets; a supplier policy is assigned to a lane and measured on orders; a routing change is
 assigned to a depot and measured on parcels. When the two differ, the outcome is correlated within
-the assignment unit, and an analysis that treats baskets as independent will report standard
-errors that are too small by a large factor. The estimand must state both, even when they coincide.
+the assignment unit, and treating baskets as independent reports standard errors that are too
+small by a large factor. The estimand must state both, even when they coincide.
 
-**Time zero.** In a trial, time zero is the moment of randomisation, and eligibility is assessed
-just before it. In observational data, time zero is usually chosen by the analyst and is the
-single most common source of a specific bias: if units are selected into the treated group because
-of something that happened before follow-up began, the pre-follow-up period is "immortal" and the
-treated group looks better by construction. The fix is to align time zero with the decision point
-and to assess eligibility at that moment, not earlier.
+**Time zero.** In a trial, time zero is randomisation, and eligibility is assessed just before it.
+In observational data, time zero is usually chosen by the analyst and is the single most common
+source of a specific bias: if units are selected into the treated group because of something before
+follow-up began, the pre-follow-up period is "immortal" and the treated group looks better by
+construction. Align time zero with the decision point and assess eligibility at that moment.
 
 ### 5.4 Step 4 — Reconcile with the ICH E9(R1) attributes
 
@@ -388,13 +329,13 @@ one-to-one, and understanding why is instructive.
 | Population-level summary | Comparison | Names the summary measure explicitly, separate from the contrast |
 | Strategy for handling intercurrent events | No direct equivalent | Forces one of five strategies to be chosen and defended |
 
-The two framings differ in emphasis rather than substance. The six-slot version separates
-**time** and **unit** because supply chain analyses routinely get them wrong in ways that clinical
-trials do not: observational windows are chosen by the analyst, and assignment and measurement
-often occur at different grains. The five-attribute version separates **summary measure** from
-**contrast** because the choice between a difference and a ratio is a substantive decision that
-analysts otherwise make by habit. A complete statement uses both: six slots for the substance, and
-the ICH vocabulary for the intercurrent-event question.
+The two framings differ in emphasis. The six-slot version separates **time** and **unit** because
+supply chain analyses routinely get them wrong: observational windows are chosen by the analyst,
+and assignment and measurement often occur at different grains. The five-attribute version
+separates **summary measure** from **contrast** because choosing a difference rather than a ratio
+is a substantive decision. Use both: six slots for the substance, ICH vocabulary for intercurrent
+events. The addendum also separates sensitivity analyses, which target the same estimand under
+departures from assumptions, from supplementary analyses, which target a different estimand.
 
 The five strategies for intercurrent events are worth memorising, because they transfer directly.
 
@@ -406,17 +347,13 @@ The five strategies for intercurrent events are worth memorising, because they t
 | While on treatment | Effect only during the period the patient took the drug | Effect only during the weeks the promotion was live on shelf |
 | Principal stratum | Effect in the patients who would adhere | Effect in the stores that would comply if assigned |
 
-The choice changes the number, sometimes the sign. A promotion analysed under a treatment-policy
-strategy includes stores that never set up the display, so the estimated effect is diluted by
-non-compliance. The same promotion analysed under a hypothetical strategy estimates the effect if
-execution were perfect, which is the right number for a decision about whether the *mechanism*
-works and the wrong number for a decision about whether to *run the programme* as it is actually
-executed.
+The choice changes the number, sometimes the sign. A treatment-policy analysis includes stores
+that never set up the display, so the effect is diluted by non-compliance. A hypothetical analysis
+estimates the effect if execution were perfect — the right number for whether the *mechanism*
+works, the wrong number for whether to *run the programme* as it is actually executed.
 
-> **Note:** The ICH addendum separates sensitivity analyses, which probe robustness to departures
-> from assumptions while targeting the same estimand, from supplementary analyses, which target
-> different estimands. Mixing the two is a common reporting failure: a "sensitivity analysis" that
-> quietly estimates a per-protocol effect is not a sensitivity analysis, it is a second study.
+> **Note:** The five strategies are not interchangeable refinements. Each defines a different
+> estimand, and a report that does not name the strategy cannot be compared with one that does.
 
 ### 5.5 Step 5 — Run the target trial thought experiment
 
@@ -444,7 +381,7 @@ zero may be ambiguous, because the promotion's start date is recorded inconsiste
 may be present, because promoted stores drew demand from neighbouring stores that were not
 promoted.
 
-Naming the component that cannot be emulated is the deliverable. It converts "we can't do causal
+Naming the component that cannot be emulated is the deliverable: it converts "we can't do causal
 inference" into "we can estimate this, but the estimate assumes no spillover between stores within
 15 km, and here is the test for that".
 
@@ -484,11 +421,10 @@ is to know which diagnostic would falsify the estimate.
 | Causal | Consistency | The treatment is defined so that the observed outcome equals the potential outcome under it | Audit for multiple versions of the treatment |
 | Causal | No interference (SUTVA) | One unit's outcome does not depend on another's treatment | Spillover test across geographic or network distance |
 
-The exchangeability assumption cannot be tested directly, and this is the single most important
-asymmetry in the table. Every other row has a diagnostic. For exchangeability, you can only argue
-from design, measure the sensitivity of the conclusion to a plausible unmeasured confounder, and
-look for a negative-control outcome that should show no effect. Topic 10 develops the sensitivity
-machinery; here it is enough to know that the assumption is argued, not verified.
+The exchangeability assumption cannot be tested directly, and this is the most important asymmetry
+in the table. Every other row has a diagnostic. For exchangeability you can only argue from
+design, measure the sensitivity of the conclusion to a plausible unmeasured confounder, and look
+for a negative-control outcome that should show no effect. Topic 10 develops that machinery.
 
 ### 5.8 Step 8 — Choose the design, then the estimator
 
@@ -505,24 +441,22 @@ from that structure.
 | Matching on observables | Effect in the matched population | All confounders measured, overlap | An unmeasured confounder drives selection |
 | Before-and-after | A descriptive change, not a causal effect | Nothing | Anything else changed at the same time |
 
-The last row is included deliberately. A before-and-after comparison is a legitimate descriptive
-statement and an illegitimate causal one. It appears in causal clothing constantly, usually
-because nobody asked what else changed.
+The last row is included deliberately: a before-and-after comparison is a legitimate descriptive
+statement and an illegitimate causal one. It appears in causal clothing constantly, usually because
+nobody asked what else changed.
 
 ### 5.9 Step 9 — Pre-specify the sensitivity analysis and the decision rule
 
-Two commitments make the analysis honest, and both must be made before the outcome data are seen.
+**The sensitivity analysis** asks how strong an unmeasured confounder would have to be to overturn
+the conclusion, stated as a magnitude: "an unmeasured factor would need to raise promoted-store
+sales by more than 9% relative to control to explain the entire estimate" is usable; "the result is
+robust" is not.
 
-**The sensitivity analysis** asks: how strong would an unmeasured confounder have to be to overturn
-this conclusion? State the answer as a magnitude, not a verdict. "An unmeasured factor would need
-to raise promoted-store sales by more than 9% relative to control to explain the entire estimate"
-is a usable statement; "the result is robust" is not.
-
-**The decision rule** maps the estimate to an action, including the action "do nothing". Write it
-as an if-then: "if the lower bound of the interval exceeds the €2,000 break-even margin, roll out;
-if the interval spans zero, run a second test in a different market; if the point estimate is
-negative, stop the programme." A decision rule fixed in advance prevents the most common form of
-analytical dishonesty, which is choosing the threshold after seeing the number.
+**The decision rule** maps the estimate to an action, including "do nothing", as an if-then: "if
+the lower bound of the interval exceeds the €2,000 break-even margin, roll out; if the interval
+spans zero, test again in a different market; if the point estimate is negative, stop." Fixing the
+threshold in advance prevents the most common analytical dishonesty, which is choosing it after
+seeing the number.
 
 ### 5.10 The mismatch checklist
 
@@ -544,10 +478,9 @@ items 1, 2, 4, 6, or 9 is a stop.
 | 11 | The sensitivity analysis is pre-specified | A named departure and a threshold for concern | Robustness checked only if the result is doubted |
 | 12 | The decision rule is pre-specified | An if-then mapping to action | The recommendation is written after the result |
 
-Items 2, 5, and 7 are the ones that catch prediction-versus-causation confusion, because a
-predictive question can pass all three only if the "comparison" is a benchmark forecast rather
-than a counterfactual condition. Item 9 catches the opposite error, in which a causal claim is
-made with no identification argument at all.
+Items 2, 5, and 7 catch prediction-versus-causation confusion: a predictive question passes all
+three only if the "comparison" is a benchmark forecast rather than a counterfactual condition. Item
+9 catches the opposite error, a causal claim with no identification argument at all.
 
 ## 6. Worked example
 
@@ -558,8 +491,8 @@ price promotion in 40 stores. The stores were not chosen at random: the regional
 stores where the product was already selling well and where a competitor had recently withdrawn a
 competing item. The remaining 80 stores continued at full price.
 
-The analytics team is asked three questions in the same meeting, and the answers are produced from
-the same table. All figures are illustrative and internally consistent.
+The team is asked three questions in one meeting; the answers come from the same table, and all
+figures are illustrative.
 
 ### 6.2 The three questions and their estimands
 
@@ -586,9 +519,9 @@ Question C can be wrong, because it makes no claim about a world that did not oc
 | Gross margin, total | €68,120 | €71,760 | +€3,640 (+5.3%) |
 
 This is a complete and correct description: 18,400 units, €71,760 of gross margin, in 40 named
-stores, over four named weeks. It is the right answer to Question A and it supports no causal
-claim. The comparison with weeks 10–13 is offered as context, not as a counterfactual, and the
-distinction matters because the category was growing in the same period.
+stores, over four named weeks. It is the right answer to Question A and supports no causal claim.
+The comparison with weeks 10–13 is context, not a counterfactual, and the distinction matters
+because the category was growing in the same period.
 
 ### 6.4 Question B: the predictive answer
 
@@ -598,9 +531,9 @@ backtest on the previous six promotions in comparable stores, with a mean absolu
 error of 4.1%.
 
 Two things this answer is and one thing it is not. It is a conditional expectation given the plan,
-useful for buying and staffing decisions. It is a calibrated interval, useful for a service-level
-commitment. It is not evidence that the promotion caused anything, because the promotion is an
-input to the forecast, not a treatment being tested.
+useful for buying and staffing. It is a calibrated interval, useful for a service-level commitment.
+It is not evidence that the promotion caused anything, because the promotion is an input to the
+forecast, not a treatment being tested.
 
 ### 6.5 Question C: the target trial
 
@@ -618,11 +551,10 @@ The team writes the trial it would have run.
 Then the emulation check. Eligibility is measurable. Assignment is not random, and the selection
 was explicitly on prior sales and a competitor exit — that is the emulation failure. Time zero is
 recoverable from the promotion calendar. Interference is possible if promoted stores drew demand
-from nearby unpromoted stores, which would bias the estimate upward.
-
-The design that follows is a difference-in-differences on matched control stores, with store and
-week fixed effects, plus a spillover check comparing control stores within 15 km of a promoted
-store against those farther away.
+from nearby unpromoted stores, which would bias the estimate upward. The design that follows is a
+difference-in-differences on matched control stores, with store and week fixed effects, plus a
+spillover check comparing control stores within 15 km of a promoted store against those farther
+away.
 
 ### 6.6 The arithmetic
 
@@ -666,13 +598,12 @@ included the promotion as a feature, so its accuracy is partly a measure of how 
 encoded the promotion's expected effect. A model that perfectly predicts the outcome of a
 value-destroying promotion scores 100%.
 
-Three specific versions of this error appear in practice:
+Three versions of this error appear in practice:
 
-1. **Accuracy reported to the steering committee as "the promotion performed to plan."** True and
-   irrelevant. Performing to plan is consistent with a plan that should not have been made.
-2. **Accuracy computed after the fact with a model that includes a promotion dummy.** The dummy
-   absorbs the effect, and the residual is small by construction. This is leakage wearing a
-   validation report.
+1. **"The promotion performed to plan."** True and irrelevant: performing to plan is consistent
+   with a plan that should not have been made.
+2. **Accuracy computed with a promotion dummy in the model.** The dummy absorbs the effect, and
+   the residual is small by construction. This is leakage wearing a validation report.
 3. **Accuracy of a counterfactual baseline model used as validation of the uplift.** The baseline
    model is validated on non-promotional periods, where its target is observed. The uplift is the
    difference between two predictions in a period where neither potential outcome is observed.
@@ -694,10 +625,9 @@ units at €5.20.
 | Net | 15,600 − 18,720 | −€3,120 |
 
 The decomposition is the useful part. The promotion gained €15,600 on units that would not
-otherwise have sold, and gave away €18,720 on units that would have sold anyway. The second term
-is larger, and it is invisible in every volume-based report.
-
-Break-even requires the incremental units to compensate for the discount on the baseline:
+otherwise have sold, and gave away €18,720 on units that would have sold anyway. The second term is
+larger, and it is invisible in every volume-based report. Break-even requires the incremental
+units to compensate for the discount on the baseline:
 
 ```text
 break-even incremental units = (14,400 x 1.30) / 3.90 = 4,800 units
@@ -732,8 +662,8 @@ that borrows the credibility of one column to support a claim from another.
 ## 7. Code, query, or calculation
 
 This topic is about specification, so the artefact is a specification, not a program. The block
-below is the estimand template applied to two supply chain questions. It is deliberately short
-enough to copy into a project charter by hand.
+below is the estimand template applied to two supply chain questions, short enough to copy into a
+project charter by hand.
 
 ```text
 SLOT            PROMOTIONAL LIFT                SUPPLIER OTIF POLICY
@@ -756,29 +686,23 @@ ICE strategy    treatment policy (analyse      principal stratum (lanes that
 ```
 
 Read the last row of each column. The promotion is analysed under a treatment policy, because the
-decision is whether to run the programme as it is actually executed, non-compliant stores
-included. The supplier policy is analysed under a principal stratum, because the decision is
-whether the rule works when followed, and lanes that cannot follow it would dilute the answer.
+decision is whether to run the programme as executed, non-compliant stores included. The supplier
+policy is analysed under a principal stratum, because the decision is whether the rule works when
+followed, and lanes that cannot follow it would dilute the answer. Change either choice and the
+number changes. That is the point of writing it down.
 
-Change either choice and the number changes. That is the point of writing it down.
-
-Two calculations belong beside the template, and both are one line.
-
-```text
-incremental effect (DiD) = (Y_treat_post - Y_treat_pre) - (Y_ctrl_post - Y_ctrl_pre)
-margin effect            = incremental units x promo margin - counterfactual units x discount
-```
-
-The first is the comparison. The second is the decision. Neither is a model, and both require the
-estimand to have been fixed first.
+The comparison itself is one subtraction: the change in the treated mean minus the change in the
+control mean. The decision is a second one: incremental units times the promotion margin, minus
+counterfactual units times the discount. Neither is a model, and both require the estimand to have
+been fixed first.
 
 ## 8. Data, standards, and regulatory context
 
-There is no standard that governs estimands in supply chain analytics. There is a very carefully
-written standard that governs them in clinical trials, a set of reporting conventions in
-observational research, and a small and uneven body of industry guidance on measurement. Knowing
-which is which prevents the two common errors: claiming a compliance obligation that does not
-exist, and inventing a definition where a good one is available.
+There is no standard that governs estimands in supply chain analytics. There is a carefully written
+standard that governs them in clinical trials, a set of reporting conventions in observational
+research, and a small, uneven body of industry guidance on measurement. Knowing which is which
+prevents the two common errors: claiming a compliance obligation that does not exist, and
+inventing a definition where a good one is available.
 
 ### 8.1 The clinical-trials standard and its scope
 
@@ -819,12 +743,9 @@ experiment — has an estimand that depends on the exposure distribution and on 
 was stopped. Two identical experiments run for different lengths therefore answer different
 questions, even though both are reported as "the lift". A windowed metric, fixed in advance at a
 defined horizon, has a stable estimand. They also report that for cumulative metrics, statistical
-power can *decrease* as more data accumulate, which breaks the intuition that longer experiments
-are always better.
-
-That is the same lesson as the promotion example in section 6, arriving from a different
-direction: the window is part of the question, and choosing it after seeing the data is choosing
-the answer.
+power can *decrease* as data accumulate, breaking the intuition that longer is always better. That
+is the lesson of section 6 from another direction: the window is part of the question, and choosing
+it after seeing the data is choosing the answer.
 
 ### 8.3 Reporting conventions that carry over
 
@@ -837,9 +758,8 @@ the answer.
 | Placebo or sham comparison | Trials | A comparator that differs only in the active ingredient | An unpromoted matched store, or a promotion with no price change |
 
 The negative control is the most underused of these in commercial analytics and the cheapest to
-implement. If your promotion design shows a "lift" in a product that was not promoted and could
-not have been affected, the design is picking up a trend, not an effect. The test costs one extra
-column in a query.
+implement: if a design shows a "lift" in a product that was not promoted and could not have been
+affected, it is picking up a trend. The test costs one extra column in a query.
 
 ### 8.4 What no standard supplies
 
@@ -853,27 +773,18 @@ No standard defines the following, and each is a decision the analyst must make 
   Clinical trials assume no interference; supply chains rarely satisfy it.
 - What loss function is appropriate. Trials have a primary endpoint; businesses have a P&L.
 
-These gaps are not a deficiency of the standards. They are the part of the problem that is
-specific to the domain, and they are why the six-slot statement exists.
-
-### 8.5 Governance analogies, stated carefully
-
-Listed companies operate internal controls over financial reporting, and forecast accuracy can
-feed revenue guidance. Model risk guidance in banking, such as the Federal Reserve's SR 11-7,
-provides a useful template for model documentation and validation. Neither governs the choice of
-estimand.
-
-The honest statement is: **these regimes constrain documentation and review, not statistical
-definition.** They make it more likely that someone will ask what the model estimates, which is
-useful. They do not tell you the answer, and citing them as though they did is a way of borrowing
-authority for a choice that remains yours.
+These gaps are not a deficiency of the standards. They are the part of the problem specific to the
+domain, and they are why the six-slot statement exists. Governance regimes such as internal control
+over financial reporting or banking model-risk guidance constrain documentation and review, not
+statistical definition: they make it more likely that someone will ask what the model estimates,
+and they do not supply the answer.
 
 ## 9. Industry practice and case evidence
 
 ### 9.1 What operations management research says about its own causal practice
 
 The operations management literature has spent the last decade auditing its own causal claims,
-and the results are a useful calibration for how hard this is.
+and the results calibrate how hard this is.
 
 | Source | Finding | Grade |
 |---|---|---|
@@ -887,9 +798,6 @@ The consistent message is that the design carries the identification and the est
 repair it. This is the academic version of the rule in section 5.8: design before estimator.
 
 ### 9.2 The promotion-forecast problem, documented
-
-The claim that a promotion's forecast accuracy says nothing about its effect is not a stylistic
-preference. It is supported by evidence about how promotion forecasts actually behave.
 
 Fildes, Goodwin and Önkal (2018), in the *International Journal of Forecasting*, report
 experimental evidence on how people forecast promotional effects. Forecasters anchor on the
@@ -906,10 +814,9 @@ measure them tend to *over*-credit them.
 | A counterfactual model can reach about 90% forecast accuracy on non-promotional periods and still not validate the uplift estimate | Practitioner case write-up; the authors state that there is no ground truth in counterfactual forecasting | D |
 | Attribution and return-on-ad-spend figures show what happened, not whether the activity caused the result | Industry incrementality guidelines, November 2025 | C |
 
-The first row and the second row point in opposite directions, and both can be true. A human
-adjusting a baseline upward under-adjusts; a statistical baseline used as a counterfactual tends to
-attribute too much to the promotion. The measurement error runs one way and the judgment error
-runs the other, and neither cancels the other.
+The first row and the second row point in opposite directions, and both can be true: a human
+adjusting a baseline upward under-adjusts, while a statistical baseline used as a counterfactual
+attributes too much to the promotion. Neither error cancels the other.
 
 > **Note:** The vendor figures in rows two and three are graded D because they come from commercial
 > suppliers of baseline and measurement tools, reporting benchmarks that favour their framing.
@@ -917,23 +824,15 @@ runs the other, and neither cancels the other.
 > academic evidence and with the arithmetic in section 6, not because their magnitudes should be
 > quoted.
 
-### 9.3 The industry evidence hierarchy for incrementality
+### 9.3 The industry evidence hierarchy
 
-The November 2025 incrementality guidelines published by the digital advertising trade bodies
-rank measurement methods by causal strength, and the ranking transfers to supply chain
-measurement almost unchanged:
-
-| Method | Causal strength as graded | Supply chain analogue |
-|---|---|---|
-| Randomised experiment, holdout, matched market | Strong | Store-level randomised rollout, matched-market test |
-| Model-based counterfactual | Strong to moderate, prone to omitted-variable and selection bias | Difference-in-differences, synthetic control |
-| Econometric or marketing-mix model | Moderate to weak | Regression on observational history with controls |
-| Attribution or last-touch proxy | Weak | "Sales during the promotion" or "orders from the promoted region" |
-
-The guidelines' central sentence — that attribution shows what happened, not whether the activity
-caused the result — is the same distinction this topic draws between Questions A and C. That a
-trade body found it necessary to write it down in 2025 is evidence of how persistent the confusion
-is.
+The November 2025 incrementality guidelines rank measurement methods by causal strength:
+randomised experiments and matched markets are strong; model-based counterfactuals are strong to
+moderate and prone to omitted-variable bias; econometric and marketing-mix models are moderate to
+weak; attribution or last-touch proxies are weak. The supply chain analogue runs from a randomised
+store rollout, through difference-in-differences, to "sales during the promotion". The guidelines'
+central claim — attribution shows what happened, not whether the activity caused it — is the
+distinction between Questions A and C.
 
 ### 9.4 What practitioners actually do
 
@@ -946,17 +845,10 @@ is.
 | Intercurrent events named and handled by a stated strategy | Rare | Non-execution silently dilutes or inflates effects depending on the direction |
 | Sensitivity analysis pre-specified | Occasional | Robustness claims made only for results that survived |
 
-The pattern is consistent across the sources: the technical machinery for credible causal
-inference is available and taught, and the specification discipline that would make it usable is
-not routinely practised. That gap, not the mathematics, is what this topic addresses.
-
-### 9.5 A note on the evidence quality in this section
-
-Four of the five tables above rest on peer-reviewed sources. The vendor benchmarks are graded D
-and dated. The industry guidelines are graded C: they are a consensus document from trade bodies
-with a commercial interest in measurement being taken seriously, which does not make them wrong
-and does make them interested. No quantitative claim in this topic depends on a vendor figure; the
-worked example is constructed arithmetic, labelled as such.
+The pattern is consistent: the machinery for credible causal inference is available and taught,
+and the specification discipline that would make it usable is not routinely practised. That gap,
+not the mathematics, is what this topic addresses. No quantitative claim here depends on a vendor
+figure; the worked example is constructed arithmetic, labelled as such.
 
 ## 10. Failure modes and red flags
 
@@ -969,41 +861,24 @@ worked example is constructed arithmetic, labelled as such.
 | Comparator left undefined | "Versus business as usual" | The alternative condition is never specified | The effect is relative to an unknown state | Define the comparator with the same specificity as the treatment |
 | Intercurrent events unhandled | Non-execution discussed only in the limitations | The question silently shifts from policy to mechanism | Estimate answers a question nobody asked | Name the events; choose one of the five strategies |
 | Metric window chosen after the result | Several horizons reported; the significant one is highlighted | The estimand depends on the window and stopping rule | Inflated effects, unreproducible findings | Pre-specify the window and the stopping rule |
-| Scale switched post hoc | Percentages for small effects, absolute for large | Ratio and difference answer different questions | Misleading magnitude | Report absolute and relative together, as pre-specified |
 | Confounding described as "controlled for" | A long covariate list, no graph | Adjustment is a claim about the graph, not a count of variables | Collider and mediator bias, with more confidence | Draw the graph; state which variables are confounders |
 | Positivity unexamined | Propensity scores near 0 and 1, matched sample much smaller | Some units have no comparable counterpart | Estimate applies to a shrinking, unrepresentative subset | Report overlap; state the population the estimate covers |
 | Interference ignored | Promoted and control stores in the same catchment | One unit's outcome depends on another's treatment | Effect overstated, sometimes doubled | Buffer zones; spillover test at distance |
 | Sensitivity analysis absent or post hoc | "Results are robust" with no threshold | No specified departure or threshold for concern | Fragile conclusions presented as settled | Pre-specify one sensitivity analysis and its decision threshold |
-| Decision rule invented after the estimate | The recommendation matches the point estimate exactly | Threshold chosen to fit | Analysis becomes advocacy | Write the if-then rule before the result |
-| Three question types merged in one model | One "demand model" serves finance, planning, and pricing | Different estimands share one validation | Each user inherits the wrong validation | Document separate estimands and separate validation per use |
 | Descriptive claim with a causal verb | "The promotion drove 40% growth" | "Drove" implies a counterfactual the analysis does not have | False attribution in reporting | Rewrite with "during the promotion, sales were 40% higher" |
 
-Four deserve a note.
+Two deserve a note. **Forecast accuracy offered as evidence of effect** survives because it looks
+like rigour: someone quantified something, compared it with a target, and reported the comparison.
+The defect is that both sides of the comparison are in the same world; section 6.7 gives the
+arithmetic of a case where the forecast is 97.8% accurate and the intervention loses money.
 
-**Forecast accuracy offered as evidence of effect** is the signature failure of commercial
-analytics, and it survives because it looks like rigour. Someone quantified something, compared it
-with a target, and reported the comparison. The defect is that both sides of the comparison are in
-the same world. Section 6.7 gives the arithmetic of a case where the forecast is 97.8% accurate and
-the intervention loses money.
-
-**Estimator named instead of estimand** is the failure that this topic exists to prevent, and it
-is usually committed by competent analysts. "We ran a difference-in-differences" is an answer
-about method. The estimand answer is "the average difference in margin per store over four weeks
-between running and not running the promotion, in the 40 stores that ran it". The second sentence
-can be wrong; the first cannot.
-
-**Time zero set to first observation** is the most technical failure on the list and the easiest to
-fix once named. When an analyst uses all available history and defines the pre-period as everything
-before the intervention, units that entered the treated group because of an earlier event are
-credited with survival that had nothing to do with the treatment. The fix is to define the
-decision point and start follow-up there, discarding the earlier history for identification
-purposes even though it remains useful for describing the population.
-
-**Three question types merged in one model** is the most organisational failure. It happens when a
-single "demand model" is asked to support financial planning, operational replenishment, and
-promotional pricing. Each of those uses requires a different estimand, and the model's validation
-is usually built for one of them. The other two inherit a validation that does not apply, and the
-error surfaces as an argument about whose numbers are right.
+**Estimator named instead of estimand** is usually committed by competent analysts. "We ran a
+difference-in-differences" is an answer about method; "the average difference in margin per store
+over four weeks between running and not running the promotion" is an answer about quantity. The
+second can be wrong. The first cannot. The remaining failures follow from these two: time zero set
+to first observation credits units that entered the treated group after an earlier event with
+survival unrelated to treatment, and a single "demand model" asked to serve finance, planning, and
+pricing inherits whichever validation was built for one of them.
 
 ## 11. Assumptions and limits
 
@@ -1011,7 +886,6 @@ error surfaces as an argument about whose numbers are right.
 |---|---|---|---|
 | The question type can be classified unambiguously | The whole routing depends on it | A question that mixes description and causation ("how much did we gain") | Split into two questions and answer each separately |
 | The six slots can be filled before seeing outcome data | Pre-specification is what makes the estimate credible | Stakeholders cannot agree on the population or the outcome | If a slot cannot be filled, the question is not yet a question |
-| The decision is stable over the analysis window | The estimand is tied to a decision | Strategy changes, reorganisation, budget cycle moves | Check the decision owner and date before starting |
 | The population is identifiable in the data | The estimate must refer to real units | Eligibility criteria are not recorded | Count eligible units; compare with the operational total |
 | The comparator is a real condition | A contrast needs two states | "Do nothing" is not observed anywhere | Find units that experienced the comparator |
 | For predictive questions, the deployment distribution resembles training | Otherwise the estimate does not transfer | Promotions, new items, structural breaks, channel shift | Backtest on the most recent period; monitor feature drift |
@@ -1022,19 +896,15 @@ error surfaces as an argument about whose numbers are right.
 | The outcome measurement is stable over the window | Otherwise the change includes a definitional component | System change, restatement, new data source | Compare data dictionary versions; reconcile a sample |
 | The loss function is known well enough to choose a decision | Otherwise the decision rule cannot be written | Cost of stock-out, margin, and goodwill not quantified | Bound the costs; test the decision at both bounds |
 
-Two limits of the whole framework are worth stating.
+Two limits are worth stating. **The framework disciplines the question; it does not generate the
+answer.** A perfectly specified estimand with an unidentified design produces a precise statement
+of an unanswerable question — an improvement, because the failure becomes visible while it is
+still cheap.
 
-**The framework disciplines the question; it does not generate the answer.** A perfectly specified
-estimand with an unidentified design produces a precise statement of an unanswerable question.
-That is an improvement over an imprecise statement of an unanswerable question, but it is not an
-answer. The value is that the failure becomes visible early, when it is cheap.
-
-**The three-way split is a simplification.** Real questions sit on a spectrum. "What is the effect
-of our forecast on our inventory?" is causal. "What inventory will we hold next quarter?" is
-predictive but depends on a causal model of how orders respond to stock-outs. "How much service
+**The three-way split is a simplification.** "What inventory will we hold next quarter?" is
+predictive but depends on a causal model of how orders respond to stock-outs; "how much service
 did we deliver?" is descriptive until someone asks why. The taxonomy is a routing device, not an
-ontology, and the useful question is always "which of these is being asked right now", not "which
-category does this project belong to".
+ontology: the question is always "which of these is being asked right now".
 
 ## 12. Exercises
 
@@ -1050,12 +920,10 @@ A retailer ran a four-week display test in 30 stores with 40 control stores.
 Full-price margin is €4.00 per unit; promotional margin is €3.10 per unit. The promotion applied to
 all units sold in the treated stores during the window.
 
-**Deliverable:** the naive change, the control change, the difference-in-differences estimate, the
-counterfactual volume, the percentage lift, the margin effect, and the break-even lift.
-**Acceptance criteria:** every intermediate number shown; the naive overstatement expressed as a
-percentage of the causal estimate; the margin decomposed into gained and forgone components; a
-one-sentence decision recommendation.
-**Time:** 50 minutes.
+**Deliverable:** naive change, control change, DiD, counterfactual volume, percentage lift, margin
+effect, and break-even lift. **Acceptance criteria:** every intermediate number shown; naive
+overstatement as a percentage of the causal estimate; margin decomposed into gained and forgone
+components; a one-sentence decision recommendation. **Time:** 50 minutes.
 
 ### Exercise 2 — Classify six requests (analysis, 30 minutes)
 
@@ -1070,10 +938,9 @@ counterfactual each does or does not require.
 6. "What would our service level be at 14 days of cover instead of 10?"
 
 **Deliverable:** a six-row table with type, counterfactual required (yes/no), and one sentence of
-justification.
-**Acceptance criteria:** at least one item is predictive-plus-loss rather than causal, with the
-reason stated; "why" is classified as causal with a note on mechanism.
-**Time:** 30 minutes.
+justification. **Acceptance criteria:** at least one item is predictive-plus-loss rather than
+causal, with the reason stated; "why" is classified as causal with a note on mechanism. **Time:**
+30 minutes.
 
 ### Exercise 3 — Write the estimand for a supplier question (design, 40 minutes)
 
@@ -1081,10 +948,9 @@ A procurement team asks whether a new allocation rule reduced late deliveries. T
 volume by a two-week frozen window instead of weekly reallocation, and applies to 180 tier-1 lanes.
 
 **Deliverable:** the six-slot estimand, the ICH five-attribute mapping, and the intercurrent-event
-strategy with one sentence of justification.
-**Acceptance criteria:** population and unit distinguished; time zero tied to the contract start;
-comparator specified as a condition; the strategy choice defended against at least one alternative.
-**Time:** 40 minutes.
+strategy with one sentence of justification. **Acceptance criteria:** population and unit
+distinguished; time zero tied to contract start; comparator specified as a condition; the strategy
+choice defended against at least one alternative. **Time:** 40 minutes.
 
 ### Exercise 4 — Run the target trial (design, 45 minutes)
 
@@ -1092,10 +958,8 @@ For the allocation-rule question in Exercise 3, write the target trial protocol 
 component that cannot be emulated.
 
 **Deliverable:** the seven protocol components, the emulation failure, and the diagnostic that
-would detect it.
-**Acceptance criteria:** eligibility measurable or explicitly flagged; assignment level stated;
-interference considered; the diagnostic is specific enough to run.
-**Time:** 45 minutes.
+would detect it. **Acceptance criteria:** eligibility measurable or explicitly flagged; assignment
+level stated; interference considered; the diagnostic specific enough to run. **Time:** 45 minutes.
 
 ### Exercise 5 — Find the confusion in a memo (critique, 40 minutes)
 
@@ -1103,10 +967,9 @@ Write, or obtain, a one-page internal memo that claims an intervention worked. I
 sentence that borrows causal credibility from a descriptive or predictive result.
 
 **Deliverable:** an annotated memo with each problematic sentence rewritten in its correct
-question type, plus a list of the estimands the memo would need to support its conclusion.
-**Acceptance criteria:** at least four sentences annotated; rewrites preserve the true claim;
-the missing estimands are named in six-slot form.
-**Time:** 40 minutes.
+question type, plus the estimands the memo would need to support its conclusion. **Acceptance
+criteria:** at least four sentences annotated; rewrites preserve the true claim; the missing
+estimands are named in six-slot form. **Time:** 40 minutes.
 
 ### Exercise 6 — Audit a forecast-accuracy-means-success claim (critique, 35 minutes)
 
@@ -1114,11 +977,9 @@ A team reports 96% forecast accuracy during a promotion and concludes the promot
 successful. Reconstruct what the 96% measures.
 
 **Deliverable:** the numerator and denominator of the accuracy figure, the two worlds compared,
-and a corrected claim.
-**Acceptance criteria:** the absence of a counterfactual is stated explicitly; one alternative
-explanation for high accuracy is given (the promotion was in the feature set); the corrected claim
-is a descriptive or predictive statement, not a causal one.
-**Time:** 35 minutes.
+and a corrected claim. **Acceptance criteria:** the absence of a counterfactual stated explicitly;
+one alternative explanation for high accuracy given (the promotion was in the feature set); the
+corrected claim is descriptive or predictive, not causal. **Time:** 35 minutes.
 
 ### Exercise 7 — Map the intercurrent events (analysis, 40 minutes)
 
@@ -1126,40 +987,17 @@ For a promotion programme in 200 stores, list the intercurrent events that could
 assignment and outcome measurement, and write the effect under each of the five strategies.
 
 **Deliverable:** an event table and a strategy table, with the direction of bias for each strategy
-against the treatment-policy estimate.
-**Acceptance criteria:** at least five events; each strategy described in one sentence; the
-direction of bias stated, not just the existence.
-**Time:** 40 minutes.
+against the treatment-policy estimate. **Acceptance criteria:** at least five events; each strategy
+in one sentence; the direction of bias stated, not just its existence. **Time:** 40 minutes.
 
 ### Exercise 8 — Pre-specify the sensitivity analysis and decision rule (design, 45 minutes)
 
 For Exercise 1, write the sensitivity analysis and the decision rule before looking at the answer.
 
 **Deliverable:** one sensitivity analysis with a named departure and a numeric threshold for
-concern, and an if-then decision rule covering rollout, retest, and stop.
-**Acceptance criteria:** the threshold is a magnitude, not a verdict; the decision rule covers all
-three branches; both are written as though the result were unknown.
-**Time:** 45 minutes.
-
-### Exercise 9 — Apply the mismatch checklist (application, 45 minutes)
-
-Take a real or realistic project proposal and run the twelve-item checklist from section 5.10.
-
-**Deliverable:** the completed checklist with pass/fail per item, the two most serious failures,
-and a repaired estimand statement.
-**Acceptance criteria:** every item answered, not skipped; the repairs are specific; at least one
-item is failed and the consequence explained.
-**Time:** 45 minutes.
-
-### Exercise 10 — Build the question-type router for your own work (design, 60 minutes)
-
-Take the last three analytics requests you received. Classify them, write the estimand each
-actually required, and note where the delivered work diverged.
-
-**Deliverable:** a three-row table with the request as stated, the estimand required, and the gap.
-**Acceptance criteria:** at least one request turns out to have been misclassified; the gap is
-described in terms of the six slots; the corrected estimand is computable.
-**Time:** 60 minutes.
+concern, and an if-then decision rule covering rollout, retest, and stop. **Acceptance criteria:**
+the threshold is a magnitude, not a verdict; the rule covers all three branches; both are written
+as though the result were unknown. **Time:** 45 minutes.
 
 ## 13. Self-check answers
 
@@ -1194,16 +1032,14 @@ observed lift                = 23.81%
 shortfall                    = 5.22 percentage points
 ```
 
-The recommendation is to stop or redesign: the display test raised volume by 23.8% and needed
-29.0% to pay for the discount. Three correct summary numbers point in three directions — units up
-30%, naive margin up, causal margin down €1,530 — and only the third answers the decision
-question.
+The recommendation is to stop or redesign: the display test raised volume by 23.8% and needed 29.0%
+to pay for the discount. Three correct summary numbers point in three directions — units up 30%,
+naive margin up, causal margin down €1,530 — and only the third answers the decision question.
 
-Two wrong answers are common. Using the post-period actual as the baseline for the percentage
-(2,250 / 11,700 = 19.2%) understates the lift, because the denominator should be the counterfactual,
-not the observed. Computing the margin effect as incremental units times the promo margin alone
-(€6,975) omits the discount given away on units that would have sold at full price, which is the
-larger term in this example.
+Two wrong answers are common. Using the post-period actual as the denominator (2,250 / 11,700 =
+19.2%) understates the lift, because the denominator is the counterfactual, not the observed.
+Computing the margin effect as incremental units times the promo margin alone (€6,975) omits the
+discount given away on units that would have sold at full price — the larger term here.
 
 ### 13.2 Exercise 2 answers
 
@@ -1216,11 +1052,10 @@ larger term in this example.
 | 5 | Why OTIF dropped after migration | Causal, mechanism | Yes | Attribution among candidate causes; needs a graph and often mediation |
 | 6 | Service level at 14 days of cover | Predictive, conditional on a policy | No, if the policy is evaluated as a plan | It asks what would be observed under a stated inventory policy, not what an intervention would change |
 
-Item 6 is the one that divides people. If the question is "what service would we deliver if we set
-cover to 14 days", and setting cover does not change supplier behaviour or demand, a predictive
-model of demand and lead time answers it. If the change would alter supplier behaviour — for
-example by changing order frequency enough to affect fill — it becomes causal. The test from
-section 3.2 decides: does the action change the outcome, or select among outcomes.
+Item 6 divides people. If setting cover to 14 days would not change supplier behaviour or demand, a
+predictive model of demand and lead time answers it; if the change would alter supplier behaviour —
+say by changing order frequency enough to affect fill — it becomes causal. The test from section
+3.2 decides: does the action change the outcome, or select among outcomes.
 
 ### 13.3 Exercise 3 rubric
 
@@ -1239,163 +1074,99 @@ has an estimator and a period, and no population, comparator, or unit.
 
 ### 13.4 Exercise 4 rubric
 
-A strong protocol states eligibility as measurable criteria, two strategies with dose and
-duration, assignment at supplier level, time zero at contract start, a 12-month follow-up, OTIF
-measured at line level, and a difference in proportions. It then identifies the emulation failure:
-assignment was not random, and lanes were moved to the new rule partly because their suppliers
-were already improving, which violates exchangeability. The diagnostic it proposes is a
-pre-trend comparison over the 12 months before the change, plus a negative-control outcome such
-as invoice accuracy, which the rule should not affect.
-
-A weak protocol lists the components but concludes that the analysis is "observational, so causal
-claims are not possible". That is the failure the target trial exists to prevent. The correct
-conclusion is that a causal claim is possible under stated assumptions, and here is the assumption
-that is doing the work.
+A strong protocol gives measurable eligibility, two strategies with dose and duration, assignment
+at supplier level, time zero at contract start, a 12-month follow-up, and a difference in
+proportions. It names the emulation failure — assignment was not random, and lanes moved partly
+because their suppliers were already improving — and proposes a pre-trend comparison plus a
+negative control such as invoice accuracy. A weak protocol concludes that "observational data
+cannot support causal claims", which is the conclusion the exercise exists to replace with a
+stated assumption.
 
 ### 13.5 Exercise 5 rubric
 
-A strong annotation distinguishes three sentence types: descriptive sentences that are true but
-carry no causal weight ("sales rose 40% during the promotion"), predictive sentences presented as
-evidence ("the model predicted the lift, so the promotion worked"), and causal sentences with no
-identification ("the promotion drove growth"). For each it supplies the missing estimand in
-six-slot form. It notes that the memo's conclusion may still be correct — the exercise is about
-what the evidence supports, not about which conclusion is right.
-
-A weak annotation corrects the grammar of the claims without naming the missing estimand, or
-declares the whole memo wrong without separating the parts that are true.
+A strong annotation separates descriptive sentences that are true but carry no causal weight,
+predictive sentences presented as evidence, and causal sentences with no identification, and
+supplies the missing estimand for each. It allows that the memo's conclusion may still be right:
+the exercise concerns what the evidence supports. A weak annotation corrects grammar without
+naming estimands, or declares the memo wholly wrong.
 
 ### 13.6 Exercise 6 rubric
 
-A strong answer reconstructs the accuracy figure as `1 − |actual − forecast| / actual`, notes that
-both terms are measured in the world where the promotion ran, and states that no counterfactual
-appears anywhere in the calculation. It offers the leakage explanation: the promotion was a
-feature in the forecasting model, so the model was told the promotion would happen and learned its
-typical effect; high accuracy shows the model encoded the effect, not that the effect was caused.
-The corrected claim is predictive — "we can plan the next promotion to within about 4%" — and the
-memo should say so.
-
-A weak answer says the accuracy figure is "biased" without saying what it is biased relative to,
-or proposes a better forecasting model, which does not address the question.
+A strong answer reconstructs the figure as `1 − |actual − forecast| / actual`, notes that both
+terms are measured in the world where the promotion ran, and states that no counterfactual appears
+in the calculation. It offers the leakage explanation: the promotion was a feature, so the model
+learned its typical effect. The corrected claim is predictive — "we can plan to within about 4%".
+A weak answer calls the figure "biased" without saying relative to what.
 
 ### 13.7 Exercise 7 rubric
 
-A strong event table includes at least: display not executed; out of stock during the promotion;
-price overridden at the register; competitor promotion in the same weeks; store remodel; and
-partial-week execution. The strategy table states the effect under each of the five strategies and
-the direction of bias relative to the treatment-policy estimate: a hypothetical strategy that
-assumes perfect execution will exceed the treatment-policy estimate when non-execution dilutes the
-effect; a while-on-treatment strategy truncates the window and usually reduces the estimate; a
-composite strategy that counts non-execution as failure will reduce it further; a principal-stratum
-estimate applies to compliers and may be larger or smaller depending on whether compliers are
-high- or low-response stores.
-
-A weak answer lists events without strategies, or treats non-execution as missing data to be
-imputed, which is a different and usually wrong move: the store did not fail to report, it did not
-receive the treatment.
+A strong table includes non-execution, stock-out, price override, a competitor promotion, remodel,
+and partial-week execution. It states the effect under each strategy and the direction of bias
+against the treatment-policy estimate: hypothetical exceeds it when non-execution dilutes the
+effect; while-on-treatment truncates the window and usually reduces it; composite reduces it
+further; principal-stratum applies to compliers and may move either way. A weak answer lists
+events without strategies, or treats non-execution as data to be imputed: the store did not fail
+to report, it did not receive the treatment.
 
 ### 13.8 Exercise 8 rubric
 
-A strong sensitivity analysis names one departure and quantifies it: "if promoted stores would
-have grown 3 percentage points faster than control for reasons unrelated to the display, the
-margin effect moves from −€1,530 to −€1,100; the conclusion reverses only if the differential
-growth exceeds 8.7 percentage points, which is larger than any pre-period divergence observed."
-The threshold is a magnitude and it is compared with something observable. The decision rule is
-written as if-then, covers rollout, retest, and stop, and does not mention the actual result.
-
-A weak answer says "we checked robustness by trying another control group" without stating what
-would count as a failure, or writes a decision rule whose thresholds match the observed estimate.
+A strong sensitivity analysis names one departure and quantifies it: "if promoted stores had grown
+3 points faster than control for unrelated reasons, the margin effect moves from −€1,530 to
+−€1,100; the conclusion reverses only if differential growth exceeds 8.7 points, larger than any
+pre-period divergence." The decision rule is if-then, covers rollout, retest, and stop, and does
+not mention the result. A weak answer says robustness was "checked" without a threshold.
 
 ## 14. Interview questions
 
-**1. "What is an estimand, and how is it different from a metric?"**
+**1. "What is an estimand, and how is it different from a metric?"** Strong: the precise quantity
+to be estimated, fixed before analysis, enumerated in six slots; distinguishes estimand from
+estimator and estimate, and notes that a metric is a measurement convention without a comparison.
+Weak: "the thing you are trying to measure" — true, and no purchase on any decision.
 
-A strong answer defines it as the precise quantity to be estimated, fixed before analysis, and
-enumerates the slots: population, unit, outcome, time, intervention, comparison. It distinguishes
-estimand from estimator and estimate, and notes that a metric is usually a measurement convention
-without a comparison. A weak answer says "it's the thing you're trying to measure", which is true
-and gives no purchase on any of the decisions the concept exists to settle.
+**2. "A stakeholder asks whether the promotion worked. What do you ask first?"** Strong: what
+decision depends on the answer, then what the comparator is, then over what window and in which
+stores; "worked" is ambiguous between "sold more", "sold more than otherwise", and "made money".
+Weak: asks for the sales data.
 
-**2. "A stakeholder asks whether the promotion worked. What do you ask first?"**
+**3. "Can a model be highly accurate and causally wrong?"** Strong: yes — accuracy is prediction on
+the deployment distribution, and a model can predict from proxies that are consequences of the
+treatment, or from a feature that encodes the treatment itself, as in the promotion forecast.
+Weak: "correlation is not causation", without saying what accuracy does and does not measure.
 
-A strong answer asks what decision depends on the answer, then what the comparator is, then over
-what window and in which stores. It notes that "worked" is ambiguous between "sold more", "sold
-more than would have happened otherwise", and "made money", and that the three require different
-estimands. A weak answer asks for the sales data.
+**4. "What is the target trial, and why would you run one you cannot execute?"** Strong: the seven
+protocol components, which expose whether the causal question is well posed and which component
+cannot be emulated; the failure becomes a stated assumption with a diagnostic, not a reason to
+abandon the analysis. Weak: a thought experiment with no practical consequence.
 
-**3. "Can a model be highly accurate and causally wrong?"**
+**5. "What are intercurrent events, and give me a supply chain example."** Strong: post-time-zero
+events that change what the outcome means — non-execution of a promotion, a stock-out during it —
+plus at least three of the five handling strategies and their different estimates. Weak: calls
+them missing data.
 
-A strong answer says yes, and gives the mechanism: accuracy is a statement about prediction on the
-deployment distribution, and a model can predict well from proxies that are consequences of the
-treatment, or from a feature that encodes the treatment itself. It gives the promotion example,
-where the forecast includes the promotion as an input. A weak answer says "correlation is not
-causation" without saying what accuracy does and does not measure.
+**6. "Why does the unit of assignment matter if I am measuring baskets?"** Strong: outcomes within
+a store are correlated, so treating baskets as independent understates standard errors and
+inflates significance; the estimand states both units and the analysis clusters at assignment
+level. Weak: "we aggregate to store level" — possibly right, but not the reason.
 
-**4. "What is the target trial, and why would you run one you cannot execute?"**
+**7. "When is a before-and-after comparison legitimate?"** Strong: as a descriptive statement about
+change over time, and as a causal one only if nothing else changed, which is rare; names
+seasonality, trend, concurrent events, and mean reversion. Weak: "never", which overstates a
+common and correct descriptive use.
 
-A strong answer describes the seven protocol components, explains that the exercise exposes
-whether the causal question is well posed and which component cannot be emulated, and notes that
-the emulation failure becomes a stated assumption with a diagnostic rather than a reason to
-abandon the analysis. A weak answer describes it as a thought experiment with no practical
-consequence.
+**8. "How would you tell whether a supplier scorecard is a causal tool?"** Strong: asks whether the
+scorecard predicts which supplier will be late or intervenes on it; a score built under the
+current allocation rule may not predict behaviour under a different rule, because the rule shaped
+the data. Weak: assumes a good predictor is a good lever.
 
-**5. "What are intercurrent events, and give me a supply chain example."**
+**9. "What does it mean for an analysis to be pre-specified?"** Strong: estimand, primary
+comparison, window, and decision rule fixed before outcome data are examined, which prevents
+choosing the metric, window, or subgroup that produces the desired answer; distinguishes it from
+having discussed the plan internally. Weak: treats it as a bureaucratic step.
 
-A strong answer defines them as post-time-zero events that change what the outcome means, gives
-non-execution of a promotion or a stock-out during the promotion as examples, and names at least
-three of the five handling strategies with their different estimates. A weak answer calls them
-missing data.
-
-**6. "Why does the unit of assignment matter if I am measuring baskets?"**
-
-A strong answer explains clustering: outcomes within a store are correlated, so treating baskets
-as independent understates standard errors, often by a large factor, and inflates significance. It
-notes that the estimand should state both units and the analysis should cluster at the assignment
-level. A weak answer says "we aggregate to store level", which may be right but does not explain
-why it is necessary.
-
-**7. "When is a before-and-after comparison legitimate?"**
-
-A strong answer says it is a legitimate descriptive statement about change over time and an
-illegitimate causal one unless nothing else changed, which is rare. It notes the specific threats:
-seasonality, trend, concurrent events, and mean reversion. A weak answer says "never", which
-overstates: the descriptive use is common and correct.
-
-**8. "How would you tell whether a supplier scorecard is a causal tool?"**
-
-A strong answer asks whether the scorecard is being used to predict (which supplier will be late)
-or to intervene (whether changing the supplier changes lateness). It notes that a score built on
-observed performance under the current allocation rule may not predict what happens under a
-different rule, because the rule itself shaped the data. A weak answer assumes that a good
-predictor is a good lever.
-
-**9. "What does it mean for an analysis to be pre-specified, and why does it matter?"**
-
-A strong answer says the estimand, the primary comparison, the window, and the decision rule are
-fixed before outcome data are examined, and explains that this prevents selection on results —
-choosing the metric, window, or subgroup that produces the desired answer. It distinguishes
-pre-specification from having discussed the plan internally. A weak answer treats it as a
-bureaucratic step.
-
-**10. "What would make you abandon a causal analysis?"**
-
-A strong answer names positivity failure, an intervention that cannot be defined consistently, and
-interference that cannot be bounded. It notes that confounding alone is not a reason to abandon,
-because it can be argued about and its sensitivity measured, whereas a positivity violation means
-there is no comparable group at all. A weak answer says "when the data are not experimental".
-
-**11. "How do you decide between reporting a difference and a ratio?"**
-
-A strong answer says the choice depends on the decision and the audience: a difference is what an
-operational plan needs, a ratio is what makes products comparable, and a ratio on a small base can
-look large while being commercially trivial. It recommends reporting both when the decision
-depends on both, and pre-specifying which is primary. A weak answer picks one by habit.
-
-**12. "Your model says the promotion added 4,000 units. What else do you need before recommending a rollout?"**
-
-A strong answer asks for the margin effect, the break-even threshold, the interval, the
-generalisation population, and the cost of scaling. It notes that 4,000 units of volume with a 20%
-discount can be margin-negative, so the volume estimate alone does not support a rollout. A weak
-answer treats the volume estimate as the answer.
+**10. "What would make you abandon a causal analysis?"** Strong: positivity failure, an
+intervention that cannot be defined consistently, and interference that cannot be bounded;
+confounding alone is not a reason, because it can be argued about and its sensitivity measured.
+Weak: "when the data are not experimental".
 
 ## 15. Key terms
 
@@ -1409,11 +1180,7 @@ answer treats the volume estimate as the answer.
 - **Potential outcome** — the outcome for a unit under a specified treatment condition.
 - **Intervention** — a fully specified action, including dose, timing, duration, and delivery.
 - **Comparator** — the alternative condition, specified as precisely as the intervention.
-- **Unit of analysis** — the entity whose outcome is measured.
-- **Unit of assignment** — the entity to which the intervention is applied.
 - **Time zero** — the moment eligibility is assessed and follow-up begins.
-- **Population-level summary** — the summary measure that makes two conditions comparable.
-- **Contrast** — the comparison between summary values under two conditions.
 - **Intercurrent event** — a post-time-zero event that changes the interpretation of the outcome.
 - **Treatment policy strategy** — analyse outcomes regardless of adherence to the assigned condition.
 - **Hypothetical strategy** — estimate the outcome had the intercurrent event not occurred.
@@ -1425,15 +1192,9 @@ answer treats the volume estimate as the answer.
 - **Positivity** — every covariate pattern has a nonzero probability of each condition.
 - **Consistency** — the observed outcome equals the potential outcome under the treatment received.
 - **SUTVA** — no interference between units and no hidden versions of the treatment.
-- **Interference** — one unit's outcome depends on another unit's treatment.
 - **Confounder** — a variable affecting both treatment and outcome.
 - **Collider** — a variable affected by both treatment and outcome; conditioning on it induces bias.
 - **Mediator** — a variable on the causal path from treatment to outcome.
-- **Incrementality** — the part of an outcome that would not have occurred without the intervention.
-- **Baseline** — the level against which an outcome is compared; a counterfactual only if justified.
-- **Leakage** — use of information at training time that is unavailable at prediction time.
-- **Decision rule** — the pre-specified mapping from an estimate to an action.
-- **Sensitivity analysis** — an analysis probing robustness to departures from assumptions, targeting the same estimand.
 
 ## 16. Sources
 
@@ -1443,9 +1204,8 @@ answer treats the volume estimate as the answer.
   DOI: 10.1214/10-STS330. Explanatory, predictive, and descriptive modelling as distinct goals;
   an underspecified model can have lower expected prediction error than the true one.
 - Holland, P. W. (1986). "Statistics and Causal Inference." *JASA*, 81(396). The fundamental
-  problem of causal inference; the potential-outcomes framing.
-- Rubin, D. B. (1986). "Which Ifs Have Causal Answers?" *JASA*. SUTVA, and when a causal question
-  is well posed.
+  problem of causal inference; the potential-outcomes framing. Rubin, D. B. (1986). "Which Ifs
+  Have Causal Answers?" *JASA*. SUTVA, and when a causal question is well posed.
 - Hernán, M. A. and Robins, J. M. *Causal Inference: What If*. Chapman and Hall/CRC; free PDF from
   the authors. Chapter 3.6 on the target trial; Chapter 22 on emulation, time zero, and sustained
   strategies.
@@ -1473,11 +1233,6 @@ answer treats the volume estimate as the answer.
   831–859. DOI: 10.1002/joom.1318.
 - Ketokivi, M. and McIntosh, C. N. (2017). "Addressing the endogeneity dilemma in operations
   management research." *Journal of Operations Management*, 52(1), 1–14.
-- Rudin, C. (2019). "Stop explaining black box machine learning models for high stakes decisions."
-  *Nature Machine Intelligence*. DOI: 10.1038/s42256-019-0048-x.
-- Covert, I., Lundberg, S. and Lee, S.-I. (2021). "Explaining by Removing: A Unified Framework for
-  Model Explanation." *Journal of Machine Learning Research*; arXiv:2011.14878. Removal-based
-  explanations simulate interventions on features, which are not interventions on the world.
 
 **Standards and regulatory — Grade B**
 
@@ -1524,19 +1279,15 @@ answer treats the volume estimate as the answer.
 **Note on citations.** Volume and page numbers appear where the sources consulted confirmed them
 and are omitted where they did not. The addendum's paragraph numbering is not reproduced, because
 the versions consulted differed in their internal references. Vendor figures in section 9.2 are
-reported as the vendors state them, are not independently verified, and are used only for the
-direction of bias they describe.
+reported as stated, not independently verified, and used only for the direction of bias.
 
 ## 17. Links
 
 - Module map: [`_index.md`](_index.md)
 - Next topic, written: `02_probability-bootstrap.md` (planned)
-- Later in this module: `06_dags.md` (planned) — the graph machinery behind the confounder,
-  collider, and mediator distinctions in section 4
-- Later in this module: `07_experiments-quasi.md` (planned) — design choice once the estimand is
-  fixed
-- Later in this module: `10_sensitivity-omitted-bias.md` (planned) — the quantitative version of
-  the sensitivity analysis sketched in section 5.9
+- `06_dags.md` (planned) — the graph machinery behind section 4's confounder, collider, and mediator
+- `07_experiments-quasi.md` (planned) — design choice once the estimand is fixed
+- `10_sensitivity-omitted-bias.md` (planned) — the quantitative form of section 5.9
 - Measurement background: [`../01A_foundations_units_time_assumptions/09_forecast-error-metrics.md`](../01A_foundations_units_time_assumptions/09_forecast-error-metrics.md)
   — what forecast accuracy does and does not measure, which section 6.7 depends on
 - Experiment design and pilot evidence: [`../05_experimentation_pilots_evidence/_index.md`](../05_experimentation_pilots_evidence/_index.md)
