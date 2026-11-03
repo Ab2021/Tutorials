@@ -36,10 +36,10 @@ not the whole program.
 | 3 | [`03_mint-reconciliation.md`](03_mint-reconciliation.md) | MinT in Detail | Covariance shrinkage, constraints, and a reference implementation. | 1,200–1,800 | complete |
 | 4 | [`04_temporal-cross-temporal.md`](04_temporal-cross-temporal.md) | Temporal and Cross-Temporal Hierarchies | Reconciling across time buckets as well as entities. | 1,200–1,800 | complete |
 | 5 | [`05_intermittent-classification.md`](05_intermittent-classification.md) | Intermittent Demand: Classification and Methods | Syntetos-Boylan classification and the methods that fit each class. | 1,200–1,800 | complete |
-| 6 | [`06_compound-poisson-hurdle.md`](06_compound-poisson-hurdle.md) | Compound Poisson and Hurdle Models | Separating occurrence from size in slow-moving demand. | 1,200–1,800 | planned |
-| 7 | [`07_probabilistic-forecasts.md`](07_probabilistic-forecasts.md) | Probabilistic Forecasts: What a Distribution Is For | Quantiles, intervals, and the decisions they enable. | 1,200–1,800 | planned |
-| 8 | [`08_conformal-prediction.md`](08_conformal-prediction.md) | Conformal Prediction for Time Series | Distribution-free coverage under dependence and its limits. | 1,200–1,800 | planned |
-| 9 | [`09_scoring-rules.md`](09_scoring-rules.md) | Scoring Probabilistic Forecasts | CRPS, pinball loss, log score, and calibration diagnostics. | 1,200–1,800 | planned |
+| 6 | [`06_compound-poisson-hurdle.md`](06_compound-poisson-hurdle.md) | Compound Poisson and Hurdle Models | Separating occurrence from size in slow-moving demand. | 1,200–1,800 | complete |
+| 7 | [`07_probabilistic-forecasts.md`](07_probabilistic-forecasts.md) | Probabilistic Forecasts: What a Distribution Is For | Quantiles, intervals, and the decisions they enable. | 1,200–1,800 | complete |
+| 8 | [`08_conformal-prediction.md`](08_conformal-prediction.md) | Conformal Prediction for Time Series | Distribution-free coverage under dependence and its limits. | 1,200–1,800 | complete |
+| 9 | [`09_scoring-rules.md`](09_scoring-rules.md) | Scoring Probabilistic Forecasts | CRPS, pinball loss, log score, and calibration diagnostics. | 1,200–1,800 | complete |
 | 10 | [`10_quantiles-decisions.md`](10_quantiles-decisions.md) | Decision Use of Quantiles | Choosing a quantile from service level, cost, and risk appetite. | 1,200–1,800 | planned |
 
 ## 4. How the topics fit together
