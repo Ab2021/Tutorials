@@ -622,10 +622,6 @@ base.
 | Extra variable handling at receiving sites | −0.70 |
 | **Net annual saving** | **2.59** |
 
-The transport penalty is 48% of the avoidable cost. That is normal, and it is the number
-greenfield studies do not have to compute, because in a greenfield study the new sites are placed
-to minimise it.
-
 ### 6.5 Payback, NPV, and the notice period
 
 Undiscounted, payback is `7.55 / 2.59 = 2.92 years` — the number that would appear in a first
@@ -913,9 +909,6 @@ the folklore as a claim about frequency; the mechanisms are A-grade arithmetic.
 
 ## 10. Failure modes and red flags
 
-Each row names the failure, the red flag visible in a meeting or a dataset before anyone has diagnosed
-it, the mechanism, the consequence, and the mitigation.
-
 | Failure | Red flag you can see | Mechanism | Consequence | Mitigation |
 |---|---|---|---|---|
 | Existing sites entered at zero fixed cost | Every existing site stays open in every scenario | Sunk-capacity trap: the model can never justify a closure | The study "confirms" the status quo and is worthless | Enter the avoidable annual cost, not zero |
@@ -1165,6 +1158,13 @@ Strong: reconfiguration capital, dual running, severance and notice, recruitment
 inventory build, stranded overhead, customer disruption, dilapidations, disposal net of
 proceeds, and programme cost — each dated. Weak: "one-off costs", as a single line.
 
+**6. "A model proposes expanding a site by 40%. What do you check first?"**
+
+Strong: whether the building can take it — clear height, floor loading, column grid, dock count,
+site boundary, planning use class, landlord consent, permit headroom — each encoded as a
+constraint rather than assumed; and whether the labour agreement permits the shift pattern.
+Weak: checks the capex line and the labour rate, and treats the building as infinitely elastic.
+
 **7. "Should the model choose a destination or a path?"**
 
 Strong: both, under different objectives — steady-state discounted cost for the destination, NPV
@@ -1294,5 +1294,5 @@ observation, or anecdote.
 - Part I foundations: [`../../01_foundations/_index.md`](../../01_foundations/_index.md)
 - Module survey file: [`../../../course/11_network_design_optimization.md`](../../../course/11_network_design_optimization.md)
 
-> **Note:** topics 07 to 10 are listed in `_index.md` but do not exist on disk yet, so they are
-> shown as plain file names marked planned. Every markdown link on this page resolves.
+> **Note:** topics 07 to 10 carry the status `planned` in `_index.md`, so they appear as plain file
+> names rather than links. Every markdown link on this page resolves.

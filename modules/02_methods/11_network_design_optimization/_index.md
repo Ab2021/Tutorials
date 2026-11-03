@@ -36,10 +36,10 @@ not the whole program.
 | 3 | [`03_milp-anatomy.md`](03_milp-anatomy.md) | MILP Anatomy | Variables, constraints, objective, and the modelling choices that decide solvability. | 1,200–1,800 | complete |
 | 4 | [`04_facility-location.md`](04_facility-location.md) | The Baseline Capacitated Facility-Location Model | Fixed charge, capacity, and demand allocation. | 1,200–1,800 | complete |
 | 5 | [`05_multi-commodity-period.md`](05_multi-commodity-period.md) | Multi-Commodity and Multi-Period Models | Product families, inventories, and time-expanded networks. | 1,200–1,800 | complete |
-| 6 | [`06_greenfield-brownfield.md`](06_greenfield-brownfield.md) | Greenfield and Brownfield Design | Building from scratch versus adapting an existing footprint. | 1,200–1,800 | planned |
-| 7 | [`07_scenario-sensitivity.md`](07_scenario-sensitivity.md) | Scenario and Sensitivity Analysis | Which assumptions change the answer, and by how much. | 1,200–1,800 | planned |
-| 8 | [`08_robust-stochastic.md`](08_robust-stochastic.md) | Robust and Stochastic Optimization | Hedging against demand, cost, and disruption uncertainty. | 1,200–1,800 | planned |
-| 9 | [`09_carbon-objective.md`](09_carbon-objective.md) | Carbon in the Objective | Emissions factors, scope boundaries, and multi-objective trade-offs. | 1,200–1,800 | planned |
+| 6 | [`06_greenfield-brownfield.md`](06_greenfield-brownfield.md) | Greenfield and Brownfield Design | Building from scratch versus adapting an existing footprint. | 1,200–1,800 | complete |
+| 7 | [`07_scenario-sensitivity.md`](07_scenario-sensitivity.md) | Scenario and Sensitivity Analysis | Which assumptions change the answer, and by how much. | 1,200–1,800 | complete |
+| 8 | [`08_robust-stochastic.md`](08_robust-stochastic.md) | Robust and Stochastic Optimization | Hedging against demand, cost, and disruption uncertainty. | 1,200–1,800 | complete |
+| 9 | [`09_carbon-objective.md`](09_carbon-objective.md) | Carbon in the Objective | Emissions factors, scope boundaries, and multi-objective trade-offs. | 1,200–1,800 | complete |
 | 10 | [`10_solvers-heuristics.md`](10_solvers-heuristics.md) | Solvers, Heuristics, and Practical Limits | MIP gaps, decomposition, and when a heuristic is the professional answer. | 1,200–1,800 | planned |
 
 ## 4. How the topics fit together
@@ -71,12 +71,12 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 5 |
+| planned | 1 |
 | draft | 0 |
-| complete | 5 |
+| complete | 9 |
 
-Module 11 is in production as of 3 November 2026. Topics 01 to 05 are written and meet the
-quality bar in `MODULE_EXPANSION_SPEC.md` §5; topics 06–10 are indexed but not yet written. Status moves from
+Module 11 is in production as of 3 November 2026. Topics 01 to 09 are written and meet the
+quality bar in `MODULE_EXPANSION_SPEC.md` §5; topic 10 is indexed but not yet written. Status moves from
 `planned` to `draft` to `complete` as each file is produced at its target length. The survey file
 linked above is complete at survey depth and can be used on its own.
 

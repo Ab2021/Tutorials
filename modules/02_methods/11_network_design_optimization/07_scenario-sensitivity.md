@@ -472,7 +472,7 @@ this design than the best available. Regret is measured in the same units as cos
 direct interpretation — "if this future happens, we will have spent 158 thousand per year more
 than we needed to".
 
-```
+```text
 regret(d, s) = cost(d, s) - min over designs d' of cost(d', s)
 ```
 
@@ -852,8 +852,9 @@ The recommendation, written in the form the reporting standard requires:
 What the analysis does not say: whether a 5% demand increase is credible (that requires the
 forecast error history from Module 07), whether Q's demonstrated throughput in a bad month is 48
 or 55 (that requires the site's operating data), and whether the organisation can execute a
-two-site transition (that is topic 01's executability question, using topic 06's machinery). The
-analysis has converted those questions into thresholds that someone else can answer. That is its job.
+two-site transition (that is topic 01's executability question, using Module 11 topic 06's
+machinery). The analysis has converted those questions into thresholds that someone else can
+answer. That is its job.
 
 ## 7. Code, query, or calculation
 
@@ -988,8 +989,6 @@ known, the failure mode section 10 opens with. **C**
 | Scenario count inflated | Twenty scenarios, none named, no narrative | Software makes runs cheap | Nobody can argue with any of them | Three to six named scenarios; a sample belongs in topic 08 |
 | No stated criterion | The matrix has no decision rule | Criterion left implicit | The reader supplies their own and reaches a different design | State expected cost, minimax regret, or robustness, and why |
 
-One of these deserves expansion.
-
 **Infeasibility hidden as high cost.** A solver returns "infeasible", and the analyst needs a
 number for the table, so a large penalty is substituted, averaged with the other scenarios, and
 a design is selected. This is the most consequential silent error in the genre: it converts a
@@ -1014,7 +1013,7 @@ off. Section 6.5 showed the mechanism, and the penalty has no evidential basis.
 Two limits matter more than the rest. **The analysis is only as good as the scenario set**, and
 the set is a judgement; no arithmetic repairs a set that omits the future in which the
 recommendation fails. **The analysis says nothing about transition**: it compares steady-state
-designs, not the cost and risk of getting from here to there, which is topic 06's subject.
+designs, not the cost and risk of getting from here to there, which Module 11 topic 06 owns.
 
 ## 12. Exercises
 
@@ -1112,13 +1111,13 @@ minority term and rarely changes the open set.
 **Exercise 3.** The zero basic variable means the optimal dual set is not a singleton, and the
 reported dual of 0 is one extreme point. The true one-sided shadow prices are the minimum and
 maximum of the dual over that set: the value of an extra unit is the minimum, and the value of
-removing a unit is the maximum, up to sign convention. Quote both, with the constraint, the
-units, and the sentence "the LP is degenerate, so this is a range rather than a single price".
+removing a unit is the maximum, up to sign convention. Quote both, with the constraint, the units,
+and "the LP is degenerate, so this is a range rather than a single price".
 
 **Exercise 4.** `1,410 + 430k = 1,600 + 350k` gives `80k = 190`, so `k = 2.375`. The paragraph
 should say transport would have to rise 137.5% before the ranking changes, that this reflects a
 cost structure in which fixed cost is roughly three times flow cost, and that the correct
-conclusion is that transport is not the switching parameter — not that transport is risk-free.
+conclusion is that transport is not the switching parameter — not that it is risk-free.
 
 **Exercise 5.** A strong set: base; growth with freight rising alongside volume; a cost shock in
 which energy, freight, and wages rise together; a policy shock in which a carbon border cost and
@@ -1146,55 +1145,55 @@ probabilities exist. A weak memo gives the base optimum and a tornado chart.
 
 ## 14. Interview questions
 
-**1. "What is the difference between sensitivity analysis and scenario analysis?"**
-Strong: one parameter against a coherent joint future; the first is a derivative, the second a
-displacement, and the second is where correlations live. Weak: "scenarios are more detailed
-sensitivities", which misses the joint-movement point.
+**1. "Sensitivity versus scenario analysis?"**
+Strong: one parameter at a time against a coherent joint future; the first is a derivative, the
+second a displacement, and the second is where correlations live.
+Weak: "scenarios are more detailed sensitivities", which misses joint movement.
 
-**2. "Why does one-at-a-time analysis overstate confidence?"**
+**2. "Why does one-at-a-time overstate confidence?"**
 Strong: additivity fails near thresholds, the corners of the parameter space are never sampled,
-and percentage bands cannot represent regime changes. Weak: "because it does not test
-everything", with no mechanism.
+and percentage bands cannot represent regime changes.
+Weak: "because it does not test everything", with no mechanism.
 
-**3. "You are given a capacity shadow price. When should you not believe it?"**
+**3. "When should you not believe a capacity shadow price?"**
 Strong: when the LP is degenerate, when the value comes from a MIP, or when the constraint is
-structural rather than marginal; quote the basis and the one-sided prices. Weak: quotes the
-number and adds it to the capital request.
+structural rather than marginal; quote the basis and the one-sided prices.
+Weak: quoting the number straight into a capital request.
 
-**4. "The ranging report says the transport rate can rise 140% before the answer changes. Good news?"**
-Strong: it says transport is not the switching parameter in this cost structure; the width
-reflects the fixed-to-flow ratio, not the absence of risk. Weak: "yes, the design is robust",
-which is the sentence that gets repeated in the steering committee.
+**4. "Ranging says transport can rise 140% before the answer changes. Good news?"**
+Strong: it says transport is not the switching parameter here; the width reflects the
+fixed-to-flow ratio, not the absence of risk.
+Weak: "yes, the design is robust" — the sentence that gets repeated in committee.
 
 **5. "How many scenarios should a network study use?"**
-Strong: three to six named, coherent, designed for coverage; a larger sample belongs to a
-stochastic formulation, and the test is whether the set contains the future in which the answer
-fails. Weak: a number with no rationale, or "as many as the software allows".
+Strong: three to six named, coherent, chosen for coverage; a larger sample belongs to a
+stochastic formulation, and the test is whether the set contains the future in which the answer fails.
+Weak: a number with no rationale, or "as many as the software allows".
 
-**6. "How do you stop a scenario set from justifying the answer someone already wanted?"**
+**6. "How do you stop a scenario set from justifying a preferred answer?"**
 Strong: fix the ranges and the set before the base solve; include a scenario that hurts the
-preferred design; have the set reviewed by someone who disagrees. Weak: "we were objective",
-which is not a control.
+preferred design; have the set reviewed by someone who disagrees.
+Weak: "we were objective", which is not a control.
 
-**7. "What is minimax regret, and when would you use it instead of expected cost?"**
+**7. "What is minimax regret, and when is it preferable to expected cost?"**
 Strong: choose the design whose worst shortfall against the scenario optimum is smallest; use it
-when probabilities are not defensible, and note it is not minimising worst-case cost. Weak:
-confuses it with maximin or variance minimisation.
+when probabilities are not defensible, noting it is not worst-case cost.
+Weak: confusing it with maximin or variance minimisation.
 
-**8. "What is decision stability and why might you prefer it to optimality?"**
+**8. "What is decision stability and why prefer it to optimality?"**
 Strong: the same open set winning across most scenarios; a stable design avoids a reversal that
-costs more than the optimality premium, counted over sets and feasibility, not just cost. Weak:
-"the answer does not change much", with no definition of change.
+costs more than the optimality premium, counted over sets and feasibility.
+Weak: "the answer does not change much", with no definition of change.
 
-**9. "Your tornado chart's longest bar is transport. What do you tell the room?"**
+**9. "Your tornado's longest bar is transport. What do you tell the room?"**
 Strong: the bar shows the cost effect over the range chosen, not the risk; check the threshold
-and the plausibility before calling it the biggest exposure. Weak: "transport is our biggest
-risk", which converts an effect size into a probability claim.
+and the plausibility before calling it the biggest exposure.
+Weak: "transport is our biggest risk", converting an effect size into a probability claim.
 
-**10. "A design is optimal in the base case and infeasible in one of five scenarios. What do you recommend?"**
+**10. "Optimal in the base case, infeasible in one of five scenarios. What do you recommend?"**
 Strong: do not average the infeasibility into a cost; report it, price the alternative design,
-and let the business judge the scenario's credibility. Weak: assigns a large penalty and reports
-an expected cost, hiding the structural finding.
+and let the business judge the scenario's credibility.
+Weak: assigning a large penalty and reporting an expected cost, hiding the structural finding.
 
 ## 15. Key terms
 

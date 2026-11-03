@@ -672,11 +672,11 @@ import math
 
 def evaluate_maritime_route(name, dist_nm, speed_kts, draft_penalty_pct,
                              toll_cost, war_risk_pct, hull_val, base_rate,
-                             cargo_val, holding_rate, vessel_teu):
+                             cargo_val, holding_rate, vessel_teu, land_days=0.0):
     # Kinematics & Transit Time
     sea_days = dist_nm / (24.0 * speed_kts)
     canal_days = 1.5 if toll_cost > 0 else 0.0
-    total_days = sea_days + canal_days
+    total_days = sea_days + canal_days + land_days
     
     # Hydrodynamic Fuel Burn (Cubic Power Law: P ~ V^3)
     # Ref: 95 mt/day at 16 kts + 12 mt aux
@@ -697,8 +697,9 @@ def evaluate_maritime_route(name, dist_nm, speed_kts, draft_penalty_pct,
     total_cost_teu = base_rate + fuel_per_teu + toll_per_teu + war_ins_per_teu + inv_cost_per_teu
     
     # Fleet String Loop Sizing (Weekly Departure Requirement)
-    # 22 days total port dwell across 10 port calls
-    round_trip_days = (2.0 * sea_days) + 22.0 + (canal_days * 2.0)
+    # 22 days total port dwell across 10 port calls (or 10 days for MLB transpacific string)
+    port_dwell = 10.0 if land_days > 0 else 22.0
+    round_trip_days = (2.0 * sea_days) + port_dwell + (canal_days * 2.0)
     vessels_required = math.ceil(round_trip_days / 7.0)
     
     return {
@@ -709,12 +710,12 @@ def evaluate_maritime_route(name, dist_nm, speed_kts, draft_penalty_pct,
 
 # Execution across primary global maritime corridors
 scenarios = [
-    ("1A: Asia-Europe Suez Normal", 10500, 16.0, 0.00, 520000, 0.05, 140e6, 1100, 45000, 0.18, 14000),
-    ("1B: Asia-Europe Suez Interdiction", 10500, 16.0, 0.00, 520000, 0.85, 140e6, 1100, 45000, 0.18, 14000),
-    ("1C: Asia-Europe Cape of Good Hope", 14000, 16.0, 0.00, 0, 0.00, 140e6, 1450, 45000, 0.18, 14000),
-    ("2A: Asia-USEC Panama Normal", 10600, 16.0, 0.00, 1050000, 0.00, 115e6, 1450, 45000, 0.18, 10500),
-    ("2B: Asia-USEC Panama 44ft Drought", 10600, 16.0, 0.188, 2850000, 0.00, 115e6, 1450, 45000, 0.18, 10500),
-    ("2C: Asia-USEC Intermodal MLB", 5700, 18.0, 0.00, 0, 0.00, 115e6, 2630, 45000, 0.18, 10500)
+    ("1A: Asia-Europe Suez Normal", 10500, 16.0, 0.00, 520000, 0.05, 140e6, 1100, 45000, 0.18, 14000, 0.0),
+    ("1B: Asia-Europe Suez Interdiction", 10500, 16.0, 0.00, 520000, 0.85, 140e6, 1100, 45000, 0.18, 14000, 0.0),
+    ("1C: Asia-Europe Cape of Good Hope", 14000, 16.0, 0.00, 0, 0.00, 140e6, 1450, 45000, 0.18, 14000, 0.0),
+    ("2A: Asia-USEC Panama Normal", 10600, 16.0, 0.00, 1050000, 0.00, 115e6, 1450, 45000, 0.18, 10500, 0.0),
+    ("2B: Asia-USEC Panama 44ft Drought", 10600, 16.0, 0.188, 2850000, 0.00, 115e6, 1450, 45000, 0.18, 10500, 0.0),
+    ("2C: Asia-USEC Intermodal MLB", 5700, 18.0, 0.00, 0, 0.00, 115e6, 2630, 45000, 0.18, 10500, 8.89)
 ]
 
 print(f"{'Route':<35} | {'Days':<6} | {'Fuel(t)':<7} | {'Cost/TEU':<9} | {'Inv/TEU':<8} | {'Ships':<5}")
@@ -735,12 +736,12 @@ for sc in scenarios:
 ```text
 Route                               | Days   | Fuel(t) | Cost/TEU  | Inv/TEU  | Ships
 ----------------------------------------------------------------------------------
-1A: Asia-Europe Suez Normal         | 28.84  | 2925.4  | $1917.92  | $639.96  | 12   
-1B: Asia-Europe Suez Interdiction   | 28.84  | 2925.4  | $1997.92  | $639.96  | 12   
-1C: Asia-Europe Cape of Good Hope   | 36.46  | 3901.2  | $2440.18  | $809.05  | 14   
-2A: Asia-USEC Panama Normal         | 29.1   | 2539.2  | $2352.94  | $645.73  | 12   
-2B: Asia-USEC Panama 44ft Drought   | 29.1   | 2539.2  | $2882.35  | $645.73  | 12   
-2C: Asia-USEC Intermodal MLB        | 14.69  | 1978.0  | $3238.41  | $326.01  | 8    
+1A: Asia-Europe Suez Normal         | 28.84  | 2925.8  | $1918.08  | $640.09  | 12   
+1B: Asia-Europe Suez Interdiction   | 28.84  | 2925.8  | $1998.08  | $640.09  | 12   
+1C: Asia-Europe Cape of Good Hope   | 36.46  | 3901.0  | $2440.20  | $809.08  | 14   
+2A: Asia-USEC Panama Normal         | 29.1   | 2953.6  | $2378.72  | $645.87  | 12   
+2B: Asia-USEC Panama 44ft Drought   | 29.1   | 2953.6  | $2655.32  | $645.87  | 12   
+2C: Asia-USEC Intermodal MLB        | 22.08  | 1943.1  | $3240.38  | $490.09  | 6    
 ```
 *(Note: Output illustrates the severe 2-ship fleet absorption penalty on Cape routing and the dramatic inventory-financing compression achieved by intermodal landbridges).*
 
