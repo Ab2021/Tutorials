@@ -31,15 +31,15 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_installed-base-failure-forecast.md`](01_installed-base-failure-forecast.md) | Installed Base and Failure Demand | Asset register, exposure, failure rate, and why service demand is not retail demand. | 1,200–1,800 | planned |
-| 2 | [`02_criticality-spares-classification.md`](02_criticality-spares-classification.md) | Criticality and Spares Classification | Consequence, FMEA, VED, and the difference between expensive and critical. | 1,200–1,800 | planned |
-| 3 | [`03_multi-echelon-sparing.md`](03_multi-echelon-sparing.md) | Multi-Echelon Sparing and METRIC | Where to hold spares across depots, repair shops, and field locations. | 1,200–1,800 | planned |
-| 4 | [`04_repair-loop-turnaround.md`](04_repair-loop-turnaround.md) | Repair Loops and Turnaround | Repairable parts, pipeline stock, and the economics of repair capacity. | 1,200–1,800 | planned |
-| 5 | [`05_field-service-scheduling.md`](05_field-service-scheduling.md) | Field Service Scheduling | Dispatch, routing, skills, first-time fix, and the service window. | 1,200–1,800 | planned |
-| 6 | [`06_service-contracts-sla.md`](06_service-contracts-sla.md) | Service Contracts and SLAs | Availability, response time, power-by-the-hour, and penalty design. | 1,200–1,800 | planned |
-| 7 | [`07_no-fault-found-returns.md`](07_no-fault-found-returns.md) | No-Fault-Found and Service Returns | Test, disposition, and the hidden cost of unverified failures. | 1,200–1,800 | planned |
-| 8 | [`08_connected-assets-predictive-service.md`](08_connected-assets-predictive-service.md) | Connected Assets and Predictive Service | Telemetry, condition monitoring, and when prediction beats stocking. | 1,200–1,800 | planned |
-| 9 | [`09_service-network-design.md`](09_service-network-design.md) | Service Network Design | Depot location, coverage, and the cost of response time. | 1,200–1,800 | planned |
+| 1 | [`01_installed-base-failure-forecast.md`](01_installed-base-failure-forecast.md) | Installed Base and Failure Demand | Asset register, exposure, failure rate, and why service demand is not retail demand. | 1,200–1,800 | complete |
+| 2 | [`02_criticality-spares-classification.md`](02_criticality-spares-classification.md) | Criticality and Spares Classification | Consequence, FMEA, VED, and the difference between expensive and critical. | 1,200–1,800 | complete |
+| 3 | [`03_multi-echelon-sparing.md`](03_multi-echelon-sparing.md) | Multi-Echelon Sparing and METRIC | Where to hold spares across depots, repair shops, and field locations. | 1,200–1,800 | complete |
+| 4 | [`04_repair-loop-turnaround.md`](04_repair-loop-turnaround.md) | Repair Loops and Turnaround | Repairable parts, pipeline stock, and the economics of repair capacity. | 1,200–1,800 | complete |
+| 5 | [`05_field-service-scheduling.md`](05_field-service-scheduling.md) | Field Service Scheduling | Dispatch, routing, skills, first-time fix, and the service window. | 1,200–1,800 | complete |
+| 6 | [`06_service-contracts-sla.md`](06_service-contracts-sla.md) | Service Contracts and SLAs | Availability, response time, power-by-the-hour, and penalty design. | 1,200–1,800 | complete |
+| 7 | [`07_no-fault-found-returns.md`](07_no-fault-found-returns.md) | No-Fault-Found and Service Returns | Test, disposition, and the hidden cost of unverified failures. | 1,200–1,800 | complete |
+| 8 | [`08_connected-assets-predictive-service.md`](08_connected-assets-predictive-service.md) | Connected Assets and Predictive Service | Telemetry, condition monitoring, and when prediction beats stocking. | 1,200–1,800 | complete |
+| 9 | [`09_service-network-design.md`](09_service-network-design.md) | Service Network Design | Depot location, coverage, and the cost of response time. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -70,9 +70,9 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 9 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 9 |
 
 Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
 as each file is produced at its target length. The survey file linked above is complete at survey
