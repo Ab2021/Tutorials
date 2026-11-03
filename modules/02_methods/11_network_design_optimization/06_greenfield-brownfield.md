@@ -50,27 +50,24 @@ is the network you already have, running forward, with its leases, its wage infl
 known capacity shortfalls and its renewal dates. Pricing that counterfactual is the work, and it
 is work that greenfield studies never have to do.
 
-There is a reason the literature and the textbooks are dominated by the greenfield case, and it
-is worth stating plainly because it explains what you have and have not been taught. The
-canonical facility-location formulations carry no state. A binary variable `x_j` costs the same
-to switch on whether or not a building was already standing there. Adding legacy requires either
-a second binary for closure, or a differentiated fixed cost, or a time index — and the first
-published treatments of closing and relocation appear in 1975 and 1982, more than sixty years
-after Weber's continuous location problem. The greenfield case is not the important case. It is
-the case the mathematics was built for, and therefore the case that teaching examples
-demonstrate.
+There is a reason the literature and the textbooks are dominated by the greenfield case, and it is
+worth stating plainly because it explains what you have and have not been taught. The canonical
+facility-location formulations carry no state: a binary variable `x_j` costs the same to switch on
+whether or not a building was already standing there. Adding legacy requires either a second binary
+for closure, or a differentiated fixed cost, or a time index — and the first published treatments of
+closing and relocation appear in 1975 and 1982, more than sixty years after Weber's continuous
+location problem. The greenfield case is not the important case; it is the case the mathematics was
+built for, and therefore the case that teaching examples demonstrate.
 
-**What this topic is not.** Topic 04 owns the facility-location formulation: fixed charge,
-capacity, linking constraint, relaxation, gap. This topic does not re-derive any of it. Topic 05
-adds commodities and periods, and a migration path is a multi-period object, so topic 05 is the
-machinery you will reach for. Topic 07 owns sensitivity, topic 08 owns uncertainty, topic 13 owns
-what happens inside a reconfigured building, and Module 14A owns disruption and resilience. This
-topic owns the distinction, the cost of change, and the transition. It matters commercially
-because a greenfield study answers a question a company asks once a decade, usually when it has no
-network or is entering a new country, while a brownfield study answers a question it asks every
-year. The second is where the analytical hours are spent and where the credibility of the function
-is made; an analyst who can only do the first can produce a beautiful answer to a question nobody
-is currently asking.
+**What this topic is not.** Topic 04 owns the facility-location formulation: fixed charge, capacity,
+linking constraint, relaxation, gap, and this topic does not re-derive any of it. Topic 05 adds
+commodities and periods, and a migration path is a multi-period object, so topic 05 is the machinery
+you will reach for. Topic 07 owns sensitivity, topic 08 owns uncertainty, topic 13 owns what happens
+inside a reconfigured building, and Module 14A owns disruption and resilience. This topic owns the
+distinction, the cost of change, and the transition. It matters commercially because a greenfield
+study answers a question a company asks once a decade, usually when it has no network or is entering
+a new country, while a brownfield study answers a question it asks every year — and the second is
+where the analytical hours are spent and where the credibility of the function is made.
 
 ## 2. Learning outcomes
 
@@ -91,10 +88,9 @@ By the end of this topic you can:
 6. **Encode** physical and legal reconfigurability as capacity ceilings and arc removals, and
    **distinguish** a constraint from a cost.
 7. **Construct** a migration path with a critical path, a capacity check at every date, and a
-   stated earliest-effective date per closure.
-8. **Choose** between optimising a destination and optimising a path, and **explain** why the
-   honest answer is usually both, under two different objectives.
-9. **Report** a brownfield study to the standard in section 5: baseline priced, option set
+   stated earliest-effective date per closure, and **explain** why a destination and a path are
+   optimised under two different objectives.
+8. **Report** a brownfield study to the standard in section 5: baseline priced, option set
    enumerated with the do-nothing case, cost-of-change items listed as included and excluded,
    and the migration path with its critical assumptions.
 
@@ -129,13 +125,13 @@ something the first does not: a status quo.
 
 The pictures differ in four ways, and those four ways carry the topic.
 
-**Property 1 — Greenfield has no incumbent, brownfield's incumbent is the competitor.** In the
-greenfield problem the model compares designs against each other. In the brownfield problem it
+**Property 1 — Greenfield has no incumbent; brownfield's incumbent is the competitor.** In the
+greenfield problem the model compares designs against each other; in the brownfield problem it
 compares each design against the network that will run if nobody decides anything. That baseline
 is not zero cost and it is not "today's cost": it is today's cost rolled forward with the lease
 renewals, the wage settlements, the known capacity shortfall, and the service trajectory already
-committed. A study that omits the baseline has no denominator, and its savings percentages are
-ratios against an imaginary world.
+committed. A study that omits it has no denominator, and its savings percentages are ratios
+against an imaginary world.
 
 **Property 2 — In brownfield, the dominant cost is already spent, so the objective is a
 difference.** A greenfield facility's fixed cost is a forecast; a brownfield facility's fixed cost
@@ -143,18 +139,18 @@ is a decision — which of its existing costs will disappear if it closes. The f
 engineering estimate, the second from a management accounting judgement, and the second is wrong
 more often because it looks like it should be easy.
 
-**Property 3 — In brownfield, the binding constraints are physical and legal, not economic.**
-A greenfield site can be designed to any specification. An existing site is a building with a
-clear height, a floor load, a column grid, a dock count, a lease with a break clause in 2031, a
-landlord who must consent to alterations, a planning use class, and a workforce with contractual
-notice. Some of these are prices. Most are walls, and a model that prices a wall will recommend
-knocking it down — correct in the model, impossible in the building.
+**Property 3 — In brownfield, the binding constraints are physical and legal, not economic.** A
+greenfield site can be designed to any specification. An existing site is a building with a clear
+height, a floor load, a column grid, a dock count, a lease with a break clause in 2031, a landlord who
+must consent to alterations, a planning use class, and a workforce with contractual notice. Some of
+these are prices; most are walls, and a model that prices a wall will recommend knocking it down —
+correct in the model, impossible in the building.
 
-**Property 4 — In brownfield, the output is a sequence, not a set.** The greenfield answer is an
-open set: build these three, serve these markets. The brownfield answer is a dated sequence: close
-this one after the lease break, expand that one in the same financial year, keep the third and
-re-rack it, and do not touch the fourth until the transport contract is re-tendered. The set is
-the destination. The sequence is the decision.
+**Property 4 — In brownfield, the output is a sequence, not a set.** The greenfield answer is an open
+set: build these three, serve these markets. The brownfield answer is a dated sequence: close this one
+after the lease break, expand that one in the same financial year, keep the third and re-rack it, and
+do not touch the fourth until the transport contract is re-tendered. The set is the destination; the
+sequence is the decision.
 
 ### 3.1 Why the two traps are mirror images
 
@@ -236,20 +232,16 @@ can manage."
 | Use class | The planning category that governs what a building may be used for, and what consent exists for | Ignored when a site changes role | Regulatory code |
 | Clear height | The usable vertical distance under the lowest obstruction in a warehouse | Treated as a layout detail rather than a capacity ceiling | Metres |
 | Floor loading | The safe distributed load a slab can carry | Ignored when automated storage is proposed | Kilonewtons per square metre |
-| Convertible capacity | Capacity that can change product family or role without structural change | Assumed for every existing site | Units per period |
-| Incremental capacity block | A discrete quantum of extra capacity added at a site, with its own fixed cost | Modelled as continuous capacity | Units per period, plus currency |
 | Step-fixed cost | A cost that is fixed within a volume band and rises at a threshold | Modelled as purely fixed or purely variable | Currency per period, per band |
 | Churn limit | A constraint on the number of sites changed in a given period | Absent, so the model recommends everything at once | Sites per period |
 | Capital envelope | The maximum transition spend available in a period | Ignored, so the path is unaffordable even when optimal | Currency per period |
 | Migration path | The dated sequence of network states from today to the target | Confused with the target network | Sequence of dated states |
-| Target network | The configuration the path is heading toward | Reported as the decision | Open set at a stated date |
 | Critical path | The longest chain of dependent activities that determines the earliest completion date | Confused with the shortest route | Days |
 | Option set | Three to five named designs, each costed against the same baseline | Replaced by a single recommendation | Set of designs |
 | Payback period | Time until cumulative undiscounted savings recover the one-off cost | Computed on gross saving rather than net | Years |
 | Net present value (NPV) | The sum of discounted future cash flows, including the one-off cost | Computed without the transition cost | Currency, at a stated rate |
 | Internal rate of return (IRR) | The discount rate at which NPV equals zero | Compared across projects with different horizons | Percent per year |
 | Hurdle rate | The minimum return a project must earn to be approved | Treated as a property of the project rather than the company | Percent per year |
-| Brownfield premium | The cost advantage a new site must overcome to justify leaving an existing one | Assumed to be zero | Currency per period |
 
 Two deserve expansion, because they are where the argument breaks.
 
@@ -278,23 +270,21 @@ the sequence of judgements that the greenfield procedure does not contain.
 **Input and output:** the decision sentence from topic 01 becomes a one-line classification —
 greenfield, brownfield, or hybrid — with the decision verbs named.
 
-**Why it matters:** the classification fixes the cost basis, the constraint set, the output
-format, and the review standard. It is usually left implicit, which is how a brownfield decision
-gets modelled as greenfield and then rejected.
+**Why it matters:** the classification fixes the cost basis, the constraint set, the output format,
+and the review standard. It is usually left implicit, which is how a brownfield decision gets
+modelled as greenfield and then rejected.
 
 **The test is the verb, not the industry.** "Which of six regions should host our first European
-DC" is greenfield even though the company is old. "Close Ashfield, expand Calder, or keep both"
-is brownfield even for a one-site startup, because the status quo is an option. For a hybrid, say
-what each stage is for: the greenfield run supplies a bound and a direction; the brownfield run
-supplies the decision.
+DC" is greenfield even though the company is old. "Close Ashfield, expand Calder, or keep both" is
+brownfield even for a one-site startup, because the status quo is an option. For a hybrid, say what
+each stage is for: the greenfield run supplies a bound and a direction; the brownfield run supplies
+the decision.
 
 ### Step 2 — Price the do-nothing baseline before anything else
 
-**Input:** the current footprint, the lease register, contracted wage and rent escalation, and
-the known capacity shortfall.
-
-**Output:** the status quo's total network cost, by year, discounted at the hurdle rate, on the
-cost basis every option will use.
+**Input and output:** the current footprint, lease register, contracted wage and rent escalation,
+and known capacity shortfall become the status quo's total network cost, by year, discounted at the
+hurdle rate, on the cost basis every option will use.
 
 **Why it matters:** every number in the study is a difference from this one. Three errors recur.
 **Assuming the baseline is flat** — leases renew at market rent, wages escalate, and a site at 94%
@@ -309,9 +299,8 @@ found its headline before solving anything.
 
 ### Step 3 — Build the existing-asset register
 
-**Input:** the site list, lease register, fixed-asset register, headcount, and permits.
-
-**Output:** one row per site with the fields below, each with a source and a date.
+**Input and output:** the site list, lease register, fixed-asset register, headcount, and permits
+become one row per site with the fields below, each with a source and a date.
 
 | Field | Why the model needs it | Typical source | Where it goes wrong |
 |---|---|---|---|
@@ -331,9 +320,8 @@ gap that changes the answer: obtain it, or treat the site as unleasable for the 
 
 ### Step 4 — Apply the avoidability test to every site's cost
 
-**Input:** the cost centre report and the register.
-
-**Output:** one avoidable annual cost per site, reconciled from the ledger and signed off.
+**Input and output:** the cost centre report and the register become one avoidable annual cost per
+site, reconciled from the ledger and signed off.
 
 The test is a question asked line by line: **if this site ceased operation on the first day of
 next year, would this cost disappear?** The answers fall into four classes.
@@ -345,18 +333,17 @@ next year, would this cost disappear?** The answers fall into four classes.
 | Step-fixed | Labour that steps at a shift threshold; space that steps at a racking bank | Piecewise, with the bands stated |
 | Not avoidable | Allocated corporate overhead, shared services, regional management, group insurance | Excluded from the fixed cost, and treated as stranded overhead if it persists |
 
-**Why it matters:** this classification decides whether consolidation looks profitable. Topic 04
-put the overstatement from including allocations at 30 to 50% in the cases that course uses; here
-the gap is smaller and arises from a different cause, which is the point — the size of the error
-varies, and you cannot assume it away in either direction. If the avoidable cost cannot be signed
-off by a management accountant, the study is using the analyst's opinion as a financial input.
-Say so, and run both figures.
+**Why it matters:** this classification decides whether consolidation looks profitable. Topic 04 put
+the overstatement from including allocations at 30 to 50% in the cases that course uses; here the
+gap is smaller and arises from a different cause, which is the point — the size of the error varies,
+and you cannot assume it away in either direction. If the avoidable cost cannot be signed off by a
+management accountant, the study is using the analyst's opinion as a financial input: say so, and
+run both figures.
 
 ### Step 5 — Decide the treatment of sunk capital, and write it in the cost basis
 
-**Input:** the fixed-asset register, the depreciation policy, and the disposal evidence.
-
-**Output:** a stated convention, applied consistently, covering four items: historic capital and
+**Input and output:** the fixed-asset register, the depreciation policy, and the disposal evidence
+become a stated convention, applied consistently, covering four items: historic capital and
 depreciation are **excluded** from the annual fixed cost, being a record of a past decision while
 the model's fixed cost is a future cost; **write-down** is included in the transition account, not
 the annual cost, and labelled non-cash; **disposal proceeds** reduce the net closure cost, which
@@ -365,18 +352,17 @@ is a cost of retention, or disposal proceeds are a benefit of closure — not bo
 
 **Why it matters:** this is where the two traps of section 3.1 are made or avoided. Setting the
 existing site's fixed cost to zero is the sunk-capacity trap; setting it to depreciation plus a
-return on capital is the sunk-cost trap. Both are conventions, both are defensible-sounding, and
-both produce a systematically biased answer. If the company's capital allocation process requires
-a return on existing assets (a "capital charge"), that charge is a management device, not an
-economic cost: show it separately rather than embedding it, or the model will prefer closure for
-a reason that exists only inside the company's accounting.
+return on capital is the sunk-cost trap. Both are conventions, both are defensible-sounding, and both
+produce a systematically biased answer. If the company's capital allocation process requires a return
+on existing assets (a "capital charge"), that charge is a management device, not an economic cost:
+show it separately rather than embedding it, or the model will prefer closure for a reason that
+exists only inside the company's accounting.
 
 ### Step 6 — Encode the option set per site as discrete alternatives
 
-**Input:** the register and the physical and legal constraints.
-
-**Output:** for each site, a small set of mutually exclusive states, each with a fixed cost, a
-capacity, a one-off cost, and an earliest effective date.
+**Input and output:** the register and the physical and legal constraints become, for each site, a
+small set of mutually exclusive states, each with a fixed cost, a capacity, a one-off cost, and an
+earliest effective date.
 
 The five verbs, and what each means in model terms:
 
@@ -400,10 +386,9 @@ multi-period form from topic 05, not a single-period choice set.
 
 ### Step 7 — Encode reconfigurability as capacity ceilings and arc removals
 
-**Input:** the building survey, the lease, the planning status, and the labour agreements.
-
-**Output:** per site and per product family, a capacity ceiling that reflects what the building
-can physically and legally do, and a set of market–site arcs that are forbidden.
+**Input and output:** the building survey, the lease, the planning status, and the labour agreements
+become, per site and per product family, a capacity ceiling that reflects what the building can
+physically and legally do, and a set of market–site arcs that are forbidden.
 
 The constraints that matter, and how each enters the model:
 
@@ -429,10 +414,9 @@ show what it is worth; that is more honest than either excluding it or assuming 
 
 ### Step 8 — Build the cost-of-change account as a separate workstream
 
-**Input:** the transition plan, the HR schedule, the property advice, and the project plan.
-
-**Output:** a dated schedule of one-off and temporary costs, split into included and excluded
-items, with a range on each.
+**Input and output:** the transition plan, the HR schedule, the property advice, and the project
+plan become a dated schedule of one-off and temporary costs, split into included and excluded items,
+with a range on each.
 
 | Item | Typical driver | Where it belongs | Commonly omitted because |
 |---|---|---|---|
@@ -459,11 +443,9 @@ needs a range rather than a number.
 
 ### Step 9 — Assemble the multi-period model, with change binaries and a churn limit
 
-**Input:** the site states, the capacity ceilings, the demand by period, and the cost-of-change
-schedule.
-
-**Output:** a model that chooses, for each site and period, which state it is in, and pays the
-transition cost whenever the state changes.
+**Input and output:** the site states, the capacity ceilings, the demand by period, and the
+cost-of-change schedule become a model that chooses, for each site and period, which state it is in,
+and pays the transition cost whenever the state changes.
 
 The structure is topic 05's multi-period model with three additions: **state binaries**
 `w_jst` = 1 if site `j` is in state `s` in period `t`, with `sum_s w_jst = 1` for every site and
@@ -481,10 +463,8 @@ the schedule the business wants, which is a finding about the path.
 
 ### Step 10 — Check the path, not only the destination
 
-**Input:** the solved multi-period model, or a hand-built transition plan.
-
-**Output:** for every date in the horizon, total available capacity against demand, by product
-family and by region.
+**Input and output:** the solved multi-period model, or a hand-built transition plan, becomes — for
+every date in the horizon — total available capacity against demand, by product family and region.
 
 A target can be feasible and its path infeasible. The classic failure is a capacity trough: the
 closing site's volume must go somewhere before the receiving site's expansion is commissioned. A
@@ -499,9 +479,8 @@ absorb the dual-running cost.
 
 ### Step 11 — Optimise the destination and the path under different objectives
 
-**Input:** the same instance, solved twice.
-
-**Output:** a destination design, a migration path, and a reconciliation of the two.
+**Input and output:** the same instance, solved twice, becomes a destination design, a migration
+path, and a reconciliation of the two.
 
 This is the part practitioners most often skip, and it is where the honest answer lives.
 
@@ -515,9 +494,9 @@ This is the part practitioners most often skip, and it is where the honest answe
 | Typical disagreement | The destination ignores that the route destroys value | The path locks in a design that is never optimal |
 
 The two can disagree in both directions. A destination that is best in 2032 may require a
-transition that destroys value if executed in 2027, because the demand that justifies it has
-not arrived. A path that phases change slowly to protect service may accumulate so much
-dual-running cost that it never earns back.
+transition that destroys value if executed in 2027, because the demand that justifies it has not
+arrived; a path that phases change slowly to protect service may accumulate so much dual-running
+cost that it never earns back.
 
 **Why it matters:** running one model with both objectives produces a compromise that satisfies
 neither. Run two, and report where they differ; the differences are the decisions. If the
@@ -527,19 +506,15 @@ the disagreement is about.
 
 ### Step 12 — Build the option set and price every member against the baseline
 
-**Input:** the destination, the path, the near-optima, and the business's own proposal.
+**Input and output:** the destination, the path, the near-optima, and the business's own proposal
+become three to five named options, each with an NPV against the do-nothing baseline, a one-off
+cost, a payback, a key risk, and a list of conditions that must hold.
 
-**Output:** three to five named options, each with an NPV against the do-nothing baseline, a
-one-off cost, a payback, a key risk, and a list of conditions that must hold.
-
-A workable set contains:
-
-1. **Do nothing**, or minimum compliance if do-nothing is infeasible.
-2. **The destination optimum**, transitioned as fast as the constraints permit.
-3. **A low-change option** — keep and reconfigure, or downsize — which is what the business will
-   compare everything else to.
-4. **A phased version** of the destination, respecting the churn limit and the capital envelope.
-5. **The business's own proposal**, if it differs, costed honestly.
+A workable set contains: **do nothing**, or minimum compliance if do-nothing is infeasible; **the
+destination optimum**, transitioned as fast as the constraints permit; **a low-change option** —
+keep and reconfigure, or downsize — which is what the business will compare everything else to; **a
+phased version** of the destination, respecting the churn limit and the capital envelope; and **the
+business's own proposal**, if it differs, costed honestly.
 
 **Why it matters:** the option set is the product. It converts a yes-or-no argument into a
 choice among costed futures, and it makes the constraints visible: the difference between
@@ -564,13 +539,13 @@ absolute.
 | 6 | Critical assumptions | Lease exit, landlord consent, planning, consultation, EPC lead time, transport penalty — each with the value at which the answer flips | Because these, not the objective value, are what the committee must secure |
 | 7 | Destination versus path | Where the two disagree, and by how much | Because the disagreement is the decision |
 
-Six of these are in the greenfield standard from topic 04 plus one. The addition that matters
-most is item 4. A brownfield study that lists only what it included cannot be reviewed, because
-the reviewer cannot tell whether the exclusion was a judgement or an omission.
+Six of these are in the greenfield standard from topic 04 plus one, and the addition that matters
+most is item 4: a brownfield study that lists only what it included cannot be reviewed, because the
+reviewer cannot tell whether the exclusion was a judgement or an omission.
 
-**The last step, which is not a step.** Before the report leaves the building, ask the question
-the committee will ask: **what would have to be true for us to do nothing?** If you cannot
-answer it in one sentence with a number in it, the baseline has not been priced.
+**The last step, which is not a step.** Before the report leaves the building, ask the question the
+committee will ask: **what would have to be true for us to do nothing?** If you cannot answer it in
+one sentence with a number in it, the baseline has not been priced.
 
 ## 6. Worked example
 
@@ -611,11 +586,11 @@ different baseline and a different answer.
 | **Total** | **6.40** | **5.14** | |
 
 The avoidable cost is 5.14 million against a ledger of 6.40 million. A business case built on the
-ledger would overstate the annual benefit by 1.26 million, or 25% — smaller than the 30 to 50%
-range topic 04 reports, and from a different cause: not a large allocation, but an unavoidable
-lease. Two facts organise everything that follows. The rent of 1.10 million is 21% of the
-avoidable cost and is not avoidable until 2031, and the site is at 94% of planning capacity, so it
-is not a candidate for downsizing without losing throughput.
+ledger would overstate the annual benefit by 1.26 million, or 25% — smaller than the 30 to 50% range
+topic 04 reports, and from a different cause: not a large allocation, but an unavoidable lease. Two
+facts organise what follows: the rent of 1.10 million is 21% of the avoidable cost and is not
+avoidable until 2031, and the site is at 94% of planning capacity, so it is not a candidate for
+downsizing without losing throughput.
 
 ### 6.3 The cost to close
 
@@ -738,16 +713,13 @@ model's job is to price it, not to agree.
 difference between +1.53 and −2.32. No model can price a negotiation.
 2. **Is the 190-kilometre average distance right?** It came from a centroid calculation that
    topic 02 warned about. The 17% margin is narrower than that method's typical error.
-3. **What happens to service during the migration?** The model has no service variable. A
-   620,000-case transfer over six months will produce late deliveries, and the penalty is not in
-   the 7.55 million.
-4. **What does the workforce do?** Consultation will surface alternatives — redeployment,
-   reduced hours, a phased closure — that change the cost and the date, and that the model
-   cannot generate.
+3. **What happens to service during the migration?** The model has no service variable. A 620,000-case
+   transfer over six months will produce late deliveries, and the penalty is not in the 7.55 million.
+4. **What does the workforce do?** Consultation will surface alternatives — redeployment, reduced
+   hours, a phased closure — that change the cost and the date, and that the model cannot generate.
 
-Four questions, none answered by the arithmetic, all capable of reversing the ranking. That is
-the normal condition of a brownfield study, and it is why the output is an option set with
-conditions rather than a recommendation.
+Four questions, none answered by the arithmetic. That is the normal condition of a brownfield
+study, and it is why the output is an option set with conditions rather than a recommendation.
 
 ## 7. Code, query, or calculation
 
@@ -757,7 +729,6 @@ two contested items — the rent and the transport penalty — impossible to hid
 
 ```text
 ASHFIELD DC — cost to close against annual saving   (GBP m, 2026 prices)
-
 annual site cost per ledger                                    6.40
   less allocated overhead, not avoidable                      -0.16
   less rent to 2031, no break clause, not avoidable           -1.10
@@ -785,18 +756,16 @@ rent escape for NPV = 0       0.44 per year, 40% of 1.10
 Three readings matter.
 
 **The two subtractions at the top are the whole brownfield argument.** Every number below them
-depends on 5.14 rather than 6.40. If the analyst had used the ledger, the NPV would be
-`(6.40 − 2.55) × 3.5075 − 7.55 = +5.95 million`, four times the true figure. The error is not
-in the arithmetic; it is in the first line.
+depends on 5.14 rather than 6.40. Had the analyst used the ledger, the NPV would be
+`(6.40 − 2.55) × 3.5075 − 7.55 = +5.95 million`, four times the true figure. The error is not in
+the arithmetic; it is in the first line.
 
 **The payback and the NPV disagree in tone.** A 2.92-year payback reads as a strong case; a
-1.53 million NPV on a 7.55 million commitment reads as a marginal one. Both are correct. The
-payback ignores discounting and the delay; the NPV ignores nothing except the items in section
-6.8. Report both, and explain the gap.
-
-**The last line is the output.** "Close Ashfield" is a decision the company may not be able to
-take. "Secure 0.44 million a year of rent relief and close Ashfield" is a decision it can take,
-with a named owner, a counterparty, and a date.
+1.53 million NPV on a 7.55 million commitment reads as a marginal one. Both are correct: the
+payback ignores discounting and the delay, the NPV ignores nothing except the items in section 6.8.
+Report both, and explain the gap. **The last line is the output:** "Close Ashfield" is a decision the
+company may not be able to take, while "secure 0.44 million a year of rent relief and close
+Ashfield" is a decision it can take, with a named owner, a counterparty, and a date.
 
 > **Note:** the single-period form above is a screening calculation. It answers "is this worth
 > a business case", not "what should we do and when". For the latter, use the multi-period
@@ -805,10 +774,9 @@ with a named owner, a counterparty, and a date.
 
 ## 8. Data, standards, and regulatory context
 
-Brownfield work has a larger regulatory surface than greenfield work, because it touches
-employment law, property law, and accounting standards that a new-build study never encounters.
-What follows is the map, not advice. Every item requires professional review in the relevant
-jurisdiction.
+Brownfield work has a larger regulatory surface than greenfield work, because it touches employment
+law, property law, and accounting standards that a new-build study never encounters. What follows is
+the map, not advice; every item requires professional review in the relevant jurisdiction.
 
 ### 8.1 Employment and consultation
 
@@ -870,38 +838,33 @@ transport appears in both the cost and the carbon account, not just the first.
 
 ### 8.5 What is requirement and what is convention
 
-- **Requirement:** a closure cannot take effect before the statutory and contractual clocks
-  permit. **Convention:** that the clock is 90 days.
-- **Requirement:** an existing site's capacity is bounded by its building. **Convention:** which
-  of clear height, floor loading, or dock count is the binding bound.
-- **Requirement:** allocated overhead that survives closure is not a saving. **Convention:**
-  which ledger lines are allocations.
-- **Requirement:** a write-down is non-cash. **Convention:** whether the business case is stated
-  on a cash or an accounting basis.
-- **Requirement:** rent under an unbroken lease does not disappear. **Convention:** whether a
-  sublet is available and at what fraction of passing rent.
+- **Requirement:** a closure cannot take effect before the statutory and contractual clocks permit,
+  and rent under an unbroken lease does not disappear. **Convention:** that the clock is 90 days, and
+  whether a sublet is available and at what fraction of passing rent.
+- **Requirement:** an existing site's capacity is bounded by its building, a write-down is non-cash,
+  and allocated overhead that survives closure is not a saving. **Convention:** which of clear
+  height, floor loading, or dock count is the binding bound; whether the business case is stated on a
+  cash or an accounting basis; and which ledger lines are allocations.
 
-The pattern is the same as topic 04's: definitions are requirements, and the numbers you put
-into them are judgements. A brownfield study contains more judgements than a greenfield one,
-which is why it needs a longer cost basis rather than a shorter one.
+The pattern is the same as topic 04's: definitions are requirements, and the numbers you put into them
+are judgements. A brownfield study contains more judgements than a greenfield one, which is why it
+needs a longer cost basis rather than a shorter one.
 
 ## 9. Industry practice and case evidence
 
 ### 9.1 What the literature actually models
 
-The facility-location literature is greenfield-dominated for a structural reason, and the
-chronology is the evidence. Weber's continuous location problem (1909), Hakimi's vertex
-optimality (1964), and Balinski's fixed-charge formulation (1965) all describe a choice among
-candidate sites with no inherited state. The first treatments that give an existing facility a
-distinct status appear much later: Wesolowsky and Truscott (1975) on the multi-period
-location-allocation problem with relocation, and Van Roy and Erlenkotter (1982) on the dynamic
-problem with opening and closing. Grade A for both. The review by Melo, Nickel, and
-Saldanha-da-Gama in the *European Journal of Operational Research* (2009) makes the point
-implicitly: the model classes it surveys are distinguished by capacity, commodities, periods, and
-uncertainty, and the legacy asset enters only through the multi-period formulation. Grade A.
-
-The consequence for a practitioner is not that the literature is wrong. It is that the default
-formulation you will reach for, and the one you were taught, has no place to put a lease.
+The facility-location literature is greenfield-dominated for a structural reason, and the chronology
+is the evidence. Weber's continuous location problem (1909), Hakimi's vertex optimality (1964), and
+Balinski's fixed-charge formulation (1965) all describe a choice among candidate sites with no
+inherited state. The first treatments that give an existing facility a distinct status appear much
+later: Wesolowsky and Truscott (1975) on the multi-period location-allocation problem with relocation,
+and Van Roy and Erlenkotter (1982) on the dynamic problem with opening and closing. Grade A for both.
+The review by Melo, Nickel, and Saldanha-da-Gama in the *European Journal of Operational Research*
+(2009) makes the point implicitly: the model classes it surveys are distinguished by capacity,
+commodities, periods, and uncertainty, and the legacy asset enters only through the multi-period
+formulation. Grade A. The consequence for a practitioner is not that the literature is wrong, but that
+the default formulation you will reach for, and the one you were taught, has no place to put a lease.
 
 ### 9.2 What the modelling literature says about transition
 
@@ -923,17 +886,11 @@ plans fail.
 | Marks & Spencer, Hardwick DC closure, 2018 | Closure of a DC affecting approximately 450 colleagues, with a third-party operator appointed at a new South East DC as part of a move to fewer, larger automated sites | C | Shows the pattern: a closure and a contract transfer in the same announcement, which is what the transition actually looks like |
 | Marks & Spencer, distribution review, 2010 | Closure of 21 of 110 warehouses, with distribution costs reduced by approximately 15.9 million pounds, or 3.9% | C | Reported as a percentage of a distribution bill, not of a network cost, so it is not comparable with a study output |
 
-The Woolworths figure is the most useful of the three because it is a single number attached to
-a single decision in an audited document. It is still only one line of a cost-of-change account
-that would have had a dozen. The M&S distribution review is also a reminder of the scale
-difference: 3.9% of a distribution bill is not a network redesign, it is a cost programme.
-
 ### 9.4 What vendor and consultancy material reports
 
 | Source | Claim | Grade | Reading |
 |---|---|---|---|
-| 4flow VIA documentation | Software offers three explicit modes: greenfield, brownfield, and hybrid; brownfield restricts the model to existing locations | D | Evidence that practitioners distinguish the classes, and that the distinction is a product feature rather than a textbook nicety |
-| KPI Solutions, OPSdesign, TREW, Fortna | Brownfield projects typically take 6 to 12 months against 18 to 36 for greenfield; clear height is the binding capacity constraint in older buildings | D | Consistent across vendors, which makes it credible as a range; not a measurement |
+| 4flow VIA documentation; KPI Solutions, OPSdesign, TREW, Fortna | Software distinguishes greenfield, brownfield, and hybrid modes, with brownfield restricting candidates to existing locations; brownfield projects typically take 6 to 12 months against 18 to 36 for greenfield, and clear height is the binding capacity constraint in older buildings | D | Evidence that practitioners distinguish the classes, and consistent ranges across vendors; not a measurement |
 | University of Twente thesis, van Sijpveld | Formal brownfield design model with three scenarios — empty facility, predefined areas, existing layout — and reported annual cost reductions of about 10.9% and 2.2% against prior consultant designs | C | A master's thesis with a real case; the percentages are instance-specific |
 | Umbrex facility move playbook; warehouses.solutions lease transition checklist; Regent CRE | Transition cost model as lease overlap plus exit and restoration plus move execution plus temporary storage plus disruption; a 2 to 8 week overlap is the usual balance point | D | The most operationally specific public descriptions of dual running; treat the ranges as practitioner convention |
 | TriVista grocery case | Consolidation of overlapping DCs with one-time costs explicitly including facility exit, severance, inventory relocation, and upfit; reported 17.9 million dollars of annual savings | D | Unusually complete cost list for a vendor case; baseline not disclosed |
@@ -942,31 +899,22 @@ difference: 3.9% of a distribution bill is not a network redesign, it is a cost 
 ### 9.5 The practitioner folklore, and what supports it
 
 The claim you will hear in every brownfield study review is that the answer turns out to be
-"change less than you thought". The evidence for it is indirect, and it is worth separating
-three mechanisms that are often bundled.
-
-1. **The baseline was mispriced.** Once committed escalation and known capital are in the
-   do-nothing case, part of the apparent saving was going to happen anyway.
-2. **The avoidable cost was overstated.** The site's ledger includes costs that survive.
-3. **The cost of change was omitted.** With it included, the payback moves beyond the period
-   over which anyone believes the saving.
+"change less than you thought". The evidence is indirect, and it is worth separating three
+mechanisms that are often bundled. **The baseline was mispriced** — once committed escalation and
+known capital are in the do-nothing case, part of the apparent saving was going to happen anyway.
+**The avoidable cost was overstated** — the site's ledger includes costs that survive. **The cost
+of change was omitted** — with it included, payback moves beyond the period over which anyone
+believes the saving.
 
 All three are arithmetical, not cultural. That matters, because it means the finding can be
 tested rather than asserted, and because it means a study that produces a large saving in a
 brownfield network should be asked which of the three mechanisms it has skipped. Grade E for
 the folklore as a claim about frequency; the mechanisms are A-grade arithmetic.
 
-A second piece of folklore is that greenfield studies report larger savings than brownfield
-ones. Topic 04's vendor survey shows greenfield cases reporting 32 to 45% cost reduction and
-restructuring cases reporting 6 to 15%, which is consistent with the claim, and the explanation
-is base rates rather than method: a greenfield baseline is an inherited network that was never
-designed, and a brownfield baseline is usually a network somebody chose recently. Grade D for
-the percentages, E for the comparison.
-
 ## 10. Failure modes and red flags
 
-Each row names the failure, the red flag visible in a meeting or a dataset before anyone has
-diagnosed it, the mechanism, the consequence, and the mitigation.
+Each row names the failure, the red flag visible in a meeting or a dataset before anyone has diagnosed
+it, the mechanism, the consequence, and the mitigation.
 
 | Failure | Red flag you can see | Mechanism | Consequence | Mitigation |
 |---|---|---|---|---|
@@ -980,24 +928,20 @@ diagnosed it, the mechanism, the consequence, and the mitigation.
 | Path never checked for capacity | The destination is feasible and the plan is not | The closing site's volume has nowhere to go until the expansion is commissioned | A nine-month capacity trough discovered in delivery | Capacity check by date, region, and product family |
 | Reconfigurability assumed universal | Every site can serve every product family at any volume | One capacity number per site, no building spec | A design the buildings cannot deliver | Capacity ceiling per site per family, from a survey |
 | No churn limit | The model changes the whole network in year one | Transition cost is small against discounted saving | An unexecutable programme presented as optimal | Limit changes per period to what the programme office can run |
-| Transition cost annualised | The one-off appears as a per-year charge | Convenience in the spreadsheet | Timing destroyed; NPV becomes an average | Keep the dated profile |
-| One design presented | The deck has a recommendation and no alternatives | The optimum was treated as the answer | Yes-or-no decision, and the answer is no | Option set with the do-nothing case first |
 | Greenfield answer presented as a plan | The recommended sites do not exist and no transition is costed | The problem was misclassified at step 1 | A plan nobody can start | Classify the problem and state the classification |
 
 Two of these deserve a paragraph.
 
 **Zero fixed cost at existing sites** is the single most common structural error in brownfield
-models, and it is invisible in the output. Nothing about the answer looks wrong: the model
-returns a sensible open set, a sensible allocation, and a cost that reconciles to the ledger
-better than it should. The error is only detectable by reading the input file. Assert it: after
-every build, check that no existing site has a fixed cost of zero unless the cost is genuinely
-zero — a fully depreciated, fully owned site with no local operating cost, which is rare.
+models, and it is invisible in the output: the model returns a sensible open set, a sensible
+allocation, and a cost that reconciles to the ledger better than it should. The error is only
+detectable by reading the input file. Assert it: after every build, check that no existing site has
+a fixed cost of zero unless the cost is genuinely zero.
 
-**Notice periods** are where brownfield and greenfield studies most sharply diverge, because
-they are the one "soft" factor that is legally hard. A greenfield site opens when the EPC
-contract says. A brownfield site closes when the consultation ends. The difference in the worked
-example was 0.41 years of payback and 1.0 million of NPV, and the model that omits it is not
-approximately right.
+**Notice periods** are where brownfield and greenfield studies most sharply diverge, because they
+are the one "soft" factor that is legally hard. A greenfield site opens when the EPC contract says;
+a brownfield site closes when the consultation ends. The difference in the worked example was 0.41
+years of payback and 1.0 million of NPV, and the model that omits it is not approximately right.
 
 ## 11. Assumptions and limits
 
@@ -1012,20 +956,19 @@ approximately right.
 | Capacity is independent of product mix | One capacity number per site | A mix shift toward bulky or chilled product reduces usable capacity without changing the number |
 | Reconfiguration is possible wherever the model permits it | The state must be offered | Building, planning, or landlord constraints make an offered state impossible |
 | The discount rate is constant over the horizon | NPV requires one rate | Risk rises sharply during a transition, so a single rate understates the cost of the risky option |
-| Transition does not affect demand | Demand is exogenous | Service failures during migration lose customers, which the model books as no effect |
 
-**The model has no theory of the organisation.** It does not know that the site manager has
-twenty years of relationships, that the union will propose an alternative, that the regional
-director's bonus depends on service during the transition, or that a closure in an election year
-attracts attention the company would rather avoid. These are not soft factors to be waved away.
-They are constraints and costs that exist outside the model and must be handled deliberately: as
-a constraint if they are absolute, as a scenario if they are uncertain, and as a paragraph in
-the option narrative if they are real but unquantifiable.
+**The model has no theory of the organisation.** It does not know that the site manager has twenty
+years of relationships, that the union will propose an alternative, that the regional director's
+bonus depends on service during the transition, or that a closure in an election year attracts
+attention the company would rather avoid. These are not soft factors to be waved away: they are
+constraints and costs that exist outside the model and must be handled deliberately — as a
+constraint if they are absolute, as a scenario if they are uncertain, and as a paragraph in the
+option narrative if they are real but unquantifiable.
 
-**The model is a screening device, not a decision.** It prices options on stated assumptions. It
-does not negotiate a lease, obtain consent, consult a workforce, or run a migration. The value
-of the exercise is that it tells you which of those activities is worth the effort, and by how
-much — which is what the 0.44 million rent-escape threshold in section 6.6 is.
+**The model is a screening device, not a decision.** It prices options on stated assumptions; it
+does not negotiate a lease, obtain consent, consult a workforce, or run a migration. Its value is
+that it tells you which of those activities is worth the effort, and by how much — which is what
+the 0.44 million rent-escape threshold in section 6.6 is.
 
 ## 12. Exercises
 
@@ -1036,27 +979,27 @@ You are given three briefs: (a) a retailer choosing its first three DCs in a new
 to add a fourth DC to an existing three.
 
 **Deliverable:** a one-line classification for each, with the decision verbs named.
-**Acceptance criteria:** each classification is justified from the verbs, not the industry; at
-least one brief is identified as hybrid; for each, one sentence on what the cost basis must
-contain that a greenfield study would omit.
+**Acceptance criteria:** each classification is justified from the verbs, not the industry; at least
+one brief is identified as hybrid; for each, one sentence on what the cost basis must contain that a
+greenfield study would omit.
 
 ### Exercise 2 — Price a do-nothing baseline (calculation, 45 minutes)
 
-A network costs 40.0 million per year today. Rent on 30% of the footprint renews in year 2 at
-+12%. Wages escalate at 3.5% a year on 55% of the cost base. One site is at 96% of planning
-capacity and will need 2.0 million of capital in year 3 to keep serving demand.
+A network costs 40.0 million per year today. Rent on 30% of the footprint renews in year 2 at +12%.
+Wages escalate at 3.5% a year on 55% of the cost base. One site is at 96% of planning capacity and
+will need 2.0 million of capital in year 3 to keep serving demand.
 
 **Deliverable:** the baseline cost by year for five years, discounted at 9%.
-**Acceptance criteria:** escalation applied to the right cost lines; the capital included in the
-year it is spent; the total NPV stated; one sentence on why this baseline is not "today's cost".
+**Acceptance criteria:** escalation applied to the right cost lines; the capital included in the year
+it is spent; the total NPV stated; one sentence on why this baseline is not "today's cost".
 
 ### Exercise 3 — Audit the avoidable cost (application, 50 minutes)
 
 Given a site cost centre of 4.80 million comprising site labour 2.90, rent 0.90, utilities 0.28,
 maintenance 0.25, insurance 0.09, site IT 0.11, and allocated overhead 0.27.
 
-**Deliverable:** a table classifying every line, and one avoidable annual cost reconciled from
-the ledger.
+**Deliverable:** a table classifying every line, and one avoidable annual cost reconciled from the
+ledger.
 **Acceptance criteria:** every line classified; the reconciliation arithmetic shown; one line
 identified as step-fixed with its band; the question "if this site ceased operation on 1 January,
 would this cost disappear" answered explicitly for the two largest lines.
@@ -1120,14 +1063,13 @@ each, and one question that would establish whether the 28% is comparable to any
 
 ## 13. Self-check answers
 
-**Exercise 1.** (a) Greenfield: the verbs are build and locate, and there is no status quo. The
-cost basis must include land, EPC, and permitting, which a brownfield study treats as given.
-(b) Brownfield: the verbs are close, keep, and reconfigure, and the status quo is one of the
-options. The cost basis must include the avoidable cost, the lease tail, and the closure cost.
-(c) Hybrid: the greenfield run establishes whether a fourth site is justified at all and where;
-the brownfield run decides whether to add it to the existing three and how to transition. The
-brownfield cost basis must include the interaction with the existing three, which a greenfield
-study would not model.
+**Exercise 1.** (a) Greenfield: the verbs are build and locate, and there is no status quo; the cost
+basis must include land, EPC, and permitting, which a brownfield study treats as given.
+(b) Brownfield: the verbs are close, keep, and reconfigure, and the status quo is one of the options;
+the cost basis must include the avoidable cost, the lease tail, and the closure cost.
+(c) Hybrid: the greenfield run establishes whether a fourth site is justified at all and where; the
+brownfield run decides whether to add it to the existing three and how to transition, including the
+interaction with the existing three that a greenfield study would not model.
 
 **Exercise 2.** Non-escalating base 40.0, of which 55% (22.0) is wage-exposed and 30% of
 footprint rent is 12.0 at renewal. Year 1: 40.0 × 1.019 (3.5% on 55%) = 40.77. Year 2: wages
@@ -1137,11 +1079,10 @@ footprint rent is 12.0 at renewal. Year 1: 40.0 × 1.019 (3.5% on 55%) = 40.77. 
 of rent steps up, 22.0 million of wages compounds, and 2.0 million of capital is committed
 whatever the network decision.
 
-**Exercise 3.** Avoidable: labour 2.90, utilities 0.28, maintenance 0.25, insurance 0.09, site
-IT 0.11 = 3.63. Not avoidable: rent 0.90 (unexpired term), allocated overhead 0.27. Total 4.80,
-reconciliation 4.80 − 0.90 − 0.27 = 3.63. Labour is step-fixed: it steps at shift thresholds, so
-the band must be stated. For rent the answer is "no, not until the term ends"; for labour it is
-"yes, after consultation and notice".
+**Exercise 3.** Avoidable: labour 2.90, utilities 0.28, maintenance 0.25, insurance 0.09, site IT
+0.11 = 3.63. Not avoidable: rent 0.90 (unexpired term), allocated overhead 0.27. Total 4.80,
+reconciliation 4.80 − 0.90 − 0.27 = 3.63. Labour is step-fixed, so the band must be stated; for rent
+the answer is "no, not until the term ends", for labour "yes, after consultation and notice".
 
 **Exercise 4.** One-off: severance 140 × 16,500 = 2.31; write-down 1.90 − 0.40 = 1.50; dual
 running 6 × 0.13 = 0.78; stranded overhead 15 × 0.05 = 0.75; dilapidations 0.45; inventory 0.12;
@@ -1149,32 +1090,30 @@ receiving capital 0.95. Total 6.86 million. Payback 6.86 / 2.10 = 3.27 years. Cu
 −4.76, −2.66, −0.56, +1.54. To exceed four years the one-off must exceed 8.40 million, which
 requires roughly 1.5 million more of severance or a receiving-capital estimate 60% higher.
 
-**Exercise 5.** Clear height at 9 metres caps cubic storage, so the capacity ceiling for the
-proposed high-bay automation is roughly a third of a 30-metre building — a capacity ceiling, not
-a cost. The 12 by 24 metre grid permits racking but penalises dense layouts, so it enters as a
-layout cost penalty inside the handling rate. Fourteen docks cap throughput at roughly one door
-per 10,000 square feet of floor, which is a throughput ceiling per period. Landlord consent for
-alterations is a cost with a lead time, since it can usually be obtained for a price. Without
-these, the model would place automated volume in a building that cannot hold the racking, and
-would report a capacity the site cannot ship.
+**Exercise 5.** Clear height at 9 metres caps cubic storage, so the capacity ceiling for the proposed
+high-bay automation is roughly a third of a 30-metre building — a capacity ceiling, not a cost. The
+12 by 24 metre grid permits racking but penalises dense layouts, so it enters as a layout cost
+penalty inside the handling rate. Fourteen docks cap throughput at roughly one door per 10,000
+square feet of floor, which is a throughput ceiling per period. Landlord consent for alterations is a
+cost with a lead time, since it can usually be obtained for a price. Without these, the model would
+place automated volume in a building that cannot hold the racking and report a capacity the site
+cannot ship.
 
-**Exercise 6.** Rent 0.75 and fit-out 3.20 are the new items. Take the same saving structure as
-option 1 but with a lower transport penalty because a fifth site closer to Ashfield's customers
-can absorb part of the volume — say 1.20 rather than 1.85 — giving a net annual saving of
-5.14 − 1.20 − 0.70 = 3.24, less the new rent 0.75, so 2.49. One-offs 3.20 plus 3.30 of severance
-and closure (the write-down remains) = 6.50, and the lease runs five years so no rent tail
-matters. NPV = 2.49 × 3.5075 − 6.50 = 8.73 − 6.50 = +2.23 million, which would move it to the
-top of the table. The ranking changes by about 0.7 million, which is larger than the error on
-the transport estimate and therefore material.
+**Exercise 6.** Rent 0.75 and fit-out 3.20 are the new items. Take option 1's saving structure but
+with a lower transport penalty, because a fifth site closer to Ashfield's customers can absorb part
+of the volume — say 1.20 rather than 1.85 — giving a net annual saving of 5.14 − 1.20 − 0.70 = 3.24,
+less the new rent 0.75, so 2.49. One-offs 3.20 plus 3.30 of severance and closure (the write-down
+remains) = 6.50, and the lease runs five years so no rent tail matters. NPV = 2.49 × 3.5075 − 6.50 =
+8.73 − 6.50 = +2.23 million, which moves it to the top of the table. The ranking changes by about
+0.7 million, larger than the error on the transport estimate and therefore material.
 
-**Exercise 7.** Announcement day 0. Consultation opens day 0 and closes day 90. Notice served
-within the consultation, effective day 150. Receiving capital approved day 0, commissioned
-month 10. Volume migration months 10 to 16, dual running months 9 to 16. First full saving month
-17. Critical path: capital approval, then EPC and racking, then commissioning — 10 months, longer
-than the 5-month employment clock, so capital approval is the binding constraint, not
-consultation. Capacity check by quarter must show the receiving sites above demand at every
-quarter; if the expansion lands in month 10 and the closure is effective in month 5, there is a
-five-month trough and the closure must be delayed.
+**Exercise 7.** Announcement day 0. Consultation opens day 0 and closes day 90; notice served within
+it, effective day 150. Receiving capital approved day 0, commissioned month 10. Volume migration
+months 10 to 16, dual running months 9 to 16, first full saving month 17. Critical path: capital
+approval, then EPC and racking, then commissioning — 10 months, longer than the 5-month employment
+clock, so capital approval binds, not consultation. The capacity check by quarter must show the
+receiving sites above demand at every quarter; if the expansion lands in month 10 and the closure is
+effective in month 5, there is a five-month trough and the closure must be delayed.
 
 **Exercise 8.** A strong page states: baseline 40.0 million escalating to 45.5 by year 5 with
 2.0 million of committed capital, discounted to 170.2 million; options 0 to 4 with NPVs 0.00,
@@ -1226,7 +1165,14 @@ Strong: reconfiguration capital, dual running, severance and notice, recruitment
 inventory build, stranded overhead, customer disruption, dilapidations, disposal net of
 proceeds, and programme cost — each dated. Weak: "one-off costs", as a single line.
 
-**6. "Why is the closure date not a decision variable?"**
+**7. "Should the model choose a destination or a path?"**
+
+Strong: both, under different objectives — steady-state discounted cost for the destination, NPV
+including transition cost for the path, with the path additionally constrained by capacity at every
+date and by the capital envelope. A feasible target can have an infeasible path. Report where they
+disagree. Weak: picks one and argues it is sufficient.
+
+**8. "Why is the closure date not a decision variable?"**
 
 Strong: because statute and contract fix a minimum elapsed time from announcement to effect —
 60 days under WARN in the United States, a 30-day standstill under Directive 98/59/EC in the
@@ -1234,32 +1180,13 @@ European Union, plus consultation — so it is a parameter derived from law and 
 agreements. Weak: "because HR decides it", which is an organisational answer to a legal
 question.
 
-**7. "What is the difference between a target network and a migration path?"**
-
-Strong: the target is an open set at a date; the path is a dated sequence of states with capacity
-available at every date, subject to a capital envelope and a churn limit. A feasible target can
-have an infeasible path. Weak: treats the path as a project plan appended to the design.
-
-**8. "Should the model choose a destination or a path?"**
-
-Strong: both, under different objectives — steady-state discounted cost for the destination,
-NPV including transition cost for the path, with the path additionally constrained by capacity
-at every date and by the capital envelope. Report where they disagree. Weak: picks one and
-argues it is sufficient.
-
-**9. "How would you handle the reputational cost of a closure?"**
-
-Strong: as a constraint if it is absolute, as a scenario if it is uncertain, and as a paragraph
-in the option narrative if it is real but unquantifiable; do not invent a coefficient. Weak:
-either ignores it as soft or assigns it a number with no basis.
-
-**10. "A brownfield study concludes that nothing should change. How do you test that?"**
+**9. "A brownfield study concludes that nothing should change. How do you test that?"**
 
 Strong: check the three mechanisms — was the baseline priced, was the avoidable cost correct,
 was the cost of change included — and check the zero-fixed-cost error in the input file. Weak:
 accepts the finding, or rejects it because brownfield studies "always" find savings.
 
-**11. "What is the one number you would put in front of a capital committee?"**
+**10. "What is the one number you would put in front of a capital committee?"**
 
 Strong: the flip value of the binding assumption — the rent that must be escaped, the transport
 penalty that must not be exceeded, or the severance per head that must not be surpassed — because
@@ -1318,60 +1245,34 @@ observation, or anecdote.
 
 **Standards, regulation, and official guidance**
 
-- Worker Adjustment and Retraining Notification Act, 29 U.S.C. §§2101–2109, in particular
-  §2102 on notice before plant closings and mass layoffs. **B**
-- Directive 98/59/EC on collective redundancies, consolidated text. Consultation and the
-  30-day standstill. **B**
-- IAS 37 *Provisions, Contingent Liabilities and Contingent Assets*; IAS 36 *Impairment of
-  Assets*; IFRS 5 *Non-current Assets Held for Sale*; IFRS 16 *Leases*. **B**
+- Worker Adjustment and Retraining Notification Act, 29 U.S.C. §§2101–2109, in particular §2102 on notice before plant closings and mass layoffs. **B**
+- Directive 98/59/EC on collective redundancies, consolidated text. Consultation and the 30-day standstill. **B**
+- IAS 37 *Provisions*; IAS 36 *Impairment of Assets*; IFRS 5 *Non-current Assets Held for Sale*; IFRS 16 *Leases*. **B**
 - ISO 14083:2023, greenhouse gas emissions from transport chain operations. **B**
 - GS1 Global Location Number; ISO 8601; ISO 4217; ISO 80000. Identity, dates, currency, units. **B**
-- National planning, building regulation, environmental permitting, and transfer-of-undertakings
-  rules. Jurisdiction-specific; consult current text. **B**
+- National planning, building regulation, environmental permitting, and transfer-of-undertakings rules. Jurisdiction-specific; consult current text. **B**
 
 **Company, official, and institutional**
 
-- Woolworths Group, "F21 Significant Items and Supply Chain Update," ASX announcement,
-  23 June 2021. Approximately AUD 44 million of redundancy recognised in F21 alongside a
-  roughly AUD 400 million distribution centre. **C**
-- Marks & Spencer, "M&S Clothing and Home Logistics Changes: Hardwick Distribution Centre to
-  Close," press release, 2018. Approximately 450 colleagues affected; DHL appointed at the new
-  South East DC. **C**
-- Marks & Spencer distribution review as reported in *Commercial Motor*, 2010. 21 of 110
-  warehouses closed; distribution costs down approximately GBP 15.9 million, or 3.9%. **C**
-- MIT Center for Transportation and Logistics, "The New Competitive Edge: Analytics-Driven
-  Supply Chain Design." Brownfield optimisation as adjusting an existing network while
-  retaining part of the design. **C**
-- van Sijpveld, University of Twente master's thesis on conceptual brownfield warehouse design.
-  Three brownfield scenarios; annual cost reductions of about 10.9% and 2.2% against prior
-  designs. **C**
+- Woolworths Group, "F21 Significant Items and Supply Chain Update," ASX announcement, 23 June 2021. About AUD 44 million of redundancy recognised in F21 alongside a roughly AUD 400 million distribution centre. **C**
+- Marks & Spencer, "M&S Clothing and Home Logistics Changes: Hardwick Distribution Centre to Close," press release, 2018. About 450 colleagues affected; DHL appointed at the new South East DC. **C**
+- Marks & Spencer distribution review as reported in *Commercial Motor*, 2010. 21 of 110 warehouses closed; distribution costs down about GBP 15.9 million, or 3.9%. **C**
+- MIT Center for Transportation and Logistics, "The New Competitive Edge: Analytics-Driven Supply Chain Design." Brownfield optimisation as adjusting an existing network while retaining part of the design. **C**
+- van Sijpveld, University of Twente master's thesis on conceptual brownfield warehouse design. Three brownfield scenarios; annual cost reductions of about 10.9% and 2.2% against prior designs. **C**
 
 **Vendor, consultancy, and software documentation**
 
-- 4flow VIA help documentation: greenfield, brownfield, and hybrid strategies, with brownfield
-  restricting candidates to existing locations. **D**
-- KPI Solutions, OPSdesign, TREW Automation, and Fortna, brownfield versus greenfield warehouse
-  design notes. Clear height, dock count, and floor loading as binding constraints; 6–12 months
-  against 18–36 months. **D**
-- Umbrex, "The Facility Move Playbook"; warehouses.solutions lease transition checklist; Regent
-  CRE, "20 Hidden Warehouse Relocation Costs." Transition cost as overlap plus exit and
-  restoration plus execution plus temporary storage plus disruption; a 2–8 week overlap as the
-  usual balance point. **D**
-- TriVista, grocery distribution network case study. One-time costs itemised to include facility
-  exit, severance, inventory relocation, and upfit; reported USD 17.9 million annual savings. **D**
-- Miebach, fashion retailer distribution network case study, Canada. Five DCs, lease expiry,
-  "sweat the asset" strategy. **D**
+- 4flow VIA help documentation: greenfield, brownfield, and hybrid strategies, with brownfield restricting candidates to existing locations. **D**
+- KPI Solutions, OPSdesign, TREW Automation, and Fortna, brownfield versus greenfield warehouse design notes. Clear height, dock count, and floor loading as binding constraints; 6–12 months against 18–36 months. **D**
+- Umbrex, "The Facility Move Playbook"; warehouses.solutions lease transition checklist; Regent CRE, "20 Hidden Warehouse Relocation Costs." Transition cost as overlap plus exit and restoration plus execution plus temporary storage plus disruption; a 2–8 week overlap as the usual balance point. **D**
+- TriVista, grocery distribution network case study. One-time costs itemised to include facility exit, severance, inventory relocation, and upfit; reported USD 17.9 million annual savings. **D**
+- Miebach, fashion retailer distribution network case study, Canada. Five DCs, lease expiry, "sweat the asset" strategy. **D**
 
 **Press and practitioner observation**
 
-- Practitioner observation in this file on how baseline pricing, avoidable cost, and the cost of
-  change are typically handled in project work. A description of the norm, not a measurement. **E**
+- Practitioner observation in this file on how baseline pricing, avoidable cost, and the cost of change are typically handled in project work. A description of the norm, not a measurement. **E**
 
-> **Note on citation discipline.** The 6–12 against 18–36 month build comparison, the 2–8 week
-> dual-running overlap, and the cluster of vendor savings percentages are practitioner ranges
-> repeated across sources, not findings. The Woolworths and Marks & Spencer figures are quoted as
-> disclosed and are not adjusted for scope differences. No percentage here should be transferred
-> to another network without rebuilding the baseline.
+> **Note on citation discipline.** The 6–12 against 18–36 month build comparison, the 2–8 week dual-running overlap, and the cluster of vendor savings percentages are practitioner ranges repeated across sources, not findings. The Woolworths and Marks & Spencer figures are quoted as disclosed and are not adjusted for scope differences. No percentage here should be transferred to another network without rebuilding the baseline.
 
 ## 17. Links
 

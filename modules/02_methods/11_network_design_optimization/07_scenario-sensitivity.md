@@ -22,28 +22,27 @@ network studies fail, and the failures have a recognisable shape.
 
 **The saving that evaporated.** A distribution study recommends consolidating from five sites
 to three and reports a 9% cost reduction. Eighteen months later the company has three sites,
-the cost is 2% below the old baseline, and the operations director calls the study wrong. The
-study was not wrong. Its demand assumption was 12% above what materialised, and the three-site
-design had been loaded to 96% of capacity, so the shortfall did not simply reduce cost — it
-forced expediting, spot capacity, and a service penalty that the model never priced. A single
-sensitivity run at 0.85 times demand, reporting that the design becomes infeasible below 0.94,
-would have changed the recommendation to four sites for a cost of about 1.5%.
+cost is 2% below the old baseline, and the operations director calls the study wrong. The study
+was not wrong: its demand assumption was 12% above what materialised, and the three-site design
+had been loaded to 96% of capacity, so the shortfall forced expediting, spot capacity, and a
+service penalty the model never priced. A single sensitivity run at 0.85 times demand, reporting
+that the design becomes infeasible below 0.94, would have changed the recommendation to four
+sites at a cost of about 1.5%.
 
 **The recommendation that reversed between meetings.** A European manufacturer runs the same
 model twice, six months apart, and gets two different open sets. Nothing about the business
-changed. The first run used a freight rate card at 2024 price levels and a labour cost at 2026;
-the second used a 2026 rate card and a 2024 wage index. The transport-to-labour balance moved
-by enough to reverse the ranking. Neither run was internally wrong. Neither reported the price
-year of each input, so nobody could see the inconsistency. This is not a modelling failure. It
-is a reporting failure, and it is cured by a parameter ledger, which section 5 builds.
+changed: the first run used a freight rate card at 2024 price levels and a labour cost at 2026;
+the second used a 2026 rate card and a 2024 wage index. The transport-to-labour balance moved by
+enough to reverse the ranking, and neither run reported the price year of each input, so nobody
+could see the inconsistency. This is a reporting failure rather than a modelling failure, cured
+by the parameter ledger that section 5 builds.
 
 **The scenario set that agreed with itself.** A sponsor asks for scenarios. The analyst produces
 a base case, an optimistic case, and a pessimistic case, all built by scaling demand up and
-down by 10%. All three favour the sponsor's preferred site. The study is used to justify a
-decision that was made before it started. The failure is structural rather than dishonest: the
-scenario set varied one dimension, in one direction, around one anchor, and never varied the
-parameters that would have questioned the answer. Section 5.6 gives the test that catches this
-before the deck is written.
+down by 10%. All three favour the sponsor's preferred site, and the study is used to justify a
+decision made before it started. The failure is structural rather than dishonest: the set
+varied one dimension, in one direction, around one anchor, and never varied the parameters that
+would have questioned the answer. Section 5.3 gives the test that catches this.
 
 Three things follow from these cases, and they organise the topic.
 
@@ -69,12 +68,11 @@ because thirty rows means nobody looked at which six matter.
 **Relationship to the rest of the module.** Topic 04 owns the model being analysed and the
 meaning of its coefficients; without that vocabulary the diagnostics in section 5 are opaque.
 Topic 05 owns the multi-commodity and multi-period extensions, which multiply the parameter
-count and make the ranked list in section 5.3 more, not less, important. Topic 08 owns the
+count and make the ranked list in section 5, Step 3 more, not less, important. Topic 08 owns the
 formal treatment of uncertainty. Topic 10 owns solver behaviour, including why a dual value
 from a mixed-integer programme (MIP) is not the dual value of its linear relaxation. Module 20
-owns simulation, which is the complementary test bed: simulation asks "what does this design do
-under a detailed operating model", while this topic asks "which design, under which futures".
-The two answer different questions and a serious study uses both.
+owns simulation: simulation asks what a design does under a detailed operating model; this topic
+asks which design, under which futures. A serious study uses both.
 
 ## 2. Learning outcomes
 
@@ -97,7 +95,7 @@ By the end of this topic you can:
    scenarios — and **choose** between recommending a stable design and a cheaper unstable one.
 8. **Compute** minimax regret for a small design/scenario matrix and **explain** when it should
    displace expected cost as the decision criterion.
-9. **Write** a scenario and sensitivity section to the reporting standard in section 5.11,
+9. **Write** a scenario and sensitivity section to the reporting standard in section 5.8,
    including the explicit statement of which scenario would flip the answer.
 
 Each outcome maps to an exercise in section 12 and to a self-check answer in section 13.
@@ -180,10 +178,8 @@ arbitrary weighted average wearing the costume of one. Use regret or robustness 
 why.
 
 **Property 6 — The answer has a shape, and the shape is the finding.** Across a parameter range,
-the optimal cost typically looks like one of three things: a plateau (the answer is insensitive
-and the study is easy), a threshold (the answer switches once, at a computable value), or a
-cliff (the answer becomes infeasible, which is a different and worse event than becoming
-expensive). Naming the shape is more informative than any single number.
+the optimal cost typically looks like one of three things: a plateau, a threshold, or a cliff.
+Naming the shape is more informative than any single number, and section 3.1 shows why.
 
 ### 3.1 Why the shape matters more than the number
 
@@ -203,23 +199,21 @@ design. Section 6 shows a design of exactly this kind.
 
 ### 3.2 The correlation argument, in one small table
 
-Suppose two parameters, demand volume and transport rate, each range over low and high. A
-one-at-a-time design tests three points: base, low demand, high transport. A joint design tests
-four corners, and the corners are not equally likely.
+Suppose two parameters, demand volume and transport rate, each move over a low and a high value.
+A one-at-a-time design tests three points: base, low demand, high transport. A joint design tests
+the corners, and the corners are not equally likely.
 
-| State of the world | Demand | Transport rate | One-at-a-time samples it? | Plausible? |
+| State of the world | Demand | Transport rate | Sampled by one-at-a-time? | Plausible? |
 |---|---|---|---|---|
 | Base | 1.00 | 1.00 | Yes | Yes |
 | Slow growth, cheap fuel | 0.90 | 0.90 | No | Yes |
 | Boom, expensive fuel | 1.10 | 1.15 | No | Yes |
-| Demand collapse, capacity glut | 0.80 | 0.85 | Partly | Yes |
-| Demand high, transport low | 1.10 | 0.90 | No | Possible, less common |
-| Demand low, transport high | 0.90 | 1.15 | Partly | Stagflation; plausible |
+| Stagflation | 0.90 | 1.15 | Partly | Yes |
 
-Three of the six plausible states are never visited by the one-at-a-time design, and two of those
-three are the states in which a transport-heavy network and a fixed-heavy network diverge most.
-The one-at-a-time design did not lie about any single parameter. It simply never asked the
-question that the decision turns on.
+Three of the four states are never visited by the one-at-a-time design, and two of those three
+are the states in which a transport-heavy network and a fixed-heavy network diverge most. The
+one-at-a-time design did not lie about any single parameter. It simply never asked the question
+that the decision turns on.
 
 > **Note:** correlation does not have to be estimated statistically to be used in scenario
 > design. It has to be named. "In this scenario, demand falls and freight rates fall together
@@ -266,15 +260,11 @@ question that the decision turns on.
 | Slack | The difference between the right-hand side and the left-hand side at the solution | Confused with spare capacity that can be sold | Units of the constraint |
 | LP relaxation | The MIP with its integer variables allowed to take fractional values | Treated as a solution rather than a bound | Model |
 | Scenario probability | A weight attached to a scenario for expected-value calculations | Asserted without evidence | Proportion |
-| Laplace criterion | The rule that assigns equal probability to all scenarios | Used as a neutral default without argument | Decision rule |
 | Plausibility | The judgement that a scenario could occur, independent of its probability | Confused with likelihood | Judgement |
 | Decision rule | The stated criterion by which a design is chosen from the scenario matrix | Left implicit | Rule |
-| Option value | The worth of retaining the ability to change course later | Ignored in a single-period model | Currency |
 | Sample average approximation (SAA) | Estimating an expected-value objective by averaging over a sampled scenario set | Treated as exact | Method |
-| Main effect | The change in output caused by one input averaged over the others | Confused with a joint effect | Currency |
-| Interaction effect | Output change caused by two inputs moving together beyond their separate effects | Ignored in OAT | Currency |
 
-Five of these deserve expansion, because they are the ones most often used loosely in a meeting.
+Three of these deserve expansion, because they are the ones most often used loosely in a meeting.
 
 **Sensitivity versus scenario.** Sensitivity holds the world still and moves one dial. Scenario
 moves the world. The practical test: if the parameter values in a run could not plausibly coexist,
@@ -290,19 +280,9 @@ minimising worst-case cost, which is a different and usually more conservative r
 
 **Dual value versus shadow price.** A dual value is a number the solver returns. A shadow price
 is an economic claim that one more unit of the constrained resource is worth that number. The
-claim is valid under conditions that section 5.4 states and that degeneracy often violates. The
-distinction is not pedantry: a capacity shadow price is routinely used to justify a capital
+claim is valid under conditions that section 5, Step 5 states and that degeneracy often violates.
+The distinction is not pedantry: a capacity shadow price is routinely used to justify a capital
 request for expansion, and if it is wrong the request is wrong.
-
-**Range versus stability.** The RHS ranging interval tells you how far one number can move before
-the LP basis changes. Decision stability tells you whether the open set survives the scenario
-set. The first is a property of a basis; the second is a property of a decision. A study can have
-a wide ranging interval and an unstable open set, because the ranging interval is about a
-continuous relaxation and the open set is about integers.
-
-**Scenario count versus scenario coverage.** The number of scenarios is a communication decision.
-The coverage is an analytical one. Five scenarios that all sit on the same side of the switch
-point cover nothing, however carefully they were built. Section 5.6 gives the coverage test.
 
 ## 5. The mechanics, step by step
 
@@ -335,10 +315,8 @@ unit, source, price year, owner, and plausible range.
 Without it, a reviewer cannot tell whether a range came from a contract, an index, or a guess,
 and the ranges are where the conclusions live. A minimal ledger has eight columns: parameter,
 symbol, value, unit, source document, price year, owner, and low/high range with the basis for
-each bound.
-
-**Branch:** if a range has no basis beyond "it felt right", mark it as a judgement and state who
-made it. A judgement range is legitimate; an unlabelled one is not.
+each bound. If a range has no basis beyond "it felt right", mark it as a judgement and state who
+made it; an unlabelled one is not legitimate.
 
 ### Step 3 — Rank the inputs by whether they can move the answer
 
@@ -365,9 +343,9 @@ network design specifically; other model classes rank differently.
 | 15 | Fleet and asset residual values | Transition cost, not steady-state | Wide | No, in a steady-state model |
 
 Two readings of this table matter. **The top six are where the study's time should go.** A
-sensitivity analysis that spends equal effort on all fifteen is a sensitivity analysis that has
-not understood the model. **The bottom four are where the arguments happen**, because they are
-the parameters that finance and operations own, and they are usually the least consequential.
+sensitivity analysis that spends equal effort on all fifteen has not understood the model. **The
+bottom four are where the arguments happen**: finance and operations own them, and they are
+usually the least consequential.
 
 ### Step 4 — Take the diagnostics from the LP relaxation
 
@@ -511,7 +489,7 @@ the base case and third in two other scenarios will be reversed within two years
 reversal costs more than the 2% of annual cost that the optimum bought. Count how many scenarios
 each candidate design wins, how many it is feasible in, and what its worst rank is. Then name
 the single scenario that would flip the recommendation, and ask whether that scenario is
-credible. Section 5.10 gives the test.
+credible. Section 5.7 gives the test.
 
 ### Step 11 — Choose the criterion and write to the standard
 
@@ -527,46 +505,36 @@ matrix. State which one you used and why.
 
 The overstatement has three sources, and only the first is widely recognised.
 
-**Source 1 — Additivity is assumed and rarely true.** If the cost function were linear in the
-parameters, the joint effect of two changes would be the sum of the separate effects, and an OAT
-study would be complete. Network cost is piecewise linear at best and discontinuous at the open
-set. Near a threshold, two moderate changes can combine to cross it when neither would alone.
-The OAT analysis reports two small effects and misses the crossing.
+**Source 1 — Additivity is assumed and rarely true.** If cost were linear in the parameters, the
+joint effect of two changes would be the sum of the separate effects and an OAT study would be
+complete. Network cost is piecewise linear at best and discontinuous at the open set. Near a
+threshold, two moderate changes can combine to cross it when neither would alone; the OAT
+analysis reports two small effects and misses the crossing.
 
 **Source 2 — The corners are never sampled.** In `k` parameters an OAT design visits `2k + 1`
 points, while the corners of the box number `2^k`. For `k = 10`, that is 21 points against 1,024.
 The unsampled region is not uniformly unimportant; it is exactly where several parameters
 combine, which is where real futures live.
 
-**Source 3 — The range is often chosen around the base, so it cannot reveal a structural
-break.** A ±20% band assumes the base is roughly right and the question is how far off it can
-be. Some of the most consequential futures are not within ±20% of anything: a tariff that goes
-from zero to a positive rate, a site that becomes unavailable, a channel that moves from 10% to
-40% of volume. A percentage band cannot represent a regime change, and a study built only from
-percentage bands will report a comfortable answer to the wrong question.
+**Source 3 — The range is chosen around the base, so it cannot reveal a structural break.** A
+±20% band assumes the base is roughly right and asks how far off it can be. Some consequential
+futures are not within ±20% of anything: a tariff that goes from zero to a positive rate, a site
+that becomes unavailable, a channel that moves from 10% to 40% of volume. A percentage band
+cannot represent a regime change, and a study built only from percentage bands will report a
+comfortable answer to the wrong question.
 
 ### 5.2 The range that tells you nothing
 
-Worked example of the pathology. Suppose the recommended design has a flow cost of 430 and a
-fixed cost of 1,410, and the alternative has a flow cost of 350 and a fixed cost of 1,600. The
-recommended design wins by `(1,600 - 1,410) - (430 - 350) = 190 - 80 = 110`.
+In the section 6 instance the recommended design has a flow cost of 430 and a fixed cost of
+1,410; the alternative has a flow cost of 350 and a fixed cost of 1,600, so the recommended design
+wins by `(1,600 - 1,410) - (430 - 350) = 110`. Raising all transport costs by a factor `k` changes
+both flow terms proportionally, and the ranking changes only when `1,410 + 430k = 1,600 + 350k`,
+which gives `k = 2.375`, a rise of 137.5%.
 
-Now ask how far transport can rise before the alternative wins. Raising all transport costs by
-a factor `k` changes both flow terms proportionally:
-
-```
-1,410 + 430k  =  1,600 + 350k
-80k = 190
-k = 2.375
-```
-
-Transport would have to rise 137.5% before the ranking changes. The RHS ranging report will
-happily print an interval of that width, and a reader will conclude that transport is not a
-risk. The correct conclusion is narrower: transport is not the parameter that decides this
-design, because fixed cost is roughly three times flow cost. If the ratio were reversed — a
-network in which transport dominates — the same percentage move in transport would flip the
-answer, and the ranging interval would be narrow. **The width of the range is a statement about
-the cost structure, not about the world.**
+The ranging report prints that width, and a reader concludes that transport is not a risk. The
+narrower conclusion is that transport is not the switching parameter, because fixed cost is
+roughly three times flow cost; reverse the ratio and the same percentage move flips the answer.
+**The width of the range is a statement about the cost structure, not about the world.**
 
 ### 5.3 How many scenarios are enough
 
@@ -584,40 +552,37 @@ that a person can hold them in mind and argue with each one.
 The useful distinction is between a **designed set** and a **sample**. A designed set of four to
 six scenarios, each built from a narrative, is the right tool for a capital decision, because
 each scenario can be argued with and each has a name that survives into the minutes. A sample of
-hundreds or thousands, generated by Monte Carlo or by sample average approximation, is the right
-tool for estimating a distribution, and it belongs with topic 08. Mixing the two produces the
-worst of both: too many scenarios to discuss, too few to estimate anything.
+hundreds or thousands, generated by Monte Carlo or by sample average approximation, belongs with
+topic 08. Mixing the two produces the worst of both: too many scenarios to discuss, too few to
+estimate anything.
 
 > **Note:** the failure mode to test for is not "too few scenarios". It is "every scenario
-> supports the answer". A set of six scenarios that all lie on the same side of the switch point
-> has the appearance of rigour and the content of a press release. The test is simple: identify
-> the scenario in which the recommended design is worst, and check whether it is in the set. If
-> it is not, the set is incomplete by construction.
+> supports the answer". Six scenarios all on the same side of the switch point have the
+> appearance of rigour and the content of a press release. The test: identify the scenario in
+> which the recommended design is worst, and check whether it is in the set. If it is not, the
+> set is incomplete by construction.
 
 ### 5.4 The probability question, answered honestly
 
 Most network studies have no defensible probabilities, and the honest response is to say so and
-change the criterion rather than to invent weights.
-
-There are three positions, and each is legitimate in the right setting.
+change the criterion rather than to invent weights. There are three positions, and each is
+legitimate in the right setting.
 
 1. **Probabilities exist and are defensible.** Demand for a mature product with a stable
-   history, in a stable market, over a two-year horizon. Then expected cost is meaningful, and
-   the sample average approximation is the right estimator. Even here, the distribution is over
-   the *near* future, and the strategic horizon usually extends past the point where the
-   distribution is credible.
-2. **Probabilities do not exist, but plausibility judgements do.** A tariff regime, a
-   technology shift, a competitor's network decision. No frequency interpretation is available.
-   Then use minimax regret or a robustness criterion, and state the judgements that shaped the
-   scenario set.
-3. **Neither exists, and the decision is a bet.** Then the honest output is a set of conditional
+   history, in a stable market, over a two-year horizon. Then expected cost is meaningful and
+   sample average approximation is the right estimator. Even here the distribution is over the
+   *near* future, and the strategic horizon usually outruns it.
+2. **Probabilities do not exist, but plausibility judgements do.** A tariff regime, a technology
+   shift, a competitor's network decision. Then use minimax regret or a robustness criterion,
+   and state the judgements that shaped the scenario set.
+3. **Neither exists, and the decision is a bet.** Then the honest output is conditional
    recommendations and a portfolio logic: which design is cheap to reverse, which keeps optional
    capacity, which can be phased.
 
 The failure to avoid is the middle one dressed as the first: three scenarios, equal weights
 because equal weights feel neutral, an expected cost computed to the currency unit, and a
-recommendation that inherits the authority of arithmetic it does not have. Equal weighting is
-not neutral; it is a strong claim that all three futures are equally likely.
+recommendation inheriting the authority of arithmetic it does not have. Equal weighting is not
+neutral; it is a strong claim that all three futures are equally likely.
 
 ### 5.5 Reading a tornado chart honestly
 
@@ -625,11 +590,10 @@ A tornado chart shows the size of the effect of each parameter, one at a time, o
 range. It does not show probability, it does not show interaction, and its bar lengths depend
 entirely on the ranges chosen. Three rules keep it honest.
 
-- **State the range basis on the chart.** "±20% around the 2026 plan" is a range basis. "Plausible
-  range" is not, unless the plausibility argument is in the appendix.
+- **State the range basis on the chart.** "±20% around the 2026 plan" is a range basis.
+  "Plausible range" is not, unless the plausibility argument is in the appendix.
 - **Mark the base case and the switch points.** A bar that crosses the base line changes the
-  cost; a bar that changes the open set is a different kind of event and should be marked
-  differently.
+  cost; a bar that changes the open set is a different kind of event and should be marked so.
 - **Do not sort by bar length and call the top bar the biggest risk.** The top bar is the
   parameter with the largest cost effect over the range you chose. Risk is effect times
   plausibility, and plausibility is not in the chart.
@@ -660,19 +624,19 @@ The procedure has four steps.
 1. **Name the flip.** From the threshold analysis, identify the parameter value at which the
    recommendation changes, and the scenario in which it occurs.
 2. **State the magnitude in the units the business uses.** "Q's fixed cost rises 12%, from 910
-   to 1,020 thousand per year" is testable against a lease quote. "Fixed costs are uncertain" is
-   not.
-3. **Test the credibility.** Is 1,020 within the range of quotes the landlord has given. Is a 5%
-   demand increase inside the forecast error the business already experiences. Is a 9% capacity
-   derating consistent with the site's demonstrated throughput in a bad month.
-4. **Report the result in one of three forms.** The flip is not credible, and the recommendation
-   stands with the threshold quoted. The flip is credible, and the recommendation changes. The
-   flip is credible but the cost of insuring against it exceeds the cost of being wrong, and the
+   to 1,020 thousand per year" is testable against a lease quote. "Fixed costs are uncertain"
+   is not.
+3. **Test the credibility.** Is 1,020 within the range of quotes the landlord has given? Is a
+   5% demand increase inside the forecast error the business already experiences? Is a 9%
+   capacity derating consistent with the site's demonstrated throughput in a bad month?
+4. **Report the result in one of three forms.** The flip is not credible, and the
+   recommendation stands with the threshold quoted. The flip is credible, and the recommendation
+   changes. The flip is credible but insurance costs more than being wrong, and the
    recommendation stands with the insurance priced.
 
-The third form is the one most often missed, and it is the most useful. A design that is 2%
-more expensive and survives the credible downside is usually the right recommendation, and the
-2% is the premium.
+The third form is the one most often missed, and the most useful. A design that is 2% more
+expensive and survives the credible downside is usually the right recommendation, and the 2% is
+the premium.
 
 ### 5.8 What the reporting standard requires
 
@@ -774,32 +738,27 @@ The arithmetic, so that it can be checked.
 
 **Fixed costs, all sites.** Scaling all three fixed costs by `s` scales both candidates' fixed
 terms: at `s = 0.8`, {Q, R} costs `0.8 × 1,410 + 430 = 1,558`; at `s = 1.2`,
-`1.2 × 1,410 + 430 = 2,122`. The alternative {P, R} costs `0.8 × 1,600 + 350 = 1,630` and
-`1.2 × 1,600 + 350 = 2,270`. No flip, because the two sets differ by only 190 in fixed cost and
-scaling both by the same factor changes the difference by 38 at most.
+`1.2 × 1,410 + 430 = 2,122`. The alternative {P, R} costs 1,630 and 2,270. No flip, because the
+two sets differ by only 190 in fixed cost and scaling both changes that difference by 38 at most.
 
 **Demand volume.** At 0.8×, demand is 80 and the unconstrained allocation fits inside both
 capacities: Q takes 28 + 24 = 52 of its 55, R takes 16 + 12 = 28 of 50. Flow is
 `28×5 + 24×3 + 16×4 + 12×3 = 312`, and total is `1,410 + 312 = 1,722`. At 1.2×, demand is 120,
-which exceeds {Q, R}'s 105 capacity, so the design becomes infeasible rather than expensive.
-The best feasible design is {P, R}: P carries 42 + 36 = 78 of 80, R carries 24 + 18 = 42 of 50,
-flow is `42×3 + 36×4 + 24×4 + 18×3 = 420`, total 2,020.
+which exceeds {Q, R}'s 105 capacity, so the design becomes infeasible rather than expensive. The
+best feasible design is {P, R}: P carries 78 of 80, R carries 42 of 50, flow is 420, total 2,020.
 
-**Labour rate.** Labour is 45% of fixed cost and 25% of flow cost in this instance. A 20%
-increase in the labour rate therefore raises fixed costs by 9% and flow costs by 5%. {Q, R}
-goes to `1,410 × 1.09 + 430 × 1.05 = 1,536.9 + 451.5 = 1,988.4`; the alternative goes to
-`1,600 × 1.09 + 350 × 1.05 = 1,744 + 367.5 = 2,111.5`. No flip: the gap widens rather than
-narrows, because labour is a larger share of P's fixed cost than of Q's.
+**Labour rate.** Labour is 45% of fixed cost and 25% of flow cost in this instance, so a 20%
+increase raises fixed costs by 9% and flow costs by 5%. {Q, R} goes to
+`1,410 × 1.09 + 430 × 1.05 = 1,988.4`; the alternative goes to `1,600 × 1.09 + 350 × 1.05 =
+2,111.5`. No flip: the gap widens, because labour is a larger share of P's fixed cost than of Q's.
 
 **Transport rate.** Scaling all unit costs by 1.2 scales both flow terms and leaves the
-allocation unchanged, because relative costs are unchanged: {Q, R} becomes 1,926, {P, R} becomes
-2,020. Scaling by 0.8 gives 1,754 and 1,880. No flip, at any plausible rate, as section 6.4
-shows.
+allocation unchanged, because relative costs are unchanged: {Q, R} becomes 1,926, {P, R} 2,020.
+Scaling by 0.8 gives 1,754 and 1,880. No flip at any plausible rate, as section 6.4 shows.
 
-**Q capacity.** At 66 thousand units, M1 moves entirely to Q (Q load 65, within 66), and flow
-falls to `35×5 + 30×3 + 20×4 + 15×3 = 390`, so total is 1,800: a 40 saving. At 44 thousand units,
-{Q, R} capacity falls to 94, below demand, and the design is infeasible; the best feasible design
-is {P, R} at 1,950.
+**Q capacity.** At 66 thousand units, M1 moves entirely to Q and flow falls to
+`35×5 + 30×3 + 20×4 + 15×3 = 390`, so total is 1,800, a 40 saving. At 44 thousand units, {Q, R}
+capacity falls to 94, below demand, and the design is infeasible; {P, R} at 1,950 is best.
 
 ### 6.4 The thresholds, which are not ranked like the bars
 
@@ -893,15 +852,14 @@ The recommendation, written in the form the reporting standard requires:
 What the analysis does not say: whether a 5% demand increase is credible (that requires the
 forecast error history from Module 07), whether Q's demonstrated throughput in a bad month is 48
 or 55 (that requires the site's operating data), and whether the organisation can execute a
-two-site transition (that is the executability question from topic 01, and topic 06's machinery).
-The analysis has converted those questions into thresholds that can be answered by someone else.
-That is its job.
+two-site transition (that is topic 01's executability question, using topic 06's machinery). The
+analysis has converted those questions into thresholds that someone else can answer. That is its job.
 
 ## 7. Code, query, or calculation
 
 The calculation below reproduces every number in section 6 with a pencil. It is the preferred
 form for a small instance because it shows the two things a solver call hides: which parameter
-flips the open set, and how differently the parameters rank when you sort by threshold rather
+flips the open set, and how differently the parameters rank when sorted by threshold rather
 than by swing.
 
 ```text
@@ -976,18 +934,17 @@ year on every table.
 ## 9. Industry practice and case evidence
 
 **What the review literature reports.** Klibi, Martel, and Guitouni's critical review of robust
-supply chain network design (2010) observes that the dominant practice in network design has
-been deterministic models followed by "appropriate sensitivity analysis and scenario analysis",
-and argues that this is insufficient for decisions with long horizons and deep uncertainty. The
-observation is a statement about method prevalence, not about outcomes, and it is the most
-useful single framing for this topic. **A**
+supply chain network design (2010) observes that the dominant practice has been a deterministic
+model followed by "appropriate sensitivity analysis and scenario analysis", and argues that this
+is insufficient for long-horizon decisions under deep uncertainty. The observation is about
+method prevalence, not outcomes, and it is the most useful framing for this topic. **A**
 
 **What the factor-screening literature reports.** Lalwani, Disney, and Naim (2006) applied
 Taguchi orthogonal arrays and analysis of variance to a distribution network simulation and
 report that inventory holding cost and delivery frequency influenced the design more than demand
-shifts or transport tariffs did. If that ordering transfers, it inverts the intuition that
-demand is always the first thing to vary. The finding is instance-specific and should be read as
-a prompt to screen factors rather than as a rule. **A**
+shifts or transport tariffs. If that ordering transfers, it inverts the intuition that demand is
+always the first thing to vary; the finding is instance-specific and should prompt screening
+rather than become a rule. **A**
 
 **What the sensitivity-method literature reports.** Saltelli and colleagues (2019) argue that
 one-at-a-time designs are invalid for non-linear models and leave most of a multi-dimensional
@@ -996,8 +953,8 @@ Davis (2024) review one-way sensitivity reporting in health technology assessmen
 tornado diagrams typically show only the extremes of the range — with a 95% interval, outcomes
 at each end have about a 2.5% likelihood — and recommend showing intermediate values and
 thresholds. Vreman and colleagues (2021) report that arbitrary rather than evidence-based ranges
-were common in the appraisals they sampled. The domain is health economics, not logistics, and
-the methodological point transfers directly. **A**
+were common in the appraisals they sampled. The domain is health economics, not logistics; the
+methodological point transfers directly. **A**
 
 | Practice | What is observed | Grade | How to read it |
 |---|---|---|---|
@@ -1012,7 +969,7 @@ regret, sample average approximation — is well developed and thinly used. Prac
 overwhelmingly report a base case, a tornado chart, and three scenarios, with ranges chosen by
 judgement and not documented. That is not necessarily wrong; it is cheap, understandable, and
 adequate for many decisions. It becomes wrong when the ranges are chosen after the answer is
-known, which is the failure mode section 10 opens with. **C**
+known, the failure mode section 10 opens with. **C**
 
 ## 10. Failure modes and red flags
 
@@ -1031,21 +988,13 @@ known, which is the failure mode section 10 opens with. **C**
 | Scenario count inflated | Twenty scenarios, none named, no narrative | Software makes runs cheap | Nobody can argue with any of them | Three to six named scenarios; a sample belongs in topic 08 |
 | No stated criterion | The matrix has no decision rule | Criterion left implicit | The reader supplies their own and reaches a different design | State expected cost, minimax regret, or robustness, and why |
 
-Two of these deserve expansion.
+One of these deserves expansion.
 
 **Infeasibility hidden as high cost.** A solver returns "infeasible", and the analyst needs a
-number for the table, so a large penalty is substituted. The penalty is then averaged with the
-other scenarios and a design is selected. This is the most consequential silent error in the
-genre, because it converts a structural finding — the design cannot operate in this future —
-into a cost that can be traded off. Section 6.5 showed the mechanism: the choice of penalty
-decides whether the base optimum survives, and the penalty has no evidential basis.
-
-**Uniform parameter scaling.** A scenario built by multiplying every cost by 1.1 changes the
-level of the objective and almost nothing about the ranking, because a ranking depends on
-differences between designs and a uniform multiplier preserves them. Scenarios earn their keep
-by moving parameters *differentially*: a cross-border tariff that hits one lane, a wage increase
-that hits labour-heavy sites harder, a capacity derating at one site. A scenario set in which
-every parameter moves by the same percentage is a sensitivity run in disguise.
+number for the table, so a large penalty is substituted, averaged with the other scenarios, and
+a design is selected. This is the most consequential silent error in the genre: it converts a
+structural finding — the design cannot operate in this future — into a cost that can be traded
+off. Section 6.5 showed the mechanism, and the penalty has no evidential basis.
 
 ## 11. Assumptions and limits
 
@@ -1063,11 +1012,289 @@ every parameter moves by the same percentage is a sensitivity run in disguise.
 | The open set is the decision unit | Stability is counted over sets | Partial openings and phasing are invisible |
 
 Two limits matter more than the rest. **The analysis is only as good as the scenario set**, and
-the set is a judgement. No amount of arithmetic repairs a set that omits the future in which the
+the set is a judgement; no arithmetic repairs a set that omits the future in which the
 recommendation fails. **The analysis says nothing about transition**: it compares steady-state
-designs, not the cost and risk of getting from here to there, which is topic 06's subject and
-often the binding constraint.
+designs, not the cost and risk of getting from here to there, which is topic 06's subject.
 
-<!--CHUNK3-END-->
+## 12. Exercises
 
+### Exercise 1 — Classify the runs (recall and application, 30 minutes)
 
+Five runs: (i) demand +15% alone; (ii) demand +15% with freight +18% because both follow the
+same cycle; (iii) all fixed costs +10%; (iv) a tariff removing one cross-border lane; (v) the
+current network held fixed.
+
+**Deliverable:** a table classifying each as sensitivity, scenario, or reference case, with one
+sentence of justification.
+**Acceptance criteria:** classification uses the joint-movement test, not the size of the
+change; (ii) is a scenario with its correlation named; (iii) is noted as a near-uniform change
+that may not move the ranking.
+
+### Exercise 2 — Rank the inputs (analysis, 40 minutes)
+
+Take a network study you know, or the section 6 instance, and produce the top six rows of the
+ranked input list from section 5, Step 3.
+
+**Deliverable:** six rows with parameter, plausible range, basis for the range, expected effect
+on the open set.
+**Acceptance criteria:** every range is sourced or labelled a judgement with a named owner; one
+parameter is ranked low with a written reason; the ranking is justified by cost structure.
+
+### Exercise 3 — Read the duals (calculation, 45 minutes)
+
+A three-constraint LP has an optimal basis in which one basic variable is at zero, and the
+solver reports a dual of 0 on a capacity constraint whose slack is zero.
+
+**Deliverable:** why the reported dual may be wrong, both one-sided shadow prices, and a
+one-paragraph instruction to a colleague on what to quote.
+**Acceptance criteria:** degeneracy identified from the zero basic variable and zero slack; both
+prices given with units; the instruction states the basis and the caveat.
+
+### Exercise 4 — The useless range (critique, 30 minutes)
+
+Using the section 6 numbers, compute the transport multiplier at which the ranking changes and
+write the paragraph that would accompany it.
+
+**Deliverable:** the algebra and a paragraph of no more than 120 words.
+**Acceptance criteria:** the multiplier is 2.375; the paragraph attributes the width to the
+fixed-to-flow ratio, not to an absence of transport risk; no robustness claim is made.
+
+### Exercise 5 — Design a scenario set (design, 60 minutes)
+
+For a consumer goods network with a 2030 horizon, design four scenarios.
+
+**Deliverable:** four named scenarios, each a complete parameter set with correlations, plus the
+coverage test from section 5.3.
+**Acceptance criteria:** at least one scenario hurts the preferred design; no two lie on the same
+side of every switch point; each correlation has a causal story; the count is justified.
+
+### Exercise 6 — Convert the tornado into thresholds (calculation, 45 minutes)
+
+Take the five rows of section 6.3 and compute, for each, the parameter value at which the open
+set changes, or state that none exists in a plausible range.
+
+**Deliverable:** a threshold table with the algebra for each row.
+**Acceptance criteria:** demand +5.0%, Q capacity −9.1%, Q fixed cost +12.1%, transport +137.5%,
+labour with no positive root and an explanation; the two rankings shown side by side.
+
+### Exercise 7 — Regret against expectation (calculation, 45 minutes)
+
+Using the cost matrix in section 6.5, compute the regret table and the expected cost of each
+design under equal weights and under weights of 0.5, 0.2, 0.1, 0.1, 0.1 for A to E.
+
+**Deliverable:** both tables and a statement of which design each criterion selects.
+**Acceptance criteria:** infeasibility handled explicitly with the penalty stated; the
+sensitivity of the answer to the penalty shown; the recommendation names the criterion.
+
+### Exercise 8 — Write the stability memo (design, 60 minutes)
+
+Write a one-page recommendation for Meridian to the standard in section 5.8.
+
+**Deliverable:** the memo with the eight required items as headings.
+**Acceptance criteria:** all eight items present; the flip named in one sentence; the criterion
+stated with a reason; the recommendation conditional rather than absolute; every number with its
+unit.
+
+## 13. Self-check answers
+
+**Exercise 1.** (i) Sensitivity: one parameter, everything else fixed. (ii) Scenario: two
+parameters move together with a causal link, so the joint state is coherent. (iii) Sensitivity,
+and a weak one: scaling all fixed costs is near-uniform and may not alter the ranking. (iv)
+Scenario, and a structural one: the lane is removed, so the parameter space changes shape. (v)
+Reference case: the do-nothing option, which belongs in every matrix as a design.
+
+**Exercise 2.** A defensible six: demand volume (−20% to +30%), demand geography (5% to 15% of
+volume relocated), fixed cost estimates (−25% to +25% after stripping allocation), capacity
+ceilings (−10% to −25% against nameplate), transport rates (−15% to +40%), duty and tariff (step
+changes). A low-ranked parameter with a reason might be the inventory carrying rate: it scales a
+minority term and rarely changes the open set.
+
+**Exercise 3.** The zero basic variable means the optimal dual set is not a singleton, and the
+reported dual of 0 is one extreme point. The true one-sided shadow prices are the minimum and
+maximum of the dual over that set: the value of an extra unit is the minimum, and the value of
+removing a unit is the maximum, up to sign convention. Quote both, with the constraint, the
+units, and the sentence "the LP is degenerate, so this is a range rather than a single price".
+
+**Exercise 4.** `1,410 + 430k = 1,600 + 350k` gives `80k = 190`, so `k = 2.375`. The paragraph
+should say transport would have to rise 137.5% before the ranking changes, that this reflects a
+cost structure in which fixed cost is roughly three times flow cost, and that the correct
+conclusion is that transport is not the switching parameter — not that transport is risk-free.
+
+**Exercise 5.** A strong set: base; growth with freight rising alongside volume; a cost shock in
+which energy, freight, and wages rise together; a policy shock in which a carbon border cost and
+a tariff arrive together; a capacity shock at the most loaded site. Each correlation has a
+causal story, and at least one scenario makes the preferred design infeasible or third. A weak
+set varies demand only, in three sizes, and calls it three scenarios.
+
+**Exercise 6.** Demand: `105/100 − 1 = +5.0%`, infeasibility. Q capacity: `50/55 − 1 = −9.1%`,
+infeasibility. Q fixed cost: `1,950 − 500 − 430 = 1,020`, or `+12.1%`, a cost flip. Transport:
+`(1,600 − 1,410)/(430 − 350) = 2.375`, or `+137.5%`, a cost flip. Labour: the difference is
+`−110 − 65.5(m − 1)`, which never reaches zero for positive `m`, so there is no threshold.
+
+**Exercise 7.** With equal weights and a penalty of 4,000, expected costs are D1 1,600, D2 1,993,
+D3 2,509, D4 2,891, and D1 wins. With weights 0.5, 0.2, 0.1, 0.1, 0.1, D1 is
+`920 + 800 + 205 + 400 + 172 = 2,497` and D2 is `975 + 404 + 216 + 195 + 188 = 1,978`, so D2
+wins. The ranking changes with the weights, which is the point: expected cost is only as
+defensible as the weights, and minimax regret selects D2 without needing them.
+
+**Exercise 8.** A strong memo states the five parameters and their sourced ranges; five named
+scenarios with correlations; why five rather than three (both feasibility shocks covered); the
+stability finding that D1 wins three of five and is infeasible in two; the regret table with
+D2's maximum of 158; the flip as "a 5.0% demand increase or a 9.1% capacity derating makes the
+base optimum infeasible"; and minimax regret as the criterion because no defensible
+probabilities exist. A weak memo gives the base optimum and a tornado chart.
+
+## 14. Interview questions
+
+**1. "What is the difference between sensitivity analysis and scenario analysis?"**
+Strong: one parameter against a coherent joint future; the first is a derivative, the second a
+displacement, and the second is where correlations live. Weak: "scenarios are more detailed
+sensitivities", which misses the joint-movement point.
+
+**2. "Why does one-at-a-time analysis overstate confidence?"**
+Strong: additivity fails near thresholds, the corners of the parameter space are never sampled,
+and percentage bands cannot represent regime changes. Weak: "because it does not test
+everything", with no mechanism.
+
+**3. "You are given a capacity shadow price. When should you not believe it?"**
+Strong: when the LP is degenerate, when the value comes from a MIP, or when the constraint is
+structural rather than marginal; quote the basis and the one-sided prices. Weak: quotes the
+number and adds it to the capital request.
+
+**4. "The ranging report says the transport rate can rise 140% before the answer changes. Good news?"**
+Strong: it says transport is not the switching parameter in this cost structure; the width
+reflects the fixed-to-flow ratio, not the absence of risk. Weak: "yes, the design is robust",
+which is the sentence that gets repeated in the steering committee.
+
+**5. "How many scenarios should a network study use?"**
+Strong: three to six named, coherent, designed for coverage; a larger sample belongs to a
+stochastic formulation, and the test is whether the set contains the future in which the answer
+fails. Weak: a number with no rationale, or "as many as the software allows".
+
+**6. "How do you stop a scenario set from justifying the answer someone already wanted?"**
+Strong: fix the ranges and the set before the base solve; include a scenario that hurts the
+preferred design; have the set reviewed by someone who disagrees. Weak: "we were objective",
+which is not a control.
+
+**7. "What is minimax regret, and when would you use it instead of expected cost?"**
+Strong: choose the design whose worst shortfall against the scenario optimum is smallest; use it
+when probabilities are not defensible, and note it is not minimising worst-case cost. Weak:
+confuses it with maximin or variance minimisation.
+
+**8. "What is decision stability and why might you prefer it to optimality?"**
+Strong: the same open set winning across most scenarios; a stable design avoids a reversal that
+costs more than the optimality premium, counted over sets and feasibility, not just cost. Weak:
+"the answer does not change much", with no definition of change.
+
+**9. "Your tornado chart's longest bar is transport. What do you tell the room?"**
+Strong: the bar shows the cost effect over the range chosen, not the risk; check the threshold
+and the plausibility before calling it the biggest exposure. Weak: "transport is our biggest
+risk", which converts an effect size into a probability claim.
+
+**10. "A design is optimal in the base case and infeasible in one of five scenarios. What do you recommend?"**
+Strong: do not average the infeasibility into a cost; report it, price the alternative design,
+and let the business judge the scenario's credibility. Weak: assigns a large penalty and reports
+an expected cost, hiding the structural finding.
+
+## 15. Key terms
+
+- **Sensitivity analysis** — output response to one input, all else fixed.
+- **Scenario analysis** — output under a coherent, jointly specified future.
+- **One-at-a-time (OAT)** — varying one parameter through a range, returning to base.
+- **Tornado diagram** — sorted bar chart of output ranges by parameter; effect, not probability.
+- **Scenario set** — the named futures evaluated together; a design choice, not a sample.
+- **Coherent scenario** — parameter values that could plausibly coexist.
+- **Correlated parameters** — inputs that move together, so joint variation is not additive.
+- **Stress test** — evaluation under a named adverse future chosen to probe a vulnerability.
+- **Switch point** — the parameter value at which two designs exchange rank.
+- **Threshold** — the value beyond which the recommendation changes, including by infeasibility.
+- **Decision stability** — the same open set winning across most scenarios.
+- **Oscillation** — two or more designs alternating as optimal as parameters move.
+- **Regret** — a design's cost in a scenario minus the best feasible cost in that scenario.
+- **Minimax regret** — choose the design with the smallest worst-case regret.
+- **Expected cost** — probability-weighted average cost; only as good as the weights.
+- **Robustness** — acceptable performance across scenarios without a probability model.
+- **Dual value** — local rate of change of the LP objective with respect to a right-hand side.
+- **Shadow price** — the economic reading of a dual; valid under stated conditions.
+- **Reduced cost** — the improvement needed before a variable enters the LP basis.
+- **RHS ranging** — the interval over which one right-hand side may move without a basis change.
+- **Degeneracy** — a zero basic variable, which makes duals non-unique.
+- **Feasibility count** — the number of scenarios in which a design can operate at all.
+- **Coverage test** — whether the scenario set contains the future in which the answer fails.
+
+## 16. Sources
+
+Grading: A peer-reviewed or audited; B regulatory, official, or standard-setting; C company case,
+consultancy, or institutional analysis; D vendor; E press or anecdote.
+
+**Peer-reviewed and methodological**
+
+- Gál, T. (1986). "Shadow prices and sensitivity analysis in linear programming under degeneracy." *OR Spectrum*, 8, 59–71. DOI: 10.1007/BF01719736. **A**
+- Ho (2000). "Computing true shadow prices in linear programming." *Informatica*. One-sided shadow prices under degeneracy. **A**
+- Koltai, T., and Tatay, T. "A practical approach to sensitivity analysis in linear programming under degeneracy for management decision making." *International Journal of Production Economics*. DOI: 10.1016/j.ijpe.2010.04.037. **A**
+- Saltelli, A., and colleagues (2019). "Why so many published sensitivity analyses are false." *Environmental Modelling & Software*. DOI: 10.1016/j.envsoft.2019.01.012. **A**
+- Taylor, M., and Davis, S. (2024). "Tornado diagrams only tell us 5% of the story." *Value in Health*. DOI: 10.1016/j.jval.2024.10.741. Abstract as indexed; verify before quoting. **A**
+- Vreman, R. A., and colleagues (2021). "The application and implications of novel deterministic sensitivity analysis methods." *PharmacoEconomics*. PMC7790801. **A**
+- Gandjour, A. (2021). "Deterministic sensitivity analysis under ignorance." *PharmacoEconomics*. PMC8440146. **A**
+- Savage, L. J. (1951). "The theory of statistical decision." *JASA*, 46, 55–67. **A**
+- Stoye, J. "Axioms for minimax regret choice correspondences." Working paper, Cornell University. Menu dependence and ambiguity aversion. **C**
+- Klibi, W., Martel, A., and Guitouni, A. (2010). "The design of robust value-creating supply chain networks: a critical review." *EJOR*, 203(2), 283–293. DOI: 10.1016/j.ejor.2009.06.011. **A**
+- Govindan, K., Fattahi, M., and Keyvanshokooh, E. (2017). "Supply chain network design under uncertainty: a comprehensive review." *EJOR*. DOI: 10.1016/j.ejor.2017.04.009. **A**
+- Snyder, L. V., and Daskin, M. S. (2006). "Stochastic p-robust location problems." *IIE Transactions*. **A**
+- Daskin, M. S., Hesse, S. M., and ReVelle, C. S. (1997). "α-reliable p-minimax regret." *Location Science*. DOI: 10.1016/S0966-8349(98)00036-9. **A**
+- Lalwani, C. S., Disney, S. M., and Naim, M. M. (2006). "On assessing the sensitivity to uncertainty in distribution network design." *IJPDLM*. Taguchi screening. **A**
+- Birge, J. R., and Louveaux, F. (2011). *Introduction to Stochastic Programming*, 2nd ed. Springer. **A**
+
+**Standards, official, and regulatory**
+
+- ISO 31000:2018, risk management guidelines; ISO/IEC 31010:2019, risk assessment techniques. **B**
+- ISO 14083:2023, transport chain greenhouse gas quantification. **B**
+- Regulation (EU) 2023/956, carbon border adjustment mechanism. **B**
+- IFRS 16 *Leases*; ASC 842. **B**
+- World Customs Organization, Harmonized System nomenclature. **B**
+- US Federal Reserve, SR 11-7, guidance on model risk management. **B**
+- Eurostat, U.S. Bureau of Labor Statistics, and ILO labour cost and price indices. **B**
+
+**Company, consultancy, and institutional**
+
+- Roxburgh, C. (2009). "The use and abuse of scenarios." McKinsey Quarterly. At least four scenarios; dependence collapses combinations. **C**
+- McKinsey (2021). "Scenario-based cash planning in a crisis." Three to four deterministic scenarios in CFO practice. **C**
+- Amer, M., Daim, T. U., and Jetter, A. J. (2013). "A review of scenario planning." *Futures*. No precise optimum scenario count; commonly three to six. **A**
+
+**Vendor**
+
+- Coupa, "Sensitivity analysis in supply chain design and planning"; ICRON, "From static assumptions to scenario-based network design"; Lambda SCS, supply chain risk measurement. Scenario management presented as a software capability. **D**
+
+> **Note on citation discipline.** The scenario-count guidance is a communication heuristic
+> repeated across sources, not a finding, and the Taylor and Davis figure is a conference
+> abstract quoted as indexed. No range or threshold here transfers to another network without
+> rebuilding the instance.
+
+## 17. Links
+
+**This module**
+
+- Module map: [`_index.md`](_index.md)
+- The model being analysed: [`04_facility-location.md`](04_facility-location.md)
+- Multi-commodity and multi-period extensions: [`05_multi-commodity-period.md`](05_multi-commodity-period.md)
+- MILP anatomy and why MIPs have no duals: [`03_milp-anatomy.md`](03_milp-anatomy.md)
+- Transition and brownfield analysis: [`06_greenfield-brownfield.md`](06_greenfield-brownfield.md)
+- The graph and cost-to-serve basis: [`02_graph-cost-to-serve.md`](02_graph-cost-to-serve.md)
+- The decision ladder this analysis serves: [`01_network-decision-ladder.md`](01_network-decision-ladder.md)
+- Next, the formal treatment of uncertainty: `08_robust-stochastic.md` (planned)
+- Later, carbon as a scenario dimension: `09_carbon-objective.md` (planned)
+- Later, solver behaviour and gap reporting: `10_solvers-heuristics.md` (planned)
+
+**Adjacent modules**
+
+- Forecast error, which is the input to the demand range: [`../07_time_series_forecasting/_index.md`](../07_time_series_forecasting/_index.md)
+- Intermittent and probabilistic demand: [`../08_hierarchical_intermittent_probabilistic_forecasting/_index.md`](../08_hierarchical_intermittent_probabilistic_forecasting/_index.md)
+
+**Programme navigation**
+
+- Part II methods map: [`../_index.md`](../_index.md)
+- Part I foundations: [`../../01_foundations/_index.md`](../../01_foundations/_index.md)
+- Module survey file: [`../../../course/11_network_design_optimization.md`](../../../course/11_network_design_optimization.md)
+
+> **Note:** topics 08 to 10 are listed in `_index.md` but do not exist on disk yet, so they are
+> shown as plain file names marked planned. Every markdown link on this page resolves.
