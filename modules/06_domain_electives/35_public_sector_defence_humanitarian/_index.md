@@ -31,16 +31,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_public-procurement-frameworks.md`](01_public-procurement-frameworks.md) | Public Procurement and Frameworks | Tender, framework, call-off, and rule compliance. | 1,200–1,800 | planned |
-| 2 | [`02_whole-life-cost-meat.md`](02_whole-life-cost-meat.md) | Whole-Life Cost and MEAT Evaluation | Discounting, operating cost, risk, and auditable scoring. | 1,200–1,800 | planned |
-| 3 | [`03_defence-availability-pbl.md`](03_defence-availability-pbl.md) | Defence Availability and Performance-Based Logistics | Mission-capable rates, contractor support, and obsolescence. | 1,200–1,800 | planned |
-| 4 | [`04_strategic-stockpiles.md`](04_strategic-stockpiles.md) | Strategic Stockpiles | Sizing, rotation, release, and the cost of preparedness. | 1,200–1,800 | planned |
-| 5 | [`05_humanitarian-needs-assessment.md`](05_humanitarian-needs-assessment.md) | Humanitarian Needs Assessment | Population, standards, duration, and local capacity. | 1,200–1,800 | planned |
-| 6 | [`06_pipeline-prepositioning.md`](06_pipeline-prepositioning.md) | Pipeline and Pre-Positioning | Lead-time pipeline, hubs, and the first-response gap. | 1,200–1,800 | planned |
-| 7 | [`07_last-mile-fragile-settings.md`](07_last-mile-fragile-settings.md) | Last Mile in Fragile Settings | Access, security, partners, and protection. | 1,200–1,800 | planned |
-| 8 | [`08_cash-versus-in-kind.md`](08_cash-versus-in-kind.md) | Cash versus In-Kind Assistance | Market capacity, targeting, and mode choice. | 1,200–1,800 | planned |
-| 9 | [`09_donor-reporting-audit.md`](09_donor-reporting-audit.md) | Donor Reporting and Audit | IATI, HXL, reconciliation, and traceability. | 1,200–1,800 | planned |
-| 10 | [`10_ethics-protection-security.md`](10_ethics-protection-security.md) | Ethics, Protection, and Security | Do no harm, neutrality, data protection, and export control. | 1,200–1,800 | planned |
+| 1 | [`01_public-procurement-frameworks.md`](01_public-procurement-frameworks.md) | Public Procurement and Frameworks | Tender, framework, call-off, and rule compliance. | 1,200–1,800 | complete |
+| 2 | [`02_whole-life-cost-meat.md`](02_whole-life-cost-meat.md) | Whole-Life Cost and MEAT Evaluation | Discounting, operating cost, risk, and auditable scoring. | 1,200–1,800 | complete |
+| 3 | [`03_defence-availability-pbl.md`](03_defence-availability-pbl.md) | Defence Availability and Performance-Based Logistics | Mission-capable rates, contractor support, and obsolescence. | 1,200–1,800 | complete |
+| 4 | [`04_strategic-stockpiles.md`](04_strategic-stockpiles.md) | Strategic Stockpiles | Sizing, rotation, release, and the cost of preparedness. | 1,200–1,800 | complete |
+| 5 | [`05_humanitarian-needs-assessment.md`](05_humanitarian-needs-assessment.md) | Humanitarian Needs Assessment | Population, standards, duration, and local capacity. | 1,200–1,800 | complete |
+| 6 | [`06_pipeline-prepositioning.md`](06_pipeline-prepositioning.md) | Pipeline and Pre-Positioning | Lead-time pipeline, hubs, and the first-response gap. | 1,200–1,800 | complete |
+| 7 | [`07_last-mile-fragile-settings.md`](07_last-mile-fragile-settings.md) | Last Mile in Fragile Settings | Access, security, partners, and protection. | 1,200–1,800 | complete |
+| 8 | [`08_cash-versus-in-kind.md`](08_cash-versus-in-kind.md) | Cash versus In-Kind Assistance | Market capacity, targeting, and mode choice. | 1,200–1,800 | complete |
+| 9 | [`09_donor-reporting-audit.md`](09_donor-reporting-audit.md) | Donor Reporting and Audit | IATI, HXL, reconciliation, and traceability. | 1,200–1,800 | complete |
+| 10 | [`10_ethics-protection-security.md`](10_ethics-protection-security.md) | Ethics, Protection, and Security | Do no harm, neutrality, data protection, and export control. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -72,9 +72,9 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
 Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
 as each file is produced at its target length. The survey file linked above is complete at survey

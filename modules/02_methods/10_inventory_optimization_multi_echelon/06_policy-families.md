@@ -1302,4 +1302,142 @@ continuous review needs good data, without saying which data or what happens wit
 A strong answer gives the chain: protection period, buffer, target, average inventory, storage,
 order frequency and cost, and the MOQ check. A weak answer says the buffer, and stops.
 
-<!--APPEND-->
+## 15. Key terms
+
+Twenty-six terms carry the whole topic. If you can define these without the file in front of you,
+you can read any replenishment configuration you are handed and say what it will do.
+
+| Term | One-line definition |
+|---|---|
+| Continuous review | Inventory position is observed at every transaction, so the trigger can fire at any moment |
+| Periodic review | Inventory position is observed only at scheduled review instants, so the trigger is evaluated on a calendar |
+| Review period (`R`) | The interval between consecutive review instants, in days or weeks |
+| Review interval in practice | Whatever the batch job interval is, regardless of what the configuration screen calls the policy |
+| Reorder point (`s`) | A threshold on the inventory position; an order is triggered when the position is at or below it |
+| Order-up-to level (`S`) | A target the inventory position is raised to at the moment of ordering |
+| Min | The name a min-max system gives to its trigger; operationally a reorder point |
+| Max | The name a min-max system gives to its target; operationally an order-up-to level |
+| `(s,Q)` | Continuous review, fixed order quantity; the trigger fires, a constant `Q` is ordered |
+| `(s,S)` | Continuous review, variable quantity; the trigger fires, the position is raised to `S` |
+| `(R,S)` | Periodic review, variable quantity; at each review the position is raised to `S` |
+| `(R,s,S)` | Periodic review with an in-period trigger as well as a review-instant target |
+| Inventory position | On-hand plus on-order minus backorders; the quantity the trigger is compared against |
+| On-hand | Physical stock in the location, excluding goods in transit and goods committed elsewhere |
+| On-order | Supply that has been released but not yet received; the field most often missing from a manual calculation |
+| Backorder | Demand accepted but not served, held as a negative in the position |
+| Undershoot | The amount by which the position at the trigger sits below `s`, caused by demand arriving in lots larger than one unit |
+| Protection period | The span the buffer must cover: lead time, plus the review period where one exists |
+| Review-period increment | The extra buffer required solely because the trigger can only fire on a calendar |
+| Safety stock field | A separately configured quantity in most systems, distinct from the level or the trigger |
+| Planning time fence | A horizon inside which the system will not reschedule supply; constrains what a policy can achieve |
+| Time bucket | The granularity at which reviews and receipts are netted, usually a day or a week |
+| Lot size key | The configuration that decides whether the quantity is fixed, lot-for-lot, or a multiple |
+| Order multiple | A quantity the order must be a whole multiple of, usually a pallet or a case pack |
+| Minimum order quantity (MOQ) | A floor on the order quantity imposed by the supplier rather than by the policy |
+| Double buffer | Two overlapping protections set by different people, typically a min-max band and a safety stock field |
+| Reconstruction test | Rebuilding the policy from order history and comparing it with the documented parameter set |
+
+Two of these terms are doing more work than the rest. **Inventory position** is the quantity the
+policy actually operates on, and almost every manual calculation that goes wrong has used on-hand
+instead. **Undershoot** is the correction that makes fixed-quantity continuous review behave the
+way the formulas claim, and it is absent from most textbook treatments of `(s,Q)`.
+
+## 16. Sources
+
+Sources are grouped by what they can support. Grades follow Module 28: A peer-reviewed or audited,
+B regulatory or official, C company case or investor claim, D vendor marketing or product
+documentation, E press summary or anecdote.
+
+### 16.1 Analytical and empirical literature — grade A
+
+| Source | What it supports |
+|---|---|
+| Scarf, H. (1960), *Mathematical Methods in the Social Sciences* | The optimality of `(s,S)` under a fixed ordering cost and convex holding and shortage costs |
+| Singha, K., Buddhakulsomsiri, J. and Parthanadee, P. (2017), *Mathematical Problems in Engineering* | Continuous and periodic review converging in cost once undershoot is modelled |
+| Gürler, Ü., Alp, O. and Büyükkaramikli, N. (2014), *Transportation Research Part E* | The periodic-review premium under contracted trucking, from a few per cent to roughly 20 per cent |
+| Cachon, G. (2001), *Operations Research* | The poor performance of continuous-review-optimised policies implemented under periodic review |
+| Prak, D., Teunter, R. and Riezebos, J. (2015), *European Journal of Operational Research* | Hybrid review: periodic counting with continuous ordering |
+| Hollier, R., Mak, K. and Yiu, K. (2005), *International Journal of Production Research* | `(s,S)` against `(s,Q)` under lumpy demand with a maximum issue quantity |
+| Ward, J. (1978), *Management Science* | Reorder points computed for unit-sized demand being too low when demand arrives in lots |
+
+> **Note:** Journal, volume and page details are reported as they appeared in the sources consulted.
+> Where a search returned a title and year but not a full citation, the entry is given without
+> volume and page numbers rather than reconstructed. Nothing in this section is a claim about a
+> source that was not read at least in abstract.
+
+### 16.2 Standards and official instruments — grade B
+
+| Instrument | What it supports |
+|---|---|
+| GS1 GTIN | Product identity as the item dimension of a policy |
+| GS1 GLN | Location identity as the location dimension |
+| GS1 EPCIS 2.0 | Event data supplying receipt and issue timestamps |
+| ISO 8000 series | Data quality of the keys the parameters attach to |
+| ISO 22400-2 | Definitions of manufacturing and inventory KPIs; not a policy prescription |
+| IAS 2 and ASC 330 | Inventory measurement at the lower of cost and net realisable value |
+| Service level agreements | The contractual service measure and target the policy is set against |
+
+The standards group supports the data and auditability claims in section 8 and nothing about which
+policy family to choose. No standard consulted prescribes a family, a review period, or a min-max
+derivation, and none should be cited as if it did.
+
+### 16.3 Product documentation — grade D
+
+| Product | Used only for |
+|---|---|
+| SAP ERP material master | The names and roles of the reorder-point and lot-size fields |
+| Oracle Fusion Cloud item planning attributes | The names of the planning-method and min-max fields |
+| Microsoft Dynamics 365 Business Central | The reordering-policy options and the separate safety stock and safety lead time fields |
+| Infor SyteLine | The reorder point and order multiple fields on purchased items |
+| Rootstock | The planning policy and policy quantity fields |
+| QAD | The item-site planning record fields |
+
+Grade D is correct here even though the documentation is accurate: it establishes what a named
+product documents about its own configuration, and nothing about industry practice, adoption, or
+the frequency of any configuration error. No claim in this file rests on a vendor document for
+anything other than a field name.
+
+### 16.4 Community and anecdotal material — grade E
+
+| Source | Used only for |
+|---|---|
+| SAP Community discussion of planning time fences on reorder-point MRP types, message 61839 | The existence of a reported incompatibility between reorder-point planning and time fencing in one release |
+
+This is a single community report about a single release. It is cited because the structural point
+it illustrates is real and is corroborated by the engine design, not because the report itself is
+evidence of how often the combination fails.
+
+### 16.5 What is inference rather than finding
+
+Three statements in this file are the author's inference from field observation and are not
+sourced to any study:
+
+1. That "continuous review" usually means a nightly batch in practice.
+2. That most organisations fail the reconstruction test on at least one item in ten.
+3. That double buffering arises most often because two fields were set by two different people.
+
+No source consulted measures any of these. They are stated as patterns worth testing against your
+own system, and the tests are given in section 12 so the claim can be checked rather than believed.
+
+## 17. Links
+
+Within this module:
+
+- Module index: [`_index.md`](_index.md)
+- The cost-service frontier the policy is optimised against: [`01_cost-service-frontier.md`](01_cost-service-frontier.md)
+- EOQ and the lot-size key: [`02_eoq-limits.md`](02_eoq-limits.md)
+- Newsvendor, the periodic-review case with no replenishment: [`03_newsvendor.md`](03_newsvendor.md)
+- Safety stock and the protection period: [`04_safety-stock.md`](04_safety-stock.md)
+- The service measures the parameters are set against: [`05_service-metrics.md`](05_service-metrics.md)
+- Lead-time demand distributions, which supply the buffer the trigger is built on: [`07_lead-time-demand.md`](07_lead-time-demand.md)
+- Multi-echelon policies, where a trigger at one level depends on another: [`08_multi-echelon.md`](08_multi-echelon.md)
+- Pooling and postponement, which change the item dimension of a policy: [`09_pooling-postponement.md`](09_pooling-postponement.md)
+- Segmentation and DDMRP, which reparameterise rather than replace these families: [`10_segmentation-shelf-life.md`](10_segmentation-shelf-life.md)
+
+Elsewhere in the program:
+
+- Part II map: [`../_index.md`](../_index.md)
+- Intermittent and compound demand, which changes what the trigger sees: [`../08_hierarchical_intermittent_probabilistic_forecasting/06_compound-poisson-hurdle.md`](../08_hierarchical_intermittent_probabilistic_forecasting/06_compound-poisson-hurdle.md)
+- Demand sensing, which shortens the observation lag inside the lead time: [`../09_demand_sensing_promotions_npi/01_demand-sensing-signals.md`](../09_demand_sensing_promotions_npi/01_demand-sensing-signals.md)
+- Part I map: [`../../01_foundations/_index.md`](../../01_foundations/_index.md)
+- Survey file: [`../../../course/10_inventory_optimization_multi_echelon.md`](../../../course/10_inventory_optimization_multi_echelon.md)

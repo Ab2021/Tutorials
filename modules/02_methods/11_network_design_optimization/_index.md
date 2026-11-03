@@ -31,11 +31,11 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_network-decision-ladder.md`](01_network-decision-ladder.md) | The Network Decision Ladder | Strategic, tactical, and operational network choices and their time scales. | 1,200–1,800 | planned |
-| 2 | [`02_graph-cost-to-serve.md`](02_graph-cost-to-serve.md) | The Network as a Graph; Cost-to-Serve | Nodes, arcs, flows, and the decomposition of delivered cost. | 1,200–1,800 | planned |
-| 3 | [`03_milp-anatomy.md`](03_milp-anatomy.md) | MILP Anatomy | Variables, constraints, objective, and the modelling choices that decide solvability. | 1,200–1,800 | planned |
-| 4 | [`04_facility-location.md`](04_facility-location.md) | The Baseline Capacitated Facility-Location Model | Fixed charge, capacity, and demand allocation. | 1,200–1,800 | planned |
-| 5 | [`05_multi-commodity-period.md`](05_multi-commodity-period.md) | Multi-Commodity and Multi-Period Models | Product families, inventories, and time-expanded networks. | 1,200–1,800 | planned |
+| 1 | [`01_network-decision-ladder.md`](01_network-decision-ladder.md) | The Network Decision Ladder | Strategic, tactical, and operational network choices and their time scales. | 1,200–1,800 | complete |
+| 2 | [`02_graph-cost-to-serve.md`](02_graph-cost-to-serve.md) | The Network as a Graph; Cost-to-Serve | Nodes, arcs, flows, and the decomposition of delivered cost. | 1,200–1,800 | complete |
+| 3 | [`03_milp-anatomy.md`](03_milp-anatomy.md) | MILP Anatomy | Variables, constraints, objective, and the modelling choices that decide solvability. | 1,200–1,800 | complete |
+| 4 | [`04_facility-location.md`](04_facility-location.md) | The Baseline Capacitated Facility-Location Model | Fixed charge, capacity, and demand allocation. | 1,200–1,800 | complete |
+| 5 | [`05_multi-commodity-period.md`](05_multi-commodity-period.md) | Multi-Commodity and Multi-Period Models | Product families, inventories, and time-expanded networks. | 1,200–1,800 | complete |
 | 6 | [`06_greenfield-brownfield.md`](06_greenfield-brownfield.md) | Greenfield and Brownfield Design | Building from scratch versus adapting an existing footprint. | 1,200–1,800 | planned |
 | 7 | [`07_scenario-sensitivity.md`](07_scenario-sensitivity.md) | Scenario and Sensitivity Analysis | Which assumptions change the answer, and by how much. | 1,200–1,800 | planned |
 | 8 | [`08_robust-stochastic.md`](08_robust-stochastic.md) | Robust and Stochastic Optimization | Hedging against demand, cost, and disruption uncertainty. | 1,200–1,800 | planned |
@@ -71,13 +71,14 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 5 |
 | draft | 0 |
-| complete | 0 |
+| complete | 5 |
 
-Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
-as each file is produced at its target length. The survey file linked above is complete at survey
-depth and can be used on its own.
+Module 11 is in production as of 3 November 2026. Topics 01 to 05 are written and meet the
+quality bar in `MODULE_EXPANSION_SPEC.md` §5; topics 06–10 are indexed but not yet written. Status moves from
+`planned` to `draft` to `complete` as each file is produced at its target length. The survey file
+linked above is complete at survey depth and can be used on its own.
 
 ## 7. Sources for this module
 

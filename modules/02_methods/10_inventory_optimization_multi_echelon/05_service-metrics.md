@@ -1323,10 +1323,12 @@ consulted establishes an origin for the term "fill rate", and this file does not
 - The trade-off the service target sits on: [`01_cost-service-frontier.md`](01_cost-service-frontier.md)
 - The order quantity that enters the fill conversion: [`02_eoq-limits.md`](02_eoq-limits.md)
 - The single-period quantile, where service becomes a critical ratio: [`03_newsvendor.md`](03_newsvendor.md)
-- Next in this module, not yet on disk: `06_policy-families.md` (planned) — how (s,Q) and (R,S)
+- Next in this module: [`06_policy-families.md`](06_policy-families.md) — how (s,Q) and (R,S)
   policies generate the cycles counted here.
-- Not yet on disk: `07_lead-time-demand.md`, `08_multi-echelon.md`, `09_pooling-postponement.md`,
-  `10_segmentation-shelf-life.md` (all planned).
+- Later in this module: [`07_lead-time-demand.md`](07_lead-time-demand.md),
+  [`08_multi-echelon.md`](08_multi-echelon.md),
+  [`09_pooling-postponement.md`](09_pooling-postponement.md),
+  [`10_segmentation-shelf-life.md`](10_segmentation-shelf-life.md).
 - Quantiles and decisions: [`../08_hierarchical_intermittent_probabilistic_forecasting/10_quantiles-decisions.md`](../08_hierarchical_intermittent_probabilistic_forecasting/10_quantiles-decisions.md)
   — choosing the quantile from costs rather than from a target.
 - Availability as a demand driver: [`../09_demand_sensing_promotions_npi/09_distribution-assortment.md`](../09_demand_sensing_promotions_npi/09_distribution-assortment.md)

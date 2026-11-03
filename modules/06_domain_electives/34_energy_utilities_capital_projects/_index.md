@@ -31,15 +31,15 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_asset-register-criticality.md`](01_asset-register-criticality.md) | Asset Register and Criticality | Asset hierarchy, consequence, and the basis for spares policy. | 1,200–1,800 | planned |
-| 2 | [`02_mro-failure-modelling.md`](02_mro-failure-modelling.md) | MRO Demand and Failure Modelling | Failure rates, condition data, and intermittent demand. | 1,200–1,800 | planned |
-| 3 | [`03_outage-turnaround-materials.md`](03_outage-turnaround-materials.md) | Outage and Turnaround Materials | Scope freeze, kitting, staging, and work-package readiness. | 1,200–1,800 | planned |
-| 4 | [`04_long-lead-procurement.md`](04_long-lead-procurement.md) | Long-Lead Equipment and Project Procurement | Lead time, float, expediting, and procurement on the critical path. | 1,200–1,800 | planned |
-| 5 | [`05_bulk-materials-construction.md`](05_bulk-materials-construction.md) | Bulk Materials and Construction Logistics | Takeoff, wastage, laydown, preservation, and modules. | 1,200–1,800 | planned |
-| 6 | [`06_schedule-earned-value.md`](06_schedule-earned-value.md) | Schedule and Earned Value Analytics | SPI, CPI, float, and supply-driven schedule risk. | 1,200–1,800 | planned |
-| 7 | [`07_commodity-price-contracts.md`](07_commodity-price-contracts.md) | Commodity Price and Contract Structures | Index-linked pricing, hedging, and risk allocation. | 1,200–1,800 | planned |
-| 8 | [`08_renewables-grid-spares.md`](08_renewables-grid-spares.md) | Renewables and Grid Equipment | Distributed assets, pooled spares, and grid connection constraints. | 1,200–1,800 | planned |
-| 9 | [`09_resilience-storm-response.md`](09_resilience-storm-response.md) | Resilience and Storm Response | Pre-positioning, mutual aid, and restoration priorities. | 1,200–1,800 | planned |
+| 1 | [`01_asset-register-criticality.md`](01_asset-register-criticality.md) | Asset Register and Criticality | Asset hierarchy, consequence, and the basis for spares policy. | 1,200–1,800 | complete |
+| 2 | [`02_mro-failure-modelling.md`](02_mro-failure-modelling.md) | MRO Demand and Failure Modelling | Failure rates, condition data, and intermittent demand. | 1,200–1,800 | complete |
+| 3 | [`03_outage-turnaround-materials.md`](03_outage-turnaround-materials.md) | Outage and Turnaround Materials | Scope freeze, kitting, staging, and work-package readiness. | 1,200–1,800 | complete |
+| 4 | [`04_long-lead-procurement.md`](04_long-lead-procurement.md) | Long-Lead Equipment and Project Procurement | Lead time, float, expediting, and procurement on the critical path. | 1,200–1,800 | complete |
+| 5 | [`05_bulk-materials-construction.md`](05_bulk-materials-construction.md) | Bulk Materials and Construction Logistics | Takeoff, wastage, laydown, preservation, and modules. | 1,200–1,800 | complete |
+| 6 | [`06_schedule-earned-value.md`](06_schedule-earned-value.md) | Schedule and Earned Value Analytics | SPI, CPI, float, and supply-driven schedule risk. | 1,200–1,800 | complete |
+| 7 | [`07_commodity-price-contracts.md`](07_commodity-price-contracts.md) | Commodity Price and Contract Structures | Index-linked pricing, hedging, and risk allocation. | 1,200–1,800 | complete |
+| 8 | [`08_renewables-grid-spares.md`](08_renewables-grid-spares.md) | Renewables and Grid Equipment | Distributed assets, pooled spares, and grid connection constraints. | 1,200–1,800 | complete |
+| 9 | [`09_resilience-storm-response.md`](09_resilience-storm-response.md) | Resilience and Storm Response | Pre-positioning, mutual aid, and restoration priorities. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -70,9 +70,9 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 9 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 9 |
 
 Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
 as each file is produced at its target length. The survey file linked above is complete at survey

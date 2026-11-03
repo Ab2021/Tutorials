@@ -2,6 +2,59 @@
 
 All substantive changes to the curriculum are recorded here.
 
+## 2026.15.0 — 3 November 2026
+
+### Added — Module 10 written in full
+- Module 10 (`02_methods/10_inventory_optimization_multi_echelon/`) is now written in full: ten
+  topic files, 13,153 lines, each with all 17 required sections and every relative link resolving.
+- `01_cost-service-frontier.md` — the trade-off curve, the marginal cost of the next point of
+  service, and why service targets are budget decisions rather than inventory settings.
+- `02_eoq-limits.md` — the EOQ derivation and the eight assumptions it rests on, priced one at a
+  time against the cost of the assumption failing.
+- `03_newsvendor.md` — the critical fractile, the underage-versus-overage ratio, and the
+  pull-to-centre behaviour that makes practitioners order away from the computed quantity.
+- `04_safety-stock.md` — the protection period as the fundamental quantity, the omitted
+  lead-time-variance term, and the honest estimation of sigma under censored history.
+- `05_service-metrics.md` — cycle service level, unit and line fill rate, ready rate and OTIF as
+  measures that are related but not interchangeable, and the normal loss function that converts
+  between them.
+- `06_policy-families.md` — (s,Q), (s,S), (R,S) and (R,s,S) as two decisions on two dimensions,
+  the min-max/order-up-to confusion, and how to identify the family a system actually runs from
+  its configuration rather than its label.
+- `07_lead-time-demand.md` — lead-time demand as a random sum, the variance identity, the limit of
+  the normal approximation at low mean demand, dispersion testing, and the censoring bias.
+- `08_multi-echelon.md` — installation versus echelon stock, what Clark and Scarf established,
+  MEIO as practised, DRP deployment, shortage allocation, and buffer placement across a network.
+- `09_pooling-postponement.md` — the square-root law and the correlation condition that makes it
+  fail, component commonality, and the three forms of postponement with the conditions each needs.
+- `10_segmentation-shelf-life.md` — the ABC×XYZ matrix, demand-pattern classification, DDMRP zones
+  assessed against the evidence actually available, and perishability as a third policy dimension.
+
+### Changed
+- Module 10 status table reports 10 `complete` and the module total of 13,153 lines.
+- `modules/02_methods/_index.md` reports four modules complete in Part II; `VALIDATION_STATUS.md`
+  now records 102 of 476 topic units and 132,643 lines.
+- The module-close link sweep converted eight stale `(planned)` markers across seven files to live
+  links. Two were plain-text file lists inside `text` fences; those were rewritten as bulleted link
+  lists, and the "not yet written" heading in `03_newsvendor.md` was replaced with a section that
+  describes what each sibling now covers.
+
+### Notes
+- **Module 06 remains deferred at the user's request.** A verification pass confirmed that no file
+  in Module 10 references `06_machine_learning_foundations`, in any form.
+- Two writer sessions were interrupted by the API session usage limit. `05_service-metrics.md` was
+  cut during a compression pass at 1,338 lines and `06_policy-families.md` was cut after section
+  14. Both were verified on disk rather than assumed: section 05 was structurally complete and was
+  accepted at 1,338 lines, inside the module's stated 1,200–1,800 target; sections 15 to 17 of
+  topic 06 were written during the close and checked against the file's own body.
+- `04_safety-stock.md` reports a single `!` character. It is the `!=` operator inside a formula,
+  not prose punctuation.
+- Source discipline in this module: no named inventor is attributed to the safety-stock formula;
+  the ERP omission rate for the lead-time-variance term is stated as field inference rather than a
+  measured rate; DDMRP performance figures are graded D and no adoption percentage is reproduced;
+  and the service-compounding rule is presented as arithmetic valid only for independent local
+  buffering rather than as a general result.
+
 ## 2026.14.0 — 3 November 2026
 
 ### Added — Module 09 written in full

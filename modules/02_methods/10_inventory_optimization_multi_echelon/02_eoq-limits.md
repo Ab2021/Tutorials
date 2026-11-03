@@ -1279,15 +1279,13 @@ weak answer starts computing EOQs for all 4,000 and reports the total inventory 
 - Intermittent demand and the compound Poisson hurdle model:
   [`../08_hierarchical_intermittent_probabilistic_forecasting/06_compound-poisson-hurdle.md`](../08_hierarchical_intermittent_probabilistic_forecasting/06_compound-poisson-hurdle.md)
 
-Sibling topics in this module that are not yet written are listed here as plain text, not links:
+Sibling topics in this module:
 
-```text
-03_newsvendor.md                (planned)  newsvendor and the critical fractile
-04_safety-stock.md              (planned)  safety stock under demand and lead-time uncertainty
-05_service-metrics.md           (planned)  CSL, fill rate, OTIF
-06_policy-families.md           (planned)  (s,Q), (R,S), min-max, periodic review
-07_lead-time-demand.md          (planned)  lead-time demand distributions
-08_multi-echelon.md             (planned)  multi-echelon inventory, MEIO, DRP
-09_pooling-postponement.md      (planned)  pooling and postponement
-10_segmentation-shelf-life.md   (planned)  segmentation, DDMRP, shelf life
-```
+- [`03_newsvendor.md`](03_newsvendor.md) — newsvendor and the critical fractile
+- [`04_safety-stock.md`](04_safety-stock.md) — safety stock under demand and lead-time uncertainty
+- [`05_service-metrics.md`](05_service-metrics.md) — CSL, fill rate, OTIF
+- [`06_policy-families.md`](06_policy-families.md) — (s,Q), (R,S), min-max, periodic review
+- [`07_lead-time-demand.md`](07_lead-time-demand.md) — lead-time demand distributions
+- [`08_multi-echelon.md`](08_multi-echelon.md) — multi-echelon inventory, MEIO, DRP
+- [`09_pooling-postponement.md`](09_pooling-postponement.md) — pooling and postponement
+- [`10_segmentation-shelf-life.md`](10_segmentation-shelf-life.md) — segmentation, DDMRP, shelf life

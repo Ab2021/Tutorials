@@ -36,11 +36,11 @@ not the whole program.
 | 3 | [`03_newsvendor.md`](03_newsvendor.md) | Newsvendor and the Critical Fractile | Optimal order quantity under a single selling season. | 1,200–1,800 | complete |
 | 4 | [`04_safety-stock.md`](04_safety-stock.md) | Safety Stock under Demand and Lead-Time Uncertainty | Combining variability, lead time, and review period. | 1,200–1,800 | complete |
 | 5 | [`05_service-metrics.md`](05_service-metrics.md) | Service Metrics: CSL, Fill Rate, OTIF | Definitions that are not interchangeable and the policies they imply. | 1,200–1,800 | complete |
-| 6 | [`06_policy-families.md`](06_policy-families.md) | Policy Families | (s,Q), (R,S), min-max, and periodic review in operational terms. | 1,200–1,800 | planned |
-| 7 | [`07_lead-time-demand.md`](07_lead-time-demand.md) | Lead-Time Demand Distributions | Compounding demand and lead-time variability correctly. | 1,200–1,800 | planned |
-| 8 | [`08_multi-echelon.md`](08_multi-echelon.md) | Multi-Echelon Inventory, MEIO, and DRP | Echelon stock, lead-time demand, DRP deployment, shortage allocation, and where to hold the buffer. | 1,200–1,800 | planned |
-| 9 | [`09_pooling-postponement.md`](09_pooling-postponement.md) | Pooling and Postponement | Risk pooling, component commonality, and delayed differentiation. | 1,200–1,800 | planned |
-| 10 | [`10_segmentation-shelf-life.md`](10_segmentation-shelf-life.md) | Segmentation, DDMRP, and Shelf Life | ABC/XYZ, decoupling points, and perishable inventory constraints. | 1,200–1,800 | planned |
+| 6 | [`06_policy-families.md`](06_policy-families.md) | Policy Families | (s,Q), (R,S), min-max, and periodic review in operational terms. | 1,200–1,800 | complete |
+| 7 | [`07_lead-time-demand.md`](07_lead-time-demand.md) | Lead-Time Demand Distributions | Compounding demand and lead-time variability correctly. | 1,200–1,800 | complete |
+| 8 | [`08_multi-echelon.md`](08_multi-echelon.md) | Multi-Echelon Inventory, MEIO, and DRP | Echelon stock, lead-time demand, DRP deployment, shortage allocation, and where to hold the buffer. | 1,200–1,800 | complete |
+| 9 | [`09_pooling-postponement.md`](09_pooling-postponement.md) | Pooling and Postponement | Risk pooling, component commonality, and delayed differentiation. | 1,200–1,800 | complete |
+| 10 | [`10_segmentation-shelf-life.md`](10_segmentation-shelf-life.md) | Segmentation, DDMRP, and Shelf Life | ABC/XYZ, decoupling points, and perishable inventory constraints. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,15 +71,15 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 8 |
+| planned | 0 |
 | draft | 0 |
-| complete | 2 |
+| complete | 10 |
 
-Module 10 is in production as of 3 November 2026. Topics 01 and 02 are written and meet the
-quality bar in `MODULE_EXPANSION_SPEC.md` §5; topics 03–10 are indexed but not yet written.
-Status moves from `planned` to `draft` to `complete` as each file is produced at its target length.
-The survey file linked above is complete at survey depth and can be used on its own. Module 06 is
-deferred and is not linked from any file in this module.
+All ten topic files are written and meet the quality bar in `MODULE_EXPANSION_SPEC.md` §5: at
+least 1,000 lines, all 17 sections present, arithmetic checked, sources real and graded. The
+module total is 13,153 lines. Every relative link in the module resolves. Module 06 is deferred
+and is not linked from any file in this module. Status moves from `complete` to `reviewed` when a
+second reader signs off, and to `revised` after corrections.
 
 ## 7. Sources for this module
 

@@ -1277,19 +1277,16 @@ used for a quantitative claim in this file.
 - [Part 1 index](../../01_foundations/_index.md) — the foundations the cost pair rests on.
 - [Module 10 survey](../../../course/10_inventory_optimization_multi_echelon.md) — the topic map.
 
-**Not yet written**
+**The rest of this module**
 
-These siblings are planned. They are plain text because a link to a missing file is worse than none.
-
-```text
-04_safety-stock.md                     (planned)
-05_service-metrics.md                 (planned)
-06_policy-families.md                 (planned)
-07_lead-time-demand.md                (planned)
-08_multi-echelon.md                   (planned)
-09_pooling-postponement.md            (planned)
-10_segmentation-shelf-life.md         (planned)
-```
-
-When 04 is written, read it next: safety stock is the repeated-setting version of this fractile,
-with lead-time demand in place of season demand.
+- [04. Safety Stock under Demand and Lead-Time Uncertainty](04_safety-stock.md) — the repeated-setting
+  version of this fractile, with lead-time demand in place of season demand. Read it next.
+- [05. Service Metrics: CSL, Fill Rate, OTIF](05_service-metrics.md) — the measures this quantity sets.
+- [06. Policy Families](06_policy-families.md) — the rules that reproduce the fractile continuously.
+- [07. Lead-Time Demand Distributions](07_lead-time-demand.md) — the distribution the fractile needs.
+- [08. Multi-Echelon Inventory, MEIO, and DRP](08_multi-echelon.md) — the fractile applied across a
+  network.
+- [09. Pooling and Postponement](09_pooling-postponement.md) — pooling as a change to the demand
+  distribution this fractile is computed on.
+- [10. Segmentation, DDMRP, and Shelf Life](10_segmentation-shelf-life.md) — the single-period case
+  with expiry, where salvage enters the critical ratio.
