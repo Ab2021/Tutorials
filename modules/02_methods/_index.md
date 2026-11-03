@@ -83,14 +83,15 @@ Parallel depth after 10:
 
 | Status | Count |
 |---|---:|
-| planned | 15 |
+| planned | 13 |
 | draft | 0 |
-| complete | 1 |
+| complete | 3 |
 
 The sixteen survey files in `../../course/` are complete at survey depth. Module 07 is written at
-topic depth (ten files, 12,942 lines). Module 08 is in production. Module 06 is deferred at the
-user's request and will not be written in this edition; the other fourteen modules are indexed
-but not yet written.
+topic depth (ten files, 12,942 lines), Module 08 at topic depth (ten files, 12,992 lines), and
+Module 09 at topic depth (ten files, 12,982 lines). Module 10 is next. Module 06 is deferred at the
+user's request and will not be written in this edition; the other twelve modules are indexed but
+not yet written.
 
 ## 6. Sources
 

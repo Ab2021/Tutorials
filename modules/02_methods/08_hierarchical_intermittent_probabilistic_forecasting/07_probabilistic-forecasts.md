@@ -1279,10 +1279,9 @@ internally consistent. Where the search material did not confirm a venue, the en
 ## 17. Links
 
 - Module map: [`_index.md`](_index.md)
-- Previous topic (planned, not yet on disk): `06_compound-poisson-hurdle.md`
-- Next topic (planned, not yet on disk): `08_conformal-prediction.md`
-- Later in this module (planned, not yet on disk): `09_scoring-rules.md`
-- Later in this module (planned, not yet on disk): `10_quantiles-decisions.md`
+- Previous topic: [`06_compound-poisson-hurdle.md`](06_compound-poisson-hurdle.md)
+- Next topic: [`08_conformal-prediction.md`](08_conformal-prediction.md)
+- Later in this module: [`09_scoring-rules.md`](09_scoring-rules.md), [`10_quantiles-decisions.md`](10_quantiles-decisions.md)
 - Hierarchy structures this topic assumes: [`01_hierarchy-structures.md`](01_hierarchy-structures.md)
 - Reconciliation mechanics: [`02_aggregation-consistency.md`](02_aggregation-consistency.md)
 - Intermittent demand and method families: [`05_intermittent-classification.md`](05_intermittent-classification.md)

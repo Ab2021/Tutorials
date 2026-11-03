@@ -40,7 +40,7 @@ not the whole program.
 | 7 | [`07_probabilistic-forecasts.md`](07_probabilistic-forecasts.md) | Probabilistic Forecasts: What a Distribution Is For | Quantiles, intervals, and the decisions they enable. | 1,200–1,800 | complete |
 | 8 | [`08_conformal-prediction.md`](08_conformal-prediction.md) | Conformal Prediction for Time Series | Distribution-free coverage under dependence and its limits. | 1,200–1,800 | complete |
 | 9 | [`09_scoring-rules.md`](09_scoring-rules.md) | Scoring Probabilistic Forecasts | CRPS, pinball loss, log score, and calibration diagnostics. | 1,200–1,800 | complete |
-| 10 | [`10_quantiles-decisions.md`](10_quantiles-decisions.md) | Decision Use of Quantiles | Choosing a quantile from service level, cost, and risk appetite. | 1,200–1,800 | planned |
+| 10 | [`10_quantiles-decisions.md`](10_quantiles-decisions.md) | Decision Use of Quantiles | Choosing a quantile from service level, cost, and risk appetite. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,13 +71,15 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
-Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
-as each file is produced at its target length. The survey file linked above is complete at survey
-depth and can be used on its own.
+All ten topic files are written and meet the quality bar in `MODULE_EXPANSION_SPEC.md` §5: at
+least 1,000 lines, all 17 sections present, arithmetic checked, sources real and graded. The
+module total is 12,992 lines. Every relative link in the module resolves. Module 06 is deferred
+and is not linked from any file in this module. Status moves from `complete` to `reviewed` when a
+second reader signs off, and to `revised` after corrections.
 
 ## 7. Sources for this module
 

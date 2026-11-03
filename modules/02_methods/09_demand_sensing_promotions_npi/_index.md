@@ -31,16 +31,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_demand-sensing-signals.md`](01_demand-sensing-signals.md) | Demand Sensing versus Forecasting | Which signals have lead time, which are lagging, and which are noise. | 1,200–1,800 | planned |
-| 2 | [`02_sales-decomposition.md`](02_sales-decomposition.md) | Sales Decomposition | Baseline, seasonality, promotion, distribution, and price separated explicitly. | 1,200–1,800 | planned |
-| 3 | [`03_promotion-mechanics.md`](03_promotion-mechanics.md) | Promotion Mechanics and Calendar Data | Feature, display, TPR, coupon, and the data each generates. | 1,200–1,800 | planned |
-| 4 | [`04_baseline-incrementality.md`](04_baseline-incrementality.md) | Baseline and Incrementality | Counterfactual baselines and why promoted sales are not lift. | 1,200–1,800 | planned |
-| 5 | [`05_cannibalization-halo.md`](05_cannibalization-halo.md) | Cannibalization, Halo, and Pull-Forward | The three adjustments that turn lift into profit. | 1,200–1,800 | planned |
-| 6 | [`06_price-display-effects.md`](06_price-display-effects.md) | Price and Display Effects | Elasticity, threshold effects, and visual attention as confounders. | 1,200–1,800 | planned |
-| 7 | [`07_causal-ml-uplift.md`](07_causal-ml-uplift.md) | Causal Machine Learning and Uplift | Heterogeneous treatment effects and who responds to a promotion. | 1,200–1,800 | planned |
-| 8 | [`08_npi-forecasting.md`](08_npi-forecasting.md) | New Product Forecasting | Analogy, attribute, diffusion, and distribution-led methods before launch. | 1,200–1,800 | planned |
-| 9 | [`09_distribution-assortment.md`](09_distribution-assortment.md) | Assortment and Distribution Effects | Availability and facings as drivers that dominate early demand. | 1,200–1,800 | planned |
-| 10 | [`10_post-launch-learning.md`](10_post-launch-learning.md) | Post-Launch Learning and ROI | Updating the forecast with early sales and settling the ROI question. | 1,200–1,800 | planned |
+| 1 | [`01_demand-sensing-signals.md`](01_demand-sensing-signals.md) | Demand Sensing versus Forecasting | Which signals have lead time, which are lagging, and which are noise. | 1,200–1,800 | complete |
+| 2 | [`02_sales-decomposition.md`](02_sales-decomposition.md) | Sales Decomposition | Baseline, seasonality, promotion, distribution, and price separated explicitly. | 1,200–1,800 | complete |
+| 3 | [`03_promotion-mechanics.md`](03_promotion-mechanics.md) | Promotion Mechanics and Calendar Data | Feature, display, TPR, coupon, and the data each generates. | 1,200–1,800 | complete |
+| 4 | [`04_baseline-incrementality.md`](04_baseline-incrementality.md) | Baseline and Incrementality | Counterfactual baselines and why promoted sales are not lift. | 1,200–1,800 | complete |
+| 5 | [`05_cannibalization-halo.md`](05_cannibalization-halo.md) | Cannibalization, Halo, and Pull-Forward | The three adjustments that turn lift into profit. | 1,200–1,800 | complete |
+| 6 | [`06_price-display-effects.md`](06_price-display-effects.md) | Price and Display Effects | Elasticity, threshold effects, and visual attention as confounders. | 1,200–1,800 | complete |
+| 7 | [`07_causal-ml-uplift.md`](07_causal-ml-uplift.md) | Causal Machine Learning and Uplift | Heterogeneous treatment effects and who responds to a promotion. | 1,200–1,800 | complete |
+| 8 | [`08_npi-forecasting.md`](08_npi-forecasting.md) | New Product Forecasting | Analogy, attribute, diffusion, and distribution-led methods before launch. | 1,200–1,800 | complete |
+| 9 | [`09_distribution-assortment.md`](09_distribution-assortment.md) | Assortment and Distribution Effects | Availability and facings as drivers that dominate early demand. | 1,200–1,800 | complete |
+| 10 | [`10_post-launch-learning.md`](10_post-launch-learning.md) | Post-Launch Learning and ROI | Updating the forecast with early sales and settling the ROI question. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,13 +71,15 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
-Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
-as each file is produced at its target length. The survey file linked above is complete at survey
-depth and can be used on its own.
+All ten topic files are written and meet the quality bar in `MODULE_EXPANSION_SPEC.md` §5: at
+least 1,000 lines, all 17 sections present, arithmetic checked, sources real and graded. The
+module total is 12,982 lines. Every relative link in the module resolves. Module 06 is deferred
+and is not linked from any file in this module. Status moves from `complete` to `reviewed` when a
+second reader signs off, and to `revised` after corrections.
 
 ## 7. Sources for this module
 

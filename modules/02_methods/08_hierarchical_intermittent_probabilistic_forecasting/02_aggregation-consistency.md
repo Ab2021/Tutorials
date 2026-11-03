@@ -1282,8 +1282,8 @@ Within this module:
 
 - Module map and topic status: [`_index.md`](_index.md)
 - Previous topic, hierarchy structures: [`01_hierarchy-structures.md`](01_hierarchy-structures.md)
-- Next topic, minimum-trace reconciliation: `03_minimum-trace-reconciliation.md` (planned)
-- Later topics in this module: `04_intermittent-demand.md` (planned), `05_probabilistic-forecasting.md` (planned)
+- Next topic, minimum-trace reconciliation: [`03_mint-reconciliation.md`](03_mint-reconciliation.md)
+- Later topics in this module: [`04_temporal-cross-temporal.md`](04_temporal-cross-temporal.md), [`05_intermittent-classification.md`](05_intermittent-classification.md), [`06_compound-poisson-hurdle.md`](06_compound-poisson-hurdle.md), [`07_probabilistic-forecasts.md`](07_probabilistic-forecasts.md), [`08_conformal-prediction.md`](08_conformal-prediction.md), [`09_scoring-rules.md`](09_scoring-rules.md), [`10_quantiles-decisions.md`](10_quantiles-decisions.md)
 
 Within the part:
 

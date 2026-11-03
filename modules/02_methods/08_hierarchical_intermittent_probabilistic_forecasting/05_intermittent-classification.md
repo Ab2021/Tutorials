@@ -1279,10 +1279,10 @@ relying on the constants in a regulated context.
 
 - This module's index: [`_index.md`](_index.md)
 - Previous topic in this module: [`04_temporal-cross-temporal.md`](04_temporal-cross-temporal.md)
-- Next topic in this module: `06_compound-poisson-hurdle.md` (planned, not yet written)
+- Next topic in this module: [`06_compound-poisson-hurdle.md`](06_compound-poisson-hurdle.md)
 - Hierarchy structures, which set the levels this topic classifies at: [`01_hierarchy-structures.md`](01_hierarchy-structures.md)
 - Aggregation consistency, which governs what reconciliation may change: [`02_aggregation-consistency.md`](02_aggregation-consistency.md)
-- Probabilistic forecasts, which consume the distribution this routing assumes: `07_probabilistic-forecasts.md` (planned, not yet written)
+- Probabilistic forecasts, which consume the distribution this routing assumes: [`07_probabilistic-forecasts.md`](07_probabilistic-forecasts.md)
 - The method mechanics this topic routes to: [`../07_time_series_forecasting/06_intermittent-demand.md`](../07_time_series_forecasting/06_intermittent-demand.md)
 - The metrics this topic assumes: [`../../01_foundations/01A_foundations_units_time_assumptions/10_intermittent-metrics.md`](../../01_foundations/01A_foundations_units_time_assumptions/10_intermittent-metrics.md)
 - Lead-time demand distributions, the bridge to inventory policy: [`../../01_foundations/01A_foundations_units_time_assumptions/11_demand-lead-time-distributions.md`](../../01_foundations/01A_foundations_units_time_assumptions/11_demand-lead-time-distributions.md)

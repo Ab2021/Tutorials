@@ -1,4 +1,4 @@
-# Temporal and Cross-Temporal Hierarchies
+﻿# Temporal and Cross-Temporal Hierarchies
 
 > Module 08 — Hierarchical, Intermittent, and Probabilistic Forecasting
 > Topic 04 of 10
@@ -1035,8 +1035,8 @@ Within this module:
 - Module map and topic status: [`_index.md`](_index.md)
 - Prerequisite, hierarchy structures: [`01_hierarchy-structures.md`](01_hierarchy-structures.md)
 - Prerequisite, aggregation consistency and the four classical methods: [`02_aggregation-consistency.md`](02_aggregation-consistency.md)
-- Next topic, minimum-trace reconciliation in detail: `03_mint-reconciliation.md` (planned)
-- Later topic, intermittent demand classification and methods: `05_intermittent-classification.md` (planned)
+- Next topic, minimum-trace reconciliation in detail: [`03_mint-reconciliation.md`](03_mint-reconciliation.md)
+- Later topic, intermittent demand classification and methods: [`05_intermittent-classification.md`](05_intermittent-classification.md)
 
 Within the part:
 

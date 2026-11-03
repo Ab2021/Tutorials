@@ -1,4 +1,4 @@
-# Hierarchy Structures — product, location, customer, and temporal aggregation and the paths between them
+﻿# Hierarchy Structures — product, location, customer, and temporal aggregation and the paths between them
 
 > Module 08 — Hierarchical, Intermittent, and Probabilistic Forecasting
 > Topic 01 of 10
@@ -1293,7 +1293,7 @@ section 10 are inferences from the algebra, not prevalence estimates.
   [`../../../course/07_time_series_forecasting.md`](../../../course/07_time_series_forecasting.md)
 - Next topic, aggregation consistency and the classical reconciliation methods:
   [`02_aggregation-consistency.md`](02_aggregation-consistency.md)
-- Minimum-trace reconciliation in detail: `03_mint-reconciliation.md` (planned)
-- Temporal and cross-temporal structures: `04_temporal-cross-temporal.md` (planned)
-- Intermittent demand, where the bottom level usually lives: `05_intermittent-classification.md` (planned)
-- Probabilistic forecasts and their decision use: `07_probabilistic-forecasts.md` (planned)
+- Minimum-trace reconciliation in detail: [`03_mint-reconciliation.md`](03_mint-reconciliation.md)
+- Temporal and cross-temporal structures: [`04_temporal-cross-temporal.md`](04_temporal-cross-temporal.md)
+- Intermittent demand, where the bottom level usually lives: [`05_intermittent-classification.md`](05_intermittent-classification.md)
+- Probabilistic forecasts and their decision use: [`07_probabilistic-forecasts.md`](07_probabilistic-forecasts.md)

@@ -1,4 +1,4 @@
-# Compound Poisson and Hurdle Models — separating occurrence from size in slow-moving demand
+﻿# Compound Poisson and Hurdle Models — separating occurrence from size in slow-moving demand
 
 > Module 08 — Hierarchical, Intermittent, and Probabilistic Forecasting
 > Topic 06 of 10
@@ -1272,9 +1272,9 @@ before being quoted in a policy document. None of them affects the qualitative a
 - Related: [`02_aggregation-consistency.md`](02_aggregation-consistency.md) — aggregation and disaggregation, and why the closure property matters.
 - Related: [`03_mint-reconciliation.md`](03_mint-reconciliation.md) — reconciling forecasts across a hierarchy.
 - Related: [`04_temporal-cross-temporal.md`](04_temporal-cross-temporal.md) — the bucket changes that alter `λ` and the classification together.
-- Next topic, not yet on disk: `07_probabilistic-forecasts.md` (planned) — what a predictive distribution is for, and how to read one.
-- Later in this module, not yet on disk: `09_scoring-rules.md` (planned) — CRPS and the proper scoring rules used in step 18.
-- Later in this module, not yet on disk: `10_quantiles-decisions.md` (planned) — choosing the quantile from the critical ratio.
+- Next topic, not yet on disk: [`07_probabilistic-forecasts.md`](07_probabilistic-forecasts.md) — what a predictive distribution is for, and how to read one.
+- Later in this module, not yet on disk: [`09_scoring-rules.md`](09_scoring-rules.md) — CRPS and the proper scoring rules used in step 18.
+- Later in this module, not yet on disk: [`10_quantiles-decisions.md`](10_quantiles-decisions.md) — choosing the quantile from the critical ratio.
 - Method prerequisite: [`../07_time_series_forecasting/06_intermittent-demand.md`](../07_time_series_forecasting/06_intermittent-demand.md) — Croston, SBA and TSB, and why they return a rate.
 - Measurement prerequisite: [`../../01_foundations/01A_foundations_units_time_assumptions/10_intermittent-metrics.md`](../../01_foundations/01A_foundations_units_time_assumptions/10_intermittent-metrics.md) — ADI, CV², and the failure of percentage errors.
 - Distribution prerequisite: [`../../01_foundations/01A_foundations_units_time_assumptions/11_demand-lead-time-distributions.md`](../../01_foundations/01A_foundations_units_time_assumptions/11_demand-lead-time-distributions.md) — lead-time demand and the critical ratio.

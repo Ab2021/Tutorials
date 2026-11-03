@@ -1,4 +1,4 @@
-# MinT in Detail — covariance shrinkage, constraints, and a reference implementation
+﻿# MinT in Detail — covariance shrinkage, constraints, and a reference implementation
 
 > Module 08 — Hierarchical, Intermittent, and Probabilistic Forecasting
 > Topic 03 of 10
@@ -1280,7 +1280,7 @@ Within this module:
 - Module map and topic status: [`_index.md`](_index.md)
 - Previous topic, aggregation consistency and the four classical methods: [`02_aggregation-consistency.md`](02_aggregation-consistency.md)
 - Foundations of the hierarchy itself: [`01_hierarchy-structures.md`](01_hierarchy-structures.md)
-- Next topic, temporal and cross-temporal hierarchies: `04_temporal-cross-temporal.md` (planned)
+- Next topic, temporal and cross-temporal hierarchies: [`04_temporal-cross-temporal.md`](04_temporal-cross-temporal.md)
 
 Within the part:
 

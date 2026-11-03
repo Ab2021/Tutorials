@@ -1,4 +1,4 @@
-# Scoring Probabilistic Forecasts — CRPS, Pinball Loss, Log Score, and Calibration Diagnostics
+﻿# Scoring Probabilistic Forecasts — CRPS, Pinball Loss, Log Score, and Calibration Diagnostics
 
 > Module 08 — Hierarchical, Intermittent, and Probabilistic Forecasting
 > Topic 09 of 10
@@ -1283,7 +1283,7 @@ drawn from a published case.
 - Module map: [`_index.md`](_index.md)
 - Previous topic, distributions and their purpose: [`07_probabilistic-forecasts.md`](07_probabilistic-forecasts.md)
 - Topic 08, conformal prediction and its coverage guarantees: [`08_conformal-prediction.md`](08_conformal-prediction.md)
-- Next topic, decision use of quantiles, is planned and not yet written: `10_quantiles-decisions.md` (planned)
+- Next topic, decision use of quantiles: [`10_quantiles-decisions.md`](10_quantiles-decisions.md)
 - Intermittent demand and the compound Poisson route to a distribution: [`06_compound-poisson-hurdle.md`](06_compound-poisson-hurdle.md)
 - Classification of intermittent series: [`05_intermittent-classification.md`](05_intermittent-classification.md)
 - Reconciliation and aggregation: [`02_aggregation-consistency.md`](02_aggregation-consistency.md) and [`03_mint-reconciliation.md`](03_mint-reconciliation.md)

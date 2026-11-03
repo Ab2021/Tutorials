@@ -2,6 +2,125 @@
 
 All substantive changes to the curriculum are recorded here.
 
+## 2026.14.0 — 3 November 2026
+
+### Added — Module 09 written in full
+- Module 09 (`02_methods/09_demand_sensing_promotions_npi/`) is now written in full: ten topic
+  files, 12,982 lines, each with all 17 required sections and every relative link resolving.
+- `01_demand-sensing-signals.md` — the signal-and-lead-time layer above forecasting: which signals
+  arrive before the decision gate, which are lagging, and how upstream order data is distorted.
+- `02_sales-decomposition.md` — baseline, seasonality, promotion, distribution and price defined
+  before estimation, the identification problem, and an auditable component table.
+- `03_promotion-mechanics.md` — feature, display, temporary price reduction, coupon and trade
+  deal, the data each generates, and the funded-versus-shelf-price gap.
+- `04_baseline-incrementality.md` — the counterfactual ladder from naive before-after through
+  control-store difference-in-differences to randomised holdout, and the assumption each buys.
+- `05_cannibalization-halo.md` — pull-forward, cannibalization and halo as the three adjustments
+  that turn gross lift into incremental margin.
+- `06_price-display-effects.md` — reference price, threshold and saturation, and the confounding
+  structure that makes observational elasticities unreliable.
+- `07_causal-ml-uplift.md` — conditional average treatment effects, the meta-learner family, honest
+  splitting, and the Qini evaluation problem.
+- `08_npi-forecasting.md` — analogy, attribute, diffusion and distribution-led methods for a
+  product with no sales history, and why no diffusion parameter can be estimated from a launch.
+- `09_distribution-assortment.md` — numeric and weighted distribution, on-shelf availability,
+  censored demand, and the sales decomposition into distribution and rate.
+- `10_post-launch-learning.md` — revising a forecast with early observations, promotion and launch
+  ROI against adjusted rather than gross lift, and portfolio learning.
+
+### Changed
+- Module 09 status table reports 10 `complete` and the module total.
+- `modules/02_methods/_index.md` reports three modules complete in Part II; `VALIDATION_STATUS.md`
+  now records 92 of 476 topic units and 119,490 lines.
+- The module-close link sweep converted 18 stale `(planned)` markers across six files to live
+  links. Two of them were plain-text file lists inside `text` fences, where a markdown link cannot
+  render; those were rewritten as bulleted link lists so the siblings became reachable.
+
+### Notes
+- **Module 06 remains deferred at the user's request.** A verification pass confirmed that no
+  Module 09 file contains a link to, or description of, Module 06's contents. Because uplift
+  modelling would normally draw its vocabulary from that module, the topic 07 brief required the
+  necessary learning concepts to be stated in the file itself.
+- Two writers reported exceeding the 5–8 search budget this module, at nine searches each. No
+  fabricated citation entered either file, and both disclosed the overrun in their hand-backs.
+- The topic 06 writer declined to confirm the widely quoted "average grocery own-price elasticity
+  near −2.6" from any source it reached, confined it to a note as an order of magnitude, and
+  asserted only the dispersion finding. It named its regulatory instruments but stated that
+  consolidated texts were not retrieved.
+- The topic 04 writer kept the "72 per cent of trade promotions do not break even" figure only as a
+  grade-D prior about a base rate, never as a calculation input, because its provenance could not
+  be traced to retrievable originals.
+- The topic 05 writer deleted four candidate citations whose records the searches did not
+  confirm, and omitted DOIs wherever none was returned rather than construct plausible ones.
+- The topic 08 writer cited intention-to-trial conversion studies for the direction of bias only,
+  because the adjustment coefficients were not returned, and states in three places that no
+  diffusion parameter is estimated from the launch item's own data.
+- The topic 09 writer separated a cross-sectional convexity result from a within-brand temporal
+  elasticity, so the file does not claim distribution responds uniformly, and graded the
+  industry-funded out-of-stock studies C with an explanation of the grading.
+- The topic 10 writer deleted its practice-versus-evidence table when its one quantitative
+  assertion, that ROI on full-margin lift overstates by "a factor of two to four", could not be
+  sourced. The table went rather than the claim being repeated unqualified.
+
+## 2026.13.0 — 3 November 2026
+
+### Added — Module 08 written in full
+- Module 08 (`02_methods/08_hierarchical_intermittent_probabilistic_forecasting/`) is now written
+  in full: ten topic files, 12,992 lines, each with all 17 required sections and every relative
+  link resolving.
+- `01_hierarchy-structures.md` — product, location, customer and temporal aggregation, the
+  summing matrix, and the paths between levels.
+- `02_aggregation-consistency.md` — bottom-up, top-down, middle-out, and optimal reconciliation,
+  with the error consequences of each.
+- `03_mint-reconciliation.md` — MinT in detail: the generalised least-squares form, covariance
+  estimators, shrinkage, and constrained reconciliation.
+- `04_temporal-cross-temporal.md` — reconciliation across time buckets as well as entities, and
+  where the published gains concentrate.
+- `05_intermittent-classification.md` — the Syntetos–Boylan grid, routing series to method
+  families, misclassification cost, and why static classification fails over a product lifecycle.
+- `06_compound-poisson-hurdle.md` — occurrence and size as separate processes, lead-time
+  convolution, and why a point estimator cannot answer a fill-rate question.
+- `07_probabilistic-forecasts.md` — the predictive distribution as a commitment, the functional
+  each downstream decision reads, and calibration as a tested property.
+- `08_conformal-prediction.md` — split and adaptive conformal methods, the exchangeability seam,
+  and the documented failure of naive conformal intervals on dependent demand.
+- `09_scoring-rules.md` — propriety, pinball loss, CRPS, log score, energy and variogram scores,
+  and calibration diagnostics as distinct from scores.
+- `10_quantiles-decisions.md` — cycle service level, fill rate, ready rate, the critical fractile,
+  risk appetite, and the governance of a service target.
+
+### Changed
+- Module 08 status table reports 10 `complete` and the module total.
+- `modules/02_methods/_index.md` reports two modules complete in Part II; `VALIDATION_STATUS.md`
+  now records 82 of 476 topic units and 106,508 lines.
+- The module-close link sweep found that `02_aggregation-consistency.md` named three sibling
+  topics by file names that do not exist (`03_minimum-trace-reconciliation.md`,
+  `04_intermittent-demand.md`, `05_probabilistic-forecasting.md`). All three were corrected to the
+  real file names and converted to live links.
+
+### Notes
+- **Module 06 remains deferred at the user's request.** A verification pass confirmed that no
+  Module 08 file contains a link to, or description of, Module 06's contents.
+- Two writers narrowed claims rather than assert them. The topic 05 writer declined to state the
+  exact diagonal-approximation inequality from the Syntetos–Boylan–Croston exchange because the
+  sign and constants could not be verified from reachable material, describing it only
+  qualitatively. The topic 06 writer dropped the claim that hurdle models systematically mis-fit
+  intermittent demand, because at the fitted bucket the hurdle and compound Poisson forms are
+  observationally equivalent; it states the equivalence and confines the divergence to
+  extrapolation, identification and fractional horizons.
+- The topic 07 writer removed the GefCom 2014 "99 quantile levels" and M4 "100,000 series" details
+  because the session's searches did not return them, rather than repeating widely circulated
+  figures from memory.
+- The topic 08 writer stated that a production-scheduling demand forecast is not a high-risk AI
+  system under Regulation (EU) 2024/1689 and that "SR 11-7 compliant" has no meaning outside
+  banking, claiming only that the documentation discipline transfers.
+- The topic 09 writer disclosed that it ran nine searches against a budget of eight. No fabricated
+  citation entered the file.
+- The topic 04 writer inverted an instruction in its own brief: the brief said temporal
+  reconciliation helps the shortest horizon, whereas the literature reports gains largest at the
+  coarsest level, with the UK A&E case the documented short-horizon exception. The file follows the
+  literature. The brief was wrong.
+
 ## 2026.12.0 — 3 November 2026
 
 ### Added — Module 07 written in full

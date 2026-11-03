@@ -1,4 +1,4 @@
-# Conformal Prediction for Time Series
+﻿# Conformal Prediction for Time Series
 
 > Module 08 — Hierarchical, Intermittent, and Probabilistic Forecasting
 > Topic 08 of 10
@@ -1286,8 +1286,8 @@ quantile fits and the crossing problem. Weak: picks one without stating the data
 
 - Module map and topic sequence: [`_index.md`](_index.md)
 - Previous topic, on the distributions and calibration this builds on: [`07_probabilistic-forecasts.md`](07_probabilistic-forecasts.md)
-- Next topic, on scoring the intervals this produces: `09_scoring-rules.md` (planned)
-- Later, on choosing the quantile from the decision: `10_quantiles-decisions.md` (planned)
+- Next topic, on scoring the intervals this produces: [`09_scoring-rules.md`](09_scoring-rules.md)
+- Later, on choosing the quantile from the decision: [`10_quantiles-decisions.md`](10_quantiles-decisions.md)
 - Intermittent-demand methods that make the score awkward: [`05_intermittent-classification.md`](05_intermittent-classification.md) and [`06_compound-poisson-hurdle.md`](06_compound-poisson-hurdle.md)
 - The evaluation design this topic depends on: [`../07_time_series_forecasting/08_rolling-origin-backtesting.md`](../07_time_series_forecasting/08_rolling-origin-backtesting.md)
 - The metrics that score an interval rather than a point: [`../07_time_series_forecasting/09_error-metrics-cost.md`](../07_time_series_forecasting/09_error-metrics-cost.md)
