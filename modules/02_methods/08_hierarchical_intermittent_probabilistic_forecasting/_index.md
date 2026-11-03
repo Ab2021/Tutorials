@@ -32,10 +32,10 @@ not the whole program.
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
 | 1 | [`01_hierarchy-structures.md`](01_hierarchy-structures.md) | Hierarchy Structures | Product, location, customer, and temporal aggregation and the paths between them. | 1,200–1,800 | complete |
-| 2 | [`02_aggregation-consistency.md`](02_aggregation-consistency.md) | Aggregation Consistency and the Four Classical Methods | Bottom-up, top-down, middle-out, and optimal reconciliation. | 1,200–1,800 | planned |
-| 3 | [`03_mint-reconciliation.md`](03_mint-reconciliation.md) | MinT in Detail | Covariance shrinkage, constraints, and a reference implementation. | 1,200–1,800 | planned |
-| 4 | [`04_temporal-cross-temporal.md`](04_temporal-cross-temporal.md) | Temporal and Cross-Temporal Hierarchies | Reconciling across time buckets as well as entities. | 1,200–1,800 | planned |
-| 5 | [`05_intermittent-classification.md`](05_intermittent-classification.md) | Intermittent Demand: Classification and Methods | Syntetos-Boylan classification and the methods that fit each class. | 1,200–1,800 | planned |
+| 2 | [`02_aggregation-consistency.md`](02_aggregation-consistency.md) | Aggregation Consistency and the Four Classical Methods | Bottom-up, top-down, middle-out, and optimal reconciliation. | 1,200–1,800 | complete |
+| 3 | [`03_mint-reconciliation.md`](03_mint-reconciliation.md) | MinT in Detail | Covariance shrinkage, constraints, and a reference implementation. | 1,200–1,800 | complete |
+| 4 | [`04_temporal-cross-temporal.md`](04_temporal-cross-temporal.md) | Temporal and Cross-Temporal Hierarchies | Reconciling across time buckets as well as entities. | 1,200–1,800 | complete |
+| 5 | [`05_intermittent-classification.md`](05_intermittent-classification.md) | Intermittent Demand: Classification and Methods | Syntetos-Boylan classification and the methods that fit each class. | 1,200–1,800 | complete |
 | 6 | [`06_compound-poisson-hurdle.md`](06_compound-poisson-hurdle.md) | Compound Poisson and Hurdle Models | Separating occurrence from size in slow-moving demand. | 1,200–1,800 | planned |
 | 7 | [`07_probabilistic-forecasts.md`](07_probabilistic-forecasts.md) | Probabilistic Forecasts: What a Distribution Is For | Quantiles, intervals, and the decisions they enable. | 1,200–1,800 | planned |
 | 8 | [`08_conformal-prediction.md`](08_conformal-prediction.md) | Conformal Prediction for Time Series | Distribution-free coverage under dependence and its limits. | 1,200–1,800 | planned |

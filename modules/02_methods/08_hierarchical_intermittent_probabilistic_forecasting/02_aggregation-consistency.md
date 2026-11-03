@@ -174,7 +174,7 @@ bias. Only a rank-`n_b` map can represent an arbitrary coherent forecast.
 ### 3.4 Orientation table
 
 Module 07 topic 05 presented the four methods as four answers to "where is the information?". That
-presentation is assumed, not repeated. This table exists so the rest of the file has a reference.
+presentation is assumed, not repeated; this table is the reference for the rest of the file.
 
 | Method | Forecast at | Derive the rest by | Rank | Encodes the belief that |
 |---|---|---|---|---|
@@ -243,6 +243,7 @@ The optimality claim describes an oracle, not a procedure.
 resemble the past; the other says it will resemble what the level-specific models expect. Neither is
 a statement about the world. Both are statements about which information the method may use, and the
 choice only matters when the two disagree.
+
 ## 5. The mechanics, step by step
 
 Four phases. Phase A states the requirement. Phase B decides what to trust. Phase C applies each
@@ -310,7 +311,7 @@ share above 0.50, no method that trusts the leaves as its primary source will be
 
 **Step 7. Name the candidates honestly, including those your tooling does not offer.** Four, plus the
 option of not reconciling. Most organisations compare two and conclude; the comparison costs one
-backtest and is the difference between a defensible choice and a default.
+backtest.
 
 **Step 8. Write down the projection each candidate implies.** This step is the one most likely to be
 skipped and most likely to change the conclusion.
@@ -419,10 +420,8 @@ origin dates, horizon, evaluation buckets, and the base forecasts. The last is t
 violated; comparing bottom-up built on exponential smoothing with a reconciliation built on ARIMA
 measures the base models, not the reconciliation.
 
-**Step 16. Choose a metric and a level weighting, and state both.** This is where comparisons become
-incomparable. A metric at the leaf and a metric at the root answer different questions, and a score
-weighting levels equally is a third. M5 weighted its twelve levels equally, a defensible choice for a
-competition and not the weighting any single business would choose.
+**Step 16. Choose a metric and a level weighting, and state both.** A metric at the leaf and a metric
+at the root answer different questions, and a score weighting levels equally is a third.
 
 **Step 17. Compare each method against the base forecast, not only against each other.** "Which of
 the four is best" is less useful than "did reconciliation earn its keep". Report the error of the
@@ -472,8 +471,8 @@ and is outside this example.
 
 ### 6.2 Base forecasts at every level
 
-Five models ran independently, one per level, each with its own features and history. That is how a
-real organisation produces base forecasts, and it is why they do not add up.
+Five models ran independently, one per level, each with its own features and history — how a real
+organisation produces base forecasts, and why they do not add up.
 
 | Node | Level | Base forecast (eaches) | Sum of children | Gap |
 |---|---|---:|---:|---:|
@@ -631,10 +630,8 @@ comes back unchanged; a method that alters an already-coherent forecast is not a
 
 ## 8. Data, standards, and regulatory context
 
-Coherence is not only a statistical property. It is a property of identifiers, unit conversions, and
-calendars, and those are governed by standards. A forecast can be arithmetically coherent and still
-fail an audit because the arithmetic was done in the wrong units or across a calendar in which the
-parents do not contain their children.
+Coherence is also a property of identifiers, unit conversions, and calendars, each governed by a
+standard.
 
 ### 8.1 Three hierarchies, not one
 
@@ -784,10 +781,6 @@ top results came from ensembles, which is consistent with the literature's findi
 reconciliation choice is conditional: if no single projection is best everywhere, averaging
 projections is a sensible response.
 
-Do not read M5 as evidence that any particular method wins. Read it as evidence that the evaluation
-design determines the answer, and that twelve levels equally weighted is one defensible design among
-many.
-
 ### 9.3 What firms appear to do
 
 The public record on corporate practice is mostly inference, and should be labelled as such.
@@ -806,9 +799,8 @@ is common, and it is simply not disclosed.
 
 ## 10. Failure modes and red flags
 
-Each row names a failure, the signal visible in a meeting or a dataset, the mechanism, the
-consequence, and the mitigation. The red flag column is the one to remember: most of these are
-detectable in ten minutes and are detected in almost none.
+Each row names a failure, a red flag visible in a meeting or dataset, the mechanism, the consequence,
+and the mitigation.
 
 | # | Failure mode | Red flag in a meeting or dataset | Mechanism | Consequence | Mitigation |
 |---:|---|---|---|---|---|
@@ -842,12 +834,12 @@ detectable in ten minutes and are detected in almost none.
 | 8 | Coherence is worth its cost | Justifies the whole exercise | The reconciled number is coherent and wrong at the decision level | Backtest reconciled against base at the decision level; if it loses, coherence is not paying |
 | 9 | Level weighting reflects decision value | Makes a single score meaningful | Equal weighting is used as a convenience | Ask which level each decision consumes, and how many decisions per level |
 | 10 | The bucket calendar is consistent | Weeks nest into months | ISO weeks versus Gregorian months | Sum the weeks in a month; if they do not equal the month, a bridge is required |
+
 ## 12. Exercises
 
 Nine exercises. Exercises 1–6 are calculation and application, 7–8 are critique, and 9 is design.
-Each states a deliverable, acceptance criteria, and an estimated time. Work them in order; exercise
-4 depends on the share definitions from exercise 2, and exercise 6 depends on the renormalisation
-argument in section 6.6.
+Each states a deliverable, acceptance criteria, and an estimated time. Exercise 4 depends on the
+share definitions from exercise 2, and exercise 6 on the renormalisation argument in section 6.6.
 
 ### Exercise 1 — Build `S` and `C`
 
@@ -985,8 +977,8 @@ the four-week evidence plan names a specific diagnostic per level.
 
 ## 13. Self-check answers
 
-Answers to exercises 1–8 with the reasoning; a rubric for 9. Check your arithmetic against these
-before reading the reasoning, because the reasoning is easier to follow once the numbers are known.
+Answers to exercises 1–8 with the reasoning; a rubric for 9. Check your arithmetic before reading the
+reasoning, which is easier to follow once the numbers are known.
 
 ### Answer 1
 
@@ -1118,8 +1110,8 @@ method on accuracy grounds alone and never mention the coherence requirement at 
 
 ## 14. Interview questions
 
-Ten questions, each with the content a strong answer contains and what a weak answer reveals. Ask
-them in this order; the later ones assume the earlier ones are answered.
+Ten questions, each with what a strong answer contains and what a weak answer reveals. They are
+ordered; the later ones assume the earlier ones are answered.
 
 ### Q1. What does it mean for a set of forecasts to be coherent?
 
@@ -1220,28 +1212,18 @@ One line each, cross-referenced to the section where the term is developed.
   cannot, with rank deficiency `n - n_b` (section 5, step 14).
 - **Forecast proportions** — shares computed from base forecasts, normalised within each parent and
   multiplied down (section 6.6).
-- **Forecast value added (FVA)** — error reduction relative to a stated benchmark; meaningless without
-  the benchmark (section 5, step 17).
 - **Generalised least squares (GLS)** — `(S' W^-1 S)^-1 S' W^-1`; optimal when `W` is the true error
   covariance (section 5, step 14).
 - **Historical proportions** — shares computed from past demand, in average-of-proportions or
   proportion-of-averages form (section 6.3).
-- **Idempotence** — `(S P)(S P) = S P`; the property that makes the map a projection, and not a
-  synonym for unbiasedness (section 3.2).
-- **Level weighting** — the weight each level receives in a single score spanning the hierarchy; a
-  choice, never a neutral default (section 5, step 16).
 - **Middle-out** — reconciling from a named intermediate level upward and downward; the level is the
   method (section 6.7).
 - **Minimum trace (MinT)** — the family of estimators minimising the trace of the reconciled error
   covariance, with variants for estimating `W` (section 5, step 14).
-- **Oblique projection** — a weighted projection, moving along a direction that is not perpendicular
-  to the subspace (section 3.1).
 - **Optimal reconciliation** — the weighted least-squares projection onto the coherent subspace using
   an estimated error covariance (section 5, step 14).
 - **Ordinary least squares (OLS)** — GLS with `W = I`; the perpendicular projection, and a strong
   baseline (section 5, step 14).
-- **Proration** — scaling every member by one factor to close a gap; not reconciliation (section 10,
-  row 2).
 - **Reconciliation register** — the document naming method, weights, owner, evidence, and override
   rule per planning stream (section 5, step 19).
 - **Residual of reconciliation** — `(I - S P) y_hat`, the part of the base forecast the map discards
@@ -1292,7 +1274,7 @@ they could not be checked against the source.
 | Conference and practitioner accounts of planning transformations | The inference in section 9.3 about who owns which level; treated as inference, not fact | C |
 
 No Grade E material is relied on. Named company cases of reconciliation failure are absent from the
-public record, and section 9.3 labels the corresponding claims as inference rather than evidence.
+public record, and section 9.3 labels the corresponding claims as inference.
 
 ## 17. Links
 
@@ -1307,7 +1289,6 @@ Within the part:
 
 - Part index: [`../_index.md`](../_index.md)
 - Prerequisite module topic on hierarchy and aggregation: [`../07_time_series_forecasting/05_hierarchy-aggregation.md`](../07_time_series_forecasting/05_hierarchy-aggregation.md)
-- Prerequisite module map: [`../07_time_series_forecasting/_index.md`](../07_time_series_forecasting/_index.md)
 
 Elsewhere in the course:
 
