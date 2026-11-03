@@ -532,114 +532,91 @@ The 30% markdown was overly generous. Because expected demand ($49.7$ units) far
 
 ---
 
+### Phase 3: Weekly Operational Ledger and Replenishment Schedule (Monday through Sunday)
+
+The table below tracks the complete 7-day operational ledger for Organic Strawberries at Store #308, illustrating how weather forecasts, censored demand imputation, and replenishment rules interact over a weekly cycle:
+
+| Day | Weather (Forecast / Realized) | Morning Inv ($I_{\text{open}}$) | Replen. Recv ($R_t$) | Available Stock ($I_{\text{tot}}$) | Observed Sales ($Y_t$) | Censored? | Reconstructed Demand ($\hat{D}_t$) | End-of-Day Waste ($W_t$) | Closing Inv ($I_{\text{close}}$) | Order Placed ($Q_{t+1}$) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| **Mon (1)** | $17^\circ\text{C}$ / $17^\circ\text{C}$ (Overcast) | 0 | 45 | 45 | 36 | No | 36.0 | 0 | 9 (Batch 1: $\tau=2$) | 45 |
+| **Tue (2)** | $18^\circ\text{C}$ / $19^\circ\text{C}$ (Sunny) | 9 | 45 | 54 | 40 | No | 40.0 | 0 | 14 (9 B1: $\tau=1$; 5 B2: $\tau=2$) | 40 |
+| **Wed (3)** | $19^\circ\text{C}$ / $18^\circ\text{C}$ (Rain, 4mm) | 14 | 40 | 54 | 41 | No | 41.0 | 4 (B1 expired) | 9 (B2: $\tau=1$) | 65 (Heatwave alert) |
+| **Thu (4)** | $26^\circ\text{C}$ / $27^\circ\text{C}$ (Heatwave) | 9 | 65 | 74 | 74 | **Yes (15:30)** | **95.0** (Tobit EM) | 0 | 0 | 75 |
+| **Fri (5)** | $24^\circ\text{C}$ / $23^\circ\text{C}$ (Sunny) | 0 | 75 | 75 | 68 | No | 68.0 | 0 | 7 (Batch 5: $\tau=2$) | 80 |
+| **Sat (6)** | $22^\circ\text{C}$ / $22^\circ\text{C}$ (Mild Sun) | 7 + 13* | 80 | 100 | 66 (20 MD + 46 FP) | No | 66.0 (Choice split) | 0 | 34 (Batch 6: $\tau=2$) | 0 (Store closed Sun) |
+| **Sun (7)** | Closed | 34 | 0 | 34 | 0 | — | — | 0 | 34 (Batch 6: $\tau=1$) | 35 (For Mon morning) |
+
+*\*Note for Day 6:* Store associates conducted a morning stock audit, locating 13 units in the backroom walk-in cooler that had been omitted from the shelf on Friday, creating a total of 20 units of Day 4/5 inventory requiring dynamic markdown clearance.
+
+#### Weekly Financial and Operational Summary
+- **Total Gross Scanned Sales:** $36 + 40 + 41 + 74 + 68 + 66 = 325 \text{ units}$.
+- **Total Retail Revenue:** $(305 \times €3.99) + (20 \times €2.79) = €1,216.95 + €55.80 = €1,272.75$.
+- **Total Wholesale Procurement Cost:** $(45 + 45 + 40 + 65 + 75 + 80) \times €2.20 = 350 \times €2.20 = €770.00$.
+- **Total Physical Waste / Shrink:** 4 units (expired Wednesday night) $\times €2.20 = €8.80$.
+- **Net Gross Margin:** $€1,272.75 - €770.00 = €502.75$ ($39.5\%$ gross margin on procurement cost).
+- **Shrink Rate:** $4 / 350 = 1.14\%$ by unit volume ($€8.80 / €1,272.75 = 0.69\%$ by retail value), well below the European fresh supermarket shrink benchmark of $3.5\%$.
+
+---
+
 ## 7. Code, query, or calculation
 
 The following production-ready Python script implements the Expectation-Maximization (EM) algorithm for estimating right-censored Poisson demand. It accepts observed register sales and on-shelf stockout indicator flags, iteratively computes the conditional tail expectation of truncated observations, and returns the maximum-likelihood latent demand arrival rate $\lambda^*$.
 
 ```python
-"""
-em_censored_poisson.py
-----------------------
-Estimates latent Poisson demand parameter (lambda) from right-censored
-retail sales data where stockout events truncate true consumer demand.
-Uses exact Poisson tail expectations in the E-step. Standard library only.
-"""
+"""em_censored_poisson.py: Reconstructs latent Poisson demand from right-censored sales."""
 import math
 from typing import List, Tuple
 
 def em_censored_poisson(
-    sales: List[int],
-    censored: List[bool],
-    max_iter: int = 100,
-    tol: float = 1e-6
+    sales: List[int], censored: List[bool], max_iter: int = 100, tol: float = 1e-6
 ) -> Tuple[float, List[float], int]:
-    """
-    Fits latent Poisson arrival rate lambda via Expectation-Maximization.
-
-    Parameters:
-        sales: Observed sales units per period (length N).
-        censored: True if a stockout occurred in that period, False otherwise.
-        max_iter: Maximum number of EM iterations.
-        tol: Absolute convergence tolerance on lambda.
-
-    Returns:
-        lambda_est: Maximum likelihood latent demand parameter.
-        imputed_demand: Expected latent demand for each period.
-        iterations: Number of iterations executed until convergence.
-    """
-    if len(sales) != len(censored):
-        raise ValueError("sales and censored arrays must have identical length")
-    if any(s < 0 for s in sales):
-        raise ValueError("Sales observations cannot be negative integers")
-
+    """Fits Poisson arrival rate lambda via EM algorithm under right-censored observations."""
     n = len(sales)
-    # Initialize lambda as the arithmetic mean of observed sales
     lambda_est = sum(sales) / max(n, 1)
 
     for iteration in range(max_iter):
         expected_demands: List[float] = []
 
-        # --- E-Step: Impute conditional expectation for censored periods ---
+        # E-Step: Impute conditional expectation E[D | D >= y] for censored periods
         for y, is_cens in zip(sales, censored):
-            if not is_cens:
-                expected_demands.append(float(y))
-            else:
-                # E[D | D >= y] = lambda * P(D >= y - 1) / P(D >= y)
-                if y <= 0:
-                    expected_demands.append(float(lambda_est))
-                    continue
+            if not is_cens or y <= 0:
+                expected_demands.append(float(y if not is_cens else lambda_est))
+                continue
 
-                # Accumulate Poisson CDF terms: sum_{k=0}^{y-1} exp(-lam) * lam^k / k!
-                term = math.exp(-lambda_est)
-                cdf_y_minus_1 = 0.0
-                cdf_y_minus_2 = 0.0
-                cur_term = term
+            # Compute Poisson tail probabilities
+            term = math.exp(-lambda_est)
+            cdf_y_minus_1, cdf_y_minus_2, cur_term = 0.0, 0.0, term
+            for k in range(y + 120):
+                if k > 0:
+                    cur_term *= (lambda_est / k)
+                if k < y - 1:
+                    cdf_y_minus_2 += cur_term
+                if k < y:
+                    cdf_y_minus_1 += cur_term
 
-                for k in range(y + 120):
-                    if k > 0:
-                        cur_term *= (lambda_est / k)
-                    if k < y - 1:
-                        cdf_y_minus_2 += cur_term
-                    if k < y:
-                        cdf_y_minus_1 += cur_term
+            tail_y = max(1.0 - cdf_y_minus_1, 1e-14)
+            tail_y_minus_1 = max(1.0 - cdf_y_minus_2, 1e-14) if y > 0 else 1.0
+            e_cond = lambda_est * (tail_y_minus_1 / tail_y)
+            expected_demands.append(max(e_cond, float(y)))
 
-                tail_y = max(1.0 - cdf_y_minus_1, 1e-14)
-                tail_y_minus_1 = max(1.0 - cdf_y_minus_2, 1e-14) if y > 0 else 1.0
-
-                e_cond = lambda_est * (tail_y_minus_1 / tail_y)
-                # Physical constraint: expected latent demand cannot be below observed sales
-                expected_demands.append(max(e_cond, float(y)))
-
-        # --- M-Step: Maximize likelihood by updating lambda ---
+        # M-Step: Update lambda with sample mean of expected complete-data demand
         new_lambda = sum(expected_demands) / n
         if abs(new_lambda - lambda_est) < tol:
             return new_lambda, expected_demands, iteration + 1
-
         lambda_est = new_lambda
 
     return lambda_est, expected_demands, max_iter
 
-
 if __name__ == "__main__":
-    # 14-day sample: Observed sales for Organic Strawberries at Store #308
-    # Days 4, 6, and 11 suffered stockouts (censored = True)
-    historical_sales = [14, 16, 15, 20, 18, 22, 12, 15, 17, 16, 20, 13, 14, 19]
-    stockout_flags   = [False, False, False, True, False, True, False,
-                        False, False, False, True, False, False, False]
-
-    uncensored_mean = sum(historical_sales) / len(historical_sales)
-    lam_ml, imputed_d, iters = em_censored_poisson(historical_sales, stockout_flags)
-
-    print("=== Censored Poisson Demand Reconstruction ===")
-    print(f"Sample Size:            {len(historical_sales)} days")
-    print(f"Observed Naive Mean:    {uncensored_mean:.3f} units/day")
-    print(f"EM Latent Lambda:       {lam_ml:.3f} units/day")
-    print(f"Under-estimation Bias:  {((lam_ml - uncensored_mean) / lam_ml) * 100:.2f}%")
-    print(f"Iterations to Converge: {iters}")
-    print("\nDaily Breakdown (Censored Days Highlighted):")
-    for t, (obs, cens, imp) in enumerate(zip(historical_sales, stockout_flags, imputed_d), 1):
-        flag = " [STOCKOUT -> IMPUTED]" if cens else ""
-        print(f"Day {t:02d}: Observed = {obs:2d}, Imputed Demand = {imp:5.2f}{flag}")
+    sales = [14, 16, 15, 20, 18, 22, 12, 15, 17, 16, 20, 13, 14, 19]
+    censored = [False, False, False, True, False, True, False,
+                False, False, False, True, False, False, False]
+    lam, imputed, iters = em_censored_poisson(sales, censored)
+    print(f"Sample: {len(sales)} days | Naive Mean: {sum(sales)/len(sales):.3f} units/day")
+    print(f"EM Lambda: {lam:.3f} units/day (Under-estimation Bias: {((lam - sum(sales)/len(sales))/lam)*100:.2f}%)")
+    for t, (y, c, d_hat) in enumerate(zip(sales, censored, imputed), 1):
+        tag = " [STOCKOUT -> IMPUTED]" if c else ""
+        print(f"Day {t:02d}: Sold = {y:2d}, Imputed Demand = {d_hat:5.2f}{tag}")
 ```
 
 ### Expected Output and Operational Interpretation
@@ -723,6 +700,27 @@ Under European Standard **EN 12830** (temperature recorders for transport, stora
 | **United States** | FDA / USDA Date Labeling Guidance (2019) | Differentiates "Best if Used By" (quality advisory) from "Use By" (safety advisory). | Items past "Best if Used By" can be legally sold at steep markdowns or donated, whereas "Use By" infant formula or ready-to-eat meat cannot. |
 | **Germany** | Lebensmittel- und Futtermittelgesetzbuch (LFGB) | Enforces strict microbiological safety at consumer sale; prohibits selling spoiled food even at discount. | Dynamic pricing algorithms must cease discounting and trigger automatic removal before microbiological thresholds breach. |
 
+### 5. EPCIS 2.0 Event Architecture for Granular Perishable Tracking
+
+GS1 **EPCIS 2.0** (Electronic Product Code Information Services) provides the standard data capture framework linking supply chain events with analytical models. For perishable inventory and demand sensing, the following core event structures are captured:
+
+```text
+  ┌───────────────────┐      ┌────────────────────┐      ┌────────────────────┐
+  │   ObjectEvent     │      │  AggregationEvent  │      │   ObjectEvent      │
+  │ bizStep: receiving│ ───> │ bizStep: packing   │ ───> │ bizStep: retailing │
+  │ disp: in_progress │      │ disp: in_transit   │      │ disp: retail_sold  │
+  └───────────────────┘      └────────────────────┘      └────────────────────┘
+           │                                                        │
+           ▼                                                        ▼
+  [Cold-Chain Sensor Event]                                [Or disp: expired]
+  EN 12830 Temp Telemetry                                  Triggers Shrink Log
+```
+
+- **ObjectEvent (`bizStep: receiving`, `disposition: in_progress`):** Captures physical store arrival, lot code, expiration date, and temperature logger disposition.
+- **AggregationEvent (`bizStep: packing`):** Tracks hierarchical containment (e.g., clamshells aggregated into master cartons tagged with SSCC serial shipping container codes).
+- **TransformationEvent:** Records processing (e.g., slicing raw melons into ready-to-eat fruit cups), resetting the product expiration date and establishing child lot lineage.
+- **ObjectEvent (`bizStep: retail_selling`, `disposition: retail_sold` vs `disposition: expired`):** Crucial for data science pipelines. Distinguishing units sold at full price from units written off as expired (`expired`) or damaged (`damaged`) provides the clean historical ground truth required to prevent shrinkage from masquerading as lost demand.
+
 ---
 
 ## 9. Industry practice and case evidence
@@ -785,6 +783,8 @@ Every quantitative demand model embodies structural assumptions about market beh
 | 7 | **First-In, First-Out (FIFO) Depletion** | Simplifies inventory tracking models by assuming the oldest batch is sold before newer batches are touched. | Shoppers rummaging through produce displays to extract the freshest batch from the back (LIFO behavior). | Conduct observational shelf audits or compare GS1 2D barcode scan dates against delivery lot sequences. |
 | 8 | **Uncorrelated Forecast Errors Across SKUs** | Allows independent univariate forecasting of SKUs without full cross-covariance matrix inversion. | Category-wide stockouts or major promotional campaigns driving systematic multi-item basket substitution. | Compute cross-item residual correlation matrices within fresh categories; check for high off-diagonal mass. |
 | 9 | **Static Shelf Presentation Capacity** | Ensures that presentation minimums and visual facings remain constant in order-up-to calculations. | Store associates re-allocating shelf space dynamically to fill gaps created by out-of-stock adjacent products. | Track planogram compliance feeds and computer-vision shelf monitoring logs. |
+| 10 | **Unconstrained Supplier Delivery Reliability** | Assumes the distribution center or direct-store vendor ships 100% of the calculated replenishment quantity on time. | Upstream harvest crop failures or chilled transport breakdowns causing supplier short-shipments. | Audit ASN (Advanced Shipping Notice) fill rates and vendor compliance scorecards. |
+| 11 | **Independent Hourly Arrival Rates (Poisson Process)** | Assumes customer arrivals across intra-day hours follow independent Poisson arrival processes without batch arrivals. | Organized tour bus arrivals or sudden school lunch rushes hitting convenience formats simultaneously. | Perform dispersion index tests ($\operatorname{Var}(Y) / \mathbb{E}[Y]$) on intra-day 15-minute transaction intervals. |
 
 ---
 
@@ -972,6 +972,44 @@ If an automated forecasting engine trains directly on $Y_t$, it treats the trunc
    $$R + L \le M \quad \text{and} \quad Q + SS \le M \cdot \bar{D}_{\text{min}}$$
    If demand variability requires a safety stock that breaches this threshold, the retailer must either negotiate shorter replenishment lead times $L$, reduce minimum order quantities $Q$, or accept that target service levels cannot be achieved without structural waste.
 
+### Architectural Blueprint for Exercise 7 (500-Store Enterprise Chain)
+
+A robust production deployment for a 500-store supermarket chain requires an event-driven, decoupled microservices architecture designed to process 600,000 distinct daily store-SKU combinations (500 stores $\times$ 1,200 fresh SKUs):
+
+```text
+  [Store POS Scanners] ──> Kafka CDC Topic: `pos.transactions.v1` ──┐
+  [Handheld Inventory] ──> Kafka CDC Topic: `inventory.events.v1`  ──┼──> DuckDB / Lakehouse
+  [Met Office NWP API] ──> Airflow DAG: `fetch.weather.d2`         ──┘        │
+                                                                              ▼
+  ┌───────────────────────────────────────────────────────────────────────────────┐
+  │ Daily Pipeline Execution (16:30 - 17:45 Local Store Time)                     │
+  │ 1. Censored Demand Imputation (Tobit EM & Diurnal Curve Scaling)              │
+  │ 2. Feature Pipeline Assembly (Frozen NWP Forecasts + Promotional Calendars)   │
+  │ 3. Inference Engine (Tweedie GBDT Models with Hierarchical MinT Scaling)      │
+  │ 4. Replenishment Optimization (Order-up-to S with Physical Presentation Floor)│
+  │ 5. Dynamic Markdown Allocation (Optimal Discount Vector δ*(t) to ESL Engine)   │
+  └───────────────────────────────────────┬───────────────────────────────────────┘
+                                          │
+                                          ▼
+                             [EDI 850 Orders to DC / DSD]
+                             (Cutoff: 18:00 sharp for next-day 06:00 arrival)
+```
+
+1. **Ingestion & Data Cleansing:**
+   - Stream POS scans and waste logs via Kafka into an append-only Delta Lake / DuckDB analytical layer.
+   - Run automated phantom inventory detection nightly: if an item with expected sales $\ge 3$ units/day records $Y = 0$ while system inventory shows $I \ge 1$ for 48 consecutive hours, auto-dispatch a cycle count task to the store associate's RF terminal.
+2. **Feature Engineering Cadence:**
+   - Freeze weather features using the 12:00 UTC Numerical Weather Prediction run for valid date $t+1$ and $t+2$. Never backfill with realized weather during training.
+   - Maintain pre-calculated diurnal footfall profiles $w(h)$ by store-day-of-week, updated bi-weekly across fully-stocked baseline trading days.
+3. **Inference & Optimization Layer:**
+   - Train regional LightGBM models under the Tweedie deviance loss ($p = 1.30$). Re-train models weekly on Sunday night; run inference daily at 16:30.
+   - Impose hard operational boundaries on the order-up-to target $S$:
+     $$S_{i,s,t} = \max\left( I_{\text{pres}}, \; \hat{D}_{i,s,t} + z \cdot \hat{\sigma}_{i,s,t} \right) \quad \text{subject to } S_{i,s,t} \le M_{\text{life}} \cdot \bar{D}_{\text{max}}$$
+4. **Automated Death-Spiral Circuit Breaker:**
+   - Compute the 14-day cumulative On-Shelf Availability (OSA) tracking signal:
+     $$\text{TS}_t = \frac{\sum_{k=t-13}^t (D_k^* - Y_k)}{\sqrt{\sum_{k=t-13}^t \sigma_k^2}}$$
+   - If $\text{TS}_t > 3.0$ (persistent stockouts), halt automated forecast reduction, freeze base demand at the category pre-stockout baseline, and alert the central category planner.
+
 ### Answer to Exercise 7: Grading Rubric for System Design (500-Store Chain)
 
 | Evaluation Dimension | Exceeds Standard (Strong Pass) | Meets Standard (Pass) | Fails Standard (Redo) |
@@ -1017,6 +1055,14 @@ If an automated forecasting engine trains directly on $Y_t$, it treats the trunc
 ### Question 8: How do you handle customer substitution when an organic fresh SKU stocks out?
 - **What a strong answer contains:** The candidate explains that unobserved stockouts distort adjacent item demand through **forced substitution**. When Organic Gala Apples stock out, a fraction $\alpha$ of shoppers purchase Conventional Gala Apples. The POS records an artificial demand spike on conventional apples. If left uncorrected, the forecasting engine will permanently over-forecast conventional apples and under-forecast organic apples. The candidate outlines how to resolve this: construct category choice sets using multinomial logit models with availability indicators, jointly estimate primary demand and cross-substitution coefficients, and strip out substituted volume before updating baseline forecasts.
 - **What a weak answer reveals:** The candidate treats each SKU as an isolated univariate time series and ignores cross-elasticity and category assortment dynamics entirely.
+
+### Question 9: How do you model multi-echelon replenishment lead-time variability for ultra-fresh foods when DC-to-store logistics routes experience traffic or temperature excursions?
+- **What a strong answer contains:** The candidate explains that in ultra-fresh perishables, lead-time variability ($\sigma_L$) does not merely cause delayed arrival; it directly destroys saleable shelf life. If a truck scheduled for 04:00 delivery arrives at 09:00, the store loses 5 hours of morning sales, and the shelf-life clock has already advanced. Furthermore, if a temperature excursion occurs during transport, the entire shipment may be rejected upon arrival under EN 12830 cold-chain protocols, converting a lead-time delay into an instantaneous 100% supply outage. The candidate advocates for modeling lead-time demand using compound stochastic lead-time models where delivery status is conditioned on cold-chain logger data. Safety stock must be split into buffer stock (for demand variance) and arrival time buffer stock (for delivery window variance), with hard shelf-life outdating constraints capping total order-up-to thresholds.
+- **What a weak answer reveals:** The candidate naively assumes classical lead-time demand variance equations ($\sigma_{\text{LTD}} = \sqrt{L \sigma_D^2 + \bar{D}^2 \sigma_L^2}$) without realizing that late deliveries on perishables shorten saleable life and can trigger regulatory rejection.
+
+### Question 10: How do you design a cold-start demand forecasting model for a newly launched perishable SKU with zero historical sales data?
+- **What a strong answer contains:** The candidate outlines a structured cold-start architecture: (1) Category hierarchical priors and Bayesian shrinkage: assign the new SKU to a granular subcategory node (e.g., Organic Stone Fruit) and initialize baseline sales and diurnal curves from parent cluster distributions; (2) Product attribute embedding: extract text and metadata features (pack weight, organic certification, country of origin, price tier, shelf life days) and use a k-nearest-neighbors or gradient boosted model trained across historical product launches to estimate initial velocity; (3) Rapid adaptation heuristic: use an aggressive exponential smoothing parameter ($\alpha \approx 0.5$) or Kalman filter update over the first 5 trading days to recalibrate the initial prior as live POS transactions arrive; (4) Conservative initial replenishment: set order quantities closer to the median or lower newsvendor quantile to prevent immediate launch spoilage, transitioning to optimal critical fractile replenishment once demand parameters stabilize.
+- **What a weak answer reveals:** The candidate suggests waiting several months to collect data before forecasting, or proposes running an unconstrained A/B test without considering product expiration and inventory write-downs.
 
 ---
 
@@ -1081,5 +1127,5 @@ If an automated forecasting engine trains directly on $Y_t$, it treats the trunc
   - [`07_food-waste-donation.md`](07_food-waste-donation.md) — Food-waste hierarchy, regulatory donation mandates, and waste analytics.
 - **Foundational Methodology Modules:**
   - [Module 07 — Time Series Forecasting](../../02_methods/07_time_series_forecasting/_index.md) — Intermittent demand, ARIMA, and exogenous regressors.
-  - [Module 08 — Machine Learning for Supply Chain](../../02_methods/08_machine_learning_demand_sensing/_index.md) — Gradient boosted trees and demand sensing architectures.
+- [Module 08 — Hierarchical, Intermittent, and Probabilistic Forecasting](../../02_methods/08_hierarchical_intermittent_probabilistic_forecasting/_index.md) — Gradient boosted trees, intermittent estimators, and probabilistic forecasts.
   - [Module 10 — Inventory Optimization and Multi-Echelon Planning](../../02_methods/10_inventory_optimization_multi_echelon/_index.md) — Newsvendor fractiles and safety stock optimization.

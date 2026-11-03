@@ -31,15 +31,15 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_agri-production-harvest.md`](01_agri-production-harvest.md) | Agricultural Production and Harvest Planning | Yield, seasonality, contracts, and the farm-to-supply link. | 1,200–1,800 | planned |
-| 2 | [`02_perishable-forecasting.md`](02_perishable-forecasting.md) | Forecasting Perishable Demand | Short horizons, weather, freshness, and promotion effects. | 1,200–1,800 | planned |
-| 3 | [`03_shelf-life-fefo.md`](03_shelf-life-fefo.md) | Shelf Life, FEFO, and Age-Based Inventory | Remaining shelf life as a state variable and FEFO policy. | 1,200–1,800 | planned |
-| 4 | [`04_newsvendor-salvage.md`](04_newsvendor-salvage.md) | Newsvendor with Salvage and Freshness Pricing | Order quantity when unsold stock has salvage value and markdown. | 1,200–1,800 | planned |
-| 5 | [`05_cold-chain-quality.md`](05_cold-chain-quality.md) | Cold Chain and Quality | Temperature, MKT, excursions, and quality degradation. | 1,200–1,800 | planned |
-| 6 | [`06_traceability-food-safety.md`](06_traceability-food-safety.md) | Traceability and Food Safety | HACCP, FSMA 204, EPCIS, and lot-level trace. | 1,200–1,800 | planned |
-| 7 | [`07_food-waste-donation.md`](07_food-waste-donation.md) | Food Waste and Donation | Waste hierarchy, measurement, and donation economics. | 1,200–1,800 | planned |
-| 8 | [`08_food-service-quick-commerce.md`](08_food-service-quick-commerce.md) | Food Service and Quick Commerce | Restaurant supply, dark stores, and meal delivery. | 1,200–1,800 | planned |
-| 9 | [`09_sourcing-contracts-yield-risk.md`](09_sourcing-contracts-yield-risk.md) | Sourcing Contracts and Yield Risk | Grower contracts, price mechanisms, and supply risk. | 1,200–1,800 | planned |
+| 1 | [`01_agri-production-harvest.md`](01_agri-production-harvest.md) | Agricultural Production and Harvest Planning | Yield, seasonality, contracts, and the farm-to-supply link. | 1,200–1,800 | complete |
+| 2 | [`02_perishable-forecasting.md`](02_perishable-forecasting.md) | Forecasting Perishable Demand | Short horizons, weather, freshness, and promotion effects. | 1,200–1,800 | complete |
+| 3 | [`03_shelf-life-fefo.md`](03_shelf-life-fefo.md) | Shelf Life, FEFO, and Age-Based Inventory | Remaining shelf life as a state variable and FEFO policy. | 1,200–1,800 | complete |
+| 4 | [`04_newsvendor-salvage.md`](04_newsvendor-salvage.md) | Newsvendor with Salvage and Freshness Pricing | Order quantity when unsold stock has salvage value and markdown. | 1,200–1,800 | complete |
+| 5 | [`05_cold-chain-quality.md`](05_cold-chain-quality.md) | Cold Chain and Quality | Temperature, MKT, excursions, and quality degradation. | 1,200–1,800 | complete |
+| 6 | [`06_traceability-food-safety.md`](06_traceability-food-safety.md) | Traceability and Food Safety | HACCP, FSMA 204, EPCIS, and lot-level trace. | 1,200–1,800 | complete |
+| 7 | [`07_food-waste-donation.md`](07_food-waste-donation.md) | Food Waste and Donation | Waste hierarchy, measurement, and donation economics. | 1,200–1,800 | complete |
+| 8 | [`08_food-service-quick-commerce.md`](08_food-service-quick-commerce.md) | Food Service and Quick Commerce | Restaurant supply, dark stores, and meal delivery. | 1,200–1,800 | complete |
+| 9 | [`09_sourcing-contracts-yield-risk.md`](09_sourcing-contracts-yield-risk.md) | Sourcing Contracts and Yield Risk | Grower contracts, price mechanisms, and supply risk. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -70,9 +70,9 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 9 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 9 |
 
 Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
 as each file is produced at its target length. The survey file linked above is complete at survey

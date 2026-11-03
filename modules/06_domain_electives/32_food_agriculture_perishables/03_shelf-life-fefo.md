@@ -514,18 +514,17 @@ The following production script implements the Nahmias age-structured inventory 
 ```python
 """Simulate age-structured perishable inventory under FEFO and mixed LIFO regimes."""
 from dataclasses import dataclass
-import numpy as np
 
 
 @dataclass(frozen=True)
 class PerishableConfig:
     shelf_life: int  # m periods
     order_up_to: int  # S target
-    cost: float  # unit cost c
-    price: float  # unit price p
-    holding: float  # holding cost h
-    disposal: float  # disposal fee c_d
-    salvage: float = 0.0  # salvage recovery s
+    cost: float
+    price: float
+    holding: float
+    disposal: float
+    salvage: float = 0.0
 
     @property
     def waste_penalty(self) -> float:
@@ -533,94 +532,62 @@ class PerishableConfig:
 
 
 def simulate_age_cohorts(
-    config: PerishableConfig, demand_series: list[int], alpha: float
+    cfg: PerishableConfig, demands: list[int], alpha: float
 ) -> dict[str, float]:
     """Run multi-period age-structured simulation under alpha-depletion policy."""
-    m = config.shelf_life
-    # x[0] = 1 period remaining, x[m-2] = m-1 periods remaining
-    x = np.zeros(m - 1, dtype=np.int64)
-    total_revenue, total_cogs, total_waste, total_holding = 0.0, 0.0, 0.0, 0.0
-    total_outdates, total_lost_sales = 0, 0
+    m = cfg.shelf_life
+    x = [0] * (m - 1)
+    rev, cogs, waste, hold, outdates, lost = 0.0, 0.0, 0.0, 0.0, 0, 0
 
-    for demand in demand_series:
-        on_hand = int(np.sum(x))
-        order_qty = max(0, config.order_up_to - on_hand)
-        x[m - 2] += order_qty  # fresh order arrives into freshest cohort
+    def pull_stock(qty: int, reverse: bool) -> int:
+        nonlocal rev, cogs
+        indices = range(m - 2, -1, -1) if reverse else range(m - 1)
+        for i in indices:
+            take = min(x[i], qty)
+            x[i] -= take
+            qty -= take
+            cogs += take * cfg.cost
+            rev += take * cfg.price
+            if qty == 0:
+                break
+        return qty
 
-        fefo_dem = int(np.round(alpha * demand))
-        lifo_dem = demand - fefo_dem
+    for d in demands:
+        x[m - 2] += max(0, cfg.order_up_to - sum(x))
+        fefo_dem = int(round(alpha * d))
+        rem = pull_stock(fefo_dem, reverse=False) + pull_stock(d - fefo_dem, reverse=True)
+        if rem > 0:
+            lost += pull_stock(rem, reverse=False)
 
-        # Deplete FEFO (oldest to newest: index 0 -> m-2)
-        for i in range(m - 1):
-            pull = min(x[i], fefo_dem)
-            x[i] -= pull
-            fefo_dem -= pull
-            total_cogs += pull * config.cost
-            total_revenue += pull * config.price
+        outdates += x[0]
+        waste += x[0] * cfg.waste_penalty
+        x = x[1:] + [0]
+        hold += sum(x) * cfg.holding
 
-        # Deplete LIFO (newest to oldest: index m-2 -> 0)
-        for i in range(m - 2, -1, -1):
-            pull = min(x[i], lifo_dem)
-            x[i] -= pull
-            lifo_dem -= pull
-            total_cogs += pull * config.cost
-            total_revenue += pull * config.price
-
-        # Overflow: unmet demand of either stream consumes remaining stock
-        overflow = fefo_dem + lifo_dem
-        if overflow > 0:
-            for i in range(m - 1):
-                pull = min(x[i], overflow)
-                x[i] -= pull
-                overflow -= pull
-                total_cogs += pull * config.cost
-                total_revenue += pull * config.price
-        total_lost_sales += overflow
-
-        # Outdating at end of period (cohort 0 expires)
-        outdated = int(x[0])
-        total_outdates += outdated
-        total_waste += outdated * config.waste_penalty
-
-        # Aging step: shift cohorts downward
-        x[:-1] = x[1:]
-        x[-1] = 0
-        total_holding += float(np.sum(x)) * config.holding
-
-    profit = total_revenue - total_cogs - total_waste - total_holding
     return {
-        "profit": round(profit, 2),
-        "outdates": total_outdates,
-        "lost_sales": total_lost_sales,
-        "waste_cost": round(total_waste, 2),
+        "profit": round(rev - cogs - waste - hold, 2),
+        "outdates": outdates,
+        "lost_sales": lost,
+        "waste_cost": round(waste, 2),
     }
 
 
 if __name__ == "__main__":
-    cfg = PerishableConfig(
-        shelf_life=4,
-        order_up_to=100,
-        cost=2.0,
-        price=4.5,
-        holding=0.1,
-        disposal=0.3,
-    )
+    cfg = PerishableConfig(4, 100, cost=2.0, price=4.5, holding=0.1, disposal=0.3)
     demands = [40, 30, 45, 35, 50, 40, 30, 45]
-    fefo_res = simulate_age_cohorts(cfg, demands, alpha=1.0)
-    cherry_res = simulate_age_cohorts(cfg, demands, alpha=0.5)
-
-    print(f"Pure FEFO (alpha=1.0)   -> Profit: ${fefo_res['profit']}, Outdates: {fefo_res['outdates']}")
-    print(f"Cherry-Pick (alpha=0.5) -> Profit: ${cherry_res['profit']}, Outdates: {cherry_res['outdates']}")
-    assert fefo_res["outdates"] <= cherry_res["outdates"], "FEFO must yield <= outdates than LIFO"
+    fefo = simulate_age_cohorts(cfg, demands, alpha=1.0)
+    cherry = simulate_age_cohorts(cfg, demands, alpha=0.5)
+    print(f"Pure FEFO (alpha=1.0)   -> Profit: ${fefo['profit']}, Outdates: {fefo['outdates']}")
+    print(f"Cherry-Pick (alpha=0.5) -> Profit: ${cherry['profit']}, Outdates: {cherry['outdates']}")
+    assert fefo["outdates"] <= cherry["outdates"]
 ```
 
 ### Expected Output
 
 ```text
-Pure FEFO (alpha=1.0)   -> Profit: $758.5, Outdates: 0
-Cherry-Pick (alpha=0.5) -> Profit: $673.5, Outdates: 37
+Pure FEFO (alpha=1.0)   -> Profit: $739.0, Outdates: 0
+Cherry-Pick (alpha=0.5) -> Profit: $622.4, Outdates: 53
 ```
-
 ---
 
 ## 8. Data, standards, and regulatory context
@@ -677,6 +644,36 @@ Food shelf-life management is governed by overlapping national and international
      - **"Use by" (Article 24):** Mandatory for foods which, from a microbiological point of view, are highly perishable and are therefore likely after a short period to constitute an immediate danger to human health. Selling or distributing food past its "Use by" date is an illegal criminal offense.
      - **"Best before":** Indicates date until which the food retains its specific properties under proper storage; product can legally be sold or donated past this date if safe.
 
+
+### 8.4 GS1 EPCIS 2.0 Event Architecture for Lot-Level Shelf-Life Tracking
+
+To achieve end-to-end visibility across organizational boundaries, modern perishable supply chains utilize **GS1 Electronic Product Code Information Services (EPCIS) 2.0** (JSON-LD and REST binding). EPCIS provides four standardized event types that capture the "what, where, when, and why" of age-structured inventory:
+
+1. **ObjectEvent (Commissioning / Packaging):** Records when physical units are created and binds the lot number, packaging timestamp, and expiration date to the GS1 Digital Link URI.
+2. **AggregationEvent (Palletizing):** Binds individual consumer trade items (GTINs) or cases into a Serial Shipping Container Code (SSCC-18) pallet identifier, establishing hierarchical lot inheritance.
+3. **TransformationEvent (Repackaging / Processing):** Captures the conversion of raw perishable inputs into finished packaged goods, recalculating the resulting composite shelf life based on the earliest-expiring ingredient.
+4. **TransactionEvent (Shipping / Receiving):** Records the transfer of custody between legal entities, linking EDI purchase orders to physical SSCC pallet scans.
+
+Under EPCIS 2.0 CBV (Core Business Vocabulary), expiration attributes are standardized in JSON-LD payloads:
+
+```json
+{
+  "@context": ["https://ref.gs1.org/standards/epcis/2.0.0/epcis-context.jsonld"],
+  "type": "ObjectEvent",
+  "action": "ADD",
+  "bizStep": "commissioning",
+  "disposition": "active",
+  "epcList": ["urn:epc:id:sgtin:0012345.067890.LOT-B429A"],
+  "eventTime": "2026-11-03T08:00:00Z",
+  "eventTimeZoneOffset": "+00:00",
+  "readPoint": {"id": "urn:epc:id:sgln:0012345.11111.0"},
+  "cbv:itemExpirationDate": "2026-11-15",
+  "cbv:shelfLifeExpirationDate": "2026-11-15T23:59:59Z",
+  "cbv:bestBeforeDate": "2026-11-13"
+}
+```
+
+When receiving docks scan the incoming SSCC barcode, their automated WMS queries the upstream supplier's EPCIS repository. The system retrieves `cbv:shelfLifeExpirationDate`, calculates the real-time Proportionate RSL, and issues an automated gate-hold before the forklift driver unloads the trailer.
 ---
 
 ## 9. Industry practice and case evidence
@@ -722,6 +719,9 @@ In 2021–2023, extreme driver shortages and refrigerated chassis congestion at 
 | 8 | **Disconnected EDI ASN Dates** | Expiration date on physical carton barcode does not match the `DTM*036` segment in EDI 856. | Packaging line operators changed master date stamp without synchronizing plant MES and EDI gateway. | Automated receipt failure; trailer detention while quality control performs manual verification. | Automated barcode-to-EDI validation scanning at plant pallet wrapper exit. |
 | 9 | **Blind Cold Storage Rotation** | 3PL warehouse charges monthly storage fees while pallets exceed retailer MRSL thresholds. | 3PL fee structure incentivizes volume storage rather than inventory velocity; no visibility into client RSL rules. | Stock becomes un-shippable to primary retail channels while sitting in contracted 3PL care. | Automated daily WMS reporting of "Effective Usable Life to Primary Channel" with liquidation alerts. |
 | 10 | **Replenishment Oversizing** | EOQ-based purchasing rules order 30 days of supply for a product with 21 days of shelf life. | Purchasing agents optimize purchase price volume tiers without constraining lot size by shelf life $m$. | Guaranteed structural outdating of trailing order cohorts. | Shelf-life-constrained order sizing: $Q_{\text{max}} = \sum_{t=1}^{m - L - \text{MRSL}} \hat{D}_t$. |
+| 11 | **The Temperature-Excursion RSL Cliff** | Pallet temperature logger beeps during receiving dock download. | Refrigeration breakdown during multi-day rail transit accelerates biochemical decay kinetics. | Product reaches dock with nominally valid date code but unmerchantable microbial spoilage. | Automated IoT logger-to-WMS integration calculating Arrhenius-adjusted effective RSL. |
+| 12 | **Reverse-Logistics Outdating Cascade** | Rejected trailers dwell at carrier terminal awaiting customer service disposition. | Bureaucratic delays in resolving EDI 861 gate rejection disputes consume remaining shelf life. | Product that was initially salvageable at 65% RSL dwells until 0% RSL; 100% total write-off. | Pre-authorized secondary liquidation contracts triggering instant automated diversion. |
+| 13 | **Virtual Batch Splitting Errors** | Warehouse splits a physical pallet into multiple order picks with mismatched expiration dates. | WMS lot allocation logic assigns partial cases across multiple pick faces without barcode re-labeling. | Downstream store receives cases with unrecorded older dates; in-store rotation fails. | Mandatory serialized GS1-128 container re-tagging upon pallet de-consolidation. |
 
 ---
 
@@ -737,6 +737,8 @@ In 2021–2023, extreme driver shortages and refrigerated chassis congestion at 
 | 6 | **Instantaneous Operational Replenishment** | Avoids complex multi-period lead-time convolutions in the state transition equations. | Fresh food manufacturing schedules require 2- to 5-day production changeover and cooling windows. | Historical supplier lead-time variance analysis across refrigerated LTL lanes. |
 | 7 | **Independent SKU Dynamics** | Analyzes age cohorts for a single SKU in isolation. | Stocking out of a 1-gallon milk SKU causes immediate substitution demand into half-gallon containers. | Cross-price elasticity matrix estimation and assortment substitution models. |
 | 8 | **Static Contractual MRSL Thresholds** | Assumes retailers apply invariant percentage rules across all seasons and macroeconomic environments. | Retailers relax MRSL rules during severe national shortages to maintain shelf presence, then tighten them during gluts. | Historical receiving dock rejection logs cross-referenced with national supply availability indices. |
+| 9 | **Fixed Review Period Duration ($\Delta t$)** | Establishes uniform time steps for cohort advancement equations. | Store receiving schedules fluctuate due to carrier delays, holiday shifts, and dock curfews. | Discrete-event simulation calibrated to continuous variable inter-arrival times. |
+| 10 | **Zero Pallet Structural Crushing** | Assumes physical packaging integrity is maintained throughout the storage horizon. | Bottom layer cartons on 60-inch high pallets buckle under prolonged chilling humidity. | Crushed packaging exposes food to microbial contamination, causing premature spoilage. | Corrugated box compression strength testing (ECT) under 90% relative humidity. |
 
 ---
 
@@ -796,6 +798,21 @@ Design an allocation policy governing which butter lots (the 14-day lot vs. the 
 Critique the standard practice of applying a flat 50% discount to all perishable goods on their final day of shelf life. Formulate an optimization model that determines the optimal markdown timing $t^*$ and discount depth $\delta^*$ as a function of remaining stock $x_{1,t}$, price elasticity of demand $\epsilon$, full price $p$, salvage value $s$, and cannibalization coefficient $\beta \in [0, 1]$ (representing the fraction of discount buyers who would have otherwise purchased fresh stock at full price).
 - *Deliverable:* Written critique (300 words), mathematical model formulation with objective function and constraints, and an operational policy recommendation.
 - *Acceptance Criteria:* Clear identification of economic trade-offs (margin recovery vs. full-price cannibalization vs. disposal cost); rigorous mathematical notation. Time: 30 minutes.
+
+### Exercise 7: Arrhenius Temperature Excursion and Effective RSL Calculation (Calculation)
+A shipment of fresh organic salmon fillets with a validated baseline shelf life of $m = 10.0$ days at standard storage temperature $T_{\text{standard}} = 274.15\text{ K}$ ($1.0^\circ\text{C}$) departs an aquaculture processing plant in Chile bound for a Miami distribution center. The primary spoilage mechanism is pseudomonad microbial proliferation with activation energy $E_a = 75,000\text{ J/mol}$.
+During airfreight tarmac staging, the reefer container experiences a failure, holding the product at $T_{\text{excurs}} = 285.15\text{ K}$ ($12.0^\circ\text{C}$) for $\Delta t_{\text{excurs}} = 18.0\text{ hours}$ ($0.75\text{ days}$). Standard transit takes 2.25 days at $1.0^\circ\text{C}$.
+1. Compute the Arrhenius acceleration factor $A_T$ using gas constant $R = 8.314\text{ J/(mol}\cdot\text{K)}$.
+2. Calculate the equivalent standard days of shelf life consumed during the 18-hour excursion.
+3. Compute the effective remaining shelf life $R_{\text{arr}}^{\text{adj}}$ upon arrival at the Miami DC.
+4. If the retailer enforces an MRSL covenant of $\ge 70.0\%$, does the shipment pass or fail the receipt gate?
+- *Deliverable:* Calculation of $A_T$, effective elapsed days, adjusted remaining shelf life, and gate decision.
+- *Acceptance Criteria:* Accurate Kelvin conversions; correct Arrhenius exponent evaluation; sound RSL percentage comparison. Time: 20 minutes.
+
+### Exercise 8: GS1 EPCIS 2.0 Critical Tracking Event Architecture (Design)
+Design an end-to-end GS1 EPCIS 2.0 event architecture for a fresh packaged cut-salad processor subject to FDA FSMA 204. The process encompasses: (1) Harvesting and washing raw baby spinach; (2) Packaging into 1-lb clamshells with lot creation and expiration stamping; (3) Palletizing 120 clamshells onto an SSCC pallet; and (4) Shipping to a grocery retailer DC under an EDI 856 ASN.
+- *Deliverable:* A structured JSON-LD event schema representing the `ObjectEvent` commissioning and `AggregationEvent` palletizing steps, specifying all mandatory Key Data Elements (KDEs): GTIN, lot code, expiration date, SSCC, BizStep, Disposition, and ReadPoint.
+- *Acceptance Criteria:* Full compliance with GS1 EPCIS 2.0 JSON-LD syntax; explicit inclusion of `cbv:shelfLifeExpirationDate` and `cbv:itemExpirationDate`. Time: 25 minutes.
 
 ---
 
@@ -941,6 +958,78 @@ Critique the standard practice of applying a flat 50% discount to all perishable
 
 ---
 
+### Answer to Exercise 7: Arrhenius Temperature Excursion and Effective RSL Calculation
+
+1. **Arrhenius Thermal Acceleration Factor ($A_T$):**
+   - Temperatures in Kelvin: $T_{\text{standard}} = 1.0 + 273.15 = 274.15\text{ K}$; $T_{\text{excurs}} = 12.0 + 273.15 = 285.15\text{ K}$.
+   - Inverse temperature difference:
+     $$\Delta \left(\frac{1}{T}\right) = \frac{1}{274.15} - \frac{1}{285.15} \approx 0.00364764 - 0.00350693 = 0.00014071\text{ K}^{-1}$$
+   - Exponent term:
+     $$\frac{E_a}{R} \cdot \Delta \left(\frac{1}{T}\right) = \frac{75,000}{8.314} \times 0.00014071 = 9020.93 \times 0.00014071 \approx 1.26935$$
+   - Acceleration factor:
+     $$A_T = \exp(1.26935) \approx \mathbf{3.5585}$$
+   - The microbial reaction proceeds $3.56\times$ faster during the excursion.
+2. **Equivalent Shelf Life Consumed During Excursion:**
+   $$\Delta t_{\text{equiv}} = A_T \times \Delta t_{\text{excurs}} = 3.5585 \times 0.75\text{ days} = \mathbf{2.6689\ standard\ days}$$
+3. **Effective Remaining Shelf Life ($R_{\text{arr}}^{\text{adj}}$):**
+   - Standard transit consumed: $2.25$ days.
+   - Total effective transit consumption: $2.25 + 2.6689 = \mathbf{4.9189\ days}$.
+   - Effective remaining shelf life:
+     $$R_{\text{arr}}^{\text{adj}} = 10.0 - 4.9189 = \mathbf{5.0811\ days}$$
+   - Note: Calendar elapsed time was only $2.25 + 0.75 = 3.0$ days, which would have implied $7.0$ calendar days remaining. The thermal excursion burned an extra $1.92$ days of biochemical life!
+4. **Gate Compliance Audit:**
+   $$\text{Effective RSL}\% = \frac{5.0811}{10.0} \times 100\% = \mathbf{50.81\%}$$
+   - Contractual requirement: $\text{MRSL} \ge 70.0\%$.
+   - Since $50.81\% < 70.0\%$, the WMS issues an **AUTOMATED GATE REJECTION**.
+
+---
+
+### Answer to Exercise 8: GS1 EPCIS 2.0 Critical Tracking Event Architecture
+
+- **Traceability System Architecture:**
+  The solution requires two linked EPCIS events sharing a common GS1 Digital Link lot-level SGTIN:
+
+```json
+{
+  "@context": ["https://ref.gs1.org/standards/epcis/2.0.0/epcis-context.jsonld"],
+  "isA": "EPCISDocument",
+  "schemaVersion": "2.0",
+  "creationDate": "2026-11-03T10:00:00Z",
+  "epcisBody": {
+    "eventList": [
+      {
+        "type": "ObjectEvent",
+        "action": "ADD",
+        "bizStep": "commissioning",
+        "disposition": "active",
+        "epcList": ["urn:epc:id:sgtin:0012345.099881.LOT-SPIN-042"],
+        "eventTime": "2026-11-03T06:30:00Z",
+        "eventTimeZoneOffset": "-05:00",
+        "readPoint": {"id": "urn:epc:id:sgln:0012345.PACK01.0"},
+        "bizLocation": {"id": "urn:epc:id:sgln:0012345.SALINAS_PLANT.0"},
+        "cbv:itemExpirationDate": "2026-11-17",
+        "cbv:shelfLifeExpirationDate": "2026-11-17T23:59:59Z"
+      },
+      {
+        "type": "AggregationEvent",
+        "action": "ADD",
+        "bizStep": "packing",
+        "disposition": "in_progress",
+        "parentID": "urn:epc:id:sscc:0012345.1000000042",
+        "childEPCs": ["urn:epc:id:sgtin:0012345.099881.LOT-SPIN-042"],
+        "eventTime": "2026-11-03T07:15:00Z",
+        "eventTimeZoneOffset": "-05:00",
+        "readPoint": {"id": "urn:epc:id:sgln:0012345.PALLETIZER2.0"}
+      }
+    ]
+  }
+}
+```
+
+- **Compliance Verification:** The schema binds the SSCC-18 pallet identifier to the child SGTIN carrying `cbv:shelfLifeExpirationDate`. When scanned at the retail DC receiving dock, the WMS queries this EPCIS repository via REST API, automatically auditing FSMA 204 KDEs without manual data entry.
+
+---
+
 ## 14. Interview questions
 
 ### Question 1: What is the Nahmias state vector, and why does scalar inventory tracking fail in fresh food?
@@ -997,6 +1086,32 @@ Critique the standard practice of applying a flat 50% discount to all perishable
 
 **Weak Answer:** Dynamic markdowns mean putting yellow stickers on old food. If you discount it too early, people who would have paid full price buy the cheap food instead. You fix this by only discounting at the end of the day.
 
+
+### Question 9: How does the Arrhenius kinetic model connect cold-chain IoT telemetry to automated WMS gate decisions?
+**Strong Answer:** In standard logistics, WMS systems evaluate Remaining Shelf Life (RSL) purely as a calendar subtraction: $T_{\text{exp}} - T_{\text{receipt}}$. However, biochemical degradation kinetics (microbial growth, enzymatic breakdown, lipid oxidation) accelerate exponentially with temperature according to the Arrhenius relation: $k(T) = A \exp(-E_a / (R T))$. When IoT temperature loggers transmit time-temperature series from a refrigerated container, the analytics platform computes the thermal acceleration ratio $A_T = \exp\left(\frac{E_a}{R}\left(\frac{1}{T_{\text{standard}}} - \frac{1}{T_{\text{excurs}}}\right)\right)$ and integrates the cumulative effective shelf life consumed: $\Delta t_{\text{eff}} = \int A_T(t) dt$. If a 12-hour excursion at $12^\circ\text{C}$ consumes 3.5 equivalent days of life, the WMS updates the effective remaining shelf life downward. If this Arrhenius-adjusted RSL falls below the contractual MRSL threshold (e.g., $<75\%$), the WMS triggers an automated gate refusal before the load is unloaded, preventing thermally damaged goods from entering the retail network.
+
+**Weak Answer:** The Arrhenius formula calculates how hot the truck was and how much faster bacteria grow. If the logger shows it got too warm, the warehouse rejects the shipment.
+
+---
+
+### Question 10: How can an inventory optimization model mathematically prevent the "stagnation trap" under customer cherry-picking?
+**Strong Answer:** Under mixed customer depletion where cherry-picking occurs ($(1-\alpha) > 0$), the oldest cohort $x_{1,t}$ receives only $\alpha D_t$ of demand. If $\alpha D_t < x_{1,t}$, outdating is mathematically guaranteed: $W_t = x_{1,t} - \alpha D_t > 0$. To prevent this stagnation trap, the optimization model must deploy two linked levers: (1) **Replenishment Throttling:** The model constrains the inbound order quantity $Q_t$ such that the total forward-looking supply across all cohorts does not exceed the effective compliant absorption rate: $\sum_{j=1}^{k} x_{j,t} \le \sum_{\tau=1}^{k} \mathbb{E}[\alpha D_{t+\tau}]$. (2) **Dynamic Markdown Triggers:** The model monitors the ratio of cohort stock to compliant velocity: $\rho_{1,t} = x_{1,t} / (\alpha \hat{D}_t)$. When $\rho_{1,t} > 1$, the system automatically triggers a price reduction $\delta^*$ calculated to stimulate price elasticity $\epsilon$ such that $(1 + \epsilon \delta^*) \alpha \hat{D}_t \ge x_{1,t}$, clearing the cohort before midnight expiration.
+
+**Weak Answer:** You prevent stagnation by not ordering too much inventory and putting discount stickers on the items at the front of the shelf so people buy them.
+
+---
+
+### Question 11: Under what operational circumstances should a central distribution center intentionally violate FEFO by dispatching newer inventory to a store?
+**Strong Answer:** A CDC should intentionally deviate from strict network-wide FEFO under two structural conditions: (1) **Asymmetric Transit and Velocity Mismatches (The Matching Principle):** When supplying a remote, slow-turning rural store (transit time 3 days, sales velocity 5 units/day), shipping older stock with 7 days remaining guarantees that the product will either violate the store's receiving MRSL covenant or expire on the retail shelf. The CDC routes fresher stock (e.g., 20 days remaining) to the remote node, while directing the 7-day stock to an adjacent urban flagship store (transit time 2 hours, velocity 100 units/day) where it will be completely cleared within 12 hours. (2) **Contractual Minimum RSL Gating:** When an institutional or commercial customer (e.g., a hospital or export customer) contractually enforces an $85\%$ MRSL requirement, the CDC must dispatch newer stock to clear the contractual covenant, while allocating remaining older stock to domestic retail channels operating under lower $60\%$ thresholds.
+
+**Weak Answer:** You violate FEFO when a store specifically asks for fresher products or when you have to send food on a long truck drive so it doesn't rot on the road.
+
+---
+
+### Question 12: What are the architectural differences between batch-level and serialized item-level traceability for perishable inventory?
+**Strong Answer:** Batch-level traceability tracks inventory by production lot identifier (GS1 AI 10) aggregated at the case or pallet level (SSCC). All units within the batch share an identical assumed expiration date (AI 17). This architecture suffices for wholesale warehouse management and bulk recalls, but fails completely at the retail shelf because it cannot distinguish which specific physical units were taken by cherry-picking consumers. Serialized item-level traceability (using GS1 2D Digital Link QR codes or RFID tags) assigns an EPC (Electronic Product Code) unique to every individual unit (SGTIN). The POS scanner records the exact serial number and expiration date of each unit sold. This enables real-time age-structured inventory auditing, automated POS blocking of out-of-date items, algorithmic individual-pack markdown tracking, and instant elimination of phantom inventory discrepancies.
+
+**Weak Answer:** Batch tracking tracks the whole pallet with a lot number, while serialized tracking puts a unique barcode on every single package. Serialized tracking is better because you know exactly which item was sold.
 ---
 
 ## 15. Key terms

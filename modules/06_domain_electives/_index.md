@@ -33,8 +33,8 @@ The organising idea is that **every industry has a constraint the generic method
 | # | Module | Sector | Topics | Status |
 |---:|---|---|---:|---|
 | 31 | [`31_aftermarket_spare_parts_service/`](31_aftermarket_spare_parts_service/_index.md) | Aftermarket and service | 9 | complete |
-| 32 | [`32_food_agriculture_perishables/`](32_food_agriculture_perishables/_index.md) | Food and agriculture | 9 |
-| 33 | [`33_healthcare_provider_life_sciences/`](33_healthcare_provider_life_sciences/_index.md) | Healthcare and life sciences | 9 |
+| 32 | [`32_food_agriculture_perishables/`](32_food_agriculture_perishables/_index.md) | Food and agriculture | 9 | complete |
+| 33 | [`33_healthcare_provider_life_sciences/`](33_healthcare_provider_life_sciences/_index.md) | Healthcare and life sciences | 9 | complete |
 | 34 | [`34_energy_utilities_capital_projects/`](34_energy_utilities_capital_projects/_index.md) | Energy, utilities, capital projects | 9 |
 | 35 | [`35_public_sector_defence_humanitarian/`](35_public_sector_defence_humanitarian/_index.md) | Public sector, defence, humanitarian | 10 |
 | 36 | [`36_global_freight_ports_trade_policy/`](36_global_freight_ports_trade_policy/_index.md) | Global freight and trade | 10 |
@@ -72,9 +72,9 @@ Teach at most two in a 40-week cohort. Pairings that work well: 31 with 34, 32 w
 
 | Status | Count |
 |---|---:|
-| planned | 9 |
+| planned | 7 |
 | draft | 0 |
-| complete | 1 |
+| complete | 3 |
 
 The ten survey files in `../../course/` are complete at survey depth. Topic files are indexed but
 not yet written.

@@ -31,15 +31,15 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_provider-network-item-master.md`](01_provider-network-item-master.md) | The Provider Network and Item Master | Manufacturer to patient, identity, UDI, and contract linkage. | 1,200–1,800 | planned |
-| 2 | [`02_par-levels-clinical-replenishment.md`](02_par-levels-clinical-replenishment.md) | Par Levels and Clinical Replenishment | Demand, review period, lead time, criticality, and cabinet data. | 1,200–1,800 | planned |
-| 3 | [`03_or-case-carts-preference-cards.md`](03_or-case-carts-preference-cards.md) | Operating Rooms, Case Carts, and Preference Cards | Kit design, pick accuracy, and first-case delays. | 1,200–1,800 | planned |
-| 4 | [`04_consignment-vmi.md`](04_consignment-vmi.md) | Consignment and Vendor-Managed Inventory | Ownership, counting, expiry, and contract terms. | 1,200–1,800 | planned |
-| 5 | [`05_udi-traceability.md`](05_udi-traceability.md) | UDI and Traceability | Receipt-to-patient trace, point-of-use capture, and recall readiness. | 1,200–1,800 | planned |
-| 6 | [`06_shortage-recall-management.md`](06_shortage-recall-management.md) | Shortage and Recall Management | Allocation rules, substitution, and recall execution. | 1,200–1,800 | planned |
-| 7 | [`07_clinical-trial-supply.md`](07_clinical-trial-supply.md) | Clinical Trial Supply | Randomization, blinding, kits, resupply, and expiry. | 1,200–1,800 | planned |
-| 8 | [`08_provider-metrics-governance.md`](08_provider-metrics-governance.md) | Provider Metrics and Governance | Fill rate, turns, case-cart accuracy, and clinical value analysis. | 1,200–1,800 | planned |
-| 9 | [`09_privacy-clinical-risk.md`](09_privacy-clinical-risk.md) | Privacy and Clinical Risk | HIPAA, GDPR, de-identification, and decision-support boundaries. | 1,200–1,800 | planned |
+| 1 | [`01_provider-network-item-master.md`](01_provider-network-item-master.md) | The Provider Network and Item Master | Manufacturer to patient, identity, UDI, and contract linkage. | 1,200–1,800 | complete |
+| 2 | [`02_par-levels-clinical-replenishment.md`](02_par-levels-clinical-replenishment.md) | Par Levels and Clinical Replenishment | Demand, review period, lead time, criticality, and cabinet data. | 1,200–1,800 | complete |
+| 3 | [`03_or-case-carts-preference-cards.md`](03_or-case-carts-preference-cards.md) | Operating Rooms, Case Carts, and Preference Cards | Kit design, pick accuracy, and first-case delays. | 1,200–1,800 | complete |
+| 4 | [`04_consignment-vmi.md`](04_consignment-vmi.md) | Consignment and Vendor-Managed Inventory | Ownership, counting, expiry, and contract terms. | 1,200–1,800 | complete |
+| 5 | [`05_udi-traceability.md`](05_udi-traceability.md) | UDI and Traceability | Receipt-to-patient trace, point-of-use capture, and recall readiness. | 1,200–1,800 | complete |
+| 6 | [`06_shortage-recall-management.md`](06_shortage-recall-management.md) | Shortage and Recall Management | Allocation rules, substitution, and recall execution. | 1,200–1,800 | complete |
+| 7 | [`07_clinical-trial-supply.md`](07_clinical-trial-supply.md) | Clinical Trial Supply | Randomization, blinding, kits, resupply, and expiry. | 1,200–1,800 | complete |
+| 8 | [`08_provider-metrics-governance.md`](08_provider-metrics-governance.md) | Provider Metrics and Governance | Fill rate, turns, case-cart accuracy, and clinical value analysis. | 1,200–1,800 | complete |
+| 9 | [`09_privacy-clinical-risk.md`](09_privacy-clinical-risk.md) | Privacy and Clinical Risk | HIPAA, GDPR, de-identification, and decision-support boundaries. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -70,9 +70,9 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 9 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 9 |
 
 Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
 as each file is produced at its target length. The survey file linked above is complete at survey

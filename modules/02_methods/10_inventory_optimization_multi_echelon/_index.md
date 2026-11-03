@@ -35,7 +35,7 @@ not the whole program.
 | 2 | [`02_eoq-limits.md`](02_eoq-limits.md) | EOQ and Its Limits | Setup, holding, and the assumptions that rarely hold in practice. | 1,200–1,800 | complete |
 | 3 | [`03_newsvendor.md`](03_newsvendor.md) | Newsvendor and the Critical Fractile | Optimal order quantity under a single selling season. | 1,200–1,800 | complete |
 | 4 | [`04_safety-stock.md`](04_safety-stock.md) | Safety Stock under Demand and Lead-Time Uncertainty | Combining variability, lead time, and review period. | 1,200–1,800 | complete |
-| 5 | [`05_service-metrics.md`](05_service-metrics.md) | Service Metrics: CSL, Fill Rate, OTIF | Definitions that are not interchangeable and the policies they imply. | 1,200–1,800 | planned |
+| 5 | [`05_service-metrics.md`](05_service-metrics.md) | Service Metrics: CSL, Fill Rate, OTIF | Definitions that are not interchangeable and the policies they imply. | 1,200–1,800 | complete |
 | 6 | [`06_policy-families.md`](06_policy-families.md) | Policy Families | (s,Q), (R,S), min-max, and periodic review in operational terms. | 1,200–1,800 | planned |
 | 7 | [`07_lead-time-demand.md`](07_lead-time-demand.md) | Lead-Time Demand Distributions | Compounding demand and lead-time variability correctly. | 1,200–1,800 | planned |
 | 8 | [`08_multi-echelon.md`](08_multi-echelon.md) | Multi-Echelon Inventory, MEIO, and DRP | Echelon stock, lead-time demand, DRP deployment, shortage allocation, and where to hold the buffer. | 1,200–1,800 | planned |
