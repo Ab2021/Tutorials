@@ -1,4 +1,4 @@
-# MILP Anatomy — variables, constraints, objective, and the modelling choices that decide solvability
+﻿# MILP Anatomy — variables, constraints, objective, and the modelling choices that decide solvability
 
 > Module 11 — Network Design and Optimization
 > Topic 03 of 10
@@ -1280,9 +1280,9 @@ cost numerical accuracy. Weak answer: says "I am careful with units", which is n
 - This module's index: [`_index.md`](_index.md)
 - Previous topic, the network as a graph and cost-to-serve: [`02_graph-cost-to-serve.md`](02_graph-cost-to-serve.md)
 - First topic, the decision ladder: [`01_network-decision-ladder.md`](01_network-decision-ladder.md)
-- Next topic, the baseline capacitated facility-location model: `04_facility-location.md` (planned)
-- Then multi-commodity and multi-period models: `05_multi-commodity-period.md` (planned)
-- Later, solvers and heuristics: `10_solvers-heuristics.md` (planned)
+- Next topic, the baseline capacitated facility-location model: [`04_facility-location.md`](04_facility-location.md)
+- Then multi-commodity and multi-period models: [`05_multi-commodity-period.md`](05_multi-commodity-period.md)
+- Later, solvers and heuristics: [`10_solvers-heuristics.md`](10_solvers-heuristics.md)
 - This part's index: [`../_index.md`](../_index.md)
 - Module 10, inventory and multi-echelon optimisation: [`../10_inventory_optimization_multi_echelon/_index.md`](../10_inventory_optimization_multi_echelon/_index.md)
 - Part I of the program: [`../../01_foundations/_index.md`](../../01_foundations/_index.md)

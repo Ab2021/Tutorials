@@ -1295,5 +1295,5 @@ case, conference paper, or institutional analysis; D vendor or consultancy; E pr
 - Part I foundations: [`../../01_foundations/_index.md`](../../01_foundations/_index.md)
 - Module survey file: [`../../../course/11_network_design_optimization.md`](../../../course/11_network_design_optimization.md)
 
-> **Note:** topics 06 to 10 are listed in `_index.md` but do not exist on disk yet, so they are
-> shown as plain file names marked planned; every markdown link on this page resolves.
+> **Note:** all ten topic files in this module are now written. Every markdown link on this page
+> resolves to a file that exists on disk.

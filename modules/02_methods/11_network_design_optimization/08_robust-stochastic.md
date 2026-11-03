@@ -1,4 +1,4 @@
-# Robust and Stochastic Optimization — hedging against demand, cost, and disruption uncertainty
+﻿# Robust and Stochastic Optimization — hedging against demand, cost, and disruption uncertainty
 
 > Module 11 — Network Design and Optimization
 > Topic 08 of 10
@@ -1279,8 +1279,8 @@ case, consultancy, preprint, or institutional analysis; D vendor; E press or ane
 - Transition and phasing, which this topic does not model: [`06_greenfield-brownfield.md`](06_greenfield-brownfield.md)
 - The graph and cost-to-serve basis: [`02_graph-cost-to-serve.md`](02_graph-cost-to-serve.md)
 - The decision ladder this analysis serves: [`01_network-decision-ladder.md`](01_network-decision-ladder.md)
-- Next, carbon as part of the objective: `09_carbon-objective.md` (planned)
-- Later, decomposition and solver behaviour for large stochastic programmes: `10_solvers-heuristics.md` (planned)
+- Next, carbon as part of the objective: [`09_carbon-objective.md`](09_carbon-objective.md)
+- Later, decomposition and solver behaviour for large stochastic programmes: [`10_solvers-heuristics.md`](10_solvers-heuristics.md)
 
 **Adjacent modules**
 
@@ -1294,5 +1294,5 @@ case, consultancy, preprint, or institutional analysis; D vendor; E press or ane
 - Part I foundations: [`../../01_foundations/_index.md`](../../01_foundations/_index.md)
 - Module survey file: [`../../../course/11_network_design_optimization.md`](../../../course/11_network_design_optimization.md)
 
-> **Note:** topics 09 and 10 are listed in `_index.md` but do not exist on disk yet, so they are
-> shown as plain file names marked planned. Every markdown link on this page resolves.
+> **Note:** all ten topic files in this module are now written. Every markdown link on this page
+> resolves to a file that exists on disk.

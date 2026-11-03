@@ -1,4 +1,4 @@
-# Carbon in the Objective — emissions factors, scope boundaries, and multi-objective trade-offs
+﻿# Carbon in the Objective — emissions factors, scope boundaries, and multi-objective trade-offs
 
 > Module 11 — Network Design and Optimization
 > Topic 09 of 10
@@ -1280,7 +1280,7 @@ consultancy, or institutional analysis; D vendor or data provider; E press or an
 - Transition and brownfield analysis: [`06_greenfield-brownfield.md`](06_greenfield-brownfield.md)
 - The trade-off analysis this curve is a variant of: [`07_scenario-sensitivity.md`](07_scenario-sensitivity.md)
 - The formal treatment of uncertainty the emissions model inherits: [`08_robust-stochastic.md`](08_robust-stochastic.md)
-- Later, solver behaviour and gap reporting: `10_solvers-heuristics.md` (planned)
+- Later, solver behaviour and gap reporting: [`10_solvers-heuristics.md`](10_solvers-heuristics.md)
 
 **Adjacent modules**
 
@@ -1295,5 +1295,5 @@ consultancy, or institutional analysis; D vendor or data provider; E press or an
 - Part I foundations: [`../../01_foundations/_index.md`](../../01_foundations/_index.md)
 - Module survey file: [`../../../course/11_network_design_optimization.md`](../../../course/11_network_design_optimization.md)
 
-> **Note:** topic 10 is indexed but does not exist on disk yet, so it appears as a plain file name
-> marked planned. Every markdown link on this page resolves.
+> **Note:** all ten topic files in this module are now written. Every markdown link on this page
+> resolves to a file that exists on disk.

@@ -1,4 +1,4 @@
-# The Network Decision Ladder — Strategic, Tactical, and Operational Network Choices and Their Time Scales
+﻿# The Network Decision Ladder — Strategic, Tactical, and Operational Network Choices and Their Time Scales
 
 > Module 11 — Network Design and Optimization
 > Topic 01 of 10
@@ -1225,9 +1225,9 @@ Every entry is graded A-E. A is peer-reviewed or audited; B is regulatory, offic
 **This module**
 
 - Module map: [`_index.md`](_index.md)
-- Next topic (planned): `02_graph-cost-to-serve.md`
-- Later in this module (planned): `03_milp-anatomy.md`, `04_facility-location.md`, `05_multi-commodity-period.md`
-- Later in this module (planned): `06_greenfield-brownfield.md`, `07_scenario-sensitivity.md`, `08_robust-stochastic.md`, `09_carbon-objective.md`, `10_solvers-heuristics.md`
+- Next topic [`02_graph-cost-to-serve.md`](02_graph-cost-to-serve.md)
+- Later in this module: [`03_milp-anatomy.md`](03_milp-anatomy.md), [`04_facility-location.md`](04_facility-location.md), [`05_multi-commodity-period.md`](05_multi-commodity-period.md)
+- Later in this module: [`06_greenfield-brownfield.md`](06_greenfield-brownfield.md), [`07_scenario-sensitivity.md`](07_scenario-sensitivity.md), [`08_robust-stochastic.md`](08_robust-stochastic.md), [`09_carbon-objective.md`](09_carbon-objective.md), [`10_solvers-heuristics.md`](10_solvers-heuristics.md)
 
 **Prerequisite modules**
 
@@ -1249,5 +1249,6 @@ Every entry is graded A-E. A is peer-reviewed or audited; B is regulatory, offic
 - Part II methods index: [`../_index.md`](../_index.md)
 - Module survey file: [`../../../course/11_network_design_optimization.md`](../../../course/11_network_design_optimization.md)
 
-> **Note:** sibling topic files 02 to 10 in this module are listed in `_index.md` but do not exist on disk yet. They are shown above as plain file names marked planned, not as links, so that this page contains no broken targets.
+> **Note:** all ten topic files in this module are now written, and every link on this page
+> resolves to a file that exists on disk.
 

@@ -1,4 +1,4 @@
-# The Network as a Graph and Cost-to-Serve
+﻿# The Network as a Graph and Cost-to-Serve
 
 > Module 11 — Network Design and Optimization
 > Topic 02 of 10
@@ -1289,11 +1289,11 @@ then distance metric, then aggregation — and report each against the decision 
 - Part I foundations: [`../../01_foundations/_index.md`](../../01_foundations/_index.md)
 - Module survey file: [`../../../course/11_network_design_optimization.md`](../../../course/11_network_design_optimization.md)
 - Sibling topic: [`01_network-decision-ladder.md`](01_network-decision-ladder.md)
-- Sibling topic: `03_milp-anatomy.md` (planned)
-- Sibling topic: `04_facility-location.md` (planned)
-- Sibling topic: `05_multi-commodity-period.md` (planned)
-- Sibling topic: `06_greenfield-brownfield.md` (planned)
-- Sibling topic: `07_scenario-sensitivity.md` (planned)
-- Sibling topic: `08_robust-stochastic.md` (planned)
-- Sibling topic: `09_carbon-objective.md` (planned)
-- Sibling topic: `10_solvers-heuristics.md` (planned)
+- Sibling topic: [`03_milp-anatomy.md`](03_milp-anatomy.md)
+- Sibling topic: [`04_facility-location.md`](04_facility-location.md)
+- Sibling topic: [`05_multi-commodity-period.md`](05_multi-commodity-period.md)
+- Sibling topic: [`06_greenfield-brownfield.md`](06_greenfield-brownfield.md)
+- Sibling topic: [`07_scenario-sensitivity.md`](07_scenario-sensitivity.md)
+- Sibling topic: [`08_robust-stochastic.md`](08_robust-stochastic.md)
+- Sibling topic: [`09_carbon-objective.md`](09_carbon-objective.md)
+- Sibling topic: [`10_solvers-heuristics.md`](10_solvers-heuristics.md)

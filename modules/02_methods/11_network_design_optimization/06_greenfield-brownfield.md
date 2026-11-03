@@ -1284,8 +1284,10 @@ observation, or anecdote.
 - MILP anatomy, assumed here: [`03_milp-anatomy.md`](03_milp-anatomy.md)
 - The formulation this topic extends: [`04_facility-location.md`](04_facility-location.md)
 - Multi-commodity and multi-period models, the machinery for a migration path: [`05_multi-commodity-period.md`](05_multi-commodity-period.md)
-- Planned, not yet written: `07_scenario-sensitivity.md`, `08_robust-stochastic.md`,
-  `09_carbon-objective.md`, `10_solvers-heuristics.md`
+- Next, the analysis a transition plan must survive: [`07_scenario-sensitivity.md`](07_scenario-sensitivity.md)
+- Then, uncertainty in the transition itself: [`08_robust-stochastic.md`](08_robust-stochastic.md)
+- Then, emissions as a transition objective: [`09_carbon-objective.md`](09_carbon-objective.md)
+- Closing topic, solver behaviour for a long-horizon transition model: [`10_solvers-heuristics.md`](10_solvers-heuristics.md)
 
 **Adjacent modules and programme navigation**
 
@@ -1294,5 +1296,5 @@ observation, or anecdote.
 - Part I foundations: [`../../01_foundations/_index.md`](../../01_foundations/_index.md)
 - Module survey file: [`../../../course/11_network_design_optimization.md`](../../../course/11_network_design_optimization.md)
 
-> **Note:** topics 07 to 10 carry the status `planned` in `_index.md`, so they appear as plain file
-> names rather than links. Every markdown link on this page resolves.
+> **Note:** all ten topic files in this module are now written. Every markdown link on this page
+> resolves to a file that exists on disk.

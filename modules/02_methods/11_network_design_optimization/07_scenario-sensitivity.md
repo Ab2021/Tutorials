@@ -1,4 +1,4 @@
-# Scenario and Sensitivity Analysis — which assumptions change the answer, and by how much
+﻿# Scenario and Sensitivity Analysis — which assumptions change the answer, and by how much
 
 > Module 11 — Network Design and Optimization
 > Topic 07 of 10
@@ -1280,9 +1280,9 @@ consultancy, or institutional analysis; D vendor; E press or anecdote.
 - Transition and brownfield analysis: [`06_greenfield-brownfield.md`](06_greenfield-brownfield.md)
 - The graph and cost-to-serve basis: [`02_graph-cost-to-serve.md`](02_graph-cost-to-serve.md)
 - The decision ladder this analysis serves: [`01_network-decision-ladder.md`](01_network-decision-ladder.md)
-- Next, the formal treatment of uncertainty: `08_robust-stochastic.md` (planned)
-- Later, carbon as a scenario dimension: `09_carbon-objective.md` (planned)
-- Later, solver behaviour and gap reporting: `10_solvers-heuristics.md` (planned)
+- Next, the formal treatment of uncertainty: [`08_robust-stochastic.md`](08_robust-stochastic.md)
+- Later, carbon as a scenario dimension: [`09_carbon-objective.md`](09_carbon-objective.md)
+- Later, solver behaviour and gap reporting: [`10_solvers-heuristics.md`](10_solvers-heuristics.md)
 
 **Adjacent modules**
 
@@ -1295,5 +1295,5 @@ consultancy, or institutional analysis; D vendor; E press or anecdote.
 - Part I foundations: [`../../01_foundations/_index.md`](../../01_foundations/_index.md)
 - Module survey file: [`../../../course/11_network_design_optimization.md`](../../../course/11_network_design_optimization.md)
 
-> **Note:** topics 08 to 10 are listed in `_index.md` but do not exist on disk yet, so they are
-> shown as plain file names marked planned. Every markdown link on this page resolves.
+> **Note:** all ten topic files in this module are now written. Every markdown link on this page
+> resolves to a file that exists on disk.

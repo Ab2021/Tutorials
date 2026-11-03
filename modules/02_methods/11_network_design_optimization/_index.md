@@ -40,7 +40,7 @@ not the whole program.
 | 7 | [`07_scenario-sensitivity.md`](07_scenario-sensitivity.md) | Scenario and Sensitivity Analysis | Which assumptions change the answer, and by how much. | 1,200–1,800 | complete |
 | 8 | [`08_robust-stochastic.md`](08_robust-stochastic.md) | Robust and Stochastic Optimization | Hedging against demand, cost, and disruption uncertainty. | 1,200–1,800 | complete |
 | 9 | [`09_carbon-objective.md`](09_carbon-objective.md) | Carbon in the Objective | Emissions factors, scope boundaries, and multi-objective trade-offs. | 1,200–1,800 | complete |
-| 10 | [`10_solvers-heuristics.md`](10_solvers-heuristics.md) | Solvers, Heuristics, and Practical Limits | MIP gaps, decomposition, and when a heuristic is the professional answer. | 1,200–1,800 | planned |
+| 10 | [`10_solvers-heuristics.md`](10_solvers-heuristics.md) | Solvers, Heuristics, and Practical Limits | MIP gaps, decomposition, and when a heuristic is the professional answer. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,14 +71,15 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 1 |
+| planned | 0 |
 | draft | 0 |
-| complete | 9 |
+| complete | 10 |
 
-Module 11 is in production as of 3 November 2026. Topics 01 to 09 are written and meet the
-quality bar in `MODULE_EXPANSION_SPEC.md` §5; topic 10 is indexed but not yet written. Status moves from
-`planned` to `draft` to `complete` as each file is produced at its target length. The survey file
-linked above is complete at survey depth and can be used on its own.
+All ten topic files are written and meet the quality bar in `MODULE_EXPANSION_SPEC.md` §5: at
+least 1,000 lines, all 17 sections present, arithmetic checked, sources real and graded. The
+module total is 12,934 lines. Every relative link in the module resolves. Module 06 is deferred
+and is not linked from any file in this module. Status moves from `complete` to `reviewed` when a
+second reader signs off, and to `revised` after corrections.
 
 ## 7. Sources for this module
 

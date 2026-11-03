@@ -1,4 +1,4 @@
-# Multi-Commodity and Multi-Period Models — product families, inventories, and time-expanded networks
+﻿# Multi-Commodity and Multi-Period Models — product families, inventories, and time-expanded networks
 
 > Module 11 — Network Design and Optimization
 > Topic 05 of 10
@@ -1292,8 +1292,8 @@ versions may differ and should be cited in a formal study.
 - Module 10's multi-echelon topic, for safety stock as a policy: [`../10_inventory_optimization_multi_echelon/08_multi-echelon.md`](../10_inventory_optimization_multi_echelon/08_multi-echelon.md)
 - Part I foundations: [`../../01_foundations/_index.md`](../../01_foundations/_index.md)
 - This module's survey file: [`../../../course/11_network_design_optimization.md`](../../../course/11_network_design_optimization.md)
-- Planned, not yet written: `06_greenfield-brownfield.md` (planned) — phasing and legacy assets
-- Planned, not yet written: `07_scenario-sensitivity.md` (planned) — which assumptions change the answer
-- Planned, not yet written: `08_robust-stochastic.md` (planned) — demand and disruption uncertainty
-- Planned, not yet written: `09_carbon-objective.md` (planned) — emissions in the objective
-- Planned, not yet written: `10_solvers-heuristics.md` (planned) — gaps, decomposition, and limits
+- Next in this module: [`06_greenfield-brownfield.md`](06_greenfield-brownfield.md) — phasing and legacy assets
+- Then: [`07_scenario-sensitivity.md`](07_scenario-sensitivity.md) — which assumptions change the answer
+- Then: [`08_robust-stochastic.md`](08_robust-stochastic.md) — demand and disruption uncertainty
+- Then: [`09_carbon-objective.md`](09_carbon-objective.md) — emissions in the objective
+- Closing topic: [`10_solvers-heuristics.md`](10_solvers-heuristics.md) — gaps, decomposition, and limits
