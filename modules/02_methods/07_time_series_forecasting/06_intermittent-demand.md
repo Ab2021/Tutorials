@@ -1,4 +1,4 @@
-# Intermittent Demand — Croston, SBA, TSB, and classification before method choice
+﻿# Intermittent Demand — Croston, SBA, TSB, and classification before method choice
 
 > Module 07 — Time Series Forecasting Foundations
 > Topic 06 of 10
@@ -1250,14 +1250,14 @@ the qualitative argument.
 - Module map: [`_index.md`](_index.md)
 - Previous topic: [`04_regression-lags-fourier.md`](04_regression-lags-fourier.md) — regression with
   calendar and causal features, and the leakage discipline assumed in section 5.
-- Planned sibling: `05_hierarchy-aggregation.md` (planned) — where to forecast, and how aggregation
+- Planned sibling: [`05_hierarchy-aggregation.md`](05_hierarchy-aggregation.md) — where to forecast, and how aggregation
   changes error.
 - Related: [`02_exponential-smoothing.md`](02_exponential-smoothing.md) — the level, trend, and
   seasonality recursions that fail on zero-heavy series.
 - Related: [`01_forecastability-benchmarks.md`](01_forecastability-benchmarks.md) — the naive and
   seasonal-naive floors used as controls in section 6.6.
-- Later in this module: `08_rolling-origin-backtesting.md` (planned) and
-  `09_error-metrics-cost.md` (planned).
+- Later in this module: [`08_rolling-origin-backtesting.md`](08_rolling-origin-backtesting.md) and
+  [`09_error-metrics-cost.md`](09_error-metrics-cost.md).
 - Measurement prerequisite:
   [`../../01_foundations/01A_foundations_units_time_assumptions/10_intermittent-metrics.md`](../../01_foundations/01A_foundations_units_time_assumptions/10_intermittent-metrics.md)
   — ADI, CV², the four-class grid, and why percentage errors fail here.

@@ -1,4 +1,4 @@
-# Hierarchy and Aggregation — Where to Forecast and How Aggregation Changes Error
+﻿# Hierarchy and Aggregation — Where to Forecast and How Aggregation Changes Error
 
 > Module 07 — Time Series Forecasting Foundations
 > Topic 05 of 10
@@ -1280,11 +1280,11 @@ statistic here is invented.
 - The benchmark discipline this topic assumes: [`01_forecastability-benchmarks.md`](01_forecastability-benchmarks.md)
 - Exponential smoothing as the base forecaster at the planning level: [`02_exponential-smoothing.md`](02_exponential-smoothing.md)
 - ARIMA and SARIMAX as an alternative base forecaster: [`03_arima-sarimax.md`](03_arima-sarimax.md)
-- Next topic, intermittent demand where the bottom level lives: `06_intermittent-demand.md` (planned)
-- Forecast combination, which interacts with reconciliation: `07_forecast-combination.md` (planned)
-- Backtesting at multiple levels: `08_rolling-origin-backtesting.md` (planned)
-- Error metrics and their cost interpretation: `09_error-metrics-cost.md` (planned)
-- Overrides and forecast value added: `10_overrides-fva.md` (planned)
+- Next topic, intermittent demand where the bottom level lives: [`06_intermittent-demand.md`](06_intermittent-demand.md)
+- Forecast combination, which interacts with reconciliation: [`07_forecast-combination.md`](07_forecast-combination.md)
+- Backtesting at multiple levels: [`08_rolling-origin-backtesting.md`](08_rolling-origin-backtesting.md)
+- Error metrics and their cost interpretation: [`09_error-metrics-cost.md`](09_error-metrics-cost.md)
+- Overrides and forecast value added: [`10_overrides-fva.md`](10_overrides-fva.md)
 - Reconciliation estimators and the MinT family: [`../08_hierarchical_intermittent_probabilistic_forecasting/_index.md`](../08_hierarchical_intermittent_probabilistic_forecasting/_index.md)
 - Hierarchy design, grain, and additivity: [`../../01_foundations/01A_foundations_units_time_assumptions/07_hierarchy-design.md`](../../01_foundations/01A_foundations_units_time_assumptions/07_hierarchy-design.md)
 - Forecast error metrics at the foundations level: [`../../01_foundations/01A_foundations_units_time_assumptions/09_forecast-error-metrics.md`](../../01_foundations/01A_foundations_units_time_assumptions/09_forecast-error-metrics.md)

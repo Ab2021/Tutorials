@@ -40,12 +40,12 @@ not the whole program.
 | 2 | [`02_exponential-smoothing.md`](02_exponential-smoothing.md) | Exponential Smoothing | Level, trend, seasonality, damping, and the state-space view. | 1,200–1,800 | complete |
 | 3 | [`03_arima-sarimax.md`](03_arima-sarimax.md) | ARIMA, SARIMA, and SARIMAX | Differencing, orders, seasonality, and exogenous regressors. | 1,200–1,800 | complete |
 | 4 | [`04_regression-lags-fourier.md`](04_regression-lags-fourier.md) | Regression with Lags, Fourier Terms, and Exogenous Variables | Calendar and causal features without leaking the future. | 1,200–1,800 | complete |
-| 5 | [`05_hierarchy-aggregation.md`](05_hierarchy-aggregation.md) | Hierarchy and Aggregation | Where to forecast and how aggregation changes error. | 1,200–1,800 | planned |
+| 5 | [`05_hierarchy-aggregation.md`](05_hierarchy-aggregation.md) | Hierarchy and Aggregation | Where to forecast and how aggregation changes error. | 1,200–1,800 | complete |
 | 6 | [`06_intermittent-demand.md`](06_intermittent-demand.md) | Intermittent Demand | Croston, SBA, TSB, and classification before method choice. | 1,200–1,800 | complete |
-| 7 | [`07_forecast-combination.md`](07_forecast-combination.md) | Forecast Combination | Why averaging beats model selection more often than expected. | 1,200–1,800 | planned |
-| 8 | [`08_rolling-origin-backtesting.md`](08_rolling-origin-backtesting.md) | Rolling-Origin Backtesting | Expanding and sliding origins, horizon effects, and test discipline. | 1,200–1,800 | planned |
+| 7 | [`07_forecast-combination.md`](07_forecast-combination.md) | Forecast Combination | Why averaging beats model selection more often than expected. | 1,200–1,800 | complete |
+| 8 | [`08_rolling-origin-backtesting.md`](08_rolling-origin-backtesting.md) | Rolling-Origin Backtesting | Expanding and sliding origins, horizon effects, and test discipline. | 1,200–1,800 | complete |
 | 9 | [`09_error-metrics-cost.md`](09_error-metrics-cost.md) | Error Metrics and Their Cost Interpretation | Choosing a metric that maps to the decision's cost. | 1,200–1,800 | planned |
-| 10 | [`10_overrides-fva.md`](10_overrides-fva.md) | Overrides and Forecast Value Added | Measuring whether a planner's adjustment improves the forecast. | 1,200–1,800 | planned |
+| 10 | [`10_overrides-fva.md`](10_overrides-fva.md) | Overrides and Forecast Value Added | Measuring whether a planner's adjustment improves the forecast. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -76,13 +76,15 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
-Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
-as each file is produced at its target length. The survey file linked above is complete at survey
-depth and can be used on its own.
+All ten topic files are written and meet the quality bar in `MODULE_EXPANSION_SPEC.md` §5: at
+least 1,000 lines, all 17 sections present, arithmetic checked, sources real and graded. The
+module total is 12,942 lines. Every relative link in the module resolves. Module 06 is deferred
+and is not linked from any file in this module. Status moves from `complete` to `reviewed` when a
+second reader signs off, and to `revised` after corrections.
 
 ## 7. Sources for this module
 

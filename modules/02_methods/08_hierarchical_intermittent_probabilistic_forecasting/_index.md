@@ -31,7 +31,7 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_hierarchy-structures.md`](01_hierarchy-structures.md) | Hierarchy Structures | Product, location, customer, and temporal aggregation and the paths between them. | 1,200–1,800 | planned |
+| 1 | [`01_hierarchy-structures.md`](01_hierarchy-structures.md) | Hierarchy Structures | Product, location, customer, and temporal aggregation and the paths between them. | 1,200–1,800 | complete |
 | 2 | [`02_aggregation-consistency.md`](02_aggregation-consistency.md) | Aggregation Consistency and the Four Classical Methods | Bottom-up, top-down, middle-out, and optimal reconciliation. | 1,200–1,800 | planned |
 | 3 | [`03_mint-reconciliation.md`](03_mint-reconciliation.md) | MinT in Detail | Covariance shrinkage, constraints, and a reference implementation. | 1,200–1,800 | planned |
 | 4 | [`04_temporal-cross-temporal.md`](04_temporal-cross-temporal.md) | Temporal and Cross-Temporal Hierarchies | Reconciling across time buckets as well as entities. | 1,200–1,800 | planned |

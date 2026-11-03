@@ -2,6 +2,50 @@
 
 All substantive changes to the curriculum are recorded here.
 
+## 2026.12.0 — 3 November 2026
+
+### Added — Module 07 written in full
+- Module 07 (`02_methods/07_time_series_forecasting/`) is now written in full: ten topic files,
+  12,942 lines, each with all 17 required sections and every relative link resolving. This is the
+  first module written in Part II.
+- `01_forecastability-benchmarks.md` — naive, seasonal-naive, drift and mean benchmarks; forecast-
+  ability; the M-competition lineage and what it does and does not establish.
+- `02_exponential-smoothing.md` — the smoothing family as one idea; damped trend; additive versus
+  multiplicative seasonality; the state-space formulation and the ETS taxonomy.
+- `03_arima-sarimax.md` — stationarity and differencing, order selection, seasonal structure,
+  exogenous regressors, the leakage trap, and residual diagnostics.
+- `04_regression-lags-fourier.md` — harmonic seasonality, moving holidays, distributed lags, and a
+  catalogue of future-leakage errors with the red flag for each.
+- `05_hierarchy-aggregation.md` — where to forecast, top-down versus bottom-up versus middle-out,
+  temporary aggregation, and the reconciliation problem previewed without solving it.
+- `06_intermittent-demand.md` — Croston, SBA and TSB, the bias-correction history, and classification
+  used as a screen rather than a verdict.
+- `07_forecast-combination.md` — the combination puzzle, the error-correlation term, and why equal
+  weights beat estimated weights on short samples.
+- `08_rolling-origin-backtesting.md` — expanding and sliding origins, horizon effects, and the
+  selection-versus-evaluation leakage.
+- `09_error-metrics-cost.md` — the metric family, asymmetric cost, and the newsvendor critical
+  fractile that turns an error distribution into a decision quantile.
+- `10_overrides-fva.md` — forecast value added, the three override reasons, and how to measure a
+  planner's adjustment against the right baseline.
+
+### Changed
+- Module 07 status table reports 10 `complete` and the module total.
+- `modules/02_methods/_index.md` reports one module complete in Part II; `VALIDATION_STATUS.md` now
+  records 72 of 476 topic units and 93,516 lines.
+
+### Notes
+- **Module 06 remains deferred at the user's request** (2 November 2026). Module 07's prerequisite
+  list names Module 06, so the module index and every topic file carry an explicit note instead of
+  pointing at unwritten material. A verification pass confirmed that no Module 07 file contains a
+  link to, or description of, Module 06's contents.
+- One writer corrected an error carried in its own brief: the brief described the Syntetos–Boylan
+  bias correction as removing "a bias of exactly p/2", which no source the writer could reach
+  supported. The file states the bias as being of order 1/(2p) and notes that published
+  approximations differ in their constants. The brief's version was not printed.
+- Another writer could not confirm the current edition year of ISO 3534-1 and omitted the year
+  rather than guessing it.
+
 ## 2026.11.0 — 2 November 2026
 
 ### Added — Module 05 written in full

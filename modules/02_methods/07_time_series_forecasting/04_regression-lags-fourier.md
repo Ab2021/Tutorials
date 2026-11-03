@@ -1,4 +1,4 @@
-# Regression with Lags, Fourier Terms, and Exogenous Variables
+﻿# Regression with Lags, Fourier Terms, and Exogenous Variables
 
 > Module 07 — Time Series Forecasting Foundations
 > Topic 04 of 10
@@ -1282,9 +1282,9 @@ papers are those reported in their abstracts and are labelled dataset-specific.
 
 - Module map: [`_index.md`](_index.md)
 - Previous topic: [`03_arima-sarimax.md`](03_arima-sarimax.md)
-- Next topic: `05_hierarchy-aggregation.md` (planned)
-- Backtesting: `08_rolling-origin-backtesting.md` (planned)
-- Error metrics: `09_error-metrics-cost.md` (planned)
+- Next topic: [`05_hierarchy-aggregation.md`](05_hierarchy-aggregation.md)
+- Backtesting: [`08_rolling-origin-backtesting.md`](08_rolling-origin-backtesting.md)
+- Error metrics: [`09_error-metrics-cost.md`](09_error-metrics-cost.md)
 - Foundations of the benchmark: [`01_forecastability-benchmarks.md`](01_forecastability-benchmarks.md)
 - Error structure: [`02_exponential-smoothing.md`](02_exponential-smoothing.md)
 - The formal treatment of seasonality, holidays, and distributed lags:

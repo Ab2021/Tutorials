@@ -1,4 +1,4 @@
-> Module 07 — Time Series Forecasting Foundations
+﻿> Module 07 — Time Series Forecasting Foundations
 > Topic 01 of 10
 > Estimated study time: 3.5 hours
 > Prerequisites: Module 01A topics 09–11; Module 04 topic 04; Module 05 topic 06
@@ -1277,9 +1277,9 @@ than its source supports.
 - Module map: [`_index.md`](_index.md)
 - Next topic, exponential smoothing as the first family of challengers:
   [`02_exponential-smoothing.md`](02_exponential-smoothing.md)
-- Backtesting machinery that makes the comparison fair: `08_rolling-origin-backtesting.md` (planned)
-- FVA and override measurement: `10_overrides-fva.md` (planned)
-- Intermittent demand, where MAE misleads: `06_intermittent-demand.md` (planned)
+- Backtesting machinery that makes the comparison fair: [`08_rolling-origin-backtesting.md`](08_rolling-origin-backtesting.md)
+- FVA and override measurement: [`10_overrides-fva.md`](10_overrides-fva.md)
+- Intermittent demand, where MAE misleads: [`06_intermittent-demand.md`](06_intermittent-demand.md)
 - Error metrics and their cost interpretation:
   [`../../01_foundations/01A_foundations_units_time_assumptions/09_forecast-error-metrics.md`](../../01_foundations/01A_foundations_units_time_assumptions/09_forecast-error-metrics.md)
 - Intermittent demand classification: [`../../01_foundations/01A_foundations_units_time_assumptions/10_intermittent-metrics.md`](../../01_foundations/01A_foundations_units_time_assumptions/10_intermittent-metrics.md)
