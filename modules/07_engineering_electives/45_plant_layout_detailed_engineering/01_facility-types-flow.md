@@ -370,48 +370,71 @@ Aisle sizing is a deterministic geometric function of the Material Handling Equi
 ====================================================================================================
 ```
 
-#### Analytical Formula for Right-Angle Stacking Aisle Width ($W_{aisle}$)
-For a counterbalanced or reach forklift performing a 90-degree turn into a rack bay to deposit a pallet:
-$$W_{aisle} = R_{turn} + \sqrt{(L_L + L_F)^2 + \left(\frac{W_L}{2}\right)^2} + C_{clear}$$
-where:
-- $R_{turn}$ = outside turning radius of the forklift chassis (specified by manufacturer, e.g., 2.15 m for a 2.5-ton counterbalanced truck; 1.65 m for a reach truck).
-- $L_L$ = length of the carried pallet load along the fork axis (e.g., 1.20 m).
-- $L_F$ = front chassis overhang (distance from front drive axle centerline to the fork face, e.g., 0.45 m).
-- $W_L$ = width of the carried pallet load (e.g., 1.00 m).
-- $C_{clear}$ = total operational safety clearance factor (minimum 0.20 m for manual operation; 0.10 m for laser-guided AGVs).
+#### Preliminary Right-Angle Stacking Estimate
+The following expression is a **screening approximation**, not a general swept-path solution for either counterbalanced or reach trucks:
+$$W_{aisle,screen} = R_{turn} + \sqrt{(L_L + L_F)^2 + \left(\frac{W_L}{2}\right)^2} + C_{clear}$$
+Here $R_{turn}$ is a selected chassis turning radius, $L_L$ is load length, $L_F$ is a chosen front overhang, $W_L$ is load width, and $C_{clear}$ is an assumed clearance, all in meters.
+The terms do not establish a common turning center for every truck and do not capture mast reach, steering geometry, load overhang or rack engagement.
+Obtain the manufacturer's right-angle stacking aisle specification for the exact truck, load, rack and operating clearances.
+Confirm the final layout with a swept-path study and an operational risk assessment; do not use this equation to certify clearance.
 
 #### Standard Industrial Aisle Width Classifications:
-1. **Wide Aisle (Conventional Counterbalance):** $W_{aisle} = 3.50\text{--}4.00 \text{ m}$. Allows two-way passing and high-speed maneuvering. Low space utilization.
+1. **Wide Aisle (Conventional Counterbalance):** $W_{aisle} = 3.50\text{--}4.00 \text{ m}$ is an illustrative stacking range, not proof of two-way passing clearance. Check actual truck and load envelopes.
 2. **Narrow Aisle (Reach Trucks):** $W_{aisle} = 2.70\text{--}3.00 \text{ m}$. Standard configuration in modern RDCs up to 10 m lift height.
 3. **Very Narrow Aisle (VNA Turret Trucks / AS/RS):** $W_{aisle} = 1.65\text{--}1.85 \text{ m}$. Truck operates strictly in a guided channel without turning to face the rack; forks articulate 180 degrees left and right. Maximizes volumetric density.
 
-#### Pedestrian-MHE Traffic Segregation (OSHA 1910.178 & ISO 3691-4)
-To eliminate fatality risks:
-- Minimum physical aisle clearance for dedicated pedestrian walkways: $W_{ped} \ge 1.00 \text{ m}$, bounded by structural yellow crash barriers rated to absorb a 5,000 kg vehicle impact at 5 km/h ($\ge 10 \text{ kJ}$ kinetic energy absorption).
-- Shared two-way traffic aisles:
-  $$W_{total} = 2 \cdot W_{vehicle, max} + W_{ped} + 4 \cdot C_{side}$$
-  where $C_{side} \ge 0.50 \text{ m}$ lateral clearance to rack uprights and pedestrian barriers.
+#### Pedestrian-MHE Traffic Segregation
+Separate pedestrians from powered trucks wherever practicable, and design crossings, visibility, barriers and operating rules from the site's risk assessment and applicable requirements.
+Neither a universal $1.00\text{ m}$ walkway width nor a generic $0.50\text{ m}$ side clearance follows from OSHA 1910.178 or ISO 3691-4 for every installation.
+Establish walkway and egress widths under the applicable jurisdiction and assess the specific equipment.
+For example, a $5,000\text{ kg}$ vehicle at $5\text{ km/h}$ has approximately $4.8\text{ kJ}$ of translational kinetic energy, not $10\text{ kJ}$.
+Barrier selection also depends on impact angle, load height, anchorage, deformation and manufacturer-rated test conditions; energy alone is not a barrier certification.
+For two-way traffic, draw both vehicle-and-load envelopes, turning paths and pedestrian separation rather than adopting a generic width formula.
 
 #### Tugger Train Off-Tracking and Kinematic Swept Path
 In discrete assembly plants and multi-tote fulfillment hubs, industrial tugger trains pull multiple articulated carts ($N = 3 \text{ to } 6$ carts) along plant aisles. Unlike single-chassis forklifts, articulated trailers exhibit geometric "off-tracking," where trailing carts cut corners toward the inside of a turn.
-For a tugger train with tractor wheelbase $L_0$, trailer drawbar lengths $L_d$, and trailer wheelbase $L_w$ executing a circular curve of radius $R$, the total swept path width $W_{swept, train}$ is:
-$$W_{swept, train} = R_{outer} - R_{inner, min} + C_{safety}$$
-Where the outer radius is determined by the tractor's front corner overhang:
-$$R_{outer} = \sqrt{(R + \frac{W_0}{2})^2 + L_{front}^2}$$
-And the maximum off-tracking inward deviation $\Delta_{off}$ of the $n$-th trailer is approximated by the classical Western Association of State Highway Officials (WASHO) formulation:
-$$\Delta_{off, n} \approx \frac{L_0^2 + \sum_{k=1}^n (L_{d, k}^2 + L_{w, k}^2)}{2 R}$$
-For a 4-cart tugger train executing a 90-degree turn around a building column with $R = 4.5 \text{ m}$, total inward off-tracking can reach $0.85\text{--}1.10 \text{ m}$. Aisles and aisle corner bevels (chamfers) must be widened by at least $\Delta_{off}$ or chamfered at 45 degrees to prevent trailing carts from clipping structural building columns or rack uprights.
+Off-tracking depends on hitch geometry, axle positions, speed and the complete path through the turn.
+The difference between the outermost and innermost swept boundaries, plus site-specific clearance, is the space to test.
+Use a manufacturer-supported swept-path model or representative full-scale trial for the actual tractor, carts and load.
+Include the approach and exit transitions, not only a constant-radius circular turn.
+Chamfer or widen corners as determined by that study; a fixed off-tracking allowance is not a substitute.
 
 #### Blind Intersection Sight Triangles and Stopping Distances
 At orthogonal cross-aisle intersections, forklift operators and AMRs face obstructed sightlines caused by tall pallet racks. Safe layout design requires maintaining an unobstructed **Sight Triangle** based on vehicle stopping sight distance $d_{stop}$:
 $$d_{stop} = v \cdot t_{reaction} + \frac{v^2}{2 \cdot a_{decel}}$$
 Where:
 - $v$ = vehicle operational velocity (e.g., $3.0 \text{ m/s} \approx 10.8 \text{ km/h}$).
-- $t_{reaction}$ = operator perception and reaction time (typically $0.75\text{ to }1.00 \text{ s}$ for manual operators; $0.15 \text{ s}$ for LiDAR AMRs).
-- $a_{decel}$ = maximum emergency braking deceleration without tipping load forward (for a laden forklift, bounded by load stability: $a_{decel} \le 2.0\text{--}2.5 \text{ m/s}^2$).
-For $v = 3.0 \text{ m/s}$, $t_r = 0.8 \text{ s}$, and $a = 2.0 \text{ m/s}^2$:
-$$d_{stop} = (3.0 \times 0.8) + \frac{3.0^2}{2 \times 2.0} = 2.40 + 2.25 = 4.65 \text{ m}$$
-Racks terminating at cross-aisles must either set back storage by $4.65 \text{ m}$, install wide-angle parabolic mirrors providing a reflected sightline $\ge 5.0 \text{ m}$, or enforce speed governors and floor-projected blue/red LED boundary spotlights projecting at least $5.0 \text{ m}$ ahead of the vehicle.
+- $t_{reaction}$ = total perception and reaction time, including detection and control delays.
+- $a_{decel}$ = achievable deceleration for the loaded vehicle and floor conditions.
+For an illustrative $v = 3.0 \text{ m/s}$, $t_r = 0.8 \text{ s}$, and $a = 2.0 \text{ m/s}^2$:
+$$d_{stop} = (3.0 \times 0.8) + \frac{3.0^2}{2 \times 2.0} = 4.65 \text{ m}$$
+These assumed values are not design limits or manufacturer guarantees.
+Measure or obtain validated values, including floor condition, load and grade, and provide additional margin for uncertainty.
+Visibility at an intersection must cover both approaching paths and their relative timing.
+Mirrors and warning lights are supplementary controls, not substitutes for a validated sightline, segregation or speed-control strategy.
+### Flow-study handoff: an audit trail
+
+1. Define each origin and destination as a physical handoff point rather than a department centroid.
+   Record whether trips are loaded, empty or combined, and identify the unit of each count.
+2. Extract timestamped movements for a representative operating window.
+   Preserve cancelled transactions and distinguish them from completed physical moves.
+3. Reconcile total receipts and dispatches with inventory changes over the same window.
+   Investigate differences rather than forcing the flow matrix to balance.
+4. Map each move to an actual allowed path, including one-way aisles and lift locations.
+   A Manhattan distance is only a lower bound when obstacles or traffic rules cause detours.
+5. Separate normal days, peak days and disruption scenarios.
+   Average volume alone does not demonstrate that queues fit during a concentrated arrival window.
+6. Add travel time, loading time, waiting time and empty returns to an equipment-hour estimate.
+   Do not apply a loaded distance cost to both legs unless the costing convention explicitly includes both.
+7. Check that each alternative meets fixed constraints before ranking operating cost.
+   Fire separation, vehicle access and pedestrian protection are not tradeable preference scores.
+8. Record the assumptions that move the decision: demand, shift calendar, staffing and inventory policy.
+   Recalculate the ranking when the assumed peak or product mix changes.
+9. Review the proposed paths with drivers, maintenance staff, safety specialists and receiving operators.
+   Record disagreements and any physical trial or manufacturer information needed to resolve them.
+10. Hand over a versioned flow matrix, a dated layout and an open-issues list.
+    A future change to product mix or dock allocation should trigger the same analysis.
+
 
 ### Step 6: Thermal Boundary and Environmental Zoning
 
@@ -741,59 +764,64 @@ High-density storage facilities represent extreme fire fuel loads. Building layo
 
 ## 9. Industry practice and case evidence
 
-Physical facility design practices reflect distinct trade-offs between capital intensity, operational velocity, and flexibility across leading global enterprise supply chains.
+The following cases are hypothetical teaching scenarios, not documented descriptions of particular companies.
+They show which evidence must be collected before comparing facility designs.
 
-```text
-====================================================================================================
-                        ENTERPRISE ARCHETYPE CASE PROFILES
-====================================================================================================
+### Case 1: Straight-through cross-dock
 
-  1. WALMART HIGH-VELOCITY CROSS-DOCK PARADIGM
-     [ Inbound Yard Apron: 43m ] ──────> [ 60m Shallow Floor ] ──────> [ Outbound Yard Apron: 43m ]
-     - Pure Straight-Through I-Flow Topology.
-     - Facility Footprint: 60m narrow depth x 800m longitudinal length (extreme 1:13 aspect ratio).
-     - Direct cross-dock transfer; inventory dwell < 18 hours. Zero internal high-bay racking.
+An inbound dock faces an outbound dock across a shallow sorting floor.
+Freight is assigned to outbound lanes according to destination and departure time.
+The design aim is to reduce putaway and retrieval, not to eliminate all staging.
+Compare trailer arrivals with departure schedules at 15-minute intervals.
+Count receiving and loading door-hours separately.
+Model delayed trucks and loads that miss their planned departures.
+Calculate whether the resulting staging footprint fits without blocking exits.
+Include pedestrian crossings and trailer movements on both yard aprons.
+Document any manual rework and exceptions before estimating labor savings.
+The cross-dock option is not automatically superior to a warehouse with storage.
+It needs synchronized flows and enough destination volume to consolidate departures.
 
-  2. LINEAGE LOGISTICS AUTOMATED COLD STORAGE HIGH-BAY
-     [ +4°C Chill Dock Airlock ] ──────> [ -25°C Clad-Rack AS/RS ] ──────> [ Interlocked Loading ]
-     - Monolithic Building-Clad High-Bay (42m vertical clear height).
-     - Glycol sub-floor run-around loops drawing waste heat from ammonia compressors.
-     - Automated oxygen reduction system (15% O2) eliminating in-rack fire sprinkler pipes.
+### Case 2: Automated cold storage
 
-  3. TOYOTA MOTOR MANUFACTURING (TMMK) GEORGETOWN
-     [ External Supplier Milk-Runs ] ──> [ Fishbone Spine Aisle ] ───> [ Takt-Paced Assembly ]
-     - Hybrid Spine Flow Topology with decoupled tugger train delivery.
-     - Maximum 2 hours of line-side parts inventory; zero forklift penetration on assembly lines.
-     - 45-degree angle kitting bays reducing tugger train swept-turn entry delays by 35%.
+A temperature-controlled facility considers a rack-supported high-bay structure.
+An automated crane transfers pallets between an airlock and storage locations.
+The layout must accommodate rack loads, building loads and the crane envelope.
+The team also examines floor insulation and frost-heave protection.
+Compare thermal leakage and refrigeration loads for the proposed envelope.
+Include access for maintenance and recovery of a failed crane.
+Size the interface buffer for replenishment and dispatch peaks.
+Fire protection must follow the approved design and applicable requirements.
+Oxygen reduction is not proof that ignition is impossible or that sprinklers can be omitted.
+Any reduced-oxygen proposal also needs a worker-exposure and emergency-access assessment.
+Engage the fire-protection engineer and authority having jurisdiction before selection.
+The relevant decision is total risk and lifecycle cost, not height alone.
 
-  4. OCADO / KROGER URBAN CUSTOMER FULFILLMENT CENTERS (MFC)
-     [ Dense 3D Aluminum Grid Hive ] ───> [ 4.0 m/s Overhead Bots ] ───> [ Decant-to-Van in 15 min ]
-     - Grid Cube AS/RS footprint: 2,500m2 urban brownfield footprint.
-     - Ultra-dense tote storage; zero pedestrian aisles inside the hive.
-     - Sub-2-hour hyper-local grocery delivery; 99.8% pick accuracy.
-====================================================================================================
-```
+### Case 3: Assembly plant spine
 
-### Case 1: Walmart High-Velocity Cross-Dock Network
-- **Architectural Archetype:** Pure Straight-Through I-Flow Cross-Dock.
-- **Physical Geometry:** Walmart's high-velocity cross-dock facilities (e.g., regional consolidation centers) feature a narrow, elongated aspect ratio (often $60\text{--}75 \text{ m}$ deep by $600\text{--}900 \text{ m}$ long). 
-- **Operational Mechanics:** Trailers back up to inbound doors along the North apron; automated telescoping conveyor belts extend directly into the trailer nose. Cartons are scanned, identified via GS1-128 barcodes, routed across an overhead high-speed cross-belt sorter, and dropped directly into destination outbound linehaul chutes on the South apron.
-- **Documented Evidence:** Dwell time across the facility averages under 14 hours. By eliminating internal pallet putaway and rack storage, building footprint area is reduced by 70% compared to a conventional storage warehouse handling equivalent throughput volume.
+An assembly plant considers a main logistics aisle with feeder routes to workstations.
+Material arrives at receiving, is sorted and is delivered to line-side buffers.
+The spine can reduce circuitous trips, but it can become a single congestion point.
+Estimate demand at each station in containers per production hour.
+Translate the delivery frequency into the number of train departures per shift.
+Calculate line-side space for replenishment, variability and empty containers.
+Draw the full swept path of each tractor and cart combination.
+At shared crossings, separate people from vehicles wherever practicable.
+Check what happens when a stopped train blocks the principal aisle.
+An alternate route or recovery plan can be more valuable than a shorter average trip.
+Do not assume all automotive plants use this arrangement or a fixed buffer duration.
 
-### Case 2: Lineage Logistics Multi-Temperature Automated High-Bay
-- **Architectural Archetype:** Automated Cold Storage Facility with Rack-Supported Structure.
-- **Physical Geometry:** Modern cold storage facilities engineered by Lineage Logistics utilize "clad-rack" architecture, where the structural steel pallet racking itself forms the physical structural frame of the building, supporting the insulated exterior sandwich panels and roof. Vertical clear heights reach $38\text{--}45 \text{ m}$, minimizing the building's ground footprint and thermal envelope surface area.
-- **Thermodynamic Management:** To eliminate frost heave, closed-loop hydronic heating networks circulate warm glycol beneath the floor insulation. The facilities operate automated crane aisles under a low-oxygen environment ($15\% \text{ O}_2$ concentration), which physically prevents fire ignition, eliminating the need for complex, freeze-vulnerable wet/dry fire sprinkler pipes inside the $-25^\circ\text{C}$ freezer core.
+### Case 4: Automated goods-to-person fulfillment
 
-### Case 3: Toyota Motor Manufacturing Kentucky (TMMK) Georgetown
-- **Architectural Archetype:** Discrete Manufacturing Assembly Plant.
-- **Physical Geometry:** Toyota's Georgetown plant utilizes a **Hybrid Spine Flow Topology**. Heavy exterior delivery trucks dock at peripheral unloading pads located immediately adjacent to their corresponding manufacturing sub-assembly stations (point-of-use delivery).
-- **Kinematic Segregation:** Forklifts are strictly restricted to peripheral receiving docks and completely barred from active assembly lines. Material movement from docks to workstations is executed exclusively by automated electric tugger trains running on rigid 20-minute milk-run cycles. Parts are staged in gravity-fed flow racks sized for exactly 60 to 120 minutes of production buffer, enforcing strict visual management and immediate bottleneck identification.
-
-### Case 4: Ocado / Kroger Urban Micro-Fulfillment Centers
-- **Architectural Archetype:** Urban Automated Micro-Fulfillment Center (MFC).
-- **Physical Geometry:** Situated inside dense suburban and urban industrial parks, these facilities operate within existing $2,500\text{--}5,000 \text{ m}^2$ brownfield footprints with $8\text{--}12 \text{ m}$ clear heights.
-- **Automation Density:** The facility core consists of an aluminum 3D structural grid ("the Hive") holding tens of thousands of stacked storage totes. Swarms of battery-powered robotic bots travel across top-mounted rails at speeds up to $4.0 \text{ m/s}$, retrieving totes via winch mechanisms and delivering them to ergonomic pick stations along the perimeter. Orders are picked, bagged, consolidated into delivery vans, and dispatched within 15 to 30 minutes of order placement.
+An operator considers a dense grid of totes with robotic retrieval and perimeter pick stations.
+The design removes routine walking within the storage grid but creates transfer and induction interfaces.
+Measure order-line demand, tote presentations and station service time by hour.
+Estimate peak robot and workstation utilization separately.
+Test the effects of tote replenishment, battery charging and equipment outages.
+Provide access and a safe isolation process for maintenance inside the grid.
+Include exceptions such as oversize, damaged and temperature-controlled items.
+Compare required floor area with a manual alternative using the same service target.
+Treat delivery time and order accuracy as observed operating measures, not assumed guarantees.
+Vendor specifications and local risk assessment are needed before detailed design.
 
 ---
 
@@ -1173,7 +1201,7 @@ The following technical questions test deep competency in facility layout engine
   - [`08_safety-fire-ergonomics.md`](08_safety-fire-ergonomics.md) — Safety, Fire, and Ergonomics: Egress, Sprinklers, Segregation, and Traffic
 - **Root Survey File:** [`../../../course/45_plant_layout_detailed_engineering.md`](../../../course/45_plant_layout_detailed_engineering.md)
 - **Prerequisite Modules:**
-  - Module 10: Network Design and Facility Location — [`../../02_methods/10_network_design/`](../../02_methods/10_network_design/)
-  - Module 15: Warehouse Operations and Material Handling — [`../../03_commerce/15_warehouse_operations/`](../../03_commerce/15_warehouse_operations/)
-  - Module 18: Transportation Management and Fleet Routing — [`../../03_commerce/18_transportation_management/`](../../03_commerce/18_transportation_management/)
-  - Module 20: Production Scheduling and Line Balancing — [`../../03_commerce/20_production_scheduling/`](../../03_commerce/20_production_scheduling/)
+  - Module 11: Network Design and Optimization — [`../../02_methods/11_network_design_optimization/_index.md`](../../02_methods/11_network_design_optimization/_index.md)
+  - Module 13: Warehousing, Fulfillment, and Labor — [`../../02_methods/13_warehousing_fulfillment_labor/_index.md`](../../02_methods/13_warehousing_fulfillment_labor/_index.md)
+  - Module 12: Transportation, Routing, and Last Mile — [`../../02_methods/12_transportation_routing_last_mile/_index.md`](../../02_methods/12_transportation_routing_last_mile/_index.md)
+  - Module 15: Manufacturing and Production Planning — [`../../02_methods/15_manufacturing_production_planning/_index.md`](../../02_methods/15_manufacturing_production_planning/_index.md)

@@ -378,7 +378,7 @@ Cable trays are procured in standard straight modular sections ($3.0\text{ m}$ o
 - **Routing Expansion Factor:** Physical cable tray paths must navigate structural bracing, HVAC ducting, and piping corridors. A linear routing expansion factor of $+10\%$ to $+15\%$ over direct theoretical distance is applied during MTO-1 and MTO-2.
 - **Fill Ratio Constraint (NEC 392 / IEC 60364):** Cable tray cross-sectional area cannot be fully packed with power cables due to Joule heating and ampacity derating. The physical tray width $W_{tray}$ must satisfy:
   $$\sum_{k=1}^{N_{cables}} d_k^2 \le \gamma_{fill} \cdot W_{tray} \cdot H_{tray}$$
-  where $\gamma_{fill} \le 0.40$ (40% maximum cross-sectional fill for power cables per National Electrical Code NEC 392). Sizing errors in MTO tray width cascade into catastrophic rework if trays reach capacity mid-project.
+  This expression is only a rough geometric screening metric, not an NEC 392 compliance calculation. The applicable fill method depends on cable type, size, tray construction, and installation; use the adopted code and manufacturer data.
 - **Structural Load Ratings (NEMA VE-1):** Cable trays must support dead cable weight plus concentrated ice and wind loads:
   $$w_{total} = w_{tray} + \sum_{k} w_{cable, k} + w_{environmental}$$
   Support bracket spacing ($L_{span} = 3.0\text{ m}$ to $6.0\text{ m}$) must satisfy the mid-span deflection limit ($\delta_{max} \le L_{span}/200$) under maximum working load classes (e.g., NEMA Class 12C supports $149\text{ kg/m}$ over $3.66\text{ m}$).
@@ -456,7 +456,7 @@ Optimal material take-off management minimizes $TPC$ by driving the delta betwee
 ### Facility Context: Hydrocarbon Fractionation Plant Expansion (Unit 42)
 To observe the mathematical and operational mechanics of MTO progression and revision control, we follow a critical commodity scope through the project lifecycle:
 - **Scope Item:** Schedule 40 Seamless Stainless Steel Pipe (Grade ASTM A312 TP316L, 6-inch Nominal Pipe Size; Outside Diameter $D_o = 6.625\text{ inches} = 168.3\text{ mm}$, Nominal Wall Thickness $t = 0.280\text{ inches} = 7.11\text{ mm}$, Linear Mass $m' = 28.26\text{ kg/m}$).
-- **Associated Bulk Components:** ASME B16.5 Class 300 Raised-Face Weld-Neck Flanges (316L) and ASME B16.9 Class 300 90° Long-Radius Butt-Weld Elbows (316L).
+- **Associated Bulk Components:** ASME B16.5 Class 300 raised-face weld-neck flanges (316L) and ASME B16.9 90° long-radius butt-weld elbows (316L). B16.9 elbows do not carry a B16.5 pressure class; verify their wall thickness and pressure suitability for the piping specification.
 - **Commercial Data:** 
   - Standard Mill Purchase Price: $P_{mill} = \$130.00\text{ per meter}$.
   - Distributor Spot Expedited Price: $P_{spot} = \$185.00\text{ per meter}$.
@@ -549,7 +549,7 @@ During field erection, spools are installed across Piperack 42.
   - Remaining Pristine Stock in Laydown Yard:
     $$L_{pristine} = 1,548.0\text{ m} - (1,437.2\text{ m} + 98.8\text{ m}) = 12.0\text{ m} \quad (2\text{ full } 6.0\text{ m joints})$$
   - Flange Surplus: 4 pristine Class 300 316L Flanges in original crates.
-  - Elbow Surplus: 2 pristine Class 300 316L Elbows.
+  - Elbow Surplus: 2 pristine 316L butt-weld elbows.
 
 ---
 
@@ -766,7 +766,9 @@ The BIMForum specification standardizes the geometric detail and attribute data 
 
 ## 9. Industry practice and case evidence
 
-### Industrial Case Evidence
+### Illustrative scenarios, not documented case evidence
+
+The following composite teaching scenarios and their numbers are hypothetical; they are not evidence of identifiable projects or measured losses.
 
 ```text
 ====================================================================================================
@@ -1112,13 +1114,78 @@ The following cross-linked terms define the vocabulary of material take-off engi
 - **[Surplus Salvage Value ($S_v$)](#step-7-mto-4-construction-reconciliation--mto-5-closeout-economics):** Net cash recovered by selling obsolete metal to secondary recyclers.
 - **[Revision Cloud](#4-definitions-and-vocabulary):** Standardized scalloped graphic identifying changed drawing regions per ASME Y14.35M.
 - **[Cable Pull Schedule](#4-definitions-and-vocabulary):** Manifest of electrical/instrument cable tags, routes, and cut lengths.
-- **[Cable Tray Fill Ratio](#3-electrical-cable-tray-and-conduit):** NEC 392 cross-sectional limit ($\le 40\%$) preventing cable overheating.
+- **[Cable Tray Fill Ratio](#3-electrical-cable-tray-and-conduit):** A screening measure; actual NEC 392 requirements depend on the tray and cable installation.
 - **[Snake Factor ($\lambda_{snake}$)](#4-instrumentation--control-wiring):** Cable length buffer allowance ($3\text{–}5\%$) for settling in tray bends.
 - **[Internal Dress Tail ($L_{dress}$)](#4-instrumentation--control-wiring):** Extra cable length ($2\text{–}3\text{ m}$) required for internal panel wiring.
 - **[Quarantine Hold Tag](#4-definitions-and-vocabulary):** Physical and digital marker isolating materials undergoing ECN redesign.
 - **[ASME B31.3](#1-process-safety-management-osha-29-cfr-1910119-moc-compliance):** International standard governing process piping design and materials.
 - **[Management of Change (MOC)](#1-process-safety-management-osha-29-cfr-1910119-moc-compliance):** OSHA 1910.119 regulatory mandate controlling technical plant modifications.
 - **[BIM Level of Development (LOD)](#5-bimforum-level-of-development-lod-specification):** BIMForum standard specifying model element maturity from LOD 100 to 500.
+
+### Revision reconciliation exercise
+
+Use this miniature ledger to distinguish net demand from purchasing action.
+
+| State | Pipe demand, m | Purchase commitment, m | Released to fabrication, m |
+|---|---:|---:|---:|
+| Baseline B | 1,000 | 1,080 | 400 |
+| Proposed C | 1,060 | 1,080 | 400 |
+| Approved C | 1,060 | 1,080 | 400 |
+
+The proposed change adds 60 m of demand.
+It does not automatically authorize a new order.
+Before deciding, determine whether all 1,080 m is usable for revision C.
+Separate stock by specification, size, heat traceability, condition, and availability date.
+If 50 m is obsolete, usable commitment is 1,030 m.
+The preliminary shortage is then 30 m, before approved allowances.
+If 20 m is already reserved to a different work package, the unallocated shortage rises to 50 m.
+Do not subtract that reservation twice if it is already included in demand.
+Record the exact snapshot time and units for each quantity.
+
+**Transaction trail**
+
+1. Engineering issues the proposed revision and identifies changed line segments.
+2. Document control identifies the last approved drawing set.
+3. Procurement identifies cancellable and non-cancellable purchase-order lines.
+4. The fabricator identifies cut, welded, and unstarted material.
+5. Warehouse staff identify available stock and existing allocations.
+6. The discipline engineer assesses whether old material remains technically usable.
+7. The change authority approves or rejects the engineering change.
+8. Procurement calculates the incremental requisition only after approval.
+9. Warehouse releases any hold only after disposition is documented.
+10. The project controls team records the cost and schedule effects separately.
+
+An engineering revision is not a physical inventory transaction.
+A receipt is not proof of technical acceptance.
+A purchase order is not proof that material is available on site.
+These distinctions prevent artificial surplus and double ordering.
+
+**Data controls**
+
+- Keep the source model revision alongside the extracted quantity.
+- Keep the extraction date and the scope boundary.
+- Record whether the quantity includes design growth.
+- Record whether it includes fabrication loss or field-fit allowance.
+- Identify quantities expressed in pieces separately from linear length.
+- Preserve the unit conversion used in every import.
+- Match nominal size, material grade, schedule, and specification.
+- Record ownership where several contractors share a laydown yard.
+- Give each allocation a destination and an expiration or release event.
+- Preserve disposition evidence when held material is reused.
+- Reconcile the change register against open purchase commitments.
+- Escalate differences that cannot be explained by a documented transaction.
+
+**Decision questions**
+
+- What demand changed, and which drawing authorizes it?
+- What material is already committed but not yet received?
+- What is physically available and technically acceptable?
+- What has been allocated to another scope?
+- What can be cancelled, returned, or repurposed?
+- Which additional quantity remains after these deductions?
+- Who accepts the associated cost and delivery risk?
+
+The example uses round numbers for teaching; actual allowances and commercial remedies are project-specific.
 
 ---
 

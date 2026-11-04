@@ -218,18 +218,19 @@ To capture these interactions, Muther established the **Activity Relationship Ch
 ```
 
 #### Standardized Proximity Rating Codes and Numerical Conversion
-To evaluate layouts mathematically, qualitative letters must map to numerical relationship weights $w_{ij}$. Industry practice utilizes either linear, geometric, or logarithmic weighting scales:
+The following numerical weights are illustrative project choices, not prescribed SLP scores; the columns show linear and two exponential-style scales.
+The frequencies are not design quotas: assign ratings from documented reasons.
 
-| Rating Code | Engineering Meaning | Traditional SLP Score | Geometric Score ($2^k$) | Logarithmic Score ($4^k$) | Target Frequency (% of Pairs) |
+| Rating Code | Engineering Meaning | Illustrative Linear Score | Illustrative Doubling Score | Illustrative Power-of-Four Score | Example Frequency (% of Pairs) |
 |---|---|---|---|---|---|
 | **A** | Absolutely Necessary | 4 | 16 | 64 | 2% – 5% |
 | **E** | Especially Important | 3 | 8 | 16 | 5% – 10% |
 | **I** | Important | 2 | 4 | 4 | 10% – 15% |
 | **O** | Ordinary Closeness | 1 | 2 | 1 | 15% – 25% |
 | **U** | Unimportant | 0 | 0 | 0 | 40% – 60% |
-| **X** | Undesirable (Separation Mandatory) | -4 | -16 | -64 | 1% – 5% |
+| **X** | Undesirable; investigate separation requirement | -4 | -16 | -64 | 1% – 5% |
 
-Standardized engineering reason codes must be appended to every non-U rating:
+Define project-specific reason codes and append them to every non-U rating:
 - **Reason 1:** Direct material flow or sequence of operations.
 - **Reason 2:** Shared personnel, supervision, or shift management.
 - **Reason 3:** Shared material handling equipment (overhead cranes, AGVs, forklifts).
@@ -240,15 +241,16 @@ Standardized engineering reason codes must be appended to every non-U rating:
 - **Reason 8:** Communication, paperwork, or shared inspection tooling.
 
 #### Total Closeness Rating (TCR)
-For each department $i$, calculate its **Total Closeness Rating (TCR)** by summing the absolute relationship weights with all other departments:
+For each department $i$, calculate an illustrative **Total Closeness Rating (TCR)** by summing the signed relationship weights with all other departments:
 $$TCR_i = \sum_{\substack{j=1 \\ j \neq i}}^N w(R_{ij})$$
-Departments with the highest $TCR$ values represent topological network hubs and must be placed centrally during layout synthesis. Departments with low or negative $TCR$ values are positioned along the facility periphery.
+A high score can suggest a candidate hub, but a negative rating must not cancel or conceal a required separation.
+Central placement is a heuristic, not a rule: shapes, routes, utilities and mandated separations may dictate a different placement.
 
 ---
 
 ### 5.4 Multi-Objective Flow-REL Fusion
 
-To prevent flow and non-flow requirements from competing during optimization, combine normalized flow intensity $\hat{f}_{ij}$ and normalized relationship weights $\hat{w}_{ij}$ into a single synthetic adjacency score $C_{ij}$:
+As one optional screening heuristic, combine normalized flow intensity $\hat{f}_{ij}$ and normalized relationship weights $\hat{w}_{ij}$ into a synthetic adjacency score $C_{ij}$:
 
 1. Symmetrize material flow to reflect two-way aisle traffic:
    $$\bar{f}_{ij} = f_{ij} + f_{ji}$$
@@ -258,7 +260,33 @@ To prevent flow and non-flow requirements from competing during optimization, co
 3. Construct the combined affinity matrix $C = [C_{ij}]$ parameterized by an engineering trade-off coefficient $\alpha \in [0, 1]$:
    $$C_{ij} = \alpha \hat{f}_{ij} + (1 - \alpha) \hat{w}_{ij}$$
 
-When $\alpha = 1.0$, the problem reduces to classical material transport work minimization. When $\alpha = 0.0$, the problem optimizes pure qualitative activity relationships. Industrial manufacturing facilities typically operate with $\alpha \in [0.60, 0.80]$, whereas service, R&D, and pharmaceutical facilities operate with $\alpha \in [0.20, 0.40]$.
+At $\alpha = 1.0$ the affinity contains flow only; it becomes a transport-work objective only if it is paired with appropriate distances and costs.
+At $\alpha = 0.0$ it contains the selected qualitative weights only.
+Select $\alpha$ with stakeholders and test sensitivity rather than treating a sector-specific value as standard.
+Enforce mandatory separations as hard constraints before scoring: normalization alone can make an undesirable pair's score positive when flow is high.
+If maximum flow is zero, set normalized flow to zero; if all relationship weights are equal, omit that uninformative term.
+
+#### Comparing alternatives without hiding trade-offs
+
+1. Record the baseline layout and the units and period of each movement count.
+   Use the same demand scenario for all alternatives.
+2. Define a hard-constraint register for egress, hazardous separation and equipment access.
+   Eliminate any alternative that cannot satisfy a requirement, regardless of its score.
+3. Assign each REL rating with its reason and the stakeholder who approved it.
+   Distinguish a desirable separation from a legally required minimum distance.
+4. Estimate route distances through actual doors and aisles, not just centroids.
+   Document any one-way or height restrictions that change the route.
+5. Calculate handling work for each alternative as flow multiplied by route distance.
+   Include empty returns separately when the input flow records only loaded moves.
+6. Keep adjacency satisfaction, travel work and capital cost visible as separate results.
+   A weighted total is a decision aid, not evidence that an unsafe design is acceptable.
+7. Repeat the comparison for peak volume and a plausible changed product mix.
+   Record whether the preferred layout changes and why.
+8. Review the results with operations, maintenance and safety representatives.
+   Resolve conflicting assumptions before selecting a layout for detailed design.
+9. Retain the matrix, constraint register and dated drawing as a reproducible decision record.
+   Reopen the decision when product routing or building constraints materially change.
+
 
 ---
 
@@ -681,6 +709,10 @@ Plant layout optimization is heavily constrained by mandatory statutory building
 ---
 
 ## 9. Industry practice and case evidence
+
+The following cases are illustrative scenarios, not verified accounts of named facilities.
+Their quantities are teaching assumptions; do not use them as industry benchmarks.
+For an actual project, collect the underlying routing, cost, safety and occupancy evidence.
 
 ### Case 1: Brownfield Powertrain Plant Reconfiguration (Automotive)
 An automotive powertrain component manufacturer in Ohio operated a $45,000\text{ m}^2$ plant built in 1978. The legacy layout followed a strict process-oriented job shop: all 60 stamping presses were grouped in Bay A, 40 heat treat ovens in Bay B, and 85 CNC milling machines in Bay C. 
@@ -1179,6 +1211,6 @@ $$F = \begin{bmatrix}
   - Topic 05: Handling Equipment and Automation — [`05_handling-equipment-automation.md`](05_handling-equipment-automation.md)
   - Topic 09: Layout Simulation — [`09_layout-simulation.md`](09_layout-simulation.md)
 - Program Prerequisites:
-  - Module 10: Logistics Network Design — [`../../02_methods/10_network_design/`](../../02_methods/10_network_design/)
-  - Module 15: Facility Operations — [`../../03_commerce/15_facility_operations/`](../../03_commerce/15_facility_operations/)
-  - Module 18: Facility Location Models — [`../../03_commerce/18_facility_location/`](../../03_commerce/18_facility_location/)
+  - Module 11: Network Design and Optimization — [`../../02_methods/11_network_design_optimization/_index.md`](../../02_methods/11_network_design_optimization/_index.md)
+  - Module 13: Warehousing, Fulfillment, and Labor — [`../../02_methods/13_warehousing_fulfillment_labor/_index.md`](../../02_methods/13_warehousing_fulfillment_labor/_index.md)
+  - Module 15: Manufacturing and Production Planning — [`../../02_methods/15_manufacturing_production_planning/_index.md`](../../02_methods/15_manufacturing_production_planning/_index.md)

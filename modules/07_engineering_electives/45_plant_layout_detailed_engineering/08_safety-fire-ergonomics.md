@@ -8,6 +8,8 @@
 
 ---
 
+> **Safety scope:** Numerical values and calculations in this topic are illustrative, not design approvals or universal code limits. Applicable editions, occupancy, commodity, configuration, local amendments, equipment listing, and authority-having-jurisdiction decisions determine actual requirements. Engage qualified fire protection, structural, industrial hygiene, and safety professionals before implementation.
+
 ## 1. Why this topic exists
 
 In industrial facility engineering and modern supply chain operations, physical layout decisions are inextricably linked to statutory life safety codes, structural fire protection hydraulics, chemical hazard containment, kinetic traffic segregation, and human biomechanics. While macro-layout methodologies such as Systematic Layout Planning (SLP) optimize material handling travel distances and adjacency scores, those spatial layouts remain purely theoretical until they satisfy mandatory life safety statutes and physical risk constraints. An optimized distribution center or manufacturing plant that violates egress distances, lacks hydraulic density for modern high-bay storage, exposes pedestrians to multi-ton mobile plant traffic, or forces warehouse operators into musculoskeletal injury postures cannot receive an occupancy permit, cannot secure commercial property insurance, and cannot sustain safe operations.
@@ -794,22 +796,21 @@ Modern industrial facilities operate under intense capital, speed, and spatial e
 ```
 
 ### Case 1: The Buncefield Oil Storage Depot Catastrophe (Hertfordshire, UK, 2005)
-- **Incident & Forensic Findings:** A catastrophic overflow of unleaded motor fuel from a storage tank released over 300 tonnes of volatile hydrocarbon liquid. The resulting vapor cloud ignited, generating an explosion measuring 2.4 on the Richter scale and igniting 20 large storage tanks.
-- **Facility Engineering Failure:** Forensic investigation by the Health and Safety Executive (HSE) established that the concrete secondary containment bunds (berms) failed structurally under thermal shock and hydrodynamic wave forces. Millions of liters of burning fuel and toxic perfluorooctanesulfonic acid (PFOS) firefighting foam escaped containment, polluting regional groundwater aquifers.
-- **Engineering Cutover:** Modern hazardous storage engineering under NFPA 30 strictly enforces reinforced, earthquake- and fire-resistant secondary containment structures dimensioned to capture both the chemical contents and sustained fire protection water discharge.
+- A tank overflow produced a flammable vapor cloud that ignited, causing explosions and a major fire. The official investigation addressed both loss of primary containment and failures in secondary and tertiary containment.
+- The layout lesson is to evaluate overflow prevention, emergency response, bund integrity, drainage, and off-site consequences together; do not assume a bund alone prevents escalation.
+- Source: [UK Health and Safety Executive, Buncefield investigation](https://www.hse.gov.uk/comah/buncefield/).
 
 ### Case 2: Hamlet Chicken Processing Plant Fire (Hamlet, North Carolina, 1991)
-- **Incident & Forensic Findings:** A hydraulic line rupture near an industrial deep fryer ignited at $1,500\text{ kPa}$ operating pressure. Dense, toxic acrolein smoke filled the $30,000\text{ sq ft}$ single-story facility. Twenty-five workers died and 55 were injured.
-- **Facility Engineering Failure:** Forensic analysis revealed that exit travel distances exceeded 150 ft in an unsprinklered high-hazard processing room. Crucially, multiple exterior exit doors were padlocked from the outside to prevent employee pilferage of product. Occupants were trapped in dead-end corridors and windowless processing rooms.
-- **Statutory Enforcement Impact:** The tragedy led to strict federal enforcement of OSHA 1910.36/37 and NFPA 101. Statutory mandates now prohibit any locking hardware that prevents immediate, unassisted single-motion exit egress (e.g., panic hardware) and require unalterable egress corridor widths and travel distances.
+- A fire at the Imperial Food Products plant killed 25 workers; locked exits were a critical life-safety failure.
+- Source: [North Carolina Department of Labor, Hamlet fire](https://www.labor.nc.gov/safety-and-health/occupational-safety-and-health/hamlet-fire).
+- Maintain usable exit routes and evaluate door locking arrangements against the applicable rules and approved life-safety design.
 
-### Case 3: Contemporary Automated High-Bay Fulfillment Centers (Best Practice)
-- **Operational Reality:** Leading multinational retail logistics hubs operate automated high-bay racking up to $42\text{ ft}$ ($12.8\text{ m}$) clear height using Autonomous Mobile Robots (AMRs) and very narrow aisle (VNA) turret trucks.
-- **Implementation Strategy:** 
-  1. Engineering teams design building roofs with minimum $45\text{ ft}$ structural steel clearance to deploy ceiling-mounted ESFR K-25 sprinklers. This eliminates the multimillion-dollar CapEx and maintenance overhead of internal rack sprinkler piping.
-  2. To satisfy FM Global requirements, racks are equipped with engineered mechanical pallet backstops ensuring an unblocked $6\text{ inch}$ ($152\text{ mm}$) transverse flue space and $3\text{ inch}$ ($76\text{ mm}$) longitudinal flue space.
-  3. All pedestrian picking zones are physically decoupled from AMR transit corridors using PAS 13 impact-rated polymer barriers, complemented by overhead 360-degree laser safety halos.
-  4. Workstation pick-faces utilize dynamic automated bin lifters and tilt-trays, guaranteeing that every picked item presents within the worker's $70\text{--}140\text{ cm}$ Golden Zone, keeping the NIOSH Lifting Index below 0.85 across all shifts.
+### Case 3: High-bay storage design (illustrative)
+- Rack fire protection depends on the commodity, packaging, storage arrangement, ceiling and storage heights, sprinkler listing, adopted standard, and insurer requirements.
+- Ceiling-only protection is not automatically acceptable at a given height; in-rack protection may be required.
+- Preserve the flue spaces required by the approved design, including tolerances for pallet overhang and load movement.
+- Evaluate barriers for the actual vehicle, speed, impact geometry, anchors, and protected-side deflection.
+- Evaluate lifting tasks individually; adjustable workstations do not guarantee a particular lifting index or eliminate injury risk.
 
 ---
 
@@ -1112,7 +1113,7 @@ Safety, fire protection, and ergonomic models rely on foundational physical assu
 - **Dynamic Deflection:** Horizontal deformation distance of a safety barrier during vehicle impact.
 - **Setback Buffer:** Clear physical distance between a barrier's rear face and protected assets/people.
 - **Optical Safety Halo:** 360-degree high-intensity projection defining vehicle exclusion perimeters.
-- **Recommended Weight Limit ($RWL$):** Maximum safe manual lifting weight calculated by NIOSH equation.
+- **Recommended Weight Limit ($RWL$):** Task-specific NIOSH reference weight for lifting tasks within the equation's applicability; it is not a guarantee of safety.
 - **Lifting Index ($LI$):** Ratio of actual load weight to $RWL$ ($LI = L / RWL$).
 - **Load Constant ($LC$):** Baseline NIOSH lifting parameter established at 23.0 kg (51 lb).
 - **Horizontal Multiplier ($HM$):** NIOSH multiplier penalizing forward reach distance ($25/H$).
@@ -1127,6 +1128,44 @@ Safety, fire protection, and ergonomic models rely on foundational physical assu
 - **Class I, Division 1:** NEC electrical area classification where explosive flammable vapors are present in normal operation.
 - **Static Grounding Busbar:** Copper bonding conductor preventing triboelectric spark ignition during flammable liquid decanting.
 - **Hazen-Williams Roughness Coefficient ($C$):** Dimensionless factor characterizing interior pipe surface smoothness (120 for black steel).
+
+### Field walkdown: validating the approved safety basis
+
+Use the approved drawing and operating assumptions rather than a generic clearance rule.
+Walk the route in the direction a person would travel.
+Include temporary staging and the normal open position of doors.
+Identify the responsible owner for every finding.
+
+| Observation | Evidence to record | Decision owner |
+|---|---|---|
+| Exit route obstruction | Location, duration, photograph, affected path | Site safety and operations |
+| Rack load overhang | Aisle, bay, load profile, flue condition | Storage and fire protection leads |
+| Barrier damage | Impact location, deformation, anchor condition | Facilities and barrier engineer |
+| Chemical storage change | Material, quantity, container and location | Process safety and fire protection |
+| Difficult manual lift | Load, reach, height, frequency and posture | Ergonomics lead |
+
+For egress, measure the actual accessible path, not a line through racks.
+Check the occupancy and approved design before interpreting the distance.
+Confirm that exit doors operate under expected occupancy and emergency conditions.
+For sprinklers, confirm commodity and packaging match the approved design.
+Check obstructions and flues against the relevant approved configuration.
+Do not assume a single head count or pressure applies to every design.
+For containment, assess compatible liquids, drainage and firewater where required.
+For traffic, review vehicle mass, speed, approach angle and stopping behavior.
+Confirm the barrier's tested system includes its anchors and substrate.
+Provide protected-side clearance for the expected barrier deflection.
+For lifting, observe the entire task and check the equation's applicability.
+Document duration, repetition, coupling, asymmetry and destination conditions.
+An index is a screening aid, not an individual medical prediction.
+
+**Closeout**
+
+1. Assign each finding an owner and interim control.
+2. Record whether the interim control changes the operational risk.
+3. Refer design changes to the relevant qualified discipline.
+4. Update the approved drawing and operating assumptions.
+5. Check physical implementation before closing the finding.
+6. Revisit the assessment when commodities, equipment or occupancy change.
 
 ---
 
@@ -1166,7 +1205,3 @@ Safety, fire protection, and ergonomic models rely on foundational physical assu
 - **Subsequent Topics:**
   - Topic 09: Layout Simulation and Bottleneck Analysis — [`09_layout-simulation.md`](09_layout-simulation.md)
   - Topic 10: Design for Supply Chain, Modular Facility Interfaces, and Maintainability — [`10_design-for-supply-chain.md`](10_design-for-supply-chain.md)
-- **Cross-Module Program Links:**
-  - Module 10: Inventory Theory, Multi-Echelon, and Safety Stock — [`../../02_methods/10_inventory_theory/`](../../02_methods/10_inventory_theory/)
-  - Module 15: Warehousing, Distribution Center Design, and Slotting — [`../../03_commerce/15_warehousing_dc_design/`](../../03_commerce/15_warehousing_dc_design/)
-  - Module 20: Production Scheduling and Line Balancing — [`../../03_commerce/20_production_scheduling/`](../../03_commerce/20_production_scheduling/)

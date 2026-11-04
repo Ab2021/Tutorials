@@ -443,6 +443,8 @@ Where a greenfield building will expand longitudinally, boundary structural conn
 
 ## 6. Worked example
 
+The Project Aurora worked example is hypothetical. Its dimensions, prices, and outcomes are teaching assumptions, not evidence of an actual project or a transport approval.
+
 ### 6.1 Problem scenario: "Project Aurora" Polymer Compounding Plant
 
 An engineering team is designing **Project Aurora**, a greenfield specialty polymer facility situated 42 kilometers inland from an estuarine deepwater barge terminal. 
@@ -739,42 +741,48 @@ Design for Supply Chain and Facility Lifecycle Engineering spans transportation 
   - Minimum clear aisle width between rotating pump skids: $1.2 \text{ m}$ ($4 \text{ ft}$).
   - Overhead crane hook approach boundaries to be shown explicitly on general arrangement drawings.
   - Sizing of compressor and pump maintenance laydown zones based on $150\%$ of largest maintenance component footprint.
-- **OSHA 29 CFR 1910.22 & 1910.28:** Federal regulations governing walking-working surfaces, egress corridor widths (minimum $1.12 \text{ m} / 44 \text{ in}$ for main corridors), and permanent fall protection around equipment maintenance hatches.
+- **OSHA 29 CFR 1910.22 & 1910.28:** Federal regulations addressing walking-working surfaces and fall protection; determine applicable egress dimensions separately under the adopted requirements.
 
 ---
 
 ## 9. Industry practice and case evidence
 
-### 9.1 Mega-project modularization: Chevron Gorgon LNG (Barrow Island)
-On the Gorgon LNG project in Western Australia, the production facility was constructed on a Class-A nature reserve subject to strict environmental quarantine. Craft labor on the island was severely capped, and living accommodations cost over $1,200 per worker per day.
+### 9.1 Island modularization scenario
 
-- **Execution Strategy:** The project executed extreme modularization. Over 300,000 tonnes of pre-assembled units (PAUs) and pre-assembled pipe racks (PARs) were fabricated in South Korea and China, transported via heavy ocean transport vessels, transferred to barges, and rolled onto Barrow Island using 1,200 SPMT axle lines.
-- **Logistical Constraints:** The island quarantine mandate dictated that every module underwent high-pressure washing, vacuuming, and fumigation inside sealed environmental tents at the yard. Any module exceeding the Ro-Ro ramp profile risked touching seawater, which would invalidate quarantine permits.
-- **Engineering Lesson:** Gorgon demonstrated that modularization shifts the engineering critical path from site civil construction to **dimensional interface control**. Over 45,000 field pipe welds were converted to yard welds, saving an estimated 18 million on-island work hours, but requiring laser-scanning tolerances within $\pm 2 \text{ mm}$ across multi-tier PAR shipping splits.
+A hypothetical island project uses off-site fabrication to reduce site labor.
+Modules travel by sea and are transferred at a restricted landing.
+Biosecurity checks and marine weather limit the delivery window.
+The team must align module dimensions, lifting points, and quarantine processes.
+The lesson is that off-site fabrication moves work and interfaces; it does not remove them.
 
-### 9.2 Highway superload crisis: ExxonMobil Kearl Oil Sands
-The Kearl Oil Sands project in Alberta, Canada, planned to transport over 200 oversize processing modules from fabricators in South Korea, barging them up the Columbia and Snake Rivers to Lewiston, Idaho, and trucking them across US Highway 12 through Idaho and Montana.
+### 9.2 Highway superload scenario
 
-- **The Failure:** The modules measured up to $7.3 \text{ m}$ ($24 \text{ ft}$) wide and $9.1 \text{ m}$ ($30 \text{ ft}$) high, weighing up to $300 \text{ tonnes}$. ExxonMobil faced legal injunctions from local environmental and indigenous groups regarding traffic disruption on scenic two-lane highways. Bridge clearance audits revealed that multiple overhead utilities and narrow bridges could not accommodate the unsteered swept paths.
-- **Consequence:** Transport was halted in federal court for over 18 months. ExxonMobil was forced to disassemble dozens of completed modules at Lewiston, cutting structural steel frames and piping into smaller segments to comply with alternative legal routes. The logistics failure added hundreds of millions of dollars in redesign, field re-assembly, and schedule delay.
-- **Evidence Grade:** B (Public regulatory filings and US Federal District Court records, 2011–2013).
+A hypothetical oversized module has a proposed highway route.
+The route crosses bridges and passes through a constrained town.
+Permitting, public access, utilities and bridge capacity affect the move.
+If a route is unavailable, splitting the module may require redesign and additional field work.
+Route approval must precede a commitment to the shipping envelope.
 
-### 9.3 Gulf Coast modularization: US Gulf Coast Petrochemical Expansions
-In the petrochemical corridor between Houston, Texas, and Lake Charles, Louisiana, modularization has become the standard execution model for ethylene crackers and LNG export terminals (e.g., Sabine Pass, Golden Pass, Cheniere Corpus Christi).
+### 9.3 Petrochemical modularization scenario
 
-- **Economic Driver:** Loaded craft labor rates on the US Gulf Coast range from $130 to $180 per hour, driven by regional labor shortages. In contrast, East Asian and Mexican fabrication yards deliver fully tested modules at $45 to $70 per hour.
-- **DFSC Practice:** Engineering teams establish fixed module sizes matched to ocean semi-submersible heavy transport ships (e.g., Dockwise / Boskalis vessels) carrying widths up to $16 \text{ m}$ and weights up to $2,500 \text{ tonnes}$. Complete Electrical Equipment Rooms (E-Houses) are fabricated, wired, fully commissioned with factory acceptance testing (FAT), and shipped as pressurized, climate-controlled packages, reducing on-site electrical craft hours by over $70\%$.
+A hypothetical petrochemical project compares yard and site fabrication.
+The comparison includes labor, transport, temporary works, installation and commissioning.
+Lower yard labor rates alone do not establish a net project saving.
+Equipment-room factory testing reduces some site work but does not replace site acceptance.
 
-### 9.4 Pharmaceutical skid modularization: Rapid mRNA vaccine deployment
-During the 2020–2022 pandemic mobilization, biopharmaceutical manufacturers (e.g., Lonza, Moderna) deployed modular, skid-mounted cleanroom suites for mRNA lipid nanoparticle synthesis.
+### 9.4 Pharmaceutical skid scenario
 
-- **Execution Model:** Rather than stick-building stainless steel process piping and cleanroom enclosures on site, entire process trains were assembled on standardized $3.0 \text{ m} \times 9.0 \text{ m}$ stainless steel skids designed to fit standard cargo aircraft (Boeing 747-400F nose cargo door) and intermodal air-ride trailers.
-- **Lifecycle Benefit:** All piping was pre-passivated and pre-validated under ASME BPE standards before leaving the cleanroom fabrication facility. Facilities integrated standardized wall knockout panels and quick-connect tri-clamp utility headers, compressing facility commissioning from 24 months down to 8 months.
+A hypothetical clean-process facility receives factory-built skids.
+Vendor documentation covers materials, fabrication and factory tests.
+The owner still verifies installation, utility connections and site qualification.
+Aircraft door dimensions alone do not establish airfreight suitability.
 
-### 9.5 Gigafactory fast-track expansion: Tesla Giga Texas
-In large-scale battery and electric vehicle assembly facilities, lifecycle expansion flexibility governs the structural building layout:
-- **Modular Bays:** The facility structural framework was engineered on a continuous $12.0 \text{ m} \times 12.0 \text{ m}$ structural bay grid, designed to support high-density mezzanine floor loads ($15 \text{ kN/m}^2$) for future dry-room battery cell lines.
-- **Knockout Panels:** Exterior insulated metal panel (IMP) walls along the northern and southern facades were engineered with removable structural wind girts. Heavy casting presses (Giga Press units, up to 9,000 tonnes clamping force) were delivered in prefabricated sub-assemblies through dedicated wall knockout slots, eliminating the need to leave roof structures open during adverse weather.
+### 9.5 Expansion scenario
+
+A hypothetical battery plant reserves a future equipment delivery opening.
+The structural engineer checks temporary and permanent load paths.
+Operations protects the delivery corridor from later storage encroachment.
+The project revisits the opening when equipment dimensions are confirmed.
 
 ---
 
@@ -1053,6 +1061,123 @@ The following glossary defines key terms and cross-references them to related co
 - **Tube Bundle Pull Corridor:** Reserved horizontal space for withdrawing heat exchanger internals. Cross-ref: Section 5.3.
 - **Utility Stub Header:** Sized and valved utility pipe branch reserved for brownfield plant expansions. Cross-ref: Section 5.4.
 
+### Integrated route-to-maintenance decision exercise
+
+This exercise follows a hypothetical compressor module from fabrication to replacement.
+The numbers illustrate trade-offs; they do not authorize a lift, road move, or facility design.
+
+**Decision context**
+
+- The module must reach a site through a bridge and a constrained gate.
+- The owner wants to remove its largest component without removing the roof.
+- A second production train may be built later.
+- Road permits and the final vendor arrangement are not yet available.
+- The design team must reserve space without pretending those uncertainties are resolved.
+
+**Candidate arrangements**
+
+| Attribute | Option A: complete module | Option B: split module |
+|---|---|---|
+| Fabrication | More work completed at the yard | More field connections |
+| Transport | One larger load | Two smaller loads |
+| Site work | Fewer assembly interfaces | Additional assembly and inspection |
+| Maintenance | Pull corridor must clear module frame | Pull corridor must clear field joints |
+| Expansion | Existing footprint may constrain future aisle | Interface location can preserve aisle |
+
+Neither option is automatically cheaper.
+Compare the whole sequence rather than only truck count.
+Record actual mass and center of gravity as vendor data matures.
+Consider packaging, transport frames, temporary supports and rigging.
+These can change both mass and the external envelope.
+
+**1. Establish the transport envelope**
+
+1. Identify every leg from yard to foundation.
+2. Record the mode and responsible carrier for each leg.
+3. List width, height, length, axle loads and gross mass.
+4. Include cargo overhang and temporary transport steel.
+5. Identify bridges, overhead wires, turns and pavement constraints.
+6. Record the survey date and any planned route changes.
+7. Obtain the carrier's swept-path assessment for the actual combination.
+8. Ask authorities which permits and escorts are required.
+9. Record weather, tidal or time-of-day restrictions where relevant.
+10. Identify an alternate route and its separate approvals.
+
+A static width check is not a swept-path analysis.
+The cargo tail, steering behavior and road geometry all matter.
+An axle-group calculation is not a bridge-specific structural assessment.
+Permit issuance and route availability remain external dependencies.
+
+**2. Establish the installation sequence**
+
+1. Identify the delivery orientation at the site gate.
+2. Reserve a temporary staging area and travel path.
+3. Check ground bearing for each transporter configuration.
+4. Identify the crane or alternative installation method.
+5. Include crane setup, outriggers, tailing and exclusion zones.
+6. Verify lifting points against the approved load case.
+7. Check clearances through the full motion, not only final placement.
+8. Identify temporary works and structural supports.
+9. Plan how temporary equipment will leave after setting the module.
+10. Record hold points for inspection and handover.
+
+Lift planning belongs to competent personnel using actual equipment and approved loads.
+The layout drawing is an input to the lift plan, not a substitute for it.
+
+**3. Preserve maintenance access**
+
+Start with the heaviest or longest replaceable component.
+Obtain its actual removal direction and dimensions from the vendor.
+Add the handling device, rigging and worker access envelope.
+Trace the route from the installed position to a usable laydown area.
+Check door openings, beam elevations and crane hook approach.
+Account for equipment that must be disconnected or temporarily moved.
+Identify isolation and energy-control arrangements with operations.
+Check whether the route remains available during normal production.
+Mark the reserved space on both the layout and the operating plan.
+Assign a person to prevent the corridor becoming permanent storage.
+
+**4. Protect the expansion interface**
+
+- Record the expected future load and uncertainty range.
+- Show utility tie-in locations on the current drawing.
+- Identify whether the existing equipment has spare capacity.
+- Preserve access for installing the future branch.
+- Identify shutdown and isolation requirements.
+- Keep the future transport and maintenance routes clear.
+- Record structural provisions and the design load used.
+- Distinguish installed spare capacity from merely reserved space.
+- Reassess the interface whenever the process basis changes.
+- Obtain discipline approval before occupying the reserved area.
+
+**5. Compare lifecycle costs consistently**
+
+Use a common scope and currency date for both options.
+Include yard fabrication, packaging, inland freight and permits.
+Include marine transport and port handling if applicable.
+Include site assembly, testing, temporary works and installation.
+Include maintenance access and foreseeable replacement costs.
+Treat expected delay as a scenario, not a guaranteed number.
+Discount costs only using the project's stated financial basis.
+Do not count a shared cost twice.
+Show exclusions and uncertainty beside the comparison.
+Evaluate schedule and safety constraints separately from cost.
+
+For illustration, suppose A costs 100 units initially and B costs 108.
+If an agreed future access modification costs A 15 and B 4, undiscounted totals are 115 and 112.
+This comparison excludes financing, timing, risk and all other differences.
+It shows why the lowest initial price need not minimize lifecycle cost.
+It does not establish that B is preferable on a real project.
+
+**Decision record**
+
+The final record names the selected option and the version of each drawing.
+It states the governing route survey and unresolved permit status.
+It lists the required transport, lift, structural and fire reviews.
+It identifies who owns each unresolved interface and its due date.
+It documents the assumptions that would trigger reconsideration.
+The design is not released merely because the comparison table is complete.
+
 ---
 
 ## 16. Sources
@@ -1097,10 +1222,7 @@ The following authoritative sources, standards, and engineering references gover
 - Topic 09: [Layout Simulation](09_layout-simulation.md)
 
 ### Related curriculum modules
-- [Module 15: Transportation Planning, Carrier Selection, and Freight Procurement](../../03_commerce/15_transportation_planning/)
-- [Module 20: Production Scheduling and Line Balancing](../../03_commerce/20_production_scheduling/)
-- [Module 28: Supply Chain Network Design and Facility Location](../../04_value_governance/28_network_design/)
-- [Module 41: Process Engineering and Material Flow](../../07_engineering_electives/41_process_engineering/)
-- [Module 42: Piping and Instrumentation Diagrams (P&ID) Advanced](../../07_engineering_electives/42_piping_instrumentation_diagrams/)
-- [Module 43: Civil and Structural Engineering for Industrial Plants](../../07_engineering_electives/43_civil_structural_engineering/)
-- [Module 44: Electrical and Instrumentation Engineering Interfaces](../../07_engineering_electives/44_electrical_instrumentation_interfaces/)
+- [Network design and optimization](../../02_methods/11_network_design_optimization/_index.md)
+- [Transportation, routing, and last mile](../../02_methods/12_transportation_routing_last_mile/_index.md)
+- [Digital twins and simulation](../../02_methods/20_digital_twins_simulation_optimization_uncertainty/_index.md)
+- [Maritime, rail, and air operations](../41_maritime_rail_air_operations/_index.md)

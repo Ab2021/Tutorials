@@ -156,8 +156,8 @@ Ignoring any component of this decomposition leads directly to under-fleeting, o
 | **Tilt-Tray Sorter** | A continuous carrier sortation loop where trays tilt mechanically or electro-pneumatically to discharge cartons using gravitational slide. | Sorting parcels with varying friction coefficients without dynamic tilt control, causing light envelopes to stall or fly off. | Kinematic Conveyor System |
 | **C-Rate** | The rate of battery charge or discharge normalized against total capacity; $1\text{C}$ charges a battery fully in 1 hour; $2\text{C}$ in 30 minutes. | Specifying $3\text{C}$ fast charging without verifying thermal dissipation and lithium-ion cell degradation limits. | Inverse hours ($\text{hr}^{-1}$) |
 | **Opportunity Charging** | The practice of charging automated vehicle batteries during idle periods, shift breaks, or while dwelling at loading/unloading stations. | Expecting full battery recharge during 20-second pallet transfers without high-voltage charging contact shoes. | Power Delivery Strategy |
-| **Class I, Division 2** | An NFPA 70 / National Electrical Code (NEC) hazardous location classification where flammable gases (e.g., hydrogen) may be present under abnormal conditions. | Failing to classify lead-acid battery rooms; inadequate ventilation causes explosive hydrogen concentrations above 1% LFL. | NFPA 70 / NEC Article 500 |
-| **Lower Flammable Limit (LFL)** | The lowest concentration of a flammable gas in air capable of producing a flash of fire in the presence of an ignition source (4.0% for $H_2$). | Operating battery charging areas without safety margins; OSHA mandates dilution ventilation to keep hydrogen below 25% of LFL (1.0%). | Percentage by volume ($\%$) |
+| **Class I, Division 2** | A hazardous-location classification for flammable gases under specified abnormal conditions. | Assuming every battery room has the same classification without a site-specific assessment. | NFPA 70 / NEC |
+| **Lower Flammable Limit (LFL)** | The lowest gas concentration in air capable of flame propagation; hydrogen is approximately 4% by volume. | Treating a selected design margin as a universal OSHA concentration limit. | Percentage by volume |
 
 ---
 
@@ -266,13 +266,13 @@ $$T_{max} = \max(T_x, T_y), \quad T_{min} = \min(T_x, T_y), \quad b = \frac{T_{m
 When $b = 1.0$, the rack is kinematically "square," meaning an automated crane requires identical times to traverse the full length or the full height.
 
 #### Single-Command and Dual-Command Travel Times
-Assuming randomized storage and retrieval across the rack face, the expected one-way travel time $E[T_{sc\_travel}]$ between the Input/Output (I/O) station located at the bottom corner $(0,0)$ and a uniformly distributed storage location $(X, Y)$ is derived by integrating the Chebyshev metric over the normalized unit rack:
+Assume independent uniform storage locations, simultaneous axis motion, and travel time proportional to distance on each axis. The expected one-way travel time from the corner I/O station is:
 
-$$E[T_{sc\_travel}] = T_{max} \int_0^1 \int_0^1 \max(x, b \cdot y) \, dx \, dy = T_{max} \left(\frac{1}{3} + \frac{b^2}{30}\right)$$
+$$E[T_{sc\_travel}] = T_{max} \int_0^1 \int_0^1 \max(x, b \cdot y) \, dx \, dy = T_{max} \left(\frac{1}{2} + \frac{b^2}{6}\right)$$
 
 A Single-Command Cycle ($T_{sc}$) consists of the crane traveling from the I/O station to a rack location, depositing or retrieving a load, and returning empty to the I/O station:
 
-$$T_{sc} = 2 \cdot E[T_{sc\_travel}] + 2 \cdot t_{p/d} = 2 \cdot T_{max} \left(\frac{1}{3} + \frac{b^2}{30}\right) + 2 \cdot t_{p/d}$$
+$$T_{sc} = 2 \cdot E[T_{sc\_travel}] + 2 \cdot t_{p/d} = 2 \cdot T_{max} \left(\frac{1}{2} + \frac{b^2}{6}\right) + 2 \cdot t_{p/d}$$
 
 Where $t_{p/d}$ is the time required for the crane's telescopic shuttle forks to extend, deposit/retrieve a pallet, and retract to home position.
 
@@ -292,7 +292,9 @@ Therefore, the total expected Dual-Command cycle time is:
 
 $$T_{dc} = 2 \cdot E[T_{sc\_travel}] + E[T_{between}] + 4 \cdot t_{p/d}$$
 
-$$T_{dc} = T_{max} \left(\frac{2}{3} + \frac{b^2}{15} + \frac{1}{3} + \frac{b^2}{6} - \frac{b^3}{30}\right) + 4 \cdot t_{p/d} = T_{max} \left(1 + \frac{7b^2}{30} - \frac{b^3}{30}\right) + 4 \cdot t_{p/d}$$
+$$T_{dc} = T_{max} \left(\frac{4}{3} + \frac{b^2}{2} - \frac{b^3}{30}\right) + 4 \cdot t_{p/d}$$
+
+These closed forms require linear travel time, not the nonlinear acceleration profiles above. Substituting full-span acceleration-adjusted times is a screening approximation, not an exact FEM cycle calculation: short moves spend a larger fraction of time accelerating. For a design commitment, integrate $\max(t_x(|x_1-x_2|),t_y(|y_1-y_2|))$ over the actual locations or simulate the equipment, including dwells, interference, and supplier acceptance conditions.
 
 The single-command hourly throughput ($\lambda_{sc}$) and dual-command hourly throughput ($\lambda_{dc}$) per crane are:
 
@@ -499,9 +501,9 @@ Where $K_{dyn}$ is the dynamic magnification factor ($1.5 \le K_{dyn} \le 2.5$) 
 | **Superflat High** | VNA Turret Trucks ($H > 12\text{ m}$), AS/RS Bottom Rails | $F_F 65 / F_L 60$ | $F_{min} 100$ | $\Delta z \le 1.0\text{ mm}$ across $1.5\text{ m}$ track |
 
 #### Slab Punching Shear (ACI 318)
-High-bay pallet rack uprights and heavy AS/RS crane columns transfer massive point loads directly into the concrete floor slab through steel baseplates. The governing failure mode is two-way **punching shear**, where a truncated pyramid of concrete shears around the baseplate perimeter.
+Rack uprights and crane columns transfer concentrated loads to the floor. Punching shear is one possible failure mode; flexure, bearing, anchors, joints, soil support and other limit states may govern. A qualified structural engineer must establish which code and slab-on-ground design method apply.
 
-Per ACI 318-19, the two-way nominal shear strength ($V_c$) of an unreinforced concrete slab without shear reinforcement is:
+For an idealized interior, square loaded area, the following expression illustrates one possible nominal two-way shear term; it is not a complete ACI 318 check:
 
 $$V_c = 0.33 \cdot \lambda \cdot \sqrt{f'_c} \cdot b_0 \cdot d \text{ [Newtons]}$$
 
@@ -519,7 +521,7 @@ The design punching shear capacity must satisfy:
 
 $$\phi V_c \ge P_u$$
 
-Where $\phi = 0.75$ is the ACI strength reduction factor for shear, and $P_u$ is the factored ultimate concentrated column point load ($P_u = 1.2 D + 1.6 L$). If $\phi V_c < P_u$, the engineer must increase baseplate dimensions ($c$), increase slab thickness ($h$), or integrate post-tensioning tendons.
+For this illustrative comparison, take $\phi = 0.75$ and a given factored load $P_u$. Real load combinations, applicable strength equations, soil reactions and detailing require project-specific verification. A favorable ratio does not establish slab or baseplate adequacy.
 
 #### Seismic Tie-In Engineering (RMI ANSI MH16.1)
 Storage racks are free-standing steel structures governed by RMI ANSI MH16.1 and ASCE 7. The total horizontal seismic design base shear ($V$) acting on a storage rack frame is:
@@ -538,7 +540,7 @@ $$C_s = \frac{S_{DS}}{\left(\frac{R}{I_e}\right)}$$
 
 $$W_{seismic} = W_{rack\_steel} + 0.67 \cdot W_{product\_rated}$$
 
-RMI MH16.1 mandates an operational product load reduction factor of $0.67$ to reflect the statistical reality that warehouses are rarely 100% full of maximum-weight pallets at the instant of a seismic event.
+The $0.67$ factor is an assumed scenario for this arithmetic example, not a universal seismic load reduction. Establish seismic weight, response coefficients, limits, load combinations and anchorage requirements from the adopted editions and the engineered rack design.
 
 > **Note on Building-Rack Interaction:** Never structurally tie high-bay pallet racks to the building roof purlins or building structural columns without a slip-joint interface. Pre-engineered metal buildings (PEMBs) have high lateral drift flexibility, whereas industrial steel storage racks are extremely stiff. A rigid tie will cause the swaying building roof to pull or push down on the rack frames during wind or seismic events, inducing buckling and catastrophic progressive structural collapse.
 
@@ -620,7 +622,7 @@ $$T_{max} = T_y = 31.6667\text{ s}, \quad T_{min} = T_x = 27.50\text{ s}, \quad 
 #### Step A3: Expected Travel Times
 Compute expected one-way travel time $E[T_{sc\_travel}]$:
 
-$$E[T_{sc\_travel}] = T_{max} \left(\frac{1}{3} + \frac{b^2}{30}\right) = 31.6667 \cdot (0.33333 + 0.02514) = 11.3515\text{ s}$$
+$$E[T_{sc\_travel}] \approx 31.6667 \cdot \left(\frac{1}{2}+\frac{0.86842^2}{6}\right) = 19.8136\text{ s}$$
 
 Compute expected travel time between two random points $E[T_{between}]$:
 
@@ -629,23 +631,23 @@ $$E[T_{between}] = T_{max} \left(\frac{1}{3} + \frac{b^2}{6} - \frac{b^3}{30}\ri
 #### Step A4: Cycle Times and Throughput
 Single-Command Cycle Time ($T_{sc}$):
 
-$$T_{sc} = 2 \cdot E[T_{sc\_travel}] + 2 \cdot t_{p/d} = 2 \cdot (11.3515) + 2 \cdot (12.0) = 22.703 + 24.0 = 46.703\text{ s}$$
+$$T_{sc} \approx 2 \cdot 19.8136 + 2 \cdot 12.0 = 63.627\text{ s}$$
 
-$$\lambda_{sc} = \frac{3600}{46.703} = 77.08\text{ pallets/hour}$$
+$$\lambda_{sc} \approx \frac{3600}{63.627} = 56.58\text{ pallets/hour}$$
 
 Dual-Command Cycle Time ($T_{dc}$):
 
 $$T_{dc} = 2 \cdot E[T_{sc\_travel}] + E[T_{between}] + 4 \cdot t_{p/d}$$
 
-$$T_{dc} = 22.703 + 13.8444 + 4 \cdot (12.0) = 36.5474 + 48.0 = 84.547\text{ s}$$
+$$T_{dc} \approx 2 \cdot 19.8136 + 13.8445 + 4 \cdot 12.0 = 101.472\text{ s}$$
 
 Dual-command cycles per hour:
 
-$$\text{Dual Cycles/hr} = \frac{3600}{84.547} = 42.58\text{ dual cycles/hour}$$
+$$\text{Dual Cycles/hr} \approx \frac{3600}{101.472} = 35.48\text{ dual cycles/hour}$$
 
 Total dual-command pallet transactions (1 store + 1 retrieve per cycle):
 
-$$\lambda_{dc} = 2 \cdot 42.58 = 85.16\text{ pallets/hour}$$
+$$\lambda_{dc} \approx 2 \cdot 35.48 = 70.96\text{ pallets/hour}$$
 
 ---
 
@@ -726,7 +728,7 @@ $$\phi V_c = 0.75 \cdot 702.83\text{ kN} = 527.12\text{ kN}$$
 
 Evaluate Factor of Safety ($FS$):
 
-$$FS = \frac{\phi V_c}{P_u} = \frac{527.12\text{ kN}}{240.00\text{ kN}} = 2.20 \ge 1.00 \quad \text{[ADEQUATE - PASSED]}$$
+$$\frac{\phi V_c}{P_u} = \frac{527.12}{240.00} = 2.20 \quad \text{[illustrative ratio only]}$$
 
 #### Step C2: Seismic Base Shear Calculation (RMI ANSI MH16.1)
 Calculate the seismic response coefficient $C_s$:
@@ -738,7 +740,7 @@ Calculate effective seismic weight $W_{seismic}$ per bay (incorporating the $0.6
 $$W_{seismic} = W_{rack} + 0.67 \cdot W_{product} = 15.0 + 0.67 \cdot 240.0 = 175.80\text{ kN}$$
 $$V = C_s \cdot W_{seismic} = 0.234375 \cdot 175.80\text{ kN} = 41.20\text{ kN}$$
 
-Each rack bay frame and anchoring system must resist $41.20\text{ kN}$ of horizontal base shear at the slab interface.
+The $41.20\text{ kN}$ result is an illustrative arithmetic value, not a final rack or anchor design force; validate the seismic assumptions and all required checks.
 
 ---
 
@@ -769,13 +771,13 @@ Continuous dilution exhaust ventilation airflow required to maintain $H_2 \le 1.
 
 $$Q_{vent} = \frac{V_{H2}}{0.01} = 501.6\text{ m}^3/\text{hour} \approx 295.2\text{ CFM (Cubic Feet per Minute)}$$
 
-The design must specify a dedicated Class I, Division 2 spark-proof exhaust fan delivering at least $350\text{ CFM}$ with differential pressure sensor interlocks to the battery chargers.
+This is only an ideal well-mixed dilution estimate, not a ventilation design or equipment classification. Account for charger gas evolution, accumulation near ceilings, airflow distribution, loss of ventilation, applicable codes, and the site hazardous-area classification; a qualified designer must select the fan and interlocks.
 
 ---
 
 ## 7. Code, query, or calculation
 
-The following Python script implements the mathematical formulas for FEM 9.851 AS/RS cycle times, AMR fleet sizing with congestion/battery deratings, and ACI 318 slab punching shear verification.
+The following Python script illustrates approximate AS/RS cycle times, AMR fleet sizing, and an idealized punching-shear arithmetic example. It is not a design or code-compliance verification.
 
 ```python
 import math
@@ -783,11 +785,11 @@ import math
 def calculate_asrs_cycle(L, H, vx, ax, vy, ay, t_pd):
     tax, tay = vx / ax, vy / ay
     sax, say = 0.5 * ax * tax**2, 0.5 * ay * tay**2
-    Tx = 2 * tax + (L - 2 * sax) / vx
-    Ty = 2 * tay + (H - 2 * say) / vy
+    Tx = 2 * math.sqrt(L / ax) if L < vx**2 / ax else tax + L / vx
+    Ty = 2 * math.sqrt(H / ay) if H < vy**2 / ay else tay + H / vy
     T_max, T_min = max(Tx, Ty), min(Tx, Ty)
     b = T_min / T_max
-    E_one_way = T_max * (1.0 / 3.0 + (b**2) / 30.0)
+    E_one_way = T_max * (0.5 + (b**2) / 6.0)
     E_between = T_max * (1.0 / 3.0 + (b**2) / 6.0 - (b**3) / 30.0)
     T_sc = 2.0 * E_one_way + 2.0 * t_pd
     T_dc = 2.0 * E_one_way + E_between + 4.0 * t_pd
@@ -808,13 +810,13 @@ def check_punching_shear(Pu_kN, c_mm, d_mm, fc_MPa, phi=0.75):
     Vc_N = 0.33 * 1.0 * math.sqrt(fc_MPa) * b0 * d_mm
     phi_Vc_kN = (phi * Vc_N) / 1000.0
     fs = phi_Vc_kN / Pu_kN
-    return {"b0_mm": b0, "phi_Vc_kN": phi_Vc_kN, "FS": fs, "adequate": fs >= 1.0}
+    return {"b0_mm": b0, "phi_Vc_kN": phi_Vc_kN, "ratio": fs}
 
 if __name__ == "__main__":
     asrs = calculate_asrs_cycle(90.0, 30.0, 4.0, 0.8, 1.0, 0.6, 12.0)
-    print(f"AS/RS FEM 9.851: Tx={asrs['Tx']:.1f}s, Ty={asrs['Ty']:.1f}s, b={asrs['b']:.4f}")
+    print(f"AS/RS approximation: Tx={asrs['Tx']:.1f}s, Ty={asrs['Ty']:.1f}s, b={asrs['b']:.4f}")
     print(f"Single Command: {asrs['T_sc']:.2f}s -> {asrs['Thru_sc']:.1f} pallets/hr")
-    print(f"Dual Command:   {asrs['T_dc']:.2f}s -> {asrs['Thru_dc']:.1f} pallets/hr (42.6 cycles/hr)")
+    print(f"Dual Command:   {asrs['T_dc']:.2f}s -> {asrs['Thru_dc']:.1f} pallets/hr ({3600/asrs['T_dc']:.1f} cycles/hr)")
 
     n_ceil, n_exact, tot_sec = size_amr_fleet(
         [600, 700, 500], [80, 120, 150], [70, 110, 140], 1.2, 1.5, 50.0, 0.85, 0.88
@@ -822,21 +824,21 @@ if __name__ == "__main__":
     print(f"AMR Fleet: Required Fleet Size = {n_ceil} AMRs (Exact: {n_exact:.2f})")
 
     shear = check_punching_shear(240.0, 250.0, 200.0, 35.0)
-    print(f"Punching Shear: phi*Vc = {shear['phi_Vc_kN']:.2f} kN vs Pu = 240.00 kN (FS={shear['FS']:.2f})")
+    print(f"Punching Shear: phi*Vc = {shear['phi_Vc_kN']:.2f} kN vs Pu = 240.00 kN (ratio={shear['ratio']:.2f})")
 ```
 
 ### Assumptions and Limits of the Script
-1. The AS/RS model assumes uniform, randomized rack storage access and constant acceleration trapezoids (ignoring jerk).
+1. The AS/RS calculation substitutes full-span acceleration-adjusted times into constant-speed formulas; it is approximate and is not a FEM acceptance test.
 2. The AMR fleet calculation assumes steady-state arrival rates with deterministic routing; stochastic queueing peaks may require discrete-event simulation validation.
-3. The punching shear check follows ACI 318 for interior square baseplates without shear reinforcement or moment transfer.
+3. The punching arithmetic assumes an interior square loaded area and simplified strength expression. Slab-on-ground behavior, soil support, load factors, joint proximity, reinforcement and all applicable failure modes require project-specific structural design; the result is not a pass/fail determination.
 
 ### Expected Terminal Output
 ```text
-AS/RS FEM 9.851: Tx=27.5s, Ty=31.7s, b=0.8684
-Single Command: 46.70s -> 77.1 pallets/hr
-Dual Command:   84.55s -> 85.2 pallets/hr (42.6 cycles/hr)
+AS/RS approximation: Tx=27.5s, Ty=31.7s, b=0.8684
+Single Command: 63.63s -> 56.6 pallets/hr
+Dual Command:   101.47s -> 71.0 pallets/hr (35.5 cycles/hr)
 AMR Fleet: Required Fleet Size = 145 AMRs (Exact: 144.27)
-Punching Shear: phi*Vc = 527.12 kN vs Pu = 240.00 kN (FS=2.20)
+Punching Shear: phi*Vc = 527.12 kN vs Pu = 240.00 kN (ratio=2.20)
 ```
 
 ---
@@ -848,9 +850,9 @@ Material handling automation and civil engineering interfaces are governed by an
 ### 8.1 Material Handling & Automation Standards
 
 #### FEM 9.851 & FEM 9.831 / 9.832
-The Federation Europeenne de la Manutention (FEM) establishes binding engineering methods for storage and retrieval machines:
-- **FEM 9.851:** Defines the standardized calculation principles for AS/RS cycle times and throughput, establishing the 5-point representative cycle and the continuous Chebyshev integral formulation used globally by MHE suppliers.
-- **FEM 9.831 / 9.832:** Governs structural tolerances, permissible deflections, and clearances for AS/RS cranes and racking interfaces. It mandates that maximum mast deflection under dynamic travel acceleration must not exceed $H / 2000$ to prevent rack collisions.
+The Federation Europeenne de la Manutention (FEM) publishes technical guidance; its applicability depends on the contract and jurisdiction.
+- **FEM 9.851:** A supplier cycle-time reference. Confirm the edition, reference cycles, load-handling allowances and performance test conditions in the procurement specification; the continuous approximation above is not itself a prescribed FEM test.
+- **FEM 9.831 / 9.832:** Consult the applicable editions and manufacturer documentation for equipment and rack interfaces. Do not infer a universal mast-deflection limit from a generic guide.
 
 #### ISO 3691-4:2023 (Driverless Industrial Trucks)
 ISO 3691-4 is the premier international safety standard for AGVs and AMRs. It mandates:
@@ -1082,13 +1084,13 @@ An automated warehouse operates 120 AMRs (Lithium $\text{LiFePO}_4$) and 30 Clas
    - $T_{max} = T_x = 33.571\text{ s}$, $T_{min} = T_y = 22.333\text{ s}$.
    - $b = T_{min} / T_{max} = 22.333 / 33.571 = 0.66525$.
 3. **Cycle Times:**
-   - $E[T_{sc\_travel}] = T_{max} \cdot (1/3 + b^2 / 30) = 33.571 \cdot (0.33333 + (0.66525)^2 / 30) = 33.571 \cdot (0.33333 + 0.01475) = 33.571 \cdot 0.34808 = 11.685\text{ s}$.
-   - $E[T_{between}] = T_{max} \cdot (1/3 + b^2/6 - b^3/30) = 33.571 \cdot (0.33333 + 0.07376 - 0.00982) = 33.571 \cdot 0.39727 = 13.337\text{ s}$.
-   - $T_{sc} = 2 \cdot (11.685) + 2 \cdot (10.0) = 23.37 + 20.0 = 43.37\text{ s}$.
-   - $T_{dc} = 2 \cdot (11.685) + 13.337 + 4 \cdot (10.0) = 23.37 + 13.337 + 40.0 = 76.71\text{ s}$.
-4. **Throughput:**
-   - Single-Command Throughput: $\lambda_{sc} = 3600 / 43.37 = 83.0\text{ pallets/hour}$.
-   - Dual-Command Throughput: $\lambda_{dc} = 7200 / 76.71 = 93.86\text{ pallets/hour}$ ($46.93\text{ dual cycles/hr}$).
+   - $E[T_{sc\_travel}] \approx 33.571 \cdot (1/2 + 0.66525^2/6) = 19.262\text{ s}$.
+   - $E[T_{between}] \approx 33.571 \cdot (1/3 + 0.66525^2/6 - 0.66525^3/30) = 13.337\text{ s}$.
+   - $T_{sc} \approx 2(19.262) + 2(10.0) = 58.523\text{ s}$.
+   - $T_{dc} \approx 2(19.262) + 13.337 + 4(10.0) = 91.860\text{ s}$.
+4. **Approximate throughput:**
+   - Single-command: $3600 / 58.523 = 61.51$ pallets/hour.
+   - Dual-command: $7200 / 91.860 = 78.38$ pallet transactions/hour, or $39.19$ cycles/hour.
 5. **Kinematically Balanced Height ($H^*$):**
    - For $b = 1.0$, $T_y = T_x = 33.571\text{ s}$.
    - $33.571 = 2 \cdot t_{ay} + (H^* - 2 \cdot s_{ay}) / v_y = 3.0 + (H^* - 1.8) / 1.2$.
@@ -1120,7 +1122,7 @@ An automated warehouse operates 120 AMRs (Lithium $\text{LiFePO}_4$) and 30 Clas
    - $V_c = 0.33 \cdot 1.0 \cdot 5.4772 \cdot 1480.0 \cdot 170.0 = 454,772\text{ N} = 454.77\text{ kN}$.
    - $\phi V_c = 0.75 \cdot 454.77 = 341.08\text{ kN}$.
 3. **Structural Adequacy:**
-   - $P_u = 310.0\text{ kN} \le \phi V_c = 341.08\text{ kN}$. The current baseplate is **adequate** ($FS = 341.08 / 310.0 = 1.10$).
+   - $P_u = 310.0\text{ kN} \le \phi V_c = 341.08\text{ kN}$ for this simplified expression, giving a ratio of $1.10$. This alone does not establish baseplate or slab adequacy.
 4. **Required Baseplate for Exact Capacity ($c^*$):**
    - To achieve $\phi V_c = P_u = 310.0\text{ kN}$:
    - Required $V_c = 310.0 / 0.75 = 413.33\text{ kN} = 413,333\text{ N}$.
@@ -1180,7 +1182,7 @@ An automated warehouse operates 120 AMRs (Lithium $\text{LiFePO}_4$) and 30 Clas
 
 ### Question 4: Structural Slab Loading & Punching Shear
 **Prompt:** "When an automated pallet rack upright increases its column load from $150\text{ kN}$ to $300\text{ kN}$, why is increasing baseplate thickness alone insufficient, and what governing failure mechanism must the civil engineer check?"
-- **What a strong candidate covers:** The governing failure mode in an unreinforced slab-on-ground under concentrated point loading is two-way punching shear per ACI 318. The punching shear capacity $\phi V_c = \phi \cdot 0.33 \lambda \sqrt{f'_c} b_0 d$ is a function of the concrete tensile strength, slab effective depth ($d$), and the critical shear perimeter $b_0 = 4(c + d)$. Increasing baseplate thickness prevents the plate itself from bending, ensuring uniform bearing, but does not increase $b_0$ unless the baseplate plan dimensions ($c_1, c_2$) are enlarged. To resist a $300\text{ kN}$ load, the engineer must expand baseplate width/length, increase slab structural thickness, or install structural tie-rods/post-tensioning.
+- **What a strong candidate covers:** Increasing plate thickness can improve plate bending resistance but does not by itself enlarge the loaded area or establish slab capacity. Assess bearing, punching, flexure, joints, anchors, reinforcement and subgrade support with the applicable slab design method; a structural engineer must determine the governing mechanism and any appropriate remedy.
 - **Red flags in weak answers:** Confusing one-way beam shear with two-way punching shear; assuming soil subgrade carries the concentrated shear directly; ignoring concrete compressive strength $f'_c$.
 
 ### Question 5: Seismic Building-Rack Interaction
@@ -1278,5 +1280,4 @@ An automated warehouse operates 120 AMRs (Lithium $\text{LiFePO}_4$) and 30 Clas
 - **Root Survey File:** [`../../../course/45_plant_layout_detailed_engineering.md`](../../../course/45_plant_layout_detailed_engineering.md)
 - **Prerequisites & Methods Links:**
   - Module 10: Inventory Optimization & Multi-Echelon Planning — [`../../02_methods/10_inventory_optimization_multi_echelon/_index.md`](../../02_methods/10_inventory_optimization_multi_echelon/_index.md)
-  - Module 15: Warehouse Operations & Labor Analytics — [`../../03_commerce/15_warehouse_labor_analytics/_index.md`](../../03_commerce/15_warehouse_labor_analytics/_index.md)
   - Module 20: Digital Twins and Simulation — [`../../02_methods/20_digital_twins_simulation_optimization_uncertainty/_index.md`](../../02_methods/20_digital_twins_simulation_optimization_uncertainty/_index.md)

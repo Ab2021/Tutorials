@@ -172,7 +172,7 @@ $$T_{service} = t_{spot} + t_{inspect} + t_{transfer} + t_{paperwork} + t_{clear
 4. **Paperwork and WMS Seal Time ($t_{paperwork}$):** Bill of Lading (BOL) verification, discrepancy overage/shortage/damage (OS&D) logging, and electronic WMS receipt confirmation. Standard value: $0.050\text{ hr}$ ($3.0\text{ min}$).
 5. **Clear and Departure Time ($t_{clear}$):** Leveler lip retraction, overhead door closure, vehicle restraint release, and trailer pull-out from the dock envelope. Standard value: $0.033\text{ hr}$ ($2.0\text{ min}$).
 
-> **Note:** Sizing docks at $\eta_{util} > 0.85$ is a critical engineering defect. Because arrival times and service durations are stochastic, operating beyond 85% utilization causes exponential queuing growth, resulting in yard gridlock and severe carrier detention penalties.
+> **Note:** There is no universal utilization cutoff: waiting generally rises sharply as utilization approaches 100%, but acceptable utilization depends on arrival variability, number of doors, operating policy and service targets. Evaluate the actual peak and yard capacity rather than treating 85% as a code limit.
 
 ---
 
@@ -214,9 +214,9 @@ $$W = W_q + \frac{1}{\mu} = W_q + T_{service}$$
 
 #### The $M/G/c$ Allen-Cunneen Approximation
 
-In practice, dock service times are not memoryless exponentials; their variance is bounded by pallet count and forklift cycle speeds. Furthermore, appointment scheduling reduces arrival variance. Under general arrival and service distributions, we use the **Allen-Cunneen approximation**:
+In practice, arrival and service variability differ by freight mix and scheduling. For a stationary $G/G/c$ queue, the following Allen-Cunneen-style approximation estimates mean wait using the corresponding $M/M/c$ result:
 
-$$W_q(M/G/c) \approx \frac{P_q(M/M/c)}{c\mu(1-\rho)} \cdot \left( \frac{C_a^2 + C_s^2}{2} \right)$$
+$$W_q(G/G/c) \approx \frac{P_q(M/M/c)}{c\mu(1-\rho)} \cdot \left( \frac{C_a^2 + C_s^2}{2} \right)$$
 
 Where:
 - $C_a^2 = \frac{\sigma_a^2}{(1/\lambda)^2}$: Squared coefficient of variation of interarrival times.
@@ -227,13 +227,13 @@ Where:
   - $C_s^2 \approx 0.15 \text{ to } 0.30$: Standardized palletized freight unloading.
   - $C_s^2 \approx 0.80 \text{ to } 1.20$: Non-palletized, mixed-SKU floor-loaded freight requiring manual sorting.
 
-The variance reduction multiplier $\frac{C_a^2 + C_s^2}{2}$ directly demonstrates the quantitative ROI of dock appointment scheduling: reducing arrival and service variance cuts yard queue lengths and carrier detention risk by 50% to 70% at the exact same physical door count.
+The multiplier illustrates the effect of measured variability on estimated mean wait. It does not establish a universal savings percentage or detention probability: validate the arrival process, time-varying peaks, finite yard and service-level tails with operational data or simulation.
 
 ---
 
 ### 5.3 Yard Apron Geometry and Truck Kinematics
 
-Yard apron geometry must accommodate the physical dimensions and steering envelopes of the largest anticipated road vehicle. For North American logistics facilities, the universal design vehicle is the **AASHTO WB-67** (Interstate Semitrailer).
+Yard apron geometry must accommodate the actual vehicle mix and steering envelopes. The AASHTO WB-67 is a useful North American screening vehicle where representative, not a universal substitute for site-specific swept-path checks.
 
 ```text
 ========================================================================================================================
@@ -552,7 +552,7 @@ The staging lane width ($W_{stage}$) for two paired 40-inch wide pallets with si
 
 $$W_{stage} = 2 \cdot W_{pallet} + 3 \cdot c_{gap} = 2 \cdot (3.333) + 3 \cdot (0.333) = 6.667 + 1.0 = 7.67\text{ ft } (92.0\text{ in})$$
 
-With dock doors standardly spaced at 12.0 feet center-to-center, an outbound door provides 12.0 feet of wall width. Sizing staging lanes at 7.67 feet wide leaves a 4.33-foot pedestrian safety walkway between adjacent staging lanes. If a facility stages two full waves per outbound door ($2 \times 26 = 52$ pallets), the staging zone must extend $2 \times 56.33 + 12.0 = 124.7\text{ ft}$ deep into the facility, driving structural building bay dimensions.
+At 12.0-foot door centers, a 7.67-foot lane leaves 4.33 feet of nominal width, but that residual is not automatically a safe pedestrian walkway: define protected routes, crossings, barriers and truck operating envelopes separately. If two full waves are staged end-to-end per door, the pallet rows plus the 12-foot dock-face clear zone require $2 \times 56.33 + 12.0 = 124.7$ feet before any additional circulation or setbacks.
 
 ---
 
@@ -733,7 +733,9 @@ $$A_{gross\_stage} = 9,457.2 \cdot (1 + 0.30) = 12,294.4\text{ sq ft}$$
 With 9 outbound doors on 12-ft centerlines, the exterior dock wall width is $9 \times 12 = 108.0\text{ ft}$. The staging zone must extend into the warehouse footprint to a depth of:
 $$\text{Depth of Staging Bay} = \frac{12,294.4\text{ sq ft}}{108.0\text{ ft}} = 113.8\text{ ft}$$
 
-Pacific Gateway specifies a **115-foot deep clear staging marshalling bay** directly behind the outbound dock door bank.
+The area-divided-by-width result is a preliminary average, not proof that 18 full trailer loads fit. In particular, two end-to-end 13-row lanes require at least 124.7 feet under the stated assumptions, before further circulation. Draw the actual lanes, shared clear zones, columns and segregated pedestrian routes; increase the building depth or revise the staging layout before approving the footprint.
+
+The proposed **115-foot bay is not established as feasible** for the end-to-end configuration; resolve the dimensional layout before specifying it.
 
 ---
 
@@ -1106,7 +1108,7 @@ The staging bay must extend **147.5 feet deep** into the warehouse floor footpri
 ### Question 4: How does carrier appointment scheduling impact dock queue lengths mathematically?
 - **What a Strong Answer Contains:** The candidate cites the Allen-Cunneen approximation for $M/G/c$ queues:
   $$W_q \approx \frac{P_q}{c\mu(1-\rho)} \cdot \left( \frac{C_a^2 + C_s^2}{2} \right)$$
-  They explain that appointment scheduling reduces the squared coefficient of variation of arrivals ($C_a^2$) from $\ge 1.0$ (random Poisson/bursty) down to $0.20\text{–}0.40$. Because queue delay is directly proportional to the variance sum $(C_a^2 + C_s^2)/2$, tightening scheduling windows cuts yard queues by 50% to 70% without adding a single physical dock door.
+  They explain that reduced measured arrival variability can reduce estimated mean wait, while the actual effect depends on both arrival and service variability. This approximation does not directly predict detention probability or guarantee a particular savings percentage.
 - **What a Weak Answer Reveals:** The candidate discusses scheduling in purely qualitative terms ("it keeps things organized") without understanding the mathematical link between arrival variance and queuing delay.
 - **Trap Concept:** Assuming appointments eliminate queuing entirely; if service times have high variance ($C_s^2 \ge 1.0$), queues will still form.
 
@@ -1198,4 +1200,3 @@ The staging bay must extend **147.5 feet deep** into the warehouse floor footpri
 - **Next Sibling Topic:** [`05_handling-equipment-automation.md`](05_handling-equipment-automation.md) — Handling Equipment and Automation
 - **Related Topic:** [`01_facility-types-flow.md`](01_facility-types-flow.md) — Facility Types and Material Flow Topologies
 - **Related Safety Topic:** [`08_safety-fire-ergonomics.md`](08_safety-fire-ergonomics.md) — Safety, Fire Protection, and Ergonomics
-- **Laboratory Reference:** [`../../05_labs_electives/45_lab_facility_simulation/`](../../05_labs_electives/45_lab_facility_simulation/)

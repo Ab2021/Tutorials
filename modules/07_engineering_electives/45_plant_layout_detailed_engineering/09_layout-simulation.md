@@ -146,7 +146,7 @@ The following table formalizes the mathematical, operational, and physical terms
 | **Chute-Full Backpressure Sensor** | Optical through-beam sensor installed at the discharge mouth of a sortation chute that flags an overflow condition and inhibits diverts. | Treating as an informational alarm rather than a hard diversion inhibitor in simulation logic. | Binary sensor state: $S_{\text{chute}} \in \{0, 1\}$ |
 | **Recirculation Instability Threshold** | The critical input arrival rate $\lambda_{\text{crit}}$ at which a closed-loop conveyor sorter exceeds $100\%$ saturation due to compounding recirculating rejected items. | Assuming sorter capacity is simply the nameplate mechanical speed independent of reject rates. | $\lambda_{\text{crit}} = \mu (1 - p_{\text{reject}})$ (units/hr) |
 | **Flying-V / Fishbone Layout** | Non-orthogonal warehouse layout architecture featuring diagonal, chevron cross-aisles oriented at an angle $\theta^*$ to optimize pick-to-deposit travel distances. | Applying standard rectilinear Manhattan distance metrics to non-orthogonal diagonal travel aisles. | Aisle angle $\theta \approx 45^\circ - 54^\circ$; Gue-Meller metric |
-| **Gue-Meller Optimal Angle ($\theta^*$)** | The mathematically optimal chevron aisle inclination angle $\theta^* = \arccos(v_y / v_x)$ that minimizes total expected travel distance in fishbone warehouses. | Assuming a fixed $45^\circ$ angle is always optimal regardless of longitudinal vs lateral equipment speeds. | Angle $\theta^* = \arccos(v_y / v_x)$ (radians or degrees) |
+| **Chevron angle** | A design variable defining diagonal cross-aisle orientation. | Treating a geometry-specific optimum as universal. | Determine by optimizing the actual network and demand pattern. |
 | **Rectilinear (Manhattan) Metric** | Distance metric governing travel constrained to orthogonal grid axes: $d_1(\mathbf{p}_1, \mathbf{p}_2) = \|x_1 - x_2\| + \|y_1 - y_2\|$. | Applying Manhattan metric to diagonal cross-aisles or freely navigating AMRs with LiDAR SLAM. | Distance $d_1$ (m) |
 | **Active Period Method** | Quantitative bottleneck detection algorithm tracking the duration of uninterrupted active processing states versus starved and blocked states. | Labeling the machine with the highest nominal average utilization as the permanent system bottleneck. | Active duration $T_{\text{active}}$, Starved $T_{\text{starved}}$, Blocked $T_{\text{blocked}}$ (s) |
 | **Shifting Bottleneck** | A dynamic phenomenon where the primary throughput constraint wanders between distinct machines or subsystems across time. | Assuming a single static constraint exists permanently in a stochastic, multi-product line. | Bottleneck probability index $\beta_i(t) \in [0, 1]$ |
@@ -212,7 +212,7 @@ Designing, executing, and interpreting a pre-construction discrete-event layout 
 2. **Discretize the Material Handling Network:** Convert polyline centerlines of conveyors and AGV guide-paths into a directed metric graph $G = (V, E)$. Assign coordinate tuples $(x_i, y_i, z_i)$ to every vertex $v_i \in V$.
 3. **Map Civil Interference Zones:** For each structural column (typically $0.5 \text{ m} \times 0.5 \text{ m}$ steel wide-flange encased in concrete), establish a mandatory physical clearance buffer:
    $$B_{\text{column}} = \left\{(x, y) \mid |x - x_c| \le \frac{w_c}{2} + \delta_{\text{clear}}, \, |y - y_c| \le \frac{d_c}{2} + \delta_{\text{clear}}\right\}$$
-   where $\delta_{\text{clear}} \ge 0.50 \text{ m}$ per OSHA 1910.176 requirements. Ensure no AGV path envelope or maintenance access lane intersects $B_{\text{column}}$.
+   where $\delta_{\text{clear}}$ is a project-specific modeling allowance, not a clearance prescribed by OSHA 1910.176. Determine actual clearance from the vehicle envelope, risk assessment, applicable requirements, and equipment supplier.
 4. **Identify Floor Slab Expansion Joint Crossings:** Map the layout of sawn and armored expansion joints across the concrete slab. Automated vehicles crossing joints at high speed experience severe dynamic wheel impact. For each edge $e \in E$ that intersects an expansion joint, enforce a crossing angle constraint ($\theta_{\text{joint}} \in [75^\circ, 105^\circ]$) or introduce localized vehicle speed restrictions ($v_{\text{joint}} \le 0.80 \text{ m/s}$) to prevent premature drive-unit bearing degradation.
 
 ### Step 2: Kinematic Parameterization of Material Transport
@@ -306,11 +306,9 @@ Designing, executing, and interpreting a pre-construction discrete-event layout 
    $$D_{\text{orth}}(\mathbf{p}_1, \mathbf{p}_2) = |x_1 - x_2| + |y_1 - y_2|$$
    Under standard routing heuristics (S-shape/traversal, return, midpoint), picking travel times follow piecewise uniform or near-symmetric distributions.
 2. **Flying-V / Fishbone Layout Travel Time Formulation:** In a fishbone layout, pick aisles are oriented at an angle $\theta$ relative to the central spine, and cross-aisles form diagonal chevrons meeting at the input/output (P/D) dock.
-   - Gue and Meller derived the mathematically optimal aisle inclination angle $\theta^*$ by minimizing expected pick-to-deposit travel. For an automated picker with longitudinal velocity $v_x$ along the cross-aisles and lateral velocity $v_y$ within pick aisles, the optimal angle satisfies:
-     $$\cos(\theta^*) = \frac{v_y}{v_x}$$
-     When velocities are equal ($v_x = v_y$), $\theta^* = 45.0^\circ$. If cross-aisle transport is faster than picking aisle travel ($v_x = 1.5 v_y$), $\theta^* = \arccos(1/1.5) \approx 48.2^\circ$.
-   - Point-to-dock distance within a chevron bank is:
-     $$D_{\text{fish}}(\mathbf{p}_1, \text{dock}) = \sqrt{x_1^2 + y_1^2 + 2 x_1 y_1 \cos(\theta)}$$
+   - Choose candidate diagonal angles and construct the actual connected aisle graph for each.
+   - Compute shortest feasible paths over that graph using the actual dock positions, obstructions, direction rules, and travel speeds.
+   - Compare expected travel under the relevant demand distribution; the best angle is scenario-dependent, not a universal velocity-ratio formula.
 3. **Characterize Distributional Skewness:** Non-orthogonal layouts significantly shorten travel to the central P/D point for high-velocity SKUs located in the chevron core, creating a pronounced right-skewed travel time distribution (high positive skewness $\gamma_1 > 1.2$ and high kurtosis $\beta_2 > 4.5$). In simulation, this non-normality produces high picker-arrival variance at downstream order-consolidation buffers.
 
 ### Step 7: Dynamic Shifting Bottleneck Profiling via Active/Starved/Blocked Tracking
@@ -703,6 +701,8 @@ These standards dictate physical clearance envelopes that must be embedded direc
 
 ## 9. Industry practice and case evidence
 
+The following three scenarios are hypothetical teaching examples, not verified field studies or empirical evidence; their numbers illustrate possible failure mechanisms.
+
 The application of discrete-event simulation as a mandatory civil engineering pre-construction gate is standard practice among tier-one global logistics, e-commerce, and automotive enterprises.
 
 ```
@@ -733,7 +733,7 @@ The application of discrete-event simulation as a mandatory civil engineering pr
 +-----------------------------------------------------------------------------------+
 ```
 
-### Case 1: E-Commerce Mega-Hub Pre-Pour Sorter Validation (Empirical Fact)
+### Case 1: E-Commerce Mega-Hub Pre-Pour Sorter Validation (Illustrative)
 During the detailed engineering phase of an 850,000-square-foot North American regional distribution center, the material handling system vendor proposed a single continuous closed-loop cross-belt sorter ($1,200 \text{ m}$ perimeter) running at $2.5 \text{ m/s}$. The vendor's static spreadsheet demonstrated that the sorter's theoretical mechanical capacity ($18,000 \text{ trays/hour}$) exceeded the facility's peak requirement ($14,500 \text{ parcels/hour}$) by $24.1\%$.
 
 An independent discrete-event simulation model was constructed to validate the layout prior to pouring the slab and setting 480 structural support pylons. The simulation revealed two critical layout flaws:
@@ -742,7 +742,7 @@ An independent discrete-event simulation model was constructed to validate the l
 
 *Engineering Resolution:* The pre-pour validation forced a layout redesign: the single loop was split into two independent 9,000-tray/hr sorter loops with intermediate accumulation buffers, and column row D was shifted $1.5 \text{ m}$ on the structural drawings before foundation pouring. This simulation study avoided an estimated $\$4.2\text{M}$ in post-pour concrete demolition, re-drilling of structural footings, and contract delay penalties.
 
-### Case 2: Automotive Assembly Plant AGV Deadlock Resolution (Empirical Fact)
+### Case 2: Automotive Assembly Plant AGV Deadlock Resolution (Illustrative)
 A major automotive assembly plant in Germany transitioned its powertrain sub-assembly kitting from manual tugger trains to a fleet of 36 bidirectional Automated Guided Vehicles. The initial layout utilized a single bidirectional main transport aisle ($140 \text{ m}$ long, $3.2 \text{ m}$ wide) flanked by heavy sub-assembly workstations. To save floor space, the layout provided only two passing sidings.
 
 During initial virtual commissioning inside a physics-based DES engine:
@@ -753,7 +753,7 @@ During initial virtual commissioning inside a physics-based DES engine:
 
 *Engineering Resolution:* The simulation team tested three layout mitigations: (a) converting the corridor into a strict unidirectional loop (which increased travel distance by $42\%$), (b) installing three additional passing sidings, and (c) implementing Banker's algorithm in the fleet management controller. The simulation proved that adding three dynamic passing sidings combined with a 4D space-time reservation algorithm completely eliminated deadlock while preserving $94\%$ of straight-line travel efficiency. The concrete slab was cut for magnetic guide-wire tracks and siding charging pads prior to equipment installation, saving an estimated $\$1.8\text{M}$ in field modifications.
 
-### Case 3: Air Cargo & Express Parcel Logistics Hub (Empirical Case)
+### Case 3: Air Cargo & Express Parcel Logistics Hub (Illustrative)
 At a 600,000-square-foot international air cargo and express parcel hub, eight high-speed accumulation lines fed a primary customs inspection induction conveyor via sawtooth merge junctions. Operational field trials after structural erection revealed that customs screening stations experienced $45\%$ starvation idle time despite hundreds of packages waiting on accumulation lines.
 
 Simulation modeling diagnosed that the upstream optical window-sensing photo-eyes were installed only $2.5 \text{ m}$ upstream from the merge points. At trunk belt speeds of $2.2 \text{ m/s}$, the sensor lookahead horizon was only $1.14 \text{ seconds}$—insufficient for the metering belts to accelerate 10-package slugs from rest. The merge controllers constantly missed injection windows, forcing slugs to wait for multiple successive clear gaps. By modeling the physics in DES, engineers determined that moving the optical sensors to $6.8 \text{ m}$ upstream and implementing a dynamic queue-weighted slug release algorithm increased merge throughput by $38\%$, restoring customs station utilization to $92\%$ without replacing physical conveyor hardware.
@@ -1098,7 +1098,7 @@ A passing protocol must include:
 - **Optical Window Sensor:** Upstream photo-eye measuring gap availability on trunk conveyors to synchronize merge injection.
 - **Recirculation Instability Threshold:** Critical arrival rate $\lambda_{\text{crit}} = \mu(1 - p_{\text{reject}})$ beyond which closed-loop sorters suffer runaway saturation.
 - **Flying-V / Fishbone Layout:** Warehouse layout with diagonal chevron cross-aisles optimizing travel to a central P/D point.
-- **Gue-Meller Optimal Angle ($\theta^*$):** Mathematically optimal chevron angle $\theta^* = \arccos(v_y / v_x)$ minimizing expected pick travel.
+- **Chevron angle:** A layout design variable whose best value depends on the connected network, travel speeds, and demand.
 - **Manhattan Metric:** Rectilinear distance metric $d = |x_1 - x_2| + |y_1 - y_2|$ governing orthogonal travel.
 - **Active Period Method:** Bottleneck detection methodology tracking uninterrupted active processing durations.
 - **Shifting Bottleneck:** Operational constraint dynamically migrating across physical machines over time.
@@ -1116,6 +1116,67 @@ A passing protocol must include:
 - **Kuhn-Munkres Dispatching:** Combinatorial bipartite matching algorithm optimizing fleet task allocations.
 - **Lag-1 Autocorrelation ($\rho_1$):** Measure of statistical dependence between consecutive discrete-event state observations.
 - **Chute-Full Backpressure Sensor:** Optical divert mouth sensor inhibiting destination drops during downstream chute jams.
+
+### Experiment design: comparing two layouts
+
+Consider two candidate networks serving the same synthetic order stream.
+Layout A has a direct cross-aisle and a single merge.
+Layout B adds a bypass but requires a longer route for some picks.
+The engineering question is whether the bypass reduces peak completion time enough to justify its footprint.
+This is a decision experiment, not a claim about a real facility.
+
+**Define the experiment**
+
+1. Specify the decision deadline and the decision owner.
+2. Freeze the layout revision for each candidate.
+3. Define the observation period and the initial work-in-process.
+4. Define order completion, including any downstream consolidation.
+5. Identify the demand distribution and peak arrival profile.
+6. Specify staffing, equipment speeds, failures, and recovery rules.
+7. Use the same demand scenarios for both alternatives.
+8. State which operating rules may differ between alternatives.
+9. Choose a primary outcome before looking at results.
+10. Record the seed and model version for every run.
+
+For a terminating shift, report completed orders and unfinished orders at shift end.
+Do not silently discard unfinished orders from the cycle-time calculation.
+For a steady-state question, justify the warm-up and run length separately.
+Do not apply warm-up deletion automatically to an empty-start shift.
+
+**Illustrative paired comparison**
+
+Suppose three paired runs give the following mean completion times in minutes.
+The numbers are invented and are not sufficient for a reliable investment decision.
+
+| Shared scenario | Layout A | Layout B | B minus A |
+|---|---:|---:|---:|
+| 1 | 20 | 18 | -2 |
+| 2 | 24 | 21 | -3 |
+| 3 | 19 | 18 | -1 |
+
+The mean paired difference is -2 minutes.
+Negative values favor B for this metric.
+The observed range is not a confidence interval.
+Obtain enough independent replications for the required precision.
+Calculate uncertainty on the paired differences, not by treating all six results as unrelated.
+Common random numbers help only when corresponding random events remain meaningfully paired.
+Separate random streams by source so that an extra dispatch decision does not shift the arrival stream.
+
+**Validation and limitations**
+
+- Check that every modeled route exists in the frozen drawing.
+- Inspect a few hand-calculated travel times against the model.
+- Confirm that queue capacity uses actual physical positions.
+- Check event ordering at simultaneous arrivals and releases.
+- Test that vehicles cannot occupy conflicting reservations.
+- Verify that a failure restores the intended state after repair.
+- Compare observed queue and throughput patterns with relevant operating data when available.
+- Stress the model with altered demand and failure assumptions.
+- Record parameters that lack operational measurements.
+- Do not treat animation, average utilization, or a single seed as validation.
+- Escalate safety functions to the qualified safety design process; simulation alone is not a protective system.
+
+Citations and model assumptions should accompany the decision record.
 
 ---
 
@@ -1149,7 +1210,3 @@ A passing protocol must include:
   - [Topic 08 — Safety, Fire, and Ergonomics](08_safety-fire-ergonomics.md)
 - **Downstream Sibling Topic:**
   - [Topic 10 — Design for Supply Chain and Maintenance Interfaces](10_design-for-supply-chain.md)
-- **Cross-Program Topic Linkages:**
-  - [Module 15: Simulation and Stochastic Modeling](../../02_methods/15_simulation_stochastic_modeling/)
-  - [Module 10: Facilities and Warehousing](../../01_foundations/10_facilities_warehousing/)
-  - [Module 20: Production Scheduling and Line Balancing](../../03_commerce/20_production_scheduling/)

@@ -25,13 +25,13 @@ and a regulatory lens. All assume the core methods.
 
 ## 2. Modules
 
-| # | Module | Core question | Topics |
-|---:|---|---|---:|
+| # | Module | Core question | Topics | Status |
+|---:|---|---|---:|---|
 | 41 | [`41_maritime_rail_air_operations/`](41_maritime_rail_air_operations/_index.md) | Given fixed physical resources, what can operations actually change? | 10 | complete |
 | 42 | [`42_treasury_credit_financial_supply_chain/`](42_treasury_credit_financial_supply_chain/_index.md) | The chain is profitable — why is there no cash? | 10 | complete |
 | 43 | [`43_security_engineering_supply_chain/`](43_security_engineering_supply_chain/_index.md) | Which link in the chain is the way in? | 10 | complete |
 | 44 | [`44_mlops_production_analytics/`](44_mlops_production_analytics/_index.md) | The notebook works — why is nobody using it? | 10 | complete |
-| 45 | [`45_plant_layout_detailed_engineering/`](45_plant_layout_detailed_engineering/_index.md) | The network says build here — can the building do it? | 10 |
+| 45 | [`45_plant_layout_detailed_engineering/`](45_plant_layout_detailed_engineering/_index.md) | The network says build here — can the building do it? | 10 | complete |
 
 ## 3. Sequence
 
@@ -59,12 +59,12 @@ Module 20, provided the module-specific prerequisites are met.
 
 | Status | Count |
 |---|---:|
-| planned | 1 |
+| planned | 0 |
 | draft | 0 |
-| complete | 4 |
+| complete | 5 |
 
-The five survey files in `../../course/` are complete at survey depth. Topic files are indexed but
-not yet written.
+The five survey files in `../../course/` are complete at survey depth; their topic files
+are available in the linked module folders.
 
 ## 6. Sources
 

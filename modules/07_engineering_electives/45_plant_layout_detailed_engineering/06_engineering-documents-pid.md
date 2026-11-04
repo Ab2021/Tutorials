@@ -257,7 +257,7 @@ The engineering design commences with thermodynamic modeling and process synthes
 ### Stage 2: P&ID Development per ANSI/ISA-5.1
 
 The PFD provides process intent; the P&ID establishes functional, operational, and safety execution:
-1. **Assign Line Numbers to Every Concurrency:** Every pipe segment that undergoes a change in diameter, fluid service, material class, or passes through a major equipment boundary receives a unique line number.
+1. **Assign Line Numbers:** Apply the project's line-numbering procedure consistently. A change in size, service, class or equipment boundary may require a new number or a documented segment, according to that procedure; this is not a universal numbering rule.
    - Standard syntax: `[Nominal Diameter]-[Fluid Service]-[Sequence Number]-[Piping Spec Class]-[Insulation Code]-[Insulation Thickness]`
    - Example: `6"-CW-2041-A1A-PP-25` designates a 6-inch Cooling Water line, loop 2041, ASME Class 150 carbon steel, personal protection insulation, 25 mm thick.
 2. **Implement ANSI/ISA-5.1 Instrument Tagging:** Parse and allocate instrument identification bubbles.
@@ -270,7 +270,7 @@ The PFD provides process intent; the P&ID establishes functional, operational, a
    - **Plain Circle:** Discrete field-mounted instrument accessible to operators.
    - **Circle with Single Solid Horizontal Line:** Primary control room operator console / DCS accessible display.
    - **Circle with Dashed Horizontal Line:** Auxiliary panel or rear-of-rack mounted instrument (not directly accessible on primary operator console).
-   - **Circle with Double Solid Horizontal Line:** Inaccessible field-mounted instrument.
+   - **Circle with Double Solid Horizontal Line:** Auxiliary location accessible to an operator, subject to the applicable ISA edition and project legend.
    - **Square Enclosing Circle:** Shared display / shared control system (DCS / PLC graphic symbol).
    - **Square Enclosing Circle with Solid Horizontal Line:** Primary DCS display and control point.
 4. **Draw Signal Transmission Lines:**
@@ -283,12 +283,12 @@ The PFD provides process intent; the P&ID establishes functional, operational, a
    - Draw exact valve internal geometry: Gate, Globe, Ball, Butterfly, Plug, Diaphragm, Needle, or Check valve.
    - Indicate actuator: Manual lever/handwheel, pneumatic diaphragm, pneumatic piston/cylinder, electric motor, or hydraulic cylinder.
    - Annotate fail-safe modes on all actuated control and shutdown valves:
-     - **Fail Closed (FC / Air-to-Open):** Valve driven shut by mechanical spring upon loss of air or electrical signal (e.g., fuel gas shutoff, toxic feed line).
-     - **Fail Open (FO / Air-to-Close):** Valve driven wide open by mechanical spring upon signal loss (e.g., reactor cooling water jackets, safety blowdown lines).
-     - **Fail Locked (FL / Fail-in-Place):** Actuator traps air volume to hold existing position upon signal loss.
-     - **Fail As-Is (FAI):** Valve remains at last commanded mechanical state.
+     - **Fail Closed (FC):** The specified final position is closed on the identified failure; air-to-open describes actuator action, not all possible signal, power, or air failure outcomes.
+     - **Fail Open (FO):** The specified final position is open on the identified failure; air-to-close likewise does not define every failure.
+     - **Fail Locked (FL / Fail-in-Place):** The assembly is designed to hold position under specified failures, for example with a suitable pneumatic lock.
+     - **Fail As-Is (FAI):** The intended position is the existing position under the stated failure. Verify leakage, stored energy and actuator behavior; do not assume all failure modes are equivalent.
 6. **Incorporate Overpressure and Interlock Protections:**
-   - Place Pressure Safety Valves (PSV) or Rupture Disks (PSE) on all pressure vessels and piping segments subject to thermal expansion trapping or process runaway.
+   - Identify credible overpressure and blocked-in thermal expansion scenarios; select and locate relief or other protection based on the applicable code and documented process safety analysis.
    - Draw Safety Instrumented System (SIS) interlocks using logic bubbles (`I-01`, `I-02`) connected to emergency shutdown valves (`XV`, `SDV`).
 
 ### Stage 3: Compiling Relational Tabular Manifests: Line Lists and Equipment Lists
@@ -304,9 +304,9 @@ Data from the P&ID must be transcribed into structured relational databases:
    - Design Pressure ($P_{des}$) and Design Temperature ($T_{des}$).
    - Piping Specification Class (e.g., `A1A`, `B1A`, `C1A`).
    - Pipe Schedule / Wall thickness per ASME B36.10M (carbon steel) or B36.19M (stainless steel).
-   - Insulation purpose code: `HC` (Heat Conservation), `PP` (Personal Protection, required for lines $> 60^\circ C$ in accessible areas), `CI` (Cold Insulation / Anti-Sweat), `AI` (Acoustic Insulation), `ET` (Electric Heat Tracing), `ST` (Steam Tracing).
+   - Insulation purpose code: `HC` (Heat Conservation), `PP` (Personal Protection), `CI` (Cold Insulation / Anti-Sweat), `AI` (Acoustic Insulation), `ET` (Electric Heat Tracing), `ST` (Steam Tracing). Surface-temperature limits and protective measures depend on exposure, risk assessment and applicable requirements.
    - Insulation thickness ($mm$).
-   - Non-Destructive Examination (NDE) extent: e.g., 5% random Radiographic Testing (RT) for non-hazardous utilities, 20% RT for flammable hydrocarbons, 100% RT for lethal substance service (ASME B31.3 Category M).
+   - Non-Destructive Examination (NDE) extent, method and acceptance criteria, determined from the applicable code edition, fluid service category, weld category, design and project specification. Hazard labels alone do not define a universal RT percentage.
 3. **Calculate Hydrostatic and Pneumatic Test Pressures per ASME B31.3:**
    - Per ASME B31.3 Paragraph 345.4.2, the hydrostatic test gauge pressure $P_t$ at any point in a metallic piping system shall not be less than:
      $$P_t = 1.5 \times P \times \frac{S_t}{S}$$
@@ -314,10 +314,8 @@ Data from the P&ID must be transcribed into structured relational databases:
      - $P$ is the internal design gauge pressure ($bar$ or $MPa$).
      - $S_t$ is the allowable stress value of the material at test temperature (typically ambient, $20^\circ C$).
      - $S$ is the allowable stress value of the material at design temperature.
-     - The ratio $S_t / S$ shall not exceed 6.5. If $S_t = S$ (ambient design), $P_t = 1.5 \times P$.
-   - Per ASME B31.3 Paragraph 345.5.4, if pneumatic testing is performed (using air or nitrogen when water cannot be tolerated), the test pressure shall be:
-     $$P_{pneumatic} = 1.1 \times P$$
-     subject to strict blast-hazard radius exclusions and preliminary leak checks at the lesser of $1.7\text{ bar}$ or $0.5 \times P$.
+     - Where design temperature exceeds test temperature, apply the applicable code stress ratio, subject to the code's limits and component yield and rating checks. Otherwise use the relevant code provisions; when $S_t=S$, the basic value is $1.5P$.
+   - Pneumatic testing has high stored-energy consequences and requires a documented, approved procedure and the applicable edition's minimum test pressure, preliminary leak test, staged pressurization and exclusion controls. Do not use this summary as a field test procedure.
 
 ### Stage 4: Spatial Layout: General Arrangements (GA) and Piping Isometrics
 
@@ -409,16 +407,16 @@ To govern spatial reliability, modern detailed engineering employs the **BIMForu
 
   LOD 100: CONCEPTUAL
   - Volume, gross area, orientation, massing block.
-  - Sizing accuracy: +/- 30%. Non-relational placeholder.
+  - Conceptual representation; no universal percentage accuracy is implied.
 
   LOD 200: GENERIC SYSTEM
   - Approximate size, shape, location, and orientation.
-  - Sizing accuracy: +/- 15%. Generic pumps, nominal duct sizes.
+  - Generic pumps and nominal duct sizes; project-defined accuracy.
 
   LOD 300: SPECIFIC SYSTEM (DETAILED DESIGN BASELINE)
   - Accurate quantity, size, shape, location, and orientation.
-  - Sizing accuracy: +/- 5%. Vendor-independent specific geometry.
-  - Can be used for spatial coordination and code compliance.
+  - Specific modeled geometry; tolerances and permitted uses are project-defined.
+  - Coordination and code review still require appropriate design checks.
 
   LOD 350: INTERFACE & CONNECTION LEVEL
   - Actual interfaces modeled: Flanges, baseplates, pipe hangers, connection brackets.
@@ -430,10 +428,10 @@ To govern spatial reliability, modern detailed engineering employs the **BIMForu
     rebar bending schedules, sheet metal duct seams, electrical conduit bends.
   - Direct output to CNC pipe benders and steel fabrication shops.
 
-  LOD 500: FIELD-VERIFIED AS-BUILT DIGITAL TWIN
-  - Laser-scan verified in field after erection.
-  - Linked to asset management metadata: Serial numbers, commissioning records,
-    maintenance schedules, operating manuals (COBie / CMMS integration).
+  LOD 500: FIELD-VERIFIED REPRESENTATION
+  - Model elements verified in the field as specified by the project.
+  - A digital twin, laser scanning and asset metadata are optional deliverables,
+    not automatic consequences of the LOD designation.
 ====================================================================================================
 ```
 
@@ -465,8 +463,8 @@ The interface between process manufacturing and warehouse supply chain logistics
 
   1. BULK LIQUID OFFLOADING
      - Road tanker / railcar unloading to tank farm.
-     - Physical: Dry-disconnect couplings (TODO / Kamlok), breakaway couplings.
-     - Safety: Vapor recovery balance lines, static grounding interlock (resistance < 10 ohms).
+     - Physical: Select compatible dry-disconnect or other specified couplings and breakaway protection for the service.
+     - Safety: Assess vapor recovery and bonding/grounding for the material, transfer operation and applicable code; select interlocks and resistance criteria from the approved design.
      - Metering: Coriolis mass flow meter custody transfer skid.
 
   2. DRY BULK PNEUMATIC CONVEYING
@@ -570,11 +568,12 @@ You are tasked with engineering, validating, and auditing the interdisciplinary 
    - Schedule 40S nominal thickness: $t_{nom} = 6.02\text{ mm}$.
    - Available safety margin over requirement:
      $$\text{Margin} = 6.02\text{ mm} - 2.375\text{ mm} = 3.645\text{ mm}$$
-   - Schedule 40S is selected to satisfy structural pipe rack spanning criteria (preventing sagging between $6.0\text{ m}$ bent spacing) and mechanical abuse resistance.
-5. Mandatory Shop Hydrostatic Test Pressure per ASME B31.3 Para 345.4.2:
+   - Schedule 40S is a trial selection only. Verify support spacing, deflection, sustained and occasional stresses, thermal expansion, local loads, vibration and mechanical protection before approval; the pressure calculation alone does not prove a 6 m span.
+5. Illustrative System Hydrostatic Test Pressure per ASME B31.3 Para 345.4.2:
    $$P_t = 1.5 \times P \times \frac{S_{test}}{S_{design}}$$
    Since allowable stress for TP304 at ambient testing temperature ($20^\circ C$, $S_{test} = 137.9\text{ MPa}$) equals allowable stress at design temperature ($50^\circ C$, $S_{design} = 137.9\text{ MPa}$), $S_{test}/S_{design} = 1.0$.
    $$P_{hydro} = 1.5 \times 14.0\text{ bar gauge} = 21.0\text{ bar gauge} = 2.10\text{ MPa gauge} \approx 304.6\text{ psig}$$
+   The final test package must also check the weakest component, test temperature, static head at high and low points, temporary supports, vents, drains and applicable code limits. Shop versus field test location and any permitted alternative are determined by the approved test plan.
 
 ### Step 3: P&ID Tagging and Line List Compilation
 
@@ -598,7 +597,7 @@ You are tasked with engineering, validating, and auditing the interdisciplinary 
 | **Design Conditions** | $14.0\text{ bar gauge}$ @ $50^\circ C$ | Pump deadhead shutoff pressure + thermal excursion margin |
 | **Pipe Size & Schedule** | NPS 4" Schedule 40S | $OD = 114.3\text{ mm}$, $t_{nom} = 6.02\text{ mm}$, $ID = 102.26\text{ mm}$ |
 | **Hydrotest Pressure** | $21.0\text{ bar gauge}$ ($2.10\text{ MPa}$) | $1.5 \times P_{design}$ per ASME B31.3 Para 345.4.2; test medium: clean potable water |
-| **Pneumatic Test** | Not authorized | Water hydrotest mandatory; pneumatic hazard index excessive |
+| **Pneumatic Test** | Not authorized for this example | Any alternative requires applicable code provisions and a separately approved hazard-controlled procedure |
 | **Insulation Spec** | `PP-25` | Personal protection insulation, $25\text{ mm}$ mineral wool with 0.5 mm embossed Al jacket |
 | **NDE Requirement** | 10% RT / UT | 10% random radiographic examination on butt welds per plant chemical standard |
 | **Coating / Painting** | None (Bare SS) | Uninsulated segments passivated; insulated segments under mineral wool sealed against CUI |
@@ -1113,11 +1112,11 @@ Every engineering design calculation and document framework operates under funda
 - **Weak Answer reveals:** Confuses PFDs and P&IDs as merely different levels of drawing neatness; assumes P&IDs contain physical 3D scale and spatial coordinates; does not recognize the FEED freeze transition gate.
 
 ### Question 2: In ANSI/ISA-5.1, how do you distinguish between `FIC-101`, `FT-101`, and `FCV-101`, and what do the different horizontal lines inside an instrument bubble represent?
-- **Strong Answer:** In loop 101, `FT-101` is the Flow Transmitter (the field-mounted primary sensing device converting orifice differential pressure or Coriolis deflection into a 4–20 mA or digital signal). `FIC-101` is the Flow Indicator Controller (the computational block executing the control algorithm, typically hosted within a DCS or PLC). `FCV-101` is the Flow Control Valve (the final control element physically modulating the orifice opening via a pneumatic or electric actuator). Regarding bubble symbology: a plain circular bubble denotes a discrete field-mounted instrument accessible to field operators. A bubble with a single solid horizontal line indicates an instrument or display located on the primary operator control console (DCS console). A dashed horizontal line indicates mounting behind a panel or in an auxiliary rack room. A double solid horizontal line indicates an inaccessible field location. A square enclosing a circle denotes shared DCS/PLC software functionality.
+- **Strong Answer:** In loop 101, `FT-101` is the flow transmitter, `FIC-101` is the flow-indicating controller, and `FCV-101` is the final control valve. A plain circle indicates a field-mounted instrument; a single solid horizontal line indicates a primary accessible location; a dashed line indicates an inaccessible or behind-panel location; a double solid line indicates an accessible auxiliary location. Confirm location conventions and shared-function symbols against the project's ISA edition and drawing legend.
 - **Weak Answer reveals:** Believes `FIC` is a physical valve; cannot explain the significance of bubble divider lines; assumes all control is done inside the field instrument.
 
 ### Question 3: How is the hydrostatic test pressure calculated for a metallic piping system per ASME B31.3, and why can it not be arbitrarily increased to "be safe"?
-- **Strong Answer:** Per ASME B31.3 Paragraph 345.4.2, the minimum hydrostatic test gauge pressure is calculated as $P_t = 1.5 \times P \times (S_t / S)$, where $P$ is the internal design pressure, $S_t$ is the material allowable stress at test temperature, and $S$ is the allowable stress at design temperature (ratio capped at 6.5). It cannot be arbitrarily increased because hydrostatic pressure induces severe hoop stress ($\sigma_h = \frac{P D}{2 t}$) and longitudinal stress in the pipe wall and fittings. If $P_t$ exceeds the yield strength ($S_y$) of the material (typically verified to ensure test stress does not exceed $90\%$ of yield strength), the pipe will suffer permanent plastic deformation, flange face warping, gasket blowout, or catastrophic brittle failure. Furthermore, the flooded weight of water during testing introduces massive vertical loads that can buckle structural pipe racks designed only for lightweight vapor service.
+- **Strong Answer:** Under the applicable B31.3 edition, start with the internal design pressure and the hydrostatic test rules, including the temperature-dependent allowable-stress adjustment where applicable. Check test pressure at each elevation, component ratings and yield limitations, and use an approved test package. Increasing pressure arbitrarily can overstress piping or equipment and compromise safety.
 - **Weak Answer reveals:** Thinks hydrotest is $1.5 \times \text{operating pressure}$; believes higher pressure is always better without understanding material yield limits or structural foundation test weights.
 
 ### Question 4: What is the difference between a Hard Clash, a Soft Clash, and a 4D Clash in plant BIM coordination? Give a specific industrial example of each.
@@ -1210,6 +1209,3 @@ Every engineering design calculation and document framework operates under funda
   - Topic 08: Safety, Fire Protection, and Ergonomics — [`08_safety-fire-ergonomics.md`](08_safety-fire-ergonomics.md)
   - Topic 09: Layout Simulation and Bottleneck Diagnosis — [`09_layout-simulation.md`](09_layout-simulation.md)
   - Topic 10: Design for Supply Chain — [`10_design-for-supply-chain.md`](10_design-for-supply-chain.md)
-- **Relevant Program Elective Modules:**
-  - Module 15: Warehouse Operations and Systems — [`../../02_methods/15_warehouse_operations/`](../../02_methods/15_warehouse_operations/)
-  - Module 20: Production Scheduling and Line Balancing — [`../../03_commerce/20_production_scheduling/`](../../03_commerce/20_production_scheduling/)

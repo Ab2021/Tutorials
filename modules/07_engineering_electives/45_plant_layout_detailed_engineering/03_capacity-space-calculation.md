@@ -24,8 +24,8 @@ Conversely, over-engineering building clear height or floor space locks up exces
 
 By completing this topic, you will be able to:
 
-1. **Derive** counterbalanced forklift, reach truck, and Very Narrow Aisle (VNA) right-angle stacking aisle widths ($W_a$) directly from vehicle turning kinematics, chassis dimensions, load overhangs, and operating clearances.
-2. **Calculate** vertical rack bay pitch, top-of-storage elevations, and permissible beam levels compliant with NFPA 13 Early Suppression Fast Response (ESFR) and Control Mode Density/Area (CMDA) fire sprinkler clearance rules.
+1. **Estimate** aisle width for a stated geometric model and identify why the equipment manufacturer's specified stacking aisle and a swept-path study govern the actual design.
+2. **Calculate** vertical rack bay pitch and candidate levels under an assumed clearance, and identify the separate fire-protection review required.
 3. **Formulate and solve** analytical models of horizontal and vertical honeycombing losses across single-deep selective, double-deep, drive-in, push-back, and pallet-flow gravity rack systems.
 4. **Optimize** storage lane depth ($D^*$) by mathematically balancing the economic trade-off between operating aisle footprint savings and horizontal honeycombing vacancy penalties.
 5. **Evaluate** structural storage system kinematics—contrasting static selectivity, dynamic pressure, gravity slope mechanics, and lift equipment interfaces across modern storage architectures.
@@ -96,8 +96,8 @@ If the facility design fails to integrate these physical interfaces concurrently
 | **Top-of-Storage Elevation ($H_{storage}$)** | Vertical elevation of the topmost surface of the highest palletized unit load when resting in its rack position. | Assuming top-of-storage is the top beam level; the pallet and cargo height project above the top beam. | Meters ($\text{m}$) or Feet ($\text{ft}$) |
 | **ESFR Sprinkler** | Early Suppression Fast Response sprinkler: high-volume, high-momentum ceiling-only fire suppression head designed to suppress fire rather than merely control it. | Believing ESFR allows storage up to the roof deck; requires a mandatory minimum clear buffer below deflector. | NFPA 13; Discharge coefficient $K \ge 14.0$ |
 | **CMDA Sprinkler** | Control Mode Density/Area sprinkler: standard ceiling spray system designed to control fire size and pre-wet adjacent combustibles until manual firefighting arrives. | Assuming CMDA can handle high-hazard rack storage without requiring expensive secondary in-rack sprinkler grids. | NFPA 13; Density ($\text{gpm/ft}^2$) |
-| **Longitudinal Flue Space** | Continuous vertical opening between back-to-back rack rows, parallel to the loading aisle, permitting vertical venting of hot gases and fire suppression water ingress. | Allowing pallet loads to overhang into the flue, pinching the space to zero and failing fire inspection. | NFPA 13; Nominal minimum $6\text{ in}$ ($152\text{ mm}$) |
-| **Transverse Flue Space** | Continuous vertical opening between adjacent pallet loads on the same beam level, perpendicular to the loading aisle. | Pushing pallets flush against each other on the beam to save bay length, completely sealing transverse flues. | NFPA 13; Nominal minimum $6\text{ in}$ ($152\text{ mm}$) |
+| **Longitudinal Flue Space** | Vertical opening between back-to-back rack rows, parallel to the loading aisle. | Measuring only steel spacing while load overhang closes the opening. | Required dimensions depend on the adopted design and storage configuration. |
+| **Transverse Flue Space** | Vertical opening between adjacent pallet loads along a rack row. | Assuming a single gap dimension applies to all rack and sprinkler configurations. | Check the applicable fire-protection design. |
 | **Right-Angle Stacking Aisle ($W_a$)** | Minimum aisle width required for a material handling vehicle carrying a specified unit load to execute a $90^\circ$ turn from the aisle center into a rack bay. | Using the vehicle width or vehicle turning radius alone without calculating swept chassis and load corners. | Millimeters ($\text{mm}$) or Inches ($\text{in}$) |
 | **Turning Radius ($R_T$)** | Radius of the smallest circular turning path traced by the outermost structural point of the forklift chassis during a full-steer maneuver. | Assuming the load rotates inside the chassis radius; the front outer corner of the pallet forms an expanded swing arc. | Millimeters ($\text{mm}$) or Inches ($\text{in}$) |
 | **Load Center Distance ($c$)** | Horizontal longitudinal distance from the vertical front face of the fork tines to the center of gravity of the payload (typically half load length). | Assuming load center is fixed at $500\text{ mm}$; non-standard pallet depths or overhangs shift $c$, derating lift capacity. | Millimeters ($\text{mm}$) or Inches ($\text{in}$) |
@@ -226,32 +226,13 @@ The operating aisle width ($W_a$) is the single largest consumer of horizontal f
 +---------------------------------------------------------------------------------------------------+
 ```
 
-#### Counterbalanced Forklift Right-Angle Stacking Aisle
-A counterbalanced forklift steers via its rear axle. When turning into a rack bay, the vehicle pivots about a point $C$ lying along the centerline of the fixed front drive axle. 
-
-The traditional industrial engineering formulation for the theoretical minimum right-angle stacking aisle width is:
-$$W_a = R_T + A_L + C_{clear}$$
-where:
-* $R_T$: Outside turning radius of the forklift chassis (measured from the pivot point $C$ to the extreme rear corner of the counterweight).
-* $A_L$: Effective load arm distance from the pivot point $C$ to the outermost front corner of the payload.
-* $C_{clear}$: Total operational clearance allowance (typically $12\text{ in}$ to $18\text{ in}$, or $300\text{ mm}$ to $450\text{ mm}$, providing $150\text{--}225\text{ mm}$ buffer on each side).
-
-To derive $A_L$ rigorously from first principles:
-Let $c$ be the front overhang distance from the center of the drive axle to the front vertical face of the fork tines.
-Let $L_{load}$ be the length of the pallet load in the direction of fork entry.
-Let $W_{load}$ be the width of the pallet load perpendicular to fork entry.
-Let $b$ be the distance from the drive axle centerline to the vehicle centerline.
-
-When the truck turns $90^\circ$, the outermost front corner of the payload traces an arc with radius $R_{load}$:
-$$R_{load} = \sqrt{\left(c + L_{load}\right)^2 + \left(\frac{W_{load}}{2} + b\right)^2}$$
-
-Assuming the pivot center aligns with the inner wheel track ($b \approx 0$ for high-steer angle geometry):
-$$A_L = \sqrt{\left(c + L_{load}\right)^2 + \left(\frac{W_{load}}{2}\right)^2}$$
-
-Thus, the exact geometric right-angle stacking aisle is:
-$$W_{stack} = \sqrt{R_T^2 - d_{axle}^2} + \sqrt{\left(c + L_{load}\right)^2 + \left(\frac{W_{load}}{2}\right)^2} + C_{clear}$$
-where $d_{axle}$ is the lateral offset of the pivot center from the vehicle drive axle. In standard industrial practice with $90^\circ$ rear steer capability, $d_{axle} \to 0$, reducing the equation to the classic standard:
+#### Right-Angle Stacking Aisle: Screening Model
+The expression below is a simplified geometric estimate, not an exact aisle formula for every truck:
 $$W_a = R_T + \sqrt{\left(c + L_{load}\right)^2 + \left(\frac{W_{load}}{2}\right)^2} + C_{clear}$$
+All inputs are lengths: a selected chassis turning radius $R_T$, front overhang $c$, load length $L_{load}$, load width $W_{load}$ and an assumed total clearance $C_{clear}$.
+The expression assumes a simplified turning center and does not model a particular steering mechanism, mast extension, aisle entry or load placement.
+It is suitable only for an initial comparison with those assumptions stated.
+For a real installation, obtain the truck manufacturer's stacking-aisle data for the actual load and rack configuration, and validate the full swept envelope and operating clearances.
 
 #### Reach Truck Aisle Width
 Reach trucks do not require the entire chassis to swing into the bay. The base legs (outriggers) straddle the bottom pallet, and the pantograph or moving mast extends forward to place the load.
@@ -259,14 +240,11 @@ Reach trucks do not require the entire chassis to swing into the bay. The base l
 * Right-angle stacking aisle width typically ranges from $2,600\text{ mm}$ to $3,000\text{ mm}$ ($102\text{--}118\text{ in}$) for a standard $1,000 \times 1,200\text{ mm}$ pallet.
 
 #### Very Narrow Aisle (VNA) Geometry
-In VNA systems, the truck drives along a fixed track without turning at right angles to face the rack. The required aisle width depends strictly on vehicle chassis width, load width, and physical guidance clearances:
-$$W_{a, VNA} = \max\left(W_{truck}, W_{load}\right) + 2 \cdot \delta_{guide}$$
-where:
-* $W_{truck}$: Overall width of the turret truck chassis (typically $1,400\text{--}1,600\text{ mm}$).
-* $W_{load}$: Width of the palletized load including overhanging cartons (e.g., $1,000\text{ mm}$ or $1,200\text{ mm}$).
-* $\delta_{guide}$: Mechanical side clearance.
-  * For **Rail-Guided Systems** (continuous structural steel angles, e.g., $L100 \times 75 \times 10\text{ mm}$ anchored to the slab): $\delta_{guide} = 100\text{ mm}$ ($4\text{ in}$) per side.
-  * For **Wire-Guided Systems** (inductive guidance cable embedded in a $4\text{ mm} \times 15\text{ mm}$ floor slot tracking a $5\text{--}10\text{ kHz}$ frequency): $\delta_{guide} = 150\text{ mm}$ ($6\text{ in}$) per side.
+In VNA systems, a preliminary straight-travel envelope is:
+$$W_{a,screen} = \max\left(W_{truck}, W_{load}\right) + 2 \cdot \delta_{guide}$$
+Here $\delta_{guide}$ is an assumed side allowance, not a universal standard.
+The calculation omits mast sway, guidance tolerances, rack and load projections, placement movements and emergency access.
+Use the equipment supplier's specifications for the actual guidance system and validate the complete installation.
 
 ```text
 +───────────────────────────────────+────────────────────+─────────────────────+
@@ -297,9 +275,9 @@ Maximizing vertical space utilization requires evaluating the physical envelope 
   │                                Roof Truss Bottom Chord / Purlin
   ├─────────────────────────────────────────────────────────────────────────────────────────────────────────
   │  ▲                             Lowest Roof Structural Obstruction (Building Clear Height Reference)
-  │  │ ΔH_sprinkler_clearance      NFPA 13 Mandatory Buffer:
-  │  │                             - ESFR (Early Suppression Fast Response): ≥ 36 inches (914 mm)
-  │  ▼                             - CMDA (Control Mode Density/Area): ≥ 18 inches (457 mm)
+  │  │ ΔH_sprinkler_clearance      Illustrative design allowance:
+  │  │                             - ESFR example: 36 inches (914 mm)
+  │  ▼                             - Other designs: check applicable requirements
   ├─────────────────────────────────────────────────────────────────────────────────────────────────────────
   │                                Top-of-Storage Elevation (H_storage, max)
   │  ┌───────────────────────────┐ 
@@ -329,20 +307,19 @@ Maximizing vertical space utilization requires evaluating the physical envelope 
 =============================================================================================================
 ```
 
-#### 1. NFPA 13 Fire Suppression Clearance Rules
-The National Fire Protection Association standard NFPA 13 (*Standard for the Installation of Sprinkler Systems*) governs ceiling clearances:
-* **Standard Spray Sprinklers (CMDA):** Minimum vertical distance between the sprinkler deflector and the top-of-storage must be **$18\text{ inches}$ ($457\text{ mm}$)**.
-* **ESFR Sprinklers (K-14.0, K-16.8, K-22.4, K-25.2):** Minimum vertical clearance between the deflector and the top of storage must be **$36\text{ inches}$ ($914\text{ mm}$)**. If storage encroaches within $36\text{ inches}$, the high-velocity discharge cone cannot develop, preventing fire suppression.
-* **Sprinkler Deflector to Roof Distance:** Deflectors must typically be positioned $6\text{ in}$ to $14\text{ in}$ ($152\text{--}356\text{ mm}$) below the ceiling deck.
-* **Maximum Allowable Top-of-Storage Elevation:**
-  $$H_{storage, max} = H_{clear} - \Delta H_{sprinkler\_clearance} - \Delta H_{roof\_hang}$$
-  where $\Delta H_{roof\_hang}$ accounts for deflector drop below the lowest structural roof chord plus lighting and duct interference.
+#### 1. Sprinkler Clearances and Flue Spaces
+NFPA 13 is a design standard; its legal force depends on adoption and the applicable edition.
+Required clearance is measured from the sprinkler deflector to the storage, not automatically from the roof structure.
+An ESFR example may use $36\text{ in}$ ($914\text{ mm}$) as a preliminary allowance, but the applicable criteria depend on sprinkler listing, commodity, storage arrangement, building geometry and protection design.
+For preliminary calculation only:
+$$H_{storage, max} = H_{clear} - \Delta H_{sprinkler\_clearance} - \Delta H_{roof\_hang}$$
+Here the drop relates the chosen clear-height datum to the actual deflector elevation; use surveyed elevations in a real installation.
+The fire-protection engineer and authority having jurisdiction must review the adopted criteria and the complete design.
 
-#### 2. NFPA 13 Flue Space Mandates
-Unobstructed vertical flue openings must be maintained throughout the rack depth:
-* **Longitudinal Flue Space:** A continuous vertical opening between back-to-back rack rows. NFPA 13 requires a minimum nominal width of **$6\text{ inches}$ ($152\text{ mm}$)**. Pallet overhang (typically $75\text{ mm}$ per side) must be accommodated by sizing row spacers accordingly:
-  $$W_{spacer} = W_{flue, net} + 2 \cdot \delta_{overhang} = 152\text{ mm} + 2(75\text{ mm}) = 302\text{ mm} \approx 12\text{ inches}$$
-* **Transverse Flue Space:** Continuous vertical openings between adjacent pallet loads on the same beam and between pallets and upright columns. NFPA 13 mandates nominal **$6\text{ inches}$ ($152\text{ mm}$)** clear gaps.
+Longitudinal and transverse flue requirements likewise depend on the applicable storage and protection arrangement.
+As an illustrative geometry only, a desired $152\text{ mm}$ net flue with $75\text{ mm}$ overhang on each side needs $302\text{ mm}$ between the relevant reference faces:
+$$W_{spacer} = 152\text{ mm} + 2(75\text{ mm}) = 302\text{ mm}$$
+Check frame geometry, pallet placement tolerances and approved fire plans before specifying row spacers.
 
 #### 3. Vertical Bay Pitch and Level Sizing Calculus
 To size the structural bay levels:
@@ -523,7 +500,7 @@ $$K_{G/N} = \frac{A_{gross}}{A_{net\_pallets}}$$
 An industrial engineering team is tasked with designing a regional distribution center for high-velocity consumer goods. The analytics team has established the operational and inventory parameters:
 
 * **Target Dynamic Capacity:** $24,000$ pallets.
-* **Pallet Dimensions:** Standard GMA wooden pallet, $W_{pal} = 1,000\text{ mm}$ (fork entry face), $L_{pal} = 1,200\text{ mm}$ (depth), $h_{pallet} = 150\text{ mm}$.
+* **Pallet Dimensions:** Illustrative wooden pallet, $W_{pal} = 1,000\text{ mm}$ (fork entry face), $L_{pal} = 1,200\text{ mm}$ (depth), $h_{pallet} = 150\text{ mm}$. This is not the nominal 48-by-40-inch GMA footprint.
 * **Cargo Unit Load:** Unitized cartons, cargo height $h_{load} = 1,400\text{ mm}$, mass $m = 850\text{ kg}$. Overhang is zero.
 * **Building Structural Envelope:** Clear height $H_{clear} = 12.50\text{ m}$ ($12,500\text{ mm}$). Structural column grid is $16.0\text{ m} \times 16.0\text{ m}$.
 * **Fire Protection:** Ceiling-only ESFR K-25.2 sprinkler system.
@@ -538,7 +515,7 @@ An industrial engineering team is tasked with designing a regional distribution 
 ### Step 1: Vertical Clear Height and Level Sizing
 
 1. **NFPA 13 ESFR Clearances:**
-   * ESFR mandatory buffer below sprinkler deflector: $\Delta H_{sprinkler} = 914\text{ mm}$ ($36\text{ inches}$).
+   * Assumed preliminary buffer below sprinkler deflector: $\Delta H_{sprinkler} = 914\text{ mm}$ ($36\text{ inches}$); final criteria require design review.
    * Roof truss deflector drop and lighting allowance: $\Delta H_{roof} = 161\text{ mm}$.
    * Maximum allowable top-of-storage elevation:
      $$H_{storage, max} = 12,500\text{ mm} - 914\text{ mm} - 161\text{ mm} = 11,425\text{ mm}$$
@@ -566,7 +543,8 @@ An industrial engineering team is tasked with designing a regional distribution 
    * Elevation of top of highest pallet cargo:
      $$H_{top} = 8,875\text{ mm} + 1,550\text{ mm} = 10,425\text{ mm}$$
    * Actual clear buffer below ceiling structure:
-     $$\Delta H_{actual} = 12,500\text{ mm} - 10,425\text{ mm} = 2,075\text{ mm} > 914\text{ mm} \quad \text{[Compliant with NFPA 13]}$$
+     $$\Delta H_{actual} = 12,500\text{ mm} - 10,425\text{ mm} = 2,075\text{ mm}$$
+   * The deflector-to-storage separation is $2,075 - 161 = 1,914\text{ mm}$ under the assumed drop; this exceeds the assumed allowance, but does not establish NFPA 13 compliance.
 
 ---
 
@@ -578,7 +556,7 @@ An industrial engineering team is tasked with designing a regional distribution 
    * Horizontal honeycombing loss fraction: $L_h = 1 - 0.75 = 0.25$ ($25.0\%$).
 
 2. **Required Static Pallet Slots ($S_{static}$):**
-   To reliably hold $24,000$ active pallets at an operational fill factor of $88\%$ under $25\%$ honeycombing vacancy:
+   As an illustrative average-capacity sizing estimate, assuming that the two factors are independent and do not overlap:
    $$S_{static} = \left\lceil \frac{N_{target}}{U_h \cdot U_{oper}} \right\rceil = \left\lceil \frac{24,000}{0.75 \cdot 0.88} \right\rceil = \left\lceil \frac{24,000}{0.660} \right\rceil = 36,364\text{ static slots}$$
 
 3. **Floor Footprint Slot Requirement ($S_{floor}$):**
@@ -595,13 +573,13 @@ The reach truck technical data sheet specifies:
 * Load length: $L_{load} = 1,200\text{ mm}$; Load width: $W_{load} = 1,000\text{ mm}$.
 * Operating clearance buffer: $C_{clear} = 300\text{ mm}$.
 
-Using the exact right-angle stacking aisle equation:
+Using the simplified screening expression, not a certified truck specification:
 $$A_L = \sqrt{\left(c + L_{load}\right)^2 + \left(\frac{W_{load}}{2}\right)^2} = \sqrt{\left(380 + 1,200\right)^2 + \left(\frac{1,000}{2}\right)^2} = \sqrt{1,580^2 + 500^2} = \sqrt{2,496,400 + 250,000} = \sqrt{2,746,400} \approx 1,657\text{ mm}$$
 
-Theoretical minimum stacking aisle:
+Illustrative screening width:
 $$W_a = R_T + A_L + C_{clear} = 1,780\text{ mm} + 1,657\text{ mm} + 300\text{ mm} = 3,737\text{ mm}$$
 
-However, modern pantograph reach trucks operating in double-deep configurations use lateral outrigger straddle positioning. The manufacturer's certified double-deep operating aisle width with $100\text{ mm}$ side clearance is:
+For the remaining worked example, assume a supplier-confirmed $2,850\text{ mm}$ operating aisle for the specific double-deep truck, load and clearances. This is a hypothetical input, not an actual manufacturer's certification:
 $$W_a = 2,850\text{ mm}$$
 
 ---
@@ -624,7 +602,7 @@ In a double-deep configuration, racks are arranged in 4-deep banks between aisle
 
 3. **Bay Length along Aisle ($L_{bay}$):**
    * Two $1,000\text{ mm}$ pallets per beam: $2 \times 1,000\text{ mm} = 2,000\text{ mm}$.
-   * NFPA 13 transverse flues: $3 \times 100\text{ mm}$ clearances between loads and uprights $= 300\text{ mm}$.
+   * Illustrative load-to-load and load-to-upright clearances: $3 \times 100\text{ mm} = 300\text{ mm}$. This geometry is not a fire-code determination.
    * Upright column width: $100\text{ mm}$.
    * Total bay centerline length:
      $$L_{bay} = 2,000\text{ mm} + 300\text{ mm} + 100\text{ mm} = 2,400\text{ mm}$$
@@ -672,19 +650,19 @@ In a double-deep configuration, racks are arranged in 4-deep banks between aisle
 
 ## 7. Code, query, or calculation
 
-The following self-contained Python script implements the complete warehouse capacity and volumetric space calculus engine. It derives aisle widths, evaluates NFPA 13 vertical clear heights, computes honeycombing degradation, and outputs a complete facility engineering take-off.
+The following Python script reproduces a preliminary capacity estimate under the stated inputs. Its aisle expression is a screening calculation, and its height offset is an assumption, not an NFPA 13 compliance check or a construction take-off. A $1,000\text{ mm}$ load width is hard-coded in the screening function; the gross area is an average-module approximation.
 
 ```python
 """Warehouse Capacity Engineering and Volumetric Space Calculus Engine."""
 import math
 
 def calculate_aisle_width(turning_radius_mm, load_length_mm, load_dist_mm, clearance_mm):
-    """Calculates counterbalanced right-angle stacking aisle width (mm)."""
+    """Estimate a screening width (mm), not a manufacturer stacking-aisle rating."""
     arm = math.sqrt((load_dist_mm + load_length_mm)**2 + (1000 / 2)**2)
     return round(turning_radius_mm + arm + clearance_mm, 1)
 
 def calculate_vertical_levels(clear_ht_mm, sprinkler_offset_mm, pallet_ht_mm, load_ht_mm, lift_clearance_mm, beam_ht_mm):
-    """Calculates permissible beam levels and top-of-storage elevation under NFPA 13."""
+    """Calculate levels under a supplied height offset; not a code compliance check."""
     usable_ht = clear_ht_mm - sprinkler_offset_mm
     unit_load_ht = pallet_ht_mm + load_ht_mm
     bay_pitch = unit_load_ht + lift_clearance_mm + beam_ht_mm
@@ -722,7 +700,7 @@ def compute_facility_footprint(target_pallets, lane_depth, pallet_w, pallet_l, a
 
 if __name__ == "__main__":
     w_a = calculate_aisle_width(1780, 1200, 380, 300)
-    lvls, pitch, top_elev = calculate_vertical_levels(12500, 914, 150, 1400, 100, 125)
+    lvls, pitch, top_elev = calculate_vertical_levels(12500, 914 + 161, 150, 1400, 100, 125)
     res = compute_facility_footprint(24000, 2, 1000, 1200, 2850, lvls)
     print(f"Kinematic Aisle Width: {w_a} mm")
     print(f"Levels: {lvls} | Pitch: {pitch} mm | Top-of-Storage: {top_elev} mm")
@@ -761,10 +739,10 @@ Warehouse storage layout design is governed by strict civil, structural, fire, a
 ```
 
 ### 1. NFPA 13 (Standard for the Installation of Sprinkler Systems)
-NFPA 13 represents the legal and insurance baseline for warehouse fire safety in North America and across global multinational corporations.
-* **Commodity Classification:** Materials are grouped from Class I (non-combustible goods on wooden pallets) to Class IV (combustible plastics and packaging), up to Group A Unexpanded/Expanded Plastics. As commodity hazard increases, sprinkler discharge density and required flue spaces increase dramatically.
-* **ESFR Ceilings vs In-Rack Systems:** Under NFPA 13 (2025/2026 editions), ceiling-only ESFR sprinklers are generally permitted for storage heights up to $40\text{ ft}$ ($12.2\text{ m}$) in buildings up to $45\text{ ft}$ ($13.7\text{ m}$) clear height for Class I–IV and Cartoned Unexpanded Plastics without requiring in-rack sprinklers. Exceeding these storage heights triggers mandatory internal in-rack sprinkler piping networks at multiple beam elevations.
-* **Flue Integrity Enforcement:** Section 25.2 mandates that horizontal and vertical rack flue spaces must remain open. Local fire marshals routinely conduct optical drone or pole-camera inspections through longitudinal flues. Racks with blocked flues are cited, with permits revoked until mechanical flue stops are retrofitted.
+NFPA 13 applies where adopted or otherwise specified, subject to the edition and local amendments.
+Commodity classification, packaging, rack arrangement, storage height, sprinkler listing and water supply all affect protection design.
+Neither a single height threshold nor a universal flue dimension determines whether in-rack sprinklers are required.
+The fire-protection designer must check the applicable design criteria and the authority having jurisdiction must review the project as required.
 
 ### 2. RMI / ANSI MH16.1 (Industrial Steel Storage Racks)
 Promulgated by the Rack Manufacturers Institute (RMI) and certified by the American National Standards Institute (ANSI), MH16.1 establishes structural design criteria:
@@ -800,38 +778,28 @@ The American Concrete Institute standard ACI 117 defines the $F$-number system:
 
 ## 9. Industry practice and case evidence
 
-Modern distribution networks provide clear empirical data illustrating how volumetric calculus dictates operating performance and capital efficiency.
+The following are **illustrative scenarios**, not documented outcomes at named companies.
+They demonstrate decisions for which a practitioner must collect site-specific evidence.
 
-```text
-+───────────────────────────────────────────────────────────────────────────────────────────────────+
-| CASE EVIDENCE BENCHMARK SUMMARY                                                                   |
-+───────────────────────────────────────────────────────────────────────────────────────────────────+
-| DHL / Unilever Mega-DC: VNA Conversion + Superflat Floor Grinding -> 42% Footprint Compaction     |
-| Target Food Logistics: Push-Back vs Pallet Flow Life-Cycle Analysis in Chilled Operations         |
-| Amazon Gen-11 Non-Sort: Ceiling-Only ESFR Conversion Eliminating 140,000 Linear Feet of In-Rack |
-+───────────────────────────────────────────────────────────────────────────────────────────────────+
-```
+### Scenario 1: High-bay conversion
+An operator compares reach-truck selective rack with a guided very-narrow-aisle system.
+The denser option gains positions by reducing aisle width, but requires suitable floor tolerances, equipment and emergency procedures.
+The decision should compare usable positions after column interference, peak movements per hour, operating headroom and total installed cost.
+Obtain a defined-traffic floor survey and the truck supplier's aisle and lift-height specifications before committing.
 
-### Case 1: DHL Supply Chain / Unilever Regional Consolidation Center
-* **Facility Context:** A $180\text{M}$, $75,000\text{ m}^2$ consumer packaged goods distribution center consolidating four legacy warehouses into a single automated logistics campus in central Europe.
-* **The Engineering Problem:** The initial design proposed standard selective racking serviced by moving-mast reach trucks operating in $2,900\text{ mm}$ aisles. Facing steep land acquisition costs and local municipal footprint restrictions, the project was unviable under conventional footprint multipliers ($K_{G/N} = 3.2$).
-* **The Solution:** The engineering team redesigned the central storage hall into a wire-guided VNA turret truck system operating in $1,680\text{ mm}$ aisles with storage heights elevated to $14.5\text{ m}$ ($7$ beam levels).
-* **Floor Remediation Evidence:** The concrete slab-on-grade was poured to conventional $F_F 45 / F_L 35$ tolerances. During pre-commissioning testing, turret trucks experienced severe mast harmonic oscillation at elevations above $10\text{ m}$, triggering safety lockouts. The facility was forced to deploy laser-guided continuous floor-grinding machines to re-profile $22,000\text{ linear meters}$ of wheel tracks to DIN 18202 Superflat tolerances ($F_{min} 95$).
-* **Results:** Storage capacity increased from $52,000$ to $78,000$ pallet positions on the same structural footprint (a 42% spatial compaction). Operating labor productivity rose by 18% due to automated wire guidance allowing simultaneous travel and hoist positioning.
+### Scenario 2: Chilled storage lane depth
+A chilled facility compares selective, push-back and pallet-flow systems.
+Push-back generally retrieves from the loading face; pallet flow can support first-in, first-out when loading and picking are controlled appropriately.
+Neither system guarantees full lane utilization: lot restrictions and partial lanes may leave unavailable positions.
+Use dated SKU-lot inventory histories and replenishment sizes to estimate this loss.
+Include temperature-rated components, maintenance access and the cost of refrigerated volume in the comparison.
 
-### Case 2: Target Corporation Food Distribution Center (Perishables)
-* **Facility Context:** A $95\text{M}$ chilled ($4^\circ\text{C}$) and frozen ($-22^\circ\text{C}$) distribution facility handling high-velocity dairy, meat, and frozen foods.
-* **The Engineering Challenge:** Refrigerated warehouse construction costs exceed $\$2,200/\text{m}^2$ (compared to $\$750/\text{m}^2$ for ambient dry space), driven by insulated sandwich panels, glycol floor sub-heating, and industrial ammonia refrigeration plants. Minimizing gross building footprint and volumetric air cube was the primary financial objective.
-* **Storage Technology Evaluation:** The engineering team evaluated 4-deep Push-Back racking versus 6-deep Pallet-Flow Gravity racking for fast-moving dairy SKUs:
-  * *Push-Back:* Lower capital equipment cost ($65/\text{slot}$ vs $\$210/\text{slot}$ for gravity rollers), but imposed LIFO rotation per lane and exhibited a horizontal honeycombing loss of $37.5\%$ ($U_h = 62.5\%$).
-  * *Pallet Flow:* Maintained strictly FIFO stock rotation, eliminated honeycombing by allowing continuous charge/discharge queueing, and reduced forklift travel in cold environments.
-* **Operational Evidence:** Push-back carts in the $-22^\circ\text{C}$ freezer suffered cart bearing seizure due to standard grease viscosity breakdown, causing carts to stick at the rear and violently slide forward when jarred. Target retrofitted low-temperature synthetic lubricants and selected Pallet Flow gravity systems with centrifugal brake rollers for SKUs with weekly turn rates $>4.0$, reducing required freezer footprint by $3,800\text{ m}^2$ and saving $\$8.4\text{M}$ in initial refrigeration capital.
-
-### Case 3: Amazon Fulfillment Center Gen-11 Non-Sort Facility
-* **Facility Context:** Standard $95,000\text{ m}^2$ single-story non-sortable fulfillment facility processing bulky consumer goods, pet food, and appliances.
-* **The Fire Protection Transition:** Earlier Gen-8 non-sort facilities utilized CMDA sprinklers with extensive multi-level in-rack sprinkler piping grids. In a $100,000\text{ pallet}$ facility, this required over $140,000\text{ linear feet}$ of schedule 40 steel pipe embedded inside the rack frames, protected by wire cages.
-* **Failure Mechanism of In-Rack Piping:** Forklift mast collisions damaged in-rack pipe fittings an average of 4.2 times per facility-year, resulting in catastrophic water damage to inventory ($>\$450,000$ average claim) and prolonged rack section shutdowns.
-* **The Engineering Pivot:** In Gen-11 designs, Amazon raised building clear heights to $42\text{ ft}$ ($12.8\text{ m}$) and deployed ceiling-only ESFR K-25.2 pendant sprinklers flowing $100\text{ psi}$ ($6.9\text{ bar}$) with dedicated fire pumps. By designing rack top-of-storage limits strictly to $36\text{ ft}$ ($11.0\text{ m}$) and maintaining $6\text{ ft}$ clear deflector buffers, in-rack sprinklers were eliminated entirely, removing $\$3.2\text{M}$ in mechanical piping capital and eliminating water-strike risks.
+### Scenario 3: Rack and fire-protection interface
+A project considers ceiling-only and in-rack sprinkler protection for a proposed high-bay layout.
+The decision depends on commodity, packaging, water supply, building geometry and applicable listing and code criteria.
+In-rack piping can conflict with forklift operation and maintenance, but may be necessary for the approved design.
+Do not remove it merely because a different site uses ceiling-only protection.
+Coordinate the rack drawings, fire-protection calculations and authority review before procurement.
 
 ---
 
@@ -842,7 +810,7 @@ Modern distribution networks provide clear empirical data illustrating how volum
 | **Flue Space Occlusion** | Pallet loads overhang rack beams by $>100\text{ mm}$, visibly touching across back-to-back rows. | Operators push pallets too deep into bays; absence of mechanical backstops allows loads to close the longitudinal flue. | Automatic citation by fire marshal; invalidation of property casualty insurance; ESFR ceiling spray cannot penetrate to suppress rack fire. | Install heavy-duty structural steel flue space stops or wire mesh backing to enforce nominal $150\text{ mm}$ flue. |
 | **ESFR Clearance Encroachment** | Palletized cartons stored on top beam level are within $30\text{ inches}$ of ceiling sprinkler deflectors. | Facilities team adds top beam levels to gain storage capacity without checking building clear height or roof truss slope. | Sprinkler water distribution pattern fails to develop; fire in rack can breach roof envelope; fire authority issues immediate stop-work order. | Calculate $H_{storage, max}$ from lowest structural element; hardcode max rack beam elevations in facility engineering drawings. |
 | **Column Grid Bay Knockout** | Irregular bay spacing; structural columns protrude into operating aisles or split rack bays unevenly. | Rack layout designed independently of structural engineering column grid ($S_x \times S_y$), forcing on-site field modifications. | Knockout of $3\%\text{--}8\%$ of planned pallet slots; narrow pinch-points in aisles causing frequent forklift mast collisions. | Coordinate rack module width ($L_{bay}$) as an exact integer sub-multiple of the column grid; integrate columns into rack flue spaces. |
-| **Aisle Width Pinching** | Paint scrapes and gouges on lower upright frames; damaged aisle end-row column protectors. | Aisle width ($W_a$) specified using nominal chassis width without adding swept overhang $A_L$ and dynamic clearance $C_{clear}$. | Chronic rack frame structural damage; severe forklift slowdowns; repetitive operator musculoskeletal fatigue and product drops. | Re-derive $W_a$ from vehicle swept-path kinematics; mandate minimum $300\text{ mm}$ clear buffer for counterbalanced trucks. |
+| **Aisle Width Pinching** | Scrapes on uprights or vehicle body. | The layout omitted part of the loaded vehicle's swept envelope. | Collisions and rack damage. | Use manufacturer data and a site-specific swept-path and clearance assessment. |
 | **VNA Mast Dynamic Sway** | Turret truck mast vibrates violently at height; forks strike uprights during lateral insertion. | Floor slab poured to standard $F_F / F_L$ specs instead of defined-traffic Superflat ($F_{min} \ge 90$); dynamic vehicle roll amplification. | Forklifts locked out by electronic tilt sensors; handling cycle times triple; structural damage to top beam levels. | Conduct ASTM E1155 profile grinding along wheel paths; install laser-guided continuous floor profiling before commissioning. |
 | **Horizontal Honeycombing Collapse** | Warehouse inventory reports show 75% nominal occupancy, yet receiving docks are gridlocked with nowhere to put pallets. | Fast-moving SKUs slotted into deep-lane (4- to 8-deep) racks without lot sizing alignment; partial lanes left unfillable. | Emergency off-site storage leasing; dock congestion; staging pallets in fire egress corridors; severe labor cost blowouts. | Transition low-volume SKUs to selective racks; re-size deep-lane racks using optimal lane depth formulation ($D^*$). |
 | **Push-Back Incline Jamming** | Forklift drivers report carts sticking at the back of the lane or failing to roll forward upon retrieval. | Cart wheel bearings fouled with debris, damaged by violent pallet impacts, or grease congealed by sub-zero temperatures. | Operators stand on forks to dislodge stuck carts (severe life-safety hazard); jammed lanes become dead capacity. | Mandate sealed industrial stainless ball bearings; install cart impact bumpers; specify synthetic low-temp lubricants. |
@@ -876,9 +844,9 @@ A distribution facility is evaluating a new fleet of heavy-duty counterbalanced 
 * Outside chassis turning radius: $R_T = 2,250\text{ mm}$.
 * Distance from drive axle centerline to front fork face: $c = 480\text{ mm}$.
 * The facility handles standard ISO 1 pallets: $W_{load} = 1,000\text{ mm}$, $L_{load} = 1,200\text{ mm}$ (forks enter the $1,000\text{ mm}$ face).
-* The engineering standard mandates an operating clearance buffer of $C_{clear} = 350\text{ mm}$.
+* Assume an operating clearance buffer of $C_{clear} = 350\text{ mm}$ for this screening calculation.
 
-**Deliverable:** Compute the theoretical minimum right-angle stacking aisle width ($W_a$) using the exact kinematic formulation. State whether a planned $4,200\text{ mm}$ aisle provides sufficient operational clearance.
+**Deliverable:** Calculate the screening expression for $W_a$ and compare it with $4,200\text{ mm}$. Explain why the result alone cannot establish operational clearance.
 *Estimated time: 20 minutes.*
 
 ---
@@ -980,10 +948,10 @@ An architectural firm submits a conceptual layout for a $30,000\text{ m}^2$ e-co
    * Load length: $L_{load} = 1,200\text{ mm}$.
    * Load width: $W_{load} = 1,000\text{ mm}$.
    $$A_L = \sqrt{\left(c + L_{load}\right)^2 + \left(\frac{W_{load}}{2}\right)^2} = \sqrt{\left(480 + 1,200\right)^2 + \left(\frac{1,000}{2}\right)^2} = \sqrt{1,680^2 + 500^2} = \sqrt{2,822,400 + 250,000} = \sqrt{3,072,400} \approx 1,752.8\text{ mm}$$
-2. **Minimum Right-Angle Stacking Aisle ($W_a$):**
+2. **Screening Aisle Width ($W_a$):**
    $$W_a = R_T + A_L + C_{clear} = 2,250\text{ mm} + 1,752.8\text{ mm} + 350\text{ mm} = 4,352.8\text{ mm}$$
 3. **Critique of Planned $4,200\text{ mm}$ Aisle:**
-   The planned $4,200\text{ mm}$ aisle is **deficient by $152.8\text{ mm}$**. If implemented, the forklift cannot execute a $90^\circ$ turn without either clipping adjacent pallet loads or requiring a multi-point turn maneuver, severely degrading cycle times and creating chronic collision hazards. The aisle width must be expanded to at least $4,400\text{ mm}$.
+   The planned $4,200\text{ mm}$ aisle is $152.8\text{ mm}$ below this screening estimate. The result flags a design question, not proof that the truck cannot turn: obtain the applicable manufacturer specification and validate the swept path.
 
 ---
 
@@ -1006,7 +974,7 @@ An architectural firm submits a conceptual layout for a $30,000\text{ m}^2$ e-co
      $$H_{top} = 9,950\text{ mm} + 1,750\text{ mm} = 11,700\text{ mm}$$
    * Actual clear buffer below ceiling structure:
      $$\Delta H_{actual} = 13,800\text{ mm} - 11,700\text{ mm} = 2,100\text{ mm}$$
-   * Clear buffer below deflector: $2,100\text{ mm} - 186\text{ mm} = 1,914\text{ mm} \ge 914\text{ mm}$. **Fully compliant with NFPA 13.**
+   * Clear buffer below deflector: $2,100\text{ mm} - 186\text{ mm} = 1,914\text{ mm} \ge 914\text{ mm}$. This satisfies the exercise's assumed clearance, not a complete NFPA 13 review.
 
 ---
 
@@ -1106,15 +1074,15 @@ An architectural firm submits a conceptual layout for a $30,000\text{ m}^2$ e-co
 1. **Vertical Clear Height & Bay Pitch Failure (25 pts):**
    * Unit load height: $h_{unit} = 1,600\text{ mm}$. Bay pitch: $h_{pitch} = 1,600 + 75 + 100 = 1,775\text{ mm}$.
    * Height for 6 levels: $5 \times 1,775\text{ mm} + 1,600\text{ mm} = 10,475\text{ mm}$.
-   * Required building clear height under ESFR (requiring minimum $914\text{ mm}$ clear buffer plus $150\text{ mm}$ deflector drop):
+   * Required building clear height under the exercise's assumed $914\text{ mm}$ buffer and $150\text{ mm}$ deflector drop:
      $$H_{clear, required} \ge 10,475\text{ mm} + 914\text{ mm} + 150\text{ mm} = 11,539\text{ mm} \approx 11.55\text{ m}$$
-   * The specified $10.5\text{ m}$ clear height is deficient by over $1.0\text{ meter}$. A 6-level rack cannot physically fit without violating NFPA 13.
-2. **NFPA 13 Flue Space Violation (25 pts):**
-   * The drawing specifies $50\text{ mm}$ ($2\text{ inches}$) longitudinal flue spaces.
-   * NFPA 13 mandates a nominal minimum of **$152\text{ mm}$ ($6\text{ inches}$)**. A $50\text{ mm}$ flue will cause immediate failure during fire marshal inspection. Row spacers must be expanded to at least $300\text{ mm}$ to accommodate $75\text{ mm}$ pallet overhangs.
+   * The specified $10.5\text{ m}$ clear height is deficient by over $1.0\text{ m}$ against that assumption. Verify the actual protection design and elevations before deciding compliance.
+2. **Flue Space Review (25 pts):**
+   * The drawing specifies $50\text{ mm}$ longitudinal flue spaces.
+   * Check that dimension and any load overhang against the adopted criteria and approved fire-protection design; specify spacers from the required net opening and actual geometry.
 3. **Kinematic Aisle Width Deficiency (25 pts):**
    * The drawing specifies a $2,600\text{ mm}$ aisle for counterbalanced forklifts.
-   * Standard 3-wheel counterbalanced trucks require an aisle width of at least $3,100\text{--}3,300\text{ mm}$ to execute right-angle stacking of $1,200\text{ mm}$ loads. Operating in a $2,600\text{ mm}$ aisle is kinematically impossible without switching to reach trucks or articulated forklifts.
+   * Verify the actual truck and load against manufacturer stacking-aisle specifications and a swept-path study. The drawing alone cannot establish whether operation is possible.
 4. **Gross-to-Net Footprint Multiplier Fantasy (25 pts):**
    * The designer claims $K_{G/N} = 1.30\times$ for an e-commerce distribution center.
    * E-commerce DCs require extensive packing, sorting, QA, and outbound parcel staging aprons (typically consuming $25\%\text{--}35\%$ of total floor area), along with wide pedestrian and material cross-aisles. Realistic e-commerce selective rack multipliers range from **$2.5\times$ to $3.5\times$**. Sizing the building at $1.30\times$ understates required floor space by nearly 50%.
@@ -1131,9 +1099,9 @@ An architectural firm submits a conceptual layout for a $30,000\text{ m}^2$ e-co
 ---
 
 ### Question 2: Why does an ESFR sprinkler system dictate top-of-storage limits, and what happens if inventory violates this rule?
-* **What a strong answer contains:** The candidate cites NFPA 13, explaining that Early Suppression Fast Response (ESFR) sprinklers rely on high-volume, high-momentum discharge cones designed to penetrate the intense thermal plume of a burning rack array and suppress the fire at its source. The standard strictly mandates a minimum **$36\text{ inches}$ ($914\text{ mm}$)** vertical clearance between the sprinkler deflector and the top of storage. If storage encroaches into this buffer, the discharge spray strikes the top pallets before the overlapping cone pattern can fully form, creating dry shadow zones that allow the fire to propagate horizontally across the rack structure. The candidate notes that fire authorities will revoke certificate of occupancy, and property insurers will deny casualty coverage.
-* **What a weak answer reveals:** The candidate believes sprinklers merely need to "be close to the fire to put it out faster," failing to understand spray physics, discharge momentum, and NFPA legal mandates.
-* **Red flags:** Confusing ESFR ($36\text{ in}$) clearance with standard CMDA ($18\text{ in}$) clearance; claiming in-rack sprinklers can be added arbitrarily without hydraulic calculations.
+* **What a strong answer contains:** ESFR protection depends on the approved arrangement, including clearance from deflector to storage, commodity, building geometry and sprinkler listing. Check the adopted edition and design with the fire-protection engineer rather than declaring compliance from a single dimension.
+* **What a weak answer reveals:** Assuming any sprinkler will protect any storage arrangement, or treating clearance from the roof as clearance from the deflector.
+* **Red flags:** Removing in-rack sprinklers or increasing storage height without an approved design review.
 
 ---
 
@@ -1175,7 +1143,7 @@ An architectural firm submits a conceptual layout for a $30,000\text{ m}^2$ e-co
 ### Question 8: How do you mathematically size the required number of static rack slots to support an operational inventory target?
 * **What a strong answer contains:** The candidate explains that required static physical positions ($S_{static}$) must always exceed the average inventory target ($N_{target}$) due to two compounding factors: honeycombing vacancy ($U_h$) and operational headroom ($U_{oper}$):
 $$S_{static} = \left\lceil \frac{N_{target}}{U_h \cdot U_{oper}} \right\rceil$$
-The candidate explains that $U_{oper}$ (typically $85\%\text{--}88\%$) is mandatory because when a warehouse exceeds $90\%$ physical occupancy, forklift operators spend excessive time searching for slots, double-handling pallets, and experiencing travel congestion—a condition known as "warehouse gridlock." For deep-lane storage, $U_h$ accounts for unavoidable lane vacancy.
+The candidate explains that $U_{oper}$ is a scenario-specific headroom assumption, not a universal mandatory percentage. Validate both factors against actual SKU-lot occupancy and avoid counting the same vacancy twice.
 * **What a weak answer reveals:** The candidate sets $S_{static} = N_{target}$, claiming that any unused slot represents poor management rather than a structural mathematical requirement.
 * **Red flags:** Planning a facility for 100% nominal slot utilization.
 
@@ -1199,8 +1167,8 @@ The candidate explains that $U_{oper}$ (typically $85\%\text{--}88\%$) is mandat
 * **Gross Building Footprint ($A_{gross}$):** Total enclosed architectural ground floor area measured to the exterior face of building walls.
 * **Gross-to-Net Multiplier ($K_{G/N}$):** The ratio of total gross building footprint area to the net horizontal area occupied strictly by pallet unit loads.
 * **Horizontal Honeycombing ($L_h$):** Structural capacity rendered vacant in deep-lane storage due to SKU dedication and batch inventory depletion dynamics.
-* **Lift-Off Clearance ($h_{lift}$):** Mandatory vertical operating buffer ($75\text{--}100\text{ mm}$) allowing a forklift operator to elevate a pallet above the beam before extraction.
-* **Longitudinal Flue Space:** Continuous vertical opening between back-to-back rack rows, parallel to the aisle, mandated by NFPA 13 to be $\ge 6\text{ inches}$ ($152\text{ mm}$).
+* **Lift-Off Clearance ($h_{lift}$):** Vertical operating allowance for raising a pallet above its supports; determine it for the equipment and load.
+* **Longitudinal Flue Space:** Vertical opening between back-to-back rack rows, parallel to the aisle; required dimensions depend on the approved fire-protection design.
 * **Material Handling Equipment (MHE):** Industrial vehicles (forklifts, reach trucks, AGVs, AMRs) used to transport and hoist goods within a facility.
 * **Operational Fill Factor ($U_{oper}$):** Target maximum working occupancy (typically $85\%\text{--}90\%$) designed to prevent aisle congestion and search delays.
 * **Pantograph:** Scissor-action mechanical linkage that extends forklift tines forward into a double-deep rack bay.
@@ -1208,7 +1176,7 @@ The candidate explains that $U_{oper}$ (typically $85\%\text{--}88\%$) is mandat
 * **Right-Angle Stacking Aisle ($W_{stack}$):** Minimum aisle dimension enabling a forklift carrying a specified payload to execute a $90^\circ$ turn into a rack bay.
 * **Row Spacer:** Structural steel bracket connecting back-to-back rack uprights, engineered to enforce mandatory NFPA longitudinal flue spaces.
 * **Top-of-Storage Elevation ($H_{storage}$):** Vertical elevation of the topmost cargo surface resting in the highest rack storage level.
-* **Transverse Flue Space:** Continuous vertical opening between adjacent pallet loads on a rack beam, perpendicular to the aisle, mandated by NFPA 13 to be $\ge 6\text{ inches}$.
+* **Transverse Flue Space:** Vertical opening between adjacent pallet loads on a rack beam, perpendicular to the aisle; verify the applicable design criteria.
 * **Turning Radius ($R_T$):** The radius of the smallest circle traced by the outermost structural corner of a forklift chassis during a full-steer maneuver.
 * **Upright Frame:** Vertical structural steel assembly composed of two cold-formed or structural steel columns joined by diagonal and horizontal lacing.
 * **Vertical Honeycombing ($L_v$):** Unused volumetric space resulting from storing variable-height pallet loads within uniform, fixed-height rack openings.
