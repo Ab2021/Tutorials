@@ -206,13 +206,10 @@ an answer.
 
 ### Step 1 — Establish the design vehicle
 
-Start from the vehicle, not the shipment.
-
-- **Permitted payload P.** Read the plate for GVW and tare and subtract. Then check the route: a
-  state or national limit lower than the plate limit governs. Payload is the smaller of the two.
-- **Usable volume V.** Measure the internal length, width, and height that freight can occupy. Deduct
-  wheel boxes, the nose taper, lining, and decking. Do not use the nominal body length.
-- **Design density ρ\* = P / V.** Compute it once and write it on the wall.
+Start from the vehicle, not the shipment. **Permitted payload P**: read the plate for GVW and tare
+and subtract, then check the route, because a state or national limit lower than the plate governs.
+**Usable volume V**: measure the internal length, width, and height that freight can occupy, deducting
+wheel boxes, nose taper, lining, and decking. **Design density ρ\* = P / V**: compute it once.
 
 For the vehicle used throughout, **DV-53**, a 53-foot dry van on a US Interstate lane:
 
@@ -224,8 +221,8 @@ V  = 16.00 m × 2.40 m × 2.70 m = 103.68 m³
 ρ* = 20,400 kg ÷ 103.68 m³ = 196.8 kg/m³
 ```
 
-The same arithmetic for five representative vehicles, all design assumptions to be replaced by the
-actual unit's plate and body specification:
+Five representative vehicles, as design assumptions to be replaced by the actual unit's plate and
+body specification:
 
 | Vehicle | Permitted payload (kg) | Usable volume (m³) | Design density (kg/m³) | Cargo that binds cube | Cargo that binds weight |
 |---|---:|---:|---:|---|---|
@@ -235,15 +232,13 @@ actual unit's plate and body specification:
 | Articulated 40 t (EU) | 25,000 | 100.0 | 250.0 | White goods | Ceramic tile |
 | Articulated 53 ft (US, DV-53) | 20,400 | 103.7 | 196.8 | Cushion foam | Bagged polymer |
 
-Read this as thresholds, not a ranking. The 40 t articulated unit binds on weight above 250 kg/m³;
-the 7.5 t rigid binds above 93.8 kg/m³. The same cargo can be cube-bound in one vehicle and
+Read this as thresholds, not a ranking. The same cargo can be cube-bound in one vehicle and
 weight-bound in another, which is why "this is a cube product" is not a valid statement.
 
 ### Step 2 — Measure the load
 
 Measure mass and cube at the same level of aggregation. The common error is mixing levels: mass per
-carton with volume per pallet, or mass including the pallet with volume excluding it. Choose a unit
-load and measure both dimensions consistently, including the pallet's own mass and height.
+carton with volume per pallet, or mass including the pallet with volume excluding it.
 
 ```text
 v_unit  = footprint m² × stack height m       [m³ per pallet]
@@ -262,27 +257,25 @@ binding = argmax(u_m, u_v)
 ```
 
 Report both; name the binding one. This is the most useful line in any load plan and the one most
-often missing. The fast equivalent for a single commodity: if ρ_cargo > ρ\* the load will weight-bind
-as it fills; if ρ_cargo < ρ\*, it will cube-bind.
+often missing. Fast equivalent for a single commodity: if ρ_cargo > ρ\* the load will weight-bind as
+it fills; if ρ_cargo < ρ\*, it will cube-bind.
 
 ### Step 4 — Build the load in the binding dimension
 
 **Cube-bound.** The objective is units per cubic metre, subject to mass remaining legal. The levers
 are volumetric: raise stack height to the ceiling less clearance; reduce per-unit packaging, which
-raises units per cubic metre directly; choose a pallet pattern that wastes less floor, including
-mixed-SKU pallets; nest or knock down where the product allows. The load will finish far below its
-mass limit, which is the definition rather than a failure, and the response is to raise density,
-never to add ballast.
+raises units per cubic metre directly; choose a pallet pattern that wastes less floor; nest or knock
+down where the product allows. The load finishes far below its mass limit, which is the definition
+rather than a failure, and the response is to raise density, never to add ballast.
 
 **Weight-bound.** The objective is mass, subject to volume remaining legal. The levers are
 gravimetric: reduce mass per unit; distribute mass across axles so no axle limit binds before gross
-weight; accept floor gaps and plan so they do not become load-shift risk; check the deck rating,
-because a dense load on a small footprint can exceed the floor's kg/m² limit while the total is
-legal.
+weight; accept floor gaps; check the deck rating, because a dense load on a small footprint can
+exceed the floor's kg/m² limit while the total is legal.
 
 **The failure in one line.** Building a cube-bound load by mass adds heavy items until an axle binds,
-producing a trailer that is 40% full by volume and costs the same as a full trailer to run. Building
-a weight-bound load by volume stacks light items on a dense base, producing a trailer that looks full
+producing a trailer 40% full by volume that costs the same as a full one to run. Building a
+weight-bound load by volume stacks light items on a dense base, producing a trailer that looks full
 at 60% of payload with a raised centre of gravity. Both optimise the dimension that is not binding.
 
 ### Step 5 — Test time fusion
@@ -293,20 +286,16 @@ d_i = latest dispatch = required arrival − transit time − unload time
 fusion holds  ⟺  max(r_i) ≤ min(d_i)
 ```
 
-Case that passes. Shipment A is ready Monday 06:00 and must arrive Wednesday 12:00; transit 8 hours,
-so the latest dispatch is Wednesday 04:00. Shipment B is ready Tuesday 10:00 and must arrive Tuesday
-22:00; transit 10 hours, so the latest dispatch is Tuesday 12:00. The intervals are
-[Mon 06:00, Wed 04:00] and [Tue 10:00, Tue 12:00]; the intersection is [Tue 10:00, Tue 12:00], and a
-Tuesday 10:30 dispatch satisfies both.
+Case that passes. A is ready Monday 06:00 and must arrive Wednesday 12:00; transit 8 hours, so the
+latest dispatch is Wednesday 04:00. B is ready Tuesday 10:00 and must arrive Tuesday 22:00; transit
+10 hours, so the latest dispatch is Tuesday 12:00. The intervals are [Mon 06:00, Wed 04:00] and
+[Tue 10:00, Tue 12:00]; the intersection admits a Tuesday 10:30 dispatch.
 
-Case that fails. Shipment A is not ready until Tuesday 06:00. Shipment B must arrive Tuesday 08:00
-with 10 hours of transit, so its latest dispatch is Monday 22:00. The intersection is empty. No
-dispatch time satisfies both and no price fixes it; the only routes forward are to move A earlier or
-B later, and either cost belongs in Step 7.
+Case that fails. A is not ready until Tuesday 06:00, and B must arrive Tuesday 08:00 with 10 hours of
+transit, so B's latest dispatch is Monday 22:00. The intersection is empty. No price fixes it; the
+only routes forward are to move A earlier or B later, and either cost belongs in Step 7.
 
 ### Step 6 — Test physical fit
-
-Apply both inequalities, then check geometry.
 
 ```text
 m_A + m_B ≤ P        and        v_A + v_B ≤ V
@@ -314,9 +303,8 @@ m_A + m_B ≤ P        and        v_A + v_B ≤ V
 
 Three geometry conditions the aggregate test ignores: the longest item against internal length and
 door opening; the tallest stack against internal height including clearance; the heaviest
-concentrated item against the deck rating in kg/m². If the aggregate passes and geometry fails, the
-pair does not fit and the aggregate was a screen rather than a proof. Palletised loads usually pass
-on aggregate and fail on the last row.
+concentrated item against deck rating in kg/m². If the aggregate passes and geometry fails, the pair
+does not fit. Palletised loads usually pass on aggregate and fail on the last row.
 
 ### Step 7 — Test cost fusion
 
@@ -333,14 +321,13 @@ C_combined = base trip price
 Three disciplines make this honest. Use prices, not costs: a modelled cost that ignores the backhaul
 rate on move B will show a saving that does not exist. Include every stop-off charge, because it is
 often larger than the linehaul saving when the second shipment is small. Price the service change: if
-fusion required holding a shipment two days, the carrying cost belongs in C_combined even if no
-invoice carries it.
+fusion required holding a shipment two days, the carrying cost belongs in the total.
 
 ### Step 8 — Decide, and record the counterfactual
 
-Record the decision, the three results, and the arithmetic. The counterfactual is what makes it
-auditable six months later: "A and B were kept separate because the stop-off charge of
-USD 450.00 (2026 Q1) exceeded the linehaul saving of USD 263.50 (2026 Q1) by USD 186.50 (2026 Q1)."
+Record the decision, the three results, and the arithmetic. The counterfactual makes it auditable six
+months later: "A and B were kept separate because the stop-off charge of USD 450.00 (2026 Q1)
+exceeded the linehaul saving of USD 263.50 (2026 Q1) by USD 186.50 (2026 Q1)."
 
 ### The three tests as a decision table
 
@@ -355,8 +342,10 @@ USD 450.00 (2026 Q1) exceeded the linehaul saving of USD 263.50 (2026 Q1) by USD
 | 7 | pass | pass, tight | pass | Consolidate, and flag that the next shipment will not fit. |
 
 Row 6 is the case planners most often miss: the cost case is strong, the loads would fit, and the
-dates are incompatible. The correct output is not "consolidate with a longer hold" but "the saving is
-unavailable on these dates; re-test next cycle".
+dates are incompatible. The correct output is "the saving is unavailable on these dates; re-test next
+cycle", not "consolidate with a longer hold".
+
+---
 
 ---
 
@@ -399,10 +388,8 @@ USD 450.00.
 ```text
 Load A:  u_m = 3,600 ÷ 20,400 = 17.65%
          u_v = 86.40 ÷ 103.68 = 83.33%     → cube binds
-
 Load B:  u_m = 6,000 ÷ 20,400 = 29.41%
          u_v = 8.64 ÷ 103.68 = 8.33%       → weight binds
-
 Combined: u_m = 9,600 ÷ 20,400 = 47.06%
           u_v = 95.04 ÷ 103.68 = 91.67%   → cube binds
 ```
@@ -411,13 +398,10 @@ The density check agrees: A at 41.7 kg/m³ is far below the 196.8 kg/m³ crossov
 far above it.
 
 **Filled with A's cargo**, DV-53 would hold 103.68 m³ at 41.7 × 103.68 = 4,320 kg, which is 21.2% of
-permitted payload. A trailer completely full of cushion foam carries one fifth of the mass it is
-allowed to carry. **Filled with B's cargo**, the volume would take 694.4 × 103.68 = 72,000 kg, which
+permitted payload. **Filled with B's cargo**, the volume would take 694.4 × 103.68 = 72,000 kg, which
 is 3.53 times the permitted payload; B therefore weight-limits at 20,400 kg in
-20,400 ÷ 694.4 = 29.38 m³, which is 28.3% of the volume.
-
-Neither number criticises the product. They are the two ends of the same design-density fact, and
-they explain why A and B are complementary: one has volume to spare, the other has mass to spare.
+20,400 ÷ 694.4 = 29.38 m³, which is 28.3% of the volume. Neither number criticises the product: they
+are the two ends of the same design-density fact, and they explain why A and B are complementary.
 
 ### 6.3 Time fusion
 
@@ -446,8 +430,7 @@ slack: 103.68 − 95.04 = 8.64 m³
 Both inequalities hold and the combined load is cube-bound at 91.67%, with 8.64 m³ of slack — exactly
 one more pallet of B and no more. The longest item is 1.2 m against a 16.0 m internal length, the
 tallest stack 2.40 m against a 2.70 m internal height with 0.30 m clearance, and the combine requires
-re-orienting B into the slack at the rear, which is feasible because B is a single stack height.
-Physical fit passes, but narrowly, and the narrowness matters for the next decision on this lane.
+re-orienting B into the slack at the rear. Physical fit passes, but narrowly.
 
 ### 6.5 Cost fusion
 
@@ -467,11 +450,11 @@ C_combined − Σ C_i = 2,563.50 − 2,490.00 = +73.50 USD
 Cost fusion fails. The combined move costs USD 73.50 (2026 Q1) more than the two separate moves, a
 3.0% increase on the separate total.
 
-The result is counter-intuitive and worth sitting with. The combined route is 505 km against 925 km
-for the two separate moves, a saving of 420 vehicle-km; fuel, driver time, and emissions all fall.
-And the invoice rises, because the displaced move was a small LTL shipment at USD 640.00 (2026 Q1)
-while the increment added to the truck was USD 263.50 + USD 450.00 = USD 713.50 (2026 Q1).
-Consolidation replaced a cheap purchase with an expensive one.
+The result is counter-intuitive. The combined route is 505 km against 925 km for the two separate
+moves, a saving of 420 vehicle-km; fuel, driver time, and emissions all fall. And the invoice rises,
+because the displaced move was a small LTL shipment at USD 640.00 (2026 Q1) while the increment added
+to the truck was USD 263.50 + USD 450.00 = USD 713.50 (2026 Q1). Consolidation replaced a cheap
+purchase with an expensive one.
 
 ### 6.6 The break-even stop-off charge
 
@@ -481,9 +464,9 @@ S = 2,490.00 − 1,850.00 − 263.50 = 376.50 USD
 ```
 
 Any stop-off below USD 376.50 (2026 Q1) makes this consolidation pay. The quoted charge of
-USD 450.00 is USD 73.50 above the threshold, so the question for the carrier is specific and
-answerable: can the second stop be priced at or below USD 376.50 (2026 Q1) on this lane. That is a
-better question than "can you improve the rate".
+USD 450.00 is USD 73.50 above the threshold, so the question for the carrier is specific: can the
+second stop be priced at or below USD 376.50 (2026 Q1) on this lane. That is a better question than
+"can you improve the rate".
 
 ### 6.7 Sensitivity: what would make it pay
 
@@ -526,6 +509,8 @@ is unchanged, the fuel is within a rounding error, the wage is fixed. The margin
 (2026 Q1) and the average falls from USD 77.08 to USD 74.00 (2026 Q1). At 32 stacks there are no
 floor positions left, so the 33rd stack cannot ride and the marginal cost is USD 1,850.00 (2026 Q1),
 the price of a second trip. The cost curve is flat at zero and then vertical.
+
+---
 
 ---
 
@@ -756,6 +741,8 @@ The failure is structural rather than careless. Dimensions are captured at item 
 merchandising or engineering function with no transport use case, and the field is optional. The
 warehouse knows the pallet pattern because it builds the pallets. The carrier knows the vehicle
 because it owns it. Nobody owns the join.
+
+---
 
 ---
 

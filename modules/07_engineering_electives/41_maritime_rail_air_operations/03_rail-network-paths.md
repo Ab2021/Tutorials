@@ -52,12 +52,12 @@ Distance (km)
  |                                  ================
  |                                  BLOCK SECTION i
  +----------------------------------[Signal S_{i+1}]--------------------------
- |                              *   ----------------  ^ Overlap & Release
- |                          *       |              |  | Clearing Time (L_train)
- |                      *           | BLOCKING     |  | Pure Running Time
- |                  *               | TIME         |  | Approach Time
- |              *                   | STAIRWAY     |  | Sighting Time
- +--[Signal S_i]--------------------|==============|--v Route Formation
+ |                              *   ----------------  ^ Overlap & Release (t_rel)
+ |                          *       |              |  | Clearing Time (t_clear = L_train/v)
+ |                      *           | BLOCKING     |  | Pure Running Time (t_run)
+ |                  *               | TIME         |  | Approach Time (t_app)
+ |              *                   | STAIRWAY     |  | Sighting Time (t_sight)
+ +--[Signal S_i]--------------------|==============|--v Route Formation (t_rf)
  |          *                       |              |
  |      *                           |              |
  |  *  TRAIN 1 TRAJECTORY           |              |
@@ -70,16 +70,39 @@ Distance (km)
 
 For any block section, the total blocking time $T_B$ comprises six sequential, non-overlapping phases:
 
-1. **Route Formation and Locking Time ($t_{rf}$):** The time required for the interlocking system to align switches, verify track circuit occupancy, verify flank protection, and lock the route (typically 6 to 12 seconds in relay and computer-based interlockings).
+1. **Route Formation and Locking Time ($t_{rf}$):** The time required for the interlocking system to align switches, verify track circuit vacancy, verify flank protection, and lock the route (typically 6 to 12 seconds in relay and computer-based interlockings).
 2. **Sighting Time ($t_{sight}$):** The time a train driver requires to observe and mentally process the visual aspect of the approach signal before reaching it (typically 6 to 12 seconds, or the time to traverse 200 to 400 meters at line speed).
 3. **Approach Time ($t_{app}$):** The time required for the train to traverse the distance between the advance warning signal (approach signal) and the stop signal protecting the block section. If the driver does not receive a clear aspect at the advance signal, service braking must begin immediately.
 4. **Running Time ($t_{run}$):** The physical running time of the front of the train from the block's entrance signal to its exit signal.
 5. **Clearing Time ($t_{clear}$):** The time required for the entire length of the train ($L_{train}$) to clear the block section exit boundary at exit speed ($v_{exit}$).
 6. **Overlap and Route Release Time ($t_{rel}$):** The time required for the rear of the train to clear the physical safety overlap distance ($d_{ov}$) beyond the exit signal, plus the route release delay timer ($t_{rr}$) in the interlocking (typically 4 to 8 seconds).
 
+### Interaction of Consecutive Blocking Stairways
+
 When successive trains traverse a corridor, their trajectories in the distance-time plane produce a series of interlocking blocking time stairways. The **Minimum Technical Headway** ($h_{min}$) is the smallest temporal separation between the departure or arrival of two consecutive trains such that their blocking time stairways do not overlap at any block section along the corridor.
 
-If a dispatcher schedules trains with a headway $h < h_{min}$, the following train will inevitably encounter a restrictive signal aspect (yellow or red), forcing it to decelerate or stop. This induces a primary delay. If the scheduled headway includes an inadequate buffer time $t_{buf}$, minor stochastic variations in running time or dwell time cascade across successive trains, generating systemic knock-on delays (*secondary delays*).
+```text
+Distance (km)
+ ^
+ |             Block 3   [Train 1 Stairway]        [Train 2 Stairway]
+ |                       +-------------+           +-------------+
+ |                       |             |           |             |
+ +--- Signal S3 ---------+-------------+-----------+-------------+------------
+ |             Block 2   |             |           |             |
+ |                 +-----+             |     +-----+             |
+ |                 |                   |     |                   |
+ +--- Signal S2 ---+-------------------+-----+-------------------+------------
+ |             Block 1                 |     |             |
+ |           +-----+                   | +---+             |
+ |           |     |                   | |   |             |
+ +--- S1 ----+-----+-------------------+-+---+-------------+------------------
+ 0           |     |     |             | |   |     |       |
+             0    t_dep1               t_dep2      |       |
+                 <------ Scheduled Headway H ----->|       |
+                 <--- Min Headway h_min ---><-- Buffer t_buf -->
+```
+
+If a dispatcher schedules trains with a headway $H < h_{min}$, the following train will inevitably encounter a restrictive signal aspect (yellow or red), forcing it to decelerate or stop. This induces a primary delay. If the scheduled headway includes an inadequate buffer time $t_{buf}$, minor stochastic variations in running time or dwell time cascade across successive trains, generating systemic knock-on delays (*secondary delays*).
 
 ---
 
@@ -107,6 +130,18 @@ If a dispatcher schedules trains with a headway $h < h_{min}$, the following tra
 | **Safe Braking Distance** | $d_{braking}$ | The physical distance required to bring a train to a full stop from speed $v$ under emergency or full service deceleration. | Assuming constant deceleration across all speeds, rail adhesion levels, and brake pipe propagation delays. | Meters ($m$) |
 | **European Train Control System** | ETCS | Standardized European signaling and train control system comprising Level 1, Level 2, and Level 3 implementations. | Assuming ETCS Level 2 provides moving block capability (Level 2 is fixed block with cab signaling). | Signaling System |
 | **Positive Train Control** | PTC | US federally mandated safety overlay system preventing train-to-train collisions, overspeed derailments, and incursions. | Treating PTC as an automated dispatching optimizer rather than an enforcement overlay. | Regulatory Standard |
+| **Flank Protection** | — | Interlocking arrangement locking switches or derailers facing away from an established route to prevent side-swipe incursions. | Assuming signals alone provide mechanical flank protection without switch alignment. | Safety Logic |
+| **Route Locking** | — | Interlocking condition preventing any switch within an authorized route from being moved until the train has traversed the section. | Believing route locking drops immediately when the locomotive enters the block. | Safety Logic |
+| **Approach Locking** | — | Safety logic that prevents an operator from canceling a cleared signal if a train has already passed the approach threshold. | Assuming dispatchers can instantly revoke a green signal without imposing an emergency stop. | Safety Logic |
+| **Track Circuit Shunting** | — | The electrical bridging of running rails by the steel wheelsets of a train, dropping the track relay to indicate occupancy. | Assuming low-weight, rusty, or sand-coated wheels always provide reliable shunting. | Electrical Mechanism |
+| **Brake Pipe Propagation** | — | The speed at which pneumatic pressure reduction travels along the train air brake pipe (typically 250 to 300 m/s). | Assuming all railcars in a 3,000-meter train begin braking at the exact same instant. | Meters per second ($m/s$) |
+| **Virtual Block** | — | Subdivisions of a track section defined in software without physical lineside signals or axle-counter boundaries. | Confusing virtual blocks with unconstrained moving block. | Architecture |
+| **Movement Authority End Point** | EoA | The exact geographical location beyond which a train is not permitted to travel under cab signaling. | Treating the EoA as a visual stop signal rather than an electronically enforced target. | Coordinates / Meter |
+| **Saw-by Maneuver** | — | Operational procedure where two trains longer than a passing siding execute back-and-forth decoupling to meet. | Considering saw-by an acceptable routine dispatching practice rather than an operational failure. | Operational Procedure |
+| **Trailing Tonnage** | — | The total gross weight of railcars and lading hauled behind the locomotive consist. | Conflating trailing tonnage with total train weight (which includes locomotives). | Tonnes or US Tons |
+| **Headway Buffer Index** | $HBI$ | Ratio of scheduled buffer time to minimum technical headway ($t_{buf} / h_{min}$). | Operating corridors with $HBI < 0.15$ and expecting timetable punctuality. | Dimensionless Ratio |
+| **Dynamic Braking** | — | Electric braking utilizing traction motors as generators, dissipating energy as heat through resistors or catenary regen. | Relying on dynamic brakes alone for emergency stopping distance certification. | Operational Braking |
+| **Overlap Release Timer** | $t_{rr}$ | Interlocking countdown timer (typically 4–8 s) delaying route release after track circuit occupancy drops. | Omitting $t_{rr}$ in micro-simulation headway calculations. | Seconds ($s$) |
 
 ---
 
@@ -136,7 +171,7 @@ Railway capacity engineering requires a systematic, eight-step analytical proced
 [Step 7: Timetable Construction & UIC 406 Compression]
                       |
                       v
-[Step 8: Stability Audit & Knock-On Delay Propagation Modeling]
+[Step 8: Stability Audit & Periodic Timetable Optimization (PESP)]
 ```
 
 ### Step 1: Infrastructure geometry and signaling layout characterization
@@ -160,11 +195,28 @@ where:
 - $B$ is the flange and rolling contact resistance linear in velocity.
 - $C$ is the aerodynamic drag coefficient proportional to frontal area, train length, skin friction, and open/intermodal car geometry.
 
-For a train with gross mass $m$ (tonnes), length $L_{train}$ (meters), rotating mass factor $\rho_m$ (typically $1.06$ for freight cars, $1.10$ for locomotives and EMUs), and locomotive tractive effort $F_{tract}(v)$ (kilonewtons), the governing equation of motion is:
+```text
++---------------------------------------------------------------------------------------------------+
+| Typical Davis Resistance Parameters (Per Gross Tonne of Train Weight):                            |
+| Train Class                  A (N/tonne)    B (N·s / m·tonne)    C (N·s² / m²·tonne)   Mass Factor |
+| ------------------------------------------------------------------------------------------------- |
+| High-Speed Passenger EMU        10.5              0.12                 0.0035             1.10    |
+| Intermodal Double-Stack         14.8              0.22                 0.0078             1.06    |
+| Heavy Unit Bulk (Coal/Grain)    12.0              0.18                 0.0042             1.05    |
++---------------------------------------------------------------------------------------------------+
+```
+
+Tractive effort $F_{tract}(v)$ delivered by locomotives is bounded by wheel-rail adhesion at low speeds and continuous diesel/electric power output at high speeds:
+
+$$F_{tract}(v) = \min\left(\mu_{adh} \cdot m_{loco} \cdot g, \; \frac{P_{continuous} \cdot \eta}{v}\right)$$
+
+where $\mu_{adh}$ is the adhesion coefficient (typically 0.25 to 0.35 with modern wheel-slip control), $m_{loco}$ is locomotive adhesive mass, $P_{continuous}$ is engine prime mover or catenary power, and $\eta$ is transmission mechanical efficiency ($\approx 0.88\text{--}0.92$).
+
+The governing equation of motion is:
 
 $$m \cdot (1 + \rho_m) \cdot \frac{dv}{dt} = F_{tract}(v) - R(v) - m \cdot g \cdot \sin(\theta) - R_{curve}$$
 
-Integrate this ordinary differential equation numerically across track coordinates to produce the velocity-distance trajectory $v(x)$ and running time profile $t(x)$ for each train class, respecting maximum permissible track speeds ($v_{max}(x)$).
+where $\rho_m$ is the rotating mass allowance. Integrate this ordinary differential equation numerically across track coordinates to produce the velocity-distance trajectory $v(x)$ and running time profile $t(x)$ for each train class, respecting maximum permissible track speeds ($v_{max}(x)$).
 
 ### Step 3: Blocking time stairway decomposition ($T_B$)
 
@@ -197,6 +249,11 @@ The total blocking time $T_{B,k,j}$ represents a rectangle of width $T_{B,k,j}$ 
 
 The minimum headway between a leading train $1$ and a following train $2$ across block section $k$ is determined by the condition that Train 2's blocking time stairway must not overlap Train 1's blocking time stairway.
 
+#### Case 0: Two-Aspect Fixed Block Signaling
+In a two-aspect system (Green, Red), a signal displays Red if the block section ahead is occupied, and Green only when the block section is clear. Because there is no preliminary caution aspect, the block length must equal or exceed the maximum service stopping distance plus sighting distance ($L_{block} \ge d_{braking} + d_{sight}$). The headway formulation is:
+
+$$h_{min, 2A} = \frac{L_{block} + L_{train} + d_{ov} + d_{sight}}{v} + t_{rf} + t_{rr}$$
+
 #### Case A: Three-Aspect Fixed Block Signaling
 In a three-aspect system (Green, Yellow, Red), a signal displays Yellow if the block ahead is clear but the subsequent block is occupied. To maintain clear Green signals for Train 2, Train 1 must clear block section $k+1$ and its overlap before Train 2 reaches the approach signal for block section $k$.
 
@@ -206,14 +263,14 @@ $$h_{min, k}(1 \to 2) = t_{run, k, 1} + t_{clear, k, 1} + t_{rel, k, 1} + t_{rf,
 
 For identical trains traveling at constant speed $v$ over uniform block lengths $L_{block}$:
 
-$$h_{min} = \frac{2 \cdot L_{block} + L_{train} + d_{ov} + d_{sight}}{v} + t_{rf} + t_{rr}$$
+$$h_{min, 3A} = \frac{2 \cdot L_{block} + L_{train} + d_{ov} + d_{sight}}{v} + t_{rf} + t_{rr}$$
 
 Notice that in three-aspect signaling, the train must be protected by **two full block lengths** ahead.
 
 #### Case B: Four-Aspect Fixed Block Signaling
 In a four-aspect system (Green, Double Yellow, Yellow, Red), braking is distributed across two blocks. The train receives a Double Yellow warning two blocks prior to a stop signal. The headway formulation becomes:
 
-$$h_{min} = \frac{3 \cdot L_{block} + L_{train} + d_{ov} + d_{sight}}{v} + t_{rf} + t_{rr}$$
+$$h_{min, 4A} = \frac{3 \cdot L_{block} + L_{train} + d_{ov} + d_{sight}}{v} + t_{rf} + t_{rr}$$
 
 Although the numerator contains $3 \cdot L_{block}$, four-aspect blocks are designed at roughly half the length of three-aspect blocks ($L_{block, 4A} \approx 0.5 \cdot L_{block, 3A}$), resulting in a net reduction in minimum headway of 20 to 35 percent.
 
@@ -229,6 +286,19 @@ where:
   $$d_{braking, 2}(v) = \frac{v^2}{2 \cdot b_{service}}$$
 - $t_{comm}$ is the total radio transmission and cryptographic authentication delay round-trip (typically 1.5 to 3.0 seconds).
 - $t_{reaction}$ is the onboard traction control system reaction time (1.0 to 2.0 seconds).
+
+```text
++-------------------------------------------------------------------------------------------------------------+
+| Signaling Architecture Headway & Capacity Comparison:                                                       |
+| Architecture        Spacing Governing Term         Typical h_min (s)   Capacity (trains/h)  Lineside Gear   |
+| ----------------------------------------------------------------------------------------------------------- |
+| 2-Aspect Fixed      L_block >= d_braking + d_sight      360 - 600           6 - 10          Signals, Tracks |
+| 3-Aspect Fixed      2 * L_block + L_train               180 - 300          12 - 20          Signals, Tracks |
+| 4-Aspect Fixed      3 * L_block + L_train               120 - 180          20 - 30          Signals, Tracks |
+| ETCS Level 2        2 * L_block + L_train (Cab)         150 - 240          15 - 24          Balises, Radio  |
+| ETCS Level 3 (MB)   d_braking(v) + L_train               60 - 90           40 - 60          Radio, TIMS     |
++-------------------------------------------------------------------------------------------------------------+
+```
 
 ### Step 5: Mixed-traffic heterogeneity and freight slot erosion
 
@@ -307,9 +377,23 @@ To evaluate true track capacity under practical operational conditions, apply th
 +-------------------------------------------------------------------------------+
 ```
 
-### Step 8: Stability audit and knock-on delay propagation modeling
+### Step 8: Stability audit and periodic timetable optimization (PESP)
 
-The final engineering step is evaluating timetable robustness against stochastic disruptions (e.g., dispatching latency, brake test delays, locomotive wheel-slip on wet rail).
+In structured networks, timetables are synchronized using the **Periodic Event Scheduling Problem (PESP)**. 
+
+Let $G = (V, A)$ be an event-activity network where vertices $v \in V$ represent departure or arrival events, and directed arcs $a = (u, v) \in A$ represent physical running times, passenger transfers, dwells, or safety headways. For a timetable with period time $T$ (e.g., $T = 60\,\text{minutes}$):
+
+$$\min \sum_{a \in A} w_a \cdot x_a$$
+
+subject to:
+
+$$v_j - v_i + T \cdot p_{ij} = x_{ij} \quad \forall (i, j) \in A$$
+
+$$l_{ij} \le x_{ij} \le u_{ij} \quad \forall (i, j) \in A$$
+
+$$p_{ij} \in \mathbb{Z}, \quad v_i \in [0, T)$$
+
+where $l_{ij}$ and $u_{ij}$ denote lower and upper bounds on activity duration (such as minimum technical headway $h_{min}$ or dwell limits), $p_{ij}$ is the integer cycle offset, and $w_a$ is the delay cost weight.
 
 Calculate the probability that an initial primary delay $D_{prim}$ on train 1 will propagate as a secondary (knock-on) delay $D_{sec}$ to following train 2:
 
@@ -412,14 +496,16 @@ Now determine the minimum departure headway $h_{min}(i \to j)$ at the corridor o
 
 3. **Freight Followed by Passenger ($B \to A$ - Catch-up scenario):**
    Train A runs at twice the speed of Train B. The bottleneck occurs at the **exit of the final block (Block 6)**. Train A must not catch up to Train B's blocking stairway at Block 6.
-   $$\text{Running time difference across corridor} = T_{corridor, B} - T_{corridor, A} = 2,880.0 - 1,440.0 = 1,440.0\,\text{s} \quad (24.0\,\text{minutes})$$
-   At Block 6, Train A must clear Block 6 with minimum headway behind Train B. Therefore, at the origin (Block 1 departure), the scheduled separation must be:
-   $$h_{min}(B \to A) = h_{min, exit}(B \to A) + \Delta T_{corridor} = 514.2\,\text{s} + 1,440.0\,\text{s} = 1,954.2\,\text{seconds} = 32.57\,\text{minutes}$$
+   Train B enters Block 1 at $t = 0\,\text{s}$ and clears the exit of Block 6 (including length $L_B = 1,200\,\text{m}$, overlap $d_{ov} = 200\,\text{m}$, and release timer $t_{rr} = 6.0\,\text{s}$) at:
+   $$T_{clear, B}(6) = 6 \times \left(\frac{10,000\,\text{m}}{20.83\,\text{m/s}}\right) + \frac{1,200 + 200}{20.83} + 6.0 = 2,880.0 + 67.2 + 6.0 = 2,953.2\,\text{seconds}$$
+   If Train A departs the origin at $t = h_{min}(B \to A)$, it reaches the advance approach threshold to Block 6 (located at the entrance to Block 5, minus sighting distance $400\,\text{m}$ and route formation $9.0\,\text{s}$) at:
+   $$T_{app, A}(6) = h_{min}(B \to A) + 4 \times \left(\frac{10,000\,\text{m}}{41.67\,\text{m/s}}\right) - \frac{400}{41.67} - 9.0 = h_{min}(B \to A) + 960.0 - 9.6 - 9.0 = h_{min}(B \to A) + 941.4\,\text{s}$$
+   To prevent Train A from encountering restrictive signal aspects on approach to Block 6, $T_{app, A}(6) \ge T_{clear, B}(6)$:
+   $$h_{min}(B \to A) = 2,953.2 - 941.4 = 2,011.8\,\text{seconds} \quad (33.53\,\text{minutes})$$
 
 4. **Passenger Followed by Freight ($A \to B$ - Diverging scenario):**
    Train A pulls away from Train B. The bottleneck occurs at the **entrance of Block 1**:
    $$h_{min}(A \to B) = 514.2\,\text{seconds} = 8.57\,\text{minutes}$$
-
 ### Phase 4: Siding Dwell and Overtake Analysis at Kilometer 30.0
 
 Assume a commercial timetable requires one Class B freight train and two Class A passenger trains within an evaluation window.
@@ -451,27 +537,56 @@ Scheduled order: $A_1, A_2, B_1, A_3, A_4, B_2, A_5, A_6$.
 Compress the timetable by shifting paths until blocking stairways touch ($t_{buf} = 0$):
 - Pair 1 ($A_1 \to A_2$): $h_{min} = 514.2\,\text{s}$
 - Pair 2 ($A_2 \to B_1$): $h_{min} = 514.2\,\text{s}$
-- Pair 3 ($B_1 \to A_3$): Catch-up without siding overtake: $h_{min} = 1,954.2\,\text{s}$
+- Pair 3 ($B_1 \to A_3$): Catch-up without siding overtake: $h_{min} = 2,011.8\,\text{s}$
 - Pair 4 ($A_3 \to A_4$): $h_{min} = 514.2\,\text{s}$
 - Pair 5 ($A_4 \to B_2$): $h_{min} = 514.2\,\text{s}$
-- Pair 6 ($B_2 \to A_5$): Catch-up without siding overtake: $h_{min} = 1,954.2\,\text{s}$
+- Pair 6 ($B_2 \to A_5$): Catch-up without siding overtake: $h_{min} = 2,011.8\,\text{s}$
 - Pair 7 ($A_5 \to A_6$): $h_{min} = 514.2\,\text{s}$
 - Plus running time of last train ($A_6$) across corridor: $1,440.0\,\text{s}$.
 
 Total Compressed Time $T_{compressed}$:
-$$T_{compressed} = 514.2 + 514.2 + 1,954.2 + 514.2 + 514.2 + 1,954.2 + 514.2 + 1,440.0 = 7,425.2\,\text{seconds} \quad (123.75\,\text{minutes})$$
+$$T_{compressed} = 514.2(5) + 2(2,011.8) + 1,440.0 = 2,571.0 + 4,023.6 + 1,440.0 = 8,034.6\,\text{seconds} \quad (133.91\,\text{minutes})$$
 
 Add standard recommended UIC 406 buffer time allowance for mixed traffic ($30\%$ of compressed time):
-$$T_{buffer} = 0.30 \times 7,425.2 = 2,227.56\,\text{seconds} \quad (37.13\,\text{minutes})$$
+$$T_{buffer} = 0.30 \times 8,034.6 = 2,410.38\,\text{seconds} \quad (40.17\,\text{minutes})$$
 
 Total Consumed Capacity:
-$$T_{consumed} = 7,425.2 + 2,227.56 = 9,652.76\,\text{seconds} \quad (160.88\,\text{minutes})$$
+$$T_{consumed} = 8,034.6 + 2,410.38 = 10,444.98\,\text{seconds} \quad (174.08\,\text{minutes})$$
 
 Calculate Corridor Capacity Utilization ($K$):
-$$K = \frac{T_{consumed}}{T_{period}} \times 100\% = \frac{9,652.76}{14,400.0} \times 100\% = 67.03\%$$
+$$K = \frac{T_{consumed}}{T_{period}} \times 100\% = \frac{10,444.98}{14,400.0} \times 100\% = 72.53\%$$
+### Phase 6: Speed Harmonization Sensitivity Analysis
 
-### Engineering Interpretation
-At $67.03\%$ utilization, the corridor is within the sustainable operating envelope (below the $75\%$ UIC threshold). However, notice that the two freight trains alone consumed $2 \times 1,954.2 = 3,908.4\,\text{seconds}$, which is **$52.6\%$ of the total compressed time**, despite representing only $25\%$ of the total trains. Speed heterogeneity is the dominant consumer of track capacity.
+To demonstrate the impact of speed harmonization, evaluate the operational impact if locomotive horsepower is added to Class B freight trains, increasing their operating speed from $75\,\text{km/h}$ ($20.83\,\text{m/s}$) to $100\,\text{km/h}$ ($27.78\,\text{m/s}$):
+- Pure running time across 6 blocks:
+  $$T_{corridor, B}' = \frac{60,000\,\text{m}}{27.78\,\text{m/s}} = 2,160.0\,\text{s} \quad (36.00\,\text{minutes})$$
+- Speed differential across corridor:
+  $$\Delta T_{corridor}' = 2,160.0 - 1,440.0 = 720.0\,\text{s} \quad (12.00\,\text{minutes})$$
+- Freight Train B clears Block 6 at:
+  $$T_{clear, B}'(6) = 6 \times \left(\frac{10,000\,\text{m}}{27.78\,\text{m/s}}\right) + \frac{1,200 + 200}{27.78} + 6.0 = 2,160.0 + 50.4 + 6.0 = 2,216.4\,\text{seconds}$$
+- Revised Catch-up Headway ($B \to A$):
+  $$h_{min}'(B \to A) = 2,216.4 - 941.4 = 1,275.0\,\text{seconds} \quad (21.25\,\text{minutes})$$
+- Revised Compressed Time $T_{compressed}'$:
+  $$T_{compressed}' = 514.2(5) + 2(1,275.0) + 1,440.0 = 2,571.0 + 2,550.0 + 1,440.0 = 6,561.0\,\text{seconds} \quad (109.35\,\text{minutes})$$
+- Consumed capacity with $30\%$ buffer:
+  $$T_{consumed}' = 1.30 \times 6,561.0 = 8,529.30\,\text{seconds} \quad (142.16\,\text{minutes})$$
+- Revised Capacity Utilization:
+  $$K' = \frac{8,529.30}{14,400.0} \times 100\% = 59.23\%$$
+
+```text
++---------------------------------------------------------------------------------------------------+
+| Speed Harmonization Sensitivity on Corridor Utilization (4-Hour Evaluation Window):               |
+| Freight Speed (km/h)   ΔT_corridor (min)   h_min(B->A) (min)   T_comp (min)   K (% Utilization)   |
+| ------------------------------------------------------------------------------------------------- |
+| 60                        36.00               45.81               158.47             85.84%       |
+| 75 (Baseline)             24.00               33.53               133.91             72.53%       |
+| 90                        16.00               25.34               117.54             63.67%       |
+| 100                       12.00               21.25               109.35             59.23%       |
+| 120                        6.00               15.11                97.07             52.58%       |
++---------------------------------------------------------------------------------------------------+
+```
+
+Increasing freight operating speed from $75\,\text{km/h}$ to $100\,\text{km/h}$ reclaims **$13.30\%$ of total infrastructure capacity**, effectively unlocking slots for two additional intermodal freight paths within the same 4-hour window without adding a single foot of new rail.
 
 ---
 
@@ -508,20 +623,15 @@ def calc_blocking_time(train: TrainClass, block: BlockSection) -> float:
     return block.t_route_form_s + t_sight + t_app + t_run + t_clear + t_rel
 
 def calc_min_headway(lead: TrainClass, foll: TrainClass, block: BlockSection, n_blocks: int) -> float:
-    tb_lead = calc_blocking_time(lead, block)
     if foll.speed_mps > lead.speed_mps:
-        # Fast follows slow: bottleneck at corridor exit
-        delta_corridor = n_blocks * block.length_m * (1.0 / lead.speed_mps - 1.0 / foll.speed_mps)
-        return tb_lead + delta_corridor
-    # Homogeneous or slow follows fast: bottleneck at corridor entrance
-    return tb_lead
+        t_lead_clr = n_blocks * (block.length_m / lead.speed_mps) + (lead.length_m + block.overlap_m) / lead.speed_mps + block.t_route_rel_s
+        t_foll_app = (n_blocks - 2) * (block.length_m / foll.speed_mps) - (block.sighting_m / foll.speed_mps) - block.t_route_form_s
+        return t_lead_clr - t_foll_app
+    return calc_blocking_time(lead, block)
 
 def compress_timetable(pattern: List[TrainClass], block: BlockSection, n_blocks: int) -> float:
-    t_compressed = 0.0
-    for i in range(len(pattern) - 1):
-        t_compressed += calc_min_headway(pattern[i], pattern[i+1], block, n_blocks)
-    last_train_run = n_blocks * (block.length_m / pattern[-1].speed_mps)
-    return t_compressed + last_train_run
+    t_compressed = sum(calc_min_headway(pattern[i], pattern[i+1], block, n_blocks) for i in range(len(pattern) - 1))
+    return t_compressed + n_blocks * (block.length_m / pattern[-1].speed_mps)
 
 if __name__ == "__main__":
     block_def = BlockSection(10000.0, 200.0, 400.0, 9.0, 6.0)
@@ -535,10 +645,8 @@ if __name__ == "__main__":
     
     tt_pattern = [p_train, p_train, f_train, p_train, p_train, f_train, p_train, p_train]
     t_comp = compress_timetable(tt_pattern, block_def, 6)
-    uic_buffer_ratio = 0.30
-    t_consumed = t_comp * (1.0 + uic_buffer_ratio)
+    t_consumed = t_comp * 1.30
     utilization_pct = (t_consumed / (4.0 * 3600.0)) * 100.0
-    
     print(f"Blocking Time Passenger: {tb_p:.1f} s | Freight: {tb_f:.1f} s")
     print(f"Headway Pass->Pass: {h_pp:.1f} s | Freight->Pass (Catch-up): {h_fp:.1f} s")
     print(f"UIC 406 Compressed: {t_comp:.1f} s | Consumed (30% buf): {t_consumed:.1f} s")
@@ -548,9 +656,9 @@ if __name__ == "__main__":
 ### Expected Output
 ```text
 Blocking Time Passenger: 514.2 s | Freight: 1061.4 s
-Headway Pass->Pass: 514.2 s | Freight->Pass (Catch-up): 1954.2 s
-UIC 406 Compressed: 7425.2 s | Consumed (30% buf): 9652.8 s
-Capacity Utilization (4h window): 67.03%
+Headway Pass->Pass: 514.2 s | Freight->Pass (Catch-up): 2011.8 s
+UIC 406 Compressed: 8034.6 s | Consumed (30% buf): 10445.0 s
+Capacity Utilization (4h window): 72.53%
 ```
 
 ---
@@ -574,7 +682,15 @@ Railway track capacity engineering is governed by strict international standards
    - **CCS TSI (Control-Command and Signalling):** Enforces technical standards for ETCS (European Train Control System) and GSM-R / FRMCS (Future Railway Mobile Communication System). Governs movement authority generation, emergency braking curves, and balise transmission protocols.
    - **OPE TSI (Operation and Traffic Management):** Standardizes operational rules, train documentation, brake percentage calculations, and communication protocols across national borders.
 
-4. **ETCS Functional Levels:**
+4. **ETCS Braking Curve Hierarchy (Baseline 3):**
+   Under ETCS Baseline 3, train speed supervision is calculated dynamically onboard using a cascade of physical deceleration curves:
+   - **Emergency Braking Deceleration (EBD):** The physical limit of emergency friction and dynamic braking to halt before the End of Authority (EoA).
+   - **Service Braking Deceleration (SBD):** Normal service application ensuring smooth stop.
+   - **Permitted Speed Curve (P):** The maximum speed the driver may maintain without intervention.
+   - **Warning Curve (W):** Acoustic and visual alert issued if the train exceeds permitted speed.
+   - **Intervention Curve (I):** Automated brake enforcement triggered if the driver does not respond.
+
+5. **ETCS Functional Levels:**
    - **ETCS Level 1:** Cab signaling overlay on conventional fixed blocks. Transmission via intermittent Eurobalises. Lineside optical signals are retained.
    - **ETCS Level 2:** Continuous cab signaling via GSM-R / FRMCS radio. Fixed blocks are retained, but trackside visual signals are eliminated. Interlocking communicates with an onboard European Vital Computer (EVC) through a Radio Block Centre (RBC).
    - **ETCS Level 3:** Moving block signaling. Track circuits and axle counters are completely removed from the track. Train integrity is verified by an onboard Train Integrity Monitoring System (TIMS). Headway is limited only by braking physics.
@@ -583,10 +699,12 @@ Railway track capacity engineering is governed by strict international standards
 
 1. **Federal Railroad Administration (FRA) 49 CFR Part 236:**
    Governs US railway signaling and train control systems. 
-   - **Subpart I (Positive Train Control - PTC):** Mandated by the Rail Safety Improvement Act of 2008 (RSIA). PTC enforces train separation, prevents overspeed derailments, prevents unauthorized incursions into work zones, and stops trains from running through misaligned switches. PTC acts as a safety enforcement overlay on top of existing Centralized Traffic Control (CTC) or Automatic Block Signaling (ABS); it does not dynamically optimize headways.
+   - **Subpart I (Positive Train Control - PTC):** Mandated by the Rail Safety Improvement Act of 2008 (RSIA). PTC enforces train separation, prevents overspeed derailments, prevents unauthorized incursions into work zones, and stops trains from running through misaligned switches. PTC operates as a safety overlay across four segments: Back Office Server (BOS), Wayside Interface Units (WIU), Locomotive Onboard Apparatus (I-ETMS), and Communication Network (220 MHz radio). PTC enforces emergency stops when a train approaches its authority limit without decelerating; it does not dynamically optimize headways.
 
 2. **AREMA (American Railway Engineering and Maintenance-of-Way Association):**
    - The *AREMA Manual for Railway Engineering* specifies geometric standards for track centerlines, siding turnout sizes (e.g., No. 10, No. 14, No. 20 turnouts), clearance diagrams (Plate F, Plate H for double-stack intermodal equipment), and signaling circuit design rules.
+   - AREMA limits lateral acceleration on turnout curves to $a_{lat} \le 1.0\,\text{m/s}^2$ for passenger equipment and $1.5\,\text{m/s}^2$ for freight equipment, dictating diverge speed:
+     $$v_{div} = \sqrt{\frac{R \cdot a_{lat, max}}{1 - \frac{h_c}{2R}}}$$
 
 3. **Surface Transportation Board (STB) Oversight:**
    The US economic regulator for freight railroads. Under 49 U.S.C. § 11101, Class 1 railroads have a statutory "common carrier obligation" to provide transportation on reasonable request. The STB monitors network velocity, terminal dwell, and car-miles per day. When railroads compress maintenance windows or starve regional freight paths to maximize operating ratios, the STB exercises oversight hearings and emergency service orders.
@@ -626,6 +744,16 @@ Switzerland’s railway network represents the global benchmark for mixed-traffi
 - Freight trains are not dispatched as ad-hoc unscheduled runs; they are allocated rigorous, pre-calculated "system paths" woven into the periodic passenger lattice.
 - SBB engineers use UIC 406 compression tools daily to ensure that freight paths match the acceleration and deceleration characteristics of standard freight corridors, with dedicated overtaking loops positioned at exact harmonic travel times between passenger waves.
 
+### Indian Railways Western Dedicated Freight Corridor (WDFC)
+
+Spanning 1,504 kilometers from Dadri (near Delhi) to Jawaharlal Nehru Port Trust (JNPT) in Mumbai, the Western Dedicated Freight Corridor is engineered specifically to eliminate port container evacuation bottlenecks.
+
+*Engineering Specifications:*
+- Fully electrified double-track line with automated block signaling and automated train protection.
+- High-rise overhead contact system with a contact wire height of 7.57 meters, accommodating **double-stack container trains on flat cars** under 25 kV AC catenary.
+- Train lengths standardized at 1,500 meters with trailing weights of up to 13,000 tonnes and 25.0-tonne axle loads (upgradable to 32.5 tonnes).
+- Operating speed of 100 km/h for freight consists, cutting transit time from 72 hours on legacy mixed-traffic lines to under 24 hours on the dedicated corridor, eliminating speed differential penalties entirely.
+
 ---
 
 ## 10. Failure modes and red flags
@@ -642,6 +770,10 @@ Switzerland’s railway network represents the global benchmark for mixed-traffi
 | **Crew Hours of Service Expiry** | Trains stopped on mainline awaiting relief crews (*dog-catching*). | Unexpected siding dwell consumes crew statutory operating window (12.0 hours under US 49 CFR Part 228). | Train immobilized on mainline without crew; blocks one or both tracks for 4 to 8 hours. | Deploy predictive crew scheduling algorithms integrated with real-time dispatcher projection tools. |
 | **Thermal Bearing False Alarms** | Hot Box Detector (HBD) alarms trigger emergency stops in bottleneck blocks. | Defective trackside IR sensors or transient friction heat on heavy consists halts train. | Full visual hand-inspection required; train occupies critical block for 45 to 90 minutes. | Deploy acoustic bearing detectors and multi-site trending to detect bearing degradation prior to corridor entry. |
 | **Power-Weight Stall on Grade** | Heavy freight stalling on ruling grade ($i > 15‰$). | Tractive effort $F(v) < m \cdot g \cdot \sin(\theta) + R(v)$ due to locomotive power outage or low adhesion. | Complete corridor blockage; requires dispatching a helper locomotive (*banking engine*) to rescue train. | Enforce minimum power-to-weight ratios ($\text{kW}/\text{tonne}$ or $\text{HP}/\text{ton}$) before dispatching onto ruling grades. |
+| **Coupler Knuckle Breakage** | Sudden loss of brake pipe pressure on long train during throttle change. | Severe run-in / run-out draft forces (in-train slack action) exceed knuckle tensile yield limit ($\approx 1.8\text{--}2.2\,\text{MN}$). | Consist parts into two segments on mainline; emergency air brake halts both halves across multiple blocks. | Mandate Distributed Power (DP) locomotive placement throughout train consist to damp dynamic slack action. |
+| **Flank Conflict Lockout** | Departure signal fails to clear despite empty mainline ahead. | Fouling circuit on adjacent siding occupied by equipment parked past the clearance marker point. | Route formation rejected by interlocking logic; train held at station or yard ladder track. | Install optical clearance markers and track-circuit-enforced fouling point interlocking logic. |
+| **Dynamic Brake Grid Overheat** | Freight train decelerating on long mountain down-grade loses dynamic braking. | Continuous regenerative or rheostatic energy dissipation exceeds locomotive resistor cooling blower capacity. | Train forced to rely entirely on pneumatic tread friction brakes, risking overheated wheel fractures. | Impose speed restrictions at summit and schedule mandatory brake thermal cooling intervals. |
+| **Wheel Slip Adhesion Collapse** | High-power electric locomotive stalls on ascending grade during heavy rain. | Micro-slip control fails to stabilize tractive effort as adhesion coefficient drops from $\mu = 0.35$ to $\mu < 0.10$. | Train stalls; excessive wheel spin gouges railhead (*rail burn*), requiring emergency track surfacing. | Equip locomotives with automated pneumatic sanders and closed-loop traction motor torque modulation. |
 
 ---
 
@@ -657,6 +789,9 @@ Switzerland’s railway network represents the global benchmark for mixed-traffi
 | **Unlimited Electric Power Traction** | Speed-distance profiles assume trains draw maximum tractive power from the catenary. | Substation capacity limits, voltage sag when multiple heavy trains accelerate simultaneously in one zone. | Model traction power network with load-flow simulation coupled to train movement. |
 | **Siding Length Accommodates Single Train** | Siding calculations assume one train per loop between clearance markers. | Operations requiring multiple short trains to share a siding, or bidirectional double-overtakes. | Verify turnout detection circuit design and interlocking route tables for multi-train occupancy. |
 | **Uniform Human Driver Reaction** | Sighting and response times assumed constant ($t_{sight} \approx 8\text{--}12\,\text{s}$). | Driver fatigue, poor weather (fog, blizzard), inattentiveness, or unfamiliarity with route. | Analyze cab audio/event recorders or substitute cab-signaling continuous enforcement. |
+| **Reliable Track Circuit Shunting** | Assumes train wheelsets always short track circuits, reliably triggering occupancy relays. | Rust-filmed rails, light single-car railcars, or excessive sanding creating electrical insulation. | Measure rail-to-wheel electrical contact resistance using shunt verification test shunts. |
+| **Deterministic Dispatcher Decisions** | Capacity simulations assume automated or optimal meet-pass dispatching logic. | Human dispatcher cognitive overload, inconsistent priority heuristics, or shift-change delays. | Audit computer-aided dispatching (CAD) logs comparing planned vs executed meets. |
+| **Constant Train Consist Integrity** | Timetables assume consists maintain constant length and mass between terminals. | En-route car set-outs or pick-ups at intermediate industrial sidings without dedicated blocks. | Verify manifest switch lists against AEI (Automated Equipment Identification) RFID scanner tags. |
 
 ---
 
@@ -724,6 +859,26 @@ Switzerland’s railway network represents the global benchmark for mixed-traffi
 - **Deliverable:** Engineering specification with siding coordinates, track lengths, and time-space trajectory plot.
 - **Acceptance Criteria:** Siding locations match harmonic meet times; train clearance margins verified.
 - **Estimated Time:** 45 minutes.
+
+### Exercise 7: PESP Periodic Timetable Formulation
+- **Context:** A passenger train $P$ and a freight train $F$ operate on a periodic hourly timetable ($T = 60\,\text{minutes}$) across a shared track section. The departure event of train $i$ is denoted by $\pi_{i}^{dep} \in [0, 60)$ and arrival by $\pi_{i}^{arr} \in [0, 60)$. Running times are deterministic: $t_{run, P} = 20\,\text{min}$, $t_{run, F} = 35\,\text{min}$. The minimum departure headway is $h_{dep} = 5\,\text{min}$, and minimum arrival headway is $h_{arr} = 6\,\text{min}$.
+- **Task:**
+  1. Write the explicit PESP constraint equations governing the departure and arrival events.
+  2. Formulate the integer cycle parameter constraints ensuring non-overlapping headways.
+  3. Determine whether a feasible timetable exists if the passenger train is scheduled to arrive at its destination at minute 25 ($\pi_{P}^{arr} = 25$) and the freight train must depart after the passenger train.
+- **Deliverable:** Formulated mathematical program and feasibility verification.
+- **Acceptance Criteria:** Correct PESP modulo bounds; accurate integer offset assignment.
+- **Estimated Time:** 30 minutes.
+
+### Exercise 8: Speed Harmonization and Energy Trade-Off
+- **Context:** A freight railroad operating 20 trains per day over a 100-kilometer corridor is considering raising freight speeds from 60 km/h to 90 km/h to reduce speed heterogeneity and unlock 4 additional train slots. Train gross mass is 6,000 tonnes. The Davis parameters are $A = 12.0\,\text{N/tonne}$, $B = 0.18\,\text{N}\cdot\text{s/m}\cdot\text{tonne}$, $C = 0.0050\,\text{N}\cdot\text{s}^2/\text{m}^2\cdot\text{tonne}$.
+- **Task:**
+  1. Calculate the steady-state tractive resistance force $R(v)$ at 60 km/h ($16.67\,\text{m/s}$) and 90 km/h ($25.0\,\text{m/s}$).
+  2. Compute the mechanical energy consumed per train trip in megawatt-hours (MWh) at both speeds, assuming level tangent track.
+  3. Calculate the annual energy cost increase at $0.12\,\text{USD/kWh}$ and compare it against the potential revenue from operating 4 additional container trains per day ($15,000\,\text{USD}$ net margin per additional train).
+- **Deliverable:** Mechanical energy balance calculation and commercial trade-off ledger.
+- **Acceptance Criteria:** Correct application of Davis resistance; realistic energy-capacity commercial evaluation.
+- **Estimated Time:** 35 minutes.
 
 ---
 
@@ -805,6 +960,38 @@ Switzerland’s railway network represents the global benchmark for mixed-traffi
 3. **Time-Space Diagram:**
    Must show passenger paths crossing symmetrically at Km 40.0, and freight path stepping into the siding at Km 20.0 or 60.0, dwelling while the passenger path passes through on the mainline.
 
+### Answer to Exercise 7
+1. **PESP Activity Constraints:**
+   - Passenger running time: $\pi_{P}^{arr} - \pi_{P}^{dep} + 60 \cdot p_{P} = 20$
+   - Freight running time: $\pi_{F}^{arr} - \pi_{F}^{dep} + 60 \cdot p_{F} = 35$
+   - Headway at departure: $\pi_{F}^{dep} - \pi_{P}^{dep} + 60 \cdot p_{dep} \ge 5$
+   - Headway at arrival: $\pi_{F}^{arr} - \pi_{P}^{arr} + 60 \cdot p_{arr} \ge 6$
+2. **Feasibility Verification:**
+   - Given $\pi_{P}^{arr} = 25$ and running time 20 min $\implies \pi_{P}^{dep} = 5$ (with $p_P = 0$).
+   - Since freight departs after passenger: $\pi_{F}^{dep} \ge \pi_{P}^{dep} + 5 = 10$.
+   - Freight arrives at: $\pi_{F}^{arr} = \pi_{F}^{dep} + 35 \ge 10 + 35 = 45$.
+   - Check arrival headway: $\pi_{F}^{arr} - \pi_{P}^{arr} = 45 - 25 = 20 \ge 6\,\text{min}$.
+   - **Conclusion:** The timetable is feasible. Setting $\pi_{F}^{dep} = 10\,\text{min}$ yields an arrival at minute $45$, satisfying both departure and arrival headway separation with 14 minutes of buffer.
+
+### Answer to Exercise 8
+1. **Davis Resistance per Gross Tonne:**
+   - At 60 km/h ($v = 16.67\,\text{m/s}$):
+     $$r(16.67) = 12.0 + 0.18(16.67) + 0.0050(16.67^2) = 12.0 + 3.00 + 1.39 = 16.39\,\text{N/tonne}$$
+     Total force $R_{60} = 6,000 \times 16.39 = 98,340\,\text{N} = 98.34\,\text{kN}$.
+   - At 90 km/h ($v = 25.0\,\text{m/s}$):
+     $$r(25.0) = 12.0 + 0.18(25.0) + 0.0050(25.0^2) = 12.0 + 4.50 + 3.125 = 19.625\,\text{N/tonne}$$
+     Total force $R_{90} = 6,000 \times 19.625 = 117,750\,\text{N} = 117.75\,\text{kN}$.
+2. **Energy Consumed per 100-km Trip ($W = F \cdot d$):**
+   - At 60 km/h: $W_{60} = 98.34 \times 10^3\,\text{N} \times 100 \times 10^3\,\text{m} = 9.834 \times 10^9\,\text{J} = 2,731.7\,\text{kWh} \approx 2.73\,\text{MWh}$.
+   - At 90 km/h: $W_{90} = 117.75 \times 10^3\,\text{N} \times 100 \times 10^3\,\text{m} = 1.1775 \times 10^{10}\,\text{J} = 3,270.8\,\text{kWh} \approx 3.27\,\text{MWh}$.
+   - Delta per trip: $3,270.8 - 2,731.7 = 539.1\,\text{kWh}$ ($+19.7\%$).
+3. **Annual Economic Trade-Off Ledger:**
+   - Additional electricity cost per trip $= 539.1\,\text{kWh} \times 0.12\,\text{USD/kWh} = 64.69\,\text{USD}$.
+   - For 20 trains/day across 365 days $= 20 \times 365 \times 64.69 = 472,237\,\text{USD/year}$.
+   - Revenue from 4 unlocked daily train slots $= 4 \times 365 \times 15,000\,\text{USD} = 21,900,000\,\text{USD/year}$.
+   - **Net Commercial Return:** $\$21.90\text{M} - \$0.47\text{M} = +\$21.43\text{M/year}$.
+   Speed harmonization incurs a modest energy penalty that is overwhelmingly offset by the commercial value of reclaimed track capacity.
+
 ---
 
 ## 14. Interview questions
@@ -841,6 +1028,14 @@ Switzerland’s railway network represents the global benchmark for mixed-traffi
 - **Strong Answer:** Track gradient affects the equation of motion: $m(1+\rho_m)a = F_{tract} - R(v) - mg\sin\theta$. On an ascending ruling grade ($+15‰$), acceleration is severely degraded, and equilibrium speed drops to the locomotive balance speed. This dramatically inflates pure running time ($t_{run}$) and clearing time ($t_{clear} = L_{train}/v$), widening the blocking time block by minutes. On a descending steep grade ($-15‰$), safe braking distances ($d_{braking} = v^2 / 2(b - g\sin\theta)$) expand significantly, requiring longer approach times ($t_{app}$) or multi-block signal aspects to provide adequate stopping distance. Both ascending and descending grades inflate total blocking time $T_B$.
 - **Weak Answer:** Trains go slower uphill and faster downhill, so the schedule changes.
 
+### Question 9: How does Distributed Power (DP) locomotive placement influence air brake propagation and corridor capacity?
+- **Strong Answer:** In long freight trains (exceeding 2,000 meters), conventional pneumatic brake signals propagate from the lead locomotive at only 250 to 300 m/s. For a 3,000-meter train, rear cars do not begin braking until 10 to 12 seconds after brake application, causing extreme compressive slack action ("run-in") and lengthening stopping distances. Distributed Power places radio-controlled remote locomotive consists in the middle and rear of the train. Air is commanded and vented simultaneously from multiple locations, cutting pneumatic propagation time in half, reducing stopping distance by 20 to 30 percent, and damping coupler dynamic forces. This enables higher operating speeds and shorter technical headways ($h_{min}$).
+- **Weak Answer:** DP puts more engines on the train so it can carry more boxes.
+
+### Question 10: How do European infrastructure managers use Track Access Charges (TAC) to mitigate freight slot erosion?
+- **Strong Answer:** Under EU Directive 2012/34/EU, infrastructure managers (such as DB InfraGO or SNCF Réseau) establish multi-part Track Access Charges. In addition to direct wear-and-tear costs (gross-tonne-km), managers levy congestion and scarcity markups during peak hours. When a slow freight train requests a path on a high-speed mixed corridor during peak passenger periods, the operator is charged a scarcity premium reflecting the opportunity cost of eroded passenger paths ($E_{slot} \times \text{passenger access fee}$). This economic mechanism incentivizes freight operators to shift paths to nighttime hours or invest in higher-speed rolling stock capable of speed harmonization.
+- **Weak Answer:** They charge tolls like highway tollbooths based on the weight of the train.
+
 ---
 
 ## 15. Key terms
@@ -853,24 +1048,29 @@ Switzerland’s railway network represents the global benchmark for mixed-traffi
 - **Clearing Time:** The time duration required for the complete physical length of a train to pass a signal or block boundary.
 - **Cornfield Meet:** Operational deadlock where two opposing trains meet on a single-track line and neither can clear the mainline.
 - **Davis Equation:** Quadratic empirical formula ($R = A + Bv + Cv^2$) calculating aerodynamic and mechanical train rolling resistance.
+- **Distributed Power (DP):** Remote locomotive placement controlled via wireless telemetry throughout the train consist.
 - **Double-Stack Intermodal:** Rail transport of shipping containers stacked two-high on well cars, requiring high vertical clearance (Plate H).
 - **ETCS Level 2:** Radio-based cab signaling system using GSM-R / FRMCS with fixed-block track vacancy detection.
 - **ETCS Level 3:** Radio-based moving-block train control system eliminating fixed track circuits and relying on train integrity monitoring.
+- **Flank Protection:** Interlocking arrangement locking switches facing away from an active route to prevent side-swipe collisions.
 - **Fouling Point:** The location near a track switch where clearance between converging tracks drops below safety standards.
 - **Headway:** The temporal separation between consecutive trains passing a fixed point on a rail corridor.
 - **Interlocking:** Mechanical, electrical, or software safety system preventing conflicting signal and switch movements.
 - **Knock-On Delay:** Secondary delay induced on subsequent trains when a primary delay consumes the scheduled buffer time.
 - **Movement Authority (MA):** Formal electronic or signal authorization permitting a train to proceed to a designated end-of-authority point.
+- **Overlap Distance:** Physical safety margin beyond a stop signal reserved in case a train overruns the signal.
 - **Passing Siding:** Auxiliary track connected to the mainline at both ends, utilized for meets and overtakes.
 - **Periodic Event Scheduling Problem (PESP):** Mathematical graph-theoretic optimization formulation for cyclic timetables.
 - **Positive Train Control (PTC):** Mandated US safety overlay preventing collisions, overspeed derailments, and switch misalignments.
 - **Precision Scheduled Railroading (PSR):** Operational strategy emphasizing fixed train schedules, asset velocity, and train consolidation.
 - **Radio Block Centre (RBC):** Centralized computer system in ETCS Level 2/3 that calculates and transmits Movement Authorities to trains via radio.
 - **Ruling Grade:** The steepest gradient on a railway subdivision that dictates the maximum tonnage a locomotive consist can haul.
+- **Saw-by Maneuver:** Complex operational decoupling procedure executed when opposing trains exceed siding clear lengths.
 - **Sighting Time:** The time required for an engineer to observe, recognize, and react to a visual wayside signal aspect.
 - **Speed Heterogeneity:** The variance of operating speeds across different train classes utilizing a common corridor.
 - **Sperrzeittreppe:** The German engineering term for the discrete blocking time stairway in the time-space plane.
 - **Three-Aspect Signaling:** Visual signaling displaying Green (Proceed), Yellow (Caution/Approach), and Red (Stop).
+- **Track Circuit Shunting:** Electrical bridging of rails by steel wheelsets, registering track section occupancy.
 - **Train Integrity Monitoring System (TIMS):** Onboard electronic system verifying that a train has not broken in two (*parted consist*).
 - **Turnout Number:** Ratio expressing switch divergence angle ($N = \cot\alpha$); higher numbers denote gentler curves and higher speeds.
 - **UIC Leaflet 405:** International standard defining analytical methods for railway corridor capacity evaluation.
@@ -890,6 +1090,7 @@ Switzerland’s railway network represents the global benchmark for mixed-traffi
 8. Abril, M., Barber, F., Ingolotti, L., Salido, M. A., Tormos, P., & Lova, A. (2008). An assessment of railway capacity. *Transportation Research Part E: Logistics and Transportation Review*, 44(5), 774–806. https://doi.org/10.1016/j.tre.2007.04.001
 9. Goverde, R. M. P. (2007). Railway timetable stability analysis using max-plus system theory. *Transportation Research Part B: Methodological*, 41(2), 179–201. https://doi.org/10.1016/j.trb.2006.02.003
 10. Surface Transportation Board (STB). (2022). *Urgent Issues in Freight Rail Service: Rail Operating Metrics and Precision Scheduled Railroading*. Docket No. EP 770. Washington, DC.
+11. Serafini, P., & Ukovich, W. (1989). A mathematical model for periodic scheduling problems. *SIAM Journal on Discrete Mathematics*, 2(4), 550–581. https://doi.org/10.1137/0402049
 
 ---
 

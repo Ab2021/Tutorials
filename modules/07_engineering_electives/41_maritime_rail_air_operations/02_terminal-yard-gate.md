@@ -622,13 +622,13 @@ def axis_time(dist: float, v_max: float, accel: float) -> float:
     d_acc = (v_max * v_max) / accel
     return (v_max / accel) + (dist / v_max) if dist >= d_acc else 2.0 * math.sqrt(dist / accel)
 
-def asc_single_cycle(dx: float, dy: float, dz: float,
+def asc_single_cycle(dx: float, dy: float, dz_up: float, dz_down: float,
                      vx=4.0, ax=0.4, vy=1.2, ay=0.3, vz=0.7, az=0.5,
                      t_lock=14.0, t_skew=10.0) -> tuple:
     """Synthesizes ASC single-cycle move time under Chebyshev kinematics."""
     tg, tt = axis_time(dx, vx, ax), axis_time(dy, vy, ay)
     t_horiz = max(tg, tt)
-    t_vert = axis_time(dz, vz, az)
+    t_vert = axis_time(dz_up, vz, az) + axis_time(dz_down, vz, az)
     t_total = t_horiz + t_vert + t_lock + t_skew
     return t_total, 3600.0 / t_total
 
@@ -655,9 +655,8 @@ if __name__ == "__main__":
     print(f"Kim Rehandles (5 Tiers, 80% Occ): {rehandles:.3f} moves/retrieval")
 
     # 2. ASC Kinematic Move Synthesis
-    t_move, gross_mpr = asc_single_cycle(dx=72.5, dy=22.4, dz=19.7)
+    t_move, gross_mpr = asc_single_cycle(dx=72.5, dy=22.4, dz_up=6.7, dz_down=13.0)
     print(f"ASC Cycle Time: {t_move:.2f} s | Productivity: {gross_mpr:.1f} moves/hr")
-
     # 3. Gate Queuing Analysis
     wq_min, w_min, lq_trucks = mgc_allen_cunneen(lam=240, mu=36, c=8, cs2=0.3025)
     print(f"Gate Delay Wq: {wq_min * 60.0:.1f} s | Total W: {w_min:.2f} min | Lq: {lq_trucks:.2f} trucks")
@@ -666,7 +665,7 @@ if __name__ == "__main__":
 ### Expected Output:
 ```text
 Kim Rehandles (5 Tiers, 80% Occ): 3.440 moves/retrieval
-ASC Cycle Time: 69.17 s | Productivity: 52.0 moves/hr
+ASC Cycle Time: 83.07 s | Productivity: 43.3 moves/hr
 Gate Delay Wq: 26.0 s | Total W: 2.10 min | Lq: 1.73 trucks
 ```
 
