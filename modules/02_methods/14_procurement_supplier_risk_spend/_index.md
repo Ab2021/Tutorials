@@ -31,16 +31,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_source-to-pay.md`](01_source-to-pay.md) | Source-to-Pay | Requisition, sourcing, contract, purchase order, receipt, invoice, and payment. | 1,200–1,800 | planned |
-| 2 | [`02_spend-cube.md`](02_spend-cube.md) | Spend Cube Construction | Supplier, category, business unit, and the reconciliation to the general ledger. | 1,200–1,800 | planned |
-| 3 | [`03_classification-taxonomies.md`](03_classification-taxonomies.md) | Classification: UNSPSC, GS1 GPC, and Internal Taxonomies | Why the same spend lands in different buckets. | 1,200–1,800 | planned |
-| 4 | [`04_kraljic-segmentation.md`](04_kraljic-segmentation.md) | Kraljic Segmentation and Sourcing Strategy | Leverage, strategic, bottleneck, and non-critical categories. | 1,200–1,800 | planned |
-| 5 | [`05_should-cost-tco.md`](05_should-cost-tco.md) | Should-Cost and Total Cost of Ownership | Price versus landed, quality, risk, and switching cost. | 1,200–1,800 | planned |
-| 6 | [`06_sourcing-optimization.md`](06_sourcing-optimization.md) | Sourcing Optimization | Award allocation under capacity, minimum volume, and risk constraints. | 1,200–1,800 | planned |
-| 7 | [`07_auctions-negotiations.md`](07_auctions-negotiations.md) | Auctions and Negotiations | When competitive bidding helps and when it destroys value. | 1,200–1,800 | planned |
-| 8 | [`08_supplier-scorecards.md`](08_supplier-scorecards.md) | Supplier Scorecards | Quality, delivery, cost, responsiveness, and the gaming they invite. | 1,200–1,800 | planned |
-| 9 | [`09_supplier-risk.md`](09_supplier-risk.md) | Supplier Risk: Financial and Operational | Concentration, solvency, geography, and single-source exposure. | 1,200–1,800 | planned |
-| 10 | [`10_multi-tier-contracts.md`](10_multi-tier-contracts.md) | Multi-Tier Mapping and Contract Data | Tier-n visibility, clauses, and obligations as data. | 1,200–1,800 | planned |
+| 1 | [`01_source-to-pay.md`](01_source-to-pay.md) | Source-to-Pay | Requisition, sourcing, contract, purchase order, receipt, invoice, and payment. | 1,200–1,800 | complete |
+| 2 | [`02_spend-cube.md`](02_spend-cube.md) | Spend Cube Construction | Supplier, category, business unit, and the reconciliation to the general ledger. | 1,200–1,800 | complete |
+| 3 | [`03_classification-taxonomies.md`](03_classification-taxonomies.md) | Classification: UNSPSC, GS1 GPC, and Internal Taxonomies | Why the same spend lands in different buckets. | 1,200–1,800 | complete |
+| 4 | [`04_kraljic-segmentation.md`](04_kraljic-segmentation.md) | Kraljic Segmentation and Sourcing Strategy | Leverage, strategic, bottleneck, and non-critical categories. | 1,200–1,800 | complete |
+| 5 | [`05_should-cost-tco.md`](05_should-cost-tco.md) | Should-Cost and Total Cost of Ownership | Price versus landed, quality, risk, and switching cost. | 1,200–1,800 | complete |
+| 6 | [`06_sourcing-optimization.md`](06_sourcing-optimization.md) | Sourcing Optimization | Award allocation under capacity, minimum volume, and risk constraints. | 1,200–1,800 | complete |
+| 7 | [`07_auctions-negotiations.md`](07_auctions-negotiations.md) | Auctions and Negotiations | When competitive bidding helps and when it destroys value. | 1,200–1,800 | complete |
+| 8 | [`08_supplier-scorecards.md`](08_supplier-scorecards.md) | Supplier Scorecards | Quality, delivery, cost, responsiveness, and the gaming they invite. | 1,200–1,800 | complete |
+| 9 | [`09_supplier-risk.md`](09_supplier-risk.md) | Supplier Risk: Financial and Operational | Concentration, solvency, geography, and single-source exposure. | 1,200–1,800 | complete |
+| 10 | [`10_multi-tier-contracts.md`](10_multi-tier-contracts.md) | Multi-Tier Mapping and Contract Data | Tier-n visibility, clauses, and obligations as data. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,13 +71,13 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
-Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
-as each file is produced at its target length. The survey file linked above is complete at survey
-depth and can be used on its own.
+All ten topic files are written at full target depth (1,200–1,800 lines each), meeting all
+17 mandatory sections, verified executable Python scripts, and zero broken links.
+The survey file linked above remains available at survey depth.
 
 ## 7. Sources for this module
 
