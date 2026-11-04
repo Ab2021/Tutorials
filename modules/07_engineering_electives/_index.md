@@ -27,7 +27,7 @@ and a regulatory lens. All assume the core methods.
 
 | # | Module | Core question | Topics |
 |---:|---|---|---:|
-| 41 | [`41_maritime_rail_air_operations/`](41_maritime_rail_air_operations/_index.md) | Given fixed physical resources, what can operations actually change? | 10 |
+| 41 | [`41_maritime_rail_air_operations/`](41_maritime_rail_air_operations/_index.md) | Given fixed physical resources, what can operations actually change? | 10 | complete |
 | 42 | [`42_treasury_credit_financial_supply_chain/`](42_treasury_credit_financial_supply_chain/_index.md) | The chain is profitable — why is there no cash? | 10 |
 | 43 | [`43_security_engineering_supply_chain/`](43_security_engineering_supply_chain/_index.md) | Which link in the chain is the way in? | 10 |
 | 44 | [`44_mlops_production_analytics/`](44_mlops_production_analytics/_index.md) | The notebook works — why is nobody using it? | 10 |
@@ -59,9 +59,9 @@ Module 20, provided the module-specific prerequisites are met.
 
 | Status | Count |
 |---|---:|
-| planned | 5 |
+| planned | 4 |
 | draft | 0 |
-| complete | 0 |
+| complete | 1 |
 
 The five survey files in `../../course/` are complete at survey depth. Topic files are indexed but
 not yet written.

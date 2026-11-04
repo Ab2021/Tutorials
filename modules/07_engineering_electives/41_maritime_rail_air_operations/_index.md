@@ -31,16 +31,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_berth-quay-crane.md`](01_berth-quay-crane.md) | Berth and Quay Crane Operations | Crane productivity, berth allocation, and vessel turnaround. | 1,200–1,800 | planned |
-| 2 | [`02_terminal-yard-gate.md`](02_terminal-yard-gate.md) | Terminal Yard and Gate | Stack allocation, dwell, rehandles, and gate flow. | 1,200–1,800 | planned |
-| 3 | [`03_rail-network-paths.md`](03_rail-network-paths.md) | Rail Network and Path Capacity | Timetables, headway, signalling, and mixed traffic. | 1,200–1,800 | planned |
-| 4 | [`04_rail-yards-shunting.md`](04_rail-yards-shunting.md) | Rail Yards and Shunting | Marshalling, block trains, and wagon cycles. | 1,200–1,800 | planned |
-| 5 | [`05_air-cargo-uld.md`](05_air-cargo-uld.md) | Air Cargo and ULD | Build-up, breakdown, cutoffs, and belly capacity. | 1,200–1,800 | planned |
-| 6 | [`06_intermodal-hinterland.md`](06_intermodal-hinterland.md) | Intermodal and Hinterland | Rail, road, barge evacuation and port connectivity. | 1,200–1,800 | planned |
-| 7 | [`07_disruption-recovery.md`](07_disruption-recovery.md) | Disruption and Recovery | Queue sequencing, priorities, and recovery policies. | 1,200–1,800 | planned |
-| 8 | [`08_terminal-simulation.md`](08_terminal-simulation.md) | Terminal Simulation | Discrete-event modelling of quay, yard, and gate. | 1,200–1,800 | planned |
-| 9 | [`09_dg-security-operations.md`](09_dg-security-operations.md) | Dangerous Goods and Security Operations | Segregation, screening, ISPS, and access control. | 1,200–1,800 | planned |
-| 10 | [`10_automation-capital.md`](10_automation-capital.md) | Automation and Capital Decisions | Terminal automation, utilisation, and payback. | 1,200–1,800 | planned |
+| 1 | [`01_berth-quay-crane.md`](01_berth-quay-crane.md) | Berth and Quay Crane Operations | Crane productivity, berth allocation, and vessel turnaround. | 1,200–1,800 | complete |
+| 2 | [`02_terminal-yard-gate.md`](02_terminal-yard-gate.md) | Terminal Yard and Gate | Stack allocation, dwell, rehandles, and gate flow. | 1,200–1,800 | complete |
+| 3 | [`03_rail-network-paths.md`](03_rail-network-paths.md) | Rail Network and Path Capacity | Timetables, headway, signalling, and mixed traffic. | 1,200–1,800 | complete |
+| 4 | [`04_rail-yards-shunting.md`](04_rail-yards-shunting.md) | Rail Yards and Shunting | Marshalling, block trains, and wagon cycles. | 1,200–1,800 | complete |
+| 5 | [`05_air-cargo-uld.md`](05_air-cargo-uld.md) | Air Cargo and ULD | Build-up, breakdown, cutoffs, and belly capacity. | 1,200–1,800 | complete |
+| 6 | [`06_intermodal-hinterland.md`](06_intermodal-hinterland.md) | Intermodal and Hinterland | Rail, road, barge evacuation and port connectivity. | 1,200–1,800 | complete |
+| 7 | [`07_disruption-recovery.md`](07_disruption-recovery.md) | Disruption and Recovery | Queue sequencing, priorities, and recovery policies. | 1,200–1,800 | complete |
+| 8 | [`08_terminal-simulation.md`](08_terminal-simulation.md) | Terminal Simulation | Discrete-event modelling of quay, yard, and gate. | 1,200–1,800 | complete |
+| 9 | [`09_dg-security-operations.md`](09_dg-security-operations.md) | Dangerous Goods and Security Operations | Segregation, screening, ISPS, and access control. | 1,200–1,800 | complete |
+| 10 | [`10_automation-capital.md`](10_automation-capital.md) | Automation and Capital Decisions | Terminal automation, utilisation, and payback. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,10 +71,9 @@ any topic that names your current decision problem.
 ## 6. Status
 
 | Status | Count |
-|---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
 Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
 as each file is produced at its target length. The survey file linked above is complete at survey
