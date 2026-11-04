@@ -31,16 +31,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_disruption-timeline.md`](01_disruption-timeline.md) | The Disruption Timeline | Detect, respond, recover, and learn, and which metrics belong at each stage. | 1,200–1,800 | planned |
-| 2 | [`02_risk-taxonomy.md`](02_risk-taxonomy.md) | Risk Taxonomy | Supply, demand, operational, financial, cyber, geopolitical, and natural hazards. | 1,200–1,800 | planned |
-| 3 | [`03_mapping-exposure.md`](03_mapping-exposure.md) | Mapping and Exposure | Nodes, lanes, tiers, and the difference between importance and vulnerability. | 1,200–1,800 | planned |
-| 4 | [`04_ttr-tts.md`](04_ttr-tts.md) | Time-to-Recover and Time-to-Survive | The two clocks that decide whether a disruption becomes a failure. | 1,200–1,800 | planned |
-| 5 | [`05_stress-testing.md`](05_stress-testing.md) | Stress Testing | Severity, duration, and correlated shocks applied to a real network. | 1,200–1,800 | planned |
-| 6 | [`06_scenario-analysis.md`](06_scenario-analysis.md) | Scenario Analysis | Building scenarios that are plausible, distinct, and decision-relevant. | 1,200–1,800 | planned |
-| 7 | [`07_buffering-flexibility.md`](07_buffering-flexibility.md) | Buffering versus Flexibility | Inventory, capacity, dual sourcing, and the cost of each hedge. | 1,200–1,800 | planned |
-| 8 | [`08_dual-sourcing-nearshoring.md`](08_dual-sourcing-nearshoring.md) | Dual Sourcing and Nearshoring | Qualification cost, volume split, and the real lead-time benefit. | 1,200–1,800 | planned |
-| 9 | [`09_disruption-detection.md`](09_disruption-detection.md) | Disruption Detection | Early warning from supplier, port, weather, and news signals. | 1,200–1,800 | planned |
-| 10 | [`10_resilience-metrics-iso.md`](10_resilience-metrics-iso.md) | Resilience Metrics and ISO 22301 | Measuring readiness without turning it into a compliance score. | 1,200–1,800 | planned |
+| 1 | [`01_disruption-timeline.md`](01_disruption-timeline.md) | The Disruption Timeline | Detect, respond, recover, and learn, and which metrics belong at each stage. | 1,200–1,800 | complete |
+| 2 | [`02_risk-taxonomy.md`](02_risk-taxonomy.md) | Risk Taxonomy | Supply, demand, operational, financial, cyber, geopolitical, and natural hazards. | 1,200–1,800 | complete |
+| 3 | [`03_mapping-exposure.md`](03_mapping-exposure.md) | Mapping and Exposure | Nodes, lanes, tiers, and the difference between importance and vulnerability. | 1,200–1,800 | complete |
+| 4 | [`04_ttr-tts.md`](04_ttr-tts.md) | Time-to-Recover and Time-to-Survive | The two clocks that decide whether a disruption becomes a failure. | 1,200–1,800 | complete |
+| 5 | [`05_stress-testing.md`](05_stress-testing.md) | Stress Testing | Severity, duration, and correlated shocks applied to a real network. | 1,200–1,800 | complete |
+| 6 | [`06_scenario-analysis.md`](06_scenario-analysis.md) | Scenario Analysis | Building scenarios that are plausible, distinct, and decision-relevant. | 1,200–1,800 | complete |
+| 7 | [`07_buffering-flexibility.md`](07_buffering-flexibility.md) | Buffering versus Flexibility | Inventory, capacity, dual sourcing, and the cost of each hedge. | 1,200–1,800 | complete |
+| 8 | [`08_dual-sourcing-nearshoring.md`](08_dual-sourcing-nearshoring.md) | Dual Sourcing and Nearshoring | Qualification cost, volume split, and the real lead-time benefit. | 1,200–1,800 | complete |
+| 9 | [`09_disruption-detection.md`](09_disruption-detection.md) | Disruption Detection | Early warning from supplier, port, weather, and news signals. | 1,200–1,800 | complete |
+| 10 | [`10_resilience-metrics-iso.md`](10_resilience-metrics-iso.md) | Resilience Metrics and ISO 22301 | Measuring readiness without turning it into a compliance score. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,13 +71,12 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
-Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
-as each file is produced at its target length. The survey file linked above is complete at survey
-depth and can be used on its own.
+All ten topics meet the length target. The numbered sections and relative links were checked,
+and the section 7 Python examples were executed. The survey remains available at survey depth.
 
 ## 7. Sources for this module
 

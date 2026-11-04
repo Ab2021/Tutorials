@@ -83,12 +83,12 @@ Parallel depth after 10:
 
 | Status | Count |
 |---|---:|
-| planned | 8 |
+| planned | 5 |
 | draft | 0 |
-| complete | 8 |
+| complete | 11 |
 
-The sixteen survey files in `../../course/` are complete at survey depth. Modules 07 through 14
-are written at topic depth. Module 14A is being expanded. Module 06 remains deferred at the
+The sixteen survey files in `../../course/` are complete at survey depth. Modules 07 through 16
+are written at topic depth. Module 17 is being expanded. Module 06 remains deferred at the
 user's earlier request; the remaining modules are indexed for expansion.
 
 ## 6. Sources

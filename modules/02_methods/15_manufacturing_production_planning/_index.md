@@ -31,17 +31,17 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_planning-cascade.md`](01_planning-cascade.md) | The Planning Cascade and S&OP | S&OP, IBP, S&OE, MPS, MRP, scheduling, and execution with the decisions at each level. | 1,200–1,800 | planned |
-| 2 | [`02_manufacturing-master-data.md`](02_manufacturing-master-data.md) | The Manufacturing Master Data Model | Items, BOMs, routings, work centres, calendars, and their data defects. | 1,200–1,800 | planned |
-| 3 | [`03_master-production-scheduling.md`](03_master-production-scheduling.md) | Master Production Scheduling | MPS as the buffer between demand plan and material plan. | 1,200–1,800 | planned |
-| 4 | [`04_mrp-explosion.md`](04_mrp-explosion.md) | MRP Logic and a Worked Explosion | Gross to net requirements, lead-time offsetting, and nervousness. | 1,200–1,800 | planned |
-| 5 | [`05_capacity-requirements.md`](05_capacity-requirements.md) | Capacity Requirements Planning | Load, capacity, and the gap that must be resolved by a decision. | 1,200–1,800 | planned |
-| 6 | [`06_finite-scheduling.md`](06_finite-scheduling.md) | Finite Scheduling | Single machine, flow shop, job shop, and dispatching rules. | 1,200–1,800 | planned |
-| 7 | [`07_lot-sizing.md`](07_lot-sizing.md) | Lot Sizing: Four Methods Compared | Lot-for-lot, EOQ, POQ, and Wagner-Whitin with setup and holding costs. | 1,200–1,800 | planned |
-| 8 | [`08_changeovers-smed.md`](08_changeovers-smed.md) | Sequence-Dependent Changeovers and SMED | Setup time as a scheduling constraint and an improvement target. | 1,200–1,800 | planned |
-| 9 | [`09_oee-loss-tree.md`](09_oee-loss-tree.md) | OEE and the Loss Tree | Availability, performance, quality, and the losses hidden by the average. | 1,200–1,800 | planned |
-| 10 | [`10_bottlenecks-lean-toc.md`](10_bottlenecks-lean-toc.md) | Bottlenecks, Little's Law, Lean, JIT, Kanban, CONWIP, TOC | The constraint logic behind flow and inventory. | 1,200–1,800 | planned |
-| 11 | [`11_spc-cpk.md`](11_spc-cpk.md) | SPC, Cp/Cpk, and Defect Analytics | Control charts, capability, and the difference between common and special cause. | 1,200–1,800 | planned |
+| 1 | [`01_planning-cascade.md`](01_planning-cascade.md) | The Planning Cascade and S&OP | S&OP, IBP, S&OE, MPS, MRP, scheduling, and execution with the decisions at each level. | 1,200–1,800 | complete |
+| 2 | [`02_manufacturing-master-data.md`](02_manufacturing-master-data.md) | The Manufacturing Master Data Model | Items, BOMs, routings, work centres, calendars, and their data defects. | 1,200–1,800 | complete |
+| 3 | [`03_master-production-scheduling.md`](03_master-production-scheduling.md) | Master Production Scheduling | MPS as the buffer between demand plan and material plan. | 1,200–1,800 | complete |
+| 4 | [`04_mrp-explosion.md`](04_mrp-explosion.md) | MRP Logic and a Worked Explosion | Gross to net requirements, lead-time offsetting, and nervousness. | 1,200–1,800 | complete |
+| 5 | [`05_capacity-requirements.md`](05_capacity-requirements.md) | Capacity Requirements Planning | Load, capacity, and the gap that must be resolved by a decision. | 1,200–1,800 | complete |
+| 6 | [`06_finite-scheduling.md`](06_finite-scheduling.md) | Finite Scheduling | Single machine, flow shop, job shop, and dispatching rules. | 1,200–1,800 | complete |
+| 7 | [`07_lot-sizing.md`](07_lot-sizing.md) | Lot Sizing: Four Methods Compared | Lot-for-lot, EOQ, POQ, and Wagner-Whitin with setup and holding costs. | 1,200–1,800 | complete |
+| 8 | [`08_changeovers-smed.md`](08_changeovers-smed.md) | Sequence-Dependent Changeovers and SMED | Setup time as a scheduling constraint and an improvement target. | 1,200–1,800 | complete |
+| 9 | [`09_oee-loss-tree.md`](09_oee-loss-tree.md) | OEE and the Loss Tree | Availability, performance, quality, and the losses hidden by the average. | 1,200–1,800 | complete |
+| 10 | [`10_bottlenecks-lean-toc.md`](10_bottlenecks-lean-toc.md) | Bottlenecks, Little's Law, Lean, JIT, Kanban, CONWIP, TOC | The constraint logic behind flow and inventory. | 1,200–1,800 | complete |
+| 11 | [`11_spc-cpk.md`](11_spc-cpk.md) | SPC, Cp/Cpk, and Defect Analytics | Control charts, capability, and the difference between common and special cause. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -73,13 +73,12 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 11 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 11 |
 
-Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
-as each file is produced at its target length. The survey file linked above is complete at survey
-depth and can be used on its own.
+All eleven topics are written at topic depth. The survey file linked above remains available
+for a concise overview.
 
 ## 7. Sources for this module
 
