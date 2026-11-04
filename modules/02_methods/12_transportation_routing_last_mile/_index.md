@@ -34,13 +34,13 @@ not the whole program.
 | 1 | [`01_freight-modes.md`](01_freight-modes.md) | Freight Modes and Their Economics | Truckload, LTL, parcel, rail, air, and ocean cost structures. | 1,200–1,800 | complete |
 | 2 | [`02_rate-structures.md`](02_rate-structures.md) | Rate Structures and Accessorials | Linehaul, fuel, minimums, demurrage, detention, and accessorial creep. | 1,200–1,800 | complete |
 | 3 | [`03_lane-tender-analytics.md`](03_lane-tender-analytics.md) | Lane and Tender Analytics | Lane segmentation, acceptance rates, and carrier mix. | 1,200–1,800 | complete |
-| 4 | [`04_consolidation-cube.md`](04_consolidation-cube.md) | Consolidation and Cube Utilisation | Weight, cube, and the cost of running half-empty. | 1,200–1,800 | planned |
-| 5 | [`05_vrp-formulation.md`](05_vrp-formulation.md) | The Vehicle Routing Problem | Capacity, time windows, and the formulation choices that matter. | 1,200–1,800 | planned |
-| 6 | [`06_cvrptw-ortools.md`](06_cvrptw-ortools.md) | A Runnable CVRPTW in OR-Tools | Model, solve, inspect, and explain a route plan. | 1,200–1,800 | planned |
-| 7 | [`07_route-vs-dispatch.md`](07_route-vs-dispatch.md) | Route Optimisation versus Dispatch | Planning the route and running the day are different systems. | 1,200–1,800 | planned |
-| 8 | [`08_last-mile.md`](08_last-mile.md) | Last Mile: Density, Windows, and Failure | Drop density, failed delivery, and the economics of time windows. | 1,200–1,800 | planned |
-| 9 | [`09_eta-prediction.md`](09_eta-prediction.md) | ETA Prediction | Features, censoring, and the difference between a promise and a prediction. | 1,200–1,800 | planned |
-| 10 | [`10_dock-yard.md`](10_dock-yard.md) | Dock Scheduling and Yard Management | Appointment slots, dwell, and the handoff between transport and warehouse. | 1,200–1,800 | planned |
+| 4 | [`04_consolidation-cube.md`](04_consolidation-cube.md) | Consolidation and Cube Utilisation | Weight, cube, and the cost of running half-empty. | 1,200–1,800 | complete |
+| 5 | [`05_vrp-formulation.md`](05_vrp-formulation.md) | The Vehicle Routing Problem | Capacity, time windows, and the formulation choices that matter. | 1,200–1,800 | complete |
+| 6 | [`06_cvrptw-ortools.md`](06_cvrptw-ortools.md) | A Runnable CVRPTW in OR-Tools | Model, solve, inspect, and explain a route plan. | 1,200–1,800 | complete |
+| 7 | [`07_route-vs-dispatch.md`](07_route-vs-dispatch.md) | Route Optimisation versus Dispatch | Planning the route and running the day are different systems. | 1,200–1,800 | complete |
+| 8 | [`08_last-mile.md`](08_last-mile.md) | Last Mile: Density, Windows, and Failure | Drop density, failed delivery, and the economics of time windows. | 1,200–1,800 | complete |
+| 9 | [`09_eta-prediction.md`](09_eta-prediction.md) | ETA Prediction | Features, censoring, and the difference between a promise and a prediction. | 1,200–1,800 | complete |
+| 10 | [`10_dock-yard.md`](10_dock-yard.md) | Dock Scheduling and Yard Management | Appointment slots, dwell, and the handoff between transport and warehouse. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,14 +71,13 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 7 |
+| planned | 0 |
 | draft | 0 |
-| complete | 3 |
+| complete | 10 |
 
-Topics 01, 02, and 03 are written: 1,495, 1,379, and 1,250 lines, all 17 sections present, every
-relative link resolving. Topics 04 to 10 are indexed but not yet written. Status moves from `planned` to `draft`
-to `complete` as each file is produced at its target length. The survey file linked above is
-complete at survey depth and can be used on its own.
+All ten topics are written at the target length. Their relative links and numbered section
+structure were checked; the OR-Tools examples in topic 06 were run. The survey file linked above
+remains available at survey depth.
 
 ## 7. Sources for this module
 
