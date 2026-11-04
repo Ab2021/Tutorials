@@ -31,16 +31,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_lifecycle-framing.md`](01_lifecycle-framing.md) | Lifecycle and Problem Framing | Decision link, success metric, and stage gates. | 1,200–1,800 | planned |
-| 2 | [`02_versioning-reproducibility.md`](02_versioning-reproducibility.md) | Versioning and Reproducibility | Code, data, config, and environment. | 1,200–1,800 | planned |
-| 3 | [`03_experiment-tracking.md`](03_experiment-tracking.md) | Experiment Tracking | Runs, parameters, metrics, and fair comparison. | 1,200–1,800 | planned |
-| 4 | [`04_point-in-time-features.md`](04_point-in-time-features.md) | Point-in-Time Features | Feature stores, effective dating, and leakage. | 1,200–1,800 | planned |
-| 5 | [`05_orchestration-pipelines.md`](05_orchestration-pipelines.md) | Orchestration and Pipelines | DAGs, retries, backfills, and lineage. | 1,200–1,800 | planned |
-| 6 | [`06_serving-deployment.md`](06_serving-deployment.md) | Serving and Deployment | Batch, micro-batch, API, shadow, and canary. | 1,200–1,800 | planned |
-| 7 | [`07_cicd-ct.md`](07_cicd-ct.md) | CI/CD and Continuous Training | Test gates, packaging, and automated retraining. | 1,200–1,800 | planned |
-| 8 | [`08_monitoring-drift.md`](08_monitoring-drift.md) | Monitoring and Drift | PSI, data quality, proxies, and delayed labels. | 1,200–1,800 | planned |
-| 9 | [`09_retraining-champion-challenger.md`](09_retraining-champion-challenger.md) | Retraining and Champion–Challenger | Triggers, shadow evaluation, and rollback. | 1,200–1,800 | planned |
-| 10 | [`10_model-governance-platform.md`](10_model-governance-platform.md) | Model Governance and Platform Economics | SR 11-7, model cards, and build versus buy. | 1,200–1,800 | planned |
+| 1 | [`01_lifecycle-framing.md`](01_lifecycle-framing.md) | Lifecycle and Problem Framing | Decision link, success metric, and stage gates. | 1,200–1,800 | complete |
+| 2 | [`02_versioning-reproducibility.md`](02_versioning-reproducibility.md) | Versioning and Reproducibility | Code, data, config, and environment. | 1,200–1,800 | complete |
+| 3 | [`03_experiment-tracking.md`](03_experiment-tracking.md) | Experiment Tracking | Runs, parameters, metrics, and fair comparison. | 1,200–1,800 | complete |
+| 4 | [`04_point-in-time-features.md`](04_point-in-time-features.md) | Point-in-Time Features | Feature stores, effective dating, and leakage. | 1,200–1,800 | complete |
+| 5 | [`05_orchestration-pipelines.md`](05_orchestration-pipelines.md) | Orchestration and Pipelines | DAGs, retries, backfills, and lineage. | 1,200–1,800 | complete |
+| 6 | [`06_serving-deployment.md`](06_serving-deployment.md) | Serving and Deployment | Batch, micro-batch, API, shadow, and canary. | 1,200–1,800 | complete |
+| 7 | [`07_cicd-ct.md`](07_cicd-ct.md) | CI/CD and Continuous Training | Test gates, packaging, and automated retraining. | 1,200–1,800 | complete |
+| 8 | [`08_monitoring-drift.md`](08_monitoring-drift.md) | Monitoring and Drift | PSI, data quality, proxies, and delayed labels. | 1,200–1,800 | complete |
+| 9 | [`09_retraining-champion-challenger.md`](09_retraining-champion-challenger.md) | Retraining and Champion–Challenger | Triggers, shadow evaluation, and rollback. | 1,200–1,800 | complete |
+| 10 | [`10_model-governance-platform.md`](10_model-governance-platform.md) | Model Governance and Platform Economics | SR 11-7, model cards, and build versus buy. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,10 +71,9 @@ any topic that names your current decision problem.
 ## 6. Status
 
 | Status | Count |
-|---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
 Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
 as each file is produced at its target length. The survey file linked above is complete at survey

@@ -31,16 +31,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_threat-modelling-stride.md`](01_threat-modelling-stride.md) | Threat Modelling and STRIDE | Data-flow diagrams and systematic threat enumeration. | 1,200–1,800 | planned |
-| 2 | [`02_attack-trees-risk.md`](02_attack-trees-risk.md) | Attack Trees and Risk Quantification | Path probability, ALE, and control comparison. | 1,200–1,800 | planned |
-| 3 | [`03_ot-security-purdue.md`](03_ot-security-purdue.md) | OT Security and the Purdue Model | PLC, SCADA, WCS, zones, and conduits. | 1,200–1,800 | planned |
-| 4 | [`04_zero-trust-segmentation.md`](04_zero-trust-segmentation.md) | Zero Trust and Segmentation | Least privilege, micro-segmentation, and third-party access. | 1,200–1,800 | planned |
-| 5 | [`05_third-party-risk.md`](05_third-party-risk.md) | Third-Party and Supplier Risk | Assessment, evidence, contracts, and fourth parties. | 1,200–1,800 | planned |
-| 6 | [`06_software-supply-chain-sbom.md`](06_software-supply-chain-sbom.md) | Software Supply Chain and SBOM | Dependencies, provenance, signing, and SLSA. | 1,200–1,800 | planned |
-| 7 | [`07_physical-cargo-security.md`](07_physical-cargo-security.md) | Physical and Cargo Security | Strategic theft, seals, yard access, and C-TPAT/AEO. | 1,200–1,800 | planned |
-| 8 | [`08_fraud-payment-controls.md`](08_fraud-payment-controls.md) | Fraud and Payment Controls | BEC, invoice fraud, and vendor master integrity. | 1,200–1,800 | planned |
-| 9 | [`09_incident-response-continuity.md`](09_incident-response-continuity.md) | Incident Response and Continuity | Playbooks, containment, recovery, and exercises. | 1,200–1,800 | planned |
-| 10 | [`10_standards-governance.md`](10_standards-governance.md) | Standards and Governance | ISO 27001, NIST CSF, IEC 62443, and assurance. | 1,200–1,800 | planned |
+| 1 | [`01_threat-modelling-stride.md`](01_threat-modelling-stride.md) | Threat Modelling and STRIDE | Data-flow diagrams and systematic threat enumeration. | 1,200–1,800 | complete |
+| 2 | [`02_attack-trees-risk.md`](02_attack-trees-risk.md) | Attack Trees and Risk Quantification | Path probability, ALE, and control comparison. | 1,200–1,800 | complete |
+| 3 | [`03_ot-security-purdue.md`](03_ot-security-purdue.md) | OT Security and the Purdue Model | PLC, SCADA, WCS, zones, and conduits. | 1,200–1,800 | complete |
+| 4 | [`04_zero-trust-segmentation.md`](04_zero-trust-segmentation.md) | Zero Trust and Segmentation | Least privilege, micro-segmentation, and third-party access. | 1,200–1,800 | complete |
+| 5 | [`05_third-party-risk.md`](05_third-party-risk.md) | Third-Party and Supplier Risk | Assessment, evidence, contracts, and fourth parties. | 1,200–1,800 | complete |
+| 6 | [`06_software-supply-chain-sbom.md`](06_software-supply-chain-sbom.md) | Software Supply Chain and SBOM | Dependencies, provenance, signing, and SLSA. | 1,200–1,800 | complete |
+| 7 | [`07_physical-cargo-security.md`](07_physical-cargo-security.md) | Physical and Cargo Security | Strategic theft, seals, yard access, and C-TPAT/AEO. | 1,200–1,800 | complete |
+| 8 | [`08_fraud-payment-controls.md`](08_fraud-payment-controls.md) | Fraud and Payment Controls | BEC, invoice fraud, and vendor master integrity. | 1,200–1,800 | complete |
+| 9 | [`09_incident-response-continuity.md`](09_incident-response-continuity.md) | Incident Response and Continuity | Playbooks, containment, recovery, and exercises. | 1,200–1,800 | complete |
+| 10 | [`10_standards-governance.md`](10_standards-governance.md) | Standards and Governance | ISO 27001, NIST CSF, IEC 62443, and assurance. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,10 +71,9 @@ any topic that names your current decision problem.
 ## 6. Status
 
 | Status | Count |
-|---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
 Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
 as each file is produced at its target length. The survey file linked above is complete at survey
