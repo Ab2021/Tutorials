@@ -31,16 +31,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_neural-network-fundamentals.md`](01_neural-network-fundamentals.md) | Neural Network Fundamentals | Layers, activations, loss, regularisation, and what the model learns. | 1,200–1,800 | planned |
-| 2 | [`02_sequence-architectures.md`](02_sequence-architectures.md) | Sequence Architectures | RNN, CNN, and transformer encoder patterns for time series. | 1,200–1,800 | planned |
-| 3 | [`03_global-local-models.md`](03_global-local-models.md) | Global versus Local Models | Cross-learning across series and the data required to earn it. | 1,200–1,800 | planned |
-| 4 | [`04_neural-forecasting-zoo.md`](04_neural-forecasting-zoo.md) | The Neural Forecasting Zoo | DeepAR, N-BEATS, N-HiTS, TFT, PatchTST, and when each is a candidate. | 1,200–1,800 | planned |
-| 5 | [`05_ts-foundation-models.md`](05_ts-foundation-models.md) | Time-Series Foundation Models | Pretraining, zero-shot use, fine-tuning, and the claims vendors make. | 1,200–1,800 | planned |
-| 6 | [`06_zero-shot-evaluation.md`](06_zero-shot-evaluation.md) | Evaluating Zero-Shot and Fine-Tuned Models | Local baselines, horizon effects, and cost per forecast. | 1,200–1,800 | planned |
-| 7 | [`07_benchmark-contamination.md`](07_benchmark-contamination.md) | Benchmark Contamination and Leakage | Pretraining exposure and why a public score may not transfer. | 1,200–1,800 | planned |
-| 8 | [`08_llm-extraction.md`](08_llm-extraction.md) | LLMs for Extraction and Supplier Communication | Contracts, emails, and documents with human verification. | 1,200–1,800 | planned |
-| 9 | [`09_rag-agents.md`](09_rag-agents.md) | RAG over Contracts and Policies; Agents and Guardrails | Retrieval, tool use, planning, memory, and human approval. | 1,200–1,800 | planned |
-| 10 | [`10_multimodal.md`](10_multimodal.md) | Multimodal: Shelf Images, Damage, and Video | Vision models for availability, compliance, and quality inspection. | 1,200–1,800 | planned |
+| 1 | [`01_neural-network-fundamentals.md`](01_neural-network-fundamentals.md) | Neural Network Fundamentals | Layers, activations, loss, regularisation, and what the model learns. | 1,200–1,800 | complete |
+| 2 | [`02_sequence-architectures.md`](02_sequence-architectures.md) | Sequence Architectures | RNN, CNN, and transformer encoder patterns for time series. | 1,200–1,800 | complete |
+| 3 | [`03_global-local-models.md`](03_global-local-models.md) | Global versus Local Models | Cross-learning across series and the data required to earn it. | 1,200–1,800 | complete |
+| 4 | [`04_neural-forecasting-zoo.md`](04_neural-forecasting-zoo.md) | The Neural Forecasting Zoo | DeepAR, N-BEATS, N-HiTS, TFT, PatchTST, and when each is a candidate. | 1,200–1,800 | complete |
+| 5 | [`05_ts-foundation-models.md`](05_ts-foundation-models.md) | Time-Series Foundation Models | Pretraining, zero-shot use, fine-tuning, and the claims vendors make. | 1,200–1,800 | complete |
+| 6 | [`06_zero-shot-evaluation.md`](06_zero-shot-evaluation.md) | Evaluating Zero-Shot and Fine-Tuned Models | Local baselines, horizon effects, and cost per forecast. | 1,200–1,800 | complete |
+| 7 | [`07_benchmark-contamination.md`](07_benchmark-contamination.md) | Benchmark Contamination and Leakage | Pretraining exposure and why a public score may not transfer. | 1,200–1,800 | complete |
+| 8 | [`08_llm-extraction.md`](08_llm-extraction.md) | LLMs for Extraction and Supplier Communication | Contracts, emails, and documents with human verification. | 1,200–1,800 | complete |
+| 9 | [`09_rag-agents.md`](09_rag-agents.md) | RAG over Contracts and Policies; Agents and Guardrails | Retrieval, tool use, planning, memory, and human approval. | 1,200–1,800 | complete |
+| 10 | [`10_multimodal.md`](10_multimodal.md) | Multimodal: Shelf Images, Damage, and Video | Vision models for availability, compliance, and quality inspection. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,13 +71,12 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
-Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
-as each file is produced at its target length. The survey file linked above is complete at survey
-depth and can be used on its own.
+All ten topics are written at topic depth. The survey file linked above remains available
+for a concise overview.
 
 ## 7. Sources for this module
 

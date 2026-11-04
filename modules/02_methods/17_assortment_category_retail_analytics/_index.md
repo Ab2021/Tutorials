@@ -31,16 +31,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_assortment-decision-stack.md`](01_assortment-decision-stack.md) | The Assortment Decision Stack | Range, depth, space, localization, and new-item acceptance. | 1,200–1,800 | planned |
-| 2 | [`02_variety-choice-overload.md`](02_variety-choice-overload.md) | Variety versus Choice Overload | When more choice helps and when it taxes the shopper and the shelf. | 1,200–1,800 | planned |
-| 3 | [`03_category-roles.md`](03_category-roles.md) | Category Roles and Decision Trees | Destination, routine, seasonal, and convenience roles. | 1,200–1,800 | planned |
-| 4 | [`04_market-basket.md`](04_market-basket.md) | Market Basket Analysis and Association Rules | Support, confidence, lift, and the limits of rule mining. | 1,200–1,800 | planned |
-| 5 | [`05_basket-affinity.md`](05_basket-affinity.md) | Basket Affinity and Cross-Selling | Attach rates and the difference between affinity and causality. | 1,200–1,800 | planned |
-| 6 | [`06_space-elasticity.md`](06_space-elasticity.md) | Space Elasticity and Planograms | Facings, location, and the sales response to space. | 1,200–1,800 | planned |
-| 7 | [`07_private-label.md`](07_private-label.md) | Private Label and Brand Architecture | Margin, share, and the supplier relationship behind the label. | 1,200–1,800 | planned |
-| 8 | [`08_segmentation-clv.md`](08_segmentation-clv.md) | Segmentation and Customer Lifetime Value | Segments that change a decision and CLV that survives scrutiny. | 1,200–1,800 | planned |
-| 9 | [`09_store-clustering.md`](09_store-clustering.md) | Store Clustering and Localisation | Clustering on demand, not on demographics alone. | 1,200–1,800 | planned |
-| 10 | [`10_new-item-cannibalization.md`](10_new-item-cannibalization.md) | New Item Acceptance and Cannibalization | Incremental versus transferred sales and the post-launch review. | 1,200–1,800 | planned |
+| 1 | [`01_assortment-decision-stack.md`](01_assortment-decision-stack.md) | The Assortment Decision Stack | Range, depth, space, localization, and new-item acceptance. | 1,200–1,800 | complete |
+| 2 | [`02_variety-choice-overload.md`](02_variety-choice-overload.md) | Variety versus Choice Overload | When more choice helps and when it taxes the shopper and the shelf. | 1,200–1,800 | complete |
+| 3 | [`03_category-roles.md`](03_category-roles.md) | Category Roles and Decision Trees | Destination, routine, seasonal, and convenience roles. | 1,200–1,800 | complete |
+| 4 | [`04_market-basket.md`](04_market-basket.md) | Market Basket Analysis and Association Rules | Support, confidence, lift, and the limits of rule mining. | 1,200–1,800 | complete |
+| 5 | [`05_basket-affinity.md`](05_basket-affinity.md) | Basket Affinity and Cross-Selling | Attach rates and the difference between affinity and causality. | 1,200–1,800 | complete |
+| 6 | [`06_space-elasticity.md`](06_space-elasticity.md) | Space Elasticity and Planograms | Facings, location, and the sales response to space. | 1,200–1,800 | complete |
+| 7 | [`07_private-label.md`](07_private-label.md) | Private Label and Brand Architecture | Margin, share, and the supplier relationship behind the label. | 1,200–1,800 | complete |
+| 8 | [`08_segmentation-clv.md`](08_segmentation-clv.md) | Segmentation and Customer Lifetime Value | Segments that change a decision and CLV that survives scrutiny. | 1,200–1,800 | complete |
+| 9 | [`09_store-clustering.md`](09_store-clustering.md) | Store Clustering and Localisation | Clustering on demand, not on demographics alone. | 1,200–1,800 | complete |
+| 10 | [`10_new-item-cannibalization.md`](10_new-item-cannibalization.md) | New Item Acceptance and Cannibalization | Incremental versus transferred sales and the post-launch review. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,13 +71,12 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
-Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
-as each file is produced at its target length. The survey file linked above is complete at survey
-depth and can be used on its own.
+All ten topics are written at topic depth. The survey file linked above remains available
+for a concise overview.
 
 ## 7. Sources for this module
 
