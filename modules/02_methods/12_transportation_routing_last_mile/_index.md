@@ -31,9 +31,9 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_freight-modes.md`](01_freight-modes.md) | Freight Modes and Their Economics | Truckload, LTL, parcel, rail, air, and ocean cost structures. | 1,200–1,800 | planned |
-| 2 | [`02_rate-structures.md`](02_rate-structures.md) | Rate Structures and Accessorials | Linehaul, fuel, minimums, demurrage, detention, and accessorial creep. | 1,200–1,800 | planned |
-| 3 | [`03_lane-tender-analytics.md`](03_lane-tender-analytics.md) | Lane and Tender Analytics | Lane segmentation, acceptance rates, and carrier mix. | 1,200–1,800 | planned |
+| 1 | [`01_freight-modes.md`](01_freight-modes.md) | Freight Modes and Their Economics | Truckload, LTL, parcel, rail, air, and ocean cost structures. | 1,200–1,800 | complete |
+| 2 | [`02_rate-structures.md`](02_rate-structures.md) | Rate Structures and Accessorials | Linehaul, fuel, minimums, demurrage, detention, and accessorial creep. | 1,200–1,800 | complete |
+| 3 | [`03_lane-tender-analytics.md`](03_lane-tender-analytics.md) | Lane and Tender Analytics | Lane segmentation, acceptance rates, and carrier mix. | 1,200–1,800 | complete |
 | 4 | [`04_consolidation-cube.md`](04_consolidation-cube.md) | Consolidation and Cube Utilisation | Weight, cube, and the cost of running half-empty. | 1,200–1,800 | planned |
 | 5 | [`05_vrp-formulation.md`](05_vrp-formulation.md) | The Vehicle Routing Problem | Capacity, time windows, and the formulation choices that matter. | 1,200–1,800 | planned |
 | 6 | [`06_cvrptw-ortools.md`](06_cvrptw-ortools.md) | A Runnable CVRPTW in OR-Tools | Model, solve, inspect, and explain a route plan. | 1,200–1,800 | planned |
@@ -71,13 +71,14 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 7 |
 | draft | 0 |
-| complete | 0 |
+| complete | 3 |
 
-Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
-as each file is produced at its target length. The survey file linked above is complete at survey
-depth and can be used on its own.
+Topics 01, 02, and 03 are written: 1,495, 1,379, and 1,250 lines, all 17 sections present, every
+relative link resolving. Topics 04 to 10 are indexed but not yet written. Status moves from `planned` to `draft`
+to `complete` as each file is produced at its target length. The survey file linked above is
+complete at survey depth and can be used on its own.
 
 ## 7. Sources for this module
 

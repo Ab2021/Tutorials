@@ -37,11 +37,11 @@ The organising idea is that **every industry has a constraint the generic method
 | 33 | [`33_healthcare_provider_life_sciences/`](33_healthcare_provider_life_sciences/_index.md) | Healthcare and life sciences | 9 | complete |
 | 34 | [`34_energy_utilities_capital_projects/`](34_energy_utilities_capital_projects/_index.md) | Energy, utilities, capital projects | 9 | complete |
 | 35 | [`35_public_sector_defence_humanitarian/`](35_public_sector_defence_humanitarian/_index.md) | Public sector, defence, humanitarian | 10 | complete |
-| 36 | [`36_global_freight_ports_trade_policy/`](36_global_freight_ports_trade_policy/_index.md) | Global freight and trade | 10 |
-| 37 | [`37_circular_economy_reverse_networks/`](37_circular_economy_reverse_networks/_index.md) | Circular economy and reverse | 10 |
-| 38 | [`38_process_industries_commodities/`](38_process_industries_commodities/_index.md) | Process industries and commodities | 10 |
-| 39 | [`39_mining_metals_forestry/`](39_mining_metals_forestry/_index.md) | Mining, metals, forestry | 10 |
-| 40 | [`40_telecom_technology_hardware/`](40_telecom_technology_hardware/_index.md) | Telecom, technology, aerospace | 10 |
+| 36 | [`36_global_freight_ports_trade_policy/`](36_global_freight_ports_trade_policy/_index.md) | Global freight and trade | 10 | complete |
+| 37 | [`37_circular_economy_reverse_networks/`](37_circular_economy_reverse_networks/_index.md) | Circular economy and reverse | 10 | complete |
+| 38 | [`38_process_industries_commodities/`](38_process_industries_commodities/_index.md) | Process industries and commodities | 10 | complete |
+| 39 | [`39_mining_metals_forestry/`](39_mining_metals_forestry/_index.md) | Mining, metals, forestry | 10 | complete |
+| 40 | [`40_telecom_technology_hardware/`](40_telecom_technology_hardware/_index.md) | Telecom, technology, aerospace | 10 | complete |
 
 ## 3. Sequence and pairing
 
@@ -72,9 +72,9 @@ Teach at most two in a 40-week cohort. Pairings that work well: 31 with 34, 32 w
 
 | Status | Count |
 |---|---:|
-| planned | 5 |
+| planned | 0 |
 | draft | 0 |
-| complete | 5 |
+| complete | 10 |
 
 The ten survey files in `../../course/` are complete at survey depth. Topic files are indexed but
 not yet written.

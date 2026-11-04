@@ -2,6 +2,58 @@
 
 All substantive changes to the curriculum are recorded here.
 
+## 2026.16.0 — 3 November 2026
+
+### Added — Module 11 written in full
+- Module 11 (`02_methods/11_network_design_optimization/`) is now written in full: ten topic
+  files, 12,934 lines, each with all 17 required sections and every relative link resolving.
+- `01_network-decision-ladder.md` — the strategic, tactical, and operational network choices,
+  their review cycles, and the trap of letting a strategic question be answered by a tactical model.
+- `02_graph-cost-to-serve.md` — nodes, arcs, and flows as the shared representation, and the
+  decomposition of delivered cost into the components an order, lane, or customer actually consumes.
+- `03_milp-anatomy.md` — variables, constraints, and objective as modelling choices, with the
+  formulations that silently make an instance unsolvable.
+- `04_facility-location.md` — the baseline capacitated facility-location model: fixed charge,
+  capacity, single-sourcing, and the demand-allocation decisions the model really makes.
+- `05_multi-commodity-period.md` — product families, inventories, and time-expanded networks, and
+  when the multi-period formulation earns its extra size.
+- `06_greenfield-brownfield.md` — designing from scratch versus adapting an existing footprint, and
+  the sunk-cost and transition-cost accounting that separates them.
+- `07_scenario-sensitivity.md` — the analysis that tells you which assumptions change the answer,
+  run as a designed sweep rather than a demonstration.
+- `08_robust-stochastic.md` — hedging against demand, cost, and disruption uncertainty, and the
+  modelling price of each hedging device.
+- `09_carbon-objective.md` — emissions factors, scope boundaries, and multi-objective trade-offs
+  when carbon enters the objective rather than the report.
+- `10_solvers-heuristics.md` — MIP gaps, decomposition, and when a heuristic is the professional
+  answer rather than a concession.
+
+### Changed
+- Module 11 status table reports 10 `complete` and the module total of 12,934 lines.
+- `modules/02_methods/_index.md` reports five modules complete in Part II; `VALIDATION_STATUS.md`
+  now records 112 of 476 topic units and 145,577 lines.
+- The module-close link sweep converted 25 stale `(planned)` markers across seven files to live
+  links. It then required hand repair: `01_network-decision-ladder.md` had converted only the first
+  filename of each grouped list, `05_multi-commodity-period.md` retained a false "Planned, not yet
+  written:" prefix, and six files (`01`, `04`, `06`, `07`, `08`, `09`) still ended in a note
+  claiming their siblings did not exist. Each stale note now states that all ten topic files are
+  written and that every markdown link on the page resolves.
+
+### Notes
+- **Module 06 remains deferred at the user's request.** A verification pass confirmed that no file
+  in Module 11 references `06_machine_learning_foundations`, in any form.
+- A writer briefing for topic 09 described Module 30 as the sustainability and ESG module. It is
+  not: `30_simulation_optimization_production_labs.md` is the simulation and optimisation lab
+  module. The writer caught the error, named Module 30 in prose only where the lab material was
+  genuinely relevant, and routed the reporting-regime content to Modules 36 and 37, both of which
+  exist and are the correct homes. The briefing error is recorded here rather than silently fixed.
+- An earlier briefing named `05_probabilistic-forecasting.md` as a prerequisite. The real file is
+  `07_probabilistic-forecasts.md` in Module 05; the writer caught this and linked correctly.
+- Verification was run per file rather than trusted from hand-back: `(Get-Content).Count` for total
+  lines, a `^## ` count for the 17 sections, the exact four-column vocabulary header, and a regex
+  sweep for mojibake, replacement characters, and relative links that do not resolve. Every file
+  reports 17 sections, zero mojibake, and zero broken links.
+
 ## 2026.15.0 — 3 November 2026
 
 ### Added — Module 10 written in full

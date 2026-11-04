@@ -31,16 +31,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_reserves-grade-confidence.md`](01_reserves-grade-confidence.md) | Reserves, Grade, and Confidence | Resource classification, estimation, and reconciliation. | 1,200–1,800 | planned |
-| 2 | [`02_mine-planning-cutoff.md`](02_mine-planning-cutoff.md) | Mine Planning and Cut-Off Grade | Pit and underground plans, waste, and price-contingent cut-off. | 1,200–1,800 | planned |
-| 3 | [`03_drilling-blasting-loadhaul.md`](03_drilling-blasting-loadhaul.md) | Drilling, Blasting, and Load-Haul | Fragmentation, dilution, equipment, and mine productivity. | 1,200–1,800 | planned |
-| 4 | [`04_grade-blending.md`](04_grade-blending.md) | Grade Blending and Specification | LP blending across grade, impurity, and cost constraints. | 1,200–1,800 | planned |
-| 5 | [`05_processing-recovery.md`](05_processing-recovery.md) | Processing and Recovery | Crushers, mills, smelters, recovery, and throughput. | 1,200–1,800 | planned |
-| 6 | [`06_pit-to-port-logistics.md`](06_pit-to-port-logistics.md) | Pit-to-Port Logistics | Rail, conveyor, road, port, cycle time, and fleet sizing. | 1,200–1,800 | planned |
-| 7 | [`07_stockpiles-inventory.md`](07_stockpiles-inventory.md) | Stockpiles and Bulk Inventory | Buffer, blend, degradation, and working capital. | 1,200–1,800 | planned |
-| 8 | [`08_commodity-offtake.md`](08_commodity-offtake.md) | Commodity Price and Offtake | Realised price, quotation periods, TC/RC, and hedging. | 1,200–1,800 | planned |
-| 9 | [`09_forestry-harvest.md`](09_forestry-harvest.md) | Forestry Harvest and Chain of Custody | Stand scheduling, grade mix, transport, and certification. | 1,200–1,800 | planned |
-| 10 | [`10_social-environment-closure.md`](10_social-environment-closure.md) | Social Licence, Environment, and Closure | Community, water, tailings, rehabilitation, and reporting. | 1,200–1,800 | planned |
+| 1 | [`01_reserves-grade-confidence.md`](01_reserves-grade-confidence.md) | Reserves, Grade, and Confidence | Resource classification, estimation, and reconciliation. | 1,200–1,800 | complete |
+| 2 | [`02_mine-planning-cutoff.md`](02_mine-planning-cutoff.md) | Mine Planning and Cut-Off Grade | Pit and underground plans, waste, and price-contingent cut-off. | 1,200–1,800 | complete |
+| 3 | [`03_drilling-blasting-loadhaul.md`](03_drilling-blasting-loadhaul.md) | Drilling, Blasting, and Load-Haul | Fragmentation, dilution, equipment, and mine productivity. | 1,200–1,800 | complete |
+| 4 | [`04_grade-blending.md`](04_grade-blending.md) | Grade Blending and Specification | LP blending across grade, impurity, and cost constraints. | 1,200–1,800 | complete |
+| 5 | [`05_processing-recovery.md`](05_processing-recovery.md) | Processing and Recovery | Crushers, mills, smelters, recovery, and throughput. | 1,200–1,800 | complete |
+| 6 | [`06_pit-to-port-logistics.md`](06_pit-to-port-logistics.md) | Pit-to-Port Logistics | Rail, conveyor, road, port, cycle time, and fleet sizing. | 1,200–1,800 | complete |
+| 7 | [`07_stockpiles-inventory.md`](07_stockpiles-inventory.md) | Stockpiles and Bulk Inventory | Buffer, blend, degradation, and working capital. | 1,200–1,800 | complete |
+| 8 | [`08_commodity-offtake.md`](08_commodity-offtake.md) | Commodity Price and Offtake | Realised price, quotation periods, TC/RC, and hedging. | 1,200–1,800 | complete |
+| 9 | [`09_forestry-harvest.md`](09_forestry-harvest.md) | Forestry Harvest and Chain of Custody | Stand scheduling, grade mix, transport, and certification. | 1,200–1,800 | complete |
+| 10 | [`10_social-environment-closure.md`](10_social-environment-closure.md) | Social Licence, Environment, and Closure | Community, water, tailings, rehabilitation, and reporting. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,10 +71,9 @@ any topic that names your current decision problem.
 ## 6. Status
 
 | Status | Count |
-|---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
 Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
 as each file is produced at its target length. The survey file linked above is complete at survey

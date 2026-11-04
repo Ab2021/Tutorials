@@ -31,16 +31,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_incoterms-documents.md`](01_incoterms-documents.md) | Incoterms and Trade Documents | Cost and risk transfer, B/L, AWB, origin certificate. | 1,200–1,800 | planned |
-| 2 | [`02_landed-cost.md`](02_landed-cost.md) | Total Landed Cost | Goods, freight, insurance, duty, fees, and financing. | 1,200–1,800 | planned |
-| 3 | [`03_classification-valuation-origin.md`](03_classification-valuation-origin.md) | Classification, Valuation, and Origin | HS codes, customs value, and rules of origin. | 1,200–1,800 | planned |
-| 4 | [`04_modal-choice-emissions.md`](04_modal-choice-emissions.md) | Modal Choice and Emissions | Ocean, air, rail, road on cost, time, variability, carbon. | 1,200–1,800 | planned |
-| 5 | [`05_port-operations-congestion.md`](05_port-operations-congestion.md) | Port Operations and Congestion | Berth, crane, yard, gate, and dwell diagnosis. | 1,200–1,800 | planned |
-| 6 | [`06_demurrage-detention.md`](06_demurrage-detention.md) | Demurrage and Detention | Free time, dwell, charge validation, and root cause. | 1,200–1,800 | planned |
-| 7 | [`07_freight-procurement-rate-risk.md`](07_freight-procurement-rate-risk.md) | Freight Procurement and Rate Risk | Contract versus spot, indices, and surcharges. | 1,200–1,800 | planned |
-| 8 | [`08_chokepoints-resilience.md`](08_chokepoints-resilience.md) | Chokepoints and Network Resilience | Suez, Panama, Red Sea, and route diversification. | 1,200–1,800 | planned |
-| 9 | [`09_trade-policy-sanctions-carbon.md`](09_trade-policy-sanctions-carbon.md) | Trade Policy, Sanctions, and Carbon Rules | Tariffs, export control, forced labour, CBAM. | 1,200–1,800 | planned |
-| 10 | [`10_customs-broker-management.md`](10_customs-broker-management.md) | Customs and Broker Management | Declarations, audits, and broker performance. | 1,200–1,800 | planned |
+| 1 | [`01_incoterms-documents.md`](01_incoterms-documents.md) | Incoterms and Trade Documents | Cost and risk transfer, B/L, AWB, origin certificate. | 1,200–1,800 | complete |
+| 2 | [`02_landed-cost.md`](02_landed-cost.md) | Total Landed Cost | Goods, freight, insurance, duty, fees, and financing. | 1,200–1,800 | complete |
+| 3 | [`03_classification-valuation-origin.md`](03_classification-valuation-origin.md) | Classification, Valuation, and Origin | HS codes, customs value, and rules of origin. | 1,200–1,800 | complete |
+| 4 | [`04_modal-choice-emissions.md`](04_modal-choice-emissions.md) | Modal Choice and Emissions | Ocean, air, rail, road on cost, time, variability, carbon. | 1,200–1,800 | complete |
+| 5 | [`05_port-operations-congestion.md`](05_port-operations-congestion.md) | Port Operations and Congestion | Berth, crane, yard, gate, and dwell diagnosis. | 1,200–1,800 | complete |
+| 6 | [`06_demurrage-detention.md`](06_demurrage-detention.md) | Demurrage and Detention | Free time, dwell, charge validation, and root cause. | 1,200–1,800 | complete |
+| 7 | [`07_freight-procurement-rate-risk.md`](07_freight-procurement-rate-risk.md) | Freight Procurement and Rate Risk | Contract versus spot, indices, and surcharges. | 1,200–1,800 | complete |
+| 8 | [`08_chokepoints-resilience.md`](08_chokepoints-resilience.md) | Chokepoints and Network Resilience | Suez, Panama, Red Sea, and route diversification. | 1,200–1,800 | complete |
+| 9 | [`09_trade-policy-sanctions-carbon.md`](09_trade-policy-sanctions-carbon.md) | Trade Policy, Sanctions, and Carbon Rules | Tariffs, export control, forced labour, CBAM. | 1,200–1,800 | complete |
+| 10 | [`10_customs-broker-management.md`](10_customs-broker-management.md) | Customs and Broker Management | Declarations, audits, and broker performance. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,10 +71,9 @@ any topic that names your current decision problem.
 ## 6. Status
 
 | Status | Count |
-|---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
 Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
 as each file is produced at its target length. The survey file linked above is complete at survey

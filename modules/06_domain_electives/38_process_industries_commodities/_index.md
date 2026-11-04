@@ -31,16 +31,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_continuous-batch-discrete.md`](01_continuous-batch-discrete.md) | Continuous, Batch, and Discrete Production | The three modes and the planning logic of each. | 1,200–1,800 | planned |
-| 2 | [`02_yield-mass-balance.md`](02_yield-mass-balance.md) | Yield and Mass Balance | Input-output, by-products, losses, and feedstock quality. | 1,200–1,800 | planned |
-| 3 | [`03_quality-specs-blending.md`](03_quality-specs-blending.md) | Quality Specifications and Blending | Multi-stream LP to meet a specification at minimum cost. | 1,200–1,800 | planned |
-| 4 | [`04_campaigns-changeover.md`](04_campaigns-changeover.md) | Campaigns and Changeover | Setup cost, run length, and storage interaction. | 1,200–1,800 | planned |
-| 5 | [`05_bulk-storage-inventory.md`](05_bulk-storage-inventory.md) | Bulk Storage and Inventory | Tanks, silos, segregation, heels, and quality. | 1,200–1,800 | planned |
-| 6 | [`06_commodity-price-hedging.md`](06_commodity-price-hedging.md) | Commodity Price and Hedging | Flat price, basis risk, and contract structures. | 1,200–1,800 | planned |
-| 7 | [`07_bulk-logistics-laytime.md`](07_bulk-logistics-laytime.md) | Bulk Logistics and Laytime | Vessel, rail, barge, pipeline, and demurrage. | 1,200–1,800 | planned |
-| 8 | [`08_capacity-debottlenecking.md`](08_capacity-debottlenecking.md) | Capacity and Debottlenecking | Throughput, downtime, constraint, and payback. | 1,200–1,800 | planned |
-| 9 | [`09_energy-water-emissions.md`](09_energy-water-emissions.md) | Energy, Water, and Emissions | Cost and carbon in production planning. | 1,200–1,800 | planned |
-| 10 | [`10_process-safety-regulation.md`](10_process-safety-regulation.md) | Process Safety and Regulation | PSM, Seveso, REACH, and permits. | 1,200–1,800 | planned |
+| 1 | [`01_continuous-batch-discrete.md`](01_continuous-batch-discrete.md) | Continuous, Batch, and Discrete Production | The three modes and the planning logic of each. | 1,200–1,800 | complete |
+| 2 | [`02_yield-mass-balance.md`](02_yield-mass-balance.md) | Yield and Mass Balance | Input-output, by-products, losses, and feedstock quality. | 1,200–1,800 | complete |
+| 3 | [`03_quality-specs-blending.md`](03_quality-specs-blending.md) | Quality Specifications and Blending | Multi-stream LP to meet a specification at minimum cost. | 1,200–1,800 | complete |
+| 4 | [`04_campaigns-changeover.md`](04_campaigns-changeover.md) | Campaigns and Changeover | Setup cost, run length, and storage interaction. | 1,200–1,800 | complete |
+| 5 | [`05_bulk-storage-inventory.md`](05_bulk-storage-inventory.md) | Bulk Storage and Inventory | Tanks, silos, segregation, heels, and quality. | 1,200–1,800 | complete |
+| 6 | [`06_commodity-price-hedging.md`](06_commodity-price-hedging.md) | Commodity Price and Hedging | Flat price, basis risk, and contract structures. | 1,200–1,800 | complete |
+| 7 | [`07_bulk-logistics-laytime.md`](07_bulk-logistics-laytime.md) | Bulk Logistics and Laytime | Vessel, rail, barge, pipeline, and demurrage. | 1,200–1,800 | complete |
+| 8 | [`08_capacity-debottlenecking.md`](08_capacity-debottlenecking.md) | Capacity and Debottlenecking | Throughput, downtime, constraint, and payback. | 1,200–1,800 | complete |
+| 9 | [`09_energy-water-emissions.md`](09_energy-water-emissions.md) | Energy, Water, and Emissions | Cost and carbon in production planning. | 1,200–1,800 | complete |
+| 10 | [`10_process-safety-regulation.md`](10_process-safety-regulation.md) | Process Safety and Regulation | PSM, Seveso, REACH, and permits. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,10 +71,9 @@ any topic that names your current decision problem.
 ## 6. Status
 
 | Status | Count |
-|---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
 Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
 as each file is produced at its target length. The survey file linked above is complete at survey

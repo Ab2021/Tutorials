@@ -31,16 +31,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_reverse-flows-disposition.md`](01_reverse-flows-disposition.md) | Reverse Flows and the Disposition Hierarchy | Returns, recalls, cores, packaging, and end-of-life. | 1,200–1,800 | planned |
-| 2 | [`02_returns-unit-economics.md`](02_returns-unit-economics.md) | Return Unit Economics | Net recovery, margin loss, and break-even. | 1,200–1,800 | planned |
-| 3 | [`03_grading-yield.md`](03_grading-yield.md) | Grading and Recovery Yield | Condition classes, error costs, and value capture. | 1,200–1,800 | planned |
-| 4 | [`04_reverse-network-design.md`](04_reverse-network-design.md) | Reverse Network Design | Collection density, consolidation, and time-value trade-off. | 1,200–1,800 | planned |
-| 5 | [`05_refurbishment-remanufacturing.md`](05_refurbishment-remanufacturing.md) | Refurbishment and Remanufacturing | Core supply, disassembly, quality, and yield. | 1,200–1,800 | planned |
-| 6 | [`06_returns-fraud.md`](06_returns-fraud.md) | Returns Fraud and Abuse | Behaviour features, risk scoring, and review design. | 1,200–1,800 | planned |
-| 7 | [`07_packaging-reuse-deposit.md`](07_packaging-reuse-deposit.md) | Packaging Reuse and Deposit Return | Break-even trips, loss rate, and hygiene. | 1,200–1,800 | planned |
-| 8 | [`08_batteries-ewaste-second-life.md`](08_batteries-ewaste-second-life.md) | Batteries, E-Waste, and Second Life | State of health, dangerous goods, and recycling. | 1,200–1,800 | planned |
-| 9 | [`09_circular-metrics-regulation.md`](09_circular-metrics-regulation.md) | Circular Metrics and Regulation | EPR, WEEE, passports, and bounded claims. | 1,200–1,800 | planned |
-| 10 | [`10_recommerce-product-as-service.md`](10_recommerce-product-as-service.md) | Recommerce and Product-as-a-Service | Resale channels, rental, and lifecycle ownership. | 1,200–1,800 | planned |
+| 1 | [`01_reverse-flows-disposition.md`](01_reverse-flows-disposition.md) | Reverse Flows and the Disposition Hierarchy | Returns, recalls, cores, packaging, and end-of-life. | 1,200–1,800 | complete |
+| 2 | [`02_returns-unit-economics.md`](02_returns-unit-economics.md) | Return Unit Economics | Net recovery, margin loss, and break-even. | 1,200–1,800 | complete |
+| 3 | [`03_grading-yield.md`](03_grading-yield.md) | Grading and Recovery Yield | Condition classes, error costs, and value capture. | 1,200–1,800 | complete |
+| 4 | [`04_reverse-network-design.md`](04_reverse-network-design.md) | Reverse Network Design | Collection density, consolidation, and time-value trade-off. | 1,200–1,800 | complete |
+| 5 | [`05_refurbishment-remanufacturing.md`](05_refurbishment-remanufacturing.md) | Refurbishment and Remanufacturing | Core supply, disassembly, quality, and yield. | 1,200–1,800 | complete |
+| 6 | [`06_returns-fraud.md`](06_returns-fraud.md) | Returns Fraud and Abuse | Behaviour features, risk scoring, and review design. | 1,200–1,800 | complete |
+| 7 | [`07_packaging-reuse-deposit.md`](07_packaging-reuse-deposit.md) | Packaging Reuse and Deposit Return | Break-even trips, loss rate, and hygiene. | 1,200–1,800 | complete |
+| 8 | [`08_batteries-ewaste-second-life.md`](08_batteries-ewaste-second-life.md) | Batteries, E-Waste, and Second Life | State of health, dangerous goods, and recycling. | 1,200–1,800 | complete |
+| 9 | [`09_circular-metrics-regulation.md`](09_circular-metrics-regulation.md) | Circular Metrics and Regulation | EPR, WEEE, passports, and bounded claims. | 1,200–1,800 | complete |
+| 10 | [`10_recommerce-product-as-service.md`](10_recommerce-product-as-service.md) | Recommerce and Product-as-a-Service | Resale channels, rental, and lifecycle ownership. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,10 +71,9 @@ any topic that names your current decision problem.
 ## 6. Status
 
 | Status | Count |
-|---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
 Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
 as each file is produced at its target length. The survey file linked above is complete at survey

@@ -31,16 +31,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_configuration-bom-lifecycle.md`](01_configuration-bom-lifecycle.md) | Configuration, BOM, and Life Cycle | Variants, approved parts, and life-cycle dates. | 1,200–1,800 | planned |
-| 2 | [`02_component-allocation.md`](02_component-allocation.md) | Component Allocation under Shortage | Rules, double ordering, and multi-objective allocation. | 1,200–1,800 | planned |
-| 3 | [`03_ems-contract-manufacturing.md`](03_ems-contract-manufacturing.md) | EMS and Contract Manufacturing | Consignment, turnkey, yield, and capacity reservation. | 1,200–1,800 | planned |
-| 4 | [`04_npi-ramp.md`](04_npi-ramp.md) | NPI and Ramp | Qualification gates, long-lead commitments, and yield. | 1,200–1,800 | planned |
-| 5 | [`05_telecom-network-rollout.md`](05_telecom-network-rollout.md) | Telecom Network Rollout | Site readiness, civil works, equipment, and commissioning. | 1,200–1,800 | planned |
-| 6 | [`06_device-channel-sellthrough.md`](06_device-channel-sellthrough.md) | Device Supply and Channel | Sell-in versus sell-through, subsidies, and trade-in. | 1,200–1,800 | planned |
-| 7 | [`07_aerospace-aog-pools.md`](07_aerospace-aog-pools.md) | Aerospace AOG and Parts Pools | Exchange pools, approved parts, and tail configuration. | 1,200–1,800 | planned |
-| 8 | [`08_repair-reverse-data.md`](08_repair-reverse-data.md) | Repair, Reverse, and Data Security | Refurbishment, harvest, and verifiable data wiping. | 1,200–1,800 | planned |
-| 9 | [`09_obsolescence-last-time-buy.md`](09_obsolescence-last-time-buy.md) | Obsolescence and Last-Time Buy | Life-cycle demand, storage, and end-of-life. | 1,200–1,800 | planned |
-| 10 | [`10_export-control-security.md`](10_export-control-security.md) | Export Control and Security | ITAR, EAR, entity screening, and telecom security. | 1,200–1,800 | planned |
+| 1 | [`01_configuration-bom-lifecycle.md`](01_configuration-bom-lifecycle.md) | Configuration, BOM, and Life Cycle | Variants, approved parts, and life-cycle dates. | 1,200–1,800 | complete |
+| 2 | [`02_component-allocation.md`](02_component-allocation.md) | Component Allocation under Shortage | Rules, double ordering, and multi-objective allocation. | 1,200–1,800 | complete |
+| 3 | [`03_ems-contract-manufacturing.md`](03_ems-contract-manufacturing.md) | EMS and Contract Manufacturing | Consignment, turnkey, yield, and capacity reservation. | 1,200–1,800 | complete |
+| 4 | [`04_npi-ramp.md`](04_npi-ramp.md) | NPI and Ramp | Qualification gates, long-lead commitments, and yield. | 1,200–1,800 | complete |
+| 5 | [`05_telecom-network-rollout.md`](05_telecom-network-rollout.md) | Telecom Network Rollout | Site readiness, civil works, equipment, and commissioning. | 1,200–1,800 | complete |
+| 6 | [`06_device-channel-sellthrough.md`](06_device-channel-sellthrough.md) | Device Supply and Channel | Sell-in versus sell-through, subsidies, and trade-in. | 1,200–1,800 | complete |
+| 7 | [`07_aerospace-aog-pools.md`](07_aerospace-aog-pools.md) | Aerospace AOG and Parts Pools | Exchange pools, approved parts, and tail configuration. | 1,200–1,800 | complete |
+| 8 | [`08_repair-reverse-data.md`](08_repair-reverse-data.md) | Repair, Reverse, and Data Security | Refurbishment, harvest, and verifiable data wiping. | 1,200–1,800 | complete |
+| 9 | [`09_obsolescence-last-time-buy.md`](09_obsolescence-last-time-buy.md) | Obsolescence and Last-Time Buy | Life-cycle demand, storage, and end-of-life. | 1,200–1,800 | complete |
+| 10 | [`10_export-control-security.md`](10_export-control-security.md) | Export Control and Security | ITAR, EAR, entity screening, and telecom security. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,10 +71,9 @@ any topic that names your current decision problem.
 ## 6. Status
 
 | Status | Count |
-|---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
 Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
 as each file is produced at its target length. The survey file linked above is complete at survey
