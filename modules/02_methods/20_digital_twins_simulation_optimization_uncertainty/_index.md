@@ -31,16 +31,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_twin-shadow-simulation.md`](01_twin-shadow-simulation.md) | Twin versus Shadow versus Simulation, and Model-Family Choice | The three artefacts, the decision each supports, and DES versus system dynamics versus agent-based models. | 1,200–1,800 | planned |
-| 2 | [`02_discrete-event-simulation.md`](02_discrete-event-simulation.md) | Discrete-Event Simulation | Entities, events, resources, queues, and the clock. | 1,200–1,800 | planned |
-| 3 | [`03_input-modeling.md`](03_input-modeling.md) | Input Modelling | Fitting demand, service, and failure distributions from real data. | 1,200–1,800 | planned |
-| 4 | [`04_validation.md`](04_validation.md) | Validation | Face, structural, and output validation against a known period. | 1,200–1,800 | planned |
-| 5 | [`05_experiment-design.md`](05_experiment-design.md) | Experiment Design | Replications, common random numbers, and confidence intervals. | 1,200–1,800 | planned |
-| 6 | [`06_stochastic-optimization.md`](06_stochastic-optimization.md) | Stochastic Optimization | Scenarios, sample average approximation, and the value of the stochastic solution. | 1,200–1,800 | planned |
-| 7 | [`07_robust-dro.md`](07_robust-dro.md) | Robust and Distributionally Robust Optimization | Hedging against a misspecified distribution. | 1,200–1,800 | planned |
-| 8 | [`08_mdp-rl.md`](08_mdp-rl.md) | Markov Decision Processes and Reinforcement Learning | State, action, reward, and when RL is the wrong tool. | 1,200–1,800 | planned |
-| 9 | [`09_simulation-optimization.md`](09_simulation-optimization.md) | Simulation-Optimization | Searching a policy space when the objective is a simulation. | 1,200–1,800 | planned |
-| 10 | [`10_twin-architecture.md`](10_twin-architecture.md) | Twin Architecture and When Not to Build | Data, cadence, maintenance, and the honest cost of a twin. | 1,200–1,800 | planned |
+| 1 | [`01_twin-shadow-simulation.md`](01_twin-shadow-simulation.md) | Twin versus Shadow versus Simulation, and Model-Family Choice | The three artefacts, the decision each supports, and DES versus system dynamics versus agent-based models. | 1,200–1,800 | complete |
+| 2 | [`02_discrete-event-simulation.md`](02_discrete-event-simulation.md) | Discrete-Event Simulation | Entities, events, resources, queues, and the clock. | 1,200–1,800 | complete |
+| 3 | [`03_input-modeling.md`](03_input-modeling.md) | Input Modelling | Fitting demand, service, and failure distributions from real data. | 1,200–1,800 | complete |
+| 4 | [`04_validation.md`](04_validation.md) | Validation | Face, structural, and output validation against a known period. | 1,200–1,800 | complete |
+| 5 | [`05_experiment-design.md`](05_experiment-design.md) | Experiment Design | Replications, common random numbers, and confidence intervals. | 1,200–1,800 | complete |
+| 6 | [`06_stochastic-optimization.md`](06_stochastic-optimization.md) | Stochastic Optimization | Scenarios, sample average approximation, and the value of the stochastic solution. | 1,200–1,800 | complete |
+| 7 | [`07_robust-dro.md`](07_robust-dro.md) | Robust and Distributionally Robust Optimization | Hedging against a misspecified distribution. | 1,200–1,800 | complete |
+| 8 | [`08_mdp-rl.md`](08_mdp-rl.md) | Markov Decision Processes and Reinforcement Learning | State, action, reward, and when RL is the wrong tool. | 1,200–1,800 | complete |
+| 9 | [`09_simulation-optimization.md`](09_simulation-optimization.md) | Simulation-Optimization | Searching a policy space when the objective is a simulation. | 1,200–1,800 | complete |
+| 10 | [`10_twin-architecture.md`](10_twin-architecture.md) | Twin Architecture and When Not to Build | Data, cadence, maintenance, and the honest cost of a twin. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,13 +71,12 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
-Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
-as each file is produced at its target length. The survey file linked above is complete at survey
-depth and can be used on its own.
+All ten topics are written at topic depth. The survey file linked above remains available
+for a concise overview.
 
 ## 7. Sources for this module
 

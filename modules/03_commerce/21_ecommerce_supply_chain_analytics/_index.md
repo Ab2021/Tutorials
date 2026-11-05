@@ -31,16 +31,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_ecommerce-fulfillment-models.md`](01_ecommerce-fulfillment-models.md) | Fulfillment Models | 1P, 3P, dropship, marketplace, and their inventory and service implications. | 1,200–1,800 | planned |
-| 2 | [`02_order-grain-forecasting.md`](02_order-grain-forecasting.md) | Demand Forecasting at Order Grain | Day, slot, and node-level forecasting, not just monthly SKU totals. | 1,200–1,800 | planned |
-| 3 | [`03_long-tail-forecasting.md`](03_long-tail-forecasting.md) | Long-Tail Forecasting | Millions of slow-moving SKUs and the hierarchy that makes them forecastable. | 1,200–1,800 | planned |
-| 4 | [`04_inventory-placement.md`](04_inventory-placement.md) | Inventory Placement | Which node holds which SKU and the split between speed and holding cost. | 1,200–1,800 | planned |
-| 5 | [`05_delivery-promise.md`](05_delivery-promise.md) | The Delivery Promise | Promise as a product decision and a constraint on the network. | 1,200–1,800 | planned |
-| 6 | [`06_carrier-selection.md`](06_carrier-selection.md) | Shipping Cost and Carrier Selection | Rate cards, zone skipping, dimensional weight, and service mix. | 1,200–1,800 | planned |
-| 7 | [`07_returns.md`](07_returns.md) | Returns | Return reasons, rates, and the cost of a reverse logistics loop. | 1,200–1,800 | planned |
-| 8 | [`08_peak-planning.md`](08_peak-planning.md) | Peak Planning | Capacity, labour, inventory, and the failure modes unique to peak. | 1,200–1,800 | planned |
-| 9 | [`09_unit-economics.md`](09_unit-economics.md) | Unit Economics per Order | Contribution margin after fulfillment, returns, and payment costs. | 1,200–1,800 | planned |
-| 10 | [`10_marketplace-cross-border-cx.md`](10_marketplace-cross-border-cx.md) | Marketplace, Cross-Border, and Customer Experience | Customs, duty, delivery experience, and the NPS that follows. | 1,200–1,800 | planned |
+| 1 | [`01_ecommerce-fulfillment-models.md`](01_ecommerce-fulfillment-models.md) | Fulfillment Models | 1P, 3P, dropship, marketplace, and their inventory and service implications. | 1,200–1,800 | complete |
+| 2 | [`02_order-grain-forecasting.md`](02_order-grain-forecasting.md) | Demand Forecasting at Order Grain | Day, slot, and node-level forecasting, not just monthly SKU totals. | 1,200–1,800 | complete |
+| 3 | [`03_long-tail-forecasting.md`](03_long-tail-forecasting.md) | Long-Tail Forecasting | Millions of slow-moving SKUs and the hierarchy that makes them forecastable. | 1,200–1,800 | complete |
+| 4 | [`04_inventory-placement.md`](04_inventory-placement.md) | Inventory Placement | Which node holds which SKU and the split between speed and holding cost. | 1,200–1,800 | complete |
+| 5 | [`05_delivery-promise.md`](05_delivery-promise.md) | The Delivery Promise | Promise as a product decision and a constraint on the network. | 1,200–1,800 | complete |
+| 6 | [`06_carrier-selection.md`](06_carrier-selection.md) | Shipping Cost and Carrier Selection | Rate cards, zone skipping, dimensional weight, and service mix. | 1,200–1,800 | complete |
+| 7 | [`07_returns.md`](07_returns.md) | Returns | Return reasons, rates, and the cost of a reverse logistics loop. | 1,200–1,800 | complete |
+| 8 | [`08_peak-planning.md`](08_peak-planning.md) | Peak Planning | Capacity, labour, inventory, and the failure modes unique to peak. | 1,200–1,800 | complete |
+| 9 | [`09_unit-economics.md`](09_unit-economics.md) | Unit Economics per Order | Contribution margin after fulfillment, returns, and payment costs. | 1,200–1,800 | complete |
+| 10 | [`10_marketplace-cross-border-cx.md`](10_marketplace-cross-border-cx.md) | Marketplace, Cross-Border, and Customer Experience | Customs, duty, delivery experience, and the NPS that follows. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,13 +71,12 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
-Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
-as each file is produced at its target length. The survey file linked above is complete at survey
-depth and can be used on its own.
+All ten topics are written at topic depth. The survey file linked above remains available
+for a concise overview.
 
 ## 7. Sources for this module
 

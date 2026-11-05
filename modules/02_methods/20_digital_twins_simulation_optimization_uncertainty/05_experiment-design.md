@@ -383,6 +383,114 @@ A 95% procedure would cover the fixed model mean in 95% of hypothetical repetiti
 After observing one interval, its endpoints are fixed; the frequentist interpretation is not a 95% probability that the fixed mean is inside it.
 An interval for a future year's saving requires a prediction or distributional analysis, not merely the confidence interval for the mean.
 
+### Supplement: measurement choices that change the answer
+
+A replication-level metric can hide a change in the population being measured.
+For example, one policy may accept fewer orders because it quotes a later delivery date.
+If the experiment only measures lateness among accepted orders, the policy can appear attractive while losing sales.
+Include the demand and acceptance mechanism when it is material to the decision.
+If the model treats arrivals as unaffected by the policy, state that restriction.
+
+There are several distinct ways to summarize service across simulated years.
+They answer different business questions.
+Suppose year 1 has 900 on-time orders out of 1,000 orders.
+Suppose year 2 has 1,980 on-time orders out of 2,000 orders.
+The equal-year mean service rate is (90% + 99%) / 2 = 94.5%.
+The pooled rate is 2,880 / 3,000 = 96%.
+The difference arises because the pooled measure gives the larger year twice the weight.
+If a contract applies independently to each year, the first measure may be more relevant.
+If the decision concerns an arbitrary order, the pooled measure may better match the target.
+Neither measure alone reports the probability that an individual year misses a threshold.
+
+Suppose the target is at least 95% on-time service each year.
+Of those two illustrative years, one meets the target and one does not.
+The observed proportion meeting the target is 1 / 2 = 50%.
+Two observations are too few for a useful estimate of the true probability.
+The 96% pooled service rate does not imply that 96% of years meet the annual target.
+Store the annual indicators if that probability is the decision quantity.
+
+Monthly obligations need a further distinction.
+The expected percentage of months meeting a requirement is not necessarily the probability that all 12 months meet it.
+Within a simulated year, the monthly indicators may be correlated because months share staff, backlog, and demand conditions.
+For an all-months criterion, compute the indicator once per independent year.
+For a monthly-average criterion, compute the average over months within each year and then analyze independent years.
+Do not count the 12 monthly indicators as independent year-level observations.
+
+Cost metrics need an equally explicit boundary.
+An order may miss its first promised delivery date but eventually ship without an extra carrier charge.
+A customer may incur an expedite charge, cancel, or accept a later delivery.
+Each mechanism can require a different economic model.
+When the USD per late order is an average, document which population generated that average.
+An estimate from exceptional high-value orders should not be applied automatically to every late order.
+
+Late-order costs can also change with the policy.
+Suppose the candidate reduces mild delays but the remaining late orders are disproportionately severe.
+Multiplying avoided counts by the old average cost may overstate or understate savings.
+Instead, calculate each replication's incremental cost from its delay severity and customer mix where evidence supports that detail.
+If detailed valuation is unavailable, use a range and show which values reverse the decision.
+
+### Supplement: independent runs versus common random numbers
+
+Suppose the analyst can afford 200 policy runs in total.
+One design uses 100 independent A runs and 100 independent B runs.
+Another uses 100 matched A/B pairs.
+Both designs use the same number of complete runs.
+The independent design estimates the difference in means using the two sample variances.
+The matched design estimates the mean of 100 differences using their sample variance.
+
+The two designs target the same difference in expectations if both policy marginals are correct.
+The difference is their precision, not their definition of benefit.
+With matched inputs, the covariance term can reduce the variance of the estimated difference.
+With mismatched or negatively correlated outcomes, it can increase that variance.
+Evaluate the paired variance in a pilot instead of declaring a universal advantage.
+
+Assume each policy's output has variance 100 in squared outcome units.
+If the paired covariance is 60 in the same squared units, the paired-difference variance is 80.
+With independent policy outputs it is 200.
+For 100 matched pairs, the variance of the mean difference is 80 / 100 = 0.8.
+For 100 independent runs of each policy, it is 200 / 100 = 2.
+The corresponding standard errors are approximately 0.894 and 1.414 outcome units.
+The ratio 2 / 0.8 = 2.5 describes the variance reduction at this budget.
+It does not imply that the paired standard error is 2.5 times smaller.
+
+If paired covariance is -20 instead, difference variance becomes 240.
+At 100 pairs, the variance of the estimated difference is 2.4.
+That exceeds the independent design's variance of 2 at the same number of policy runs.
+An analyst should then investigate the coupling, policy interaction, and pilot stability.
+If the coupling is correct but consistently adverse, independent runs may be preferable.
+
+The number of pairs is the sample size for a paired confidence interval.
+It is not the sum of the A and B run counts.
+For 100 pairs, the ordinary paired t interval has 99 degrees of freedom.
+The individual A and B outputs within a pair are deliberately dependent.
+Across pairs, the scenario-generation scheme must provide independence.
+
+### Supplement: stopping, precision, and decision value
+
+A precision target can be absolute or relative.
+An absolute half-width of USD 10,000/year is easy to compare with a USD 20,000/year materiality threshold.
+A relative half-width such as 10% of the estimated saving becomes unstable when the estimated saving is near zero.
+It can also become misleading when the estimate changes sign.
+State the unit and denominator whenever a relative precision target is used.
+
+More simulation is most valuable when the decision is sensitive to uncertainty that simulation can reduce.
+If the lower bound is below the materiality threshold but the upper bound is well above it, improved precision might change the recommendation.
+If every plausible result is below the threshold, additional replications may have little decision value.
+If the cost per late order is unknown by a factor of three, collecting financial evidence may be more valuable than narrowing the Monte Carlo interval.
+If the model omits the proposed shift's ramp-up, model revision may matter more than either activity.
+
+Formal expected value of information compares the best expected decision value with and without the proposed information.
+It averages over possible evidence and subsequent actions under an explicit probability model.
+The calculation depends on decision alternatives, implementation costs, and beliefs about uncertain quantities.
+A rough comparison of analysis cost and decision sensitivity is useful, but should not be mislabeled a formal value-of-information estimate.
+The cost of a study includes analyst time, compute, delay to implementation, and any operational disruption from a pilot.
+
+When a fixed sample is planned, publish the number of pairs and interval method before confirmation.
+Prespecify what to do if a run fails because of a software defect.
+Fix the defect, identify affected outputs, and rerun the required experiment under a recorded model version.
+Do not remove a valid extreme scenario merely because it makes the interval wider.
+An extreme observation may be the most important operational finding.
+
 ### Step 9: Include economics and constraints
 
 **Input:** replication-level operational outcomes, cost schedule, and decision thresholds.
@@ -549,6 +657,100 @@ The preliminary economic estimate favours B at the assumed late-order cost.
 The director should not treat that as approval: service performance, implementation feasibility, and confirmation remain unresolved.
 A production analysis would use a prespecified larger independent set of pairs, a service statistic aligned with the agreement, and sensitivity to the late-order cost.
 It would also check whether the forecast demand, backlog initialization, and failure logic are credible for the actual 12-month period.
+### Second case: warmup in a mature cross-dock
+
+Consider a hypothetical cross-dock operating continuously except for a weekly maintenance window.
+Management wants to estimate average trailer waiting time under two dock-door allocation rules.
+The decision is whether to change the allocation rule, not whether to open the facility.
+The output of interest is average trailer waiting time in minutes per trailer under a repeating weekly demand pattern.
+The demand forecast describes arrivals by hour of week.
+The proposed allocation is a plan.
+The target is a chosen waiting-time limit.
+No carrier appointment commitment changes merely because a model recommends a plan.
+
+The analyst initially starts both policies with no trailers on site on Monday at 00:00.
+That empty condition is convenient for implementation, but actual Monday starts usually have a carryover queue.
+Consequently, early waiting times are likely to be too low for the mature operation.
+The problem is initialization, not an anomalous random seed.
+Running many copies of the same short empty-start week can estimate the wrong quantity very precisely.
+
+For an illustrative diagnostic, suppose independent pilot trajectories have the following mean queue sizes at weekly boundaries.
+The figures are hypothetical and measured in trailers.
+
+| Boundary | Baseline A | Candidate B |
+|---|---:|---:|
+| Start of week 1 | 0 | 0 |
+| Start of week 2 | 18 | 14 |
+| Start of week 3 | 24 | 19 |
+| Start of week 4 | 25 | 20 |
+| Start of week 5 | 26 | 20 |
+| Start of week 6 | 25 | 21 |
+
+Both policies appear to approach a recurring Monday state in this simplified view.
+Candidate B stabilizes at a different average queue than baseline A.
+Sharing the initial empty state does not mean the two policies should have identical mature-state queues.
+The relevant comparison is the waiting-time difference under each policy's own ongoing dynamics.
+The table does not prove that either distribution is stable.
+It reports means only, and the pilot trajectories may still have long tails or serial dependence.
+
+The team inspects hourly queue trajectories and other slow state variables over additional independent runs.
+Those checks include outstanding trailer appointments, maintenance state, and the distribution of carrying work across the weekly boundary.
+The analyst chooses four complete weeks as an initial candidate deletion period for both policies.
+The choice preserves the weekly calendar phase for the measured period.
+The measured period then covers, for example, 12 complete weeks per independent replication.
+Each policy within a pair receives matched exogenous arrivals and appropriate common disruption inputs.
+Separate replication pairs use independent scenarios.
+
+The analyst repeats the analysis using six deleted weeks and the same 12-week measurement duration.
+Suppose the baseline mean waiting-time estimate changes by 0.4 minutes per trailer and the candidate estimate changes by 0.3 minutes per trailer.
+The paired difference changes by 0.1 minutes per trailer in this illustration.
+That sensitivity is useful evidence, but is not a formal test that initialization bias is absent.
+The six-week comparison also consumes more simulated time.
+The team documents both results and the rationale for the selected cutoff.
+
+If the allocation rule creates a growing backlog under peak weekly demand, the table might continue rising instead of stabilizing.
+In that situation, a long-run average waiting-time claim would be inappropriate.
+The team could instead ask a finite-horizon question, such as the next 12 weeks starting from today's observed backlog.
+The finite-horizon study would retain the relevant starting period.
+Its result would not be interchangeable with a steady-cycle estimate.
+
+Suppose four independent measured pairs yield waiting-time reductions of 8, 12, 10, and 14 minutes per trailer.
+These numbers are deliberately simple for a manual calculation.
+The mean reduction is 11 minutes per trailer.
+The deviations are -3, 1, -1, and 3 minutes per trailer.
+Their squared sum is 20 squared minutes per trailer.
+The sample variance is 20 / 3, or approximately 6.67 squared minutes per trailer.
+The sample standard deviation is approximately 2.582 minutes per trailer.
+The standard error is 2.582 / √4, or approximately 1.291 minutes per trailer.
+The two-sided 95% t critical value with three degrees of freedom is approximately 3.182.
+The half-width is approximately 4.11 minutes per trailer.
+The interval is approximately 6.89 to 15.11 minutes per trailer.
+
+That interval estimates the mean difference for the measured model and selected warmup scheme.
+Only four pairs are available, so the t assumptions matter substantially.
+It does not include uncertainty about whether the deletion period was adequate.
+It does not establish the distribution of individual trailer delays.
+It also does not by itself establish any dollar saving.
+
+Suppose finance estimates that one minute of avoided waiting saves USD 0.50 per trailer and that the operation handles 100,000 trailers per year.
+At the point estimate, the annual benefit is 11 × USD 0.50 × 100,000 = USD 550,000/year.
+If the allocation rule costs USD 400,000/year to operate, point-estimate net saving is USD 150,000/year.
+This scaling assumes a fixed annual volume and a constant incremental value for each minute saved.
+If congestion savings depend on time of day or carrier contract, the linear conversion can be wrong.
+If volume varies across scenarios, calculate saving within each replication using its own volume rather than multiplying separate averages.
+
+With fixed volume and unit value, the illustrative interval scales to roughly USD 344,500 to USD 755,500/year in gross benefit.
+After the USD 400,000/year fixed increment, the interval is roughly -USD 55,500 to USD 355,500/year in net benefit.
+This interval straddles zero and any positive materiality threshold below its upper end.
+The result is therefore inconclusive under a rule requiring a positive lower economic bound.
+Further independent pairs could reduce Monte Carlo error, subject to model assumptions.
+Evidence about the monetary value of a waiting minute and the warmup choice may be equally important.
+
+The two cases illustrate different targets.
+The fulfilment-centre case starts from an actual backlog and measures the next 12 months.
+The cross-dock case seeks a repeating long-run regime and removes an artificial initialization period.
+Using one generic warmup rule for both would change at least one decision question.
+
 
 ## 7. Code, query, or calculation
 
@@ -689,10 +891,28 @@ Simulation experiments are used to compare operational alternatives before imple
 A published review by Terzi and Cavalieri surveys simulation in the supply-chain context and discusses the variety of applications and modelling approaches.
 It is evidence of use and methodological scope, not evidence that any particular design in this lesson produced savings for a named company.
 
-A frequently cited published manufacturing example is the semiconductor fabrication facility studied by Fowler, Hogg, and Phillips in their work on control and simulation of wafer fabrication.
-Such systems motivate careful treatment of queues, utilization, and operational performance.
-The existence of a published application does not establish that its numerical results transfer to a distribution centre.
+Published supply-chain applications are useful for understanding how models represent queues, utilization, and operational performance.
+Their existence does not establish that their numerical results transfer to a particular distribution centre.
 Model structure, input distributions, and decision economics must be re-established for the current setting.
+
+When evaluating an external case, identify the actual decision that the authors studied.
+Check whether the application compared current operations with an implementable alternative.
+Look for the horizon and starting state, rather than assuming a long-run analysis.
+Check whether the authors describe replications, input distributions, and the variation between runs.
+Determine whether cost results are simulated projections or observed post-implementation outcomes.
+Those are different types of evidence.
+
+An article that reports average throughput alone may not answer a service-risk question.
+An article that reports a percentage improvement may omit the underlying cost of implementing the policy.
+A credible transfer argument must explain why the target operation resembles the source setting.
+The analyst should also identify differences in demand, resource constraints, and policy rules.
+The published estimate is a starting hypothesis, not a substitute for local input data.
+
+Where a company case is promotional, distinguish the company's own claim from independently reproduced results.
+Ask whether the baseline was stable, whether results were measured after deployment, and whether other changes occurred simultaneously.
+Absence of a public methods appendix does not prove a claim is false.
+It does limit what an outsider can infer about precision, causality, or generalizability.
+The two numerical cases in this lesson are synthetic and make no claim about a company's realized performance.
 
 NIST documents simulation as one component of manufacturing systems analysis and digital-twin work.
 That is a public institutional source for the importance of explicit representations and model integration.

@@ -810,6 +810,65 @@ An automotive factory's operating details, data quality and union agreements dif
 Transferring the method requires a new boundary, calibrated inputs and local validation.
 A model that correctly predicts a factory line does not automatically validate a yard model.
 
+### From model to an operating decision
+
+Before authorizing a capacity change, the manager needs an implementation design as well as an estimated benefit.
+The following fictional receiving-site decision illustrates the handoff.
+The current plan uses one staffed door from 06:00 to 14:00.
+An alternative adds a second crew from 08:00 to 12:00, when appointments cluster.
+The site has two physical doors, but the second requires a qualified forklift operator.
+The proposed roster must identify that operator rather than assume one is available.
+
+The study compares three feasible policies:
+
+1. Keep one staffed door for the full shift.
+2. Staff two doors during the fixed four-hour peak.
+3. Call in the second crew when the queue reaches three trucks, subject to a 45-minute call-in delay.
+
+The third policy needs a precise trigger.
+Define queue length as trucks physically ready for a door but not yet in service.
+Evaluate the trigger after each arrival and completion event.
+Once called, the crew remains on site for at least four paid hours.
+The crew cannot be called if a certified operator is unavailable.
+If the queue falls during the call-in delay, the call remains active unless the actual labor agreement permits cancellation.
+These details affect both waiting and cost; leaving them implicit makes the policy impossible to implement consistently.
+
+For each simulated shift, record total waiting minutes and the number of trucks waiting over 30 minutes.
+Also record the longest wait, the number of missed appointment commitments, paid crew-hours and work remaining at 14:00.
+If overtime is authorized, record its hours separately from regular staffing.
+If the site carries a backlog into the next shift, preserve each truck's accumulated wait rather than reset the clock.
+Use the same sampled arrival and workload scenario for all three policies where the policy does not itself change those inputs.
+Estimate policy differences across independent shifts, not across trucks within one shift.
+
+Suppose a pilot comparison produces the following illustrative *mean* results per shift:
+
+| Policy | Wait (truck-minutes) | Paid door-hours | Trucks over 30 minutes | Incremental cost versus baseline |
+|---|---:|---:|---:|---:|
+| One door | 280 | 8 | 3.0 | USD 0 |
+| Fixed peak crew | 100 | 12 | 0.6 | USD 160 |
+| Triggered call-in | 150 | 11 | 1.2 | USD 120 |
+
+These values are hypothetical; they are not results from the code or a published facility.
+At USD 1.20 per waiting truck-minute, the fixed crew avoids `180 × 1.20 = USD 216` in delay cost.
+Its illustrative net benefit is USD 56 per shift after the USD 160 incremental staffing cost.
+The triggered policy avoids `130 × 1.20 = USD 156` in delay cost.
+Its illustrative net benefit is USD 36 per shift after the USD 120 incremental cost.
+Under these assumptions, fixed peak staffing has USD 20 higher net benefit than triggered call-in.
+The fixed policy also has fewer long-waiting trucks on average.
+
+The averages are insufficient to establish a choice by themselves.
+The decision brief should include paired uncertainty intervals and the frequency of shifts that breach the service target.
+It should also show results for plausible delay rates and crew costs, including any minimum-call payment.
+If a second operator is routinely unavailable, the fixed policy is not executable without recruitment or reassignment.
+If the extra operator is reassigned from another activity, include the lost contribution or service effect of that activity.
+Management can authorize a limited pilot only after checking safety, staffing, operating procedures and financial assumptions.
+
+During a pilot, retain the baseline definition, measure actual dock-ready and service timestamps, and document deviations from the planned policy.
+Compare like-for-like appointment volume and load mix; a quieter pilot week alone does not demonstrate a causal improvement.
+Review the policy at a predetermined date with the site manager, labor representative and finance partner.
+Escalate if queue spillback, safety incidents or overtime exceed agreed limits.
+Update the model with the pilot evidence, but preserve a holdout period for evaluating any recalibration.
+
 ### Practical business cases
 
 **Receiving dock staffing.**
