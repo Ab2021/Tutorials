@@ -31,16 +31,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_promise-tiers-dark-stores.md`](01_promise-tiers-dark-stores.md) | Promise Tiers and Dark-Store Design | 10-minute, 30-minute, and scheduled promises and the footprint each needs. | 1,200–1,800 | planned |
-| 2 | [`02_short-horizon-forecasting.md`](02_short-horizon-forecasting.md) | Demand Forecasting at Short Horizons | Hourly and slot-level demand with weather, events, and promotions. | 1,200–1,800 | planned |
-| 3 | [`03_dark-store-assortment.md`](03_dark-store-assortment.md) | Assortment for Dark Stores | Breadth versus depth under a hard space constraint. | 1,200–1,800 | planned |
-| 4 | [`04_replenishment-waste.md`](04_replenishment-waste.md) | Replenishment, Shelf Life, and Waste | FEFO, expiry risk, and the cost of a stockout versus a write-off. | 1,200–1,800 | planned |
-| 5 | [`05_courier-supply-demand.md`](05_courier-supply-demand.md) | Courier Supply and Demand | Incentives, utilization, and the marketplace that clears the market. | 1,200–1,800 | planned |
-| 6 | [`06_eta-prediction.md`](06_eta-prediction.md) | ETA Prediction | Preparation, travel, handoff, and the uncertainty a customer actually sees. | 1,200–1,800 | planned |
-| 7 | [`07_batching-routing.md`](07_batching-routing.md) | Batching and Routing | Multi-order batches, walking time, and the trade-off against lateness. | 1,200–1,800 | planned |
-| 8 | [`08_dispatch-matching.md`](08_dispatch-matching.md) | Dispatch and Matching | Assignment policies, fairness, and the cost of a bad match. | 1,200–1,800 | planned |
-| 9 | [`09_unit-economics.md`](09_unit-economics.md) | Unit Economics | Basket size, delivery cost, courier pay, and contribution per order. | 1,200–1,800 | planned |
-| 10 | [`10_food-safety-welfare.md`](10_food-safety-welfare.md) | Food Safety, Cold Chain, and Courier Welfare | HACCP, temperature control, and the human side of the promise. | 1,200–1,800 | planned |
+| 1 | [`01_promise-tiers-dark-stores.md`](01_promise-tiers-dark-stores.md) | Promise Tiers and Dark-Store Design | 10-minute, 30-minute, and scheduled promises and the footprint each needs. | 1,200–1,800 | complete |
+| 2 | [`02_short-horizon-forecasting.md`](02_short-horizon-forecasting.md) | Demand Forecasting at Short Horizons | Hourly and slot-level demand with weather, events, and promotions. | 1,200–1,800 | complete |
+| 3 | [`03_dark-store-assortment.md`](03_dark-store-assortment.md) | Assortment for Dark Stores | Breadth versus depth under a hard space constraint. | 1,200–1,800 | complete |
+| 4 | [`04_replenishment-waste.md`](04_replenishment-waste.md) | Replenishment, Shelf Life, and Waste | FEFO, expiry risk, and the cost of a stockout versus a write-off. | 1,200–1,800 | complete |
+| 5 | [`05_courier-supply-demand.md`](05_courier-supply-demand.md) | Courier Supply and Demand | Incentives, utilization, and the marketplace that clears the market. | 1,200–1,800 | complete |
+| 6 | [`06_eta-prediction.md`](06_eta-prediction.md) | ETA Prediction | Preparation, travel, handoff, and the uncertainty a customer actually sees. | 1,200–1,800 | complete |
+| 7 | [`07_batching-routing.md`](07_batching-routing.md) | Batching and Routing | Multi-order batches, walking time, and the trade-off against lateness. | 1,200–1,800 | complete |
+| 8 | [`08_dispatch-matching.md`](08_dispatch-matching.md) | Dispatch and Matching | Assignment policies, fairness, and the cost of a bad match. | 1,200–1,800 | complete |
+| 9 | [`09_unit-economics.md`](09_unit-economics.md) | Unit Economics | Basket size, delivery cost, courier pay, and contribution per order. | 1,200–1,800 | complete |
+| 10 | [`10_food-safety-welfare.md`](10_food-safety-welfare.md) | Food Safety, Cold Chain, and Courier Welfare | HACCP, temperature control, and the human side of the promise. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,13 +71,12 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
-Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
-as each file is produced at its target length. The survey file linked above is complete at survey
-depth and can be used on its own.
+All ten topics are written at topic depth. The survey file linked above remains available
+for a concise overview.
 
 ## 7. Sources for this module
 

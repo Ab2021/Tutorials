@@ -54,12 +54,12 @@ Module 18.
 
 | Status | Count |
 |---|---:|
-| planned | 3 |
+| planned | 0 |
 | draft | 0 |
-| complete | 1 |
+| complete | 4 |
 
-The four survey files in `../../course/` are complete at survey depth. Module 21 is written
-at topic depth; Module 22 is being expanded and Modules 23–24 are indexed for expansion.
+The four survey files in `../../course/` are complete at survey depth. Modules 21–24 are written
+at topic depth.
 
 ## 6. Sources
 

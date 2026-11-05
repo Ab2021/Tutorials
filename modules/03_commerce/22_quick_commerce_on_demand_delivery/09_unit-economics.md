@@ -618,11 +618,36 @@ Control contribution is 1,000 × $3.00 = $3,000.
 Treatment contribution is 1,100 × ($3.00 − $1.00) = $2,200.
 Incremental contribution is $2,200 − $3,000 = −$800.
 The 100 additional orders contribute $300 before coupons, but the platform spends $1,100 on coupons.
-The 1,000 orders that would have occurred anyway also receive the discount.
+The control group provides a baseline of 1,000 orders; it does not identify which individual treatment orders would have occurred without the offer.
 An increase in orders is therefore not sufficient evidence of profitable subsidy.
 
 This comparison excludes acquisition benefits after the week and any capacity or service spillovers.
 Those effects may matter, but they require evidence and a longer counterfactual rather than an assumed positive lifetime value.
+
+### Translating the trial result into a decision
+
+The $800 difference is a realized comparison for the illustrative equal-sized groups, not an estimate of lifetime value.
+If the groups have unequal numbers of eligible customers, first calculate contribution per eligible customer in each group.
+Scale their difference to the population for which the offer would actually be deployed.
+Do not compare raw totals from groups of different size.
+
+For example, suppose the control group has 2,000 eligible customers and the treatment group has 2,500.
+If their contributions are $3,000 and $2,200 respectively, the observed values are $1.50 and $0.88 per eligible customer.
+The observed difference is −$0.62 per eligible customer, not the raw −$800 difference interpreted as an effect for an equally sized group.
+For 10,000 comparable eligible customers, the simple scaled difference is −$6,200 over the same observation period.
+That extrapolation assumes the same eligibility, response, costs, and available capacity; it is not a forecast validated for a larger launch.
+
+Randomization gives a basis for estimating the counterfactual but does not make a single observed difference exact.
+Report an uncertainty interval calculated at the randomization unit.
+If stores or geographic clusters are randomized, account for within-cluster dependence rather than treating orders as independent trials.
+Report the number of clusters, any exclusions, and the prespecified analysis window.
+When shared courier supply affects the comparison group, the estimated contrast may include interference and requires the specified cluster or spillover design.
+
+Apply a campaign-wide supplier funding cap to total eligible reimbursements, not independently to each customer.
+If a supplier offers $0.50 per qualifying order subject to a $400 cap, 1,100 qualifying orders generate at most $400 of funding.
+The uncapped multiplication would incorrectly claim $550, overstating contribution by $150.
+Confirm that all qualifying conditions are satisfied and separately track the timing and collection of the receivable.
+The cap can make the economics of expanding a campaign worse even when earlier orders were attractive.
 
 ## 7. Code, query, or calculation
 

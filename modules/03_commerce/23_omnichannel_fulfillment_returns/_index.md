@@ -31,16 +31,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_inventory-visibility.md`](01_inventory-visibility.md) | Inventory Visibility | Perpetual inventory, phantom stock, and the data quality behind a promise. | 1,200–1,800 | planned |
-| 2 | [`02_available-to-promise.md`](02_available-to-promise.md) | Available-to-Promise | ATP, ATS, and the difference between what exists and what can be sold. | 1,200–1,800 | planned |
-| 3 | [`03_order-routing-dom.md`](03_order-routing-dom.md) | Order Routing and DOM | Rules, costs, and the optimization behind a routing decision. | 1,200–1,800 | planned |
-| 4 | [`04_ship-from-store.md`](04_ship-from-store.md) | Ship-from-Store Economics | Store labour, packaging, inventory risk, and the cost of a marginal order. | 1,200–1,800 | planned |
-| 5 | [`05_bopis-curbside.md`](05_bopis-curbside.md) | BOPIS and Curbside | Pick accuracy, wait time, substitution, and the labour model. | 1,200–1,800 | planned |
-| 6 | [`06_promise-accuracy.md`](06_promise-accuracy.md) | Promise Accuracy | Measuring the promise a customer saw against what happened. | 1,200–1,800 | planned |
-| 7 | [`07_returns-networks.md`](07_returns-networks.md) | Returns Networks | Return-to-store, return-to-DC, and the reverse flow design. | 1,200–1,800 | planned |
-| 8 | [`08_disposition-economics.md`](08_disposition-economics.md) | Disposition Economics | Resell, refurbish, liquidate, donate, or destroy, with the margin of each. | 1,200–1,800 | planned |
-| 9 | [`09_return-fraud.md`](09_return-fraud.md) | Return Fraud | Wardrobing, empty-box, and the detection limits of policy and data. | 1,200–1,800 | planned |
-| 10 | [`10_channel-pnl.md`](10_channel-pnl.md) | Channel P&L | Allocating cost to channel without double counting shared capacity. | 1,200–1,800 | planned |
+| 1 | [`01_inventory-visibility.md`](01_inventory-visibility.md) | Inventory Visibility | Perpetual inventory, phantom stock, and the data quality behind a promise. | 1,200–1,800 | complete |
+| 2 | [`02_available-to-promise.md`](02_available-to-promise.md) | Available-to-Promise | ATP, ATS, and the difference between what exists and what can be sold. | 1,200–1,800 | complete |
+| 3 | [`03_order-routing-dom.md`](03_order-routing-dom.md) | Order Routing and DOM | Rules, costs, and the optimization behind a routing decision. | 1,200–1,800 | complete |
+| 4 | [`04_ship-from-store.md`](04_ship-from-store.md) | Ship-from-Store Economics | Store labour, packaging, inventory risk, and the cost of a marginal order. | 1,200–1,800 | complete |
+| 5 | [`05_bopis-curbside.md`](05_bopis-curbside.md) | BOPIS and Curbside | Pick accuracy, wait time, substitution, and the labour model. | 1,200–1,800 | complete |
+| 6 | [`06_promise-accuracy.md`](06_promise-accuracy.md) | Promise Accuracy | Measuring the promise a customer saw against what happened. | 1,200–1,800 | complete |
+| 7 | [`07_returns-networks.md`](07_returns-networks.md) | Returns Networks | Return-to-store, return-to-DC, and the reverse flow design. | 1,200–1,800 | complete |
+| 8 | [`08_disposition-economics.md`](08_disposition-economics.md) | Disposition Economics | Resell, refurbish, liquidate, donate, or destroy, with the margin of each. | 1,200–1,800 | complete |
+| 9 | [`09_return-fraud.md`](09_return-fraud.md) | Return Fraud | Wardrobing, empty-box, and the detection limits of policy and data. | 1,200–1,800 | complete |
+| 10 | [`10_channel-pnl.md`](10_channel-pnl.md) | Channel P&L | Allocating cost to channel without double counting shared capacity. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,13 +71,12 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
-Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
-as each file is produced at its target length. The survey file linked above is complete at survey
-depth and can be used on its own.
+All ten topics are written at topic depth. The survey file linked above remains available
+for a concise overview.
 
 ## 7. Sources for this module
 
