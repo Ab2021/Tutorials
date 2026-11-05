@@ -314,6 +314,192 @@ A queue with urgent deadlines can also require a lower-value case to be handled 
 A threshold may be chosen on historical data, but prospective arrivals and staffing make the realized queue stochastic.
 Track the work actually completed and the cases left waiting as separate populations.
 
+### Step 21: Reconcile the cost ledger
+
+Start with a ledger rather than an undifferentiated estimate of the cost of a miss.
+For each cost component, name the party paying it and the period in which it occurs.
+Mark whether the amount is incurred under the proposed policy, the comparator, or both.
+Only the difference between policies belongs in incremental net value.
+The underlying amounts should remain available for a finance reconciliation.
+
+| Component | Possible comparator cost | Possible proposed-policy cost | Treatment |
+|---|---|---|---|
+| Planner investigation | Existing manual checks | Alert-driven review | Difference in paid time, not all staff salary |
+| Carrier rebooking | Reactive rebooking | Earlier rebooking | Difference in charges, including cancellation terms |
+| Dock labor | Overtime after a late arrival | Rescheduled receiving labor | Difference in actually avoidable labor |
+| Inventory | Stockout or emergency inventory | Earlier replenishment | Avoid double-counting the same lost margin |
+| Customer service | Reactive calls | Proactive communication | Net change in effort and service outcome |
+| Platform subscription | Existing contract | Incremental license or usage | Include incremental fee over the evaluation horizon |
+| Claims or penalties | Applicable contractual charge | Charge remaining after action | Include only expected paid amounts under the contract |
+| Safety response | Required response under either policy | Required response under new policy | Fund and report separately; do not waive the duty |
+
+A fixed cost can matter for a launch decision even when it is irrelevant to a per-case threshold.
+For example, a USD 6,000 monthly license is not an incremental cost of reviewing one more alert under an existing contract.
+It is relevant when comparing adoption against a comparator that avoids the license altogether.
+Use consistent time buckets when combining a monthly license with a daily benefit.
+Do not multiply a gross avoided disruption loss by the number of alerts.
+Multiply the relevant conditional benefit by the probability of the event and the probability and magnitude of prevention.
+
+The finance owner should also distinguish accounting savings from released capacity.
+Fifteen minutes returned to an analyst has operational value only if the organization can use it productively.
+It does not automatically become a cash saving.
+Likewise, avoiding an overtime shift can create a cash saving only if it is actually canceled.
+Report avoided expense, released capacity, and customer outcome as separate lines.
+Assign a source and confidence range to each important ledger entry.
+
+### Step 22: Compare decisions with imperfect interventions
+
+Review is not necessarily the intervention that prevents the miss.
+Review may reveal whether a remedy is available; the operator then decides whether to exercise it.
+Suppose a review costs USD 8 regardless of outcome.
+On a shipment that would miss its appointment, the review enables a rebooking 50% of the time.
+Each successful rebooking avoids USD 300 of loss and costs USD 40.
+Assume no rebooking occurs for an untreated noncase and that unsuccessful review has no extra action cost.
+The conditional net benefit on an untreated positive is 0.50 × (USD 300 − USD 40) = USD 130.
+The expected net value of review is p × USD 130 − USD 8.
+The break-even probability is USD 8 / USD 130, approximately 6.15%.
+This differs from dividing USD 8 by the entire USD 300 exposure.
+
+If the operator sometimes rebooks a noncase, add the corresponding expected cost.
+For example, if the unnecessary rebooking costs USD 40 and happens for 10% of untreated noncases,
+the additional expected cost is (1 − p) × 0.10 × USD 40.
+The complete expression is p × USD 130 − USD 8 − (1 − p) × USD 4.
+It simplifies to p × USD 134 − USD 12.
+The break-even probability rises to USD 12 / USD 134, approximately 8.96%.
+This calculation assumes the noncase rebooking produces no compensating benefit.
+If it also causes disruption, add that incremental harm; if it produces value, include that value.
+The probabilities must describe the proposed policy relative to its comparator, not generic historical averages.
+
+### Step 23: Establish a prospective scoring and handling contract
+
+Before launching a shift, document the sequence at which information becomes available.
+An example contract is:
+
+1. Freeze eligible open shipments at 06:00 local site time.
+2. Convert source timestamps to UTC while retaining their original time zone and offset.
+3. Use only events ingested by the 06:00 scoring cutoff.
+4. Apply the separately approved mandatory-escalation rules.
+5. Estimate remaining analyst minutes after scheduled duties.
+6. Rank discretionary cases using the approved expected-value model.
+7. Assign cases to named operators and retain each assignment timestamp.
+8. Recompute or expire a case when new information changes its actionability.
+9. Log completion and action time separately from the initial alert time.
+10. Join to mature outcomes after the measurement horizon.
+
+The cutoff is a policy choice, not a statement that every site should score once per day.
+An event arriving at 06:01 may deserve an incremental rescoring process.
+That process needs its own capacity and preemption rules.
+Do not retrospectively insert the 06:01 event into the 06:00 prediction.
+If a shift spans a daylight-saving transition, retain the offset used to interpret each local time.
+A scheduled review at an ambiguous local time needs an unambiguous actual instant.
+
+### Step 24: Decide how a queue competes with incoming work
+
+A daily top-k list assumes the relevant cases are known when ranking occurs.
+Live events challenge that assumption.
+An arrival at 09:00 can be more valuable than the case an analyst is currently investigating.
+The policy must say whether interruption is permitted and what it costs.
+It must also say whether an urgent case can preempt a less urgent one.
+The cost of switching includes partially completed investigation and the time needed to regain context.
+
+For a simple operational policy, use three fields for every case:
+
+| Field | Purpose | Example |
+|---|---|---|
+| Latest useful start | Protect the intervention window | 10:20 local time |
+| Estimated duration | Estimate capacity consumption | 12 analyst minutes |
+| Expected net value | Compare benefits and costs | USD 55 per case |
+
+At each assignment decision, first remove cases that can no longer be completed in time.
+Among remaining discretionary cases, choose using a documented rule that accounts for deadlines.
+Where values are comparable and deadlines are not binding, value per minute is a useful starting heuristic.
+When deadlines bind, an exact schedule or a tested dispatch heuristic may perform better.
+After an interruption, update remaining work rather than charging the whole duration again without evidence.
+Keep a log of preemptions so that service teams can inspect disruption to their work.
+
+The practical comparator is the current dispatch policy, not a hindsight-optimal schedule.
+A hindsight schedule can be a useful upper bound but knows the future.
+An online policy cannot rank an alert before the data needed to generate it has arrived.
+Backtests should replay arrival order and the actual information available at each time.
+They should include queue aging, staffing changes, and the time needed for each action.
+
+### Step 25: Make the audit sample support population estimates
+
+Construct strata before drawing cases, for example alerted and nonalerted shipments.
+Sampling more nonalerts can make missed cases easier to find, but the sample will not be self-weighting.
+Keep each case's selection probability and adjudication result.
+If a shipment in a stratum has inclusion probability q, its inverse-probability weight is 1 / q.
+Use those weights to estimate counts in the full stratum, provided selection probabilities are known and nonzero.
+For example, auditing 10% of 900 nonalerts gives each sampled case weight 10.
+If the random audit finds 6 positives among 90 audited nonalerts, the estimated nonalert positives are 60.
+The estimate is uncertain; it is not a statement that precisely 60 misses occurred.
+
+If 100 alerted cases are all adjudicated and 30 are positive, estimated recall is 30 / (30 + 60), or 33.3%.
+This is a ratio of estimated population totals.
+The result depends on representative random sampling within the nonalert stratum and consistent labels.
+It can be unstable when only a few positives are found.
+Report the 6 observed positives, 90 audits, and the sampling design alongside the estimate.
+Use a design-appropriate uncertainty interval rather than treating 60 as a census count.
+Nonresponse or missing outcome evidence within the audit can still bias the estimate.
+Track such cases explicitly and investigate whether their missingness differs by lane or carrier.
+
+Auditing identifies an observed outcome only if the evidence exists and can be interpreted.
+It does not recover an individual untreated outcome after an effective intervention.
+For that distinction, the evaluation design needs a suitable comparator.
+Randomization is not appropriate when withholding an action would violate an obligation.
+In that situation, keep the mandatory process intact and evaluate only the discretionary portion.
+
+### Step 26: Design a pilot decision before observing its results
+
+Write down the comparator, allocation unit, intended duration, and decision rule before the pilot starts.
+The comparator should specify what staff actually do without the new queue.
+If manual escalation already catches a late shipment, the new system can claim only incremental impact.
+Define whether the policy changes selection, treatment, staffing, or all three.
+Otherwise an observed difference cannot be attributed to a particular operational change.
+
+Where feasible and authorized, randomize comparable shifts, lanes, or sites to the new policy and business as usual.
+Choose a unit large enough to limit contamination from shared analysts and carrier capacity.
+For each assigned unit, record all eligible shipments, not just handled cases.
+Analyze outcomes according to the assigned policy as the primary comparison.
+That preserves the policy contrast when operators do not follow every recommendation.
+Also describe adherence and reasons for overrides without treating adherent cases as a randomized group.
+
+Specify at least one business outcome, one workload outcome, and one safety or service guardrail.
+An example business outcome is total incremental cost in USD per eligible shipment.
+An example workload outcome is analyst minutes per 100 eligible shipments.
+An example guardrail is the number of mandatory escalations completed after their deadlines.
+These examples are design choices, not universal standards.
+Define outcome maturity and how cancellations, missing shipments, and changed appointments are handled.
+Estimate uncertainty at the randomization unit, not by pretending correlated shipments are independent.
+
+Before rollout, agree who can stop the pilot for a safety or operational concern.
+Agree who approves expanded use if benefits remain uncertain.
+Avoid repeatedly changing the primary success criterion after inspecting interim outcomes.
+If the sample is too small to distinguish a useful benefit from zero, report that uncertainty.
+An inconclusive pilot is not proof that the policy has no effect or that it is safe to scale.
+
+### Step 27: Maintain a decision log after deployment
+
+Keep a compact record for each threshold or policy revision.
+The record should include:
+
+- The effective timestamp and time zone of the change.
+- The responsible operator and approver.
+- The previous and replacement policy versions.
+- The forecast workload and the available staffed minutes.
+- The comparator and evidence used to estimate effects.
+- The mandatory-rule inventory and reserved capacity.
+- The impacted lanes, customers, and shifts.
+- The reason for the change and the alternatives considered.
+- The measurement window and expected label maturity date.
+- The rollback trigger and the person authorized to act.
+
+The log makes a future difference-in-performance analysis interpretable.
+It also helps an operator explain why an apparently similar shipment received a different priority.
+Do not infer that a policy revision caused an outcome merely because it preceded it.
+Weather, carrier capacity, and customer mix can change at the same time.
+Where those factors matter, design the evaluation to address them rather than relying on the log alone.
+
 ## 6. Worked example
 
 ### Business setup
@@ -400,6 +586,85 @@ The supervisor approves the top 100 timely reviews for this shift, subject to ma
 The dashboard shows eligible count, alerts, completed reviews, expiry, and mature outcomes separately.
 An owner reviews severity, staffing, and calibration each week before changing the policy.
 Customer communication follows decision rights; the model does not automatically change a promise.
+
+### Sensitivity to intervention effectiveness
+
+The base example assumes every timely review prevents the loss on an untreated positive.
+That is deliberately optimistic.
+Suppose instead that a timely review prevents 40% of the USD 500 loss on average for an untreated positive.
+Assume the same 100 band-A shipments are reviewed and the USD 10 review cost is unchanged.
+This is a scenario calculation, not a measured treatment effect.
+
+| Quantity | Full-prevention scenario | 40%-prevention scenario |
+|---|---:|---:|
+| Untreated positives in A | 60 shipments | 60 shipments |
+| Gross loss exposed in A | USD 30,000 | USD 30,000 |
+| Avoided loss in A | USD 30,000 | USD 12,000 |
+| Review cost in A | USD 1,000 | USD 1,000 |
+| Incremental net value | USD 29,000 | USD 11,000 |
+| Total cost including review | USD 63,500 | USD 81,500 |
+
+The 40% scenario computes avoided loss as 60 × USD 500 × 0.40 = USD 12,000.
+The residual loss over the entire cohort is USD 92,500 − USD 12,000 = USD 80,500.
+Adding USD 1,000 in review cost gives USD 81,500.
+The resulting USD 11,000 net saving is lower than the USD 29,000 base-case saving.
+Neither scenario estimates the effect of the actual operational policy without supporting evidence.
+The causal effect may vary by lane, deadline, and available carrier alternative.
+
+The band-A precision stays at 60% in both calculations because the hypothetical untreated labels do not change.
+Economic value changes because the remedy's effectiveness changes.
+This is the essential distinction between identifying a likely miss and being able to prevent its loss.
+Even perfect prediction does not create benefit if no feasible action can change the outcome.
+
+### Sensitivity to capacity and backlog
+
+Now suppose the team receives only 70 discretionary review slots after mandatory work.
+The model still generates 100 alerts for band A.
+Without within-band information, assume for illustration that 70 cases are randomly selected from the band.
+The expected number of untreated positives reviewed is 70 × 60 / 100 = 42 shipments.
+At full prevention, expected avoided loss is 42 × USD 500 = USD 21,000.
+Review costs are 70 × USD 10 = USD 700.
+The expected net saving is USD 20,300 per day relative to the no-review comparator.
+Expected remaining loss plus review cost is USD 92,500 − USD 21,000 + USD 700 = USD 72,200.
+
+These are expectations under random selection, not guaranteed results for the 70 actual shipments.
+The alert-level precision remains 60% for the full 100-case band.
+The expected timely-handling share is 70 / 100 = 70% of alerts.
+The expected timely detection of untreated positives is 42 / 185, approximately 22.7%.
+The 30 unreviewed alerts must remain visible as unreviewed or expired.
+They are not automatically false alarms and are not automatically treated positives.
+
+If the 70 cases are chosen using additional valid information, their positive share may differ from 60%.
+Estimate that share from evidence available at selection time.
+If selection prioritizes shipments close to deadline, test the resulting effectiveness as well as precision.
+Do not apply the full-band result to a nonrandom subset without justification.
+If mandatory cases are included in band A, specify whether those cases consume the 70 discretionary slots.
+The scenario assumes mandatory work was already removed from the available capacity.
+
+### Reconcile the recommendation to the operational plan
+
+The recommended action is not to lower the cutoff until the dashboard reports better recall.
+The immediate plan is to assign the highest-value feasible cases to the available operators.
+The forecast is the model's estimated chance of an untreated missed appointment.
+The target is an operational objective for missed appointments and timely handling.
+The customer commitment remains the appointment agreed with the customer.
+Only an authorized party can change that commitment.
+
+Before the next shift, the supervisor should answer:
+
+1. How many net discretionary minutes remain after mandatory work?
+2. Which cases can still be reviewed before their latest useful start?
+3. Is the likely intervention actually available for each case?
+4. Which alerts are duplicates or refer to an already resolved shipment?
+5. Which partner needs to approve an action or a changed appointment?
+6. How will unreviewed cases be audited after their outcomes mature?
+7. What effect and cost assumptions require prospective evidence?
+
+The daily handoff should list counts and minutes by queue state.
+The weekly handoff should add mature outcomes, estimates of incremental effects, and uncertainty.
+Finance should reconcile labor, carrier fees, and service costs against the comparator.
+The service owner should independently inspect missed commitments and overdue escalations.
+This division prevents a single attractive model metric from becoming the entire decision.
 
 ## 7. Code, query, or calculation
 
@@ -499,6 +764,75 @@ A control-tower alert is not automatically a high-risk AI system merely because 
 Assess the actual purpose, applicable classification, role, and current law with qualified counsel.
 No section here substitutes for a legal determination or overrides mandatory safety procedures.
 The sources section links primary texts; legal requirements must be checked as of deployment.
+
+### Minimum analytical records
+
+Use a shipment-opportunity table as the denominator.
+An event stream alone is not sufficient because shipments with no events may disappear from the analysis.
+The table should identify both included and excluded opportunities and their eligibility reasons.
+Keep source-system identifiers alongside a stable internal identifier.
+If partners disagree on an identifier, retain the mapping decision and its effective dates.
+
+| Record | Required fields for this analysis | Control question |
+|---|---|---|
+| Opportunity | Shipment ID, decision time, eligibility, original commitment | Does every eligible shipment appear exactly once per defined opportunity? |
+| Event | Event ID, shipment ID, source, event time, ingestion time | Was the event available before the forecast? |
+| Forecast | Opportunity ID, probability or score, model version, forecast time | Is the score a calibrated probability for this horizon? |
+| Alert | Opportunity ID, rule version, creation time, priority | Can an alert be distinguished from a duplicate notification? |
+| Queue history | State, owner, entry time, exit time, expiry | Was the case actually reviewed while action was still possible? |
+| Intervention | Action type, action time, approver, expense | What was done, by whom, and at what incremental cost? |
+| Outcome | Original cutoff, arrival evidence, maturity and dispute status | Is this an observed outcome or an untreated counterfactual? |
+| Sampling | Stratum, inclusion probability, selection and response | Can the audit be generalized to the population? |
+| Capacity | Shift, available minutes, mandatory workload, absences | Does the reported capacity reflect usable attention? |
+| Economics | Cost component, currency, period, comparator, source | Is the same cost counted once and on the correct side? |
+
+The queue history is an event log: a shipment can enter, be assigned, be requeued, and expire.
+Do not overwrite the original assignment when responsibility moves.
+A single current-state snapshot cannot show how long the case waited at each stage.
+Store corrections as traceable revisions rather than silently changing the old analytical record.
+
+If an appointment is amended, store both the original and the amended commitment.
+The new appointment may be valid for customer service, while the original is needed for the original-miss measure.
+Separately record whether the customer accepted the revision.
+Do not call a missed original appointment on time merely because a later timestamp replaced it.
+On the other hand, do not label a shipment late against a superseded promise without explaining the measure.
+
+### Quality controls at the data boundary
+
+Reconcile the opportunity count to a source such as the shipment management system's eligible manifest.
+Report unmatched identifiers and late-arriving records rather than silently dropping them.
+For every source, measure the lag from event occurrence to ingestion.
+Use percentiles of that lag as well as the mean when late events are operationally important.
+Check whether the lag differs for particular carriers, sites, or shifts.
+A single overall average can hide a partner that supplies nearly all updates after the action deadline.
+
+Test timestamp ordering while allowing for documented source-clock errors.
+An arrival event with an occurrence time before dispatch may indicate a mapping or clock problem.
+An event created before the score but ingested afterward was unavailable to the model at scoring.
+An ingestion timestamp after the alert does not by itself prove the underlying event happened afterward.
+Record time zone and offset when a source supplies local time.
+Flag missing or ambiguous time-zone information for remediation.
+
+Test the relationship between expected and observed review duration.
+If the queue assumes 10 minutes per case but difficult cases take 35 minutes, the capacity plan will fail.
+Compare estimated duration with actual start and completion timestamps by case type.
+Account for pauses, handoffs, and simultaneous work before calling the elapsed interval pure labor time.
+Have the operating team review outliers so that system logging artifacts do not become policy inputs.
+
+### Access and retention decisions
+
+Use the least detail necessary for the stated operational and analytical purpose.
+For example, a quality analyst may need a shipment-level pseudonymous key but not a driver's personal phone number.
+Pseudonymization alone does not establish that data is anonymous under applicable law.
+Access permissions, retention periods, and deletion procedures should follow the organization's applicable policy.
+Check obligations arising from contracts and relevant jurisdictions with the responsible privacy and legal owners.
+Avoid placing personal information in free-text alert explanations if a structured reason code will suffice.
+
+The fact that an event is exchangeable under a standard does not create permission to share it.
+Document who supplies the event, who may receive it, and which purposes are authorized.
+Record correction and dispute routes when a partner challenges an event.
+If a source is removed or a sharing agreement changes, assess the effect on monitoring coverage.
+Loss of one carrier's data can change both the population and the measured precision.
 
 ## 9. Industry practice and case evidence
 
@@ -627,6 +961,34 @@ State all assumptions and distinguish forecasts, plans, targets, and customer co
 - **Deliverable:** Draft an operating policy and a pilot scorecard.
 - **Acceptance criteria:** Name owners, capacity reservation, ranking, expiry, evidence, safeguards, and evaluation comparator.
 - **Time:** 25 minutes.
+
+### Exercise 9: Cost of an imperfect remedy
+
+- **Scenario:** Review costs USD 6 for every shipment.
+- On an untreated positive, review enables an action with 25% probability.
+- The action avoids USD 240 of loss and costs USD 40 when used.
+- Assume the action is never used on a noncase and there are no other effects.
+- **Deliverable:** Calculate conditional net benefit and break-even untreated probability.
+- **Acceptance criteria:** Show the USD 50 conditional benefit and the probability threshold.
+- Explain whether a case with a 15% calibrated probability is positive-value before capacity constraints.
+- **Time:** 15 minutes.
+
+### Exercise 10: Weighted audit and interpretation
+
+- **Scenario:** A cohort has 200 alerts and 800 nonalerts.
+- All alerts are audited and 40 have positive observed outcomes.
+- A simple random sample of 80 nonalerts is audited; 12 have positive observed outcomes.
+- All labels are mature and measured consistently for this exercise.
+- **Deliverable:** Estimate the number of nonalert positives and the observed-outcome recall.
+- **Acceptance criteria:** Show the sampling weight and estimated counts.
+- Explain the uncertainty and why observed outcomes need not identify untreated risk.
+- **Time:** 15 minutes.
+
+In both exercises, state the comparator before interpreting the number.
+Treat all monetary quantities as USD per shipment unless the calculation states a cohort total.
+Neither a positive expected value nor an estimated recall is sufficient to approve a deployment.
+The proposal also needs feasible capacity and required safeguards.
+
 ## 13. Self-check answers
 
 ### Exercise 1
@@ -698,6 +1060,42 @@ It logs generated, reviewed, expired, acted-on, and mature-outcome populations s
 It specifies a baseline, pilot allocation, costs, timing, and decision criteria.
 It includes safety, privacy, and drift review without claiming universal legal applicability.
 A weak policy reports only model accuracy or treats an alert as an executed action.
+
+### Exercise 9
+
+Conditional on an untreated positive, an enabled action has a net benefit of USD 240 − USD 40 = USD 200.
+It occurs with probability 0.25, giving expected conditional benefit of USD 50.
+For untreated probability p, expected net value of review is p × USD 50 − USD 6.
+Break-even occurs at p = USD 6 / USD 50 = 0.12, or 12%.
+At p = 15%, expected net value is 0.15 × USD 50 − USD 6 = USD 1.50 per review.
+This value is positive before considering competition for the same analyst's time.
+It assumes the USD 40 action cost occurs only in the stated enabled positive cases.
+It also assumes no cost or benefit from action on a noncase.
+If another case offers higher net value for the same scarce time, capacity may go there instead.
+
+### Exercise 10
+
+The nonalert audit probability is 80 / 800 = 0.10.
+Each audited nonalert therefore has weight 1 / 0.10 = 10.
+The estimated number of positive nonalerts is 12 × 10 = 120 shipments.
+All 200 alerts are audited, so the observed positive-alert count is 40 shipments.
+Estimated observed-outcome recall is 40 / (40 + 120) = 25%.
+Estimated observed-outcome precision among alerts is 40 / 200 = 20%.
+The recall denominator is an estimate, not a census of all positive cases.
+The sample's 12 observed nonalert positives are subject to sampling variation.
+An uncertainty interval should account for the sampling design.
+Nonresponse, inconsistent adjudication, or a nonrandom audit would weaken the estimate.
+If reviewed alerts received effective interventions, their observed outcomes can differ from untreated outcomes.
+The weighted audit does not reconstruct each treated shipment's counterfactual outcome.
+A policy comparison is needed to estimate incremental impact.
+
+### Connecting the answers to decisions
+
+The first eight exercises distinguish metric calculation from operational and causal design.
+Exercise 9 adds a remedy that works only some of the time.
+Exercise 10 shows how a known audit sampling rate changes an estimated denominator.
+Together, they show why neither a score nor an alert count alone determines economic value.
+The operator must still check actionability, deadlines, capacity, and the required escalation process.
 
 ## 14. Interview questions
 ### Question 1: Why can 90% precision still be a poor system?

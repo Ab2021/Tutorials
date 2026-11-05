@@ -48,7 +48,7 @@ After this lesson you can:
 4. **Assign** an accountable owner, backup, and decision authority across organizational boundaries.
    Exercise 5 tests the handoff.
 5. **Estimate** workload and assess whether staffing is adequate for the arrival rate and service-time distribution.
-   Exercise 6 tests the capacity calculation.
+   Exercises 6 and 10 test the capacity calculation and the allocation of scarce skills.
 6. **Specify** escalation triggers, response clocks, and fallback paths that can be exercised on a shift.
    Exercise 7 tests the escalation design.
 7. **Evaluate** queue performance using cohort-based metrics, missed outcomes, and data-quality controls.
@@ -480,6 +480,106 @@ Review missed incidents outside the queue.
 Compare independent downstream service failures, customer claims, and production interruptions with detected cases after matching on identifiers and time.
 Investigate misses and linkage gaps before calling the detection process complete.
 
+### Step 12 — Operate an overload protocol
+
+**Input:** open cases, deadlines, available skills, expected arrivals, and escalation coverage.
+**Output:** a time-bounded allocation of staff and a visible list of deferred work.
+
+An overload protocol starts before every analyst is fully occupied.
+Set a trigger using a measurable condition, such as cases approaching their intervention cutoff faster than qualified staff can process them.
+Backlog count alone is not enough: ten cases awaiting tomorrow's information and ten cases expiring in the next hour imply different responses.
+Compare required active minutes within each deadline window with the staff minutes available in that same window.
+Deduct already committed work and coverage obligations before treating minutes as available.
+
+At the start of a surge, the duty manager first confirms the scope of the disruption.
+An integration outage that produces repeated missing-scan alerts may require one incident owner and many linked affected shipments.
+A severe weather disruption may instead produce genuinely separate decisions for several destinations.
+Do not merge merely to make the queue appear manageable.
+Do not split merely to distribute a single loss across more owners.
+
+The duty manager then assigns available capacity to protected obligations and imminent cutoffs.
+For each remaining case, record the next useful action, estimated staff time, decision authority, and latest execution time.
+If two cases need the same approver, count that approver as a constrained resource rather than assuming all staff minutes are interchangeable.
+If the time estimate is uncertain, reserve a buffer or choose a conservative estimate and document the basis.
+An average handling time is not a promise that the next case will finish in that time.
+
+For cases that cannot all be completed, compare feasible alternatives rather than silently letting the clock expire.
+The alternatives can include requesting surge coverage, reducing nonessential investigation, using a preauthorized contingency, or accepting a defined residual exposure.
+The duty manager must check that abbreviated handling does not bypass mandatory controls or quality checks.
+If an action is deferred, record who made the decision, what may be lost, when to review it, and who must be notified.
+A deferred case remains visible until resolved, accepted by an authorized person, or legitimately superseded.
+
+The trigger and response should be specific enough to exercise.
+For example, a team could initiate a 15-minute capacity review when the sum of estimated work due in the next hour exceeds 80% of the effective minutes available from staff with the required skills.
+The 80% figure is an illustrative management trigger, not a universal staffing standard.
+It is a leading warning, not proof that a deadline will be missed.
+The appropriate threshold depends on variability, potential harm, and the speed of obtaining additional capacity.
+
+During the review, check both the count of cases and the amount of action-specific work.
+One case may require an initial call now and a second approval later.
+Do not assign both activities to the first deadline if their actual constraints differ.
+Conversely, do not omit the second activity simply because the first call can be finished on time.
+Where several cases share an outcome, identify the dependency before adding their claimed benefits.
+
+Use a short decision log with the following fields:
+
+| Field | Question answered |
+|---|---|
+| Snapshot time and zone | What was known when capacity was assigned? |
+| Coverage and skills | Who could actually perform each action before its cutoff? |
+| Case and next action | What specific work was competing for attention? |
+| Required minutes and deadline | How much labor was estimated, and when did the option expire? |
+| Protected obligation | Did a separate safety, legal, or contractual process constrain the order? |
+| Decision and authority | Who approved the allocation, deferral, or acceptance? |
+| Next review | When must the decision be revisited or escalated? |
+| Subsequent evidence | What happened after the decision, including changed estimates? |
+
+When the immediate pressure subsides, reconcile the decision log against actual case transitions.
+Look for expired options, unidentified dependencies, and cases that were not surfaced during the surge.
+Compare estimated active minutes with recorded active minutes by case type and role.
+Review whether staff invoked the protocol early enough for the requested help to arrive.
+Update thresholds only after considering changes in case mix, staffing, and data quality.
+
+### Overload example — two scarce resources
+
+At 13:00 local time, one coordinator and one supervisor are available for the next 30 minutes.
+The coordinator has 30 effective minutes for queue work.
+The supervisor has 10 effective minutes after a previously scheduled customer call.
+Both staff members can work concurrently, but the supervisor's approvals are sequential.
+Assume each task can start only after the prerequisites in the table are complete.
+
+| Case | Coordinator preparation | Supervisor approval | Latest completion | Estimated net benefit |
+|---|---:|---:|---|---:|
+| D | 8 minutes | 4 minutes | 13:15 | USD 3,100 |
+| E | 12 minutes | 6 minutes | 13:30 | USD 5,400 |
+| F | 10 minutes | None | 13:30 | USD 1,200 |
+
+The estimates refer to different, non-overlapping outcomes and already deduct incremental intervention cost.
+No safety or mandatory-notification obligation applies in this illustration.
+Completion means the preparation and any approval are finished; execution is assumed to occur instantly on approval for this scheduling exercise.
+In a real operation, booking or allocation execution time must also be included before the cutoff.
+
+One feasible plan prepares D from 13:00 to 13:08.
+The supervisor approves D from 13:08 to 13:12.
+The coordinator prepares E from 13:08 to 13:20.
+The supervisor approves E from 13:20 to 13:26.
+The coordinator prepares F from 13:20 to 13:30.
+All three modeled tasks meet their cutoffs, using all 30 coordinator minutes and all 10 supervisor minutes.
+The total modeled net benefit is USD 9,700 if all three actions execute as assumed.
+There is no capacity buffer for an interruption, a longer approval, or execution work.
+
+Now suppose D's preparation actually takes 13 minutes rather than 8 minutes.
+Its approval cannot begin before 13:13 and finishes at 13:17, after its 13:15 cutoff.
+The supervisor has not failed to respond slowly: the prerequisite was late.
+The team should escalate as soon as the revised estimate makes the deadline infeasible and look for a different option.
+For example, an authorized backup may be able to start some preparation in parallel if the work can genuinely be divided.
+The original USD 3,100 benefit must not be counted if the underlying option is no longer available.
+
+This example distinguishes resource utilization from service reliability.
+The initial schedule appears feasible in deterministic arithmetic but is brittle.
+The coordinator should not simply book every minute and report the plan as a service guarantee.
+The manager must decide whether surge cover, earlier preparation, or a deliberate deferral is justified by the risk and the operating constraints.
+
 ## 6. Worked example
 
 ### Business context and assumptions
@@ -570,9 +670,10 @@ The 09:20 booking deadline continues to run.
 
 From 09:12 to 09:22 the coordinator works C.
 The stock owner approves the allocation at 09:22, leaving time before 10:00 for execution.
-A's carrier confirms at 09:17, but the coordinator reads and records the confirmation at 09:22.
-For this example assume the carrier's confirmed booking timestamp of 09:17 satisfies the 09:20 cutoff; the later recording time is kept separately.
-If no confirmation had arrived by the chase time, the defined procedure would require an immediate chase or reassignment rather than continuing uninterrupted on C.
+A's carrier confirms at 09:15; an automatic notification reaches the coordinator immediately, so the 09:16 chase is unnecessary.
+For this example assume that the 09:15 booking confirmation satisfies the 09:20 cutoff and that the notification takes negligible handling time.
+The coordinator records the confirmation at 09:22, retaining both timestamps.
+If the notification had not arrived by 09:16, the procedure would require an immediate chase or reassignment rather than uninterrupted work on C.
 
 At 09:22 the coordinator starts B and finishes the appointment request at 09:40.
 The warehouse confirms the change at 10:15.
@@ -983,6 +1084,19 @@ The underlying extract includes cases closed yesterday and only queue-linked shi
 **Acceptance criteria:** Identify censoring, missing linkage, selection or detection bias, and counterfactual uncertainty; propose measurable remedies.
 **Time:** 20 minutes.
 
+### Exercise 10 — Allocate surge capacity
+
+At 14:00, one coordinator has 30 effective minutes and one supervisor has 8 effective minutes available before 14:30.
+Case G needs 10 coordinator minutes followed by 3 supervisor minutes, with both steps completed by 14:15.
+Case H needs 12 coordinator minutes followed by 5 supervisor minutes, with both steps completed by 14:30.
+Case J needs 8 coordinator minutes and no supervisor time, with completion by 14:30.
+The supervisor may approve one case at a time, and the coordinator may prepare one case at a time.
+The two roles can work simultaneously; assume action execution requires no additional time in this exercise.
+
+**Deliverable:** Produce a minute-by-minute schedule and identify its capacity buffer.
+**Acceptance criteria:** Meet all three deadlines, observe each approval prerequisite, and explain one disruption that would make the schedule infeasible.
+**Time:** 20 minutes.
+
 ## 13. Self-check answers
 
 ### Exercise 1
@@ -1080,6 +1194,17 @@ Even a completely observed on-time outcome does not establish that the action ca
 Use a mature cohort defined before outcome observation, link to an independent outcome source, and report missing linkage and open cases.
 Compare intervention and non-intervention outcomes only with a design that addresses eligibility and selection, such as an ethically appropriate randomized rollout or a carefully adjusted comparison.
 Report uncertainty, costs, changes in baseline commitments, and the limits of causal interpretation.
+
+### Exercise 10
+
+Prepare G from 14:00 to 14:10 and approve it from 14:10 to 14:13.
+Prepare H from 14:10 to 14:22 and approve it from 14:22 to 14:27.
+Prepare J from 14:22 to 14:30.
+The coordinator uses 10 + 12 + 8 = 30 minutes and the supervisor uses 3 + 5 = 8 minutes.
+Both available capacity buffers are zero, although the timing of each role's work differs.
+For example, if G takes 13 coordinator minutes, its approval finishes no earlier than 14:16 and misses the 14:15 cutoff.
+Escalate before the deadline if the revised estimate makes the option infeasible; seek a genuine parallel resource or an alternative action rather than counting G's projected benefit automatically.
+Other schedules are acceptable if they meet the prerequisites and all three deadlines.
 
 ## 14. Interview questions
 

@@ -31,16 +31,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_visibility-layers.md`](01_visibility-layers.md) | The Five Visibility Layers | Shipment, inventory, order, supplier, and network visibility and what each can answer. | 1,200–1,800 | planned |
-| 2 | [`02_event-streams-epcis.md`](02_event-streams-epcis.md) | Event Streams, IoT, Telematics, and EPCIS 2.0 | The raw material of a control tower and its quality problems. | 1,200–1,800 | planned |
-| 3 | [`03_event-time-processing-time.md`](03_event-time-processing-time.md) | Event Time versus Processing Time | Late, out-of-order, and duplicated events in a live queue. | 1,200–1,800 | planned |
-| 4 | [`04_eta-prediction.md`](04_eta-prediction.md) | ETA Prediction | Prediction intervals, censoring, and the promise that follows. | 1,200–1,800 | planned |
-| 5 | [`05_delay-propagation.md`](05_delay-propagation.md) | Delay Propagation | How one late leg becomes a missed slot and a lost sale. | 1,200–1,800 | planned |
-| 6 | [`06_anomaly-detection.md`](06_anomaly-detection.md) | Anomaly Detection | Statistical, distance, and model-based detectors in an operational stream. | 1,200–1,800 | planned |
-| 7 | [`07_exception-queue.md`](07_exception-queue.md) | Exception Management and Queue Design | Prioritisation, ownership, and the state machine of an exception. | 1,200–1,800 | planned |
-| 8 | [`08_alert-economics.md`](08_alert-economics.md) | Alert Precision, Recall, and the Economics of Attention | The cost of a false alarm and the cost of a miss. | 1,200–1,800 | planned |
-| 9 | [`09_decision-rights.md`](09_decision-rights.md) | Decision Rights and Escalation | Who can reroute, expedite, or promise, and at what threshold. | 1,200–1,800 | planned |
-| 10 | [`10_multi-party-sharing.md`](10_multi-party-sharing.md) | Multi-Party Data Sharing and Trust | Partner data, incentives, and the limits of a shared tower. | 1,200–1,800 | planned |
+| 1 | [`01_visibility-layers.md`](01_visibility-layers.md) | The Five Visibility Layers | Shipment, inventory, order, supplier, and network visibility and what each can answer. | 1,200–1,800 | complete |
+| 2 | [`02_event-streams-epcis.md`](02_event-streams-epcis.md) | Event Streams, IoT, Telematics, and EPCIS 2.0 | The raw material of a control tower and its quality problems. | 1,200–1,800 | complete |
+| 3 | [`03_event-time-processing-time.md`](03_event-time-processing-time.md) | Event Time versus Processing Time | Late, out-of-order, and duplicated events in a live queue. | 1,200–1,800 | complete |
+| 4 | [`04_eta-prediction.md`](04_eta-prediction.md) | ETA Prediction | Prediction intervals, censoring, and the promise that follows. | 1,200–1,800 | complete |
+| 5 | [`05_delay-propagation.md`](05_delay-propagation.md) | Delay Propagation | How one late leg becomes a missed slot and a lost sale. | 1,200–1,800 | complete |
+| 6 | [`06_anomaly-detection.md`](06_anomaly-detection.md) | Anomaly Detection | Statistical, distance, and model-based detectors in an operational stream. | 1,200–1,800 | complete |
+| 7 | [`07_exception-queue.md`](07_exception-queue.md) | Exception Management and Queue Design | Prioritisation, ownership, and the state machine of an exception. | 1,200–1,800 | complete |
+| 8 | [`08_alert-economics.md`](08_alert-economics.md) | Alert Precision, Recall, and the Economics of Attention | The cost of a false alarm and the cost of a miss. | 1,200–1,800 | complete |
+| 9 | [`09_decision-rights.md`](09_decision-rights.md) | Decision Rights and Escalation | Who can reroute, expedite, or promise, and at what threshold. | 1,200–1,800 | complete |
+| 10 | [`10_multi-party-sharing.md`](10_multi-party-sharing.md) | Multi-Party Data Sharing and Trust | Partner data, incentives, and the limits of a shared tower. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,13 +71,12 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
-Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
-as each file is produced at its target length. The survey file linked above is complete at survey
-depth and can be used on its own.
+All ten topics are written at topic depth. The survey file linked above remains available
+for a concise overview.
 
 ## 7. Sources for this module
 

@@ -419,6 +419,102 @@ Log the intervention and evaluate both outcomes and the process that generated t
     A before-and-after improvement alone can reflect seasonality, changing freight mix, or the disruption ending.
     Use outcome evidence to improve both the detector and the operations that make alerts actionable.
 
+### 5.8 Replay an event stream without hindsight
+
+35. Establish the replay clock and the scoring schedule.
+    Input: the event ledger, historical eligibility rules, and scoring cadence.
+    Output: an ordered list of decision instants for each eligible visit.
+    A 15-minute cadence means decisions at the designated quarter-hour boundaries, not at whichever instant produces the most favorable retrospective score.
+    Align the clock to a named time zone and preserve offsets through daylight-saving transitions.
+    If a cutoff moves, retain the version known at each decision instant.
+
+36. Reconstruct the visible ledger at each instant.
+    Include an event only when its receipt timestamp is no later than the decision timestamp.
+    Apply only corrections received by that instant.
+    If an arrival message is received after the trailer has physically departed, it cannot justify a historical alert before receipt.
+    Conversely, a correction received later does not erase an alert that was reasonable on the original evidence.
+    Preserve the initial decision and append the revision, with both receipt times.
+
+37. Resolve entity and state as they were known then.
+    Match the source event to the shipment-leg visit using the crosswalk valid at that instant.
+    Reject impossible chronology rather than calculating a negative elapsed dwell.
+    A canceled visit should leave the eligible population when the cancellation becomes known.
+    An unreceived cancellation cannot be used to remove the visit from an earlier replay snapshot.
+    Mark uncertain entity matches for investigation rather than copying the event into multiple visits.
+
+38. Calculate features and apply freshness gates.
+    Use the most recent valid arrival and cutoff known at the decision instant.
+    Store input event IDs, reference cohort version, score version, and decision timestamp alongside the score.
+    If a required input fails its freshness or validity rule, record abstention with its reason.
+    Count abstentions in the coverage denominator so a low alert rate cannot conceal a broken feed.
+    Keep mandatory obligations on their independent path even when the detector abstains.
+
+39. Reproduce the case lifecycle, not just individual scores.
+    A threshold crossing can create a case only when the case policy says a new case is permitted.
+    Later qualifying scores normally update the existing case.
+    Define whether a material worsening, approaching deadline, or new independent failure can reopen or escalate it.
+    Model operator availability and dispatch delay if the historic record supports them.
+    A case that waited in the queue beyond the action deadline is not an actionable alert merely because the score was timely.
+
+40. Freeze the replay output before inspecting labels.
+    The output is a case ledger with creation time, state transitions, owner, data-quality status, and deadline.
+    Join mature outcomes only after the replay policy is fixed.
+    Report the fraction of visits scored, abstained, alerted, reviewed on time, and unresolved.
+    A retrospective that scores only visits with complete final data estimates performance on a selected population.
+    Compare that population with all visits that would have entered the live eligibility rule.
+
+### 5.9 Estimate value when labels and interventions are incomplete
+
+41. Separate three questions before calculating a metric.
+    Detection asks whether the policy identified an outcome under a stated observational label.
+    Execution asks whether an operator reviewed the case before the last useful action time.
+    Impact asks whether an intervention changed the outcome compared with what would otherwise have happened.
+    A confusion matrix answers the first question only under its label definition.
+    It cannot by itself answer the causal impact question.
+
+42. Design the outcome review around the full eligible population.
+    When independent departure records are available, use them to identify mature outcomes among alerted and unalerted visits.
+    When review is necessary, sample both groups with known, nonzero inclusion probabilities.
+    Retain the sampling frame, probability, adjudicator decision, and reason for missing review.
+    Reviewers should use a consistent positive-outcome definition.
+    If reviewers know an alert was raised, consider whether that knowledge can bias adjudication.
+
+43. Weight audited cases according to the sampling design.
+    For a simple stratified random sample, each reviewed case represents its stratum size divided by the number reviewed.
+    Estimate total positives by adding weighted positive cases across alert and no-alert strata.
+    Estimate detected positives from the weighted positive cases in the alert stratum.
+    Their ratio estimates recall for the defined population and outcome under the sampling assumptions.
+    The estimate is not exact: report the audit sizes and uncertainty appropriate to the sampling design.
+
+44. Distinguish a prevented outcome from an unneeded alert.
+    A visit that leaves on time after a dock reassignment might have left late without it, or might have left on time anyway.
+    The observed record alone generally cannot identify which counterfactual occurred.
+    A reviewer may label the action operationally justified based on contemporaneous evidence, but that is a different outcome from measured delay prevention.
+    Store both the observed outcome and the adjudicated action rationale rather than replacing one with the other.
+    Avoid using the phrase “false alert” without naming the evaluation label.
+
+45. Choose an impact design that respects operational obligations.
+    Where safe and authorized, randomize an advisory workflow among otherwise eligible discretionary cases.
+    Define the unit of randomization, allocation, outcome window, and analysis before observing results.
+    If cases share a dock or operator, actions on one visit can affect other visits.
+    Consider shift- or site-level assignment to reduce this interference, subject to enough independent units.
+    Never randomize away a mandatory safety response or a contractual action.
+
+46. Compare the incremental economics of the intervention.
+    Include staff review time for all cases, intervention cost for acted cases, and downstream loss in the same time period and currency.
+    Compare with the actual current workflow, not an imaginary operation with no existing controls.
+    Report effects on service, queue time, and total operating cost separately before combining them.
+    If the causal effect is unknown, present a break-even intervention effect rather than claiming savings.
+    Reassess the decision under low, central, and high estimates of loss and effect.
+
+47. Close the learning loop with explicit ownership.
+    Operations owns action feasibility and case handling.
+    Data engineering owns event contracts and freshness.
+    Analytics owns replay, score validity, uncertainty, and threshold evidence.
+    The business sponsor approves capacity, cost assumptions, and the release decision.
+    Quality, privacy, and legal owners review relevant obligations rather than delegating them to the model.
+    A change request records the evidence, decision, affected cohorts, owner, and rollback condition.
+
 ## 6. Worked example
 
 ### Business situation and decision
@@ -534,6 +630,66 @@ The case includes the as-of arrival event, 162-minute elapsed dwell, 2.743 robus
 The supervisor checks freshness, calls the carrier, and decides whether to move a dock appointment under existing authority.
 The system does not automatically promise the customer a new arrival time or spend money on an expedite.
 If the carrier later corrects the arrival timestamp, retain the original decision record and update the case with the correction.
+
+### A separate audit of unalerted visits
+
+The following fictional audit illustrates how to estimate recall when complete outcome records are not available.
+It is separate from the 100-visit threshold comparison above.
+During one month, 500 eligible visits reach the decision point.
+The frozen policy alerts 100 visits and does not alert 400 visits.
+The analyst samples 20 alerted visits and 40 unalerted visits uniformly within their respective strata.
+All 60 selected visits receive a mature, independently adjudicated outcome.
+The review finds 12 positive outcomes among the 20 alerted visits and 4 among the 40 unalerted visits.
+
+| Stratum | Population, visits | Reviewed, visits | Positive reviews | Weight per review |
+|---|---:|---:|---:|---:|
+| Alerted | 100 | 20 | 12 | 100 / 20 = 5 |
+| Unalerted | 400 | 40 | 4 | 400 / 40 = 10 |
+
+The estimated number of alerted positive visits is `12 × 5 = 60` visits.
+The estimated number of unalerted positive visits is `4 × 10 = 40` visits.
+Estimated total positives are therefore `60 + 40 = 100` visits.
+Estimated recall is `60 / 100 = 60%`.
+Estimated precision is `60 / 100 = 60%`, equivalently `12 / 20` within the alerted stratum.
+The identical percentages in this example are coincidental.
+The sample's raw positive fraction, `(12 + 4) / 60 = 26.7%`, is not an estimate of population prevalence because the alert stratum was sampled at a higher rate.
+The weighted prevalence estimate is `100 / 500 = 20%`.
+
+This calculation assumes that the stratum populations and sample probabilities are correct.
+It also assumes that every selected case was adjudicated and that selection within each stratum was random.
+If four difficult unalerted cases could not be reviewed, the original weights alone would not repair the missingness.
+Investigate nonresponse and use an appropriate design-based adjustment or report the resulting limitation.
+The estimate is uncertain because only four unalerted positives were observed.
+Use a confidence interval or another uncertainty assessment appropriate to stratified sampling before comparing a small change in recall.
+The audit estimates association with the observed outcome; it does not establish whether alerting prevented late departures.
+
+### Break-even value of the alert workflow
+
+Return to the 100-visit validation example and compare the 2.0 threshold with no alerts.
+The threshold generates 25 reviews and identifies 14 observed positives.
+At USD 8 per review, incremental review cost is `25 × USD 8 = USD 200`.
+Suppose each reviewed case also incurs an average additional intervention cost of USD 3.
+Total incremental workflow cost is `25 × (USD 8 + USD 3) = USD 275`.
+This intervention-cost assumption is new and is not included in the earlier simplified loss table.
+Assume, only for this sensitivity calculation, that all 14 identified positives are eligible for an effective intervention.
+Let `p` be the fraction of those 14 losses actually prevented by the workflow.
+Let each prevented loss be valued at USD 40.
+
+Expected avoided loss is `14 × p × USD 40 = USD 560p`.
+The workflow breaks even when `USD 560p = USD 275`.
+Thus `p = 275 / 560 = 49.1%` approximately.
+If the true preventable fraction were 30%, expected avoided loss would be USD 168 and net value would be minus USD 107.
+If the true preventable fraction were 70%, expected avoided loss would be USD 392 and net value would be USD 117.
+These are conditional scenarios, not estimates of actual causal impact.
+The 14 retrospective positives may not represent the cases affected under a live intervention policy.
+Some late departures may be impossible to prevent and some alerted on-time visits may have been rescued.
+Intervention cost may apply only to acted cases rather than every reviewed case.
+Replace the simplified quantities with prospective evidence and the actual action mix before approving a business case.
+
+The decision owner should also check whether a delay avoided at the dock shifts congestion to another dock.
+If so, the financial boundary must include that displaced work rather than crediting one shipment in isolation.
+The customer commitment remains an obligation regardless of the break-even calculation.
+The break-even result informs discretionary investment; it does not cancel a required response.
 
 ## 7. Code, query, or calculation
 
@@ -854,6 +1010,18 @@ There are three shifts, a 20-case daily average capacity, and no recorded interv
 Deliverable: a one-page deployment decision record with baseline, threshold selection, deduplication, capacity, labels, monitoring, authority, and rollback.
 Acceptance criteria: specify case-level aggregation, shift peaks, as-of evaluation, action rights, and a measurable rollback trigger; identify unknown costs and label gaps.
 
+### Exercise 9 — Weighted audit and value
+
+Time: 25 minutes.
+A policy alerts 80 of 400 eligible visits.
+An auditor randomly reviews 20 alerted visits and 40 unalerted visits, with complete mature outcomes.
+Ten reviewed alerted visits and five reviewed unalerted visits are positive.
+The 80 reviews in the live workflow cost USD 6 each.
+Suppose the workflow prevents a loss worth USD 30 for each prevented positive outcome.
+
+Deliverable: estimate positive counts in both strata and recall, then calculate the number of losses that must be prevented to cover review cost.
+Acceptance criteria: use separate stratum weights, show the denominator, and explain why observed positives do not establish the number prevented.
+
 ## 13. Self-check answers
 
 ### Exercise 1
@@ -930,6 +1098,17 @@ It defines mature outcomes, intervention logs, and an audit of unalerted cases o
 It keeps the model advisory unless a named authority permits action.
 It sets measurable rollback conditions, such as a sustained input freshness failure or queue age beyond the action window, with a named person empowered to act.
 A weak record claims a precision target without specifying labels, denominators, or how missing outcomes are handled.
+
+### Exercise 9
+
+The alerted sampling weight is `80 / 20 = 4` and the unalerted weight is `320 / 40 = 8`.
+Estimated alerted positives are `10 × 4 = 40` visits.
+Estimated unalerted positives are `5 × 8 = 40` visits.
+Estimated recall is `40 / (40 + 40) = 50%`.
+The review cost is `80 × USD 6 = USD 480`.
+At USD 30 per prevented loss, break-even requires `480 / 30 = 16` prevented losses.
+Observed positive outcomes do not reveal the outcomes that would have occurred without the workflow.
+The estimate also has sampling uncertainty and assumes complete, unbiased adjudication.
 
 ## 14. Interview questions
 
