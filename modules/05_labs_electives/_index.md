@@ -50,12 +50,12 @@ Module 29 can be taken any time after Part II. Module 30 assumes Part II and ben
 
 | Status | Count |
 |---|---:|
-| planned | 2 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 2 |
 
-The two survey files in `../../course/` are complete at survey depth. Topic files are indexed but
-not yet written.
+The two survey files in `../../course/` are complete at survey depth. Modules 29–30 are
+written at topic depth.
 
 ## 6. Sources
 

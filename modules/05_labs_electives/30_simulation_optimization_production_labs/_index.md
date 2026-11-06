@@ -31,16 +31,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_environment-repo.md`](01_environment-repo.md) | Environment and Repository Layout | Python, DuckDB, Docker, fixtures, seeds, and a test-first lab contract. | 1,200–1,800 | planned |
-| 2 | [`02_demand-forecast-pipeline.md`](02_demand-forecast-pipeline.md) | Demand Forecast Pipeline | Ingest, validate, backtest, select, and publish a forecast. | 1,200–1,800 | planned |
-| 3 | [`03_inventory-policy-simulation.md`](03_inventory-policy-simulation.md) | Inventory Policy Simulation | Policy sweep against a simulated demand stream and a cost model. | 1,200–1,800 | planned |
-| 4 | [`04_network-milp.md`](04_network-milp.md) | Network MILP | Build, solve, inspect, and stress-test a facility-location model. | 1,200–1,800 | planned |
-| 5 | [`05_vrp-dispatch.md`](05_vrp-dispatch.md) | VRP and Dispatch | CVRPTW, batching, and a dispatch replay. | 1,200–1,800 | planned |
-| 6 | [`06_warehouse-des.md`](06_warehouse-des.md) | Warehouse Discrete-Event Simulation | Model a pick line, find the bottleneck, and validate against data. | 1,200–1,800 | planned |
-| 7 | [`07_streaming-events.md`](07_streaming-events.md) | Streaming Events | Produce, consume, handle late data, and alert on an exception. | 1,200–1,800 | planned |
-| 8 | [`08_model-service-container.md`](08_model-service-container.md) | Model Service and Container | Package a model behind an API with health checks and logging. | 1,200–1,800 | planned |
-| 9 | [`09_kubernetes-terraform.md`](09_kubernetes-terraform.md) | Kubernetes and Terraform | Deploy, scale, and reproduce an environment declaratively. | 1,200–1,800 | planned |
-| 10 | [`10_disaster-recovery.md`](10_disaster-recovery.md) | Observability and Disaster Recovery | Metrics, logs, backups, restore drill, and an incident runbook. | 1,200–1,800 | planned |
+| 1 | [`01_environment-repo.md`](01_environment-repo.md) | Environment and Repository Layout | Python, DuckDB, Docker, fixtures, seeds, and a test-first lab contract. | 1,200–1,800 | complete |
+| 2 | [`02_demand-forecast-pipeline.md`](02_demand-forecast-pipeline.md) | Demand Forecast Pipeline | Ingest, validate, backtest, select, and publish a forecast. | 1,200–1,800 | complete |
+| 3 | [`03_inventory-policy-simulation.md`](03_inventory-policy-simulation.md) | Inventory Policy Simulation | Policy sweep against a simulated demand stream and a cost model. | 1,200–1,800 | complete |
+| 4 | [`04_network-milp.md`](04_network-milp.md) | Network MILP | Build, solve, inspect, and stress-test a facility-location model. | 1,200–1,800 | complete |
+| 5 | [`05_vrp-dispatch.md`](05_vrp-dispatch.md) | VRP and Dispatch | CVRPTW, batching, and a dispatch replay. | 1,200–1,800 | complete |
+| 6 | [`06_warehouse-des.md`](06_warehouse-des.md) | Warehouse Discrete-Event Simulation | Model a pick line, find the bottleneck, and validate against data. | 1,200–1,800 | complete |
+| 7 | [`07_streaming-events.md`](07_streaming-events.md) | Streaming Events | Produce, consume, handle late data, and alert on an exception. | 1,200–1,800 | complete |
+| 8 | [`08_model-service-container.md`](08_model-service-container.md) | Model Service and Container | Package a model behind an API with health checks and logging. | 1,200–1,800 | complete |
+| 9 | [`09_kubernetes-terraform.md`](09_kubernetes-terraform.md) | Kubernetes and Terraform | Deploy, scale, and reproduce an environment declaratively. | 1,200–1,800 | complete |
+| 10 | [`10_disaster-recovery.md`](10_disaster-recovery.md) | Observability and Disaster Recovery | Metrics, logs, backups, restore drill, and an incident runbook. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,13 +71,12 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
-Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
-as each file is produced at its target length. The survey file linked above is complete at survey
-depth and can be used on its own.
+All ten topics are written at topic depth. The survey file linked above remains available
+for a concise overview.
 
 ## 7. Sources for this module
 
