@@ -31,16 +31,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_stakeholders-value-taxonomy.md`](01_stakeholders-value-taxonomy.md) | Stakeholders and the Value Taxonomy | Who pays, who uses, who approves, and the value each stakeholder counts. | 1,200–1,800 | planned |
-| 2 | [`02_baseline-counterfactual.md`](02_baseline-counterfactual.md) | Baseline and Counterfactual | The number the project must beat and the counterfactual that makes it credible. | 1,200–1,800 | planned |
-| 3 | [`03_roi-npv-payback.md`](03_roi-npv-payback.md) | ROI, NPV, and Payback | Cash timing, discount rates, and the assumptions that drive the answer. | 1,200–1,800 | planned |
-| 4 | [`04_tco-build-buy.md`](04_tco-build-buy.md) | Total Cost of Ownership and Build versus Buy | Licence, integration, people, and the cost of switching. | 1,200–1,800 | planned |
-| 5 | [`05_working-capital.md`](05_working-capital.md) | Working Capital and Supply Chain Finance | DIO, DSO, DPO, cash conversion, and reverse factoring, dynamic discounting, and inventory finance. | 1,200–1,800 | planned |
-| 6 | [`06_cost-to-serve.md`](06_cost-to-serve.md) | Cost-to-Serve | Allocating service cost to the customer, channel, and order that causes it. | 1,200–1,800 | planned |
-| 7 | [`07_vendor-landscape.md`](07_vendor-landscape.md) | Vendor Landscape and Business Models | Suite, point solution, marketplace, and the lock-in each creates. | 1,200–1,800 | planned |
-| 8 | [`08_adoption-change.md`](08_adoption-change.md) | Adoption and Change | Workflow fit, trust calibration, and the planner who must use the output. | 1,200–1,800 | planned |
-| 9 | [`09_benefits-realization.md`](09_benefits-realization.md) | Benefits Realization | Tracking promised versus realized value after go-live. | 1,200–1,800 | planned |
-| 10 | [`10_portfolio-exec-comms.md`](10_portfolio-exec-comms.md) | Portfolio Prioritization and Executive Communication | Choosing among projects and defending the choice in one page. | 1,200–1,800 | planned |
+| 1 | [`01_stakeholders-value-taxonomy.md`](01_stakeholders-value-taxonomy.md) | Stakeholders and the Value Taxonomy | Who pays, who uses, who approves, and the value each stakeholder counts. | 1,200–1,800 | complete |
+| 2 | [`02_baseline-counterfactual.md`](02_baseline-counterfactual.md) | Baseline and Counterfactual | The number the project must beat and the counterfactual that makes it credible. | 1,200–1,800 | complete |
+| 3 | [`03_roi-npv-payback.md`](03_roi-npv-payback.md) | ROI, NPV, and Payback | Cash timing, discount rates, and the assumptions that drive the answer. | 1,200–1,800 | complete |
+| 4 | [`04_tco-build-buy.md`](04_tco-build-buy.md) | Total Cost of Ownership and Build versus Buy | Licence, integration, people, and the cost of switching. | 1,200–1,800 | complete |
+| 5 | [`05_working-capital.md`](05_working-capital.md) | Working Capital and Supply Chain Finance | DIO, DSO, DPO, cash conversion, and reverse factoring, dynamic discounting, and inventory finance. | 1,200–1,800 | complete |
+| 6 | [`06_cost-to-serve.md`](06_cost-to-serve.md) | Cost-to-Serve | Allocating service cost to the customer, channel, and order that causes it. | 1,200–1,800 | complete |
+| 7 | [`07_vendor-landscape.md`](07_vendor-landscape.md) | Vendor Landscape and Business Models | Suite, point solution, marketplace, and the lock-in each creates. | 1,200–1,800 | complete |
+| 8 | [`08_adoption-change.md`](08_adoption-change.md) | Adoption and Change | Workflow fit, trust calibration, and the planner who must use the output. | 1,200–1,800 | complete |
+| 9 | [`09_benefits-realization.md`](09_benefits-realization.md) | Benefits Realization | Tracking promised versus realized value after go-live. | 1,200–1,800 | complete |
+| 10 | [`10_portfolio-exec-comms.md`](10_portfolio-exec-comms.md) | Portfolio Prioritization and Executive Communication | Choosing among projects and defending the choice in one page. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,13 +71,12 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
-Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
-as each file is produced at its target length. The survey file linked above is complete at survey
-depth and can be used on its own.
+All ten topics are written at topic depth. The survey file linked above remains available
+for a concise overview.
 
 ## 7. Sources for this module
 
