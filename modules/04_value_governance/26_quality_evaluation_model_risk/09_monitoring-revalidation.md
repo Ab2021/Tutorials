@@ -312,6 +312,38 @@ Define a separate control for monitor execution, freshness, and alert delivery.
 A human must acknowledge unowned or overdue alerts, and escalation must continue if the first recipient is unavailable.
 Thresholds are illustrative policy choices, not universal regulatory requirements.
 
+### Translating thresholds into an operating contract
+
+A threshold is only one part of a control.
+Write the event timestamp, evaluation frequency, recipient, acknowledgement deadline, decision authority, and escalation path alongside the numerical rule.
+The business owner approves the consequences; the monitor owner implements the measurement; an independent reviewer challenges whether the control can detect the material risk.
+Do not let a dashboard administrator silently change the action associated with a threshold.
+
+For example, a weekly scorecard covers all eligible item-location forecasts issued before Monday 08:00 local time.
+The local policy evaluates mature four-week forecasts on Tuesday at 10:00 and sends an alert to the monitoring analyst.
+If the analyst has not acknowledged a warning within one business day, the system notifies the model owner; an unacknowledged critical alert goes to the incident commander after 30 minutes.
+These times are examples, not recommended universal service levels.
+The contract specifies whether clocks run outside business hours and who covers holidays.
+An acknowledgement confirms receipt, not resolution or permission to continue using the model.
+
+Make suppression rules visible in the same record as the underlying event.
+For a planned feed maintenance window, an authorized change ticket can suppress duplicate notifications, but the data status remains unavailable.
+An active suppression has an owner, start and end, justification, and alternate route for new critical events.
+At expiry, the monitor returns to normal routing automatically or raises an operational failure for human action.
+Alert grouping can reduce duplicate messages without merging distinct affected populations or concealing a new severity.
+
+Before approving a rule, replay it against historical periods using only information available at each historical decision time.
+Count alert episodes, not just individual rows, and compare them with independently identified material events and near misses.
+Record events the rule misses as well as alerts that did not lead to intervention.
+Historical event labels are incomplete and hindsight can make a threshold look better than it would have performed in real time.
+For rare catastrophic events, a qualitative trigger and scenario exercise can be more informative than a low historical alert count.
+
+Monitor the monitor itself.
+An independent heartbeat should report scheduled runs, actual completion, expected data arrival, alert delivery, and on-call acknowledgement.
+If the evaluation job fails at cutoff, show the affected control as unknown and follow the failure procedure rather than assuming the metric passed.
+A separate channel is useful when the alerting platform itself is unavailable.
+Periodically test delivery to the actual roster, including backups, and preserve the test result.
+
 ### Step 7. Detect market and operating changes
 
 **Input:** market intelligence, procurement events, operations changes, and model-change notices.
@@ -352,6 +384,27 @@ Investigate competing explanations: data defect, deployment change, new environm
 Do not assume the model caused every downstream loss.
 Where an outcome is still developing, distinguish known facts from estimates and schedule an update.
 A severe incident may require review of similar models or locations using the same data feed.
+
+### Escalation when evidence and authority are incomplete
+
+Use an incident record with an append-only timeline rather than a collection of contradictory chat messages.
+Each entry states when the fact was observed, who reported it, the supporting artifact, and whether it is confirmed, estimated, or disputed.
+The incident commander coordinates the response; the business decision owner authorizes changes to commitments within their delegated authority.
+Neither role automatically owns the technical diagnosis or the independent validation opinion.
+
+| Situation | Immediate decision | Required escalation and evidence |
+|---|---|---|
+| Alert recipient unavailable | Route to the named backup; do not mark resolved | Page the incident commander when the acknowledgement deadline expires; record both delivery attempts. |
+| Missing feed at purchase cutoff | Hold affected automated releases under the local rule | Notify procurement and the feed owner; preserve the last valid arrival and the failed-run identifier. |
+| Manual gate overloaded | Do not release the excess queue without authorization | Escalate queue age, number of orders, criticality, and next commitment deadline to procurement leadership. |
+| Reviewer and owner disagree | Keep existing restriction unless an authorized decision changes it | Preserve both positions and request a governance decision with a documented residual-risk rationale. |
+| Supplier announcement unconfirmed | Validate the source and prepare a proportionate contingency | Set a confirmation deadline; escalate immediately if exposure would become irreversible before confirmation. |
+| Control outage spans multiple models | Identify all consumers and apply their own fallback rules | Engage the shared-data owner and each business owner; one team's acknowledgement does not close the others' incidents. |
+
+For handover, include the next decision deadline, current restriction, remaining queue, outstanding evidence, and named next owner.
+Escalation continues on elapsed time, not merely on the number of messages sent.
+The escalation authority must have an actionable choice: for example, allocate additional reviewers, delay a commitment, or authorize a documented alternative.
+An exception without an expiry and compensating control is an untracked change to the approved operating model.
 
 ### Step 9. Decide on revalidation
 
@@ -396,6 +449,33 @@ Record findings with severity, evidence, impact, owner, due date, and measurable
 Distinguish the independent validation opinion from the business owner's decision about whether to accept residual risk.
 A reviewer can recommend restriction or rejection, but the authorized governance process makes the operating decision.
 A disagreement must be escalated without editing away the independent opinion.
+
+### Choosing the depth of revalidation
+
+| Trigger | Minimum challenge | Possible expansion |
+|---|---|---|
+| Corrected late feed | Reconcile source-to-feature records, cutoff behavior, affected decisions, and alert delivery. | Review other models sharing the feed if the defect or correction changes their inputs. |
+| Sustained segment bias | Reconstruct eligible origins, mature labels, segment definition, benchmark, and decisions. | Review model design and related segments if the mechanism is not localized. |
+| New factory or product family | Establish population, data availability, decision costs, operational constraints, and comparable evidence. | Require full validation where the intended use or assumptions materially differ. |
+| Supplier shutdown | Assess input availability, decision feasibility, exposure and fallback operation. | Expand to conceptual soundness and current outcomes when the interruption changes modeled relationships. |
+| Material model redesign | Review methodology, implementation, data lineage, performance, and decision integration before use. | Apply the organization's full initial-validation process rather than relabeling a redesign as a minor fix. |
+
+The review plan identifies the version and time interval covered, the trigger, the excluded areas and their rationale, and evidence owners.
+It distinguishes tests that can be completed immediately from outcomes that will mature later.
+The reviewer records acceptance criteria before evaluating the submitted fix where practicable.
+For each criterion, link the source artifact, method, result, limitations, and finding.
+An unavailable artifact is a scope limitation, not a passed test.
+
+For replay, reconstruct the inputs actually available at each forecast origin.
+Compare the incident version and proposed version on the same eligible origins and horizons, with the same benchmark and label-maturity rules.
+Separate a corrected historical input from information that was unavailable at the original cutoff.
+A replay with revised hindsight data can be useful for diagnosis, but it cannot alone establish production performance.
+If the proposed feature did not exist at the historical origins, require defensible archived availability evidence or state that a prospective trial is needed.
+
+Do not compress the review opinion into a single score.
+The report can support use with restrictions while recording an open finding and an evidence gap.
+The authorized business owner decides whether to accept the remaining risk within policy; a reviewer does not approve their own remediation.
+If the decision departs from the independent recommendation, escalate and retain both the recommendation and signed decision.
 
 ### Step 11. Remediate, restore, and close
 
@@ -581,6 +661,45 @@ The model finding closes separately after the independent reviewer verifies its 
 Procurement records the residual supplier risk and the authority for resuming automated releases.
 All values, communications, and decisions remain linked to the incident and versions M-17.4 and its successor.
 
+### Incident ledger and capacity check
+
+The following continuation is fictional and illustrates the evidence needed to reconstruct the first day.
+It does not add an assumed observed loss or prove that the interruption caused the historical bias.
+
+| Time, Monday | Record | Owner and consequence |
+|---|---|---|
+| 09:00 | Supplier confirms heat-treatment outage; recovery estimate is three weeks. | Procurement logs the source and starts the event trigger. |
+| 09:10 | Incident commander accepts the alert and identifies Factory B as affected. | The commander opens the record and requests evidence preservation. |
+| 09:30 | Automated release for Factory B is paused. | Procurement invokes the approved manual gate; the pause is not a cancellation of existing commitments. |
+| 10:00 | Analyst snapshots M-17.4 forecasts, lead-time data, and original threshold definitions. | The analyst records artifact identifiers and cutoff times. |
+| 11:00 | The data engineer confirms feed receipt and unchanged units for the checked records. | The incident remains open because other causes and operational effects remain possible. |
+| 15:00 | Independent reviewer accepts the targeted review scope, subject to evidence access. | Procurement retains the restriction pending an authorized decision. |
+
+Suppose 18 Factory B orders require review each day, as in the case, and the assigned planner can review 18 orders per day.
+With no opening backlog and no interruptions, expected end-of-day backlog is \(0+18-18=0\) orders.
+If absences reduce capacity to 12 reviews on Tuesday while arrivals remain 18, the backlog becomes \(0+18-12=6\) orders.
+If the following day has 18 arrivals and capacity returns to 18, the backlog remains \(6+18-18=6\) orders; merely restoring normal capacity does not clear it.
+An extra six reviews are needed to eliminate that backlog, assuming no cancellations or additional arrivals.
+The commander reports the oldest order's commitment deadline as well as its count, because six delayed critical orders can be more consequential than six routine orders.
+These numbers are a capacity scenario, not evidence that Northstar actually experienced an absence.
+
+### A bounded restoration decision
+
+The business owner signs a hypothetical seven-calendar-day provisional authorization for Factory B only after the independent reviewer verifies the feed and the manual fallback.
+The authorization is conditional on the calendar feature's decision-time availability being demonstrated and the proposed version passing the agreed replay.
+It permits a controlled release of a specified subset of orders, not unrestricted purchasing.
+The exact subset and spending authority must be recorded in the deployment ticket rather than inferred from this example.
+Each day the monitor owner reports feed freshness, release counts, overrides, queue age, and any new supplier information.
+If the feed misses cutoff, the automated release hold resumes immediately.
+If the authorization expires before a fresh decision, the team returns to the documented manual gate; if that gate cannot operate, procurement leadership decides the safe alternative.
+
+At the end of the provisional period the owner reviews leading controls and the independent finding status.
+They cannot claim demonstrated four-week forecast performance from a two-week post-release observation.
+The first origin's mature outcome arrives no earlier than six weeks after that origin under the case's four-week horizon and two-week label lag.
+The reviewer then evaluates available mature outcomes, coverage, benchmark, and segment results under the predeclared plan.
+If the evidence remains insufficient, the record states that limitation and the authorized owner either retains a bounded restriction or retires the use.
+Incident containment, validation finding closure, and permanent production approval are separate decisions with separate evidence.
+
 ## 7. Code, query, or calculation
 
 The following standalone Python 3 program uses only the standard library.
@@ -701,6 +820,22 @@ A correction policy should identify when a closed period can be restated and ret
 Privacy, retention, access, and contractual restrictions may limit the evidence that can be stored or shared.
 Involve the appropriate legal, security, and data-governance owners for the actual deployment.
 
+### Outcome-maturity and revision ledger
+
+Consider 240 forecast-origin records eligible for a four-week horizon and due to mature by a Tuesday evaluation.
+If 216 have valid mature actuals, coverage is \(216/240=90\%\), not 100% of the 216 rows that happened to join.
+The missing 24 records require a reason code: late source, unmatched identifier, cancelled decision, disputed actual, or another documented category.
+Investigate the distribution of missing records by factory and criticality before interpreting an error metric.
+If 20 of the 24 missing records belong to Factory B, apparent aggregate accuracy may systematically omit the most exposed location.
+This observation identifies possible selection bias; it does not establish the errors of the missing records.
+
+An example policy may require at least 95% mature coverage for a routine outcome score to be considered complete.
+At 90%, publish the calculated score for the observed records only as incomplete and trigger the label-quality investigation.
+The outcome status is unknown for the missing records, not a pass and not zero error.
+Critical-supplier and missing-feed rules continue to operate independently of the coverage rule.
+When late records arrive, preserve the original publication and issue a dated revision with the changed denominator and reason.
+Access to detailed supplier and order records is restricted to authorized roles; the incident report can use aggregated evidence where appropriate.
+
 ### Standards and guidance
 
 The National Institute of Standards and Technology (NIST) AI Risk Management Framework 1.0 describes a voluntary approach organized around Govern, Map, Measure, and Manage.
@@ -710,6 +845,7 @@ NIST's AI RMF Playbook provides suggested actions rather than a universal checkl
 See the official sources in Section 16.
 
 The Federal Reserve's SR 11-7, *Guidance on Model Risk Management*, discusses ongoing monitoring, outcomes analysis, and effective challenge in the context of supervised banking organizations.
+For Federal Reserve supervision, [SR 26-2](https://www.federalreserve.gov/supervisionreg/srletters/sr2602.htm) superseded SR 11-7 in April 2026; consult the relevant agency's current scope.
 Its applicability depends on the organization and its regulatory circumstances; a supply-chain company should not represent the guidance as automatically binding merely because it uses a model.
 The example's governance practices are educational adaptations, not a claim of SR 11-7 compliance.
 Consult the applicable regulator and current guidance before making a legal or supervisory claim.
@@ -923,6 +1059,19 @@ The presentation cites a general disaster report but no model-specific evidence.
 **Deliverable:** a corrected two-paragraph claim and evidence request.
 **Acceptance criteria:** separate documented disruption from unsupported model assertions; describe PSI as a local descriptive measure rather than a universal legal requirement; identify what evidence would be needed to assess an actual model control.
 
+### Exercise 9 — Diagnose a control outage and delayed labels
+
+**Time:** 25 minutes.
+A Tuesday job expects 400 eligible forecast-origin records whose labels should have matured.
+It joins 360 valid actuals, including 60 of the 100 expected records for the critical factory.
+The job reports a 14% WAPE for those 360 records and a green status.
+The local policy requires at least 95% overall mature-label coverage; missing supplier feeds at the purchase cutoff require an immediate automated-release hold.
+On the same morning, the supplier feed is missing at cutoff and the primary alert recipient is on leave.
+
+**Deliverable:** calculate overall and critical-factory coverage and write a first-hour escalation and reporting plan.
+**Acceptance criteria:** use the expected populations as denominators; distinguish an observed-subset score from a complete score; invoke the independent feed rule; route to a backup and identify the decision owner.
+State what information is needed before estimating the impact of the 40 missing critical-factory labels.
+
 ## 13. Self-check answers
 
 ### Exercise 1
@@ -1013,6 +1162,20 @@ A defensible inference is that such a disruption can invalidate availability ass
 PSI is a descriptive statistic whose result depends on binning, comparison population, and time window.
 A 0.20 threshold in this lesson is illustrative and is not established as a universal requirement by the disaster report.
 Evidence for the original assertion would include a reliable model-specific incident report, baseline and threshold definitions, timestamps, affected decisions, and the organization's documented investigation.
+
+### Exercise 9
+
+Overall mature-label coverage is \(360/400=90\%\), below the local 95% completeness requirement.
+Critical-factory coverage is \(60/100=60\%\); 40 of its expected labels are missing.
+The 14% WAPE describes only the 360 joined records and cannot establish the error on the other 40 records.
+The green status misrepresents incomplete evidence, even though the observed-subset calculation may itself be arithmetically correct.
+
+At cutoff, hold the affected automated releases under the independent missing-feed rule.
+Route the alert to the named backup and escalate to the incident commander if acknowledgement is overdue.
+The procurement decision owner determines whether the approved fallback is staffed and authorized; if not, escalate for a safe alternative.
+Preserve the job run, expected-population list, unmatched keys, feed arrival log, forecasts, and release decisions.
+To estimate impact, investigate why the 40 critical-factory labels are absent, recover or reconcile valid actuals, and compare the missing records' exposure and characteristics with the observed population.
+Until then, report the missing segment's outcome performance as unknown.
 
 ## 14. Interview questions
 

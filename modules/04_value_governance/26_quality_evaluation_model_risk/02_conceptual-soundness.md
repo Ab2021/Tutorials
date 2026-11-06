@@ -780,6 +780,7 @@ Consult the relevant legal and privacy teams for the applicable jurisdiction and
 ### Supervisory guidance: applicability matters
 
 The US Federal Reserve and Office of the Comptroller of the Currency published SR 11-7/OCC 2011-12 model risk management guidance in 2011.
+For Federal Reserve supervision, [SR 26-2](https://www.federalreserve.gov/supervisionreg/srletters/sr2602.htm) superseded SR 11-7 in April 2026; consult the relevant agency's current scope.
 The guidance discusses conceptual soundness, ongoing monitoring, outcomes analysis, and effective challenge for relevant banking organizations.
 Its applicability depends on the institution, supervisory context, and current regulatory position.
 A supply-chain company does not become a regulated bank merely because it uses a forecast.

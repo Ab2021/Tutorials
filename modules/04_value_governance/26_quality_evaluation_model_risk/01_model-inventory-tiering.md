@@ -1015,6 +1015,7 @@ Retention rules depend on jurisdiction, contracts, and organizational policy.
 ### Standards and guidance are not interchangeable
 
 The US Federal Reserve and Office of the Comptroller of the Currency's 2011 guidance SR 11-7 / OCC 2011-12 addresses model risk management for banking organizations.
+For Federal Reserve supervision, [SR 26-2](https://www.federalreserve.gov/supervisionreg/srletters/sr2602.htm) superseded SR 11-7 in April 2026; consult the relevant agency's current scope.
 It discusses model development, implementation, use, validation, governance, policies, and controls.
 The banking context and the applicable regulator matter; a supply-chain company does not become subject to banking guidance merely by adopting its ideas.
 Check current regulator guidance and applicability at the time of use rather than assuming a historical document is the latest rule.

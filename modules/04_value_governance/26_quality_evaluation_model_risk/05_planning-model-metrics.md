@@ -892,6 +892,7 @@ A standardized identifier is not a substitute for an effective-dated master-data
 ### Model risk guidance
 
 The U.S. Federal Reserve and Office of the Comptroller of the Currency published SR 11-7 / OCC 2011-12 guidance on model risk management for supervised banking organizations in 2011.
+For Federal Reserve supervision, [SR 26-2](https://www.federalreserve.gov/supervisionreg/srletters/sr2602.htm) superseded SR 11-7 in April 2026; consult the relevant agency's current scope.
 Its discussion of conceptual soundness, ongoing monitoring, and outcomes analysis illustrates a governance approach, not a rule that every supply-chain company or forecast is automatically subject to banking supervision.
 Applicability depends on the institution, activity, jurisdiction, and current supervisory requirements; obtain qualified advice for a real compliance question.
 Do not represent a metric score as a regulatory approval.

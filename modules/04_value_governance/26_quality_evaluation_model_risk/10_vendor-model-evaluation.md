@@ -588,6 +588,83 @@ Set the expiry date or next review trigger in the approval record.
 Provide a distribution list so operators receive the limitations relevant to their work.
 Retain the decision and supporting artifacts under the organization's evidence policy.
 
+### H. Make coverage part of the purchasing decision
+
+Scoring only the forecasts returned by a vendor can favor a system that omits difficult cases.
+The appropriate unit of accountability is the set of requests that the operation actually needs, not just the subset that is easy to predict.
+Maintain a request ledger before sending data to the vendor.
+Give every request a unique key combining item, location, forecast origin, target period, and horizon.
+Attach a submission timestamp, input snapshot identifier, required response deadline, and applicable model release.
+Save an acknowledgement separately from a usable forecast: an HTTP success response with an empty prediction is not a forecast.
+
+Reconcile the ledger after the operational deadline rather than after a later batch repair.
+Classify each request once as on-time usable, late usable, invalid, missing, or cancelled under a previously defined rule.
+Retain the raw response and error reason, including schema errors, negative values if prohibited, and unknown identifiers.
+A duplicate response is not a second successful forecast; retain it as an operational exception.
+Compare vendor and baseline accuracy on the same on-time usable records to isolate performance where both are available.
+Also report coverage for the entire eligible request population, including critical items and new products.
+Do not silently impute a missing forecast as zero or discard a baseline error for an unavailable vendor response without reporting the exclusion.
+
+Consider an illustrative weekly batch with 1,000 eligible item-location requests.
+The vendor returns 940 on time with valid schema, 20 valid responses after the planning cutoff, and 10 responses with invalid units.
+It returns no response for the other 30 requests.
+The on-time usable coverage is `940 / 1,000 = 94%`.
+Response receipt is `(940 + 20 + 10) / 1,000 = 97%`, but that figure includes late and invalid responses.
+The remaining 3% have no response; receipt is not interchangeable with usable coverage.
+If a baseline produces forecasts on time for all 1,000 requests, the paired accuracy comparison has 940 eligible rows.
+Its 940-row result does not describe the 60 requests for which the vendor cannot support the deadline.
+
+Suppose 100 of the requests concern critical items and only 85 of those receive on-time usable vendor outputs.
+Critical-item coverage is `85 / 100 = 85%`, lower than the 94% aggregate.
+The remaining 855 valid outputs cover 900 noncritical requests, giving `855 / 900 = 95%`.
+These counts are hypothetical and do not represent evidence about a real supplier.
+They show why the review should not rely on a portfolio-wide service rate alone.
+If the prespecified critical-item requirement is 98%, the batch fails that requirement even if its aggregate accuracy is favorable.
+The requirement is a fictional buyer policy, not a regulatory threshold.
+The reviewer should investigate the 15 critical failures by cause and record the outcome before considering an exception.
+
+For an operational comparison, apply the same predefined fallback to every vendor failure.
+If the baseline can produce an on-time forecast for all 60 missing or unusable cases, label the combined set the **vendor-plus-fallback workflow**.
+Score all 1,000 outcomes for that workflow against the baseline workflow, after outcomes mature.
+The resulting comparison includes the performance and availability of the fallback; it is not a measure of the vendor model alone.
+Record fallback latency, staff workload, and costs separately when they matter to the buying decision.
+If fallback forecasts were not actually available at the cutoff, a retrospective simulation must not treat them as historical operational evidence.
+Report both the paired 940-row model comparison and the 1,000-row workflow comparison, alongside coverage and subgroup counts.
+If the fallback itself is missing for some requests, show those cases as uncovered rather than excluding them from the workflow denominator.
+
+### I. Release authorization and evidence custody
+
+For a hosted service, request a release manifest for each change affecting outputs or their interpretation.
+The manifest should identify the prior and proposed release, effective time, model and preprocessing versions, training cutoff, affected customers or populations, and any changed data rights.
+It should distinguish an infrastructure-only change from a change in model, inputs, configuration, output semantics, or retraining policy.
+The vendor's classification is an input to the buyer's decision, not a substitute for the buyer's impact assessment.
+The model owner maps the change to the approved use and the validation evidence that would become stale.
+The data owner checks whether schemas, input latency, or access permissions have changed.
+The independent reviewer challenges material changes and identifies any evidence that cannot be refreshed before the effective time.
+
+Before promotion, compare the candidate release and the currently approved release on identical frozen, permitted inputs when access permits.
+Include ordinary cases, critical items, missing-data cases, and examples near known operational limits.
+Differences are signals to investigate, not necessarily defects: an improved model may legitimately change predictions.
+Record the magnitude and direction of output changes, any changed coverage, and whether affected cases exceed the approved use.
+Where reliable outcomes already exist, compare errors on a protected evaluation period and disclose any selection or tuning using that period.
+Where outcomes have not yet matured, shadow output differences cannot establish accuracy.
+If the old release is unavailable, identify that limitation and compare against the approved fallback instead.
+
+The risk owner signs the release decision within delegated authority; the commercial sponsor does not approve their own exception alone.
+The decision specifies the release, eligible population, activation time, monitoring window, and conditions for suspension.
+An exception specifies its business rationale, unresolved exposure, compensating control, expiry, and person empowered to revoke it.
+An unannounced release should trigger investigation and escalation under the contract and internal procedure.
+If the buyer cannot identify or constrain a consequential change, the owner must decide whether the fallback or suspension is necessary.
+The decision record should contain the reviewer's dissent where the owner accepts a risk against the reviewer's recommendation.
+
+Keep evidence in an access-controlled repository under the buyer's retention schedule and contractual restrictions.
+Link each artifact to its source, creation date, receiving date, version, scope, and intended use.
+Preserve immutable or otherwise controlled copies of the protocol, request ledger, outputs, outcome versions, test code, findings, and signed decision.
+Store commercial or personal data only where authorized, with access restricted to people who need it.
+An artifact hash can help detect later alteration, but it cannot establish that the original document or data was accurate.
+If retention rights prevent storing raw vendor artifacts, retain the permitted reference, scope, dates, reviewer conclusion, and identified reproducibility limitation.
+At renewal or exit, verify access to the evidence and confirm any required return, deletion, or retention with the relevant owners.
+
 ## 6. Worked example
 
 ### Case and assumptions

@@ -821,6 +821,7 @@ The framework does not make a dataset representative merely because a checklist 
 It also does not create a universal PSI threshold or replace a domain-specific risk assessment.
 
 The US Federal Reserve and Office of the Comptroller of the Currency's 2011 SR 11-7 / OCC 2011-12 guidance addresses model risk management for supervised banking organizations.
+For Federal Reserve supervision, [SR 26-2](https://www.federalreserve.gov/supervisionreg/srletters/sr2602.htm) superseded SR 11-7 in April 2026; consult the relevant agency's current scope.
 It discusses robust development, effective challenge, outcomes analysis, and governance.
 A nonfinancial supply-chain organization may adapt the principles voluntarily; applicability to an entity depends on its regulatory context.
 Consult current supervisory guidance and counsel before making a compliance claim.

@@ -827,6 +827,7 @@ A field that was visible to an analyst but unavailable to the production plannin
 ### Model-risk guidance
 
 The U.S. Federal Reserve and Office of the Comptroller of the Currency issued interagency model-risk guidance in 2011, commonly referred to as SR 11-7 and OCC 2011-12.
+For Federal Reserve supervision, [SR 26-2](https://www.federalreserve.gov/supervisionreg/srletters/sr2602.htm) superseded SR 11-7 in April 2026; consult the relevant agency's current scope.
 The guidance discusses effective challenge, ongoing monitoring, and outcomes analysis, including backtesting where appropriate.
 Its direct applicability depends on the organization and jurisdiction; it is not automatically a binding rule for every supply-chain company.
 Using its principles voluntarily does not certify compliance or eliminate the need for legal and supervisory interpretation.

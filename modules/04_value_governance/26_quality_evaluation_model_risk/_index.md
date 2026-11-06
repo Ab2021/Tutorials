@@ -31,16 +31,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_model-inventory-tiering.md`](01_model-inventory-tiering.md) | Model Inventory and Tiering | What counts as a model, and how materiality sets the control burden. | 1,200–1,800 | planned |
-| 2 | [`02_conceptual-soundness.md`](02_conceptual-soundness.md) | Conceptual Soundness | Does the method fit the decision, the data, and the failure cost? | 1,200–1,800 | planned |
-| 3 | [`03_data-representativeness.md`](03_data-representativeness.md) | Data Quality and Representativeness | Coverage, drift, and the population the model was never tested on. | 1,200–1,800 | planned |
-| 4 | [`04_outcomes-backtesting.md`](04_outcomes-backtesting.md) | Outcomes Analysis and Backtesting | Temporal validation, benchmark comparison, and challenger models. | 1,200–1,800 | planned |
-| 5 | [`05_planning-model-metrics.md`](05_planning-model-metrics.md) | Metrics That Matter for Planning Models | Accuracy, bias, calibration, stability, and decision cost. | 1,200–1,800 | planned |
-| 6 | [`06_model-documentation.md`](06_model-documentation.md) | Model Documentation and the Model Card | Purpose, limitations, assumptions, owners, and approved use. | 1,200–1,800 | planned |
-| 7 | [`07_reproducibility-audit.md`](07_reproducibility-audit.md) | Reproducibility and Audit Trail | Code, data, parameters, and the ability to recreate a past result. | 1,200–1,800 | planned |
-| 8 | [`08_validation-independence.md`](08_validation-independence.md) | Independence and Validation | Who may validate, and the conflicts that disqualify a reviewer. | 1,200–1,800 | planned |
-| 9 | [`09_monitoring-revalidation.md`](09_monitoring-revalidation.md) | Ongoing Monitoring and Revalidation Triggers | Drift, incident, market change, and scheduled review. | 1,200–1,800 | planned |
-| 10 | [`10_vendor-model-evaluation.md`](10_vendor-model-evaluation.md) | Vendor Model Evaluation and SR 11-7 | Evidence to demand from a vendor and the limits of a black-box review. | 1,200–1,800 | planned |
+| 1 | [`01_model-inventory-tiering.md`](01_model-inventory-tiering.md) | Model Inventory and Tiering | What counts as a model, and how materiality sets the control burden. | 1,200–1,800 | complete |
+| 2 | [`02_conceptual-soundness.md`](02_conceptual-soundness.md) | Conceptual Soundness | Does the method fit the decision, the data, and the failure cost? | 1,200–1,800 | complete |
+| 3 | [`03_data-representativeness.md`](03_data-representativeness.md) | Data Quality and Representativeness | Coverage, drift, and the population the model was never tested on. | 1,200–1,800 | complete |
+| 4 | [`04_outcomes-backtesting.md`](04_outcomes-backtesting.md) | Outcomes Analysis and Backtesting | Temporal validation, benchmark comparison, and challenger models. | 1,200–1,800 | complete |
+| 5 | [`05_planning-model-metrics.md`](05_planning-model-metrics.md) | Metrics That Matter for Planning Models | Accuracy, bias, calibration, stability, and decision cost. | 1,200–1,800 | complete |
+| 6 | [`06_model-documentation.md`](06_model-documentation.md) | Model Documentation and the Model Card | Purpose, limitations, assumptions, owners, and approved use. | 1,200–1,800 | complete |
+| 7 | [`07_reproducibility-audit.md`](07_reproducibility-audit.md) | Reproducibility and Audit Trail | Code, data, parameters, and the ability to recreate a past result. | 1,200–1,800 | complete |
+| 8 | [`08_validation-independence.md`](08_validation-independence.md) | Independence and Validation | Who may validate, and the conflicts that disqualify a reviewer. | 1,200–1,800 | complete |
+| 9 | [`09_monitoring-revalidation.md`](09_monitoring-revalidation.md) | Ongoing Monitoring and Revalidation Triggers | Drift, incident, market change, and scheduled review. | 1,200–1,800 | complete |
+| 10 | [`10_vendor-model-evaluation.md`](10_vendor-model-evaluation.md) | Vendor Model Evaluation and SR 11-7 | Evidence to demand from a vendor, black-box review limits, and current supervisory guidance. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,13 +71,12 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
-Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
-as each file is produced at its target length. The survey file linked above is complete at survey
-depth and can be used on its own.
+All ten topics are written at topic depth. The survey file linked above remains available
+for a concise overview.
 
 ## 7. Sources for this module
 

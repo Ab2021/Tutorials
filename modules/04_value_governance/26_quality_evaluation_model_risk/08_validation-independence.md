@@ -804,6 +804,7 @@ When restrictions prevent sufficient examination, state the limitation instead o
 ### U.S. bank model-risk guidance
 
 The Federal Reserve and Office of the Comptroller of the Currency issued SR 11-7 / OCC 2011-12, *Supervisory Guidance on Model Risk Management*, in 2011.
+For Federal Reserve supervision, [SR 26-2](https://www.federalreserve.gov/supervisionreg/srletters/sr2602.htm) superseded SR 11-7 in April 2026; consult the relevant agency's current scope.
 It describes effective challenge and a validation framework that includes conceptual soundness, ongoing monitoring, and outcomes analysis.
 The guidance discusses independence, competence, and organizational incentives, including the need for validation to be conducted by people who are not responsible for development or use and who have appropriate incentives.
 Consult the official text and current agency materials for the applicable institution and current supervisory position.

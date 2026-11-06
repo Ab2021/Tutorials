@@ -787,6 +787,7 @@ The NIST AI RMF Playbook offers suggested actions; using its language does not i
 A demand forecasting model need not use a generative AI method for these general documentation practices to be useful.
 
 The U.S. Federal Reserve and Office of the Comptroller of the Currency issued SR 11-7 / OCC 2011-12 in 2011 on model risk management for supervised banking organizations.
+For Federal Reserve supervision, [SR 26-2](https://www.federalreserve.gov/supervisionreg/srletters/sr2602.htm) superseded SR 11-7 in April 2026; consult the relevant agency's current scope.
 It discusses model development, validation, governance, controls, and documentation in its supervisory context.
 It is not automatically binding on every nonfinancial supply-chain organization, and applicability depends on the institution, jurisdiction, and current supervisory framework.
 A distributor may borrow its challenge and documentation principles without claiming that its card is SR 11-7 certified.
