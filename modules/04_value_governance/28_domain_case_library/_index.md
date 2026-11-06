@@ -31,16 +31,16 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_case-anatomy.md`](01_case-anatomy.md) | Case Anatomy | Context, decision, data, intervention, evidence, outcome, transfer, and limits. | 1,200–1,800 | planned |
-| 2 | [`02_evidence-grades.md`](02_evidence-grades.md) | Evidence Grades A–E | Peer-reviewed, regulatory, company, vendor, and press evidence and how to use each. | 1,200–1,800 | planned |
-| 3 | [`03_transfer-test.md`](03_transfer-test.md) | The Transfer Test | Five questions that decide whether a case is a plan or an analogy. | 1,200–1,800 | planned |
-| 4 | [`04_selection-bias.md`](04_selection-bias.md) | Case Selection Bias | Survivorship, size, vendor marketing, recency, and language bias. | 1,200–1,800 | planned |
-| 5 | [`05_sector-playbooks.md`](05_sector-playbooks.md) | Building a Sector Playbook | Decisions, data, methods, regulation, cases, measurement, and failure modes. | 1,200–1,800 | planned |
-| 6 | [`06_retail-ecommerce-cases.md`](06_retail-ecommerce-cases.md) | Retail and E-commerce Cases | M5, Amazon regionalization, Zalando returns, Ocado, Shein, Instacart. | 1,200–1,800 | planned |
-| 7 | [`07_cpg-manufacturing-cases.md`](07_cpg-manufacturing-cases.md) | CPG, Manufacturing, and Industrial Cases | Continuous replenishment, trade spend, Toyota, Tohoku, Boeing, chips. | 1,200–1,800 | planned |
-| 8 | [`08_logistics-pharma-cases.md`](08_logistics-pharma-cases.md) | Logistics, Pharma, and Humanitarian Cases | ORION, NotPetya, Red Sea, vaccine allocation, DSCSA, Haiti. | 1,200–1,800 | planned |
-| 9 | [`09_ai-risk-cases.md`](09_ai-risk-cases.md) | AI and Model-Risk Cases | Zillow Offers, Knight Capital, Target, benchmark claims. | 1,200–1,800 | planned |
-| 10 | [`10_teaching-interview-use.md`](10_teaching-interview-use.md) | Teaching and Interview Use | Turning a case into a decision exercise and a structured interview answer. | 1,200–1,800 | planned |
+| 1 | [`01_case-anatomy.md`](01_case-anatomy.md) | Case Anatomy | Context, decision, data, intervention, evidence, outcome, transfer, and limits. | 1,200–1,800 | complete |
+| 2 | [`02_evidence-grades.md`](02_evidence-grades.md) | Evidence Grades A–E | Peer-reviewed, regulatory, company, vendor, and press evidence and how to use each. | 1,200–1,800 | complete |
+| 3 | [`03_transfer-test.md`](03_transfer-test.md) | The Transfer Test | Five questions that decide whether a case is a plan or an analogy. | 1,200–1,800 | complete |
+| 4 | [`04_selection-bias.md`](04_selection-bias.md) | Case Selection Bias | Survivorship, size, vendor marketing, recency, and language bias. | 1,200–1,800 | complete |
+| 5 | [`05_sector-playbooks.md`](05_sector-playbooks.md) | Building a Sector Playbook | Decisions, data, methods, regulation, cases, measurement, and failure modes. | 1,200–1,800 | complete |
+| 6 | [`06_retail-ecommerce-cases.md`](06_retail-ecommerce-cases.md) | Retail and E-commerce Cases | M5, Amazon regionalization, Zalando returns, Ocado, Shein, Instacart. | 1,200–1,800 | complete |
+| 7 | [`07_cpg-manufacturing-cases.md`](07_cpg-manufacturing-cases.md) | CPG, Manufacturing, and Industrial Cases | Continuous replenishment, trade spend, Toyota, Tohoku, Boeing, chips. | 1,200–1,800 | complete |
+| 8 | [`08_logistics-pharma-cases.md`](08_logistics-pharma-cases.md) | Logistics, Pharma, and Humanitarian Cases | ORION, NotPetya, Red Sea, vaccine allocation, DSCSA, Haiti. | 1,200–1,800 | complete |
+| 9 | [`09_ai-risk-cases.md`](09_ai-risk-cases.md) | AI and Model-Risk Cases | Zillow Offers, Knight Capital, Target, benchmark claims. | 1,200–1,800 | complete |
+| 10 | [`10_teaching-interview-use.md`](10_teaching-interview-use.md) | Teaching and Interview Use | Turning a case into a decision exercise and a structured interview answer. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -71,13 +71,12 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 10 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 10 |
 
-Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
-as each file is produced at its target length. The survey file linked above is complete at survey
-depth and can be used on its own.
+All ten topics are written at topic depth. The survey file linked above remains available
+for a concise overview.
 
 ## 7. Sources for this module
 

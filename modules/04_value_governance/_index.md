@@ -55,12 +55,12 @@ reference for the whole program.
 
 | Status | Count |
 |---|---:|
-| planned | 2 |
+| planned | 1 |
 | draft | 0 |
-| complete | 2 |
+| complete | 3 |
 
-The four survey files in `../../course/` are complete at survey depth. Modules 25–26 are written
-at topic depth; Modules 27–28 remain indexed for expansion.
+The four survey files in `../../course/` are complete at survey depth. Modules 25, 26, and 28
+are written at topic depth; Module 27 remains indexed for expansion.
 
 ## 6. Sources
 

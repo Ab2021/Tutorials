@@ -31,14 +31,14 @@ not the whole program.
 
 | # | File | Topic | Scope | Target | Status |
 |---:|---|---|---|---:|---|
-| 1 | [`01_cpg-retail.md`](01_cpg-retail.md) | CPG and Retail | Trade spend, shelf, replenishment, private label, and the retailer-supplier power balance. | 1,200–1,800 | planned |
-| 2 | [`02_pharma-cold-chain.md`](02_pharma-cold-chain.md) | Pharma and Cold Chain | GDP, serialization, temperature excursion, and allocation under scarcity. | 1,200–1,800 | planned |
-| 3 | [`03_automotive.md`](03_automotive.md) | Automotive | JIT/JIS, tiered supply, model-year changeover, and recall exposure. | 1,200–1,800 | planned |
-| 4 | [`04_semiconductor.md`](04_semiconductor.md) | Semiconductor | Long lead times, capacity allocation, yield, and the bullwhip in chips. | 1,200–1,800 | planned |
-| 5 | [`05_humanitarian.md`](05_humanitarian.md) | Humanitarian Logistics | Needs assessment, pre-positioning, cluster coordination, and access constraints. | 1,200–1,800 | planned |
-| 6 | [`06_fashion-apparel.md`](06_fashion-apparel.md) | Fashion and Apparel | Long lead times, short seasons, markdown, and returns. | 1,200–1,800 | planned |
-| 7 | [`07_cross-sector-comparison.md`](07_cross-sector-comparison.md) | Cross-Sector Comparison | What changes across sectors and what transfers. | 1,200–1,800 | planned |
-| 8 | [`08_sector-playbook-lab.md`](08_sector-playbook-lab.md) | Sector Playbook Lab | Building a two-page decision brief for one sector. | 1,200–1,800 | planned |
+| 1 | [`01_cpg-retail.md`](01_cpg-retail.md) | CPG and Retail | Trade spend, shelf, replenishment, private label, and the retailer-supplier power balance. | 1,200–1,800 | complete |
+| 2 | [`02_pharma-cold-chain.md`](02_pharma-cold-chain.md) | Pharma and Cold Chain | GDP, serialization, temperature excursion, and allocation under scarcity. | 1,200–1,800 | complete |
+| 3 | [`03_automotive.md`](03_automotive.md) | Automotive | JIT/JIS, tiered supply, model-year changeover, and recall exposure. | 1,200–1,800 | complete |
+| 4 | [`04_semiconductor.md`](04_semiconductor.md) | Semiconductor | Long lead times, capacity allocation, yield, and the bullwhip in chips. | 1,200–1,800 | complete |
+| 5 | [`05_humanitarian.md`](05_humanitarian.md) | Humanitarian Logistics | Needs assessment, pre-positioning, cluster coordination, and access constraints. | 1,200–1,800 | complete |
+| 6 | [`06_fashion-apparel.md`](06_fashion-apparel.md) | Fashion and Apparel | Long lead times, short seasons, markdown, and returns. | 1,200–1,800 | complete |
+| 7 | [`07_cross-sector-comparison.md`](07_cross-sector-comparison.md) | Cross-Sector Comparison | What changes across sectors and what transfers. | 1,200–1,800 | complete |
+| 8 | [`08_sector-playbook-lab.md`](08_sector-playbook-lab.md) | Sector Playbook Lab | Building a two-page decision brief for one sector. | 1,200–1,800 | complete |
 
 ## 4. How the topics fit together
 
@@ -67,13 +67,12 @@ any topic that names your current decision problem.
 
 | Status | Count |
 |---|---:|
-| planned | 8 |
+| planned | 0 |
 | draft | 0 |
-| complete | 0 |
+| complete | 8 |
 
-Topic files are indexed but not yet written. Status moves from `planned` to `draft` to `complete`
-as each file is produced at its target length. The survey file linked above is complete at survey
-depth and can be used on its own.
+All eight topics are written at topic depth. The survey file linked above remains available
+for a concise overview.
 
 ## 7. Sources for this module
 
