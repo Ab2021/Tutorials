@@ -1,0 +1,1479 @@
+# TRAIN — Master Directory Structure & Final Screenshot Audit
+
+**Audit date:** 6 November 2026  
+**Primary file reviewed:** `TRAIN_DIRECTORY_STRUCTURE_WITH_CUDA.md`  
+**Scope:** 56 mounted screenshot photographs across the conversation, reconciled independently of their posting order.  
+**Evidence standard:** Screenshot-verified entries versus uncertain (clipped/collapsed) names are clearly distinguished. This is **not** a filesystem export.
+
+## 1. Master directory tree
+
+All visible branches are merged below. `[contents not visible]` means a folder was collapsed in the screenshot. `[TRUNCATED/UNVERIFIED]` means the file/directory name was visibly cut off; ellipses and square-bracketed notes are **not** literal path characters. The eight HighEnd course-overview files are recorded separately instead of hidden in a single group note.
+
+```text
+TRAIN/
+├── .claude/  [contents not visible]
+├── agents/  [contents not visible]
+├── Agents_Stack_Infra/
+│   ├── Agent_Stack_Cheat_Sheets/  [contents not visible]
+│   ├── Module_00_Prerequisites/
+│   │   ├── code/  [contents not visible]
+│   │   ├── 01_python_async_and_concurrency.md
+│   │   ├── 02_rest_apis_and_websockets.md
+│   │   ├── 03_llm_fundamentals.md
+│   │   ├── 04_docker_and_containers.md
+│   │   ├── exercises.md
+│   │   └── README.md
+│   ├── Module_01_Agent_Stack_Overview/
+│   │   ├── code/  [contents not visible]
+│   │   ├── 01_why_agent_is_overloaded.md
+│   │   ├── 02_ten_layer_stack_model.md
+│   │   ├── 03_the_request_path.md
+│   │   ├── 04_critical_boundary_distinctions.md
+│   │   ├── 05_what_breaks_when_layers_collapse.md
+│   │   ├── 06_builder_checklist.md
+│   │   ├── exercises.md
+│   │   └── README.md
+│   ├── Module_02_Infrastructure_and_Models/
+│   │   ├── code/  [contents not visible]
+│   │   ├── 01_infrastructure_substrate.md
+│   │   ├── 02_model_asset.md
+│   │   ├── 03_serving_systems.md
+│   │   ├── 04_interaction_contracts.md
+│   │   ├── 05_long_context_stress_test.md
+│   │   ├── 06_lower_layer_failure_modes.md
+│   │   ├── exercises.md
+│   │   └── README.md
+│   ├── Module_03_Control_Planes_and_Sessions/
+│   │   ├── code/  [contents not visible]
+│   │   ├── 01_what_is_a_control_plane.md
+│   │   ├── 02_session_ownership.md
+│   │   ├── 03_state_management.md
+│   │   ├── 04_session_isolation.md
+│   │   ├── 05_run_lifecycle.md
+│   │   ├── exercises.md
+│   │   └── README.md
+│   ├── Module_04_Runtimes_and_Workflows/
+│   │   ├── code/  [contents not visible]
+│   │   ├── 01_what_is_a_runtime.md
+│   │   ├── 02_durable_execution.md
+│   │   ├── 03_langgraph_deep_dive.md
+│   │   ├── 04_workflow_patterns.md
+│   │   ├── 05_choosing_runtime.md
+│   │   ├── exercises.md
+│   │   └── README.md
+│   ├── Module_05_Context_Memory_Retrieval/
+│   │   ├── code/  [contents not visible]
+│   │   ├── 01_context_vs_memory_vs_transcript.md
+│   │   ├── 02_context_assembly.md
+│   │   ├── 03_retrieval_augmented_generation.md
+│   │   ├── 04_self_rag.md
+│   │   ├── 05_memory_lifecycle.md
+│   │   ├── 06_memory_types_and_patterns.md
+│   │   ├── 07_sourcegraph_code_context.md
+│   │   ├── exercises.md
+│   │   └── README.md
+│   ├── Module_06_Tools_MCP_and_Capabilities/
+│   │   ├── code/  [contents not visible]
+│   │   ├── 01_tool_schemas_and_definitions.md
+│   │   ├── 02_model_context_protocol.md
+│   │   ├── 03_capability_vs_execution.md
+│   │   ├── 04_tool_categories_and_risk.md
+│   │   ├── 05_mcp_server_implementation.md
+│   │   ├── 06_sourcegraph_mcp_integration.md
+│   │   ├── exercises.md
+│   │   └── README.md
+│   ├── Module_07_Agentic_Design_Patterns/
+│   │   ├── code/  [contents not visible]
+│   │   ├── 01_patterns_overview.md
+│   │   ├── 02_reflection_pattern.md
+│   │   ├── 03_tool_use_pattern.md
+│   │   ├── 04_planning_patterns.md
+│   │   ├── 05_multi_agent_patterns.md
+│   │   ├── 06_orchestration_patterns.md
+│   │   ├── 07_human_in_the_loop_pattern.md
+│   │   ├── 08_pattern_composition.md
+│   │   ├── 09_emerging_patterns_2025.md
+│   │   ├── exercises.md
+│   │   └── README.md
+│   ├── Module_08_Execution_Trust_Approvals/
+│   │   ├── code/  [contents not visible]
+│   │   ├── 01_execution_surfaces.md
+│   │   ├── 02_identity_and_trust.md
+│   │   ├── 03_approval_gates.md
+│   │   ├── 04_sandboxing_and_isolation.md
+│   │   ├── 05_blast_radius_analysis.md
+│   │   ├── exercises.md
+│   │   └── README.md
+│   ├── Module_09_Observability_and_Evaluation/
+│   │   ├── code/  [contents not visible]
+│   │   ├── 01_observability_vs_evaluation.md
+│   │   ├── 02_tracing_agent_runs.md
+│   │   ├── 03_evaluation_frameworks.md
+│   │   ├── 04_feedback_loops.md
+│   │   ├── 05_production_monitoring.md
+│   │   ├── exercises.md
+│   │   └── README.md
+│   ├── Module_10_OpenClaw_Architecture/
+│   │   ├── code/  [contents not visible]
+│   │   ├── 01_openclaw_overview.md
+│   │   ├── 02_gateway_and_sessions.md
+│   │   ├── 03_lane_aware_queue.md
+│   │   ├── 04_websocket_protocol.md
+│   │   ├── 05_agent_runtime_loop.md
+│   │   ├── 06_memory_as_files.md
+│   │   ├── 07_concurrency_and_invariants.md
+│   │   ├── 08_security_hardening.md
+│   │   ├── exercises.md
+│   │   └── README.md
+│   ├── Module_11_Claude_Code_Harness/
+│   │   ├── code/  [contents not visible]
+│   │   ├── 01_harness_philosophy.md
+│   │   ├── 02_go_native_engine.md
+│   │   ├── 03_five_verb_skills.md
+│   │   ├── 04_plans_md_anatomy.md
+│   │   ├── 05_parallel_execution.md
+│   │   ├── 06_advanced_features.md
+│   │   ├── 07_integrating_harness.md
+│   │   ├── exercises.md
+│   │   └── README.md
+│   ├── Module_12_Hermes_Self_Evolving_Agent/
+│   │   ├── code/  [contents not visible]
+│   │   ├── 01_self_improvement_architecture.md
+│   │   ├── 02_autonomous_skill_generation.md
+│   │   ├── 03_persistent_memory_system.md
+│   │   ├── 04_user_modeling.md
+│   │   ├── 05_multi_platform_deployment.md
+│   │   ├── 06_tool_ecosystem.md
+│   │   ├── 07_comparing_openclaw_and_hermes.md
+│   │   ├── exercises.md
+│   │   └── README.md
+│   ├── Module_13_NCA_AIIO_Infrastructure/
+│   │   ├── code/  [contents not visible]
+│   │   ├── 01_nvidia_hardware_overview.md
+│   │   ├── 02_cuda_for_infrastructure.md
+│   │   ├── 03_nvidia_smi_deep_dive.md
+│   │   ├── 04_mig_multi_instance_gpu.md
+│   │   ├── 05_nvidia_container_toolkit.md
+│   │   ├── 06_kubernetes_for_ai.md
+│   │   ├── 07_dcgm_and_monitoring.md
+│   │   ├── 08_dgx_and_base_command.md
+│   │   ├── 09_tensorrt_and_inference.md
+│   │   ├── exercises.md
+│   │   └── README.md
+│   ├── Module_14_Implementation_and_Production/
+│   │   ├── code/  [contents not visible]
+│   │   ├── 01_implementation_best_practices.md
+│   │   ├── 02_production_architecture_patterns.md
+│   │   ├── 03_domain_use_cases.md
+│   │   ├── 04_multi_agent_orchestration.md
+│   │   ├── 05_reliability_and_failure_modes.md
+│   │   ├── 06_security_and_governance.md
+│   │   ├── 07_cost_optimization.md
+│   │   ├── 08_scaling_strategies.md
+│   │   ├── 09_from_pilot_to_production.md
+│   │   ├── 10_framework_checklists.md
+│   │   ├── exercises.md
+│   │   └── README.md
+│   ├── RESEARCH/  [contents not visible]
+│   ├── agentic ai.pdf
+│   ├── agents whitepaper.pdf
+│   ├── ai agents.pdf
+│   ├── ai_engg.pdf
+│   ├── all_content.txt
+│   ├── Contxt_engg_paul.pdf
+│   ├── Embedding retrieval limitations.pdf
+│   ├── gen ai use cases.pdf
+│   ├── LLM sys design.pdf
+│   ├── LLM system design.pdf
+│   ├── prompt report.pdf
+│   └── README.md
+├── Case_Studies_Streaming_Kafka_Flink_Redpanda/
+│   ├── Flink_Stateful_Processing/
+│   │   ├── 00_FIXES_AND_TRADEOFFS.md
+│   │   ├── 00_HLD_LLD_SYSTEM_DESIGN.md
+│   │   ├── 01_Real_Time_Fraud_Detection_CEP_Broadcast.md
+│   │   ├── 02_IoT_Telemetry_Analytics_Session_Windows.md
+│   │   └── 03_Financial_Reconciliation_Exactly_Once.md
+│   ├── Kafka_Architecture/
+│   │   ├── 00_FIXES_AND_TRADEOFFS.md
+│   │   ├── 00_HLD_LLD_SYSTEM_DESIGN.md
+│   │   ├── 01_Multi_Tenant_Event_Streaming_Platform.md
+│   │   ├── 02_Real_Time_CDC_Data_Replication_Debezium.md
+│   │   └── 03_Tiered_Storage_Infinite_Retention_Platform.md
+│   ├── Production_Incidents/
+│   │   ├── 01_Hot_Partition_Consumer_Lag_Incident.md
+│   │   └── 02_Flink_Checkpoint_Failure_OOM_Incident.md
+│   ├── Streaming_Architecture_Design/
+│   │   ├── 00_FIXES_AND_TRADEOFFS.md
+│   │   ├── 00_HLD_LLD_SYSTEM_DESIGN.md
+│   │   ├── 01_Event_Sourced_CQRS_Order_Management.md
+│   │   ├── 02_Clickstream_Analytics_Ecommerce.md
+│   │   └── 03_Log_Aggregation_SIEM_Threat_Detection.md
+│   ├── 00_INDEX.md
+│   └── 00_STREAMING_SYSTEMS_FRAMEWORK.md
+├── Claude_Architect/
+│   └── course/
+│       ├── 00_Course_Overview/
+│       │   └── 00_exam_overview.md
+│       ├── 01_Domain1_Agentic_Architecture/
+│       │   ├── 01_01_agentic_loop_lifecycle.md
+│       │   ├── 01_02_multi_agent_orchestration.md
+│       │   ├── 01_03_subagent_spawning_context.md
+│       │   ├── 01_04_enforcement_and_handoff.md
+│       │   ├── 01_05_agent_sdk_hooks.md
+│       │   ├── 01_06_task_decomposition_strategies.md
+│       │   ├── 01_07_session_management.md
+│       │   └── 01_08_domain1_practice_questions.md
+│       ├── 02_Domain2_Tool_Design_MCP/
+│       │   ├── 02_01_tool_descriptions_boundaries.md
+│       │   ├── 02_02_structured_error_responses.md
+│       │   ├── 02_03_tool_distribution_tool_choice.md
+│       │   ├── 02_04_mcp_server_integration.md
+│       │   ├── 02_05_builtin_tools.md
+│       │   └── 02_06_domain2_practice_questions.md
+│       ├── 03_Domain3_Claude_Code_Config/
+│       │   ├── 03_01_claude_md_hierarchy.md
+│       │   ├── 03_02_slash_commands_and_skills.md
+│       │   ├── 03_03_path_specific_rules.md
+│       │   ├── 03_04_plan_mode_vs_direct.md
+│       │   ├── 03_05_iterative_refinement.md
+│       │   ├── 03_06_ci_cd_integration.md
+│       │   └── 03_07_domain3_practice_questions.md
+│       ├── 04_Domain4_Prompt_Engineering/
+│       │   ├── 04_01_explicit_criteria.md
+│       │   ├── 04_02_few_shot_prompting.md
+│       │   ├── 04_03_structured_output_tool_use.md
+│       │   ├── 04_04_validation_retry_feedback.md
+│       │   ├── 04_05_batch_processing.md
+│       │   ├── 04_06_multi_pass_review.md
+│       │   └── 04_07_domain4_practice_questions.md
+│       ├── 05_Domain5_Context_Reliability/
+│       │   ├── 05_01_context_preservation.md
+│       │   ├── 05_02_escalation_patterns.md
+│       │   ├── 05_03_error_propagation.md
+│       │   ├── 05_04_large_codebase_exploration.md
+│       │   ├── 05_05_human_review_confidence.md
+│       │   ├── 05_06_provenance_uncertainty.md
+│       │   └── 05_07_domain5_practice_questions.md
+│       ├── 06_Scenarios_Deep_Dive/
+│       │   ├── domains/
+│       │   │   ├── 07_Healthcare/
+│       │   │   │   └── 07_01_clinical_decision_support.md
+│       │   │   ├── 08_Legal/
+│       │   │   │   └── 08_01_contract_analysis_system.md
+│       │   │   ├── 09_Financial_Services/
+│       │   │   │   └── 09_01_fraud_detection_agent.md
+│       │   │   ├── 10_Manufacturing/
+│       │   │   │   └── 10_01_predictive_maintenance_agent.md
+│       │   │   ├── 11_Cybersecurity/
+│       │   │   │   └── 11_01_soc_automation_agent.md
+│       │   │   ├── 12_Insurance/
+│       │   │   │   └── 12_01_claims_automation_agent.md
+│       │   │   ├── 13_Retail_Ecommerce/
+│       │   │   │   └── 13_01_ecommerce_ai_agents.md
+│       │   │   ├── 14_Scientific_Research/
+│       │   │   │   └── 14_01_research_acceleration_agent.md
+│       │   │   └── 15_Cross_Industry_Patterns/
+│       │   │       ├── 15_01_production_anti_patterns.md
+│       │   │       └── 15_02_mcp_integration_production.md
+│       │   ├── 06_01_customer_support_agent.md
+│       │   ├── 06_02_code_generation_claude_code.md
+│       │   ├── 06_03_multi_agent_research.md
+│       │   ├── 06_04_developer_productivity.md
+│       │   ├── 06_05_ci_cd_pipeline.md
+│       │   ├── 06_06_structured_data_extraction.md
+│       │   └── DOMAIN_INDEX.md
+│       ├── 07_Hands_On_Exercises/
+│       │   ├── 07_01_exercise_multi_tool_agent.md
+│       │   ├── 07_02_exercise_claude_code_config.md
+│       │   ├── 07_03_exercise_data_extraction.md
+│       │   └── 07_04_exercise_multi_agent_pipeline.md
+│       ├── 08_Quick_Reference/
+│       │   ├── 08_01_api_reference_card.md
+│       │   ├── 08_02_agent_sdk_reference.md
+│       │   ├── 08_03_mcp_reference.md
+│       │   ├── 08_04_claude_code_reference.md
+│       │   ├── 08_05_anti_patterns_cheatsheet.md
+│       │   └── 08_06_decision_flowcharts.md
+│       ├── 09_Full_Practice_Exam/
+│       │   └── 09_01_practice_exam_60q.md
+│       ├── part1/  [contents not visible]
+│       ├── part2/  [contents not visible]
+│       ├── claude_mcq.txt
+│       ├── guide_en.MD
+│       ├── guide_v0.pdf
+│       └── [TRUNCATED/UNVERIFIED] instructor_8lsy243ftffjjy1cx9lm3o2bw_public_1773274827_Claud… (.pdf)
+├── CUDA/
+│   ├── CUDA_Cheat_Sheets/
+│   │   ├── 00_INDEX.md
+│   │   ├── 01_H100_Architecture.md
+│   │   ├── 02_Programming_Fundamentals.md
+│   │   ├── 03_Asynchronicity_and_Barriers.md
+│   │   ├── 04_TMA_and_Tensor_Map.md
+│   │   ├── 05_cp_async_bulk.md
+│   │   ├── 06_WGMMA_Part1.md
+│   │   ├── 07_WGMMA_Part2.md
+│   │   ├── 08_Kernel_Design.md
+│   │   ├── 09_Code_Walkthrough.md
+│   │   ├── 10_MultiGPU_Part1.md
+│   │   ├── 11_MultiGPU_Part2.md
+│   │   ├── 12_MPI_and_Profiling.md
+│   │   └── 13_50_Common_Issues.md
+│   ├── Module_00_Prerequisites/
+│   │   ├── MPI_Basics/  [contents not visible]
+│   │   ├── Profiling_Tools/  [contents not visible]
+│   │   └── README.md
+│   ├── Module_01_H100_Architecture/
+│   │   ├── code/  [contents not visible]
+│   │   ├── exercises/  [contents not visible]
+│   │   ├── 01_specifications_and_overview.md
+│   │   ├── 02_giga_thread_engine_and_gpcs.md
+│   │   ├── 03_HBM3_memory_and_L2_cache.md
+│   │   ├── 04_nvlink4_interconnect.md
+│   │   ├── 05_streaming_multiprocessors.md
+│   │   ├── 06_smsp_compute_units.md
+│   │   ├── 07_warp_scheduler_and_dispatch.md
+│   │   ├── 08_registers_and_occupancy.md
+│   │   ├── 09_shared_memory_and_L1_cache.md
+│   │   ├── 10_tma_unit_overview.md
+│   │   ├── 11_tensor_cores_overview.md
+│   │   └── README.md
+│   ├── Module_02_Programming_Fundamentals/
+│   │   ├── code/  [contents not visible]
+│   │   ├── exercises/  [contents not visible]
+│   │   ├── 01_thread_block_clusters.md
+│   │   ├── 02_cluster_sizes_and_dsmem.md
+│   │   ├── 03_inline_ptx.md
+│   │   ├── 04_ptx_state_spaces.md
+│   │   ├── 05_data_types_fp8_fp16_bf16.md
+│   │   ├── 06_pointer_arithmetic.md
+│   │   └── README.md
+│   ├── Module_03_Asynchronicity_and_Barriers/
+│   │   ├── code/  [contents not visible]
+│   │   ├── exercises/  [contents not visible]
+│   │   ├── 01_philosophy_of_asynchronicity.md
+│   │   ├── 02_memory_hazards.md
+│   │   ├── 03_mbarrier_fundamentals.md
+│   │   ├── 04_mbarrier_api_and_lifecycle.md
+│   │   ├── 05_arrive_and_wait_patterns.md
+│   │   ├── 06_advanced_synchronization.md
+│   │   └── README.md
+│   ├── Module_04_TMA_and_Tensor_Map/
+│   │   ├── code/  [contents not visible]
+│   │   ├── exercises/  [contents not visible]
+│   │   ├── 01_tma_hardware_overview.md
+│   │   ├── 02_tensor_map_descriptor.md
+│   │   ├── 03_swizzling_for_shared_memory.md
+│   │   ├── 04_L2_cache_promotion.md
+│   │   ├── 05_interleaving_and_layouts.md
+│   │   ├── 06_creating_tensor_maps_in_code.md
+│   │   └── README.md
+│   ├── Module_05_cp_async_bulk/
+│   │   ├── code/  [contents not visible]
+│   │   ├── exercises/  [contents not visible]
+│   │   ├── 01_innovations_in_async_data_movement.md
+│   │   ├── 02_cp_async_bulk_instruction.md
+│   │   ├── 03_hopper_vs_ampere_async.md
+│   │   ├── 04_unstructured_vs_structured_bulk.md
+│   │   ├── 05_sync_and_completion_mechanisms.md
+│   │   ├── 06_L2_cache_hinting_and_multicasting.md
+│   │   ├── 07_prefetching_and_async_reductions.md
+│   │   └── README.md
+│   ├── Module_06_WGMMA_Part1/
+│   │   ├── code/  [contents not visible]
+│   │   ├── exercises/  [contents not visible]
+│   │   ├── 01_paradigm_shift_warp_to_warpgroup.md
+│   │   ├── 02_wgmma_mma_async_instruction.md
+│   │   ├── 03_fetching_matrix_A.md
+│   │   ├── 04_register_management.md
+│   │   ├── 05_wgmma_descriptor.md
+│   │   └── README.md
+│   ├── Module_07_WGMMA_Part2/
+│   │   ├── code/  [contents not visible]
+│   │   ├── exercises/  [contents not visible]
+│   │   ├── 01_pipelining_with_wgmma_groups.md
+│   │   ├── 02_storing_wgmma_output.md
+│   │   ├── 03_fp8_paradigm_and_support.md
+│   │   ├── 04_fp8_quirks_packing_k_major.md
+│   │   ├── 05_sparse_wgmma.md
+│   │   └── README.md
+│   ├── Module_08_Kernel_Design/
+│   │   ├── code/  [contents not visible]
+│   │   ├── exercises/  [contents not visible]
+│   │   ├── 01_roofline_model_and_arithmetic_intensity.md
+│   │   ├── 02_warp_specialization.md
+│   │   ├── 03_pipelining_and_circular_buffering.md
+│   │   ├── 04_persistent_kernel_scheduling.md
+│   │   ├── 05_epilogue_design.md
+│   │   ├── 06_multikernel_optimizations.md
+│   │   └── README.md
+│   ├── Module_09_Code_Walkthrough/
+│   │   ├── 01_sm90_pipeline_hpp.md
+│   │   ├── 02_cooperative_pipelining.md
+│   │   ├── 03_mma_rs_ss_layouts.md
+│   │   ├── 04_tile_scheduler.md
+│   │   ├── 05_stream_k_and_group_gemm.md
+│   │   ├── 06_sm90_epilogue.md
+│   │   ├── 07_sm90_builder_inl.md
+│   │   ├── 08_flash_cu_walkthrough.md
+│   │   └── README.md
+│   ├── Module_10_MultiGPU_Part1/
+│   │   ├── code/  [contents not visible]
+│   │   ├── exercises/  [contents not visible]
+│   │   ├── 01_single_gpu_compute_bottleneck.md
+│   │   ├── 02_intranode_nvlink_mesh.md
+│   │   ├── 03_nvswitch_and_scaling_fabric.md
+│   │   ├── 04_dgx_h100_node_topology.md
+│   │   ├── 05_cuda_p2p_programming.md
+│   │   ├── 06_mpi_basics.md
+│   │   └── README.md
+│   ├── Module_11_MultiGPU_Part2/
+│   │   ├── code/  [contents not visible]
+│   │   ├── exercises/  [contents not visible]
+│   │   ├── 01_cluster_orchestration_slurm.md
+│   │   ├── 02_pmix_process_management.md
+│   │   ├── 03_nccl_initialization.md
+│   │   ├── 04_data_parallelism.md
+│   │   ├── 05_tensor_parallelism.md
+│   │   ├── 06_pipeline_parallelism.md
+│   │   ├── 07_expert_parallelism.md
+│   │   ├── 08_nccl_communication_primitives.md
+│   │   └── README.md
+│   ├── all_content.txt
+│   ├── collate_md.py
+│   ├── README.md
+│   ├── replicate.py
+│   └── replicate_structure.py
+├── deep_dive/
+│   ├── Deep_Dive_Cheat_Sheets/
+│   │   ├── 00_HLD_LLD_SYSTEM_DESIGN_Part1_UHG_CVS_Chubb_Insurers.md
+│   │   ├── 00_HLD_LLD_SYSTEM_DESIGN_Part2_Frontiers_Modalities_Governance.md
+│   │   ├── 00_INDEX.md
+│   │   ├── 01_Landscape_Overview_Three_Tensions.md
+│   │   ├── 02_UHG_Optum_Core_AI_Stack.md
+│   │   ├── 03_UHG_Optum_Pharmacy_Member_Experience_FWA.md
+│   │   ├── 04_UHG_Optum_Extended_Domains.md
+│   │   ├── 05_UHG_Optum_Government_SDOH_VBC.md
+│   │   ├── 06_CVS_Health_Core_AI_Stack.md
+│   │   ├── 07_CVS_Health_Pharmacy_Equity_Extended.md
+│   │   ├── 08_Chubb_PnC_Insurance_AI.md
+│   │   ├── 09_Other_Major_Insurers_AI.md
+│   │   ├── 10_New_Frontiers_Agentic_Autonomous_AI.md
+│   │   ├── 11_New_Frontiers_Federated_Learning_Climate_Genomics.md
+│   │   ├── 12_Speech_AI_Voice_Insurance_Healthcare.md
+│   │   ├── 13_Computer_Vision_PnC_Insurance.md
+│   │   ├── 14_Medical_Imaging_Clinical_Vision_AI.md
+│   │   ├── 15_Multimodal_AI_Document_Intelligence.md
+│   │   └── 16_50_Common_Issues_Insurance_Healthcare_AI.md
+│   ├── part1/  [contents not visible]
+│   ├── Pharma_Agentic_Case_Studies/
+│   │   ├── 00_FIXES_AND_TRADEOFFS.md
+│   │   ├── 00_HLD_LLD_SYSTEM_DESIGN.md
+│   │   ├── 00_INDEX.md
+│   │   ├── 01_Landscape_Overview_Pharma_Agentic_AI.md
+│   │   ├── 02_Operations_Agentic_AI_Manufacturing_Quality_SupplyChain.md
+│   │   ├── 03_Operations_Agentic_AI_ClinicalTrials_RnD_Ops.md
+│   │   ├── 04_Commercialization_Agentic_AI_FieldForce_MedicalAffairs.md
+│   │   ├── 05_Commercialization_Agentic_AI_MarketAccess_PatientServices.md
+│   │   ├── 06_DataScience_Agentic_AI_DrugDiscovery_RnD.md
+│   │   ├── 07_DataScience_Agentic_AI_RWE_Biostatistics_Pharmacovigilance.md
+│   │   ├── 08_CrossDomain_Agentic_Architecture_Patterns_Pharma.md
+│   │   ├── 09_Common_Issues_Pharma_Agentic_AI.md
+│   │   └── 10_RealWorld_Implemented_RAG_Agent_AgenticAI_Case_Studies.md
+│   ├── 11_UHG_Optum_New_Domains_Deep_Dive.md
+│   ├── 12_CVS_Health_New_Domains_Deep_Dive.md
+│   ├── 13_Other_Major_Insurers_AI_Deep_Dive.md
+│   ├── 14_Speech_To_Text_TTS_Insurance_Healthcare_Deep_Dive.md
+│   ├── 15_PnC_Computer_Vision_Image_AI_Deep_Dive.md
+│   ├── 16_Medical_Imaging_Clinical_Vision_AI_Deep_Dive.md
+│   └── 17_Multimodal_AI_Document_Intelligence_Deep_Dive.md
+├── DS_Domain/
+│   ├── Case_Studies_Production_ML_Systems/
+│   │   ├── 00_INDEX.md
+│   │   ├── Fraud_Modelling/
+│   │   │   ├── 01_Real_Time_Payment_Card_Fraud_Detection.md
+│   │   │   ├── 02_Insurance_Claims_Fraud_Detection.md
+│   │   │   ├── 03_Account_Takeover_Application_Fraud.md
+│   │   │   ├── 04_AML_Transaction_Monitoring_System.md
+│   │   │   └── 05_GNN_Marketplace_Fraud_Ring_Detection.md
+│   │   ├── Graph_ML/
+│   │   │   ├── 01_GNN_Fraud_AML_Ring_Detection.md
+│   │   │   ├── 02_Graph_Based_Recommendation_GraphSAGE_PinSage.md
+│   │   │   ├── 03_Knowledge_Graph_Enterprise_Search_QA.md
+│   │   │   ├── 04_Social_Network_Link_Prediction.md
+│   │   │   └── 05_Graph_Based_Marketing_Attribution_Customer_Journey.md
+│   │   ├── KDA_Solutions_Pharma/
+│   │   │   ├── 01_HCP_Promotional_Response_Driver_Analysis_Launch_Brand.md
+│   │   │   ├── 02_Patient_Adherence_Persistency_Driver_Analytics.md
+│   │   │   ├── 03_Brand_Performance_Decomposition_LOE_Mature_Brand.md
+│   │   │   ├── 04_Payer_Formulary_Access_Driver_Analysis.md
+│   │   │   └── 05_Omnichannel_Next_Best_Action_Driver_Attribution.md
+│   │   ├── Marketing_Analytics/
+│   │   │   ├── 01_Bayesian_MMM_CPG_Brand.md
+│   │   │   ├── 02_Multi_Touch_Attribution_Ecommerce.md
+│   │   │   ├── 03_CLV_Modeling_Value_Based_Bidding_Subscription.md
+│   │   │   ├── 04_Churn_Prediction_Retention_Campaign_Telecom.md
+│   │   │   └── 05_Geo_Lift_Incrementality_Testing_Paid_Media.md
+│   │   ├── NLP_LLM/
+│   │   │   ├── 01_Enterprise_RAG_Knowledge_Assistant.md
+│   │   │   ├── 02_LLM_Content_Moderation_At_Scale.md
+│   │   │   ├── 03_Semantic_Search_Ecommerce_Embeddings.md
+│   │   │   ├── 04_Document_Entity_Extraction_Pipeline.md
+│   │   │   └── 05_LLM_Support_Ticket_Summarization_Pipeline.md
+│   │   ├── Pricing/
+│   │   │   ├── 01_Dynamic_Pricing_Ecommerce_Retail.md
+│   │   │   ├── 02_Airline_Hotel_Revenue_Management.md
+│   │   │   ├── 03_Insurance_Pricing_Rating_Engine.md
+│   │   │   ├── 04_Rideshare_Surge_Pricing.md
+│   │   │   └── 05_SaaS_Usage_Based_Pricing_Optimization.md
+│   │   ├── Product_Analytics/
+│   │   │   ├── 01_Onboarding_Funnel_Optimization_SaaS.md
+│   │   │   ├── 02_AB_Testing_Experimentation_Platform.md
+│   │   │   ├── 03_Churn_Prediction_Retention_Subscription_Product.md
+│   │   │   ├── 04_Marketplace_Search_Discovery_Ranking.md
+│   │   │   └── 05_Growth_Virality_Referral_Program_Analytics.md
+│   │   ├── RecSys/
+│   │   │   ├── 01_Video_RecSys_Candidate_Generation_Ranking.md
+│   │   │   ├── 02_Ecommerce_Product_Recommendation.md
+│   │   │   ├── 03_Music_Session_Based_Recommendation.md
+│   │   │   ├── 04_News_Feed_Ranking_Freshness_Diversity.md
+│   │   │   └── 05_Ads_Recommendation_CTR_Ranking.md
+│   │   ├── Search_AdTech/
+│   │   │   ├── 01_Ecommerce_Search_Ranking_LTR_Neural_Retrieval.md
+│   │   │   ├── 02_Real_Time_Bidding_Ad_Auction_System.md
+│   │   │   ├── 03_CTR_Prediction_Display_Search_Ads.md
+│   │   │   ├── 04_Query_Autocomplete_Query_Understanding.md
+│   │   │   └── 05_Ad_Fraud_Brand_Safety_Detection.md
+│   │   ├── TimeSeries_Forecasting/
+│   │   │   ├── 01_Retail_CPG_Demand_Forecasting_At_Scale.md
+│   │   │   ├── 02_RideHailing_ETA_Demand_Forecasting.md
+│   │   │   ├── 03_Financial_Time_Series_Volatility_Forecasting.md
+│   │   │   ├── 04_Energy_Load_Forecasting.md
+│   │   │   └── 05_Server_Metrics_Anomaly_Detection.md
+│   │   └── US_Commercialization_Decision_Intelligence/
+│   │       ├── 01_Next_Best_Action_Engine_Pharma_Sales_Reps.md
+│   │       ├── 02_Territory_Alignment_Sales_Resource_Allocation.md
+│   │       ├── 03_New_Product_Launch_Forecasting.md
+│   │       ├── 04_Omnichannel_Marketing_Measurement_Pharma_MMM.md
+│   │       └── 05_HCP_Segmentation_Targeting_Model.md
+│   ├── Computer_Vision_Cheat_Sheets/
+│   │   ├── 00_PLANNING_REPORT.md
+│   │   ├── 01_Image_Fundamentals_Preprocessing.md
+│   │   ├── 02_Classical_CV_Feature_Engineering.md
+│   │   ├── 03_CNN_Architecture_Fundamentals.md
+│   │   ├── 04_Object_Detection.md
+│   │   ├── 05_Image_Segmentation.md
+│   │   ├── 06_Classification_Transfer_Learning.md
+│   │   ├── 07_Generative_Models_GAN_VAE.md
+│   │   ├── 08_Diffusion_Models.md
+│   │   ├── 09_Vision_Transformers_ViT.md
+│   │   ├── 10_Multimodal_Vision_Language.md
+│   │   ├── 11_3D_Vision_Point_Clouds.md
+│   │   ├── 12_Video_Understanding.md
+│   │   ├── 13_Self_Supervised_Contrastive_Learning.md
+│   │   ├── 14_CV_Evaluation_Metrics.md
+│   │   ├── 15_Data_Augmentation_Training_CV.md
+│   │   ├── 16_CV_Retail_Fashion.md
+│   │   ├── 17_CV_Healthcare_Medical_Imaging.md
+│   │   ├── 18_CV_Autonomous_Vehicles.md
+│   │   ├── 19_CV_Manufacturing_Quality_Control.md
+│   │   ├── 20_CV_Surveillance_Security.md
+│   │   ├── 21_CV_Agriculture_Remote_Sensing.md
+│   │   ├── 22_CV_Efficiency_Deployment.md
+│   │   ├── 23_Explainability_CV.md
+│   │   ├── 24_MLOps_Production_CV.md
+│   │   ├── 25_Interview_Questions_CV.md
+│   │   └── 26_Practical_Use_Cases_CV.md
+│   ├── Fraud_Modelling_Cheat_Sheets/
+│   │   ├── 00_PLANNING_REPORT.md
+│   │   ├── 01_Fraud_Taxonomy_Industry_Landscape.md
+│   │   ├── 02_Data_Foundations_Fraud.md
+│   │   ├── 03_Feature_Engineering_Fraud.md
+│   │   ├── 04_Imbalanced_Learning.md
+│   │   ├── 05_Supervised_Fraud_Models.md
+│   │   ├── 06_Evaluation_Metrics_Fraud.md
+│   │   ├── 07_Rule_Based_Systems_Hybrid.md
+│   │   ├── 08_Anomaly_Detection_Unsupervised.md
+│   │   ├── 09_Network_Graph_Analytics.md
+│   │   ├── 10_Sequence_Temporal_Models.md
+│   │   ├── 11_NLP_Text_Fraud_Signals.md
+│   │   ├── 12_Identity_Verification_Synthetic_ID.md
+│   │   ├── 13_Insurance_Claims_Fraud.md
+│   │   ├── 14_Healthcare_Fraud_Waste_Abuse.md
+│   │   ├── 15_Payment_Card_Transaction_Fraud.md
+│   │   ├── 16_Account_Takeover_Application_Fraud.md
+│   │   ├── 17_Ecommerce_Marketplace_Fraud.md
+│   │   ├── 18_Money_Laundering_AML.md
+│   │   ├── 19_Real_Time_Streaming_Fraud.md
+│   │   ├── 20_Explainability_Fraud_Models.md
+│   │   ├── 21_Model_Monitoring_Drift_Fraud.md
+│   │   ├── 22_Adversarial_Fraud_Arms_Race.md
+│   │   ├── 23_Graph_Neural_Networks_Fraud.md
+│   │   ├── 24_LLMs_GenAI_Fraud.md
+│   │   ├── 25_50_Fraud_Interview_Questions.md
+│   │   └── 26_Practical_Use_Cases_Industry_Problems.md
+│   ├── KDA_Solutions_Pharma_Cheat_Sheets/
+│   │   ├── 00_PLANNING_REPORT.md
+│   │   ├── 01_KDA_Fundamentals_Pharma.md
+│   │   ├── 02_Driver_Analysis_Statistical_Methods.md
+│   │   ├── 03_Promotional_Response_Modeling.md
+│   │   ├── 04_Marketing_Mix_Modeling_Pharma.md
+│   │   ├── 05_HCP_Engagement_Driver_Analytics.md
+│   │   ├── 06_Patient_Level_Driver_Analytics.md
+│   │   ├── 07_Brand_Performance_Decomposition.md
+│   │   ├── 08_Payer_Access_Driver_Analytics.md
+│   │   ├── 09_Therapeutic_Area_Nuances_KDA.md
+│   │   ├── 10_KDA_for_Launch_vs_Mature_Brands.md
+│   │   ├── 11_Causal_Inference_for_KDA.md
+│   │   ├── 12_Model_Validation_Governance_KDA.md
+│   │   ├── 13_KDA_Technology_Stack.md
+│   │   ├── 14_KDA_Outputs_Storytelling.md
+│   │   ├── 15_Case_Studies_KDA_Pharma.md
+│   │   ├── 16_KDA_vs_Other_Analytics_Frameworks.md
+│   │   ├── 17_Interview_Questions_KDA.md
+│   │   └── 18_Practical_Use_Cases_KDA.md
+│   ├── Marketing_Analytics_Cheat_Sheets/
+│   │   ├── 00_PLANNING_REPORT.md
+│   │   ├── 01_Marketing_Analytics_Fundamentals.md
+│   │   ├── 02_Customer_Acquisition_CAC_Analytics.md
+│   │   ├── 03_Attribution_Models.md
+│   │   ├── 04_Customer_Lifetime_Value.md
+│   │   ├── 05_Marketing_Mix_Modelling.md
+│   │   ├── 06_Digital_Channel_Analytics.md
+│   │   ├── 07_Email_Marketing_Analytics.md
+│   │   ├── 08_Social_Media_Analytics.md
+│   │   ├── 09_Customer_Segmentation_RFM.md
+│   │   ├── 10_Campaign_Optimisation.md
+│   │   ├── 11_Programmatic_Advertising_Analytics.md
+│   │   ├── 12_SEO_Content_Analytics.md
+│   │   ├── 13_CRM_Loyalty_Analytics.md
+│   │   ├── 14_Marketing_Ecommerce.md
+│   │   ├── 15_Marketing_SaaS_B2B.md
+│   │   ├── 16_Marketing_Financial_Services.md
+│   │   ├── 17_Marketing_Healthcare.md
+│   │   ├── 18_Experimentation_Marketing.md
+│   │   ├── 19_Marketing_Automation_Analytics.md
+│   │   ├── 20_Marketing_Data_Stack.md
+│   │   ├── 21_Causal_Inference_Marketing.md
+│   │   ├── 22_Marketing_Interview_Questions.md
+│   │   └── 23_Practical_Use_Cases_Marketing.md
+│   ├── NLP_LLM_Cheat_Sheets/
+│   │   ├── 00_PLANNING_REPORT.md
+│   │   ├── 01_NLP_Fundamentals_Text_Processing.md
+│   │   ├── 02_Classical_NLP_Pre2013.md
+│   │   ├── 03_Word_Embeddings_Era.md
+│   │   ├── 04_Sequence_Models_RNN_LSTM_GRU.md
+│   │   ├── 05_Attention_Mechanism.md
+│   │   ├── 06_Transformer_Architecture.md
+│   │   ├── 07_BERT_Encoder_Models.md
+│   │   ├── 08_GPT_Autoregressive_LLMs.md
+│   │   ├── 09_Transfer_Learning_Fine_Tuning.md
+│   │   ├── 10_Scaling_Laws_Large_LLMs.md
+│   │   ├── 11_RLHF_Alignment.md
+│   │   ├── 12_Open_Source_LLMs.md
+│   │   ├── 13_RAG_Retrieval_Augmented_Generation.md
+│   │   ├── 14_LLM_Agents_Tool_Use.md
+│   │   ├── 15_Multimodal_LLMs.md
+│   │   ├── 16_LLM_Efficiency_Compression.md
+│   │   ├── 17_NLP_Evaluation_Benchmarks.md
+│   │   ├── 18_NLP_Applications_Industry.md
+│   │   ├── 19_2025_2026_Frontier_LLMs.md
+│   │   ├── 20_NLP_Era_Comparison_Pros_Cons.md
+│   │   ├── 21_NLP_LLM_Interview_Questions.md
+│   │   └── 22_Practical_Use_Cases_NLP_LLM.md
+│   ├── Practical_ML_Design/
+│   │   ├── ML_Design_Cheat_Sheets/
+│   │   │   ├── 00_INDEX.md
+│   │   │   ├── 01_Production_ML_12_Disciplines.md
+│   │   │   ├── 02_Architecture_Patterns.md
+│   │   │   ├── 03_Feature_Store_Design.md
+│   │   │   ├── 04_Model_Monitoring_and_Drift.md
+│   │   │   ├── 05_MLOps_Governance_Compliance.md
+│   │   │   ├── 06_Training_Infrastructure.md
+│   │   │   ├── 07_Serving_Scaling_Optimization.md
+│   │   │   ├── 08_PoC_to_Production_Roadmap.md
+│   │   │   ├── 09_Framework_Tool_Selection.md
+│   │   │   ├── 10_Domain_Specific_ML_Patterns.md
+│   │   │   ├── 11_LLM_GenAI_Systems.md
+│   │   │   ├── 12_Recommendations_Search_Systems.md
+│   │   │   ├── 13_50_Common_ML_Issues.md
+│   │   │   ├── 14_Loss_Functions_Optimization_Traps.md
+│   │   │   ├── 15_System_Architecture_Production_Traps.md
+│   │   │   └── 16_Additional_15_Issues_from_PDF.md
+│   │   ├── ML_LLM_Use_Cases_2022+/  [contents not visible]
+│   │   ├── ML_Product_Sense_Guide/
+│   │   │   ├── 00_product_sense_mental_model.md
+│   │   │   ├── 01_problem_framing_and_scoping.md
+│   │   │   ├── 02_metrics_design_and_measurement.md
+│   │   │   ├── 03_recommendations_personalization_product_sense.md
+│   │   │   ├── 04_search_and_retrieval_product_sense.md
+│   │   │   ├── 05_fraud_trust_safety_product_sense.md
+│   │   │   ├── 06_nlp_text_content_product_sense.md
+│   │   │   ├── 07_prediction_forecasting_product_sense.md
+│   │   │   ├── 08_llm_agents_product_sense.md
+│   │   │   ├── 09_computer_vision_product_sense.md
+│   │   │   ├── 10_causal_inference_experiments_product_sense.md
+│   │   │   ├── 11_ml_pm_interview_playbook.md
+│   │   │   ├── all_content.txt
+│   │   │   ├── README.md
+│   │   │   └── replicate_structure.py
+│   │   ├── ML_System_Architecture_Designs/  [contents not visible]
+│   │   ├── ML_System_Design_Production_Guide/  [contents not visible]
+│   │   ├── ML System Design Case Study.md
+│   │   ├── ml_sys_des.pdf
+│   │   └── mlengg_note.pdf
+│   ├── Pricing_Cheat_Sheets/
+│   │   ├── 00_PLANNING_REPORT.md
+│   │   ├── 01_Pricing_Fundamentals_Economics.md
+│   │   ├── 02_Price_Elasticity_Demand_Models.md
+│   │   ├── 03_Cost_Value_Competitive_Pricing.md
+│   │   ├── 04_Price_Optimization_ML.md
+│   │   ├── 05_Dynamic_Pricing_Algorithms.md
+│   │   ├── 06_Revenue_Management_Yield_Optimization.md
+│   │   ├── 07_Psychological_Behavioral_Pricing.md
+│   │   ├── 08_Pricing_Experiments_AB_Testing.md
+│   │   ├── 09_Game_Theory_Competitive_Pricing.md
+│   │   ├── 10_Pricing_Insurance_Actuarial.md
+│   │   ├── 11_Pricing_Ecommerce_Retail.md
+│   │   ├── 12_Pricing_SaaS_Subscription.md
+│   │   ├── 13_Pricing_Marketplaces_Platforms.md
+│   │   ├── 14_Pricing_Financial_Services.md
+│   │   ├── 15_Pricing_Healthcare_Pharma.md
+│   │   ├── 16_Pricing_Auctions_Real_Time_Bidding.md
+│   │   ├── 17_Pricing_Fairness_Regulation.md
+│   │   ├── 18_Real_Time_Pricing_Systems.md
+│   │   ├── 19_Price_Monitoring_Competitive_Intel.md
+│   │   ├── 20_Pricing_Interview_Questions.md
+│   │   └── 21_Practical_Use_Cases_Pricing.md
+│   ├── Product_Analytics_Cheat_Sheets/
+│   │   ├── 00_PLANNING_REPORT.md
+│   │   ├── 01_Product_Analytics_Fundamentals.md
+│   │   ├── 02_Product_Metrics_Framework.md
+│   │   ├── 03_Catalogue_Management_Data.md
+│   │   ├── 04_User_Behaviour_Analytics.md
+│   │   ├── 05_Funnel_Conversion_Analysis.md
+│   │   ├── 06_Retention_Churn_Analysis.md
+│   │   ├── 07_Cohort_Segmentation_Analysis.md
+│   │   ├── 08_AB_Testing_Product_Experiments.md
+│   │   ├── 09_Feature_Adoption_Usage_Analytics.md
+│   │   ├── 10_Search_Discovery_Product.md
+│   │   ├── 11_Personalisation_Analytics.md
+│   │   ├── 12_Pricing_Catalogue_Analytics.md
+│   │   ├── 13_Inventory_Demand_Forecasting.md
+│   │   ├── 14_Mobile_App_Analytics.md
+│   │   ├── 15_Product_Analytics_Ecommerce.md
+│   │   ├── 16_Product_Analytics_SaaS.md
+│   │   ├── 17_Product_Analytics_Marketplace.md
+│   │   ├── 18_Growth_Virality_Analytics.md
+│   │   ├── 19_Causal_Inference_Product.md
+│   │   ├── 20_Product_Analytics_Tools_Stack.md
+│   │   ├── 21_Product_Analytics_Interview_Questions.md
+│   │   └── 22_Practical_Use_Cases_Product_Analytics.md
+│   ├── RecSys_Cheat_Sheets/
+│   │   ├── 00_PLANNING_REPORT.md
+│   │   ├── 01_RecSys_Fundamentals_Taxonomy.md
+│   │   ├── 02_Collaborative_Filtering_Matrix_Factorization.md
+│   │   ├── 03_Content_Based_Filtering.md
+│   │   ├── 04_Hybrid_RecSys_Ensemble.md
+│   │   ├── 05_Deep_Learning_RecSys.md
+│   │   ├── 06_Sequential_Session_Based_RecSys.md
+│   │   ├── 07_Knowledge_Graph_RecSys.md
+│   │   ├── 08_Contextual_Bandits_Exploration.md
+│   │   ├── 09_RecSys_Evaluation_Metrics.md
+│   │   ├── 10_Feature_Engineering_RecSys.md
+│   │   ├── 11_RecSys_Ecommerce_Retail.md
+│   │   ├── 12_RecSys_Streaming_Media.md
+│   │   ├── 13_RecSys_News_Content.md
+│   │   ├── 14_RecSys_Financial_Services.md
+│   │   ├── 15_RecSys_Healthcare.md
+│   │   ├── 16_RecSys_Travel_Hospitality.md
+│   │   ├── 17_Scalability_Real_Time_RecSys.md
+│   │   ├── 18_Fairness_Diversity_Bias_RecSys.md
+│   │   ├── 19_LLMs_GenAI_RecSys.md
+│   │   ├── 20_AB_Testing_Experimentation_RecSys.md
+│   │   ├── 21_RecSys_Interview_Questions.md
+│   │   └── 22_Practical_Use_Cases_RecSys.md
+│   ├── Search_AdTech_Cheat_Sheets/
+│   │   ├── 00_PLANNING_REPORT.md
+│   │   ├── 01_Search_Fundamentals_IR.md
+│   │   ├── 02_BM25_TF_IDF_Classical_Retrieval.md
+│   │   ├── 03_Learning_to_Rank.md
+│   │   ├── 04_Neural_Search_Dense_Retrieval.md
+│   │   ├── 05_Query_Understanding_NLP.md
+│   │   ├── 06_Search_Indexing_Infrastructure.md
+│   │   ├── 07_AdTech_Fundamentals.md
+│   │   ├── 08_Auction_Theory_Mechanisms.md
+│   │   ├── 09_Real_Time_Bidding_Programmatic.md
+│   │   ├── 10_Ad_Targeting_Audience.md
+│   │   ├── 11_Ad_Quality_Relevance_Ranking.md
+│   │   ├── 12_Bid_Optimisation_Budget_Pacing.md
+│   │   ├── 13_Ad_Measurement_Attribution.md
+│   │   ├── 14_Ad_Fraud_Brand_Safety.md
+│   │   ├── 15_Search_Ecommerce.md
+│   │   ├── 16_Search_Enterprise_Knowledge.md
+│   │   ├── 17_AdTech_Social_Media.md
+│   │   ├── 18_AdTech_CTV_Video.md
+│   │   ├── 19_Privacy_Cookieless_AdTech.md
+│   │   ├── 20_Search_Personalisation.md
+│   │   ├── 21_Search_AdTech_ML_Systems.md
+│   │   ├── 22_Generative_AI_Search_AdTech.md
+│   │   ├── 23_Search_AdTech_Interview_Questions.md
+│   │   └── 24_Practical_Use_Cases_Search_AdTech.md
+│   ├── TimeSeries_Forecasting_Cheat_Sheets/
+│   │   ├── 00_PLANNING_REPORT.md
+│   │   ├── 01_Time_Series_Fundamentals.md
+│   │   ├── 02_Classical_Statistical_Methods_ARIMA.md
+│   │   ├── 03_Exponential_Smoothing_ETS_State_Space.md
+│   │   ├── 04_Time_Series_Decomposition_Seasonality.md
+│   │   ├── 05_Feature_Engineering_Time_Series.md
+│   │   ├── 06_ML_For_Time_Series.md
+│   │   ├── 07_Deep_Learning_Time_Series.md
+│   │   ├── 08_Transformer_Foundation_Models_TS.md
+│   │   ├── 09_Probabilistic_Forecasting.md
+│   │   ├── 10_Hierarchical_Reconciliation_Forecasting.md
+│   │   ├── 11_Demand_Planning_Fundamentals.md
+│   │   ├── 12_Supply_Chain_Inventory_Optimization.md
+│   │   ├── 13_Retail_CPG_Demand_Forecasting.md
+│   │   ├── 14_Energy_Utilities_Forecasting.md
+│   │   ├── 15_Financial_Time_Series.md
+│   │   ├── 16_Healthcare_Epidemiological_Forecasting.md
+│   │   ├── 17_Multivariate_Time_Series.md
+│   │   ├── 18_Anomaly_Detection_Time_Series.md
+│   │   ├── 19_Causal_Inference_Time_Series.md
+│   │   ├── 20_Model_Selection_Ensembles_TS.md
+│   │   ├── 21_Evaluation_Metrics_Backtesting.md
+│   │   ├── 22_Explainability_Time_Series_Models.md
+│   │   ├── 23_Production_MLOps_Time_Series.md
+│   │   ├── 24_Interview_Questions_Time_Series.md
+│   │   └── 25_Practical_Use_Cases_TS_Demand.md
+│   └── US_Commercialization_Decision_Intelligence_Cheat_Sheets/  [contents not visible]
+├── Finetune_LLM/  [contents not visible]
+├── finetuning_course/
+│   ├── LLM_Finetuning_Cheat_Sheets/
+│   │   ├── 00_INDEX.md
+│   │   ├── 01_Transformer_Architecture_Attention.md
+│   │   ├── 02_Scaling_Laws_Pretraining_Objectives.md
+│   │   ├── 03_Memory_Compute_SingleGPU_Optimization.md
+│   │   ├── 04_Distributed_Training_Parallelism.md
+│   │   ├── 05_Post_Training_SFT_RLHF_PPO.md
+│   │   ├── 06_Preference_Optimization_DPO_Variants.md
+│   │   ├── 07_Parameter_Efficient_Finetuning_PEFT.md
+│   │   ├── 08_Model_Merging_Continual_Learning.md
+│   │   ├── 09_Inference_Deployment_Serving.md
+│   │   ├── 10_Context_Length_Extension.md
+│   │   ├── 11_Evaluation_Debugging_Training.md
+│   │   ├── 12_Multimodal_Speech_Specialized.md
+│   │   ├── 13_Advanced_Architectures_Efficiency.md
+│   │   ├── 14_Data_MLOps_Production_Workflows.md
+│   │   └── 15_50_Common_LLM_Finetuning_Issues.md
+│   ├── Module_00_Foundations/
+│   │   ├── 0.1_What_is_a_Large_Language_Model.md
+│   │   └── 0.2_Modern_LLM_Training_Pipeline.md
+│   ├── Module_01_Transformer_Architecture/
+│   │   ├── 1.1_Attention_Mechanism.md
+│   │   ├── 1.2_Transformer_Block_Architecture.md
+│   │   ├── 1.3_Scaling_and_Parameter_Counting.md
+│   │   └── 1.4_Mixture_of_Experts.md
+│   ├── Module_02_Data_Curation_Tokenization/
+│   │   ├── 2.1_Data_Sources_and_Scale.md
+│   │   ├── 2.2_Data_Curation_Pipeline.md
+│   │   ├── 2.3_Tokenization.md
+│   │   └── 2.4_Data_Formatting_for_Training.md
+│   ├── Module_03_Pretraining_Scaling_Laws/
+│   │   ├── 3.1_Training_Objectives.md
+│   │   ├── 3.2_Scaling_Laws.md
+│   │   └── 3.3_Pretraining_Hyperparameters.md
+│   ├── Module_04_Single_GPU_Training/
+│   │   ├── 4.1_Memory_Components_During_Training.md
+│   │   ├── 4.2_Activation_Memory_and_the_Sequence_Lengt… [TRUNCATED/UNVERIFIED]
+│   │   ├── 4.3_Activation_Recomputation_Gradient_Checkpo… [TRUNCATED/UNVERIFIED]
+│   │   └── 4.4_Gradient_Accumulation.md
+│   ├── Module_05_Distributed_Training/
+│   │   ├── 5.1_Data_Parallelism.md
+│   │   ├── 5.2_ZeRO_Zero_Redundancy_Optimizer.md
+│   │   ├── 5.3_Tensor_Parallelism.md
+│   │   ├── 5.4_Context_Parallelism.md
+│   │   ├── 5.5_Pipeline_Parallelism.md
+│   │   ├── 5.6_Expert_Parallelism.md
+│   │   └── 5.7_5D_Parallelism_and_Configuration_Selection… [TRUNCATED/UNVERIFIED]
+│   ├── Module_06_GPU_Internals/
+│   │   ├── 6.1_GPU_Architecture_Primer.md
+│   │   ├── 6.2_Kernel_Optimization_and_Fusion.md
+│   │   ├── 6.3_FlashAttention.md
+│   │   └── 6.4_Mixed_Precision_Training.md
+│   ├── Module_07_Post_Training_Alignment/
+│   │   ├── 7.1_Why_Post_Training_Matters.md
+│   │   ├── 7.2_Supervised_Fine_Tuning.md
+│   │   ├── 7.3_Reward_Modeling.md
+│   │   ├── 7.4_RLHF_with_PPO.md
+│   │   ├── 7.5_Direct_Preference_Optimization.md
+│   │   ├── 7.6_GRPO_Group_Relative_Policy_Optimization.md
+│   │   ├── 7.7_Reasoning_Training_and_Process_Supervision… [TRUNCATED/UNVERIFIED]
+│   │   └── 7.8_Constitutional_AI_and_RLAIF.md
+│   ├── Module_08_PEFT_Model_Merging/
+│   │   ├── 8.1_Why_PEFT_and_the_Fine_Tuning_Spectrum.md
+│   │   ├── 8.2_LoRA_Low_Rank_Adaptation.md
+│   │   ├── 8.3_QLoRA_and_Quantization_Aware_Fine_Tuning… [TRUNCATED/UNVERIFIED]
+│   │   ├── 8.4_Advanced_PEFT_Methods.md
+│   │   └── 8.5_Model_Merging_and_Weight_Averaging.md
+│   ├── Module_09_Evaluation_Debugging/
+│   │   ├── 9.1_Training_Metrics_and_Loss_Analysis.md
+│   │   ├── 9.2_Perplexity_and_Language_Model_Metrics.md
+│   │   ├── 9.3_Evaluation_Benchmarks_Comprehensive.md
+│   │   ├── 9.4_LLM_as_Judge_and_Human_Evaluation.md
+│   │   ├── 9.5_Debugging_Common_Training_Failures.md
+│   │   └── 9.6_Infrastructure_Benchmarking_and_Profiling.md
+│   ├── Module_10_Inference_Deployment/
+│   │   ├── 10.1_Inference_Optimization_KV_Cache_and_Batching.md
+│   │   ├── 10.2_Quantization_for_Inference.md
+│   │   ├── 10.3_Speculative_Decoding.md
+│   │   └── 10.4_Serving_Architecture_and_Deployment.md
+│   ├── Module_11_Context_Length_Extension/
+│   │   ├── 11.1_Why_Context_Length_Matters.md
+│   │   ├── 11.2_RoPE_and_Position_Interpolation.md
+│   │   ├── 11.3_Long_Context_Training_Strategies.md
+│   │   ├── 11.4_Memory_Efficient_Long_Context_Inference.md
+│   │   └── 11.5_Evaluation_of_Long_Context_Models.md
+│   ├── Module_12_Multimodal_Specialized/
+│   │   ├── 12.1_Vision_Language_Models.md
+│   │   ├── 12.2_Code_Language_Models.md
+│   │   └── 12.3_Agentic_and_Tool_Use_Training.md
+│   ├── Module_13_Safety_Alignment_Interpretability/
+│   │   ├── 13.1_Alignment_Principles_and_the_Alignment_Problem.md
+│   │   ├── 13.2_Safety_Training_Techniques.md
+│   │   ├── 13.3_Mechanistic_Interpretability.md
+│   │   └── 13.4_Hallucination_Causes_and_Mitigation.md
+│   ├── Module_14_MLOps_Practical_Workflows/
+│   │   ├── 14.1_Experiment_Design_and_Ablations.md
+│   │   ├── 14.2_Experiment_Tracking_and_Reproducibility.md
+│   │   ├── 14.3_Checkpointing_and_Fault_Tolerance.md
+│   │   ├── 14.4_Post_Training_Production_Pipeline.md
+│   │   └── 14.5_Cost_Estimation_and_Compute_Planning.md
+│   ├── Module_15_Advanced_Post_Training/
+│   │   ├── 15.1_Continued_Pretraining_and_Domain_Adaptation.md
+│   │   ├── 15.2_Rejection_Sampling_Fine_Tuning_and_Best_of_N.md
+│   │   ├── 15.3_Online_and_Iterative_Preference_Optimization.md
+│   │   ├── 15.4_Knowledge_Distillation_for_LLMs.md
+│   │   ├── 15.5_KTO_ORPO_SimPO_Advanced_Alignment.md
+│   │   ├── 15.6_RLVR_Reinforcement_from_Verifiable_Rewards.md
+│   │   ├── 15.7_DAPO_REINFORCE_Plus_Plus_and_Advanced_RL.md
+│   │   ├── 15.8_Self_Play_and_Self_Improvement.md
+│   │   ├── 15.9_Multi_Task_Instruction_Tuning_at_Scale.md
+│   │   └── 15.10_Continual_Learning_and_Catastrophic_Forgetting.md
+│   ├── Module_16_Advanced_Architectures_Efficiency/
+│   │   ├── 16.1_Alternative_Architectures_Mamba_RWKV_RetNet.md
+│   │   ├── 16.2_Model_Pruning_and_Sparsification.md
+│   │   ├── 16.3_Tokenizer_Training_from_Scratch.md
+│   │   ├── 16.4_Curriculum_Learning_and_Data_Ordering.md
+│   │   └── 16.5_Multilingual_LLM_Training.md
+│   ├── Module_17_Implementation_Playbook/
+│   │   ├── 17.1_Environment_Setup_and_Hardware_Selection.md
+│   │   ├── 17.2_Data_Pipeline_Implementation.md
+│   │   ├── 17.3_LoRA_and_QLoRA_Implementation.md
+│   │   ├── 17.4_SFT_Training_Loop_Best_Practices.md
+│   │   ├── 17.5_Memory_Optimization_Playbook.md
+│   │   ├── 17.6_Distributed_Training_Setup.md
+│   │   ├── 17.7_Preference_Optimization_DPO_GRPO.md
+│   │   ├── 17.8_Evaluation_Pipeline_Implementation.md
+│   │   ├── 17.9_Debugging_and_Training_Monitoring.md
+│   │   ├── 17.10_Quantization_and_Inference_Optimization.md
+│   │   ├── 17.11_MLOps_Experiment_Tracking_Reproducibility.md
+│   │   ├── 17.12_Model_Merging_and_Adapter_Composition.md
+│   │   ├── 17.13_Context_Length_Extension_Implementation.md
+│   │   ├── 17.14_End_to_End_Production_Pipeline.md
+│   │   └── 17.15_Domain_Data_Synthesis_and_Curation.md
+│   ├── Module_18_CV_VLM_Finetuning_Research/
+│   │   ├── 18.1_VLM_Architecture_and_Component_Overview.md
+│   │   ├── 18.2_Vision_Encoder_Finetuning.md
+│   │   ├── 18.3_VLM_Data_Pipeline_and_Multimodal_Datasets.md
+│   │   ├── 18.4_VLM_Instruction_Tuning_and_Alignment.md
+│   │   ├── 18.5_Efficient_VLM_Training_LoRA_and_Frozen_Strategies.md
+│   │   ├── 18.6_Document_Understanding_OCR_and_Chart_Models.md
+│   │   ├── 18.7_Multimodal_Preference_Optimization_and_RLHF.md
+│   │   ├── 18.8_VLM_Evaluation_Benchmarks_and_Metrics.md
+│   │   ├── 18.9_Video_Language_Models_and_Temporal_Understanding.md
+│   │   ├── 18.10_VLM_Production_Deployment_and_Optimization.md
+│   │   ├── 18.11_Research_Frontiers_CV_VLM_2025.md
+│   │   └── INDEX.md
+│   ├── Module_19_Distributed_Training_Infrastructure/
+│   │   ├── 19.1_Modern_Distributed_Training_Landscape.md
+│   │   ├── 19.2_DeepSpeed_Advanced_Configuration.md
+│   │   ├── 19.3_FSDP2_PyTorch_Native_Distributed.md
+│   │   ├── 19.4_Megatron_LM_and_3D_Parallelism.md
+│   │   ├── 19.5_Fault_Tolerance_and_Elastic_Training.md
+│   │   ├── 19.6_At_Scale_Profiling_and_Performance_Optimization.md
+│   │   ├── 19.7_Communication_Overlap_ZeRO_Plus_Plus_and_DualPipe.md
+│   │   ├── 19.8_Cluster_Management_SLURM_Kubernetes.md
+│   │   ├── 19.9_Cost_Optimization_and_Compute_Planning.md
+│   │   ├── 19.10_Multi_Node_Debugging_and_Distributed_Monitoring.md
+│   │   ├── 19.11_Research_Frontiers_Distributed_Training_2025.md
+│   │   └── INDEX.md
+│   ├── Module_20_Speech_Processing_ASR_TTS_STT/
+│   │   ├── 20.1_Speech_Processing_Landscape_and_Foundations.md
+│   │   ├── 20.2_ASR_Architecture_Deep_Dive.md
+│   │   ├── 20.3_Whisper_Finetuning_Complete_Guide.md
+│   │   ├── 20.4_Streaming_Real_Time_ASR.md
+│   │   ├── 20.5_TTS_Architecture_and_Modern_Models.md
+│   │   ├── 20.6_TTS_Training_and_Finetuning.md
+│   │   ├── 20.7_Voice_Cloning_and_Zero_Shot_TTS.md
+│   │   ├── 20.8_Multilingual_Speech_and_Low_Resource_Languages.md
+│   │   ├── 20.9_Native_Language_Training_Pipeline.md
+│   │   ├── 20.10_Speech_LLM_Integration_and_Foundation_Models.md
+│   │   ├── 20.11_Speech_Evaluation_Benchmarks_and_Metrics.md
+│   │   ├── 20.12_Production_Speech_Systems_and_Deployment.md
+│   │   ├── 20.13_Research_Frontiers_Speech_2025_2026.md
+│   │   └── INDEX.md
+│   ├── Tutorials-overall1/  [contents not visible]
+│   ├── all_content.txt
+│   ├── INDEX.md
+│   ├── OSS_Contribution_Roadmap_1Month.md
+│   └── replicate_structure.py
+├── GLCC/  [contents not visible]
+├── Graph_ML_2025/
+│   ├── 01_Graph_Theory_Foundations.md
+│   ├── 02_Graph_Neural_Networks.md
+│   ├── 03_Knowledge_Graphs_Ontologies.md
+│   └── 04_Fraud_Detection.md
+├── HighEnd/
+│   └── AdvancedCourse_HardwareAwareML_EdgeAI_7Domain_ComprehensiveMasteryCourse/
+│       ├── Module01_BiomedicalSignalProcessing_ECG_PPG_IMU_HRV_FFT_Wavelets_FiltersDatasets/
+│       │   ├── 01_Sampling_Theory_Nyquist_Shannon_Aliasing_AntiAliasing_ECG360Hz.md
+│       │   ├── 02_ECG_Anatomy_PWave_QRS_TWave_LeadSystems_Clinical_AFib_Detection.md
+│       │   ├── 03_Butterworth_Bandpass_Filter_Design_0p5to40Hz_ECG_Signal_Processing.md
+│       │   ├── 04_IIR_vs_FIR_Filters_SOS_Notation_50Hz_Notch_India_Powerline_Interference.md
+│       │   ├── 05_Pan_Tompkins_Algorithm_RPeak_Detection_Implementation_MIT_BIH.md
+│       │   ├── 06_HRV_Time_Domain_SDNN_RMSSD_pNN50_Clinical_ANS_STM32.md
+│       │   ├── 07_HRV_Frequency_Domain_LF_HF_Welch_PSD_ANS_Respiratory_Coupling.md
+│       │   ├── 08_HRV_Nonlinear_Analysis_Poincare_SampleEntropy_DFA_Complexity.md
+│       │   ├── 09_PPG_Signal_SpO2_RatioOfRatios_MAX30102_Waveform_Analysis.md
+│       │   ├── 10_FFT_DFT_Windowing_SpectralLeakage_ECG_Frequency_Analysis.md
+│       │   ├── 11_STFT_Wavelet_Transform_TimeFrequency_ECG_AFib_Analysis.md
+│       │   ├── 12_IMU_Signal_Processing_Accelerometer_Gyroscope_ComplementaryFilter_Fall.md
+│       │   ├── 13_Noise_Sources_BaselineWander_MotionArtifact_EMG_Removal_STM32.md
+│       │   ├── 14_Datasets_MIT_BIH_PTBXL_CPSC2018_PhysioNet_Download_Guide.md
+│       │   ├── 15_Signal_To_ML_Feature_Engineering_Edge_Preprocessing_Pipeline.md
+│       │   └── README.md
+│       ├── Module02_DeepLearningTimeSeries_1DCNN_BiLSTM_Attention_Transformers_Augmentation_FocalL…/  [TRUNCATED/UNVERIFIED]
+│       │   ├── 01_From_NLP_To_Biosignals_TransferLearning_Analogies_TemporalPatterns.md
+│       │   ├── 02_1DCNN_ECG_Kernel_Design_ReceptiveField_LocalMotif_Detection.md
+│       │   ├── 03_DilatedCausalConvolutions_WaveNet_Temporal_ECG_LongRange_Dependencies.md
+│       │   ├── 04_DepthwiseSeparable_MobileNet_Style_Efficient_ECG_Classification.md
+│       │   ├── 05_BiLSTM_Attention_Gates_ECG_Sequence_Modeling_HiddenState.md
+│       │   ├── 06_PatchTST_Patch_Tokenization_TimeSeries_Transformers_ECG.md
+│       │   ├── 07_TimesNet_TSMixer_MLPMixer_Modern_TimeSeries_Architectures.md
+│       │   ├── 08_HardwareFirst_MCU_Parameter_Budget_INT8_Friendly_Architecture_Design.md
+│       │   ├── 09_Signal_Augmentation_TimeWarping_MagnitudeScaling_ECG_Training.md
+│       │   ├── 10_Focal_Loss_Class_Imbalance_Medical_ECG_Arrhythmia_Detection.md
+│       │   ├── 11_Training_Strategy_LR_Warmup_Cosine_Annealing_EarlyStopping_ECG.md
+│       │   ├── 12_Medical_Evaluation_Metrics_AUC_Sensitivity_Specificity_ECG_Arrhythmia.md
+│       │   ├── 13_TinyECGNet_Architecture_Specification_Benchmarks_STM32_Deployment.md
+│       │   ├── 14_EndToEnd_ECG_Training_Pipeline_MIT_BIH_CPSC2018_to_STM32.md
+│       │   └── README.md
+│       ├── Module03_ModelCompression_PTQ_QAT_AWQ_SmoothQuant_Distillation_NAS/  [contents not visible]
+│       ├── Module03_ModelCompression_PTQ_QAT_AWQ_SmoothQuant_Pruning_Distillation_NAS/
+│       │   ├── 01_Quantization_Fundamentals_INT8_INT4_Scale_ZeroPoint_Symmetric_Asymmetric.md
+│       │   ├── 02_PostTraining_Quantization_PTQ_Calibration_MinMax_Histogram_Entropy.md
+│       │   ├── 03_Quantization_Aware_Training_QAT_FakeQuantization_StraightThrough_Estimator.md
+│       │   ├── 04_PerChannel_vs_PerTensor_Quantization_Accuracy_CNN_Implications.md
+│       │   ├── 05_AWQ_Activation_Aware_Weight_Quantization_LLM_Theory.md
+│       │   ├── 06_SmoothQuant_Quantization_Difficulty_Migration_LLM_Activation_Outliers.md
+│       │   ├── 07_Unstructured_Pruning_Weight_Magnitude_GMP_Lottery_Ticket.md
+│       │   ├── 08_Structured_Pruning_Channel_Filter_Hardware_Friendly_Sparsity.md
+│       │   ├── 09_Knowledge_Distillation_Teacher_Student_SoftTargets_FeatureMimicking.md
+│       │   ├── 10_Mixed_Precision_Quantization_INT8_INT4_FP16_Sensitivity_Analysis.md
+│       │   ├── 11_Quantization_Recurrent_Networks_LSTM_INT8_State_Quantization_Challenges.md
+│       │   ├── 12_Neural_Architecture_Search_NAS_Hardware_Aware_OnceForAll_ProxylessNAS.md
+│       │   ├── 13_Compression_Pipeline_PTQ_Pruning_Distillation_Combined_Strategy.md
+│       │   ├── 14_Benchmarking_Compressed_Models_Accuracy_Size_Latency_Energy.md
+│       │   ├── 15_Hero_Project_Compression_Pipeline_TinyECGNet_Float32_to_STM32_INT8.md
+│       │   └── README.md
+│       ├── Module04_EdgeDeploymentRuntimes_TFLiteMicro_ONNXRuntime_TVM_llamacpp_EdgeImpulse/
+│       │   ├── 01_TFLite_Micro_Runtime_Architecture_Memory_Arena_Interpreter_Lifecycle.md
+│       │   ├── 02_TFLite_Micro_Operator_Kernels_CMSIS_NN_Delegate_Quantized_Inference_STM32.md
+│       │   ├── 03_ONNX_Runtime_Raspberry_Pi5_Execution_Providers_XNNPACK_MLAS_Inference.md
+│       │   ├── 04_ONNX_Runtime_Graph_Optimization_Operator_Fusion_Quantization_Aware_Inference.md
+│       │   ├── 05_Apache_TVM_Compilation_Stack_Relay_IR_Graph_Lowering_Cortex_M_Target.md
+│       │   ├── 06_TVM_AutoTVM_Ansor_Autotuning_ARM_Cortex_Search_Space_Hardware_Aware_Optimization.md
+│       │   ├── 07_llamacpp_Architecture_GGUF_Format_Quantized_LLM_Inference_Raspberry_Pi5.md
+│       │   ├── 08_llamacpp_KV_Cache_Context_Management_Sampling_Medical_RAG_Prompting_Pi5.md
+│       │   ├── 09_Edge_Impulse_SDK_Data_Collection_DSP_Pipeline_Neural_Network_Deployment.md
+│       │   ├── 10_Edge_Impulse_EON_Compiler_STM32_Deployment_UART_Data_Collection_OSS_Contribution.md
+│       │   ├── 11_Model_Format_Conversion_PyTorch_ONNX_TFLite_CoreML_GGUF_Interoperability.md
+│       │   ├── 12_Runtime_Operator_Coverage_Custom_Ops_Fallback_Strategies_Deployment_Gaps.md
+│       │   ├── 13_Cross_Runtime_Benchmarking_Latency_Memory_Power_Profiling_STM32_Pi5.md
+│       │   ├── 14_Hero_Project_Runtime_Integration_TFLite_Micro_STM32_ONNX_llamacpp_Pi5_UART_Pipeline.md
+│       │   └── README.md
+│       ├── Module05_ARMArchitecture_EmbeddedSystems_CortexM_CortexA_CMSIS_FreeRTOS_STM32/
+│       │   ├── 01_ARM_CortexM4F_Pipeline_ISA_Thumb2_DSP_FPU_Architecture_Deep_Dive.md
+│       │   ├── 02_STM32F401RE_Memory_Map_Registers_HAL_Abstraction_Peripheral_Access.md
+│       │   ├── 03_DMA_Controller_ADC_ECG_Sampling_Circular_Buffer_Interrupt_STM32.md
+│       │   ├── 04_FreeRTOS_Task_Scheduling_Priority_Inversion_Mutexes_Semaphores_STM32.md
+│       │   ├── 05_CMSIS_DSP_Library_FIR_IIR_FFT_ARM_Math_ECG_Signal_Processing_STM32.md
+│       │   ├── 06_STM32_UART_DMA_Communication_Protocol_Pi5_UART_Bridge_Frame_Design.md
+│       │   ├── 07_STM32_Power_Modes_Sleep_Stop_Standby_Wake_On_Event_Battery_Optimization.md
+│       │   ├── 08_ARM_CortexA76_Architecture_OutOfOrder_NEON_SIMD_Cache_Hierarchy_Pi5.md
+│       │   ├── 09_MCU_vs_MPU_Programming_Models_Bare_Metal_RTOS_Linux_Memory_Protection.md
+│       │   ├── 10_STM32CubeIDE_Development_Workflow_Code_Generation_Build_System_Debug.md
+│       │   ├── 11_SWD_JTAG_Debugging_Segger_JLink_ITM_Trace_Semihosting_STM32.md
+│       │   ├── 12_Linker_Scripts_Memory_Layout_Flash_SRAM_Sections_STM32_TFLite_Arena.md
+│       │   ├── 13_STM32_HAL_Driver_Architecture_GPIO_ADC_UART_Timer_Abstraction_Layers.md
+│       │   ├── 14_CMSIS_NN_INT8_Inference_Optimized_Kernels_SMLAD_Quantized_NeuralNetwork_STM32.md
+│       │   ├── 15_Hero_Project_Embedded_Firmware_Architecture_FreeRTOS_TFLite_UART_Complete_Integration.md
+│       │   └── README.md
+│       ├── Module06_AICompilerFundamentals_MLIR_TVM_RISCV_GraphOpt_OperatorFusion_OSS/
+│       │   ├── 01_AI_Compiler_Stack_Overview_Frontend_Midend_Backend_IR_Levels_Why_Compilers_Matter.md
+│       │   ├── 02_MLIR_Architecture_Multi_Level_IR_Dialects_Passes_Transformations_Design_Philosophy.md
+│       │   ├── 03_TVM_Architecture_Relay_IR_TIR_Lowering_Pipeline_Schedule_Primitives_Hardware_Targets.md
+│       │   ├── 04_Graph_Level_Optimizations_Operator_Fusion_Constant_Folding_Dead_Code_Layout_Transform.md
+│       │   ├── 05_Loop_Level_Optimizations_Tiling_Vectorization_Loop_Unrolling_Polyhedral_Model_Cache.md
+│       │   ├── 06_AutoTVM_Ansor_Hardware_Aware_Tuning_Search_Space_ML_Cost_Model_Benchmark.md
+│       │   ├── 07_microTVM_AOT_Executor_STM32_Deployment_No_Heap_Static_Memory_Generated_C.md
+│       │   ├── 08_MLIR_TOSA_Dialect_Edge_ML_TFLite_Lowering_IREE_Compiler_Edge_Deployment.md
+│       │   ├── 09_RISC_V_ISA_Architecture_Vector_Extensions_RVV_Edge_ML_Accelerator_Future.md
+│       │   ├── 10_Compiler_Passes_Analysis_vs_Transformation_Dataflow_Analysis_IR_Correctness.md
+│       │   ├── 11_Quantization_Aware_Compilation_INT8_Flow_TVM_Relay_Quantize_CMSIS_NN_Backend.md
+│       │   ├── 12_MLIR_Linalg_Dialect_Structured_Ops_Fusion_Tiling_Bufferization_Lowering.md
+│       │   ├── 13_TVM_vs_MLIR_vs_XLA_vs_IREE_Compiler_Comparison_Tradeoffs_When_To_Use_Each.md
+│       │   ├── 14_OSS_Contribution_Strategy_TVM_MLIR_IREE_microTVM_PR_Guide_Issue_Triage_Community.md
+│       │   ├── 15_Compiler_IR_Debugging_Tools_mlir_opt_tvmc_Visualization_Pass_Tracing_Correctness.md
+│       │   ├── 16_Hero_Project_Compiler_Pipeline_TinyECGNet_TFLite_to_C_AOT_STM32_Pi5_Full_Stack.md
+│       │   └── README.md
+│       ├── Module07_OnDeviceLLM_EdgeRAG_SLM_QLoRA_GGUF_FAISS_MedicalRAG_SovereignAI_Pi5Deployment/
+│       │   ├── 01_OnDevice_LLM_Landscape_Why_Edge_LLM_Matters_SLM_vs_LLM_Sovereign_AI_Architecture.md
+│       │   ├── 02_GGUF_Format_Deep_Dive_Quantization_Types_Metadata_Tensors_KV_Cache_Memory_Layout.md
+│       │   ├── 03_llamacpp_Architecture_Threading_Metal_BLAS_Context_Params_Sampling_Inference_Loop.md
+│       │   ├── 04_Gemma3_Architecture_RoPE_GQA_RMSNorm_Attention_Layers_Embedding_Vocab_Edge_Inference.md
+│       │   ├── 05_KV_Cache_Memory_Arena_Attention_Computation_Pi5_NEON_Optimization_Throughput_Analysis.md
+│       │   ├── 06_FAISS_Vector_Database_IVF_PQ_HNSW_Index_Construction_Medical_Knowledge_Embeddings.md
+│       │   ├── 07_Medical_RAG_Pipeline_Design_Query_Embedding_Retrieval_Context_Injection_Prompt_Engineering.md
+│       │   ├── 08_QLoRA_Theory_NF4_Quantization_LoRA_Adapters_Rank_Alpha_Gradient_Checkpointing_Memory.md
+│       │   ├── 09_Fine_Tuning_Medical_LLM_Dataset_Preparation_Instruction_Tuning_RLHF_Alignment_Eval.md
+│       │   ├── 10_Streamlit_UI_Architecture_UART_Integration_Real_Time_ECG_Display_LLM_Response_Streaming.md
+│       │   ├── 11_Sovereign_AI_Architecture_Privacy_By_Design_No_Cloud_Dependency_Data_Governance_Edge.md
+│       │   ├── 12_Edge_Inference_Optimization_Speculative_Decoding_Context_Caching_Batching_Pi5_Limits.md
+│       │   ├── 13_ONNX_Runtime_Pi5_Deployment_BERT_Embeddings_Sentence_Transformers_Quantized_Inference.md
+│       │   ├── 14_Vector_Database_Alternatives_ChromaDB_Weaviate_Qdrant_vs_FAISS_Edge_Tradeoffs_Selection.md
+│       │   ├── 15_Benchmarking_LLM_Inference_Pi5_Tokens_Per_Second_Memory_Power_Latency_Profiling_Tools.md
+│       │   ├── 16_Hero_Project_Complete_Pi5_Stack_UART_STM32_FAISS_Gemma3_Streamlit_End_To_End_Integration.md
+│       │   └── README.md
+│       ├── Module08_SystemIntegration_SovereignHealthAI_STM32_Pi5_Streamlit_Capstone/
+│       │   ├── 01_System_Architecture_Overview_STM32_Pi5_UART_Data_Pipeline_Component_Diagram.md
+│       │   ├── 02_STM32_Hardware_Setup_ECG_Circuit_ADS1115_ADC_GPIO_UART_Power_Supply_Schematic.md
+│       │   ├── 03_STM32_Firmware_Architecture_FreeRTOS_Tasks_ADC_DMA_ECG_Inference_UART_Output.md
+│       │   ├── 04_TFLite_Micro_Integration_Model_Loading_Arena_Allocation_Operator_Resolver_Invoke.md
+│       │   ├── 05_Signal_Processing_Pipeline_STM32_Notch_Bandpass_Pan_Tompkins_QRS_Feature_Extraction.md
+│       │   ├── 06_Raspberry_Pi5_OS_Setup_UART_Configuration_Python_Environment_Service_Architecture.md
+│       │   ├── 07_Pi5_Serial_Reader_Service_JSON_Parsing_Validation_Queue_Architecture_Error_Recovery.md
+│       │   ├── 08_RAG_Pipeline_Implementation_Embedding_FAISS_Retrieval_Context_Prompt_Assembly.md
+│       │   ├── 09_llama_cpp_Python_Integration_Model_Loading_Inference_Streaming_Context_Management.md
+│       │   ├── 10_Streamlit_Application_Complete_Implementation_Layout_State_Charts_Streaming_Deploy.md
+│       │   ├── 11_System_Testing_Integration_Testing_Unit_Testing_Hardware_In_Loop_Validation.md
+│       │   ├── 12_Performance_Profiling_Bottleneck_Analysis_Memory_CPU_Power_Optimization_Tradeoffs.md
+│       │   ├── 13_OSS_Contribution_Roadmap_TVM_MLIR_TFLite_llama_cpp_FAISS_Issues_PRs_Community.md
+│       │   ├── 14_Portfolio_Project_Documentation_GitHub_README_Architecture_Diagrams_Benchmarks_Demo.md
+│       │   ├── 15_Career_Roadmap_OSS_Strategy_Research_Papers_Conference_Talks_Next_18_Months.md
+│       │   ├── 16_Capstone_Summary_Module_Synthesis_Complete_Course_Review_Future_Directions_Sovereign_Edge_AI.md
+│       │   └── README.md
+│       ├── [VISIBLE PREFIX ONLY] Module01_BiomedicalSignalProcessing_ECG_PPG_IMU_Filtering_HRV_FrequencyDomain_FundamentalsFor…  [extension shown: .md; exact filename incomplete]
+│       ├── [VISIBLE PREFIX ONLY] Module02_DeepLearningForTimeSeries_1DCNN_BiLSTM_Attention_Transformers_Augmentation_ClassImbala…  [extension shown: .md; exact filename incomplete]
+│       ├── [VISIBLE PREFIX ONLY] Module03_ModelCompression_PTQ_QAT_AWQ_SmoothQuant_StructuredPruning_KnowledgeDistillation_NAS…  [extension shown: .md; exact filename incomplete]
+│       ├── [VISIBLE PREFIX ONLY] Module04_EdgeDeploymentRuntimes_TFLiteMicro_ONNXRuntime_ApacheTVM_AutoTuning_llamacpp_Edge…  [extension shown: .md; exact filename incomplete]
+│       ├── [VISIBLE PREFIX ONLY] Module05_ARMArchitecture_EmbeddedSystems_CortexM_CortexA_CMSIS_NN_MemoryHierarchy_PowerAnal…  [extension shown: .md; exact filename incomplete]
+│       ├── [VISIBLE PREFIX ONLY] Module06_AICompilerFundamentals_MLIR_Dialects_TVMPasses_RISCV_OperatorFusion_GraphOptimization_…  [extension shown: .md; exact filename incomplete]
+│       ├── [VISIBLE PREFIX ONLY] Module07_OnDeviceLLM_EdgeRAG_SLMFineTuning_QLoRA_GGUF_FAISS_MedicalRAG_SovereignAI_Pi5Deplo…  [extension shown: .md; exact filename incomplete]
+│       ├── [VISIBLE PREFIX ONLY] Module08_SystemIntegration_SovereignHealthAI_EndToEndArchitecture_STM32_Pi5_Streamlit_Benchmarking…  [extension shown: .md; exact filename incomplete]
+│       ├── CourseIndex_Overview_Prerequisites_LearningPath_ModuleSummaries_ResourcesAndTimeline.md
+│       ├── day_by_day_18mo_plan.md
+│       ├── master_oss_plan.md
+│       └── STUDY_GUIDE_DataScientist_3Month_EdgeAI_Roadmap.md
+├── inference/
+│   └── cluster_based_test_cases/
+│       ├── cluster_based_test_cases/
+│       │   ├── generic-insurance-test-cases/  [contents not visible]
+│       │   ├── cluster_1_tool_mechanics.json
+│       │   ├── cluster_2_path_completion.json
+│       │   ├── cluster_3_reasoning.json
+│       │   ├── cluster_4_data_integrity.json
+│       │   ├── cluster_5_safety_escalation.json
+│       │   ├── cluster_6_multiagent.json
+│       │   ├── manifest.mf
+│       │   ├── mock_responses.json
+│       │   └── tools.json
+│       ├── cluster_based_test_cases.zip
+│       └── EXPLAINER.md
+├── Insurance_Analytical_Modelling/
+│   ├── course outline/  [contents not visible]
+│   ├── Course_Content/  [contents not visible]
+│   ├── Insurance_Cheat_Sheets/
+│   │   ├── 00_INDEX.md
+│   │   ├── 01_Probability_Insurance_Distributions.md
+│   │   ├── 02_Life_Contingencies_Survival_Models.md
+│   │   ├── 03_NonLife_Pricing_Ratemaking.md
+│   │   ├── 04_GLM_Theory_Insurance.md
+│   │   ├── 05_Claims_Reserving_Methods.md
+│   │   ├── 06_Reinsurance_Capital_Risk_Measures.md
+│   │   ├── 07_ML_Ensembles_Insurance_Applications.md
+│   │   ├── 08_Customer_Analytics_CLV_Acquisition.md
+│   │   ├── 09_Extreme_Value_Theory_Catastrophe.md
+│   │   ├── 10_Bayesian_Credibility_Hierarchical.md
+│   │   ├── 11_Model_Risk_Governance_Explainability.md
+│   │   ├── 12_MLOps_Insurance_Production.md
+│   │   └── 13_50_Common_Insurance_Analytics_Issues.md
+│   ├── comprehensive_insurance_analytics_actuarial_ml_180_day_course.md
+│   ├── Insurance Analytics Actuarial Course Structure.md
+│   ├── Insurance_Analytical_Modelling.code-workspace
+│   └── studynotes_werner_modlin_ratemaking.pdf
+├── LangGraph_LangChain_2025/
+│   ├── LangGraph_LangChain_Cheat_Sheets/
+│   │   ├── 00_INDEX.md
+│   │   ├── 01_Foundations_Ecosystem.md
+│   │   ├── 02_LCEL_Core_Concepts.md
+│   │   ├── 03_Prompts_Models_Parsers.md
+│   │   ├── 04_LangGraph_Architecture.md
+│   │   ├── 05_Nodes_Edges_Control_Flow.md
+│   │   ├── 06_Agents_Tool_Use.md
+│   │   ├── 07_Multi_Agent_Systems.md
+│   │   ├── 08_Memory_Persistence.md
+│   │   ├── 09_RAG_Pipelines.md
+│   │   ├── 10_Streaming_Real_Time.md
+│   │   ├── 11_LangSmith_Observability.md
+│   │   ├── 12_Production_Deployment.md
+│   │   ├── 13_2025_Patterns_Emerging.md
+│   │   └── 14_100_Common_Issues.md
+│   ├── 01_Foundations_and_Ecosystem.md
+│   ├── 02_LangChain_Core_Concepts.md
+│   ├── 03_LangGraph_Architecture.md
+│   ├── 04_Agents_and_Tool_Use.md
+│   ├── 05_Multi_Agent_Systems.md
+│   ├── 06_Memory_and_Persistence.md
+│   ├── 07_Streaming_and_Real_Time.md
+│   ├── 08_RAG_Pipelines.md
+│   ├── 09_LangSmith_Observability.md
+│   ├── 10_Production_Deployment.md
+│   ├── 11_2025_2026_Patterns.md
+│   ├── 12_100_Common_Issues.md
+│   ├── all_content.txt
+│   ├── INDEX.md
+│   └── learn/  [contents not visible]
+├── learn/  [contents not visible]
+├── raw/  [contents not visible]
+└── speechtotxt/  [contents not visible]
+```
+
+## 2. Verified scope, by top-level directory
+
+The counts refer to **explicitly recorded tree entries**, not actual filesystem totals. Parent directories themselves are excluded from the child-directory count. Prefix-only HighEnd files are shown separately because their complete names cannot be verified.
+
+| Top-level folder | Nested folders | File records | Additional clipped-name file observations |
+|---|---:|---:|---:|
+| `.claude/` | 0 | 0 | 0 |
+| `agents/` | 0 | 0 | 0 |
+| `Agents_Stack_Infra/` | 32 | 141 | 0 |
+| `Case_Studies_Streaming_Kafka_Flink_Redpanda/` | 4 | 19 | 0 |
+| `Claude_Architect/` | 23 | 68 | 0 |
+| `CUDA/` | 35 | 105 | 0 |
+| `deep_dive/` | 3 | 39 | 0 |
+| `DS_Domain/` | 29 | 330 | 0 |
+| `Finetune_LLM/` | 0 | 0 | 0 |
+| `finetuning_course/` | 23 | 156 | 0 |
+| `GLCC/` | 0 | 0 | 0 |
+| `Graph_ML_2025/` | 0 | 4 | 0 |
+| `HighEnd/` | 10 | 133 | 8 |
+| `inference/` | 3 | 11 | 0 |
+| `Insurance_Analytical_Modelling/` | 3 | 18 | 0 |
+| `LangGraph_LangChain_2025/` | 2 | 29 | 0 |
+| `learn/` | 0 | 0 | 0 |
+| `raw/` | 0 | 0 | 0 |
+| `speechtotxt/` | 0 | 0 | 0 |
+| **Total** | **167 nested + 19 top-level = 186** | **1053** | **8** |
+
+## 3. Validation methods and findings
+
+The audit reconciles screenshots by visible Explorer indentation and directory path, not filename similarities or screenshot order. It uses the prior incremental master files as a change history, verifies that recorded paths survive the merge, parses the complete box-drawing tree, and checks numbered lesson sequences. It also checks that all mounted screenshot files can be opened.
+
+- **Screenshot files:** 56 readable JPEG photographs (39 in `1000101431.jpg`–`1000101469.jpg`, seven in `1000101488.jpg`–`1000101494.jpg`, and ten `image-*.jpg` photographs).
+- **Directory records:** 186; **file records:** 1053; **additional HighEnd prefix-only file observations:** 8. These totals exclude the unplaced `System_Design_DSA…` subtree.
+- **Tree parser:** 1247 structured entries parsed successfully, zero duplicate full paths, zero invalid parent depth, and zero incorrect branch-ending markers.
+- **Numbered lesson checks:** 93 independently checked groups; all had consecutive expected numbers in the visible range. This does *not* establish absence of unnumbered or hidden files.
+- **Production ML case studies:** 11 topic subdirectories × five files = 55 case studies, plus the root `00_INDEX.md`.
+- **CUDA:** all 12 teaching modules `Module_00`–`Module_11` (74 numbered lesson files across `01`–`11`), 14 cheat-sheet files, 12 module READMEs, five CUDA-root files. Collapsed `code/`, `exercises/`, `MPI_Basics/`, and `Profiling_Tools/` remain unknown.
+- **HighEnd:** eight expanded numbered modules (121 lessons and eight READMEs) plus a second visibly separate, collapsed `Module03_ModelCompression…` folder.
+- **Agent Stack:** 15 numbered modules `Module_00`–`Module_14`; lesson number ranges and `README.md`/`exercises.md` presence checked individually.
+- **LLM finetuning:** all 21 module folders `Module_00`–`Module_20` preserved with visible lesson lists, plus 16 cheat-sheet files and course root files.
+- **LangGraph:** distinct 15-file cheat-sheet collection and 14 direct root-level files; `learn/` remains collapsed.
+- **Streaming:** four subdirectories; 17 files inside and two root-level files = 19, with repeated `00_` filenames correctly treated as files in *different* folders.
+- **Claude Architect:** course overview, five domains, deep-dive scenarios, exercises, quick references, exam, and course-root files placed according to indentation. One instructor PDF filename is clipped.
+- **Inference:** ZIP and `EXPLAINER.md` are in the outer `cluster_based_test_cases/`, while JSONs, manifest, and insurance subfolder belong in the nested `cluster_based_test_cases/`.
+
+### Numbered-sequence checks (machine-checked)
+
+| Area | Directory (relative to `TRAIN/`) | Numbered files | Sequence | Result |
+|---|---|---:|---|---|
+| DS Cheat Sheet | `DS_Domain/Computer_Vision_Cheat_Sheets` | 27 | `00–26` | Pass |
+| DS Cheat Sheet | `DS_Domain/Fraud_Modelling_Cheat_Sheets` | 27 | `00–26` | Pass |
+| DS Cheat Sheet | `DS_Domain/KDA_Solutions_Pharma_Cheat_Sheets` | 19 | `00–18` | Pass |
+| DS Cheat Sheet | `DS_Domain/Marketing_Analytics_Cheat_Sheets` | 24 | `00–23` | Pass |
+| DS Cheat Sheet | `DS_Domain/NLP_LLM_Cheat_Sheets` | 23 | `00–22` | Pass |
+| DS Cheat Sheet | `DS_Domain/Pricing_Cheat_Sheets` | 22 | `00–21` | Pass |
+| DS Cheat Sheet | `DS_Domain/Product_Analytics_Cheat_Sheets` | 23 | `00–22` | Pass |
+| DS Cheat Sheet | `DS_Domain/RecSys_Cheat_Sheets` | 23 | `00–22` | Pass |
+| DS Cheat Sheet | `DS_Domain/Search_AdTech_Cheat_Sheets` | 25 | `00–24` | Pass |
+| DS Cheat Sheet | `DS_Domain/TimeSeries_Forecasting_Cheat_Sheets` | 26 | `00–25` | Pass |
+| Practical ML | `DS_Domain/Practical_ML_Design/ML_Design_Cheat_Sheets` | 17 | `00–16` | Pass |
+| Practical ML | `DS_Domain/Practical_ML_Design/ML_Product_Sense_Guide` | 12 | `00–11` | Pass |
+| Insurance | `Insurance_Analytical_Modelling/Insurance_Cheat_Sheets` | 14 | `00–13` | Pass |
+| CUDA Cheat Sheet | `CUDA/CUDA_Cheat_Sheets` | 14 | `00–13` | Pass |
+| LangGraph | `LangGraph_LangChain_2025/LangGraph_LangChain_Cheat_Sheets` | 15 | `00–14` | Pass |
+| LangGraph | `LangGraph_LangChain_2025` | 12 | `01–12` | Pass |
+| CUDA Module | `CUDA/Module_01_H100_Architecture` | 11 | `01–11` | Pass |
+| CUDA Module | `CUDA/Module_02_Programming_Fundamentals` | 6 | `01–06` | Pass |
+| CUDA Module | `CUDA/Module_03_Asynchronicity_and_Barriers` | 6 | `01–06` | Pass |
+| CUDA Module | `CUDA/Module_04_TMA_and_Tensor_Map` | 6 | `01–06` | Pass |
+| CUDA Module | `CUDA/Module_05_cp_async_bulk` | 7 | `01–07` | Pass |
+| CUDA Module | `CUDA/Module_06_WGMMA_Part1` | 5 | `01–05` | Pass |
+| CUDA Module | `CUDA/Module_07_WGMMA_Part2` | 5 | `01–05` | Pass |
+| CUDA Module | `CUDA/Module_08_Kernel_Design` | 6 | `01–06` | Pass |
+| CUDA Module | `CUDA/Module_09_Code_Walkthrough` | 8 | `01–08` | Pass |
+| CUDA Module | `CUDA/Module_10_MultiGPU_Part1` | 6 | `01–06` | Pass |
+| CUDA Module | `CUDA/Module_11_MultiGPU_Part2` | 8 | `01–08` | Pass |
+| HighEnd Module | `…/Module01_BiomedicalSignalProcessing_ECG_PPG_IMU_HRV_FFT_Wavelets_FiltersDatasets` | 15 | `01–15` | Pass |
+| HighEnd Module | `…/Module02_DeepLearningTimeSeries_1DCNN_BiLSTM_Attention_Transformers_Augmentation_FocalL…` | 14 | `01–14` | Pass |
+| HighEnd Module | `…/Module03_ModelCompression_PTQ_QAT_AWQ_SmoothQuant_Pruning_Distillation_NAS` | 15 | `01–15` | Pass |
+| HighEnd Module | `…/Module04_EdgeDeploymentRuntimes_TFLiteMicro_ONNXRuntime_TVM_llamacpp_EdgeImpulse` | 14 | `01–14` | Pass |
+| HighEnd Module | `…/Module05_ARMArchitecture_EmbeddedSystems_CortexM_CortexA_CMSIS_FreeRTOS_STM32` | 15 | `01–15` | Pass |
+| HighEnd Module | `…/Module06_AICompilerFundamentals_MLIR_TVM_RISCV_GraphOpt_OperatorFusion_OSS` | 16 | `01–16` | Pass |
+| HighEnd Module | `…/Module07_OnDeviceLLM_EdgeRAG_SLM_QLoRA_GGUF_FAISS_MedicalRAG_SovereignAI_Pi5Deployment` | 16 | `01–16` | Pass |
+| HighEnd Module | `…/Module08_SystemIntegration_SovereignHealthAI_STM32_Pi5_Streamlit_Capstone` | 16 | `01–16` | Pass |
+| Agent Stack | `Agents_Stack_Infra/Module_00_Prerequisites` | 4 | `01–04` | Pass |
+| Agent Stack | `Agents_Stack_Infra/Module_01_Agent_Stack_Overview` | 6 | `01–06` | Pass |
+| Agent Stack | `Agents_Stack_Infra/Module_02_Infrastructure_and_Models` | 6 | `01–06` | Pass |
+| Agent Stack | `Agents_Stack_Infra/Module_03_Control_Planes_and_Sessions` | 5 | `01–05` | Pass |
+| Agent Stack | `Agents_Stack_Infra/Module_04_Runtimes_and_Workflows` | 5 | `01–05` | Pass |
+| Agent Stack | `Agents_Stack_Infra/Module_05_Context_Memory_Retrieval` | 7 | `01–07` | Pass |
+| Agent Stack | `Agents_Stack_Infra/Module_06_Tools_MCP_and_Capabilities` | 6 | `01–06` | Pass |
+| Agent Stack | `Agents_Stack_Infra/Module_07_Agentic_Design_Patterns` | 9 | `01–09` | Pass |
+| Agent Stack | `Agents_Stack_Infra/Module_08_Execution_Trust_Approvals` | 5 | `01–05` | Pass |
+| Agent Stack | `Agents_Stack_Infra/Module_09_Observability_and_Evaluation` | 5 | `01–05` | Pass |
+| Agent Stack | `Agents_Stack_Infra/Module_10_OpenClaw_Architecture` | 8 | `01–08` | Pass |
+| Agent Stack | `Agents_Stack_Infra/Module_11_Claude_Code_Harness` | 7 | `01–07` | Pass |
+| Agent Stack | `Agents_Stack_Infra/Module_12_Hermes_Self_Evolving_Agent` | 7 | `01–07` | Pass |
+| Agent Stack | `Agents_Stack_Infra/Module_13_NCA_AIIO_Infrastructure` | 9 | `01–09` | Pass |
+| Agent Stack | `Agents_Stack_Infra/Module_14_Implementation_and_Production` | 10 | `01–10` | Pass |
+| Production ML Case Studies | `DS_Domain/Case_Studies_Production_ML_Systems/Fraud_Modelling` | 5 | `01–05` | Pass |
+| Production ML Case Studies | `DS_Domain/Case_Studies_Production_ML_Systems/Graph_ML` | 5 | `01–05` | Pass |
+| Production ML Case Studies | `DS_Domain/Case_Studies_Production_ML_Systems/KDA_Solutions_Pharma` | 5 | `01–05` | Pass |
+| Production ML Case Studies | `DS_Domain/Case_Studies_Production_ML_Systems/Marketing_Analytics` | 5 | `01–05` | Pass |
+| Production ML Case Studies | `DS_Domain/Case_Studies_Production_ML_Systems/NLP_LLM` | 5 | `01–05` | Pass |
+| Production ML Case Studies | `DS_Domain/Case_Studies_Production_ML_Systems/Pricing` | 5 | `01–05` | Pass |
+| Production ML Case Studies | `DS_Domain/Case_Studies_Production_ML_Systems/Product_Analytics` | 5 | `01–05` | Pass |
+| Production ML Case Studies | `DS_Domain/Case_Studies_Production_ML_Systems/RecSys` | 5 | `01–05` | Pass |
+| Production ML Case Studies | `DS_Domain/Case_Studies_Production_ML_Systems/Search_AdTech` | 5 | `01–05` | Pass |
+| Production ML Case Studies | `DS_Domain/Case_Studies_Production_ML_Systems/TimeSeries_Forecasting` | 5 | `01–05` | Pass |
+| Production ML Case Studies | `…/US_Commercialization_Decision_Intelligence` | 5 | `01–05` | Pass |
+| Streaming Case Study | `Case_Studies_Streaming_Kafka_Flink_Redpanda/Flink_Stateful_Processing` | 3 | `01–03 (+2 supporting 00)` | Pass |
+| Streaming Case Study | `Case_Studies_Streaming_Kafka_Flink_Redpanda/Kafka_Architecture` | 3 | `01–03 (+2 supporting 00)` | Pass |
+| Streaming Case Study | `Case_Studies_Streaming_Kafka_Flink_Redpanda/Streaming_Architecture_Design` | 3 | `01–03 (+2 supporting 00)` | Pass |
+| Streaming Incidents | `Case_Studies_Streaming_Kafka_Flink_Redpanda/Production_Incidents` | 2 | `01–02` | Pass |
+| Claude Architect | `Claude_Architect/course/01_Domain1_Agentic_Architecture` | 8 | `01_01–01_08` | Pass |
+| Claude Architect | `Claude_Architect/course/02_Domain2_Tool_Design_MCP` | 6 | `02_01–02_06` | Pass |
+| Claude Architect | `Claude_Architect/course/03_Domain3_Claude_Code_Config` | 7 | `03_01–03_07` | Pass |
+| Claude Architect | `Claude_Architect/course/04_Domain4_Prompt_Engineering` | 7 | `04_01–04_07` | Pass |
+| Claude Architect | `Claude_Architect/course/05_Domain5_Context_Reliability` | 7 | `05_01–05_07` | Pass |
+| Claude Architect | `Claude_Architect/course/07_Hands_On_Exercises` | 4 | `07_01–07_04` | Pass |
+| Claude Architect | `Claude_Architect/course/08_Quick_Reference` | 6 | `08_01–08_06` | Pass |
+| LLM Finetuning | `finetuning_course/Module_00_Foundations` | 2 | `0.1–0.2` | Pass |
+| LLM Finetuning | `finetuning_course/Module_01_Transformer_Architecture` | 4 | `1.1–1.4` | Pass |
+| LLM Finetuning | `finetuning_course/Module_02_Data_Curation_Tokenization` | 4 | `2.1–2.4` | Pass |
+| LLM Finetuning | `finetuning_course/Module_03_Pretraining_Scaling_Laws` | 3 | `3.1–3.3` | Pass |
+| LLM Finetuning | `finetuning_course/Module_04_Single_GPU_Training` | 4 | `4.1–4.4` | Pass |
+| LLM Finetuning | `finetuning_course/Module_05_Distributed_Training` | 7 | `5.1–5.7` | Pass |
+| LLM Finetuning | `finetuning_course/Module_06_GPU_Internals` | 4 | `6.1–6.4` | Pass |
+| LLM Finetuning | `finetuning_course/Module_07_Post_Training_Alignment` | 8 | `7.1–7.8` | Pass |
+| LLM Finetuning | `finetuning_course/Module_08_PEFT_Model_Merging` | 5 | `8.1–8.5` | Pass |
+| LLM Finetuning | `finetuning_course/Module_09_Evaluation_Debugging` | 6 | `9.1–9.6` | Pass |
+| LLM Finetuning | `finetuning_course/Module_10_Inference_Deployment` | 4 | `10.1–10.4` | Pass |
+| LLM Finetuning | `finetuning_course/Module_11_Context_Length_Extension` | 5 | `11.1–11.5` | Pass |
+| LLM Finetuning | `finetuning_course/Module_12_Multimodal_Specialized` | 3 | `12.1–12.3` | Pass |
+| LLM Finetuning | `finetuning_course/Module_13_Safety_Alignment_Interpretability` | 4 | `13.1–13.4` | Pass |
+| LLM Finetuning | `finetuning_course/Module_14_MLOps_Practical_Workflows` | 5 | `14.1–14.5` | Pass |
+| LLM Finetuning | `finetuning_course/Module_15_Advanced_Post_Training` | 10 | `15.1–15.10` | Pass |
+| LLM Finetuning | `finetuning_course/Module_16_Advanced_Architectures_Efficiency` | 5 | `16.1–16.5` | Pass |
+| LLM Finetuning | `finetuning_course/Module_17_Implementation_Playbook` | 15 | `17.1–17.15` | Pass |
+| LLM Finetuning | `finetuning_course/Module_18_CV_VLM_Finetuning_Research` | 11 | `18.1–18.11` | Pass |
+| LLM Finetuning | `finetuning_course/Module_19_Distributed_Training_Infrastructure` | 11 | `19.1–19.11` | Pass |
+| LLM Finetuning | `finetuning_course/Module_20_Speech_Processing_ASR_TTS_STT` | 13 | `20.1–20.13` | Pass |
+
+## 4. Unresolved issues (intentionally not fabricated)
+
+The entries below **cannot** be certified from screenshots. They are retained as uncertain rather than silently omitted or invented.
+
+| Issue | Count / example | What would resolve it |
+|---|---|---|
+| HighEnd root course-overview files | 8 separate `.md` file rows; partial visible names appear in the tree | Actual file listing or screenshot with full filename column |
+| Truncated finetuning lesson names | `4.2`, `4.3`, `5.7`, `7.7`, `8.3` | Full filename listing |
+| Truncated Claude Architect instructor PDF | `instructor_8lsy…_Claud…` | Full filename listing |
+| Truncated HighEnd Module02 folder name | `Module02_DeepLearningTimeSeries_…FocalL…` | Full folder name |
+| Long HighEnd lesson names near photo right edges | In particular `Module08/16_Capstone…` | Actual file listing; transcription may contain inferred `.md` ending |
+| Distinct duplicate-numbered HighEnd modules | Two differently named `Module03_ModelCompression…` directories: one expanded, one collapsed | Open both folders to determine whether both are still present and inventory the collapsed one |
+| Unplaced partial folder from `1000101460.jpg` | `System_Design_DSA…` and two Markdown files | Screenshot with full parent breadcrumbs and folder name |
+| All collapsed folders | `agents/`, `.claude/`, `code/`, `RESEARCH/`, `learn/`, etc. | Recursive `Get-ChildItem -Force` export |
+
+### Unplaced partial subtree from the earlier screenshots
+
+The image shows these two filenames together, but does **not** establish an exact full parent path:
+
+```text
+[System_Design_DSA…]/  [parent and complete directory name unknown]
+├── 00_DSA_SYSTEMS_FRAMEWORK.md
+└── 00_INDEX.md
+```
+
+### Eight HighEnd course overview files (visible prefixes only)
+
+Each row is a separate file under `TRAIN/HighEnd/AdvancedCourse_HardwareAwareML_EdgeAI_7Domain_ComprehensiveMasteryCourse/`. The ellipsis indicates clipping, not a guessed filename.
+
+| Module | Readable prefix |
+|---|---|
+| 01 | `Module01_BiomedicalSignalProcessing_ECG_PPG_IMU_Filtering_HRV_FrequencyDomain_FundamentalsFor…` (shown as Markdown file) |
+| 02 | `Module02_DeepLearningForTimeSeries_1DCNN_BiLSTM_Attention_Transformers_Augmentation_ClassImbala…` (shown as Markdown file) |
+| 03 | `Module03_ModelCompression_PTQ_QAT_AWQ_SmoothQuant_StructuredPruning_KnowledgeDistillation_NAS…` (shown as Markdown file) |
+| 04 | `Module04_EdgeDeploymentRuntimes_TFLiteMicro_ONNXRuntime_ApacheTVM_AutoTuning_llamacpp_Edge…` (shown as Markdown file) |
+| 05 | `Module05_ARMArchitecture_EmbeddedSystems_CortexM_CortexA_CMSIS_NN_MemoryHierarchy_PowerAnal…` (shown as Markdown file) |
+| 06 | `Module06_AICompilerFundamentals_MLIR_Dialects_TVMPasses_RISCV_OperatorFusion_GraphOptimization_…` (shown as Markdown file) |
+| 07 | `Module07_OnDeviceLLM_EdgeRAG_SLMFineTuning_QLoRA_GGUF_FAISS_MedicalRAG_SovereignAI_Pi5Deplo…` (shown as Markdown file) |
+| 08 | `Module08_SystemIntegration_SovereignHealthAI_EndToEndArchitecture_STM32_Pi5_Streamlit_Benchmarking…` (shown as Markdown file) |
+
+## 5. Screenshot-to-directory crosswalk
+
+The same folders appear in multiple nonconsecutive images. Identical-looking filenames were deduplicated **by full parent path**, not by screenshot position.
+
+| Screenshot(s) | Folder family checked |
+|---|---|
+| `1000101431.jpg–1000101433.jpg` | DS_Domain production ML case studies; 11 categories, 55 files, `00_INDEX.md` |
+| `1000101434.jpg` | Insurance_Analytical_Modelling/ and neighboring root directories |
+| `1000101435.jpg` | inference/cluster_based_test_cases/ inner and outer folders |
+| `1000101436.jpg–1000101443.jpg` | HighEnd modules 01–08, two different Module03 directories, overview rows |
+| `1000101444.jpg–1000101450.jpg` | DS_Domain marketing, NLP, product analytics, recommendations, ML design |
+| `1000101451.jpg–1000101458.jpg` | DS_Domain time series, search, pricing, fraud, KDA, computer vision, related folders |
+| `1000101459.jpg–1000101460.jpg` | deep_dive/, Graph_ML_2025/ and partial System_Design_DSA… |
+| `1000101461.jpg–1000101462.jpg` | CUDA cheat sheets, folder/module overview |
+| `1000101463.jpg–1000101469.jpg` | Agents_Stack_Infra, numbered modules, supporting PDFs and RESEARCH |
+| `1000101488.jpg–1000101494.jpg` | finetuning_course (modules 00–20, cheat sheets, indexes and root files) |
+| `image-1793974205163.jpg` | LangGraph_LangChain_2025 |
+| `image-1793974368300.jpg` | Case_Studies_Streaming_Kafka_Flink_Redpanda |
+| `image-1793974456348.jpg–image-1793974543685.jpg` | Claude_Architect/course; domains, scenarios, exercises, references |
+| `image-1793974959684.jpg–image-1793975047753.jpg` | CUDA module lesson contents, READMEs, collapsed lab folders |
+
+## 6. Getting an exact filesystem-validated directory map
+
+A screenshot can prove that an entry is visible; it cannot prove that hidden files, collapsed folders or off-screen siblings do not exist. For byte-exact filenames and a truly exhaustive map, run the following in **PowerShell** on the machine containing `TRAIN` (change the path as needed):
+
+```powershell
+$root = 'C:\Users\ABBHAR1\Downloads\Train'
+Get-ChildItem -LiteralPath $root -Force -Recurse |
+  Select-Object @{Name='RelativePath'; Expression={$_.FullName.Substring($root.Length).TrimStart('\')}},
+                @{Name='Type'; Expression={if ($_.PSIsContainer) {'Directory'} else {'File'}}} |
+  Export-Csv -LiteralPath (Join-Path $root 'TRAIN_FILESYSTEM_INVENTORY.csv') -NoTypeInformation -Encoding UTF8
+```
+
+That CSV can be compared with the path records in this Markdown file. **Do not use the screenshot map as a script for creating folders** until the clipped names are resolved.

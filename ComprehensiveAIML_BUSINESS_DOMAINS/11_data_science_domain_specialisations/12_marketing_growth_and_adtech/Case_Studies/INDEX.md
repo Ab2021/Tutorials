@@ -1,0 +1,5 @@
+# Marketing, Growth and AdTech - Cross-Domain Case Studies
+
+> **Mandatory authoring contract:** Every authored case must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master: all 15 sections, bounded decision and baseline, traceable evidence, checked numerical walkthrough/sizing where applicable, failure diagnostics, 12–18 answered interview questions, and Section 15 last. This is a planned catalog, not completed cases; expand to all seven collection-index sections before publication. Evidence, implementation stage and editorial status remain separate.
+
+Use this collection for cases that compare two or more child domains. Follow the Case Study Collection INDEX Template v2 metadata, catalog, evidence, pattern, review, and link-validation rules.
