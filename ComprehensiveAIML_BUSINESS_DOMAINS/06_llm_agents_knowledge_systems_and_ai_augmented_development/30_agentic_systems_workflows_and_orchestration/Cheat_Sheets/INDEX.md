@@ -1,26 +1,57 @@
-# Module 30 Cheat Sheets â€” Agentic Systems, Workflows and Orchestration
+# Module 30 Cheat Sheets — Agentic Systems, Workflows and Orchestration
 
-## Authoring standard
+## 1. Overview
+For engineers familiar with transactions and distributed failures, this collection supports decisions about agent state, isolation, recovery and side effects. Two sheets are unreviewed drafts; production readiness requires independent review and workload-specific evidence.
 
-Every authored sheet must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. The catalog below includes a draft and planned sheets; expand to all 11 collection-index sections and a final Common Issues artifact (at least 25 complete issues) before publication. A card alone is not a completed sheet.
+## 2. Topic ladder
+| Level | Topic and outcome | Prerequisite / skill | Status |
+|---|---|---|---|
+| Foundation | Agent-pattern catalog: compare patterns against a bounded task and failure counterexample. | Basic model/tool interactions. | Planned |
+| Core | Workflow selection: select an orchestration style and explain tradeoffs. | Agent-pattern concepts. | Planned |
+| Core | Handoff protocol: define ownership and validate a handoff under failure. | Workflow and identity basics. | Planned |
+| Production | [04 Sessions, state and lifecycle](04_agent_sessions_state_isolation_and_lifecycle.md): trace ownership and isolation. | Authentication, transactions and access control. | Draft; not reviewed |
+| Production | [05 Durable workflows](05_durable_workflows_and_idempotent_execution.md): analyze crash windows and bounded backlog. | Sheet 04, queues and rate arithmetic. | Draft; not reviewed; source contents unavailable |
 
-## Cheat sheet catalog
+## 3. Quick topic lookup
+| Question | Exact section | Use and warning |
+|---|---|---|
+| Who owns session state? | [Definitions](04_agent_sessions_state_isolation_and_lifecycle.md#3-foundational-definitions) | Separate context from authoritative state. |
+| Can a timed-out write be retried? | [Failures](05_durable_workflows_and_idempotent_execution.md#8-failure-modes--edge-cases) | Inspect provider status and key contract; timeout is not failure proof. |
+| How does backlog grow? | [Formulas](05_durable_workflows_and_idempotent_execution.md#4-core-formulas-with-full-derivation) | Constant-rate queue model is not a latency guarantee. |
 
-| # | Reference | Coverage | Status |
-|---:|---|---|---|
-| 1 | agent-pattern catalog | Concise patterns, decision rules, assumptions, and common traps. | planned |
-| 2 | workflow selection | Concise patterns, decision rules, assumptions, and common traps. | planned |
-| 3 | handoff protocol | Concise patterns, decision rules, assumptions, and common traps. | planned |
-| 4 | [Agent sessions, state ownership, isolation and run lifecycle](04_agent_sessions_state_isolation_and_lifecycle.md) | Control-plane ownership, lifecycle recovery, isolation, external effects and sizing; based on the Agents Stack Infra Module 03 directory crosswalk. | draft; not reviewed |
-| 5 | [Durable workflows and idempotent execution](05_durable_workflows_and_idempotent_execution.md) | Checkpoints, retries, timeouts, business-side effect safety, queue sizing, reconciliation and diagnostic scenarios; source title mapped from Agents Stack Infra Module 04, but source contents unavailable. | draft; not reviewed |
+## 4. Reading paths
+- **Beginner:** Learn authentication and database transactions; read [session definitions](04_agent_sessions_state_isolation_and_lifecycle.md#3-foundational-definitions) and its [mental model](04_agent_sessions_state_isolation_and_lifecycle.md#2-concept-map--mental-model). Pattern catalog remains planned.
+- **Practitioner:** Read sheet 04 then [05](05_durable_workflows_and_idempotent_execution.md), tracing ownership, checkpoints and external effects.
+- **Advanced:** Read both complete drafts, then use their failures and cards to reason through replay, tenant isolation and reconciliation; the workflow and handoff guides are planned extensions.
 
-## Suggested file naming
+## 5. Prerequisite skills
+Understand HTTP authentication, tenant authorization, transactions, leases, queue rates and retry ambiguity. Start with the [session header](04_agent_sessions_state_isolation_and_lifecycle.md#1-file-header) and its linked concurrency reference; then apply queue arithmetic in [05](05_durable_workflows_and_idempotent_execution.md#4-core-formulas-with-full-derivation).
 
-Use **01_reference-slug.md**, then **02_reference-slug.md**. Keep one concern per file so references remain scannable.
+## 6. What this collection does NOT cover
+The agent-pattern catalog, workflow selection and handoff protocol remain planned. Neither draft proves exactly-once external effects or validates a provider's contract; tool integration details require separate study. Reference-informed briefs below are proposals, not completed sheets.
+
+## 7. Master symbol glossary
+| Symbol / term | Meaning; unit / type / domain | First use |
+|---|---|---|
+| Session | Tenant-scoped durable interaction container; identifier, not authorization. | [04 definitions](04_agent_sessions_state_isolation_and_lifecycle.md#3-foundational-definitions) |
+| B | Pending backlog; nonnegative scalar jobs. | [05 definitions](05_durable_workflows_and_idempotent_execution.md#3-foundational-definitions) |
+| lambda, mu | Arrival and completion rates; jobs per second, nonnegative scalars under the stated model. | [05 definitions](05_durable_workflows_and_idempotent_execution.md#3-foundational-definitions) |
+
+## 8. Quick Reference Card directory
+| Card | Rule / use | Condition and avoid |
+|---|---|---|
+| [04 card](04_agent_sessions_state_isolation_and_lifecycle.md#12-quick-reference-card) | Trace state ownership and isolation. | An identifier is not proof of authorization. |
+| [05 card](05_durable_workflows_and_idempotent_execution.md#12-quick-reference-card) | Reconcile ambiguous effects before unsafe retry. | Provider semantics and key retention govern effect safety. |
+
+## 9. Common Issues locator
+The final Common Issues artifact has not been authored; its count is unknown. Use the draft [session failures](04_agent_sessions_state_isolation_and_lifecycle.md#8-failure-modes--edge-cases) for isolation and ownership, and [workflow failures](05_durable_workflows_and_idempotent_execution.md#8-failure-modes--edge-cases) for a lost response: look up the stable operation key before retry. These are hypothetical diagnostics, not incident counts.
+
+## 10. Empirical sources, versions and collection maintenance
+Original source directories were unavailable and not inspected; the crosswalk identifies source titles only. Both sheets are drafts without independent review; their examples are not production measurements. Consult [standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [template](../../../../Templates/CHEAT_SHEET_CONTENT_MASTER_TEMPLATE.md); recheck provider contracts, retention, authorization and source versions on change. No review date is asserted. Each sheet requires all 12 sections and a final card.
 
 <!-- BEGIN INTERVIEW REFERENCE PLAN -->
 
-## Reference-informed additions to develop
+### Reference-informed additions to develop
 
 These are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../00_REFERENCE_INFORMED_CASE_PLAN.md).
 
@@ -32,3 +63,9 @@ These are proposed writing briefs informed by interview examples. The examples a
 Each future cheat sheet needs its own explanation, preconditions, formulas or algorithms where relevant, failure signals and checked examples. Do not copy the interview narrative or its scenario figures into a reference sheet.
 
 <!-- END INTERVIEW REFERENCE PLAN -->
+
+## 11. Collection acceptance checklist
+- [ ] Author the three planned guides and final Common Issues artifact with at least 25 substantive issues.
+- [ ] Independently review both drafts, their 12-section structure, calculations, recovery claims and sources.
+- [ ] Verify current provider contracts, evidence, links and anchors before publication.
+- [ ] Record review dates and distinguish illustrative traces from observed incidents.

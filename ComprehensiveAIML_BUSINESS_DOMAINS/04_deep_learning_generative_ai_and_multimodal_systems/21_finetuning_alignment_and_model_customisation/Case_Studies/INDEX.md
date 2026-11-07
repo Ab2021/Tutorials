@@ -41,19 +41,19 @@ Case metadata, pattern definitions, supporting/contrasting references, structure
 
 <!-- END INTERVIEW REFERENCE PLAN -->
 
-## Collection metadata
+## 1. Collection metadata
 
 Module 21 cases cover bounded model-customisation decisions and their operational consequences.
 The collection owner is the curriculum maintainer; evidence, implementation stage and editorial status are independent.
 The case below is illustrative and does not claim any real customer, training run or deployment.
 
-## Case catalog
+## 2. Case catalog
 
 | Case ID | Title | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
 | CASE-2026-FT01 | [Should support draft generation use a domain adapter?](01_support_domain_adaptation.md) | Support model adaptation | llm-agentic | Whether to pilot an agent-only adapter | `evaluation-mismatch` | `data-leakage`, `atomic-release-bundle` | not-measured; illustrative sizing | proposed | never | No run, measured impact or deployment; draft, unreviewed |
 
-## Canonical reusable patterns
+## 3. Canonical reusable patterns
 
 | Pattern | Meaning in this collection |
 |---|---|
@@ -61,7 +61,7 @@ The case below is illustrative and does not claim any real customer, training ru
 | `data-leakage` | Information unavailable at decision time or shared across partitions biases evaluation. |
 | `atomic-release-bundle` | Model, tokenizer, configuration and evidence must be versioned and promoted together. |
 
-## Similarity and contrast map
+## 4. Similarity and contrast map
 
 | Case or brief | Relationship | Important difference |
 |---|---|---|
@@ -69,21 +69,21 @@ The case below is illustrative and does not claim any real customer, training ru
 | PLAN-2026-IR004 | Related adapter lifecycle | Tenant isolation is the central question there, not established by this case. |
 | PLAN-2026-IR010 | Related comparison with a shared baseline | Its proposed repository and language settings differ from support drafting. |
 
-## Questions and future-case backlog
+## 5. Questions and future-case backlog
 
 - What sample size would support an agreed severe-risk upper bound in an actual deployment?
 - How should an actual business define the minimum economically useful improvement?
 - The edge compact-model case remains planned; no edge deployment is implied.
 - Reference-informed briefs above remain planned and are not claimed as covered cases.
 
-## Review and retirement log
+## 6. Review and retirement log
 
 | Item | State | Trigger or next review |
 |---|---|---|
 | CASE-2026-FT01 | Draft; no substantive review recorded | Review when sources, model, policy, rights, rubric or serving assumptions change. |
 | Collection | Not published | Independently check numerical work, source access, links and all case gates. |
 
-## Pre-publish checks
+## 7. Pre-publish checks
 
 - Verify the case's equations, arithmetic and applicable sources independently.
 - Check that all 15 sections, interview answers and local links are complete.

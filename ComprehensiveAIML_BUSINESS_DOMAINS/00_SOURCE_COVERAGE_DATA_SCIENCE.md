@@ -125,7 +125,7 @@ Hidden folders and clipped filenames remain `unresolved-source`; visible prefixe
 
 ## Pharma key-driver analysis
 
-**Teaching home:** [11_data_science_domain_specialisations/01_production_ml_case_library/03_kda_solutions_pharma/INDEX.md](11_data_science_domain_specialisations/01_production_ml_case_library/03_kda_solutions_pharma/INDEX.md). **Status:** planned.
+**Teaching home:** [11_data_science_domain_specialisations/01_production_ml_case_library/03_kda_solutions_pharma/INDEX.md](11_data_science_domain_specialisations/01_production_ml_case_library/03_kda_solutions_pharma/INDEX.md). **Status:** mostly planned; [HCP promotional-response drivers](11_data_science_domain_specialisations/01_production_ml_case_library/03_kda_solutions_pharma/Case_Studies/01_HCP_Promotional_Response_Driver_Analysis_Launch_Brand.md) is an illustrative, unreviewed draft. The original case contents remain unavailable; other cases are planned.
 
 **Testable outcome.** Frame, design and challenge each of the five separately listed production cases; do not combine independent decisions into one narrative.
 
@@ -398,7 +398,7 @@ Hidden folders and clipped filenames remain `unresolved-source`; visible prefixe
 
 ## Forecasting production decisions
 
-**Teaching home:** [11_data_science_domain_specialisations/01_production_ml_case_library/10_time_series_forecasting/INDEX.md](11_data_science_domain_specialisations/01_production_ml_case_library/10_time_series_forecasting/INDEX.md). **Status:** planned.
+**Teaching home:** [11_data_science_domain_specialisations/01_production_ml_case_library/10_time_series_forecasting/INDEX.md](11_data_science_domain_specialisations/01_production_ml_case_library/10_time_series_forecasting/INDEX.md). **Status:** mostly planned; unreviewed drafts cover [retail demand](11_data_science_domain_specialisations/01_production_ml_case_library/10_time_series_forecasting/Case_Studies/01_Retail_CPG_Demand_Forecasting_At_Scale.md) and [ride-hailing demand](11_data_science_domain_specialisations/01_production_ml_case_library/10_time_series_forecasting/Case_Studies/02_Ride_Hailing_Demand_Forecasting.md). ETA and the remaining cases are planned; the unavailable original cases were not inspected.
 
 **Testable outcome.** Frame, design and challenge each of the five separately listed production cases; do not combine independent decisions into one narrative.
 

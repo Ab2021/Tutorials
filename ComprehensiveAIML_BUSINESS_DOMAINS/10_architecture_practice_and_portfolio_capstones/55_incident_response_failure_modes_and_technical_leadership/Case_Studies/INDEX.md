@@ -41,31 +41,31 @@ Case metadata, pattern definitions, supporting/contrasting references, structure
 
 <!-- END INTERVIEW REFERENCE PLAN -->
 
-## Collection metadata
+## 1. Collection metadata
 
 Owner: incident response curriculum maintainers. Review cadence: on substantive changes to source material, technology semantics or case assumptions. Last reviewed: not reviewed. Index version: draft. Streaming case identifiers use `CASE-STREAM-NNN`. This index is the collection source of truth. Audience: incident responders and system-design interview candidates.
 
-## Case catalog
+## 2. Case catalog
 
 | Case ID | Case title | Domain | Case type | Decision / business question | Primary pattern | Secondary patterns | Evidence | Stage | Content status | Last reviewed | Key result or limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
 | CASE-STREAM-001 | [Recovering a hot partition without losing customer-event ordering](01_hot_partition_consumer_lag_incident.md) | Real-time analytics | streaming-systems | How should operators contain partition lag without losing or duplicating effects? | Incident diagnosis and recovery | Partition-aware capacity planning | illustrative | proposed | draft | not reviewed | No actual incident or measured outcome; rates and timeline are hypothetical. |
 | CASE-STREAM-002 | [Flink checkpoint failure and memory pressure](02_flink_checkpoint_failure_oom_incident.md) | Stateful streaming operations | incident | How should responders diagnose checkpoint failures and safely recover without silent loss or uncontrolled effects? | Incident diagnosis and recovery | Partition-aware capacity planning | illustrative | proposed | draft-unreviewed | not reviewed | Hypothetical scenario; no actual incident, experiment or measured outcome. |
 
-## Canonical reusable pattern vocabulary
+## 3. Canonical reusable pattern vocabulary
 
 | Pattern | Mechanism and diagnostic signature | Preconditions and counterexample | Related case / method |
 |---|---|---|---|
 | Incident diagnosis and recovery | Distinguish competing causes, contain safely, reconcile and validate recovery | Requires observable boundaries; do not infer a cause from lag alone | CASE-STREAM-001; [SRE SLO methods](https://sre.google/workbook/implementing-slos/) |
 | Partition-aware capacity planning | Compare arrival and service by partition rather than relying on aggregate averages | Useful with partition-affine work; a global sink bottleneck requires a different remedy | CASE-STREAM-001; [Kafka consumer groups](https://kafka.apache.org/documentation/#intro_consumers) |
 
-## Cross-case similarity and contrast map
+## 4. Cross-case similarity and contrast map
 
 | Pattern | Supporting case | Contrasting case | Theory / methodology | Boundary learned |
 |---|---|---|---|---|
 | Partition-aware capacity planning | CASE-STREAM-001 is an illustrative exercise, not empirical support | No comparable completed case established | [Kafka consumer groups](https://kafka.apache.org/documentation/#intro_consumers) | Added group members do not split a single partition. |
 
-## Questions and future-case backlog
+## 5. Questions and future-case backlog
 
 | Open question | Originating case | Needed evidence | Proposed next case or experiment | Priority | Owner role | Trigger / review date |
 |---|---|---|---|---|---|---|
@@ -74,14 +74,14 @@ Owner: incident response curriculum maintainers. Review cadence: on substantive 
 | Can cutover and rollback preserve effects? | CASE-STREAM-001 | Failure-injection and replay records | Fenced migration rehearsal | High | Streaming platform lead | Before migration |
 | Can checkpoint recovery preserve all source and sink effects? | CASE-STREAM-002 | Version-specific restore rehearsal, retention boundaries and sink reconciliation | Inject failures around checkpoint and sink commit | High | Streaming platform and sink owners | Before production recovery |
 
-## Review and retirement log
+## 6. Review and retirement log
 
 | Case ID | Date | What changed | Evidence or market trigger | Action | Owner role |
 |---|---|---|---|---|---|
 | CASE-STREAM-001 | 2026-11-07 | Initial draft catalog entry | Illustrative teaching exercise | Drafted; not reviewed | Streaming platform lead |
 | CASE-STREAM-002 | 2026-11-07 | Completed illustrative draft and catalog entry | Hypothetical teaching exercise | Drafted; not reviewed | Streaming platform lead |
 
-## Pre-publish index checks
+## 7. Pre-publish index checks
 
 - [ ] Complete substantive review of the draft and its source references.
 - [ ] Confirm source links and compare claims to current deployed dependency versions.

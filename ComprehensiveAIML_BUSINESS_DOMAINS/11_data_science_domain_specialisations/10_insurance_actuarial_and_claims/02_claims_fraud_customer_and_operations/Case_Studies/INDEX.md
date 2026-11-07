@@ -1,6 +1,6 @@
 # Claims, Fraud, Customer and Operations - Case Study Collection
 
-> **Mandatory authoring contract:** Every authored case must follow the [course authoring and numerical standards](../../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master: all 15 sections, bounded decision and baseline, traceable evidence, checked numerical walkthrough/sizing where applicable, failure diagnostics, 12–18 answered interview questions, and Section 15 last. This is a planned catalog, not completed cases; expand to all seven collection-index sections before publication. Evidence, implementation stage and editorial status remain separate.
+> **Mandatory authoring contract:** Every authored case must follow the [course authoring and numerical standards](../../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master: all 15 sections, bounded decision and baseline, traceable evidence, checked numerical walkthrough/sizing where applicable, failure diagnostics, 12–18 answered interview questions, and Section 15 last. Planned rows remain proposals; the linked case below is an unreviewed draft. Evidence, implementation stage and editorial status remain separate.
 
 ## 1. Collection metadata
 
@@ -9,7 +9,7 @@
 | Collection owner | Curriculum maintainer |
 | Last reviewed | 2026-11-06 |
 | Review cadence | Quarterly and on material market/regulatory change |
-| Index version | 2.0-planned |
+| Index version | 2.1-draft |
 | Canonical case-ID format | CASE-10-02-NNN |
 | Canonical tags | Use the controlled vocabulary below; add synonyms only after review |
 | Source of truth | This directory |
@@ -23,6 +23,7 @@
 | PLAN-10-02-03 | Damage-image estimate | Claims, Fraud, Customer and Operations | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
 | PLAN-10-02-04 | Customer communications | Claims, Fraud, Customer and Operations | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
 | PLAN-10-02-05 | Claims backlog optimisation | Claims, Fraud, Customer and Operations | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
+| CASE-10-02-006 | [Medical claims document extraction: MediConCen](Medical_Claims_Document_Extraction_MediConCen.md) | Medical insurance claims | llm-agentic | Whether to introduce extraction assistance or gated automation with claim-level evidence and human review | evaluation-mismatch | human-in-the-loop, cost-latency-tradeoff | published | production (reported platform); proposed (teaching design) | unreviewed | Draft; vendor/company-reported 98% field accuracy and relative processing claims lack disclosed evaluation details; no causal or compliance conclusion |
 
 ## 3. Canonical reusable patterns
 
@@ -46,12 +47,27 @@
 | evaluation-mismatch | All planned cases | Relevant method and evaluation modules | Whether proxy metric changes decision quality |
 | distribution-shift | Market, season, policy, or user changes | Forecasting, MLOps, and domain indexes | Population and operational conditions |
 | human-in-the-loop | High-impact operational cases | Governance, UX, and domain workflows | Review capacity and override quality |
+| evaluation-mismatch | CASE-10-02-006 | [Service-level objective method](https://sre.google/workbook/implementing-slos/) | Field accuracy does not establish complete-claim accuracy |
+| human-in-the-loop | CASE-10-02-006 | Independent source-backed review and adjudication | Review capacity and quality must be measured |
+| cost-latency-tradeoff | CASE-10-02-006 | Cost per correctly processed claim | Cost and turnaround claims require comparable cohorts |
 
 ## 5. Backlog and review
 
 Before drafting any listed case, replace the PLAN ID with a CASE ID, add a relative file link, choose one primary pattern and no more than two secondary patterns, state evidence/stage independently, and set a concrete review trigger. The full 15-section integrated case-study outline is mandatory for each drafted case.
 
-## 6. Pre-publish checks
+- CASE-10-02-006: obtain the reported extraction sample, rubric and denominator before using the headline as a deployment benchmark; owner: evaluation lead.
+- CASE-10-02-006: obtain baseline and final straight-through rates, cohort definitions and observation windows; owner: analytics lead.
+- CASE-10-02-006: independently assess language, document type and scan-quality slices with privacy safeguards; owner: claims quality lead.
+- CASE-10-02-006: compare complete-claim quality, latency and cost with a suitable baseline before proposing automation; owner: claims operations lead.
+- Review trigger: correction to the customer story, independent evidence, or material change to intended deployment scope.
+
+## 6. Review log
+
+| Date | Scope | State | Next trigger |
+|---|---|---|---|
+| 2026-11-07 | Added CASE-10-02-006 and documented evidence gaps | Draft; substantive review not yet completed | Source correction, independent evaluation, or change to deployment scope |
+
+## 7. Pre-publish checks
 
 - [ ] Case ID is unique and linked.
 - [ ] Evidence maturity is distinct from implementation stage.

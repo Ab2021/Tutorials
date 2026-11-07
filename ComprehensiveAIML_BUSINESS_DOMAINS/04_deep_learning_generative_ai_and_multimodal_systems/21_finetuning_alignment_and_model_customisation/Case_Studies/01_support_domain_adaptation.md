@@ -1226,12 +1226,23 @@ Each answer is a proposed design judgment, not a report of an executed system.
 
 | Field | Decision-ready summary |
 |---|---|
-| Framing | Agent-only support draft with current policy and human review |
-| Input and output | Authorized ticket plus policy excerpt to editable draft, never automatic send |
+| Domain | Customer support language-model adaptation. |
+| Problem type | Decide whether an agent-only support drafting assistant should use an adapter; authorized ticket and policy excerpt produce an editable draft, never automatic send. |
 | Decision and baseline | Compare proposed LoRA with frozen prompted base and manual drafting |
 | Method | Time-correct grouped split, supervised response-only loss, independent evaluation |
-| Finding | No pilot decision is supported until quality, safety and operational evidence exists |
+| Primary result | Not measured: no pilot decision is supported until quality, safety and operational evidence exists. |
 | Numerical anchor | Rank-eight adapters: 4,194,304 parameters under Section 6 geometry |
 | Failure boundary | Stale policy, leakage, unsafe outputs or mismatched release bundle block promotion |
 | Evidence and stage | Illustrative sizing; outcome not measured; proposed, not deployed |
 | Review | Draft, unreviewed; recheck after model, policy, rights or rubric changes |
+| Key lesson | A domain adapter does not replace current policy, independent evaluation or human review. |
+| Tags | `evaluation-mismatch`; `data-leakage`; `atomic-release-bundle` |
+
+| Supplemental field | Value |
+|---|---|
+| Case ID / version / as-of | CASE-2026-FT01 / 1.0 / 2026-11-07 |
+| Evidence level | Illustrative sizing; outcome not measured |
+| Implementation stage | Proposed; no deployed pilot |
+| Baseline / primary metric | Frozen prompted base and manual drafting; independent quality and safety gates to be defined |
+| Key limitation | No actual training run, evaluated dataset or deployment |
+| Review trigger / owner | Policy, model, data rights, rubric or serving stack change / support operations lead |

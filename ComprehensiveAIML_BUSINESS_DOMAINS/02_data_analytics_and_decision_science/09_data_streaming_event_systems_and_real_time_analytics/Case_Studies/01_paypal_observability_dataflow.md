@@ -1238,13 +1238,23 @@ Answer support: Section 9.
 
 ## 15. Quick Reference Card
 
-- **Problem:** Deliver timely, recoverable observability telemetry while reducing operational burden.
-- **Input:** Application telemetry records, with schemas and workload details not disclosed by the source.
-- **Decision:** Migrate the reported self-managed Flink-based workload to Dataflow and shift ingestion from Pulsar to Kafka.
-- **Method:** Reported proof of concept and pipeline optimization; proposed reconciliation and recovery drills are explicitly hypothetical.
-- **Finding:** Coauthors report lower cost and improved stability and uptime, without numerical comparison or independent verification.
-- **Lesson:** Check source retention, state recovery, output idempotence, and completeness as one end-to-end contract.
-- **Evidence:** Published vendor narrative, [S1]; numerical calculations are illustrative and not PayPal measurements.
-- **Implementation stage:** Production migration reported; exact rollout and current configuration not independently verified.
-- **Editorial state:** Draft, unreviewed; last reviewed is null.
-- **Review trigger:** New primary evidence, service semantics change, or substantive editorial review.
+| Field | Value |
+|---|---|
+| Domain | Observability and streaming analytics |
+| Problem type | Deliver timely, recoverable application telemetry with less operational burden. |
+| Method | Reported proof of concept and pipeline optimization, compared with the earlier self-managed system; proposed reconciliation drills are hypothetical. |
+| Primary result | Published vendor narrative: coauthors report lower cost and improved stability and uptime, without a numerical comparison or independent verification. |
+| Key lesson | Check source retention, state recovery, output idempotence and completeness as one end-to-end contract. |
+| Tags | `recoverable-stream-processing`; `partition-aware-scaling`; `migration-reconciliation` |
+| Decision | Reported migration from self-managed Flink to Dataflow and Pulsar ingestion to Kafka. |
+| Evidence / stage | Published vendor narrative [S1]; production migration reported; numerical examples are illustrative and current configuration is unverified. |
+| Review | Draft, unreviewed; revisit on new primary evidence or a service-semantics change. |
+
+| Supplemental field | Value |
+|---|---|
+| Case ID / version / as-of | CASE-2026-STR001 / 1.0 / 2024-12-03 |
+| Evidence level | Published vendor narrative; numerical examples illustrative |
+| Implementation stage | Production migration reported; exact rollout and current configuration unverified |
+| Baseline / primary metric | Earlier self-managed Flink pipeline; source reports improved stability and uptime without numerical comparison |
+| Key limitation | Workload, metric definitions and quantified outcomes are not disclosed |
+| Review trigger / owner | New primary evidence or service-semantics change / observability platform team |

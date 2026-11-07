@@ -1314,8 +1314,8 @@ Questions are prompts for a design discussion, not claims of actual interview or
 | Key lesson | A causal demand response and mature business objective are needed before trusting optimized prices |
 | Tags | causal-confounding; evaluation-mismatch; model-monitoring |
 | Case ID / version / as-of | CASE-01-06-001 / draft 1 / 2026-11-07 |
-| Evidence / source basis | not-measured / illustrative; no business dataset or run |
-| Stage / editorial status | proposed / draft-unreviewed; last reviewed null |
-| Baseline / action | Approved fixed rule / retain pending a governed randomized test |
-| Guardrails / boundary | Price bounds, movement, inventory, customer treatment and legal approval; no individual pricing |
+| Evidence level | not-measured / illustrative; no business dataset or run |
+| Implementation stage | proposed / draft-unreviewed; last reviewed null |
+| Baseline / primary metric | Approved fixed rule; measure profit and customer guardrails in a governed randomized test |
+| Key limitation | Price bounds, inventory, customer treatment and legal approval constrain the proposed test; no individual pricing or observed outcome |
 | Review trigger / owner | Changes to eligibility, constraints, experiment, or finance definitions / pricing science lead |

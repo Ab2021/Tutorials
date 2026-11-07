@@ -10,7 +10,7 @@
 |---:|---|---|
 | 1 | distributed strategies | planned |
 | 2 | dataset sharding and loading | planned |
-| 3 | checkpointing and fault recovery | planned |
+| 3 | checkpointing and fault recovery | [draft cheat sheet](../Cheat_Sheets/01_Distributed_Training_Checkpoint_and_Recovery.md); broader topic planned |
 | 4 | cluster scheduling | planned |
 | 5 | cost and throughput tuning | planned |
 

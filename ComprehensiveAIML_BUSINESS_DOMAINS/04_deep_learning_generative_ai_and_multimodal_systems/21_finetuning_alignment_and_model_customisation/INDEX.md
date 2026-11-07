@@ -9,7 +9,7 @@
 | # | Topic | Status |
 |---:|---|---|
 | 1 | curation and quality | planned |
-| 2 | SFT and PEFT | planned |
+| 2 | SFT and PEFT | [LoRA](Cheat_Sheets/01_LoRA_Parameter_Efficient_Finetuning.md) and [QLoRA](Cheat_Sheets/02_QLoRA_Quantized_Base_Adapter_Finetuning.md) drafts; SFT and broader scope planned |
 | 3 | preference optimisation | planned |
 | 4 | distillation and model merging | planned |
 | 5 | regression evaluation | planned |

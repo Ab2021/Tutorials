@@ -19,7 +19,7 @@
 | Case ID | Case title / relative link | Domain | Case type | Decision / business question | Primary pattern | Secondary pattern(s) | Evidence | Stage | Last reviewed | Key result or limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
 | CASE-01-10-001 | [Retail CPG demand forecasting at scale](01_Retail_CPG_Demand_Forecasting_At_Scale.md) | Retail CPG | predictive-ml | Daily bounded store-SKU replenishment order | evaluation-mismatch | data-leakage; model-monitoring | not-measured | proposed | unreviewed | Illustrative arithmetic only; no backtest, pilot, or business outcome measured; editorial status draft. Source: `DS_Domain/Case_Studies_Production_ML_Systems/TimeSeries_Forecasting/01_Retail_CPG_Demand_Forecasting_At_Scale.md` (formerly PLAN-01-10-01). |
-| PLAN-01-10-02 | Ride-hailing ETA and demand | Time Series Forecasting | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
+| CASE-01-10-002 | [Ride-hailing demand forecasting for operational planning](02_Ride_Hailing_Demand_Forecasting.md) | Ride-hailing marketplace | predictive-ml | Next-hour zone request forecast for optional planning | evaluation-mismatch | data-leakage; model-monitoring | not-measured | proposed | unreviewed | Draft; historical Uber article plus illustrative design and arithmetic, no measured accuracy or causal impact. ETA remains planned. |
 | PLAN-01-10-03 | Financial volatility forecast | Time Series Forecasting | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
 | PLAN-01-10-04 | Energy load forecast | Time Series Forecasting | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
 | PLAN-01-10-05 | Server-metric anomaly detection | Time Series Forecasting | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
@@ -43,7 +43,7 @@
 
 | Pattern | Cases | Theory/method links | Boundary to test |
 |---|---|---|---|
-| evaluation-mismatch | CASE-01-10-001; other cases planned | [Rolling-origin evaluation](https://otexts.com/fpp3/tscv.html) | Forecast error need not reflect shortage and holding cost |
+| evaluation-mismatch | CASE-01-10-001; CASE-01-10-002; other cases planned | [Rolling-origin evaluation](https://otexts.com/fpp3/tscv.html) | Forecast error need not reflect inventory cost or marketplace policy outcomes |
 | distribution-shift | Market, season, policy, or user changes; planned cases | Forecasting and MLOps | Population and operational conditions |
 | human-in-the-loop | CASE-01-10-001; high-impact operational cases planned | Governance and operations workflows | Review capacity and override quality |
 
@@ -52,7 +52,10 @@
 - Establish how much demand is censored during stockouts; availability data and a validated estimation approach are needed.
 - Reconcile inventory position and supplier lead times at historical cutoffs before backtesting.
 - Test whether a forecast-assisted policy improves cost and service against the operational baseline.
-- Author the ride-hailing, financial volatility, energy load, and server-metric cases as separate planned decisions.
+- Establish whether ride-hailing request events, corrections, and zone maps can be reconstructed as of historical forecast origins.
+- Validate the request-count target and design a spillover-aware test of driver guidance before claiming policy impact.
+- Evaluate interval coverage and width by zone and time after mature labels become available.
+- Author ride-hailing ETA, financial volatility, energy load, and server-metric cases as separate planned decisions.
 
 ## 6. Review and retirement log
 
@@ -60,6 +63,7 @@
 |---|---|---|---|
 | 2026-11-06 | Collection | Planning catalog reviewed | Does not constitute review of later authored content. |
 | 2026-11-07 | CASE-01-10-001 | Draft added | Illustrative, proposed, unreviewed; review on changes to cutoff, inventory semantics, snapshots, or lead times. |
+| 2026-11-07 | CASE-01-10-002 | Draft added | Published historical context and illustrative proposed design; unreviewed and not measured. |
 
 ## 7. Pre-publish checks
 

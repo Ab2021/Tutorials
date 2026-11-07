@@ -1,6 +1,6 @@
 # KDA Solutions Pharma - Case Study Collection
 
-> **Mandatory authoring contract:** Every authored case must follow the [course authoring and numerical standards](../../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master: all 15 sections, bounded decision and baseline, traceable evidence, checked numerical walkthrough/sizing where applicable, failure diagnostics, 12–18 answered interview questions, and Section 15 last. This is a planned catalog, not completed cases; expand to all seven collection-index sections before publication. Evidence, implementation stage and editorial status remain separate.
+> **Mandatory authoring contract:** Every authored case follows the [course authoring and numerical standards](../../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master. Evidence, implementation stage and editorial status remain separate; source directory names are topic leads, not evidence of source contents.
 
 ## 1. Collection metadata
 
@@ -18,7 +18,7 @@
 
 | Case ID | Case title / relative link | Domain | Case type | Decision / business question | Primary pattern | Secondary pattern(s) | Evidence | Stage | Last reviewed | Key result or limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-01-03-01 | HCP promotional-response drivers | KDA Solutions Pharma | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
+| CASE-01-03-001 | [HCP promotional-response drivers](01_HCP_Promotional_Response_Driver_Analysis_Launch_Brand.md) | KDA Solutions Pharma | analytical | Test an incremental approved HCP offer against usual scheduling | causal-confounding | evaluation-mismatch, label-delay | not-measured | proposed | not reviewed | Fictional illustration; source contents unavailable, outcome not measured; draft unreviewed |
 | PLAN-01-03-02 | Patient adherence and persistency | KDA Solutions Pharma | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
 | PLAN-01-03-03 | Brand-performance decomposition | KDA Solutions Pharma | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
 | PLAN-01-03-04 | Payer formulary access drivers | KDA Solutions Pharma | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
@@ -39,23 +39,34 @@
 | causal-confounding | Observational relationship is not intervention effect | Attribution, uplift, promotion, policy decisions | Valid randomization addresses concern |
 | incident-postmortem | Operational impact requires causal reconstruction | Actual incident or replay exercise | No failure event/replay exists |
 
-## 4. Planned cross-case map
+## 4. Cross-case similarity and contrast map
 
-| Pattern | Supporting planned cases | Theory/method links | Boundary to test |
-|---|---|---|---|
-| evaluation-mismatch | All planned cases | Relevant method and evaluation modules | Whether proxy metric changes decision quality |
-| distribution-shift | Market, season, policy, or user changes | Forecasting, MLOps, and domain indexes | Population and operational conditions |
-| human-in-the-loop | High-impact operational cases | Governance, UX, and domain workflows | Review capacity and override quality |
+| Pattern | Supporting case(s) | Contrasting case(s) | Theory/methodology link | Boundary learned |
+|---|---|---|---|---|
+| causal-confounding | CASE-01-03-001, illustrative design | Planned omnichannel attribution case, not yet authored | Randomized policy contrast and positivity, in case Section 5 | Association is not intervention effect; interference may require cluster assignment |
+| evaluation-mismatch | CASE-01-03-001 | Planned adherence case, not yet authored | Outcome definition and guardrails, in case Section 9 | Prescriber response is not a patient-health outcome |
+| label-delay | CASE-01-03-001 | Planned brand-performance case, not yet authored | Outcome maturity and missingness, in case Section 9 | Late events and absent coverage cannot be interpreted as zero response |
 
-## 5. Backlog and review
+## 5. Questions and future-case backlog
 
-Before drafting any listed case, replace the PLAN ID with a CASE ID, add a relative file link, choose one primary pattern and no more than two secondary patterns, state evidence/stage independently, and set a concrete review trigger. The full 15-section integrated case-study outline is mandatory for each drafted case.
+| Open question | Originating case | Needed evidence | Proposed next case or experiment | Priority | Owner role | Trigger / review date |
+|---|---|---|---|---|---|---|
+| Can the proposed randomized offer be reviewed and measured without patient identifiers? | CASE-01-03-001 | Authorized source, eligibility, consent and protocol review | Proposed HCP policy experiment | High | Commercial decision owner | Before any test or launch |
+| What prescriber-response evidence did the original source contain? | CASE-01-03-001 | Original source contents | Revisit source crosswalk | High | Curriculum maintainer | Source becomes accessible |
+| Which decisions and data support the remaining planned titles? | PLAN-01-03-02 through PLAN-01-03-05 | Original source contents or separately sourced evidence | Draft each planned case | Medium | Curriculum maintainer | Before drafting each case |
 
-## 6. Pre-publish checks
+## 6. Review and retirement log
 
-- [ ] Case ID is unique and linked.
-- [ ] Evidence maturity is distinct from implementation stage.
+| Case ID | Date | What changed | Evidence or market trigger | Action | Owner role |
+|---|---|---|---|---|---|
+| CASE-01-03-001 | 2026-11-07 | Illustrative draft added; not reviewed | Topic lead only; original contents unavailable | Review before publication and before any actual use | Curriculum maintainer |
+
+## 7. Pre-publish index checks
+
+- [ ] Case ID is unique and linked; planned titles remain distinct from authored cases.
+- [ ] Evidence maturity, implementation stage and document state are independently accurate.
 - [ ] Decision, metric, action, and outcome refer to the same population.
 - [ ] Assumptions, constraints, failure modes, and a quick-reference card are present.
-- [ ] Company-specific claims have primary/public evidence or are labelled illustrative.
-- [ ] Local links resolve and the review trigger is actionable.
+- [ ] Source contents, access limits, and unmeasured outcomes are disclosed.
+- [ ] Links resolve and review triggers are actionable.
+- [ ] Review dates are actual; no review is implied by the draft creation date.

@@ -1082,9 +1082,9 @@ It closes with an observable recovery gate rather than a restart announcement.
 
 | Field | Decision aid |
 |---|---|
-| Scenario | Hypothetical stateful Flink job with checkpoint failures and memory pressure |
-| Evidence status | Illustrative teaching exercise; no actual logs, run or incident outcome |
-| Primary decision | Safely contain and restore without silent loss or uncontrolled external effects |
+| Domain | Hypothetical stateful Flink job with checkpoint failures and memory pressure |
+| Primary result | Illustrative teaching exercise; no actual logs, run or incident outcome |
+| Problem type | Decide how to contain and restore without silent loss or uncontrolled external effects |
 | Baseline | Repeated unchanged restart; not tested and not a causal diagnosis |
 | First priority | Protect users, preserve evidence and identify the latest usable recovery point |
 | Main uncertainty | Whether memory, sink, state, checkpoint storage or another mechanism initiated failure |
@@ -1095,6 +1095,9 @@ It closes with an observable recovery gate rather than a restart announcement.
 | Closure gate | Application and business owners accept reconciled output and remaining risk |
 | Documentation | Check the exact Flink, connector and backend release documentation |
 | Editorial status | Draft, unreviewed; not an operational runbook |
+| Method | Compare competing memory, state, sink and storage causes; restore a compatible checkpoint and reconcile effects. |
+| Key lesson | A completed checkpoint alone does not establish source retention or safe external effects. |
+| Tags | Incident diagnosis and recovery; partition-aware capacity planning. |
 
 ### First-response checklist
 - [ ] Declare impact and identify the incident commander.
@@ -1153,3 +1156,12 @@ The case's numerical values are illustrative assumptions, not production measure
 - The business owner cannot accept the resulting freshness or correctness risk.
 - Evidence is insufficient to justify a proposed irreversible action.
 In each case, record the limitation and seek an explicitly authorized recovery decision.
+
+| Supplemental field | Value |
+|---|---|
+| Case ID / version / as-of | CASE-STREAM-002 / version and as-of not stated |
+| Evidence level | Illustrative; no actual incident or observed recovery |
+| Implementation stage | Proposed; draft unreviewed |
+| Baseline / primary metric | Repeated unchanged restart; recoverable, reconciled output without silent loss |
+| Key limitation | Hypothetical data and competing failure causes; no validated root cause |
+| Review trigger / owner | Flink version, backend, connector or recovery contract changes / streaming platform and sink owners |

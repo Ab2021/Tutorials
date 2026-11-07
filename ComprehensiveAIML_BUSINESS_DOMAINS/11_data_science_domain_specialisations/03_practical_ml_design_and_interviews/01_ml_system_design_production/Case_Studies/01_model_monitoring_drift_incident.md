@@ -1034,13 +1034,23 @@ Each question is answered under the invented case assumptions; no example is an 
 ## 15. Quick Reference Card
 | Field | Case-specific answer |
 |---|---|
-| Problem | Determine whether and how to contain a delivery-risk model after a sustained distance shift. |
-| Context | Hypothetical one-region, one-channel hourly incident with delayed delivery outcomes. |
+| Problem type | Determine whether and how to contain a delivery-risk model after a sustained distance shift. |
+| Domain | Hypothetical one-region, one-channel production ML monitoring with delayed delivery outcomes. |
 | Decision | Continue, use a verified compatible prior model, or use the manual queue. |
 | Method | Contract checks, fixed-bin PSI, cohort-matched mature quality, and counterfactual-aware evaluation. |
-| Finding | Constructed PSI is 0.240794; shift does not prove degradation. |
-| Lesson | Diagnose data validity quickly while keeping prediction quality and causal impact separate. |
+| Primary result | Illustrative: constructed PSI is 0.240794; shift does not prove degradation. |
+| Key lesson | Diagnose data validity quickly while keeping prediction quality and causal impact separate. |
 | Evidence | Illustrative assumptions and checked arithmetic; no real measurements or execution. |
 | Stage | Proposed design; no deployed incident or intervention. |
 | Editorial review | Draft, unreviewed; last_reviewed null. |
 | Review trigger | Outcome maturity, feature contract, or intervention policy changes. |
+| Tags | `model-monitoring`; `distribution-shift`; `label-delay` |
+
+| Supplemental field | Value |
+|---|---|
+| Case ID / version / as-of | CASE-03-01-005 / 1.0 / 2026-11-07 |
+| Evidence level | Illustrative; no real deployment or intervention measured |
+| Implementation stage | Proposed; draft unreviewed |
+| Baseline / primary metric | Continue current model versus compatible fallback; fixed-bin PSI and mature-cohort quality |
+| Key limitation | A constructed feature shift cannot establish degradation or causal harm |
+| Review trigger / owner | Outcome maturity, serving contract or intervention policy changes / ML on-call lead |

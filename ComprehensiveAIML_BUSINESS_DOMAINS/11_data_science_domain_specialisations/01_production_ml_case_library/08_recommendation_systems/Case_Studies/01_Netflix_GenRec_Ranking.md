@@ -1308,12 +1308,22 @@ A strong response distinguishes published facts, logical inference and construct
 ## 15. Quick Reference Card
 | Field | Decision-grade summary |
 |---|---|
-| Framing | Compare an LLM-backed catalog ranker with a mature production ranker while respecting cost and member value. |
-| Context | Netflix reports a batch-surface online A/B evaluation, not a documented universal rollout. |
+| Problem type | Compare an LLM-backed catalog ranker with a mature production ranker while respecting cost and member value. |
+| Domain | Media recommendation ranking; Netflix reports a batch-surface online A/B evaluation, not a documented universal rollout. |
 | Method | Adapt a foundation LLM, post-train ranking and language objectives with reward weighting, then prefill and score catalog items. |
-| Finding | Netflix reports significant short- and long-term online gains; exact effect sizes and metric definitions are unavailable in accessible text. |
+| Primary result | Published: Netflix reports significant short- and long-term online gains; exact effect sizes and metric definitions are unavailable in accessible text. |
 | Action | Netflix reports building and evaluating GenRec; broader deployment is not established. |
-| Lesson | Compare online outcomes and operational costs; Phase-2 label efficiency is not total training efficiency. |
+| Key lesson | Compare online outcomes and operational costs; Phase-2 label efficiency is not total training efficiency. |
 | Evidence / stage | Published primary-source report; experimental evaluation; illustrative calculations and controls separately labeled. |
 | Critical validity | MRR examples require a common population, relevance definition, cutoff and no-hit convention; relative change uses a positive baseline. |
 | Review record | Draft; independent editorial review pending; recheck if Netflix publishes detailed metrics or rollout status. |
+| Tags | `evaluation-mismatch`; `cost-latency-tradeoff`; `distribution-shift` |
+
+| Supplemental field | Value |
+|---|---|
+| Case ID / version / as-of | CASE-01-08-001 / 1.0-draft / 2026-11-07 |
+| Evidence level | Published primary-source report; calculations and controls illustrative |
+| Implementation stage | Reported online experiment; universal rollout not established |
+| Baseline / primary metric | Mature production ranker; reported online outcomes, exact metric definitions undisclosed |
+| Key limitation | No accessible exact effect sizes or complete online-evaluation details |
+| Review trigger / owner | New GenRec experiment, rollout disclosure or source correction / recommendation product and engineering roles inferred |

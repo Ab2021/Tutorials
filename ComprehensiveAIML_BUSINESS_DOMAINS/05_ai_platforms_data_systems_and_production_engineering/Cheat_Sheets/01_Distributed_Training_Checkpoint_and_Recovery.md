@@ -661,8 +661,8 @@ If 240 GiB is stored per full generation and three independent generations are r
 For a two-copy durability scheme, if both copies contain the same 720 GiB and overhead is neglected, raw payload is 1,440 GiB.
 A temporary 240 GiB staging generation raises that example's raw requirement further if staging occupies the same capacity pool.
 These are capacity estimates, not bills: storage pricing may use decimal units, replication, requests, egress and tier-specific retention rules.
-At one 240 GiB full save every 40 minutes, 36 saves/day produce 8,640 GiB/day of logical write payload before retries and replication.
-Check: 24 hours × 60 minutes / 40 minutes = 36; 36 × 240 = 8,640.
+At one 240 GiB full save every 40 minutes of useful work, ignoring pauses gives an idealized upper-rate estimate of 36 saves/day and 8,640 GiB/day.
+With the earlier 75 s non-overlapped pause per save, the long-run rate is 86,400 / (2,400 + 75) ≈ 34.91 saves/day, or approximately 8,378 GiB/day before retries and replication; actual whole saves in a calendar day depend on the starting phase.
 The physical write volume can be larger because of replication and failed attempts or smaller with effective compression and deduplication.
 Assume 240 GiB restore data at 3 GiB/s effective aggregate read bandwidth: payload transfer alone is 80 s.
 With 20 s discovery and placement, 25 s object validation, and 35 s deserialization/resharding, a nonoverlapping model totals 160 s.
@@ -671,6 +671,514 @@ RTO starts at the contractually defined failure time and ends at resumed useful 
 Model serialization time is at least proportional to the number of bytes actually visited; manifest verification also scales with object count and bytes hashed.
 Large numbers of small shards may be dominated by request latency and metadata operations even if aggregate byte volume is modest.
 **Takeaway:** Budget both retained storage and the end-to-end critical path, including recovery and control-plane delays.
+
+## 9.4 Fault-injection and recovery drill catalog
+
+Each drill is a proposed isolated test, not an executed result.
+Run with synthetic data, an explicit cleanup plan, and a retained known-good baseline.
+The expected observations are acceptance criteria; storage and framework versions determine exact instrumentation.
+
+### Drill 01: Writer before first byte
+- **Setup:** Committed A; candidate B reserved.
+- **Intervention:** Kill writer before first object write.
+- **Expected result:** A remains selected; B is not eligible.
+- **Discriminating evidence:** Compare pointer version with B allocation log.
+- **Safety / interpretation:** Clean B only after its lease expires.
+
+### Drill 02: Writer halfway through shard
+- **Setup:** A committed; B shard upload started.
+- **Intervention:** Terminate a writer mid-object.
+- **Expected result:** No partial object is accepted as B shard.
+- **Discriminating evidence:** Read exact object version and inspect completion marker.
+- **Safety / interpretation:** Abort abandoned multipart upload.
+
+### Drill 03: Last rank after upload
+- **Setup:** All B payloads written; one rank has not acknowledged.
+- **Intervention:** Kill that rank before acknowledgement.
+- **Expected result:** B remains uncommitted unless a documented verifier proves completeness.
+- **Discriminating evidence:** Compare acknowledgements with expected rank set.
+- **Safety / interpretation:** Do not manufacture an acknowledgement.
+
+### Drill 04: Coordinator before manifest
+- **Setup:** All shard acknowledgements arrived.
+- **Intervention:** Kill coordinator before manifest creation.
+- **Expected result:** Latest remains A.
+- **Discriminating evidence:** Check absence of committed B manifest.
+- **Safety / interpretation:** Preserve A and use a fresh generation ID.
+
+### Drill 05: Coordinator after manifest
+- **Setup:** B manifest written but pointer still names A.
+- **Intervention:** Kill coordinator before publish.
+- **Expected result:** Readers still select A.
+- **Discriminating evidence:** Inspect immutable manifest and pointer history.
+- **Safety / interpretation:** An authorized new coordinator may validate and publish only under the fencing policy.
+
+### Drill 06: Coordinator after publish
+- **Setup:** B validated and pointer update succeeded.
+- **Intervention:** Kill coordinator immediately after commit.
+- **Expected result:** Recovery can select B after validation.
+- **Discriminating evidence:** Read pointer and all referenced object versions.
+- **Safety / interpretation:** Keep A for fallback.
+
+### Drill 07: Stale writer
+- **Setup:** Coordinator epoch 7 is superseded by epoch 8.
+- **Intervention:** Let epoch 7 attempt publication.
+- **Expected result:** Publication authority rejects the stale epoch.
+- **Discriminating evidence:** Inspect conditional write response and current fencing token.
+- **Safety / interpretation:** Prevent the old process from retrying with new credentials.
+
+### Drill 08: Duplicate publication
+- **Setup:** B already committed.
+- **Intervention:** Retry the same publication request.
+- **Expected result:** Result is idempotent or rejected according to the contract.
+- **Discriminating evidence:** Compare pointer version and generation ID.
+- **Safety / interpretation:** Do not create two logical commits for one update.
+
+### Drill 09: Pointer conflict
+- **Setup:** Two coordinators attempt different candidates.
+- **Intervention:** Schedule both pointer writes concurrently.
+- **Expected result:** At most one conditional update succeeds for the expected version.
+- **Discriminating evidence:** Inspect provider revision and both responses.
+- **Safety / interpretation:** Validate and explicitly resolve the losing candidate.
+
+### Drill 10: Object corruption
+- **Setup:** B is committed in an isolated test store.
+- **Intervention:** Flip one byte of one shard.
+- **Expected result:** Digest validation rejects B.
+- **Discriminating evidence:** Verify exact object version and independent digest.
+- **Safety / interpretation:** Restore A rather than applying a partial state.
+
+### Drill 11: Manifest corruption
+- **Setup:** B manifest stored in a test bucket.
+- **Intervention:** Truncate manifest bytes.
+- **Expected result:** Parser or manifest integrity validation rejects B.
+- **Discriminating evidence:** Check authenticated manifest digest and schema error.
+- **Safety / interpretation:** Retain corrupt bytes for incident analysis.
+
+### Drill 12: Missing expected shard
+- **Setup:** Manifest expects eight shard IDs.
+- **Intervention:** Remove one test object.
+- **Expected result:** Restore fails closed for B.
+- **Discriminating evidence:** Read every manifest key rather than relying on listing.
+- **Safety / interpretation:** Fallback to A and alert.
+
+### Drill 13: Extra stray object
+- **Setup:** B contains all eight required shards.
+- **Intervention:** Add an unrelated ninth object.
+- **Expected result:** Restore uses the manifest set and does not adopt the stray.
+- **Discriminating evidence:** Compare object names with manifest membership.
+- **Safety / interpretation:** Garbage-collect the stray only after reachability analysis.
+
+### Drill 14: Wrong object generation
+- **Setup:** A and B have compatible tensor shapes.
+- **Intervention:** Substitute an A object for its B counterpart.
+- **Expected result:** Generation identity or hash check rejects the substitution.
+- **Discriminating evidence:** Compare object version, generation metadata and digest.
+- **Safety / interpretation:** Never repair B by mixing objects from steps.
+
+### Drill 15: Missing optimizer
+- **Setup:** Model weights exist; Adam moments absent.
+- **Intervention:** Attempt strict training resume.
+- **Expected result:** Completeness validation blocks continuation.
+- **Discriminating evidence:** Inspect optimizer slot schema and parameter mapping.
+- **Safety / interpretation:** A deliberate warm start needs a separate run identity.
+
+### Drill 16: Wrong optimizer group
+- **Setup:** Save two groups with distinct learning rates.
+- **Intervention:** Swap the group-to-parameter assignment on restore.
+- **Expected result:** Compatibility check detects different mapping.
+- **Discriminating evidence:** Compare stable parameter names and group metadata.
+- **Safety / interpretation:** Use a reviewed mapping migration, not positional guessing.
+
+### Drill 17: Missing scheduler
+- **Setup:** Training uses a stateful learning-rate scheduler.
+- **Intervention:** Remove scheduler state from test snapshot.
+- **Expected result:** Strict resume rejects missing required state.
+- **Discriminating evidence:** Compare next effective rate against the saved expected value.
+- **Safety / interpretation:** Restore a complete generation or explicitly fork schedule.
+
+### Drill 18: Scaler overflow history
+- **Setup:** Use a scaler with noninitial growth tracker.
+- **Intervention:** Restart after saving its state.
+- **Expected result:** Restored scale and tracker match the checkpoint.
+- **Discriminating evidence:** Compare scaler state before and after loading.
+- **Safety / interpretation:** Also check whether the last optimizer update was skipped.
+
+### Drill 19: Counter boundary
+- **Setup:** Save immediately after optimizer update 42.
+- **Intervention:** Restart before update 43.
+- **Expected result:** First resumed update is 43, not 42 or 44.
+- **Discriminating evidence:** Trace update, scheduler and counter order.
+- **Safety / interpretation:** Define whether saved step is completed or next.
+
+### Drill 20: Skipped update
+- **Setup:** Inject overflow at a mixed-precision step.
+- **Intervention:** Save after the scaler skips the update.
+- **Expected result:** Counter and scheduler follow the declared skipped-step policy.
+- **Discriminating evidence:** Compare actual parameter change, scaler and counter logs.
+- **Safety / interpretation:** Do not infer an update from microbatch count.
+
+### Drill 21: Mid-accumulation
+- **Setup:** Accumulate three of four microbatches.
+- **Intervention:** Interrupt before the fourth microbatch.
+- **Expected result:** Either gradients and phase restore together or recovery rolls back.
+- **Discriminating evidence:** Compare gradient buffers and phase to baseline.
+- **Safety / interpretation:** Do not step on a partial gradient sum.
+
+### Drill 22: Accumulation boundary
+- **Setup:** Finish all microbatches and optimizer step.
+- **Intervention:** Save after gradient reset.
+- **Expected result:** Resume begins a fresh accumulation window.
+- **Discriminating evidence:** Check phase zero and next sample ID.
+- **Safety / interpretation:** Record completed update and committed sample boundary together.
+
+### Drill 23: Python RNG
+- **Setup:** Draw values from Python random before saving.
+- **Intervention:** Resume and draw the next sequence.
+- **Expected result:** Values match a controlled same-environment baseline.
+- **Discriminating evidence:** Compare full generator state and next draws.
+- **Safety / interpretation:** Avoid random draws during restore before state is installed.
+
+### Drill 24: Library RNG
+- **Setup:** Use an independent numerical-library generator.
+- **Intervention:** Save and resume after several draws.
+- **Expected result:** Its next values match the baseline.
+- **Discriminating evidence:** Compare this generator object, not merely a global seed.
+- **Safety / interpretation:** Inventory every explicitly created generator.
+
+### Drill 25: Device RNG
+- **Setup:** Use stochastic accelerator operations.
+- **Intervention:** Resume with the same topology and deterministic settings.
+- **Expected result:** Controlled next-draw test matches where supported.
+- **Discriminating evidence:** Compare per-device state and device mapping.
+- **Safety / interpretation:** Do not claim cross-hardware bitwise equivalence.
+
+### Drill 26: Worker augmentation
+- **Setup:** Apply stochastic augmentation in loader workers.
+- **Intervention:** Restart with identical worker configuration.
+- **Expected result:** Expected per-sample augmentation matches the chosen contract.
+- **Discriminating evidence:** Log sample ID and augmentation seed rather than just batch number.
+- **Safety / interpretation:** Account for worker initialization consuming RNG.
+
+### Drill 27: Prefetch queue
+- **Setup:** Allow workers to fetch beyond the last completed update.
+- **Intervention:** Interrupt while prefetched items are pending.
+- **Expected result:** Resume begins at acknowledged rather than fetched position.
+- **Discriminating evidence:** Compare committed sample IDs and queued IDs.
+- **Safety / interpretation:** Permit replay only under an explicit duplicate policy.
+
+### Drill 28: Sampler epoch
+- **Setup:** Use a shuffled map dataset for two epochs.
+- **Intervention:** Save partway through epoch two.
+- **Expected result:** Next sample follows the recorded epoch permutation.
+- **Discriminating evidence:** Compare epoch, seed, position and dataset fingerprint.
+- **Safety / interpretation:** Do not recreate the sampler from seed alone.
+
+### Drill 29: Dataset drift
+- **Setup:** Snapshot references immutable dataset version V1.
+- **Intervention:** Configure restore with V2.
+- **Expected result:** Strict resume detects the version mismatch.
+- **Discriminating evidence:** Compare dataset manifest hashes and transform versions.
+- **Safety / interpretation:** Treat V2 as a documented new training branch.
+
+### Drill 30: Stream offset
+- **Setup:** Consume records from two source partitions.
+- **Intervention:** Crash after checkpoint commit but before external offset commit.
+- **Expected result:** Recovery may replay but must not silently skip records.
+- **Discriminating evidence:** Compare checkpoint cursor and source offset per partition.
+- **Safety / interpretation:** Use idempotence or an actual coordinated transaction.
+
+### Drill 31: Shuffle buffer
+- **Setup:** Use a streaming shuffle buffer with known contents.
+- **Intervention:** Restart with only its seed and source cursor.
+- **Expected result:** Exact replay should be rejected if buffer state is missing.
+- **Discriminating evidence:** Compare the next sequence against a no-failure baseline.
+- **Safety / interpretation:** Save buffer contents or declare a weaker continuity contract.
+
+### Drill 32: Packing leftovers
+- **Setup:** Pack variable-length examples into fixed token blocks.
+- **Intervention:** Interrupt with unused tokens buffered.
+- **Expected result:** Next block uses the same leftovers under strict replay.
+- **Discriminating evidence:** Inspect packer buffer and example boundaries.
+- **Safety / interpretation:** Reconstruct from a safe cursor only if deterministic.
+
+### Drill 33: Nondivisible dataset
+- **Setup:** Use 11 samples across four ranks.
+- **Intervention:** Restart with three ranks.
+- **Expected result:** Documented drop or padding policy accounts for each sample.
+- **Discriminating evidence:** Enumerate IDs assigned before and after restart.
+- **Safety / interpretation:** Distinguish intentional padding from accidental duplicates.
+
+### Drill 34: Elastic expansion
+- **Setup:** Save with four data-parallel ranks.
+- **Intervention:** Restore with eight supported ranks.
+- **Expected result:** Tensor values and optimizer state map to the supported new layout.
+- **Discriminating evidence:** Check global tensor reconstruction and sample coverage.
+- **Safety / interpretation:** Recalculate effective batch and schedule units.
+
+### Drill 35: Elastic contraction
+- **Setup:** Save with eight ranks.
+- **Intervention:** Restore with four supported ranks.
+- **Expected result:** Every required shard contributes to the reconstructed state.
+- **Discriminating evidence:** Compare global tensor checksums and optimizer slots.
+- **Safety / interpretation:** Abort if target rank memory cannot hold the new partitions.
+
+### Drill 36: Unsupported reshard
+- **Setup:** Choose an unsupported source-to-target parallel layout.
+- **Intervention:** Attempt restore.
+- **Expected result:** Compatibility check fails before training resumes.
+- **Discriminating evidence:** Inspect source layout and implementation support.
+- **Safety / interpretation:** Use original topology or a verified offline conversion.
+
+### Drill 37: Pipeline remapping
+- **Setup:** Split layers across two pipeline stages.
+- **Intervention:** Change to three stages at restart.
+- **Expected result:** Restore occurs only if layer and optimizer remapping is supported.
+- **Discriminating evidence:** Compare layer ownership and tensor keys.
+- **Safety / interpretation:** Prevent silent shape-compatible misassignment.
+
+### Drill 38: Effective batch change
+- **Setup:** Run four ranks with two microbatches per update.
+- **Intervention:** Double ranks without changing other factors.
+- **Expected result:** Effective example batch doubles for fixed per-rank batch.
+- **Discriminating evidence:** Compute rank count × microbatch size × accumulation.
+- **Safety / interpretation:** Retune only as an intentional training-policy change.
+
+### Drill 39: Collective mismatch
+- **Setup:** Make one rank skip the checkpoint collective.
+- **Intervention:** Trigger save across the group.
+- **Expected result:** The job times out and rejects the candidate.
+- **Discriminating evidence:** Compare rank logs and collective sequence numbers.
+- **Safety / interpretation:** Use bounded timeouts and fail the whole generation.
+
+### Drill 40: Slow rank
+- **Setup:** Throttle one writer while others finish.
+- **Intervention:** Trigger distributed save.
+- **Expected result:** Commit waits for the required slow shard or aborts.
+- **Discriminating evidence:** Compare rank completion times and backend request metrics.
+- **Safety / interpretation:** Avoid excluding the rank without a redundancy protocol.
+
+### Drill 41: Async isolation
+- **Setup:** Capture a checkpoint asynchronously.
+- **Intervention:** Perform further optimizer updates during writes.
+- **Expected result:** Restored snapshot represents the original cut, not mixed steps.
+- **Discriminating evidence:** Compare saved tensors with a frozen reference snapshot.
+- **Safety / interpretation:** Disable async if snapshot isolation cannot be established.
+
+### Drill 42: Staging memory
+- **Setup:** Use a constrained host-memory budget.
+- **Intervention:** Start concurrent snapshot copies.
+- **Expected result:** Memory pressure is surfaced before worker termination.
+- **Discriminating evidence:** Measure peak staging allocation and in-flight copies.
+- **Safety / interpretation:** Limit concurrency or use a proven chunked snapshot design.
+
+### Drill 43: Shared bandwidth
+- **Setup:** Run two jobs writing to one test backend.
+- **Intervention:** Trigger both checkpoints together.
+- **Expected result:** Effective aggregate rates reflect contention rather than link peak.
+- **Discriminating evidence:** Measure each job and backend throughput over the same window.
+- **Safety / interpretation:** Coordinate checkpoint admission without violating RPO.
+
+### Drill 44: Read throttling
+- **Setup:** Constrain restore bandwidth in a test environment.
+- **Intervention:** Recover a full checkpoint.
+- **Expected result:** Observed RTO increases by the read critical-path delay.
+- **Discriminating evidence:** Time placement, read, validation and deserialize separately.
+- **Safety / interpretation:** Size recovery capacity for concurrent restarts.
+
+### Drill 45: Local tier loss
+- **Setup:** Stage the newest snapshot only on one node.
+- **Intervention:** Remove the node before durable upload.
+- **Expected result:** Recovery falls back to the prior durable generation.
+- **Discriminating evidence:** Inspect durable manifest instead of local status.
+- **Safety / interpretation:** Never promote staging completion to durable commit.
+
+### Drill 46: Preemption notice
+- **Setup:** Configure a warning shorter than full checkpoint time.
+- **Intervention:** Send warning then terminate at deadline.
+- **Expected result:** The system retains and restores the last committed generation.
+- **Discriminating evidence:** Compare signal, commit and kill timestamps.
+- **Safety / interpretation:** Use periodic commits rather than depending on final save.
+
+### Drill 47: Incremental base deletion
+- **Setup:** Create a base and a dependent delta in a test store.
+- **Intervention:** Attempt to delete the base while delta is retained.
+- **Expected result:** Reachability policy blocks deletion.
+- **Discriminating evidence:** Traverse the delta manifest to its root.
+- **Safety / interpretation:** Never apply a retention count only to delta names.
+
+### Drill 48: Garbage collection race
+- **Setup:** Start mark-and-sweep while a generation is publishing.
+- **Intervention:** Delay marking until a new root appears.
+- **Expected result:** No object referenced by an eligible root is swept.
+- **Discriminating evidence:** Compare root snapshot time with fencing and grace period.
+- **Safety / interpretation:** Use a publication-aware collection protocol.
+
+### Drill 49: Encryption key unavailable
+- **Setup:** Store an encrypted generation in a test environment.
+- **Intervention:** Remove restore-time key authorization.
+- **Expected result:** Restore fails clearly before claiming success.
+- **Discriminating evidence:** Inspect key-service authorization and object read errors.
+- **Safety / interpretation:** Preserve old key versions for the approved retention period.
+
+### Drill 50: Untrusted serialization
+- **Setup:** Provide a checkpoint from an untrusted source.
+- **Intervention:** Attempt to load it in the training environment.
+- **Expected result:** Security policy prevents unsafe deserialization.
+- **Discriminating evidence:** Verify provenance, signatures and framework safe-loading settings.
+- **Safety / interpretation:** Quarantine the artifact rather than bypassing controls.
+
+### Drill 51: Old checkpoint schema
+- **Setup:** Restore a generation written by an older supported release.
+- **Intervention:** Run its documented migration path.
+- **Expected result:** Resulting state matches a verified baseline.
+- **Discriminating evidence:** Compare migrated names, dtypes and optimizer groups.
+- **Safety / interpretation:** Reject unknown schemas rather than guessing.
+
+### Drill 52: Partial load warning
+- **Setup:** Remove a required model key from a test file.
+- **Intervention:** Invoke the intended strict restore path.
+- **Expected result:** Resume fails instead of reporting success.
+- **Discriminating evidence:** Inspect missing and unexpected key reports.
+- **Safety / interpretation:** Keep warm-start logic separate from restart logic.
+
+### Drill 53: Wrong run selected
+- **Setup:** Place two run manifests in the same storage namespace.
+- **Intervention:** Point recovery at the other run.
+- **Expected result:** Run identity check rejects the candidate.
+- **Discriminating evidence:** Compare run ID, model configuration and data version.
+- **Safety / interpretation:** Namespace generation IDs and use authorized pointer updates.
+
+### Drill 54: Retention pressure
+- **Setup:** Keep three complete full snapshots and begin a fourth.
+- **Intervention:** Exhaust available staging capacity.
+- **Expected result:** A failed new write does not delete all known-good snapshots.
+- **Discriminating evidence:** Measure available capacity and each generation state.
+- **Safety / interpretation:** Reserve staging headroom before starting publication.
+
+### Drill 55: Restore time budget
+- **Setup:** Define a 5-minute end-to-end recovery objective.
+- **Intervention:** Run an isolated representative restore drill.
+- **Expected result:** Measure elapsed failure-to-useful-work time against 300 seconds.
+- **Discriminating evidence:** Break down detection, placement, transfer, load and first update.
+- **Safety / interpretation:** Do not call a payload-only estimate an achieved RTO.
+
+### Drill 56: Integrity versus correctness
+- **Setup:** Create a valid hash over a deliberately wrong tensor.
+- **Intervention:** Restore the otherwise complete generation.
+- **Expected result:** Hash verification succeeds but semantic checks detect the wrong cut.
+- **Discriminating evidence:** Compare step identity, model state invariants and reference update.
+- **Safety / interpretation:** Authenticate the producer and validate logical consistency.
+
+### Drill 57: RNG with topology change
+- **Setup:** Save per-rank RNG streams at four ranks.
+- **Intervention:** Restore at eight ranks.
+- **Expected result:** The procedure declares how new streams are assigned.
+- **Discriminating evidence:** Compare sample-based randomness and rank mapping.
+- **Safety / interpretation:** Avoid promising the original bitwise trajectory.
+
+### Drill 58: Controller state
+- **Setup:** Use early stopping with patience nearly exhausted.
+- **Intervention:** Restart after a checkpoint.
+- **Expected result:** The patience counter and best metric continue from saved values.
+- **Discriminating evidence:** Compare controller state and validation history.
+- **Safety / interpretation:** A reset is a policy change, not an exact restart.
+
+### Drill 59: EMA weights
+- **Setup:** Train while maintaining an exponential moving average.
+- **Intervention:** Resume and evaluate the EMA copy.
+- **Expected result:** EMA parameters and update count match the saved snapshot.
+- **Discriminating evidence:** Compare EMA and live parameter states separately.
+- **Safety / interpretation:** Do not reconstruct EMA from the latest model alone.
+
+### Drill 60: Frozen model reference
+- **Setup:** Store adapter weights while referencing a frozen base model.
+- **Intervention:** Change the base model artifact before restore.
+- **Expected result:** Reference hash validation rejects the mismatch.
+- **Discriminating evidence:** Compare immutable base identity and adapter metadata.
+- **Safety / interpretation:** Retain the referenced base for the entire checkpoint lifetime.
+
+### Drill 61: Checkpoint authentication
+- **Setup:** Sign a manifest with a test signing key.
+- **Intervention:** Replace both an object and its plain digest.
+- **Expected result:** Signature validation rejects the altered manifest.
+- **Discriminating evidence:** Verify signature against trusted key and exact manifest bytes.
+- **Safety / interpretation:** A plain digest alone does not identify an authorized writer.
+
+**Takeaway:** A recovery claim is credible only after the relevant failure boundary is exercised against the actual stack.
+
+## 9.5 Operational evidence and decision record
+
+The following fields form a practical checklist for a checkpoint service review.
+They are distinct questions: recording a value does not establish that it was measured or validated.
+- Record the run identifier as a stable identifier for the intended training lineage.
+- Record the parent generation so a reviewer can reconstruct the recovery lineage.
+- Record the generation identifier separately from the logical optimizer step.
+- Record the last completed optimizer update, including whether skipped updates increment the counter.
+- Record the number of tokens consumed when the learning-rate schedule is token-based.
+- Record the number of examples consumed when the input contract is example-based.
+- Record the accumulation phase and whether gradient buffers belong to the snapshot.
+- Record the precision policy for weights, gradients, optimizer slots and master parameters.
+- Record whether dynamic loss scaling is active and how skipped steps affect scheduler calls.
+- Record the model architecture and immutable configuration identity.
+- Record the code revision and dependency lock or container image digest.
+- Record the framework release and checkpoint serialization schema.
+- Record the optimizer implementation and configuration, including fused or sharded variants.
+- Record the optimizer parameter-group identities and parameter-name mappings.
+- Record scheduler type, state, schedule unit and call order.
+- Record the data source snapshot and split identities.
+- Record preprocessing, tokenization, packing and augmentation versions.
+- Record sampler algorithm, epoch, seed and acknowledged cursor semantics.
+- Record stream partition offsets separately from externally committed offsets.
+- Record how buffered, prefetched and in-flight samples are handled on restart.
+- Record the number of loader workers and their random-seed derivation policy.
+- Record CPU, device and library generator ownership and restore order.
+- Record deterministic algorithm settings and known nondeterministic operations.
+- Record the number and type of accelerators involved in the saved topology.
+- Record data-, tensor-, pipeline- and optimizer-parallel group dimensions.
+- Record the logical tensor-to-shard mapping and its schema version.
+- Record whether a target topology has been tested for restore and resharding.
+- Record the expected object count and the exact identifiers of all required objects.
+- Record object lengths and cryptographic digests for end-to-end integrity checks.
+- Record manifest authentication and the identity authorized to publish it.
+- Record storage service, region, namespace, and durability assumptions.
+- Record whether staged files reside on ephemeral or durable storage.
+- Record the publication primitive and its documented atomicity scope.
+- Record the writer lease, fencing epoch and conditional pointer revision.
+- Record the timestamp when the cut was created and when publication succeeded.
+- Record failures and retries separately from successful checkpoint latency.
+- Record per-rank snapshot capture time and write completion time.
+- Record coordinator validation time and manifest publication time.
+- Record the amount of temporary host and accelerator memory used by staging.
+- Record logical payload bytes separately from physical replicated bytes.
+- Record object counts and request rates to expose small-object overhead.
+- Record effective aggregate write bandwidth over the actual checkpoint window.
+- Record effective aggregate restore bandwidth over the actual recovery window.
+- Record relevant competing workloads and storage throttling signals.
+- Record the most recent successful restore drill and the stack version used.
+- Record the most recent failed restore drill and its unresolved cause.
+- Record recovery point objective in explicitly named steps, samples, tokens or time.
+- Record recovery time objective with explicit start and end events.
+- Record the age of the latest validated durable generation.
+- Record the latest generation whose full restoration was actually exercised.
+- Record whether acceptance requires exact replay or a weaker continuation guarantee.
+- Record exact reasons any replay guarantee was downgraded after elasticity.
+- Record the observed count of missing, duplicated or intentionally padded samples.
+- Record the observed next learning rate before the first resumed update.
+- Record scaler state and the next update's overflow or skip outcome.
+- Record the sampled loss and numerical-health checks after resumption.
+- Record error codes for failed reads, writes, checksum checks and conditional commits.
+- Record which older generation remains available as a fallback.
+- Record retention policy and all incremental ancestry needed by retained roots.
+- Record the time and authorization under which garbage collection may run.
+- Record key identifiers and access requirements without saving secret material.
+- Record who can approve an intentional rollback or non-exact warm start.
+- Record data retention and deletion obligations for checkpoint contents.
+- Record the operator and incident identifiers for any emergency restore.
+- Record whether the restored run has since created a new validated checkpoint.
+- Record unresolved compatibility and source-documentation questions as open issues.
+
+**Takeaway:** The evidence record must explain both what was saved and why a particular recovery was allowed.
 
 # 10. Key Theorems / Results Reference
 
@@ -691,3 +1199,90 @@ No source has been consulted here to establish the contents of the two unavailab
 
 # 11. Interview / Exam Questions
 
+### 11.1 Why are weights alone insufficient for training continuation?
+
+- **Answer:** An adaptive optimizer also needs moment tensors, step counters, groups and possibly master weights; scheduler, scaler, RNG and data position matter too.
+- **Reasoning:** With moments reset, the same next gradient generally produces a different update.
+- **Boundary / follow-up:** A weight-only load is valid as an explicitly labeled warm start, not an exact resume.
+
+### 11.2 What makes a distributed checkpoint committed?
+
+- **Answer:** Every required object must be durable and validated, then a manifest must be published by a fenced atomic or conditional commit.
+- **Reasoning:** A process barrier establishes participation but is not a durable write or atomic publication.
+- **Boundary / follow-up:** If the chosen storage cannot provide the required publication semantics, use a coordinator or a different backend.
+
+### 11.3 A rank fails after seven of eight shards are written. What should recovery do?
+
+- **Answer:** Reject the incomplete candidate and recover the latest earlier committed generation.
+- **Reasoning:** The seven successful writes are orphan candidates, not proof that the logical cut is complete.
+- **Boundary / follow-up:** Preserve evidence and later garbage-collect only after ensuring no retained manifest references those objects.
+
+### 11.4 What changes if a checkpoint is taken halfway through gradient accumulation?
+
+- **Answer:** The accumulation phase and every relevant gradient buffer must join the snapshot, including scaling and partition metadata.
+- **Reasoning:** Without these, the next optimizer update combines an unknown subset of microbatches.
+- **Boundary / follow-up:** The simpler alternative is rollback to a completed optimizer-update boundary.
+
+### 11.5 Why does a saved seed not ensure replay?
+
+- **Answer:** A seed specifies an initial stream, not the current generator position or every independent worker and device stream.
+- **Reasoning:** Even complete RNG states do not fix nondeterministic kernels or changed sample order.
+- **Boundary / follow-up:** Restore generator states and control relevant software, hardware and input behavior for the desired replay level.
+
+### 11.6 How do prefetch and acknowledged data position differ?
+
+- **Answer:** A worker may have fetched records that the trainer has not consumed in a completed update.
+- **Reasoning:** Saving its fetched position would skip those records if queued work disappears at restart.
+- **Boundary / follow-up:** Track the acknowledged logical training cursor, snapshot the queue, or deterministically replay from a safe earlier boundary.
+
+### 11.7 Estimate write time for 240 GiB at 4 GiB/s and describe the missing terms.
+
+- **Answer:** The payload-only time is 240 / 4 = 60 seconds.
+- **Reasoning:** The GiB units cancel and the answer is not an observed latency percentile.
+- **Boundary / follow-up:** Add measured synchronization, hashing, metadata and publication time; account for overlap only where it actually occurs.
+
+### 11.8 A 40-minute interval has uniformly distributed failures. How much work is lost on average?
+
+- **Answer:** Under that model the mean is half the interval, or 20 minutes of useful work.
+- **Reasoning:** This is neither a maximum nor the full end-to-end recovery time.
+- **Boundary / follow-up:** Frequent failure during long save phases, nonuniform hazard, and repeated retries require a more detailed model.
+
+### 11.9 What changes when the world size doubles?
+
+- **Answer:** The system must map model and optimizer shards to the new topology and reassign the remaining data without unintended gaps or duplicates.
+- **Reasoning:** Effective global batch may change unless per-rank batch or accumulation is adjusted.
+- **Boundary / follow-up:** Even a successful supported reshard can change reduction order and exact training trajectory.
+
+### 11.10 What is the difference between RPO and RTO?
+
+- **Answer:** RPO bounds acceptable lost progress; RTO bounds elapsed time from the defined failure event until resumed useful work.
+- **Reasoning:** A one-minute save can still have a long recovery if scheduling or deserialization is slow.
+- **Boundary / follow-up:** Measure both against explicit population, clock boundaries and failure scenarios.
+
+### 11.11 An object digest matches. Is the checkpoint safe to resume?
+
+- **Answer:** Not necessarily: the manifest may be untrusted, another shard may be missing, or the bytes may be semantically from an incompatible run.
+- **Reasoning:** A hash verifies byte agreement with the stated digest, not checkpoint completeness or provenance.
+- **Boundary / follow-up:** Validate every required object, trusted manifest, layout, logical cut and framework compatibility.
+
+### 11.12 A latest pointer moves backward after failover. What would you investigate?
+
+- **Answer:** Compare writer epochs, conditional-update outcomes, pointer object versions and intentional rollback records.
+- **Reasoning:** A stale coordinator may have overwritten a newer generation if fencing was absent.
+- **Boundary / follow-up:** Enforce a publication authority that rejects stale epochs, then explicitly select a validated generation.
+
+**Takeaway:** Explain the invariant, a competing explanation, and what evidence would change the decision.
+
+# 12. Quick Reference Card
+
+| Item | Value |
+|---|---|
+| Topic | Distributed training checkpoint consistency, durability and recovery |
+| Core formula | Payload transfer time = unique checkpoint bytes / effective aggregate throughput |
+| Key assumption | The published, fenced manifest names all consistent, validated and durable state; restore semantics are tested |
+| Complexity | Payload storage and transfer scale with serialized state size; metadata, resharding, replication and contention add costs |
+| Use when | Restarting or sizing a distributed training job with explicit recovery objectives |
+| Avoid when | A weight-only export or partially written shard set is mistaken for a restartable committed checkpoint |
+| Go deeper | [Collection index](INDEX.md); the installed framework and storage provider's documentation |
+| Diagnostic | Compare the manifest, object identities, cursor, counters and optimizer state before repair |
+| Evidence | Illustrative arithmetic; source files unavailable, operational performance unmeasured |

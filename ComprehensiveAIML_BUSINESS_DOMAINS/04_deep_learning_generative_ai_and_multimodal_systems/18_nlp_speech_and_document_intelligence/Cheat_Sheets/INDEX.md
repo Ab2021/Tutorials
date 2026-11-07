@@ -1,24 +1,53 @@
-# Module 18 Cheat Sheets â€” NLP, Speech and Document Intelligence
+# Module 18 Cheat Sheets — NLP, Speech and Document Intelligence
 
-## Authoring standard
+## 1. Overview
+For NLP practitioners who can work with rates and labeled data, this collection supports task selection, document extraction and speech evaluation. Only ASR is authored, as an unreviewed draft; readiness requires independent technical and source review, not merely a card.
 
-Every authored sheet must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. The catalog includes an unreviewed draft; expand this index to all 11 collection-index sections and create a final Common Issues artifact (at least 25 complete issues) before publication. A card alone is not a completed sheet.
+## 2. Topic ladder
+| Level | Topic and outcome | Prerequisite / skill | Status |
+|---|---|---|---|
+| Foundation | NLP task matrix: select a task for an input and output; compare classification, extraction and generation using a counterexample. | Basic data labels and evaluation. | Planned |
+| Core | Document extraction checklist: trace fields to source pages and validate a schema; diagnose an unsupported field. | Task selection; provenance and schema basics. | Planned |
+| Core/production | [03 ASR transcription evaluation](03_asr-transcription-evaluation.md): compute edit rates and diagnose slice regressions. | Rates, sequence alignment, consent and reference transcription. | Draft; unreviewed; source files unavailable |
 
-## Planned cheat sheets
+## 3. Quick topic lookup
+| Question | Exact section | Use and warning |
+|---|---|---|
+| How are word errors counted? | [Formulas](03_asr-transcription-evaluation.md#4-core-formulas-with-full-derivation) | Use a consistent tokenization; empty references need separate handling. |
+| Why did a score improve while users complain? | [Failure modes](03_asr-transcription-evaluation.md#8-failure-modes--edge-cases) | Compare frozen normalization and critical slices; aggregate WER hides harm. |
+| Which NLP task or extraction checklist? | Topic ladder above | Both are planned, not links to completed sheets. |
 
-| # | Reference | Coverage | Status |
-|---:|---|---|---|
-| 1 | NLP task matrix | Concise patterns, decision rules, assumptions, and common traps. | planned |
-| 2 | document extraction checklist | Concise patterns, decision rules, assumptions, and common traps. | planned |
-| 3 | [ASR transcription evaluation](03_asr-transcription-evaluation.md) | WER/CER alignment, streaming latency, language and privacy slices, diagnostics and interview questions. | draft; unreviewed; source files unavailable |
+## 4. Reading paths
+- **Beginner:** Learn rates and reference transcription, then read [definitions](03_asr-transcription-evaluation.md#3-foundational-definitions) and [worked examples](03_asr-transcription-evaluation.md#5-worked-numerical-example); task matrix is a planned extension.
+- **Practitioner:** Read the ASR draft from definitions through [selection](03_asr-transcription-evaluation.md#7-comparison--selection-table) and failures; compare normalization and language slices.
+- **Advanced:** Read the entire draft, including streaming and diagnostics; document extraction and multilingual adaptations remain planned, not prerequisites available here.
 
-## Suggested file naming
+## 5. Prerequisite skills
+Compute ratios and edit operations, distinguish words from characters, and interpret paired comparisons; the draft's [definitions](03_asr-transcription-evaluation.md#3-foundational-definitions) provide local reference. Understand consent, transcript labeling and timestamp boundaries before evaluating real audio.
 
-Use **01_reference-slug.md**, then **02_reference-slug.md**. Keep one concern per file so references remain scannable.
+## 6. What this collection does NOT cover
+The NLP task matrix and document extraction checklist are planned. ASR evaluation does not establish downstream clinical safety, speaker attribution or audio privacy compliance. Proposed interview-derived briefs below are planning references, not authored sheets.
+
+## 7. Master symbol glossary
+| Symbol | Meaning; unit / type / domain | First use |
+|---|---|---|
+| WER | Word edit rate; dimensionless scalar, nonnegative, potentially above 1; undefined for zero reference words. | [Formulas](03_asr-transcription-evaluation.md#4-core-formulas-with-full-derivation) |
+| CER | Character edit rate; dimensionless scalar under the declared character and normalization policy. | [Worked example](03_asr-transcription-evaluation.md#5-worked-numerical-example) |
+
+## 8. Quick Reference Card directory
+| Card | Rule / use | Critical condition and avoid |
+|---|---|---|
+| [ASR card](03_asr-transcription-evaluation.md#12-quick-reference-card) | Compare normalized edits per reference word. | Nonempty reference and shared normalization; do not infer safety from aggregate WER. |
+
+## 9. Common Issues locator
+The final Common Issues artifact is not authored; its issue count is unknown, not zero. Until then use the draft's [hypothetical ASR failures](03_asr-transcription-evaluation.md#8-failure-modes--edge-cases): for improved WER with complaints, compare normalization and critical slices; for silence insertions, inspect voice boundaries and consented audio. These are not observed incident counts.
+
+## 10. Empirical sources, versions and collection maintenance
+The original source directories are unavailable and were not inspected. ASR claims and illustrative arithmetic remain subject to source and independent review; production performance is not measured. Consult the [authoring standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [master template](../../../../Templates/CHEAT_SHEET_CONTENT_MASTER_TEMPLATE.md); recheck normalization, evaluation policy and sources when they change. No review date is asserted. All sheets require the template's 12 sections, checked calculations, diagnostic failures, answered interview questions and final card.
 
 <!-- BEGIN INTERVIEW REFERENCE PLAN -->
 
-## Reference-informed additions to develop
+### Reference-informed additions to develop
 
 These are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../00_REFERENCE_INFORMED_CASE_PLAN.md).
 
@@ -32,3 +61,9 @@ These are proposed writing briefs informed by interview examples. The examples a
 Each future cheat sheet needs its own explanation, preconditions, formulas or algorithms where relevant, failure signals and checked examples. Do not copy the interview narrative or its scenario figures into a reference sheet.
 
 <!-- END INTERVIEW REFERENCE PLAN -->
+
+## 11. Collection acceptance checklist
+- [ ] Author the task matrix, extraction checklist and final Common Issues artifact with at least 25 substantive issues.
+- [ ] Independently review the ASR draft, formulas, examples, sources and all 12 sections.
+- [ ] Validate real links, anchors, reading paths and glossary as the collection changes.
+- [ ] Record reviewed versions and evidence; do not treat proposed briefs or illustrative figures as production results.

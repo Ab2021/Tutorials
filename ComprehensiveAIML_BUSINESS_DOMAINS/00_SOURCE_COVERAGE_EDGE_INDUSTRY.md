@@ -406,7 +406,7 @@ Hidden folders and clipped filenames remain `unresolved-source`; visible prefixe
 
 ## Flink CEP/broadcast fraud, IoT session windows and financial reconciliation exactly-once
 
-**Teaching home:** [02_data_analytics_and_decision_science/09_data_streaming_event_systems_and_real_time_analytics/INDEX.md](02_data_analytics_and_decision_science/09_data_streaming_event_systems_and_real_time_analytics/INDEX.md). **Status:** planned.
+**Teaching home:** [02_data_analytics_and_decision_science/09_data_streaming_event_systems_and_real_time_analytics/INDEX.md](02_data_analytics_and_decision_science/09_data_streaming_event_systems_and_real_time_analytics/INDEX.md). **Status:** mostly planned; an [event-time session-window sheet](02_data_analytics_and_decision_science/09_data_streaming_event_systems_and_real_time_analytics/Cheat_Sheets/03_Flink_Event_Time_Session_Windows_and_Stateful_Processing.md) is an unreviewed partial draft with a generic trace, not the unavailable source IoT case. Fraud CEP/broadcast and reconciliation cases remain planned.
 
 **Testable outcome.** Choose event-time, state and sink semantics independently for each source case.
 
@@ -435,7 +435,7 @@ Hidden folders and clipped filenames remain `unresolved-source`; visible prefixe
 
 ## Multi-tenant platform, Debezium CDC and tiered/infinite-retention design
 
-**Teaching home:** [02_data_analytics_and_decision_science/09_data_streaming_event_systems_and_real_time_analytics/INDEX.md](02_data_analytics_and_decision_science/09_data_streaming_event_systems_and_real_time_analytics/INDEX.md). **Status:** planned.
+**Teaching home:** [02_data_analytics_and_decision_science/09_data_streaming_event_systems_and_real_time_analytics/INDEX.md](02_data_analytics_and_decision_science/09_data_streaming_event_systems_and_real_time_analytics/INDEX.md). **Status:** mostly planned; unreviewed partial drafts cover [Kafka consumer lag](02_data_analytics_and_decision_science/09_data_streaming_event_systems_and_real_time_analytics/Cheat_Sheets/01_Kafka_Consumer_Partitions_and_Lag.md) and [CDC snapshot handoff](02_data_analytics_and_decision_science/09_data_streaming_event_systems_and_real_time_analytics/Cheat_Sheets/02_CDC_Ordering_Snapshot_and_Materialization.md). They do not verify inaccessible source cases.
 
 **Testable outcome.** Choose partitioning/isolation, snapshot-to-log correctness and bounded retention/economics.
 

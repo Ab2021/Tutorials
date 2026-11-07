@@ -359,7 +359,7 @@ Hidden folders and clipped filenames remain `unresolved-source`; visible prefixe
 
 ## Observability versus evaluation, run tracing, evaluation frameworks, feedback loops and monitoring
 
-**Teaching home:** [05_ai_platforms_data_systems_and_production_engineering/28_ai_evaluation_monitoring_and_continuous_improvement/INDEX.md](05_ai_platforms_data_systems_and_production_engineering/28_ai_evaluation_monitoring_and_continuous_improvement/INDEX.md). **Status:** planned.
+**Teaching home:** [05_ai_platforms_data_systems_and_production_engineering/28_ai_evaluation_monitoring_and_continuous_improvement/INDEX.md](05_ai_platforms_data_systems_and_production_engineering/28_ai_evaluation_monitoring_and_continuous_improvement/INDEX.md). **Status:** mostly planned; [model evaluation and production monitoring](05_ai_platforms_data_systems_and_production_engineering/28_ai_evaluation_monitoring_and_continuous_improvement/Cheat_Sheets/04_Model_Evaluation_and_Production_Monitoring.md) is an unreviewed partial draft, not evidence that unavailable source files were inspected.
 
 **Testable outcome.** Separate diagnosis of what happened from evidence of whether the task succeeded.
 

@@ -771,7 +771,7 @@ CUDA: prerequisites → H100 → programming → barriers → TMA/copy → WGMMA
 
 ### Fine-tuning Module 08 / cheat sheet 07 — PEFT and model merging
 
-**Status:** planned. **Existing destination:** [04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/INDEX.md](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/INDEX.md).
+**Status:** partial, unreviewed drafts; advanced PEFT and model merging remain planned. **Existing destination:** [04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/INDEX.md](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/INDEX.md). Draft sheets: [LoRA](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/Cheat_Sheets/01_LoRA_Parameter_Efficient_Finetuning.md) and [quantized-base adapters](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/Cheat_Sheets/02_QLoRA_Quantized_Base_Adapter_Finetuning.md); neither verifies unavailable source contents.
 
 **Learning outcome.** Select full versus parameter-efficient adaptation, LoRA, visible QLoRA/quantization-aware fine-tuning, advanced PEFT and model merging/weight averaging.
 
@@ -946,7 +946,7 @@ CUDA: prerequisites → H100 → programming → barriers → TMA/copy → WGMMA
 
 ### Fine-tuning Module 14 / cheat sheet 14 — practical MLOps workflows
 
-**Status:** planned. **Existing destination:** [05_ai_platforms_data_systems_and_production_engineering/26_mlops_feature_platforms_and_model_lifecycle/INDEX.md](05_ai_platforms_data_systems_and_production_engineering/26_mlops_feature_platforms_and_model_lifecycle/INDEX.md).
+**Status:** mostly planned; [checkpoint and recovery](05_ai_platforms_data_systems_and_production_engineering/Cheat_Sheets/01_Distributed_Training_Checkpoint_and_Recovery.md) is an unreviewed partial draft. **Existing destination:** [05_ai_platforms_data_systems_and_production_engineering/26_mlops_feature_platforms_and_model_lifecycle/INDEX.md](05_ai_platforms_data_systems_and_production_engineering/26_mlops_feature_platforms_and_model_lifecycle/INDEX.md).
 
 **Learning outcome.** Design experiments/ablations, tracking/reproducibility, checkpoints/fault tolerance, post-training production handoffs and compute/cost plans.
 
@@ -1327,7 +1327,7 @@ CUDA: prerequisites → H100 → programming → barriers → TMA/copy → WGMMA
 
 ### Fine-tuning Module 19 — resilience, profiling, cluster management and costs
 
-**Status:** planned. **Existing destination:** [05_ai_platforms_data_systems_and_production_engineering/24_distributed_training_data_pipelines_and_ml_compute/INDEX.md](05_ai_platforms_data_systems_and_production_engineering/24_distributed_training_data_pipelines_and_ml_compute/INDEX.md).
+**Status:** mostly planned; [checkpoint and recovery](05_ai_platforms_data_systems_and_production_engineering/Cheat_Sheets/01_Distributed_Training_Checkpoint_and_Recovery.md) is an unreviewed partial draft. **Existing destination:** [05_ai_platforms_data_systems_and_production_engineering/24_distributed_training_data_pipelines_and_ml_compute/INDEX.md](05_ai_platforms_data_systems_and_production_engineering/24_distributed_training_data_pipelines_and_ml_compute/INDEX.md).
 
 **Learning outcome.** Integrate fault tolerance/elasticity, at-scale profiling, SLURM/Kubernetes management, compute planning and multinode debugging/monitoring.
 

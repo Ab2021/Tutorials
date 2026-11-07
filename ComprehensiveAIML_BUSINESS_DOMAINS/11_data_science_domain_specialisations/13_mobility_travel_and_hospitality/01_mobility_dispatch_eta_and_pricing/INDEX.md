@@ -9,7 +9,7 @@
 | # | Topic | Status |
 |---:|---|---|
 | 1 | marketplace dynamics | planned |
-| 2 | demand | planned |
+| 2 | demand | [Ride-hailing demand forecasting draft](../../01_production_ml_case_library/10_time_series_forecasting/Case_Studies/02_Ride_Hailing_Demand_Forecasting.md); broader topic planned |
 | 3 | driver supply | planned |
 | 4 | dispatch | planned |
 | 5 | routing | planned |

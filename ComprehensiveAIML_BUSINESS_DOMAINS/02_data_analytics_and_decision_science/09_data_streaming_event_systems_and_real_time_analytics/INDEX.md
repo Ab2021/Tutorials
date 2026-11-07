@@ -9,9 +9,9 @@
 | # | Topic | Status |
 |---:|---|---|
 | 1 | event schemas and contracts | planned |
-| 2 | Kafka and stream processing | planned |
+| 2 | Kafka and stream processing | [Kafka lag draft](Cheat_Sheets/01_Kafka_Consumer_Partitions_and_Lag.md); broader topic planned |
 | 3 | time windows and state | planned |
-| 4 | CDC and event sourcing | planned |
+| 4 | CDC and event sourcing | [CDC handoff draft](Cheat_Sheets/02_CDC_Ordering_Snapshot_and_Materialization.md); event sourcing and broader scope planned |
 | 5 | exactly-once trade-offs | planned |
 
 ## What competence looks like

@@ -11,7 +11,7 @@
 | 1 | test-set design | planned |
 | 2 | LLM and agent evaluations | planned |
 | 3 | human evaluation | planned |
-| 4 | production monitoring | planned |
+| 4 | production monitoring | [model evaluation and monitoring draft](Cheat_Sheets/04_Model_Evaluation_and_Production_Monitoring.md); broader topic planned |
 | 5 | feedback and regression gates | planned |
 
 ## What competence looks like

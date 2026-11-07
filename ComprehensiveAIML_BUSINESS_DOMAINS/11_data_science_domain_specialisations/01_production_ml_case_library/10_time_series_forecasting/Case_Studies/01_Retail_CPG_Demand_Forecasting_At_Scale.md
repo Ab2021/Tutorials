@@ -1213,11 +1213,21 @@ Each prompt is hypothetical; scores distinguish a complete answer from a plausib
 ## 15. Quick Reference Card
 | Field | Case-specific answer |
 |---|---|
-| Problem | Choose a feasible daily store-SKU replenishment quantity from point-in-time information. |
-| Context | Fictional retail CPG; two million possible series and all values illustrative. |
+| Problem type | Choose a feasible daily store-SKU replenishment quantity from point-in-time information. |
+| Domain | Fictional retail CPG; two million possible series and all values illustrative. |
 | Method | Compare a global probabilistic forecast and a seasonal-naive baseline under the same bounded policy. |
-| Key finding | With target 53, position 25, six-unit packs and capacity 30, the illustrative policy orders 30 units; this is not an observed gain. |
+| Primary result | Illustrative: with target 53, position 25, six-unit packs and capacity 30, the policy orders 30 units; this is not an observed gain. |
 | Action | No action taken; authorize replay and review before any pilot or automatic ordering. |
-| Transferable lesson | Forecast quality is not the decision: inventory, economics, constraints and feedback determine value. |
+| Key lesson | Forecast quality is not the decision: inventory, economics, constraints and feedback determine value. |
 | Evidence and stage | Illustrative computation; outcomes not measured; proposed, not deployed. |
 | Review record | Draft, unreviewed; revisit when cutoff, inventory semantics, source snapshots or supplier lead times change. |
+| Tags | `evaluation-mismatch`; `data-leakage`; `model-monitoring` |
+
+| Supplemental field | Value |
+|---|---|
+| Case ID / version / as-of | CASE-01-10-001 / 1.0 / 2026-11-07 |
+| Evidence level | Illustrative; business outcome not measured |
+| Implementation stage | Proposed; draft unreviewed |
+| Baseline / primary metric | Seasonal-naive forecast and bounded replenishment; decision costs and service to be measured |
+| Key limitation | No actual backtest, pilot or business outcome |
+| Review trigger / owner | Order timing, inventory semantics or historical snapshots change / retail replenishment lead |
