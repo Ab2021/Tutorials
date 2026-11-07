@@ -1321,10 +1321,13 @@ If freshness conflicts with correctness, make the tradeoff explicit to the decis
 
 | Field | Quick reference |
 |---|---|
-| **Problem** | Group observations by activity gap while accounting for out-of-order arrival, recovery, and corrections. |
-| **Inputs** | Immutable event ID, tenant-aware key, valid occurrence timestamp, payload, gap, watermark policy, lateness policy, and sink contract. |
-| **Core rule** | Under the generic strict fixed-gap contract, sort timestamps and connect adjacent events only when their difference is `< g`; a late bridge can merge earlier sessions. |
+| **Topic** | Event-time session grouping, state recovery, and downstream corrections. |
+| **Core formula** | Under the generic strict fixed-gap contract, adjacent sorted events connect iff `t(i+1) - t(i) < g`; a late bridge can merge previously published sessions. |
+| **Key assumption** | Integer-ms precision, half-open intervals, strict overlap, retained merge state, explicit trigger/cleanup and a correction-capable materialization. Verify the deployed assigner separately. |
+| **Complexity** | For `n` retained events, sort and scan costs `O(n log n)` time and up to `O(n)` space; incremental state and recovery depend on the implementation. |
+| **Use when** | Activity gaps define sessions and consumers can handle the chosen lateness and correction contract. |
+| **Avoid when** | Timestamps are untrustworthy or irreversible consumers cannot tolerate provisional sessions and have no reconciliation path. |
+| **Go deeper** | [CDC ordering and materialization](02_CDC_Ordering_Snapshot_and_Materialization.md); broader windowing patterns remain planned. |
 | **Worked result** | At `0,4,12 s`, gap `5 s` yields `[0,9)` and `[12,17)`; adding `8 s` yields `[0,17)` with four distinct events. |
-| **Assumptions** | Integer-ms precision, half-open intervals, strict overlap, explicit trigger/cleanup semantics, retained merge state, and a correction-capable materialization. |
-| **Failure / diagnostic** | A stalled watermark may be an idle input, while stale overlapping rows may be missing retractions; inspect input watermarks and output IDs separately. |
-| **Decision / next action** | Pin the Flink and connector versions, test gap equality and late-merge replay, and validate checkpoint, retention, deduplication, and sink effect behavior end to end. |
+| **Diagnostic** | Compare input watermarks and output IDs; stalled progress and missing retractions require different fixes. |
+| **Guardrail** | Pin Flink and connector versions; test equality, recovery, deduplication, retention and sink effects end to end. |

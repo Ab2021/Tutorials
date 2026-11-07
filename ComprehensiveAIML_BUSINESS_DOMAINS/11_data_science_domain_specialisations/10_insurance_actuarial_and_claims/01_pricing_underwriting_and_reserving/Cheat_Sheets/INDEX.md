@@ -9,6 +9,7 @@ This collection supports actuarial analysts and reviewers making exposure-normal
 | Level | Topic | Outcome and prerequisite | Status |
 |---|---|---|---|
 | Core | [03 Non-Life Pricing: Pure Premium, Frequency–Severity and Exposure](03_NonLife_Pricing_Ratemaking.md) | Reconcile earned exposure and claim counts; calculate and diagnose expected loss cost. Requires basic ratios, expected values and coverage terminology. | Draft; not reviewed |
+| Core | [05 Claims Reserving Methods](05_Claims_Reserving_Methods.md) | Develop a paid triangle, reconcile paid outstanding and distinguish incurred-based IBNR; requires ratios and claims terminology. | Draft; not reviewed |
 | Advanced | Actuarial model review | Assess assumptions, inputs and validation. | Planned |
 | Advanced | Rating-factor governance | Review factor decisions, permissible use and monitoring. | Planned |
 | Advanced | Reserving validation | Compare claim development assumptions and validation. | Planned |
@@ -22,12 +23,15 @@ This collection supports actuarial analysts and reviewers making exposure-normal
 | How do I translate loss cost into a rate? | [Worked example, Section 5](03_NonLife_Pricing_Ratemaking.md#5-worked-numerical-example) | Premium-based expense fractions must use the stated base. |
 | Why does frequency times severity fail to reconcile? | [Failure modes, Section 8](03_NonLife_Pricing_Ratemaking.md#8-failure-modes--edge-cases) | Different count rules, maturity or coverage can invalidate cancellation. |
 | How does a log exposure offset work? | [Formulas, Section 4](03_NonLife_Pricing_Ratemaking.md#4-core-formulas-with-full-derivation) | Positive exposure and proportional count intensity are required. |
+| How is paid-based outstanding calculated? | [Worked example, Section 5](05_Claims_Reserving_Methods.md#5-worked-numerical-example) | Matched factors, tail and financial basis must be appropriate. |
+| How do case reserves relate to IBNR? | [Formulas, Section 4](05_Claims_Reserving_Methods.md#4-core-formulas-with-full-derivation) | Specify broad versus strictly unreported IBNR and avoid double-counting case reserves. |
+| What can distort development? | [Failure modes, Section 8](05_Claims_Reserving_Methods.md#8-failure-modes--edge-cases) | Calendar effects, claims handling and sparse observations require investigation. |
 
 ## 4. Reading paths
 
-- **Beginner:** Review arithmetic, basic probability and contract terminology, then read Sections 1–5 of the pricing sheet; the collection has only one authored sheet.
-- **Practitioner:** Read the full pricing sheet, work its example independently, and use its diagnostics on a matched exposure and claims extract.
-- **Advanced:** Read the full sheet, test the component assumptions and operational boundaries, and extend to reserving and governance when their planned sheets are authored.
+- **Beginner:** Review arithmetic, probability and contract terminology, then read Sections 1–5 of the pricing and reserving sheets.
+- **Practitioner:** Read both sheets, reproduce their examples, and apply their diagnostics to reconciled exposure and claims extracts.
+- **Advanced:** Examine method assumptions and operational boundaries in both sheets; extend to reserving validation and governance when those planned sheets are authored.
 
 ## 5. Prerequisite skills
 
@@ -35,7 +39,7 @@ Calculate ratios and weighted averages, distinguish conditional means from indiv
 
 ## 6. Exclusions and handoffs
 
-The authored sheet does not provide a complete reserving model, a full generalized linear model inference treatment, reinsurance structuring, or legal advice. Reserving validation and rating-factor governance are planned rather than available handoffs. A qualified actuary and relevant legal and governance owners must approve production use.
+The authored sheets do not provide a complete reserving validation program, full generalized linear model inference, reinsurance structuring, or legal advice. Reserving validation and rating-factor governance are planned rather than available handoffs. A qualified actuary and relevant legal and governance owners must approve production use.
 
 ## 7. Master symbol glossary
 
@@ -49,28 +53,36 @@ The authored sheet does not provide a complete reserving model, a full generaliz
 | p | Pure premium, currency units per exposure | Scalar mean or estimate | [Definitions](03_NonLife_Pricing_Ratemaking.md#3-foundational-definitions); distinct from charged premium. |
 | F | Selected loss development factor | Positive dimensionless scalar | [Formulas](03_NonLife_Pricing_Ratemaking.md#4-core-formulas-with-full-derivation); depends on valuation age and loss basis. |
 | R | Indicated premium per exposure | Scalar currency rate | [Formulas](03_NonLife_Pricing_Ratemaking.md#4-core-formulas-with-full-derivation); requires stated expense and profit bases. |
+| C(i,j) | Cumulative paid for accident cohort i through development age j, currency units | Scalar cell on stated financial basis | [Reserving definitions](05_Claims_Reserving_Methods.md#3-foundational-definitions); not incremental paid. |
+| f(j) | Matched volume-weighted age-to-age factor, dimensionless | Scalar; matched denominator nonzero | [Reserving formulas](05_Claims_Reserving_Methods.md#4-core-formulas-with-full-derivation); distinct from pricing frequency f. |
+| T | Tail development factor, dimensionless | Selected scalar | [Reserving formulas](05_Claims_Reserving_Methods.md#4-core-formulas-with-full-derivation); one is an assumption, not proof of maturity. |
+| U(i) | Estimated cohort ultimate paid, currency units | Scalar on stated basis | [Reserving formulas](05_Claims_Reserving_Methods.md#4-core-formulas-with-full-derivation); not outstanding alone. |
+| K | Case reserve for known claims, currency units | Scalar at valuation | [Reserving definitions](05_Claims_Reserving_Methods.md#3-foundational-definitions); included in paid-based outstanding. |
 
 ## 8. Quick Reference Card directory
 
 | Card | Core rule | Use condition | Avoid |
 |---|---|---|---|
 | [Non-life pricing card](03_NonLife_Pricing_Ratemaking.md#12-quick-reference-card) | Matched loss divided by earned exposure; reconcile frequency × severity | Positive exposure and consistent coverage, time and loss basis | Applying mismatched claim counts or undeveloped losses as ultimate |
+| [Claims reserving card](05_Claims_Reserving_Methods.md#12-quick-reference-card) | Ultimate less paid equals paid outstanding | Matched development and consistent paid basis | Treating paid outstanding as pure IBNR or a confidence interval |
 
 ## 9. Common Issues locator
 
-No separate Common Issues file has been authored; the planned collection-level target is at least 25 complete distinct issues. The draft pricing sheet contains its own [hypothetical diagnostic entries](03_NonLife_Pricing_Ratemaking.md#8-failure-modes--edge-cases); these are not a completed collection-level issue artifact.
+No separate Common Issues file has been authored; the planned collection-level target is at least 25 complete distinct issues. The draft [pricing](03_NonLife_Pricing_Ratemaking.md#8-failure-modes--edge-cases) and [reserving](05_Claims_Reserving_Methods.md#8-failure-modes--edge-cases) sheets contain local hypothetical diagnostic entries; these are not a completed collection-level issue artifact.
 
 ## 10. Sources, versions and maintenance
 
 | Artifact | Evidence and source | Editorial state | Maintenance trigger |
 |---|---|---|---|
 | [Non-life pricing sheet](03_NonLife_Pricing_Ratemaking.md) | Constructed examples and derived identities; source inventory names the topic, not its inaccessible contents. CAS *Basic Ratemaking*, fifth edition, 2016, is identified as an educational reference; detailed review remains open. | Version 1.0, draft; not independently reviewed | Exposure definition, claim development, contract terms, applicable guidance or source changes |
+| [Claims reserving sheet](05_Claims_Reserving_Methods.md) | Illustrative checked arithmetic and derived identities; [Friedland, *Estimating Unpaid Claims Using Basic Techniques*, CAS, 2010](https://www.casact.org/sites/default/files/database/studynotes_friedland_estimating.pdf) is the primary educational reference; the original source inventory contents are unavailable. | Version 1.0, draft; not independently reviewed | Claims handling, valuation basis, tail evidence, applicable guidance or source changes |
 
 The source crosswalk assigns the original `Insurance_Analytical_Modelling/Insurance_Cheat_Sheets/03_NonLife_Pricing_Ratemaking.md` topic to this module; this entry does not assert that the original file was inspected or reproduced.
+The source crosswalk also names `Insurance_Analytical_Modelling/Insurance_Cheat_Sheets/05_Claims_Reserving_Methods.md`; its original contents were unavailable and were not inspected or reproduced.
 
 ## 11. Collection acceptance checklist
 
-- [x] One actual draft has a linked topic, card and status.
+- [x] Two actual drafts have linked topics, cards and statuses.
 - [x] Draft evidence is distinguished from real insurer experience.
 - [ ] Independent numerical, source, link and editorial review completed.
 - [ ] Planned neighboring topics and final Common Issues artifact authored and reviewed.

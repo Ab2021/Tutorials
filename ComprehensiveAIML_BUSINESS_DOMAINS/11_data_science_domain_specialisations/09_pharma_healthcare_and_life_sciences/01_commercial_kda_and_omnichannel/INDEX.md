@@ -25,6 +25,7 @@
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.
 - [Cheat Sheets](./Cheat_Sheets/INDEX.md): concise references for recurring design, analysis, and operating decisions.
+- Related unreviewed case: [HCP promotional-response driver analysis](../../01_production_ml_case_library/03_kda_solutions_pharma/Case_Studies/01_HCP_Promotional_Response_Driver_Analysis_Launch_Brand.md), a fictional launch experiment with no measured effect.
 
 ## Scope boundary
 
