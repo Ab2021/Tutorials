@@ -1200,7 +1200,7 @@ This ratio is NOT MEASURED and should not be inferred from raw run count or toke
 | Item | Value |
 |---|---|
 | Topic | Agent session ownership, isolation and run recovery |
-| Core formula / invariant | `C = A * D * B * M` for storage; authorize each state access and effect |
+| Core formula | `C = A * D * B * M` for storage; authorize each state access and effect |
 | Key assumption | Storage estimate assumes stationary cohorts and a stated multiplier; external effects need their own contract |
 | Complexity | Per transition: one conditional state update plus applicable authorization and audit; actual latency is not measured |
 | Use when | Designing durable, tenant-scoped runs with explicit approval and recovery |

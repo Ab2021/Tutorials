@@ -42,6 +42,9 @@ This course contains a planned syllabus and a growing set of draft teaching file
 - [Spotify personalization and experimentation](11_data_science_domain_specialisations/01_production_ml_case_library/08_recommendation_systems/Case_Studies/02_Spotify_Personalization_Experimentation.md) — draft sourced architecture case; separates Spotify's reported practices from illustrative calculations.
 - [Causal inference for marketing](11_data_science_domain_specialisations/02_data_science_method_playbooks/04_marketing_analytics_playbook/Cheat_Sheets/21_Causal_Inference_Marketing.md) — draft cheat sheet; incrementality, assumptions, uncertainty and economics.
 - [PayPal observability streaming migration](02_data_analytics_and_decision_science/09_data_streaming_event_systems_and_real_time_analytics/Case_Studies/01_paypal_observability_dataflow.md) — draft source-based case; vendor-reported outcomes and illustrative calculations are distinguished.
+- [Durable workflows and idempotent execution](06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/Cheat_Sheets/05_durable_workflows_and_idempotent_execution.md) — draft cheat sheet; retries, checkpointing and external side-effect boundaries.
+- [ECG sampling and aliasing](07_edge_ai_robotics_and_cyber_physical_systems/37_sensor_fusion_iot_and_realtime_perception/Cheat_Sheets/01_ecg_sampling_and_aliasing.md) — research-education draft; sampling, filtering and dataset provenance, not clinical guidance.
+- [Model evaluation and production monitoring](05_ai_platforms_data_systems_and_production_engineering/28_ai_evaluation_monitoring_and_continuous_improvement/Cheat_Sheets/04_Model_Evaluation_and_Production_Monitoring.md) — draft cheat sheet; mature labels, drift interpretation and operational response.
 
 ## Learning parts
 

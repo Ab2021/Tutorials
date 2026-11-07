@@ -12,6 +12,7 @@ Every authored sheet must follow the [course authoring and numerical standards](
 | 2 | workflow selection | Concise patterns, decision rules, assumptions, and common traps. | planned |
 | 3 | handoff protocol | Concise patterns, decision rules, assumptions, and common traps. | planned |
 | 4 | [Agent sessions, state ownership, isolation and run lifecycle](04_agent_sessions_state_isolation_and_lifecycle.md) | Control-plane ownership, lifecycle recovery, isolation, external effects and sizing; based on the Agents Stack Infra Module 03 directory crosswalk. | draft; not reviewed |
+| 5 | [Durable workflows and idempotent execution](05_durable_workflows_and_idempotent_execution.md) | Checkpoints, retries, timeouts, business-side effect safety, queue sizing, reconciliation and diagnostic scenarios; source title mapped from Agents Stack Infra Module 04, but source contents unavailable. | draft; not reviewed |
 
 ## Suggested file naming
 

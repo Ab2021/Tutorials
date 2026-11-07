@@ -2,7 +2,7 @@
 
 ## Authoring standard
 
-Every authored sheet must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. This is a planned catalog, not completed sheets; expand to all 11 collection-index sections and a final Common Issues artifact (at least 25 complete issues) before publication. A card alone is not a completed sheet.
+Every authored sheet must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. This catalog includes a draft sheet; expand to all 11 collection-index sections and a final Common Issues artifact (at least 25 complete issues) before publication. A card alone is not a completed sheet.
 
 ## Planned cheat sheets
 
@@ -11,6 +11,7 @@ Every authored sheet must follow the [course authoring and numerical standards](
 | 1 | evaluation matrix | Concise patterns, decision rules, assumptions, and common traps. | planned |
 | 2 | human-rater guide | Concise patterns, decision rules, assumptions, and common traps. | planned |
 | 3 | production metric tree | Concise patterns, decision rules, assumptions, and common traps. | planned |
+| 4 | [Model evaluation and production monitoring](04_Model_Evaluation_and_Production_Monitoring.md) | Mature outcome cohorts, model and agent evaluation, feature shift, operational diagnosis and response. Original inventoried source files unavailable; source text not inspected. | draft; unreviewed |
 
 ## Suggested file naming
 

@@ -4,6 +4,12 @@
 
 Every authored sheet must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. This is a planned catalog, not completed sheets; expand to all 11 collection-index sections and a final Common Issues artifact (at least 25 complete issues) before publication. A card alone is not a completed sheet.
 
+## Authored draft
+
+| Reference | Outcome | Status |
+|---|---|---|
+| [01 ECG sampling and aliasing](01_ecg_sampling_and_aliasing.md) | Calculate sampling intervals, folding and DFT spacing; distinguish analog and digital anti-aliasing. | Draft, unreviewed; not a clinical or device-validation reference |
+
 ## Planned cheat sheets
 
 | # | Reference | Coverage | Status |
