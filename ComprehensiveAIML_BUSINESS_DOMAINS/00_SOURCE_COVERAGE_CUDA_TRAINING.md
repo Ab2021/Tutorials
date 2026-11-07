@@ -514,7 +514,7 @@ CUDA: prerequisites → H100 → programming → barriers → TMA/copy → WGMMA
 
 ### Fine-tuning Module 00 — LLM foundations and modern training pipeline
 
-**Status:** planned. **Existing destination:** [04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/INDEX.md](04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/INDEX.md).
+**Status:** partially drafted. **Existing destination:** [04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/INDEX.md](04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/INDEX.md). Course lessons 0.1 and 0.2 are now authored as drafts; focused sheets, a bounded case, independent review and empirical validation remain open.
 
 **Learning outcome.** Distinguish a language model, training objective, pretraining, supervised adaptation, preference optimization and serving, and identify the artifact handed off at each stage.
 
@@ -533,14 +533,14 @@ CUDA: prerequisites → H100 → programming → barriers → TMA/copy → WGMMA
 | Exact source node | Role / proposed focused-sheet topic | Disposition |
 |---|---|---|
 | `finetuning_course/Module_00_Foundations` | Source scope/container — not a completed lesson | `source-container` |
-| `finetuning_course/Module_00_Foundations/0.1_What_is_a_Large_Language_Model.md` | 0.1 What is a Large Language Model | `planned-topic` |
-| `finetuning_course/Module_00_Foundations/0.2_Modern_LLM_Training_Pipeline.md` | 0.2 Modern LLM Training Pipeline | `planned-topic` |
+| `finetuning_course/Module_00_Foundations/0.1_What_is_a_Large_Language_Model.md` | 0.1 What is a Large Language Model | `draft` — mapped course lesson at [module 19](04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/01_What_Is_a_Large_Language_Model.md); source body unavailable |
+| `finetuning_course/Module_00_Foundations/0.2_Modern_LLM_Training_Pipeline.md` | 0.2 Modern LLM Training Pipeline | `draft` — mapped course lesson at [module 19](04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/02_Modern_LLM_Training_Pipeline.md); source body unavailable |
 
 <a id="ft-transformers"></a>
 
 ### Fine-tuning Module 01 / cheat sheet 01 — attention, blocks, scaling and MoE
 
-**Status:** planned. **Existing destination:** [04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/INDEX.md](04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/INDEX.md).
+**Status:** module lessons partially drafted. **Existing destination:** [04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/INDEX.md](04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/INDEX.md). Draft lessons cover submodules 1.1–1.4; focused sheets, bounded case, independent review and empirical validation remain open.
 
 **Learning outcome.** Compute tensor shapes and parameter/compute budgets for attention, transformer blocks and mixture-of-experts routing.
 
@@ -560,16 +560,16 @@ CUDA: prerequisites → H100 → programming → barriers → TMA/copy → WGMMA
 |---|---|---|
 | `finetuning_course/LLM_Finetuning_Cheat_Sheets/01_Transformer_Architecture_Attention.md` | 01 Transformer Architecture Attention | `planned-topic` |
 | `finetuning_course/Module_01_Transformer_Architecture` | Source scope/container — not a completed lesson | `source-container` |
-| `finetuning_course/Module_01_Transformer_Architecture/1.1_Attention_Mechanism.md` | 1.1 Attention Mechanism | `planned-topic` |
-| `finetuning_course/Module_01_Transformer_Architecture/1.2_Transformer_Block_Architecture.md` | 1.2 Transformer Block Architecture | `planned-topic` |
-| `finetuning_course/Module_01_Transformer_Architecture/1.3_Scaling_and_Parameter_Counting.md` | 1.3 Scaling and Parameter Counting | `planned-topic` |
-| `finetuning_course/Module_01_Transformer_Architecture/1.4_Mixture_of_Experts.md` | 1.4 Mixture of Experts | `planned-topic` |
+| `finetuning_course/Module_01_Transformer_Architecture/1.1_Attention_Mechanism.md` | 1.1 Attention Mechanism | `draft` — mapped course lesson at [module 19](04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/03_Attention_Mechanism.md); source body unavailable |
+| `finetuning_course/Module_01_Transformer_Architecture/1.2_Transformer_Block_Architecture.md` | 1.2 Transformer Block Architecture | `draft` — mapped course lesson at [module 19](04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/04_Transformer_Block_Architecture.md); source body unavailable |
+| `finetuning_course/Module_01_Transformer_Architecture/1.3_Scaling_and_Parameter_Counting.md` | 1.3 Scaling and Parameter Counting | `draft` — mapped course lesson at [module 19](04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/05_Scaling_and_Parameter_Counting.md); source body unavailable |
+| `finetuning_course/Module_01_Transformer_Architecture/1.4_Mixture_of_Experts.md` | 1.4 Mixture of Experts | `draft` — mapped course lesson at [module 19](04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/06_Mixture_of_Experts.md); source body unavailable |
 
 <a id="ft-data"></a>
 
 ### Fine-tuning Module 02 — data curation and tokenization
 
-**Status:** planned. **Existing destination:** [04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/INDEX.md](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/INDEX.md).
+**Status:** all four mapped module lessons are draft. **Existing destination:** [04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/INDEX.md](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/INDEX.md). Focused sheets, bounded case, independent review and empirical validation remain open.
 
 **Learning outcome.** Specify data sources/scale, curation, tokenization and training formatting with license, deduplication and leakage boundaries.
 
@@ -588,10 +588,10 @@ CUDA: prerequisites → H100 → programming → barriers → TMA/copy → WGMMA
 | Exact source node | Role / proposed focused-sheet topic | Disposition |
 |---|---|---|
 | `finetuning_course/Module_02_Data_Curation_Tokenization` | Source scope/container — not a completed lesson | `source-container` |
-| `finetuning_course/Module_02_Data_Curation_Tokenization/2.1_Data_Sources_and_Scale.md` | 2.1 Data Sources and Scale | `planned-topic` |
-| `finetuning_course/Module_02_Data_Curation_Tokenization/2.2_Data_Curation_Pipeline.md` | 2.2 Data Curation Pipeline | `planned-topic` |
-| `finetuning_course/Module_02_Data_Curation_Tokenization/2.3_Tokenization.md` | 2.3 Tokenization | `planned-topic` |
-| `finetuning_course/Module_02_Data_Curation_Tokenization/2.4_Data_Formatting_for_Training.md` | 2.4 Data Formatting for Training | `planned-topic` |
+| `finetuning_course/Module_02_Data_Curation_Tokenization/2.1_Data_Sources_and_Scale.md` | 2.1 Data Sources and Scale | `draft` — mapped course lesson at [module 21](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/2.1_Data_Sources_and_Scale.md); source body unavailable |
+| `finetuning_course/Module_02_Data_Curation_Tokenization/2.2_Data_Curation_Pipeline.md` | 2.2 Data Curation Pipeline | `draft` — mapped course lesson at [module 21](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/2.2_Data_Curation_Pipeline.md); source body unavailable |
+| `finetuning_course/Module_02_Data_Curation_Tokenization/2.3_Tokenization.md` | 2.3 Tokenization | `draft` — mapped course lesson at [module 21](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/2.3_Tokenization.md); source body unavailable |
+| `finetuning_course/Module_02_Data_Curation_Tokenization/2.4_Data_Formatting_for_Training.md` | 2.4 Data Formatting for Training | `draft` — mapped course lesson at [module 21](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/2.4_Data_Formatting_for_Training.md); source body unavailable |
 
 <a id="ft-pretraining"></a>
 

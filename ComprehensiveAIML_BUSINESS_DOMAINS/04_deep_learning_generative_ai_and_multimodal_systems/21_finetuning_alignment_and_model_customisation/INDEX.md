@@ -8,7 +8,7 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | curation and quality | planned |
+| 1 | curation and quality | Submodules 2.1–2.4 drafted; focused sheets, case and independent review remain planned |
 | 2 | SFT and PEFT | [LoRA](Cheat_Sheets/01_LoRA_Parameter_Efficient_Finetuning.md) and [QLoRA](Cheat_Sheets/02_QLoRA_Quantized_Base_Adapter_Finetuning.md) drafts; SFT and broader scope planned |
 | 3 | preference optimisation | planned |
 | 4 | distillation and model merging | planned |
@@ -24,6 +24,16 @@ After this module, a learner can turn a real problem into an appropriate technic
 - [Cheat Sheets](./Cheat_Sheets/INDEX.md): compact references for repeat use while designing, reviewing, or debugging.
 
 - [RoPE and position interpolation](Cheat_Sheets/03_RoPE_and_Position_Interpolation.md) — unreviewed draft on long-context adaptation, rotary geometry and serving boundaries; remaining context-extension topics and cases are planned.
+
+## Authored source submodules
+
+The visible Module 02 source titles are mapped from [`Train/Templates/directory.txt`](../../../Templates/directory.txt). These course lessons are new drafts; the original source lesson bodies were not available for inspection.
+
+- [2.1 — Data Sources and Scale](2.1_Data_Sources_and_Scale.md) — draft; governance, volume accounting, mixture planning, splits and data-value limits.
+- [2.2 — Data Curation Pipeline](2.2_Data_Curation_Pipeline.md) — draft; governed acquisition, parsing, filtering, deduplication, split integrity and lineage.
+- [2.3 — Tokenization](2.3_Tokenization.md) — draft; vocabulary/ID compatibility, Unicode, special tokens, token budgets and multilingual evaluation.
+- [2.4 — Data Formatting for Training](2.4_Data_Formatting_for_Training.md) — draft; chat serialization, target masks, truncation, packing and batch validation.
+
 
 ## Dependency notes
 
