@@ -801,7 +801,7 @@ CUDA: prerequisites → H100 → programming → barriers → TMA/copy → WGMMA
 
 ### Fine-tuning Module 09 / cheat sheet 11 — evaluation and debugging
 
-**Status:** partial, unreviewed drafts for mapped source submodules 9.1–9.3; visible submodules 9.4–9.6 remain planned. **Existing destination:** [05_ai_platforms_data_systems_and_production_engineering/28_ai_evaluation_monitoring_and_continuous_improvement/INDEX.md](05_ai_platforms_data_systems_and_production_engineering/28_ai_evaluation_monitoring_and_continuous_improvement/INDEX.md).
+**Status:** partial, unreviewed drafts for mapped source submodules 9.1–9.6. **Existing destination:** [05_ai_platforms_data_systems_and_production_engineering/28_ai_evaluation_monitoring_and_continuous_improvement/INDEX.md](05_ai_platforms_data_systems_and_production_engineering/28_ai_evaluation_monitoring_and_continuous_improvement/INDEX.md).
 
 **Learning outcome.** Interpret training/loss metrics, perplexity, comprehensive benchmarks, LLM-as-judge/human evaluation, training-failure diagnostics and infrastructure profiling.
 
@@ -824,15 +824,15 @@ CUDA: prerequisites → H100 → programming → barriers → TMA/copy → WGMMA
 | `finetuning_course/Module_09_Evaluation_Debugging/9.1_Training_Metrics_and_Loss_Analysis.md` | 9.1 Training Metrics and Loss Analysis | `draft` — mapped course lesson at [module 28](05_ai_platforms_data_systems_and_production_engineering/28_ai_evaluation_monitoring_and_continuous_improvement/9.1_Training_Metrics_and_Loss_Analysis.md); source body unavailable |
 | `finetuning_course/Module_09_Evaluation_Debugging/9.2_Perplexity_and_Language_Model_Metrics.md` | 9.2 Perplexity and Language Model Metrics | `draft` — mapped course lesson at [module 28](05_ai_platforms_data_systems_and_production_engineering/28_ai_evaluation_monitoring_and_continuous_improvement/9.2_Perplexity_and_Language_Model_Metrics.md); source body unavailable |
 | `finetuning_course/Module_09_Evaluation_Debugging/9.3_Evaluation_Benchmarks_Comprehensive.md` | 9.3 Evaluation Benchmarks Comprehensive | `draft` — mapped course lesson at [module 28](05_ai_platforms_data_systems_and_production_engineering/28_ai_evaluation_monitoring_and_continuous_improvement/9.3_Evaluation_Benchmarks_Comprehensive.md); source body unavailable |
-| `finetuning_course/Module_09_Evaluation_Debugging/9.4_LLM_as_Judge_and_Human_Evaluation.md` | 9.4 LLM as Judge and Human Evaluation | `planned-topic` |
-| `finetuning_course/Module_09_Evaluation_Debugging/9.5_Debugging_Common_Training_Failures.md` | 9.5 Debugging Common Training Failures | `planned-topic` |
-| `finetuning_course/Module_09_Evaluation_Debugging/9.6_Infrastructure_Benchmarking_and_Profiling.md` | 9.6 Infrastructure Benchmarking and Profiling | `planned-topic` |
+| `finetuning_course/Module_09_Evaluation_Debugging/9.4_LLM_as_Judge_and_Human_Evaluation.md` | 9.4 LLM as Judge and Human Evaluation | `draft` — mapped course lesson at [module 28](05_ai_platforms_data_systems_and_production_engineering/28_ai_evaluation_monitoring_and_continuous_improvement/9.4_LLM_as_Judge_and_Human_Evaluation.md); source body unavailable |
+| `finetuning_course/Module_09_Evaluation_Debugging/9.5_Debugging_Common_Training_Failures.md` | 9.5 Debugging Common Training Failures | `draft` — mapped course lesson at [module 28](05_ai_platforms_data_systems_and_production_engineering/28_ai_evaluation_monitoring_and_continuous_improvement/9.5_Debugging_Common_Training_Failures.md); source body unavailable |
+| `finetuning_course/Module_09_Evaluation_Debugging/9.6_Infrastructure_Benchmarking_and_Profiling.md` | 9.6 Infrastructure Benchmarking and Profiling | `draft` — mapped course lesson at [module 28](05_ai_platforms_data_systems_and_production_engineering/28_ai_evaluation_monitoring_and_continuous_improvement/9.6_Infrastructure_Benchmarking_and_Profiling.md); source body unavailable |
 
 <a id="ft-inference"></a>
 
 ### Fine-tuning Module 10 / cheat sheet 09 — inference and deployment
 
-**Status:** planned. **Existing destination:** [05_ai_platforms_data_systems_and_production_engineering/25_model_serving_inference_optimisation_and_cost/INDEX.md](05_ai_platforms_data_systems_and_production_engineering/25_model_serving_inference_optimisation_and_cost/INDEX.md).
+**Status:** partial, unreviewed drafts for mapped source submodules 10.1–10.4. **Existing destination:** [05_ai_platforms_data_systems_and_production_engineering/25_model_serving_inference_optimisation_and_cost/INDEX.md](05_ai_platforms_data_systems_and_production_engineering/25_model_serving_inference_optimisation_and_cost/INDEX.md).
 
 **Learning outcome.** Size KV cache/batches, compare inference quantization and speculative decoding, and choose a bounded serving architecture.
 
@@ -852,16 +852,16 @@ CUDA: prerequisites → H100 → programming → barriers → TMA/copy → WGMMA
 |---|---|---|
 | `finetuning_course/LLM_Finetuning_Cheat_Sheets/09_Inference_Deployment_Serving.md` | 09 Inference Deployment Serving | `planned-topic` |
 | `finetuning_course/Module_10_Inference_Deployment` | Source scope/container — not a completed lesson | `source-container` |
-| `finetuning_course/Module_10_Inference_Deployment/10.1_Inference_Optimization_KV_Cache_and_Batching.md` | 10.1 Inference Optimization KV Cache and Batching | `planned-topic` |
-| `finetuning_course/Module_10_Inference_Deployment/10.2_Quantization_for_Inference.md` | 10.2 Quantization for Inference | `planned-topic` |
-| `finetuning_course/Module_10_Inference_Deployment/10.3_Speculative_Decoding.md` | 10.3 Speculative Decoding | `planned-topic` |
-| `finetuning_course/Module_10_Inference_Deployment/10.4_Serving_Architecture_and_Deployment.md` | 10.4 Serving Architecture and Deployment | `planned-topic` |
+| `finetuning_course/Module_10_Inference_Deployment/10.1_Inference_Optimization_KV_Cache_and_Batching.md` | 10.1 Inference Optimization KV Cache and Batching | `draft` — mapped course lesson at [module 25](05_ai_platforms_data_systems_and_production_engineering/25_model_serving_inference_optimisation_and_cost/10.1_Inference_Optimization_KV_Cache_and_Batching.md); source body unavailable |
+| `finetuning_course/Module_10_Inference_Deployment/10.2_Quantization_for_Inference.md` | 10.2 Quantization for Inference | `draft` — mapped course lesson at [module 25](05_ai_platforms_data_systems_and_production_engineering/25_model_serving_inference_optimisation_and_cost/10.2_Quantization_for_Inference.md); source body unavailable |
+| `finetuning_course/Module_10_Inference_Deployment/10.3_Speculative_Decoding.md` | 10.3 Speculative Decoding | `draft` — mapped course lesson at [module 25](05_ai_platforms_data_systems_and_production_engineering/25_model_serving_inference_optimisation_and_cost/10.3_Speculative_Decoding.md); source body unavailable |
+| `finetuning_course/Module_10_Inference_Deployment/10.4_Serving_Architecture_and_Deployment.md` | 10.4 Serving Architecture and Deployment | `draft` — mapped course lesson at [module 25](05_ai_platforms_data_systems_and_production_engineering/25_model_serving_inference_optimisation_and_cost/10.4_Serving_Architecture_and_Deployment.md); source body unavailable |
 
 <a id="ft-context"></a>
 
 ### Fine-tuning Module 11 / cheat sheet 10 — context extension
 
-**Status:** partial draft. [RoPE and position interpolation](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/Cheat_Sheets/03_RoPE_and_Position_Interpolation.md) is authored but unreviewed; the remaining training, inference, evaluation and case-study scope is planned. **Existing destination:** [foundation-model internals](04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/INDEX.md).
+**Status:** partial, unreviewed drafts; mapped source submodules 11.1 and 11.3–11.5 are covered and 11.2 reuses the existing RoPE sheet. **Existing destination:** [foundation-model internals](04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/INDEX.md).
 
 **Learning outcome.** Explain context utility, RoPE/position interpolation, long-context training, memory-efficient inference and evaluation without equating larger windows with reliable retrieval.
 
@@ -881,11 +881,11 @@ CUDA: prerequisites → H100 → programming → barriers → TMA/copy → WGMMA
 |---|---|---|
 | `finetuning_course/LLM_Finetuning_Cheat_Sheets/10_Context_Length_Extension.md` | 10 Context Length Extension | `planned-topic` |
 | `finetuning_course/Module_11_Context_Length_Extension` | Source scope/container — not a completed lesson | `source-container` |
-| `finetuning_course/Module_11_Context_Length_Extension/11.1_Why_Context_Length_Matters.md` | 11.1 Why Context Length Matters | `planned-topic` |
-| `finetuning_course/Module_11_Context_Length_Extension/11.2_RoPE_and_Position_Interpolation.md` | 11.2 RoPE and Position Interpolation | `partial-draft` |
-| `finetuning_course/Module_11_Context_Length_Extension/11.3_Long_Context_Training_Strategies.md` | 11.3 Long Context Training Strategies | `planned-topic` |
-| `finetuning_course/Module_11_Context_Length_Extension/11.4_Memory_Efficient_Long_Context_Inference.md` | 11.4 Memory Efficient Long Context Inference | `planned-topic` |
-| `finetuning_course/Module_11_Context_Length_Extension/11.5_Evaluation_of_Long_Context_Models.md` | 11.5 Evaluation of Long Context Models | `planned-topic` |
+| `finetuning_course/Module_11_Context_Length_Extension/11.1_Why_Context_Length_Matters.md` | 11.1 Why Context Length Matters | `draft` — mapped course lesson at [module 19](04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/11.1_Why_Context_Length_Matters.md); source body unavailable |
+| `finetuning_course/Module_11_Context_Length_Extension/11.2_RoPE_and_Position_Interpolation.md` | 11.2 RoPE and Position Interpolation | `draft` — mapped to existing [RoPE sheet](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/Cheat_Sheets/03_RoPE_and_Position_Interpolation.md); original source body unavailable |
+| `finetuning_course/Module_11_Context_Length_Extension/11.3_Long_Context_Training_Strategies.md` | 11.3 Long Context Training Strategies | `draft` — mapped course lesson at [module 19](04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/11.3_Long_Context_Training_Strategies.md); source body unavailable |
+| `finetuning_course/Module_11_Context_Length_Extension/11.4_Memory_Efficient_Long_Context_Inference.md` | 11.4 Memory Efficient Long Context Inference | `draft` — mapped course lesson at [module 19](04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/11.4_Memory_Efficient_Long_Context_Inference.md); source body unavailable |
+| `finetuning_course/Module_11_Context_Length_Extension/11.5_Evaluation_of_Long_Context_Models.md` | 11.5 Evaluation of Long Context Models | `draft` — mapped course lesson at [module 19](04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/11.5_Evaluation_of_Long_Context_Models.md); source body unavailable |
 
 <a id="ft-specialized"></a>
 

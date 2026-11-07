@@ -8,9 +8,9 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | serving architectures | planned |
-| 2 | batching caching and routing | planned |
-| 3 | quantisation and compilation | planned |
+| 1 | serving architectures | Source Module 10 submodule 10.4 mapped as an unreviewed draft |
+| 2 | batching, caching and routing | Source Module 10 submodule 10.1 mapped as an unreviewed draft; remaining visible Module 10 submodules are planned |
+| 3 | quantisation and compilation | Source Module 10 submodule 10.2 mapped as an unreviewed draft; compilation remains planned |
 | 4 | autoscaling | planned |
 | 5 | cost-quality-latency optimisation | planned |
 
@@ -22,6 +22,15 @@ After this module, a learner can turn a real problem into an appropriate technic
 
 - [Case Studies](./Case_Studies/INDEX.md): application briefs that deliberately include data, constraints, architecture, evaluation, risk, and operating plan.
 - [Cheat Sheets](./Cheat_Sheets/INDEX.md): compact references for repeat use while designing, reviewing, or debugging.
+
+## Authored source submodules
+
+Visible Module 10 source titles 10.1–10.4 are mapped from [`Train/Templates/directory.txt`](../../../Templates/directory.txt). These are new drafts because the original source lesson bodies were unavailable.
+
+- [10.1 — Inference Optimization: KV Cache and Batching](10.1_Inference_Optimization_KV_Cache_and_Batching.md) — draft; KV payload accounting, prefill/decode, scheduling, admission, isolation and SLO validation.
+- [10.2 — Quantization for Inference](10.2_Quantization_for_Inference.md) — draft; storage/compute distinction, compatibility, calibration, validation and rollback gates.
+- [10.3 — Speculative Decoding](10.3_Speculative_Decoding.md) — draft; target/draft roles, acceptance semantics, correctness, workload slices and fallback gates.
+- [10.4 — Serving Architecture and Deployment](10.4_Serving_Architecture_and_Deployment.md) — draft; serving-plane contracts, authorization/routing, progressive delivery and rollback.
 
 ## Dependency notes
 

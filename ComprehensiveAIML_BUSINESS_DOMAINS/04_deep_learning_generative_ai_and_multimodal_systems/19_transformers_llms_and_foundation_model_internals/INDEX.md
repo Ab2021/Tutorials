@@ -11,7 +11,7 @@
 | 1 | tokenisation and embeddings | planned |
 | 2 | attention and transformer blocks | Submodules 1.1–1.4 drafted; focused sheets and independent review remain planned |
 | 3 | pretraining and scaling | Submodules 3.1–3.3 drafted; focused sheets, empirical validation and bounded case remain planned |
-| 4 | context architectures | planned |
+| 4 | context architectures | Source Module 11 submodules 11.1 and 11.3–11.5 mapped as unreviewed drafts; existing RoPE sheet maps 11.2 |
 | 5 | inference behaviour | planned |
 
 ## What competence looks like
@@ -37,6 +37,14 @@ The visible Module 00 and Module 01 source titles are mapped from [`Train/Templa
 - [3.2 — Scaling Laws](3.2_Scaling_Laws.md) — draft; fit scope, compute/data allocation, exponent fitting, uncertainty and extrapolation limits.
 - [3.3 — Pretraining Hyperparameters](3.3_Pretraining_Hyperparameters.md) — draft; optimizer/batch/schedule definitions, controlled tuning, numerical stability and resume state.
 These are module lessons, not substitutes for the separately planned focused cheat sheets, cases, or independently reviewed publication artifacts.
+
+Visible Module 11 source titles 11.1–11.5 are mapped from [`Train/Templates/directory.txt`](../../../Templates/directory.txt). Lessons 11.1 and 11.3–11.5 are new drafts; 11.2 reuses the existing unreviewed [RoPE and position interpolation](../21_finetuning_alignment_and_model_customisation/Cheat_Sheets/03_RoPE_and_Position_Interpolation.md) sheet. Original source bodies were unavailable.
+
+- [11.1 — Why Context Length Matters](11.1_Why_Context_Length_Matters.md) — draft; usable context budget, attention growth, retrieval alternatives and position-aware evaluation.
+- [11.2 — RoPE and Position Interpolation](../21_finetuning_alignment_and_model_customisation/Cheat_Sheets/03_RoPE_and_Position_Interpolation.md) — mapped to existing unreviewed sheet; does not imply source-body inspection.
+- [11.3 — Long Context Training Strategies](11.3_Long_Context_Training_Strategies.md) — draft; position/length curriculum, data controls, short-context regression and long-context gates.
+- [11.4 — Memory-Efficient Long-Context Inference](11.4_Memory_Efficient_Long_Context_Inference.md) — draft; cache payload/peak distinction, admission, isolation and tail-latency validation.
+- [11.5 — Evaluation of Long-Context Models](11.5_Evaluation_of_Long_Context_Models.md) — draft; position-aware evidence suite, retrieval comparison and quality/cost gates.
 
 ## Dependency notes
 
