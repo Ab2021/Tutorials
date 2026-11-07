@@ -200,7 +200,7 @@ The model pins feature definition `v1`, and no identity changes occur in the exa
 | Input event | Account | Event UTC | Available to aggregate UTC | In window? | Known by 10:00? |
 |---|---|---|---|---|---|
 | E1 | A | 09:35 | 09:36 | yes | yes |
-| E2 | A | 09:48 | 09:52 | yes | yes |
+| E2 | A | 09:48 | 09:49 | yes | yes |
 | E3 | A | 09:58 | 10:03 | yes | no |
 | E4 | A | 09:29 | 09:30 | no | yes |
 | E5 | B | 09:55 | 09:56 | yes | yes, wrong entity |
@@ -1268,6 +1268,6 @@ A score of 0 means incorrect, 1 partial, 2 correct with assumptions, and 3 a def
 | Complexity | Naive historical join O(MN); indexed lookup O(log N + c) under the assumptions in Section 9. |
 | Use when | Shared definitions, historical replay, or low-latency serving justify platform operations. |
 | Avoid when | Simpler versioned SQL meets the need, or historical visibility cannot be established and exact replay is claimed. |
-| Go deeper | Model monitoring and drift are planned in this collection; no authored handoff is asserted. |
+| Go deeper | [Illustrative model drift incident](../Case_Studies/01_model_monitoring_drift_incident.md); the scenario is proposed and unreviewed. |
 | Guardrail | Monitor missing, stale, denied, and failed reads separately; pin definitions and test matched vectors. |
 | Evidence | Illustrative numbers; no measured deployment; draft and unreviewed. |

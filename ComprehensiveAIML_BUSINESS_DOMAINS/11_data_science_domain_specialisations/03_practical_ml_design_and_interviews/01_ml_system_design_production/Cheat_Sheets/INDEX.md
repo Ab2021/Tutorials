@@ -1,18 +1,19 @@
 # ML System Design Production - Cheat Sheets
 
-> **Mandatory authoring contract:** Every authored sheet must follow the [course authoring and numerical standards](../../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. This is a planned catalog, not completed sheets; expand to all 11 collection-index sections and a final Common Issues artifact (at least 25 complete issues) before publication. A card alone is not a completed sheet.
+> **Mandatory authoring contract:** Every authored sheet must follow the [course authoring and numerical standards](../../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. This catalog contains unreviewed drafts and planned references, not reviewed publications; expand to all 11 collection-index sections and a final Common Issues artifact (at least 25 complete issues) before publication. A card alone is not a completed sheet.
 
 ## Purpose
 
-These planned reference cards support repeatable decisions in ML System Design Production. They complement case studies; they do not replace the assumptions, evidence, and evaluation required in a full case.
+These reference sheets support repeatable decisions in ML System Design Production. They complement case studies; they do not replace the assumptions, evidence, and evaluation required in a full case.
 
-## Planned references
+## References and planned topics
 
 | # | Reference | Coverage | Status |
 |---:|---|---|---|
 | 1 | ML system-design framework | Decision rules, inputs, metrics, trade-offs, and failure signals. | planned |
 | 2 | Capacity estimation | Decision rules, inputs, metrics, trade-offs, and failure signals. | planned |
 | 3 | Model launch gate | Decision rules, inputs, metrics, trade-offs, and failure signals. | planned |
+| 4 | [Feature store design](03_Feature_Store_Design.md) | Point-in-time joins, availability, online/offline parity, freshness and operational diagnostics. | draft; unreviewed |
 
 ## Required card fields
 

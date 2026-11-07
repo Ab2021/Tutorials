@@ -1,4 +1,4 @@
-# Module 55 Case Studies â€” Incident Response, Failure Modes and Technical Leadership
+# Module 55 Case Studies — Incident Response, Failure Modes and Technical Leadership
 
 ## Authoring standard
 
@@ -50,6 +50,7 @@ Owner: incident response curriculum maintainers. Review cadence: on substantive 
 | Case ID | Case title | Domain | Case type | Decision / business question | Primary pattern | Secondary patterns | Evidence | Stage | Content status | Last reviewed | Key result or limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
 | CASE-STREAM-001 | [Recovering a hot partition without losing customer-event ordering](01_hot_partition_consumer_lag_incident.md) | Real-time analytics | streaming-systems | How should operators contain partition lag without losing or duplicating effects? | Incident diagnosis and recovery | Partition-aware capacity planning | illustrative | proposed | draft | not reviewed | No actual incident or measured outcome; rates and timeline are hypothetical. |
+| CASE-STREAM-002 | [Flink checkpoint failure and memory pressure](02_flink_checkpoint_failure_oom_incident.md) | Stateful streaming operations | incident | How should responders diagnose checkpoint failures and safely recover without silent loss or uncontrolled effects? | Incident diagnosis and recovery | Partition-aware capacity planning | illustrative | proposed | draft-unreviewed | not reviewed | Hypothetical scenario; no actual incident, experiment or measured outcome. |
 
 ## Canonical reusable pattern vocabulary
 
@@ -71,12 +72,14 @@ Owner: incident response curriculum maintainers. Review cadence: on substantive 
 | Is order-level independence safe? | CASE-STREAM-001 | Business invariants and transition histories | Audit cross-order state | High | Application owner | Before repartitioning |
 | Can upstream safely throttle? | CASE-STREAM-001 | Acceptance and buffering semantics | Sustained overload and reconciliation test | High | Producer owner | Before containment rollout |
 | Can cutover and rollback preserve effects? | CASE-STREAM-001 | Failure-injection and replay records | Fenced migration rehearsal | High | Streaming platform lead | Before migration |
+| Can checkpoint recovery preserve all source and sink effects? | CASE-STREAM-002 | Version-specific restore rehearsal, retention boundaries and sink reconciliation | Inject failures around checkpoint and sink commit | High | Streaming platform and sink owners | Before production recovery |
 
 ## Review and retirement log
 
 | Case ID | Date | What changed | Evidence or market trigger | Action | Owner role |
 |---|---|---|---|---|---|
 | CASE-STREAM-001 | 2026-11-07 | Initial draft catalog entry | Illustrative teaching exercise | Drafted; not reviewed | Streaming platform lead |
+| CASE-STREAM-002 | 2026-11-07 | Completed illustrative draft and catalog entry | Hypothetical teaching exercise | Drafted; not reviewed | Streaming platform lead |
 
 ## Pre-publish index checks
 

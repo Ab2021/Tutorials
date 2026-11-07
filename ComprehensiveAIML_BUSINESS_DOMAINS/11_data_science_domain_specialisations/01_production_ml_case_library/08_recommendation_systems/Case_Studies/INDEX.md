@@ -19,6 +19,7 @@
 | Case ID | Case title / relative link | Domain | Case type | Decision / business question | Primary pattern | Secondary pattern(s) | Evidence | Stage | Last reviewed | Key result or limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
 | CASE-01-08-001 | [Netflix GenRec versus a mature production ranker](01_Netflix_GenRec_Ranking.md) | Media recommendation ranking | predictive-ml | Assess a catalog-aware LLM ranker against a mature baseline | evaluation-mismatch | cost-latency-tradeoff; distribution-shift | published | pilot | not reviewed | Netflix reports significant online gains in an approximately four-week A/B evaluation on batch surfaces; magnitude, metric definitions and general rollout are not established; editorial status: draft |
+| CASE-01-08-002 | [Spotify personalization versus experimentation](02_Spotify_Personalization_Experimentation.md) | Music personalization | predictive-ml | Separate recommendation serving from causal system evaluation | evaluation-mismatch | label-delay; cost-latency-tradeoff | published | production | not reviewed | Spotify describes separate stacks and experiment scale, not a measured lift; editorial status: draft |
 | PLAN-01-08-01 | Video candidate-generation and ranking | Recommendation Systems | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
 | PLAN-01-08-02 | E-commerce product recommendations | Recommendation Systems | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
 | PLAN-01-08-03 | Music session recommendation | Recommendation Systems | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
@@ -53,6 +54,7 @@
 
 The authored GenRec case is a separately sourced case in the video recommendation family; PLAN-01-08-01 remains open because its broader candidate-generation versus popularity-baseline decision has not been authored.
 Remaining planned cases need distinct decisions, evidence and baselines.
+CASE-01-08-002 addresses stack separation, not the session-model decision in PLAN-01-08-03, which remains open. Its unresolved questions include assignment mechanics, effect sizes, model specifications, and safeguards.
 Open GenRec questions include online metric definitions, randomization, precise effect sizes and any subsequent rollout.
 
 ## 6. Review and retirement log
@@ -60,6 +62,7 @@ Open GenRec questions include online metric definitions, randomization, precise 
 | Date | Entry | Editorial consequence |
 |---|---|---|
 | 2026-11-07 | Added CASE-01-08-001 from the 30 July 2026 Netflix primary source. | Draft; independent review and publication checks remain open. |
+| 2026-11-07 | Added CASE-01-08-002 from Spotify Engineering's January 2026 article. | Unreviewed draft; independent review and publication checks remain open. |
 
 ## 7. Pre-publish checks
 

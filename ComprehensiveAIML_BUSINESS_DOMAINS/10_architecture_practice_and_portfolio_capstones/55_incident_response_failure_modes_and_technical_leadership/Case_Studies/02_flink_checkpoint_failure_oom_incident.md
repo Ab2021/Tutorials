@@ -678,3 +678,478 @@ The following distinct diagnostic cards are hypotheses to discriminate, not comp
 - Regression experiment: Exercise full rebuild against authoritative input.
 - Accountable owner: Application team.
 - Counterevidence: Explicitly stateless jobs have a different recovery contract.
+
+## 13. Transferable Lesson
+
+### 13a. General principle and its boundaries
+Checkpoint failure and memory exhaustion are observations at different boundaries.
+The useful response is to construct a causal timeline and test competing explanations.
+A checkpoint failure can precede an OOM, follow one, or share an upstream cause with it.
+The hypothetical case establishes none of those orderings as an observed fact.
+The same diagnostic framework applies to stateful stream processing with durable replay.
+It does not assume every Flink job has the same state backend or sink semantics.
+The business objective is correct, useful output rather than a green checkpoint dashboard.
+Restarting the same execution repeatedly is not a substitute for isolating the mechanism.
+Protect the last usable recovery point while checking whether it is actually restorable.
+The restore gate includes source retention, state compatibility and external side effects.
+An apparently successful restart is only a process-level observation.
+It is not evidence that replay covered every source partition.
+It is not evidence that a downstream business action occurred only once.
+It is not evidence that future checkpoints will finish under normal load.
+The incident is resolved only when the agreed correctness and freshness gates are met.
+Those gates are proposed controls, not measured outcomes in this exercise.
+The application owner must define the reference result before a reconciliation run.
+The sink owner must establish whether the destination supports fencing or idempotency.
+The source owner must establish whether the required records are still retained.
+The platform owner must establish compatibility of the checkpoint and deployed artifact.
+The incident commander records uncertainty and assigns owners for each open question.
+None of these roles implies that a real team performed the action.
+
+### 13b. Diagnostic decision sequence
+1. Establish whether the job is running, restarting, paused or publishing output.
+2. Identify the affected job, execution attempts, task attempts and relevant time range.
+3. Preserve termination messages, container limits, configuration and checkpoint metadata.
+4. Record the latest completed checkpoint separately from later failed attempts.
+5. Check the retention boundary for every source partition required by the checkpoint.
+6. Find the first material deviation rather than assuming the final error was the cause.
+7. Compare per-task backpressure, throughput and checkpoint timing with the baseline.
+8. Inspect destination latency and error rate to test a downstream congestion branch.
+9. Inspect checkpoint-store latency, authorization and quota to test the storage branch.
+10. Inspect heap, native memory and process or container accounting for the OOM branch.
+11. Inspect state size and cardinality to test a state-growth branch.
+12. Compare all signals on a consistent clock and note any missing observations.
+13. Select the least risky containment supported by the evidence available.
+14. Fence old sink writers before any overlapping restore can publish.
+15. Rehearse a compatible restore when time and isolation permit.
+16. Resume under a monitored load limit agreed with the source and business owners.
+17. Reconcile replayed output and side effects against the agreed reference.
+18. Confirm sustained checkpoint progress and backlog reduction before closure.
+The sequence is a decision aid; parallel evidence collection may be appropriate.
+If the destination is causing harmful writes, containment can precede detailed diagnosis.
+If retained input is about to expire, escalate the deadline immediately.
+If an evidence source is absent, mark its conclusion unknown rather than healthy.
+Never delete a checkpoint merely to make a dashboard appear clean.
+Never change several independent settings at once if an isolating test is feasible.
+Record any emergency change that cannot wait for such a test.
+
+### 13c. Evidence matrix for the next incident
+| Question | Supporting observation | Discriminating observation | What remains uncertain |
+|---|---|---|---|
+| Was the process killed for memory? | Runtime or container termination reports memory pressure | Exit reason, memory cgroup events and JVM logs agree in time | Which allocation category caused growth |
+| Is Java heap the bottleneck? | Heap occupancy and GC pressure rise before failure | Heap dump or allocation evidence identifies retained objects | Native and network memory may also be material |
+| Is native memory implicated? | Process memory rises while heap remains comparatively stable | Backend, direct-buffer and operating-system evidence align | Attribution may require profiling under a safe workload |
+| Is sink congestion relevant? | Sink latency rises before upstream backpressure | Relieving the sink changes queueing under comparable load | A simultaneous storage issue may remain |
+| Is checkpoint storage slow? | Upload or storage operations slow during failed attempts | Store-side errors and per-task snapshot timings align | Alignment delays may have another cause |
+| Is state growing? | Per-operator logical or backend state grows across checkpoints | Key cardinality, timers and retention behavior explain the growth | Incremental checkpoint bytes are not total logical state |
+| Is one task skewed? | One subtask is much busier or larger than its peers | Key and partition distribution correlate with that task | Aggregate totals can hide several interacting bottlenecks |
+| Is a checkpoint recoverable? | It is marked completed and its metadata exists | Exact-artifact isolated restore succeeds with accessible state | Sink correctness still needs separate verification |
+| Is replay safe? | Input remains available and destination has a documented contract | Failure injection and reconciliation establish expected effects | The test covers only the exercised failure window |
+| Is recovery sustainable? | Checkpoints complete and backlog decreases | Per-partition service exceeds arrivals over an agreed observation window | Future bursts and longer retention periods still require testing |
+These are diagnostic observations, not a list of facts established by the scenario.
+Evidence from a single metric is generally insufficient for root-cause attribution.
+Checkpoint size, process memory and source lag have different units and meanings.
+A completed checkpoint records a consistent recovery point, not a business audit.
+Restore tests should use the exact release and connector versions under consideration.
+Use a separate destination or enforce a verified write fence during a rehearsal.
+An isolated test must still protect sensitive state and follow retention policies.
+Capture the negative evidence that would invalidate a favored hypothesis.
+When evidence is contradictory, preserve both sources and investigate clock or label mismatch.
+Avoid claiming a root cause when only an operational workaround has been demonstrated.
+
+### 13d. Recovery ownership and escalation
+| Decision | Responsible role | Required evidence | Stop condition |
+|---|---|---|---|
+| Declare incident and coordinate | Incident commander | Customer impact, job status and timeline | No authorized decision maker available |
+| Pause or label stale output | Business owner | Downstream dependence and impact of stale results | Staleness cannot be communicated safely |
+| Preserve and select checkpoint | Platform owner | Completion, metadata, accessibility and compatibility | No recoverable checkpoint identified |
+| Confirm replay availability | Source owner | Restored and earliest retained offsets per partition | Any required offset is unavailable |
+| Fence and reconcile effects | Sink owner | Writer identities, commit records and idempotency contract | Concurrent or untraceable effects remain |
+| Approve semantic equivalence | Application owner | Reference input, expected outputs and state semantics | Reconciliation does not meet agreed contract |
+| Restore and monitor | Platform owner | Approved artifact, limits and rollback plan | New attempt repeats failure or corrupts output |
+| Communicate closure | Incident commander | Sustained health and owner sign-offs | Evidence or business impact remains unresolved |
+The business owner may accept stale output, but cannot silently waive the stated no-loss constraint.
+Any exception to the scenario constraints requires explicit authorization and a recorded impact.
+An earlier checkpoint increases replay exposure and may reach further back than retained input.
+A newer checkpoint may be unusable despite having a later completion time.
+The correct choice is the newest verified compatible recovery point whose prerequisites hold.
+If no checkpoint satisfies those prerequisites, stop and design an authorized rebuild or backfill.
+Do not assume a savepoint exists or is interchangeable with every checkpoint.
+Document which release produced the selected state and which release will consume it.
+State migration must be separately tested when serializer or operator identity changes.
+Close incident communications with what is known, unknown and next to be validated.
+
+### 13e. Proposed validation experiments
+All experiments below are proposals, not results from this case.
+Use a nonproduction environment with representative data and controlled external effects.
+Name the owner, dataset, artifact versions and stop condition before each experiment.
+Capture per-attempt measurements and retain the experiment's configuration.
+**Experiment A: sink slowdown.**
+Inject controlled sink latency while keeping source traffic and storage conditions comparable.
+Observe output throughput, upstream backpressure, queues and checkpoint phase durations.
+Remove the injected latency and check whether the predicted signals recover.
+If they do not, investigate alternative bottlenecks and confounders.
+The experiment cannot establish that a real incident had the same cause.
+**Experiment B: checkpoint-store degradation.**
+Apply a bounded storage delay or error in a test environment.
+Observe checkpoint failures and task-level upload or asynchronous snapshot behavior.
+Compare with a control run and preserve the store-side request evidence.
+Confirm that data-plane throughput and memory remain separately observable.
+Stop before the test threatens shared infrastructure or recovery artifacts.
+**Experiment C: controlled state growth.**
+Increase key or timer cardinality using a known workload.
+Track logical state, backend storage, process memory and checkpoint characteristics separately.
+Check whether cleanup or retention semantics match the application's intended behavior.
+Demonstrate what happens after the growth source is removed.
+Do not infer memory attribution solely from checkpoint byte counts.
+**Experiment D: failure during external commit.**
+Use a test sink with an auditable ledger and stable input identifiers.
+Terminate the job at several points around checkpoint and sink commit.
+Restore from a completed checkpoint and compare each business effect with the reference.
+Record missing, duplicate and reordered effects separately.
+If any effect violates the contract, keep the production recovery gate closed.
+**Experiment E: retention boundary.**
+Create a test checkpoint with known source positions.
+Advance or expire test retention until one required position is unavailable.
+Verify that the procedure detects the gap before publishing recovered output.
+Exercise the authorized backfill or rebuild path rather than silently skipping records.
+The test does not justify expiring a real recovery point.
+**Experiment F: sustained recovery.**
+Restore with a realistic backlog and representative incoming traffic.
+Measure arrival and service rates per partition throughout the run.
+Verify that the slowest affected partition makes progress and that checkpoints continue.
+Compare replayed business outputs with the reference after catching up.
+The duration and pass thresholds must be agreed for the actual service.
+
+## 14. Connections & Cross-References
+
+### 14a. Related cases and methodology
+The companion [hot-partition incident](01_hot_partition_consumer_lag_incident.md) also separates aggregate health from local bottlenecks.
+Its partition-ordering decision is distinct from checkpoint and state-recovery compatibility.
+Both cases are illustrative exercises, not evidence of a measured production incident.
+The [Flink stateful processing concepts](https://nightlies.apache.org/flink/flink-docs-stable/docs/concepts/stateful-stream-processing/) explain state and checkpoint recovery.
+The [checkpoint operations documentation](https://nightlies.apache.org/flink/flink-docs-stable/docs/ops/state/checkpoints/) describes operational checkpoint behavior.
+The [backpressure guide](https://nightlies.apache.org/flink/flink-docs-stable/docs/ops/monitoring/back_pressure/) supplies diagnostic context for task-level signals.
+These public links are conceptual starting points, not proof of a particular deployment's behavior.
+Use documentation pinned to the deployed Flink release, connectors and state backend for an actual incident.
+The collection [index](INDEX.md) records the editorial status and scope of this case.
+Any linked stable documentation may change after this draft was written.
+
+### 14b. Answered interview pack
+
+#### 1. What is your first response to repeated checkpoint failures and an OOM?
+**Answer:** Establish impact, contain unsafe publishing and preserve evidence before repeated restarts.
+Identify the job, attempts, checkpoint IDs, timestamps and container termination reason.
+Assign source, sink, platform and application owners to parallel evidence collection.
+Preserve the last completed checkpoint and establish the source-retention deadline.
+Ask whether a stale dashboard is safer than an incorrect one.
+Collect the configured resource limits and process-memory breakdown.
+Record whether the OOM was a JVM exception or a platform-reported termination.
+Do not assume those two signals identify the same allocation mechanism.
+Compare the timing of checkpoint failures, backpressure and memory growth.
+Check whether the sink can safely be fenced before recovery.
+The immediate objective is controlled impact, not a premature root-cause declaration.
+The case's symptoms and timeline are hypothetical, not an observed outage.
+
+#### 2. Why is increasing memory not automatically the correct fix?
+**Answer:** More memory may buy headroom but does not identify or remove the cause.
+An unbounded state-retention policy can consume the additional capacity as well.
+A slow sink can continue to create backpressure after the limit is raised.
+A storage permission failure is not fixed by larger TaskManagers.
+Increasing heap may also reduce space available for native or network allocations.
+The actual memory configuration and deployment accounting must be inspected first.
+Compare heap, native, direct-buffer and container-level evidence where available.
+Estimate the blast radius and capacity cost before changing resource requests.
+An emergency increase can be justified if it is safe and reduces immediate risk.
+Document it as containment until the mechanism and sustainable limit are validated.
+Revert or adjust if it worsens scheduling or hides continued growth.
+No resource increase or successful outcome is claimed in this scenario.
+
+#### 3. How do you distinguish heap exhaustion from a container memory kill?
+**Answer:** Start with the termination record and align it with JVM and platform telemetry.
+A Java heap exception is evidence about the JVM's reported allocation failure.
+A container memory kill indicates the platform enforced a memory boundary.
+The latter does not by itself identify which process allocation category grew.
+Compare heap occupancy and garbage collection with process resident memory.
+Inspect direct memory, backend native allocation and other process consumers where measurable.
+Collect cgroup memory events or equivalent platform evidence when available.
+Check whether the telemetry captures the final seconds before termination.
+Preserve logs and dumps under the organization's data-handling rules.
+An absent heap exception does not prove the heap was healthy.
+Use an isolated reproduction or profiling to attribute growth when safe.
+Metric names and accounting differ by runtime and deployment platform.
+
+#### 4. What can checkpoint timing reveal about the bottleneck?
+**Answer:** Compare per-task checkpoint stages and their changes over time.
+Long barrier alignment can indicate uneven arrival or backpressure along an input path.
+Slow snapshot or upload stages can point toward state work or checkpoint storage.
+A single delayed task can dominate an overall checkpoint's completion time.
+Compare those timings with sink latency, task utilization and storage errors.
+Check whether the job uses aligned or unaligned checkpoints in the deployed release.
+Unaligned mode changes what is captured and how alignment delays should be interpreted.
+Inspect checkpoint configuration and exact release semantics before drawing conclusions.
+A timeout alone identifies neither the responsible task nor the root cause.
+Failed attempts and completed attempts should both be included in the comparison.
+Missing per-task data is an uncertainty, not evidence of uniform behavior.
+The checkpoint dashboard must be corroborated with source and destination observations.
+
+#### 5. How would you test whether the sink caused the backpressure?
+**Answer:** Correlate sink latency, errors and throughput with per-task backpressure.
+Check whether sink degradation began before upstream throughput declined.
+Compare equivalent task attempts and account for changing input rates.
+Inspect destination saturation, quotas, transaction behavior and network health.
+If safe, isolate a test and reduce destination latency or replace the destination with a controlled test sink.
+Hold the workload and other material conditions as constant as practical.
+Observe whether upstream queues and checkpoint timing improve as predicted.
+Ensure the test sink cannot produce real external business effects.
+A correlation without intervention or independent evidence is not conclusive.
+If backpressure persists after sink relief, investigate other constraints.
+If it improves, verify that checkpoint storage and memory are also healthy.
+Any experiment described here is proposed rather than executed.
+
+#### 6. How do you tell checkpoint-store failure from a slow data path?
+**Answer:** Examine checkpoint-specific timings alongside storage-side request evidence.
+Look for authorization failures, quota errors, throttling and elevated write latency.
+Compare snapshot or upload delays across affected tasks and checkpoint attempts.
+Separately inspect data-plane throughput, backpressure and destination latency.
+A store-side error aligned with failing uploads strengthens the storage hypothesis.
+Long alignment with healthy storage can instead indicate upstream or downstream congestion.
+Both conditions can coexist, so one signal does not exclude the other.
+Check that storage telemetry covers the correct bucket, account and time window.
+Verify credentials without copying secrets into the incident record.
+An isolated fault-injection test can compare predicted and actual signatures.
+Preserve existing recovery points while investigating storage capacity.
+Select a remedy only after its operational risk and evidence are understood.
+
+#### 7. What does a completed checkpoint guarantee?
+**Answer:** It provides a completed consistent recovery point under Flink's checkpoint model.
+It includes state and source progress according to the deployed connectors and configuration.
+The checkpoint must still be accessible and compatible with the restore artifact.
+Input needed after its recorded positions must remain available.
+The application must interpret restored state with compatible operator identities and serializers.
+External effects depend on the sink connector and destination's actual guarantees.
+A completed checkpoint alone does not prove no duplicate email, payment or database effect occurred.
+It also does not establish that the job will complete the next checkpoint.
+Check the documentation for the precise Flink and connector versions.
+Rehearse recovery using a safe destination and inspect resulting business records.
+Treat completion as a necessary recovery signal, not a complete business correctness proof.
+The exercise contains no actual checkpoint to verify.
+
+#### 8. How do you choose a checkpoint for recovery?
+**Answer:** Prefer the newest completed point that passes all recovery prerequisites.
+Verify its metadata and state files are accessible and intact.
+Identify the artifact and configuration that created it.
+Verify operator mapping and serializer compatibility for the target artifact.
+Compare every required source position with the broker's retained range.
+Understand sink transaction state and fence older writers.
+Rehearse the restore when a safe environment and time permit.
+An older checkpoint can require more replay and therefore more retained input.
+A newer completed checkpoint may still be incompatible or inaccessible.
+Record the selected checkpoint ID and the evidence supporting its selection.
+If none qualifies, escalate to an authorized rebuild or backfill.
+Never reset state merely to make the application start.
+
+#### 9. How do you reason about exactly-once external effects?
+**Answer:** Separate consistent internal recovery from the destination's business effect.
+The source may replay records after the selected checkpoint.
+The sink must coordinate commits or use a durable idempotency mechanism as appropriate.
+An idempotency key must be stable across retries and scoped to the business action.
+Check how the connector handles transactions during failure and restart.
+Check destination transaction expiration and recovery-time assumptions.
+Fence old execution attempts so they cannot race the restored writer.
+Test failures before, during and after commit in an isolated destination.
+Reconcile both duplicate and missing effects against a reference ledger.
+Counts alone can conceal one missing and one duplicated effect.
+Do not promise exactly-once behavior from the checkpoint setting alone.
+If the contract is unknown, pause unsafe effects until the owner resolves it.
+
+#### 10. How do you validate that input retention is sufficient?
+**Answer:** Compare the restored position and available range for every source partition.
+Use the source connector's documented offset semantics for the deployed version.
+Include the time needed to restore and catch up, not just the current retention state.
+Account for partitions with unequal lag and retention behavior.
+Identify compacted, filtered or otherwise unavailable records where relevant.
+Offsets are positions and are not necessarily equivalent to business-event counts.
+Record the time and source of each retention observation.
+If a required range has expired, do not silently advance to the earliest available record.
+Ask the source owner for authoritative backfill or an approved rebuild path.
+Assess downstream effects before resuming publication.
+Document any explicit business exception rather than describing it as lossless recovery.
+The assumed retention window in this case is unverified.
+
+#### 11. How would you estimate whether backlog can drain?
+**Answer:** Compare sustained processing capacity with arrivals for each affected partition.
+For a stable fluid approximation, drain rate equals service rate minus arrival rate.
+If service is not greater than arrivals, that backlog will not drain under those conditions.
+When the difference is positive, estimated drain time is backlog divided by that difference.
+Use consistent event and time units and state whether rates include filtering.
+Treat the estimate as conditional on stable rates and sufficient downstream capacity.
+Account for bursts, restart overhead and checkpoint activity in operational planning.
+Aggregate spare capacity cannot necessarily serve a partition pinned to one task.
+Measure the slowest partition rather than relying only on a cluster average.
+Compare estimated completion with source retention and the business freshness objective.
+Recalculate as observed rates change and expose the uncertainty to the incident commander.
+The earlier worked numbers in this case are hypothetical rather than measured rates.
+
+#### 12. When would unaligned checkpoints help, and what do they cost?
+**Answer:** They can reduce alignment waiting in supported backpressured configurations.
+They capture in-flight data as part of the checkpoint rather than waiting in the same way.
+This can increase checkpoint size and affect storage or recovery work.
+They do not repair an overloaded sink or eliminate the need for sufficient processing capacity.
+They do not make an incompatible checkpoint restorable.
+The available modes, limitations and configuration are release dependent.
+Check the exact Flink version and connector behavior before proposing a change.
+Benchmark representative backpressure, snapshot size and restore time in isolation.
+Compare checkpoint-store capacity and cost against the recovery objective.
+Watch for worsening snapshot or restore behavior after the change.
+Keep the previous configuration and a tested rollback plan.
+This case does not claim the mode was enabled or tested.
+
+#### 13. How do state TTL and timer cleanup affect the diagnosis?
+**Answer:** Their configured semantics determine when state or timers may be removed.
+State growth can reflect legitimate business retention, leaked state or increased key cardinality.
+Inspect the application logic, configured TTL and backend behavior for the deployed version.
+Check whether cleanup occurs eagerly or depends on access or background mechanisms.
+Examine timer cardinality and event-time or processing-time behavior separately.
+Delayed watermarks can prevent event-time operations from progressing as expected.
+Reducing retention can change business results or discard needed history.
+The application owner must approve any semantic change before deployment.
+Test late events, inactive keys and restore behavior with representative inputs.
+Compare observed state growth with key and timer creation and deletion.
+Do not equate incremental checkpoint bytes with the full logical state size.
+No state cleanup defect has been demonstrated in this hypothetical scenario.
+
+#### 14. What makes an OOM recovery plan safe for downstream users?
+**Answer:** It combines a compatible restore with explicit effect control and reconciliation.
+Communicate staleness or pause publication according to the business owner's decision.
+Fence the old writer before any new writer can commit to the same destination.
+Establish which records and transactions were committed before failure.
+Check that source retention covers the selected checkpoint's replay range.
+Use a release and configuration known to be compatible with the saved state.
+Control admission so recovery does not immediately recreate overload.
+Compare business outputs and side effects with a defined reference.
+Monitor checkpoints, memory and per-partition lag throughout the recovery window.
+Have a stop condition for renewed errors, duplicate effects or missing data.
+Obtain application and sink-owner approval before removing the publication guard.
+Process liveness alone is insufficient to declare recovery.
+
+#### 15. How would you lead the incident with incomplete and conflicting evidence?
+**Answer:** Separate observations, hypotheses, decisions and unresolved risks in the incident log.
+Assign an incident commander and named owners for each system boundary.
+Set a cadence for short updates and communicate customer impact without invented certainty.
+Preserve raw timestamps, queries and labels so different observations can be compared.
+Ask each hypothesis owner for both supporting and disconfirming evidence.
+Time-box safe diagnostic actions while tracking the retention deadline.
+Escalate decisions that require business acceptance rather than making them implicitly.
+Avoid broad simultaneous changes that make the result uninterpretable.
+Record emergency deviations and their rationale when speed requires them.
+Use explicit gates for restore, publishing and incident closure.
+After stabilization, turn unresolved mechanisms into owned experiments.
+The teaching exercise reports no real incident communications or review.
+
+#### 16. What would you include in a post-incident review?
+**Answer:** Record impact, timeline, evidence, uncertainty and decision rationale.
+Distinguish the initiating event from contributing conditions and detection gaps.
+Include the selected checkpoint and the source and sink recovery checks.
+Describe any data reconciliation, including missing and duplicate business effects.
+Record what was measured and what remains an inference.
+Assess whether alerting exposed the first useful signal at the right granularity.
+Document effective containment and the risks of actions that were rejected.
+Assign owners and due dates to specific corrective experiments and operational changes.
+Define objective acceptance criteria for each follow-up.
+Review restore drills, retention margins and sink fencing as separate controls.
+Share lessons without attributing fault to individual responders.
+For this hypothetical case, a real postmortem and completed actions do not exist.
+
+### 14c. Interview evaluation rubric
+An effective answer explicitly identifies the scenario as hypothetical.
+It separates checkpoint failure from the memory termination.
+It names at least two competing causal explanations.
+It states which observation would discriminate between them.
+It distinguishes heap from process and container memory.
+It checks the source, state and sink boundaries before recovery.
+It explains the business consequences of replay.
+It includes a safe stop or rollback condition.
+It describes reconciliation beyond a simple record count.
+It avoids treating a completed checkpoint as a universal exactly-once guarantee.
+It states assumptions behind any arithmetic and identifies its units.
+It distinguishes a proposed experiment from an actual measured result.
+It makes the incident commander responsible for coordination, not every technical decision.
+It assigns business acceptance to the appropriate owner.
+It acknowledges version-specific behavior and missing telemetry.
+It closes with an observable recovery gate rather than a restart announcement.
+
+## 15. Quick Reference Card
+
+| Field | Decision aid |
+|---|---|
+| Scenario | Hypothetical stateful Flink job with checkpoint failures and memory pressure |
+| Evidence status | Illustrative teaching exercise; no actual logs, run or incident outcome |
+| Primary decision | Safely contain and restore without silent loss or uncontrolled external effects |
+| Baseline | Repeated unchanged restart; not tested and not a causal diagnosis |
+| First priority | Protect users, preserve evidence and identify the latest usable recovery point |
+| Main uncertainty | Whether memory, sink, state, checkpoint storage or another mechanism initiated failure |
+| Source gate | Required offsets remain available for every source partition |
+| State gate | Completed checkpoint is accessible and compatible with the selected artifact |
+| Sink gate | Old writers are fenced and external effects are controlled and reconcilable |
+| Capacity gate | Backlog decreases under representative arrivals while checkpoints continue |
+| Closure gate | Application and business owners accept reconciled output and remaining risk |
+| Documentation | Check the exact Flink, connector and backend release documentation |
+| Editorial status | Draft, unreviewed; not an operational runbook |
+
+### First-response checklist
+- [ ] Declare impact and identify the incident commander.
+- [ ] Decide whether stale or potentially incorrect output must be paused or labeled.
+- [ ] Preserve checkpoint metadata, logs and termination evidence.
+- [ ] Record job, task attempt and checkpoint identifiers with timestamps.
+- [ ] Record resource limits and available heap, native and container metrics.
+- [ ] Determine the latest completed checkpoint without deleting other recovery points.
+- [ ] Identify the required source offsets and retention deadline.
+- [ ] Identify the destination's writer identities and fencing mechanism.
+- [ ] Assign source, platform, sink and application owners.
+- [ ] Record what is observed separately from what is inferred.
+
+### Evidence-to-action lookup
+| Observation | Next check | Avoid assuming |
+|---|---|---|
+| Checkpoint timeout | Per-task timing, barriers and storage errors | The store is necessarily at fault |
+| Container termination | Platform reason and process-memory breakdown | Java heap alone caused the kill |
+| High heap and GC | Allocation and retention evidence | More heap resolves an unbounded leak |
+| Rising process memory with stable heap | Native, direct and backend memory evidence | JVM heap metrics represent all memory |
+| Backpressure near sink | Sink latency and destination capacity | Every checkpoint timeout has a sink cause |
+| One slow task | Key distribution, task load and state size | Cluster average describes the bottleneck |
+| Growing state | Cardinality, timers and approved retention semantics | Checkpoint delta bytes equal total state |
+| Missing input offset | Retention, authoritative backfill and business impact | Skipping to earliest available is lossless |
+| Restore starts | Verify offsets, state mapping and sink effects | A running process means correct output |
+| Checkpoint completes | Observe repeated completion and reconcile output | External business effects are exactly once |
+
+### Restore and release gates
+- [ ] A completed, accessible checkpoint has been identified.
+- [ ] The restore artifact, operator identities and serializers are compatible.
+- [ ] Every required source partition retains the necessary replay range.
+- [ ] The destination contract and pending transactions are understood.
+- [ ] Previous writers are fenced before restored writers publish.
+- [ ] A safe rehearsal or explicitly authorized alternative has been completed.
+- [ ] Controlled admission and a stop condition are agreed.
+- [ ] Business effects and logical output match the agreed reconciliation contract.
+- [ ] Per-partition backlog falls and checkpoint progress remains stable.
+- [ ] Owners approve release of stale-output warnings or publication guards.
+
+### Arithmetic and interpretation
+Backlog change equals arrivals minus departures over the same interval.
+At constant rates, backlog accumulated from zero is `(arrival rate − service rate) × time` when arrivals exceed service.
+When service exceeds arrivals, estimated drain time is `backlog / (service rate − arrival rate)`.
+Use events and seconds consistently; do not substitute offsets for event counts without justification.
+These fluid estimates exclude changing rates, retries, scheduling and checkpoint overhead unless modeled.
+Calculate per constrained partition when spare capacity cannot be reassigned.
+The case's numerical values are illustrative assumptions, not production measurements.
+
+### Escalate or stop when
+- Required source data has expired and no authoritative backfill is available.
+- No completed checkpoint is both accessible and compatible.
+- A sink's effects cannot be fenced or reconciled.
+- Recovery creates duplicates, missing records or unauthorized side effects.
+- A restored attempt repeats the same memory or checkpoint failure.
+- Catch-up cannot finish before the relevant retention boundary.
+- The business owner cannot accept the resulting freshness or correctness risk.
+- Evidence is insufficient to justify a proposed irreversible action.
+In each case, record the limitation and seek an explicitly authorized recovery decision.
