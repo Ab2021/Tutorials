@@ -9,7 +9,7 @@ This collection supports actuarial analysts and reviewers making exposure-normal
 | Level | Topic | Outcome and prerequisite | Status |
 |---|---|---|---|
 | Core | [03 Non-Life Pricing: Pure Premium, Frequency–Severity and Exposure](03_NonLife_Pricing_Ratemaking.md) | Reconcile earned exposure and claim counts; calculate and diagnose expected loss cost. Requires basic ratios, expected values and coverage terminology. | Draft; not reviewed |
-| Core | [05 Claims Reserving Methods](05_Claims_Reserving_Methods.md) | Develop a paid triangle, reconcile paid outstanding and distinguish incurred-based IBNR; requires ratios and claims terminology. | Draft; not reviewed |
+| Core | [05 Claims Reserving Methods](05_Claims_Reserving_Methods.md) | Develop a paid triangle, reconcile paid outstanding and distinguish incurred-based IBNR; requires ratios and claims terminology. | Incomplete draft; repetitive practice needs substantive revision and independent review |
 | Advanced | Actuarial model review | Assess assumptions, inputs and validation. | Planned |
 | Advanced | Rating-factor governance | Review factor decisions, permissible use and monitoring. | Planned |
 | Advanced | Reserving validation | Compare claim development assumptions and validation. | Planned |

@@ -1,6 +1,6 @@
 # GPU Architecture, Accelerators and AI Hardware — Cheat Sheets
 
-**Status:** The roofline sheet is a draft with review and publication checks open; remaining entries are planned. Follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master. Hypothetical values are not hardware benchmarks.
+**Status:** The roofline sheet is an unreviewed draft. The H100 sheet is an incomplete draft below the requested 1,000-line threshold; remaining entries are planned. Follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master. Hypothetical values are not hardware benchmarks.
 
 ## 1. Overview
 
@@ -11,6 +11,7 @@ This collection supports engineers reasoning about GPU performance and resource 
 | Level | Reference | Outcome and prerequisite | Status |
 |---|---|---|---|
 | Practitioner | [Roofline arithmetic intensity and kernel diagnosis](01_Roofline_Arithmetic_Intensity_and_Kernel_Diagnosis.md) | Compute a boundary-specific bound and diagnose limits; requires arithmetic, data movement and GPU fundamentals | Draft; unreviewed |
+| In progress | [H100 architecture and resource limits](01_H100_Architecture_and_Resource_Limits.md) | Explain resource-limited residency and architecture-specific profiling | Incomplete; below 1,000 lines and unreviewed |
 | Planned | Precision guide | Compare numerical and hardware precision tradeoffs | Not written |
 | Planned | Hardware sizing worksheet | Size compute, memory, networking and workload headroom | Not written |
 | Planned | Common Issues | Distinct collection-wide diagnostic cases | Not written |

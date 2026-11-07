@@ -809,7 +809,7 @@ Hidden folders and clipped filenames remain `unresolved-source`; visible prefixe
 
 ## Recommender methods
 
-**Teaching home:** [11_data_science_domain_specialisations/02_data_science_method_playbooks/08_recsys_playbook/INDEX.md](11_data_science_domain_specialisations/02_data_science_method_playbooks/08_recsys_playbook/INDEX.md). **Status:** planned.
+**Teaching home:** [11_data_science_domain_specialisations/02_data_science_method_playbooks/08_recsys_playbook/INDEX.md](11_data_science_domain_specialisations/02_data_science_method_playbooks/08_recsys_playbook/INDEX.md). **Status:** mostly planned; [candidate generation and eligibility](11_data_science_domain_specialisations/02_data_science_method_playbooks/08_recsys_playbook/Cheat_Sheets/01_Candidate_Generation_Eligibility_and_Ranking.md) is a partial unreviewed draft. The source files themselves were unavailable.
 
 **Testable outcome.** Derive, compute, select and diagnose every explicitly registered focused topic below, in prerequisite order.
 

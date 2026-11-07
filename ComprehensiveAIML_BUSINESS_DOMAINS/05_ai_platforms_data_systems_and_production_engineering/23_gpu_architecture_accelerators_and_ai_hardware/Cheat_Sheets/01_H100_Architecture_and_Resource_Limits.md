@@ -78,6 +78,78 @@ NVLink connects supported devices and topology components; its presence does not
 A scheduler selects among eligible warps; it does not make all resident warps issue every cycle.
 The compiler can trade registers against instruction count, spills, and occupancy.
 The maximum block count is not necessarily achieved if any independent resource or placement condition binds first.
+
+### From grid to execution
+
+A host launch specifies a grid of blocks and the number of threads in each block.
+The runtime and device schedule blocks subject to hardware and launch constraints.
+The programmer must not assume that all blocks start together or that block execution order matches block index.
+Within a conventional block, threads can cooperate using supported block-scoped synchronization and shared memory.
+Some architectures and launch modes provide additional cluster-level facilities; those are separate contracts and are not assumed in the occupancy example.
+On an SM, resident warps compete for scheduling opportunities according to the hardware's rules.
+A warp can be resident but temporarily unable to issue because its next instruction depends on unfinished work.
+Even an eligible warp may not issue immediately if another warp is selected or the required execution resource is unavailable.
+The profiler's definitions and scope are essential when comparing any of these states.
+Consequently, adding resident warps may hide some latency without increasing the amount of useful work per instruction.
+
+### Registers, local memory and shared memory
+
+Source variables do not map one-for-one to allocated hardware registers.
+Compilation, optimization, unrolling, live ranges and target architecture affect the final allocation.
+Inspect the compiled kernel rather than assuming the number of variables predicts occupancy.
+If the compiler cannot keep all needed values in registers, some accesses can use local memory.
+Local memory is a per-thread address space, not a promise that the data resides in on-chip storage.
+Spill behavior and cache effects depend on the generated code and actual workload.
+Shared memory is explicitly allocated for a block and can support cooperation and data reuse.
+Its footprint includes both static and requested dynamic shared memory, subject to implementation-specific limits and rounding.
+Shared memory does not automatically synchronize threads or validate address calculations.
+When changing a tile layout, verify both address mapping and the required synchronization.
+
+### Distinguishing caches and memory boundaries
+
+L1 and L2 are caching levels, whereas HBM is device memory; they do not represent interchangeable traffic counts.
+A source-level load may hit in cache and therefore need not generate the same number of HBM bytes.
+Conversely, imperfect access patterns and repeated loads can move more data than a simple payload estimate.
+For a roofline calculation, define whether bytes cross the SM-to-cache, cache-to-cache or device-memory boundary.
+Use a bandwidth ceiling compatible with the chosen boundary and precision.
+If the workload fits a cache in a repeated benchmark but not in production, the benchmark may conceal device-memory pressure.
+If one workload reuses inputs while another streams new data, the same kernel can have different effective bottlenecks.
+Compare cold and warm conditions deliberately instead of assuming either is representative.
+The companion roofline sheet develops the corresponding arithmetic and measurement limits.
+
+### Tensor operations and arithmetic correctness
+
+Tensor Core availability does not mean every matrix operation or data type automatically uses the same execution path.
+The compiler, library, target architecture, matrix dimensions, alignment and chosen numerical types all matter.
+Inputs may require conversion or scaling; accumulation precision can differ from input precision.
+The correct tolerance depends on the downstream decision and reference, not on a generic percentage.
+For a reduction, error can change with the order of operations and the length of the reduction dimension.
+Compare representative values, extremes, zeros and edge shapes against a suitable reference.
+If quantization or lower precision is introduced, evaluate quality as well as latency and memory.
+An optimization is acceptable only when its output meets the documented application contract.
+
+### Asynchronous movement and buffer reuse
+
+An asynchronous operation separates issue time from completion time.
+The issuing thread or warp may proceed while a transfer is in progress, subject to the documented API.
+Before consuming a destination buffer, the program must establish the required completion and visibility relationship.
+Before reusing a buffer, it must also ensure that prior consumers are finished.
+Double buffering can overlap movement and compute but increases the live storage footprint.
+More buffers can reduce the number of blocks that fit on an SM.
+Insufficient buffering can leave computation waiting for data; excessive buffering can worsen resource pressure.
+Neither outcome follows from buffer count alone, so compare correct variants on the actual workload.
+The full TMA descriptor, barrier and instruction contracts require their own version-specific guide.
+
+### Device-to-device connectivity
+
+The existence of NVLink in a product family does not specify the route between any two visible GPUs.
+Record the actual platform, device pairing, topology and any partitioning before selecting a communication strategy.
+Peer-access support, permissions and process placement must be checked for the deployed environment.
+For a transfer benchmark, define payload size, direction, synchronization, warm-up and concurrent traffic.
+One-way bandwidth is not the same quantity as summed bidirectional or fabric-wide bandwidth.
+An isolated point-to-point measurement also does not predict all-reduce performance.
+Collective behavior depends on algorithm, participating devices, payload, topology and contention.
+Model and measure the communication pattern used by the application.
 **Takeaway:** Resident, eligible, issued, and completed are different states and require different measurements.
 
 ## 4. Core Formulas with Full Derivation
@@ -153,6 +225,56 @@ Wrong path: call four blocks the result after checking only registers; this igno
 The result is an upper bound when omitted constraints are restored, not evidence of an actual H100 occupancy value.
 Production-scale interpretation: query the actual device, compile the real kernel, inspect resource usage and use the installed occupancy API.
 Then measure achieved occupancy, eligible warps, instruction mix, memory activity and end-to-end latency under representative input.
+
+### Sensitivity A: reducing shared memory without changing work
+
+Keep the register assumptions fixed and suppose an implementation uses 32 KiB of shared memory per block instead of 48 KiB.
+Assume, for this calculation only, that the change preserves the same mathematical output and does not alter any other resource.
+The shared-memory ceiling is now floor(96/32) = 3 blocks per SM.
+The register ceiling remains 4 blocks per SM.
+Considering only these two constraints, the combined ceiling is min(4, 3) = 3 blocks.
+The additional resident block is a capacity prediction, not a throughput prediction.
+If the smaller tile increases global-memory traffic or synchronization, elapsed time could increase despite the higher ceiling.
+Check that the proposed tile covers edge elements correctly and compare output with a reference implementation before measuring performance.
+An implementation that achieves only two blocks may be limited by another constraint omitted from this exercise.
+
+### Sensitivity B: trading shared memory for registers
+
+Suppose the reduced shared-memory design also raises the compiled register allocation to 96 registers per thread.
+The simplified register cost becomes 256 × 96 = 24,576 registers per block.
+The register-only ceiling becomes floor(65,536/24,576) = 2 blocks.
+The shared-memory ceiling remains 3 blocks at 32 KiB each.
+The joint simplified ceiling is therefore min(2, 3) = 2 blocks.
+Independently, two blocks consume 49,152 registers; three would consume 73,728, exceeding the illustrative register pool.
+This example shows why optimizing shared-memory usage in isolation can move the bottleneck rather than increase residency.
+Real compiler allocations may be rounded by architecture-specific units, so use the actual allocation rather than treating this estimate as a device measurement.
+
+### Sensitivity C: comparing a resource ceiling to warp occupancy
+
+Assume the warp size is 32 threads and each 256-thread block contains eight full warps.
+At two resident blocks, there are 16 resident warps per SM under the simplified example.
+If a separate illustrative limit is 64 resident warps per SM, the resulting theoretical occupancy is 16/64 = 25%.
+This 64-warp limit is an exercise assumption, not a claim about a particular H100 configuration.
+If the assumed limit were 48 warps instead, the same 16 resident warps would correspond to approximately 33.3%.
+Both calculations describe resident-warps divided by an assumed maximum, not the fraction of cycles issuing useful instructions.
+Partial warps, hardware scheduling partitions, launch limits, and actual resource granularity need separate treatment.
+The number of blocks may also be constrained by limits that the two-resource estimate omits.
+
+### Capacity check before a performance experiment
+
+1. Record the exact GPU SKU, partitioning mode, driver and toolkit versions.
+2. Compile the candidate kernel and retain the binary and compiler resource report.
+3. Identify static and dynamic shared-memory use separately, then apply the documented allocation rules.
+4. Use the compiled kernel, intended launch dimensions and dynamic shared-memory request with the installed occupancy API.
+5. Confirm launch feasibility and correctness against a reference across ordinary and boundary-shaped inputs.
+6. Measure unprofiled latency with a stable workload and an explicit warm-up and repetition protocol.
+7. Profile the same workload and distinguish active warps from eligible warps, issue activity and memory behavior.
+8. Compare candidates on useful throughput and correctness, not occupancy alone.
+9. Investigate spills, traffic, synchronization and instruction changes if the predicted occupancy improvement fails to improve runtime.
+10. Record tool versions, metric definitions and uncertainty so that another engineer can reproduce the comparison.
+
+None of these steps has been performed on an actual device for this illustrative example.
+The exercises do not establish an H100 benchmark, an approved launch configuration or a universal tuning rule.
 The arithmetic is hand checked by multiplication and division; no device execution is claimed.
 **Takeaway:** Four register-limited blocks become two combined blocks when the illustrative shared-memory limit is included.
 
@@ -207,6 +329,84 @@ All examples below are HYPOTHETICAL, not observed incidents.
 | F10 | Slow after deployment: clock/power, driver change, workload or contention | Compare full environment and isolate the kernel from co-tenants | Roll back or mitigate the confirmed change; retain incident evidence. |
 | F11 | Profiler and production disagree: replay, sampling, or changed clocks | Compare unprofiled repetitions with profiler configuration and scope | Reduce perturbation and corroborate with another signal. |
 | F12 | One partition behaves differently: isolation profile or shared resources | Record GPU instance configuration and per-instance telemetry | Reproduce on matched partition; avoid generalizing across profiles. |
+
+### F01 investigation: resource-bound residency
+
+**Scenario:** A tile-size increase improves arithmetic reuse but decreases predicted resident blocks.
+Capture the compiler's register and shared-memory report for both binaries rather than comparing source declarations alone.
+Check whether dynamic shared memory was included in the launch and occupancy calculation.
+Compute separate bounds using rounded allocations when the architecture documentation provides the necessary rules.
+If the binding limit is shared memory, compare a smaller tile without also changing precision or input layout.
+If registers bind, inspect live ranges and spill behavior before imposing a register limit.
+Test the same shapes and correctness criteria for both versions.
+Escalate if neither reported resource explains the difference; another launch, warp, block or placement constraint may bind.
+
+### F03 investigation: occupancy gained at the cost of spills
+
+**Scenario:** A register cap increases theoretical occupancy while kernel latency worsens.
+Keep block size, input shape, clock policy and data layout fixed across the comparison.
+Record compiler spill information for both binaries.
+Compare device-memory and cache traffic, bearing in mind that local-memory accesses may be cached.
+If the capped kernel has more spill traffic and worse unprofiled latency, the cap is a plausible cause.
+Remove or relax the cap and repeat; a correlation in one profile alone is not proof.
+If traffic is unchanged, investigate instruction count, dependencies, launch configuration and timing noise.
+Never deploy the capped variant merely because its occupancy percentage is larger.
+
+### F04 investigation: asynchronous copy completion
+
+**Scenario:** A consumer sometimes observes incorrect values in a tile populated by an asynchronous transfer.
+Start with a small known tensor and a deterministic scalar or ordinary-copy reference.
+Record the descriptor, shapes, strides, destination region and all participating threads.
+Check the version-specific requirements for issuing, completing and consuming that transfer.
+Verify that the synchronization object is initialized and used at the correct scope and phase.
+An issued operation is not equivalent to completed, visible data.
+Run an appropriate correctness tool where its documented coverage includes the relevant operation.
+Then stress repeated transfers and buffer reuse; a single passing execution does not establish absence of races.
+If the descriptor is wrong, fixing synchronization alone will not correct the address calculation.
+
+### F05 investigation: numerical discrepancy
+
+**Scenario:** A matrix kernel differs from a reference on a subset of inputs.
+First check whether both paths compute the same operation, including transposes, padding, scales and accumulation type.
+Compare against a higher-precision reference when that reference is appropriate for the problem.
+Inspect absolute and relative errors together; relative error is unstable near a zero reference.
+Group discrepancies by input magnitude, matrix shape and reduction length.
+If only extreme magnitudes fail, investigate overflow, underflow and scaling.
+If only edge tiles fail, investigate masking, strides and out-of-bounds access before changing numerical tolerance.
+Agree an application-specific error budget with the consumer; a fast result outside that budget is not a valid optimization.
+
+### F06 investigation: topology-dependent transfers
+
+**Scenario:** A multi-GPU transfer is slower between some device pairs.
+Record the exact device IDs, process placement, NUMA affinity and visible topology.
+Check whether peer access is supported and enabled for the particular pair and runtime configuration.
+Measure a transfer-size sweep in both directions with an isolated workload and explicit synchronization.
+Repeat under representative concurrent traffic to reveal contention.
+Report payload size, elapsed time and whether bandwidth is one-way or aggregate.
+Do not infer collective performance from a single peer copy: collective algorithm, topology and synchronization differ.
+If pairwise access is unavailable, choose a documented supported transfer path and measure its impact.
+
+### F09 investigation: intermittent incorrect output
+
+**Scenario:** The same input occasionally produces different incorrect results.
+Preserve the exact binary, launch configuration, input and output before changing the system.
+Repeat with a fixed input and compare against an independent reference.
+Check initialization of device buffers and whether their lifetime extends through asynchronous use.
+Audit ownership and ordering between producers and consumers, including cross-stream dependencies.
+Use the installed correctness tools only within their documented detection scope.
+If the issue disappears under instrumentation, treat timing sensitivity as evidence to investigate, not proof of a race.
+After a fix, test boundary shapes and repeated runs under representative concurrency.
+
+### F10 investigation: regression after deployment
+
+**Scenario:** End-to-end latency increases after a driver, binary, workload or infrastructure change.
+Compare workload distributions and input shapes before attributing the change to the GPU.
+Record GPU SKU, partitioning, driver, toolkit, clocks, power policy and co-tenant activity.
+Separate data transfer, queueing, kernel execution and postprocessing in the measurement.
+Run old and new binaries under matched conditions where rollback and compatibility permit.
+Use repeated unprofiled timings and compare with the deployed service metric.
+If the regression follows a configuration change, preserve the evidence and roll back only through the approved operational procedure.
+Monitor correctness and customer-facing latency after mitigation; a kernel-level improvement alone may not resolve the service issue.
 
 A negative register-spill test does not prove shared memory is the bottleneck.
 A peer link test alone does not establish collective efficiency or application throughput.

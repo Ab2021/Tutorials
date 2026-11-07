@@ -52,6 +52,7 @@ This course contains a planned syllabus and a growing set of draft teaching file
 - [Medical claims document extraction — MediConCen](11_data_science_domain_specialisations/10_insurance_actuarial_and_claims/02_claims_fraud_customer_and_operations/Case_Studies/Medical_Claims_Document_Extraction_MediConCen.md) — draft case; vendor-reported outcomes with undisclosed evaluation details and illustrative controls.
 - [HCP promotional-response driver analysis](11_data_science_domain_specialisations/01_production_ml_case_library/03_kda_solutions_pharma/Case_Studies/01_HCP_Promotional_Response_Driver_Analysis_Launch_Brand.md) — illustrative draft case; causal evaluation, consent boundaries and unmeasured outcomes.
 - [Flink event-time session windows](02_data_analytics_and_decision_science/09_data_streaming_event_systems_and_real_time_analytics/Cheat_Sheets/03_Flink_Event_Time_Session_Windows_and_Stateful_Processing.md) — draft cheat sheet; generic late-merge trace, watermark, recovery and correction boundaries.
+- [Recommendation candidate generation and eligibility](11_data_science_domain_specialisations/02_data_science_method_playbooks/08_recsys_playbook/Cheat_Sheets/01_Candidate_Generation_Eligibility_and_Ranking.md) — draft cheat sheet; eligible recall, retrieval–ranking boundaries and operational diagnostics.
 
 ## Learning parts
 
