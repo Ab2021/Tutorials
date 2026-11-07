@@ -13,6 +13,7 @@
 | 3 | human evaluation | planned |
 | 4 | production monitoring | [model evaluation and monitoring draft](Cheat_Sheets/04_Model_Evaluation_and_Production_Monitoring.md); broader topic planned |
 | 5 | feedback and regression gates | planned |
+| 6 | training metrics, language-model metrics and benchmarks | Source Module 09 submodules 9.1–9.3 mapped as unreviewed drafts; remaining visible Module 09 topics are planned |
 
 ## What competence looks like
 
@@ -22,6 +23,14 @@ After this module, a learner can turn a real problem into an appropriate technic
 
 - [Case Studies](./Case_Studies/INDEX.md): application briefs that deliberately include data, constraints, architecture, evaluation, risk, and operating plan.
 - [Cheat Sheets](./Cheat_Sheets/INDEX.md): compact references for repeat use while designing, reviewing, or debugging.
+
+## Authored source submodules
+
+Visible Module 09 source titles 9.1–9.2 are mapped from [`Train/Templates/directory.txt`](../../../Templates/directory.txt). These are new drafts because the original source lesson bodies were unavailable; visible titles 9.3–9.6 remain planned.
+
+- [9.1 — Training Metrics and Loss Analysis](9.1_Training_Metrics_and_Loss_Analysis.md) — draft; masked-token objective/reductions, optimization and data instrumentation, curve triage, checkpoint gates and diagnostics.
+- [9.2 — Perplexity and Language Model Metrics](9.2_Perplexity_and_Language_Model_Metrics.md) — draft; held-out likelihood contract, corpus aggregation, paired comparison, uncertainty assumptions and release gates.
+- [9.3 — Evaluation Benchmarks: Comprehensive Design](9.3_Evaluation_Benchmarks_Comprehensive.md) — draft; manifest/provenance, slice aggregation, contamination controls, scorer validity and release gates.
 
 ## Dependency notes
 

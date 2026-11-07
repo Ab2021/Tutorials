@@ -10,7 +10,7 @@
 |---:|---|---|
 | 1 | tokenisation and embeddings | planned |
 | 2 | attention and transformer blocks | Submodules 1.1–1.4 drafted; focused sheets and independent review remain planned |
-| 3 | pretraining and scaling | Core submodule 1.3 draft; empirical objectives and scaling-law topics remain planned |
+| 3 | pretraining and scaling | Submodules 3.1–3.3 drafted; focused sheets, empirical validation and bounded case remain planned |
 | 4 | context architectures | planned |
 | 5 | inference behaviour | planned |
 
@@ -33,6 +33,9 @@ The visible Module 00 and Module 01 source titles are mapped from [`Train/Templa
 - [1.2 — Transformer Block Architecture](04_Transformer_Block_Architecture.md) — draft; residual/norm ordering, FFN structure, parameter accounting and system boundaries.
 - [1.3 — Scaling and Parameter Counting](05_Scaling_and_Parameter_Counting.md) — draft; dense parameter accounting, compute approximations, empirical scaling limits and controlled sweep design.
 - [1.4 — Mixture of Experts](06_Mixture_of_Experts.md) — draft; total versus active capacity, top-k routing, capacity, dispatch and load diagnostics.
+- [3.1 — Training Objectives](3.1_Training_Objectives.md) — draft; cross-entropy, autoregressive/masked/contrastive objective boundaries and compute proxy.
+- [3.2 — Scaling Laws](3.2_Scaling_Laws.md) — draft; fit scope, compute/data allocation, exponent fitting, uncertainty and extrapolation limits.
+- [3.3 — Pretraining Hyperparameters](3.3_Pretraining_Hyperparameters.md) — draft; optimizer/batch/schedule definitions, controlled tuning, numerical stability and resume state.
 These are module lessons, not substitutes for the separately planned focused cheat sheets, cases, or independently reviewed publication artifacts.
 
 ## Dependency notes

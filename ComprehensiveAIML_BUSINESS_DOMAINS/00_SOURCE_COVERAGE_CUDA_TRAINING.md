@@ -597,7 +597,7 @@ CUDA: prerequisites → H100 → programming → barriers → TMA/copy → WGMMA
 
 ### Fine-tuning Module 03 / cheat sheet 02 — objectives and scaling laws
 
-**Status:** planned. **Existing destination:** [04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/INDEX.md](04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/INDEX.md).
+**Status:** all three mapped module lessons are draft. **Existing destination:** [04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/INDEX.md](04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/INDEX.md). Focused sheets, bounded case, independent review and empirical validation remain open.
 
 **Learning outcome.** Compare training objectives, fit scoped scaling-law estimates and choose learning-rate/batch/token schedules without extrapolating beyond evidence.
 
@@ -617,15 +617,15 @@ CUDA: prerequisites → H100 → programming → barriers → TMA/copy → WGMMA
 |---|---|---|
 | `finetuning_course/LLM_Finetuning_Cheat_Sheets/02_Scaling_Laws_Pretraining_Objectives.md` | 02 Scaling Laws Pretraining Objectives | `planned-topic` |
 | `finetuning_course/Module_03_Pretraining_Scaling_Laws` | Source scope/container — not a completed lesson | `source-container` |
-| `finetuning_course/Module_03_Pretraining_Scaling_Laws/3.1_Training_Objectives.md` | 3.1 Training Objectives | `planned-topic` |
-| `finetuning_course/Module_03_Pretraining_Scaling_Laws/3.2_Scaling_Laws.md` | 3.2 Scaling Laws | `planned-topic` |
-| `finetuning_course/Module_03_Pretraining_Scaling_Laws/3.3_Pretraining_Hyperparameters.md` | 3.3 Pretraining Hyperparameters | `planned-topic` |
+| `finetuning_course/Module_03_Pretraining_Scaling_Laws/3.1_Training_Objectives.md` | 3.1 Training Objectives | `draft` — mapped course lesson at [module 19](04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/3.1_Training_Objectives.md); source body unavailable |
+| `finetuning_course/Module_03_Pretraining_Scaling_Laws/3.2_Scaling_Laws.md` | 3.2 Scaling Laws | `draft` — mapped course lesson at [module 19](04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/3.2_Scaling_Laws.md); source body unavailable |
+| `finetuning_course/Module_03_Pretraining_Scaling_Laws/3.3_Pretraining_Hyperparameters.md` | 3.3 Pretraining Hyperparameters | `draft` — mapped course lesson at [module 19](04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/3.3_Pretraining_Hyperparameters.md); source body unavailable |
 
 <a id="ft-single-gpu"></a>
 
 ### Fine-tuning Module 04 / cheat sheet 03 — training memory and accumulation
 
-**Status:** planned. **Existing destination:** [05_ai_platforms_data_systems_and_production_engineering/24_distributed_training_data_pipelines_and_ml_compute/INDEX.md](05_ai_platforms_data_systems_and_production_engineering/24_distributed_training_data_pipelines_and_ml_compute/INDEX.md).
+**Status:** partially drafted. **Existing destination:** [05_ai_platforms_data_systems_and_production_engineering/24_distributed_training_data_pipelines_and_ml_compute/INDEX.md](05_ai_platforms_data_systems_and_production_engineering/24_distributed_training_data_pipelines_and_ml_compute/INDEX.md). Submodules 4.1 and 4.4 are new mapped drafts; 4.2–4.3 filenames remain clipped/unresolved; focused sheets, case, review and empirical validation remain open.
 
 **Learning outcome.** Account for training memory, sequence-length-dependent activations, visible recomputation/checkpointing topics and gradient accumulation.
 
@@ -645,16 +645,16 @@ CUDA: prerequisites → H100 → programming → barriers → TMA/copy → WGMMA
 |---|---|---|
 | `finetuning_course/LLM_Finetuning_Cheat_Sheets/03_Memory_Compute_SingleGPU_Optimization.md` | 03 Memory Compute SingleGPU Optimization | `planned-topic` |
 | `finetuning_course/Module_04_Single_GPU_Training` | Source scope/container — not a completed lesson | `source-container` |
-| `finetuning_course/Module_04_Single_GPU_Training/4.1_Memory_Components_During_Training.md` | 4.1 Memory Components During Training | `planned-topic` |
+| `finetuning_course/Module_04_Single_GPU_Training/4.1_Memory_Components_During_Training.md` | 4.1 Memory Components During Training | `draft` — mapped course lesson at [module 24](05_ai_platforms_data_systems_and_production_engineering/24_distributed_training_data_pipelines_and_ml_compute/4.1_Memory_Components_During_Training.md); source body unavailable |
 | `finetuning_course/Module_04_Single_GPU_Training/4.2_Activation_Memory_and_the_Sequence_Lengt… [TRUNCATED/UNVERIFIED]` | OPEN: clipped filename; teach only visible prefix: UNVERIFIED] | `unresolved-source` |
 | `finetuning_course/Module_04_Single_GPU_Training/4.3_Activation_Recomputation_Gradient_Checkpo… [TRUNCATED/UNVERIFIED]` | OPEN: clipped filename; teach only visible prefix: UNVERIFIED] | `unresolved-source` |
-| `finetuning_course/Module_04_Single_GPU_Training/4.4_Gradient_Accumulation.md` | 4.4 Gradient Accumulation | `planned-topic` |
+| `finetuning_course/Module_04_Single_GPU_Training/4.4_Gradient_Accumulation.md` | 4.4 Gradient Accumulation | `draft` — mapped course lesson at [module 24](05_ai_platforms_data_systems_and_production_engineering/24_distributed_training_data_pipelines_and_ml_compute/4.4_Gradient_Accumulation.md); source body unavailable |
 
 <a id="ft-parallelism"></a>
 
 ### Fine-tuning Module 05 / cheat sheet 04 — ZeRO and multidimensional parallelism
 
-**Status:** planned. **Existing destination:** [05_ai_platforms_data_systems_and_production_engineering/24_distributed_training_data_pipelines_and_ml_compute/INDEX.md](05_ai_platforms_data_systems_and_production_engineering/24_distributed_training_data_pipelines_and_ml_compute/INDEX.md).
+**Status:** six visible module lessons are draft. **Existing destination:** [05_ai_platforms_data_systems_and_production_engineering/24_distributed_training_data_pipelines_and_ml_compute/INDEX.md](05_ai_platforms_data_systems_and_production_engineering/24_distributed_training_data_pipelines_and_ml_compute/INDEX.md). Submodules 5.1–5.6 are mapped drafts; clipped 5.7, focused sheets, bounded case, independent review and empirical validation remain open.
 
 **Learning outcome.** Distinguish data, ZeRO, tensor, context, pipeline, expert and visible 5D configuration-selection topics by what is partitioned and communicated.
 
@@ -674,19 +674,19 @@ CUDA: prerequisites → H100 → programming → barriers → TMA/copy → WGMMA
 |---|---|---|
 | `finetuning_course/LLM_Finetuning_Cheat_Sheets/04_Distributed_Training_Parallelism.md` | 04 Distributed Training Parallelism | `planned-topic` |
 | `finetuning_course/Module_05_Distributed_Training` | Source scope/container — not a completed lesson | `source-container` |
-| `finetuning_course/Module_05_Distributed_Training/5.1_Data_Parallelism.md` | 5.1 Data Parallelism | `planned-topic` |
-| `finetuning_course/Module_05_Distributed_Training/5.2_ZeRO_Zero_Redundancy_Optimizer.md` | 5.2 ZeRO Zero Redundancy Optimizer | `planned-topic` |
-| `finetuning_course/Module_05_Distributed_Training/5.3_Tensor_Parallelism.md` | 5.3 Tensor Parallelism | `planned-topic` |
-| `finetuning_course/Module_05_Distributed_Training/5.4_Context_Parallelism.md` | 5.4 Context Parallelism | `planned-topic` |
-| `finetuning_course/Module_05_Distributed_Training/5.5_Pipeline_Parallelism.md` | 5.5 Pipeline Parallelism | `planned-topic` |
-| `finetuning_course/Module_05_Distributed_Training/5.6_Expert_Parallelism.md` | 5.6 Expert Parallelism | `planned-topic` |
+| `finetuning_course/Module_05_Distributed_Training/5.1_Data_Parallelism.md` | 5.1 Data Parallelism | `draft` — mapped course lesson at [module 24](05_ai_platforms_data_systems_and_production_engineering/24_distributed_training_data_pipelines_and_ml_compute/5.1_Data_Parallelism.md); source body unavailable |
+| `finetuning_course/Module_05_Distributed_Training/5.2_ZeRO_Zero_Redundancy_Optimizer.md` | 5.2 ZeRO Zero Redundancy Optimizer | `draft` — mapped course lesson at [module 24](05_ai_platforms_data_systems_and_production_engineering/24_distributed_training_data_pipelines_and_ml_compute/5.2_ZeRO_Zero_Redundancy_Optimizer.md); source body unavailable |
+| `finetuning_course/Module_05_Distributed_Training/5.3_Tensor_Parallelism.md` | 5.3 Tensor Parallelism | `draft` — mapped course lesson at [module 24](05_ai_platforms_data_systems_and_production_engineering/24_distributed_training_data_pipelines_and_ml_compute/5.3_Tensor_Parallelism.md); source body unavailable |
+| `finetuning_course/Module_05_Distributed_Training/5.4_Context_Parallelism.md` | 5.4 Context Parallelism | `draft` — mapped course lesson at [module 24](05_ai_platforms_data_systems_and_production_engineering/24_distributed_training_data_pipelines_and_ml_compute/5.4_Context_Parallelism.md); source body unavailable |
+| `finetuning_course/Module_05_Distributed_Training/5.5_Pipeline_Parallelism.md` | 5.5 Pipeline Parallelism | `draft` — mapped course lesson at [module 24](05_ai_platforms_data_systems_and_production_engineering/24_distributed_training_data_pipelines_and_ml_compute/5.5_Pipeline_Parallelism.md); source body unavailable |
+| `finetuning_course/Module_05_Distributed_Training/5.6_Expert_Parallelism.md` | 5.6 Expert Parallelism | `draft` — mapped course lesson at [module 24](05_ai_platforms_data_systems_and_production_engineering/24_distributed_training_data_pipelines_and_ml_compute/5.6_Expert_Parallelism.md); source body unavailable |
 | `finetuning_course/Module_05_Distributed_Training/5.7_5D_Parallelism_and_Configuration_Selection… [TRUNCATED/UNVERIFIED]` | OPEN: clipped filename; teach only visible prefix: UNVERIFIED] | `unresolved-source` |
 
 <a id="ft-gpu-internals"></a>
 
 ### Fine-tuning Module 06 — GPU internals, fusion, FlashAttention and precision
 
-**Status:** planned. **Existing destination:** [05_ai_platforms_data_systems_and_production_engineering/23_gpu_architecture_accelerators_and_ai_hardware/INDEX.md](05_ai_platforms_data_systems_and_production_engineering/23_gpu_architecture_accelerators_and_ai_hardware/INDEX.md).
+**Status:** partially drafted. **Existing destination:** [05_ai_platforms_data_systems_and_production_engineering/23_gpu_architecture_accelerators_and_ai_hardware/INDEX.md](05_ai_platforms_data_systems_and_production_engineering/23_gpu_architecture_accelerators_and_ai_hardware/INDEX.md). Submodules 6.1–6.4 are new mapped drafts; focused sheets, bounded case, independent review and empirical validation remain open.
 
 **Learning outcome.** Relate GPU architecture to kernel fusion, FlashAttention and mixed-precision training, linking to the detailed CUDA groups rather than replacing them.
 
@@ -705,16 +705,16 @@ CUDA: prerequisites → H100 → programming → barriers → TMA/copy → WGMMA
 | Exact source node | Role / proposed focused-sheet topic | Disposition |
 |---|---|---|
 | `finetuning_course/Module_06_GPU_Internals` | Source scope/container — not a completed lesson | `source-container` |
-| `finetuning_course/Module_06_GPU_Internals/6.1_GPU_Architecture_Primer.md` | 6.1 GPU Architecture Primer | `planned-topic` |
-| `finetuning_course/Module_06_GPU_Internals/6.2_Kernel_Optimization_and_Fusion.md` | 6.2 Kernel Optimization and Fusion | `planned-topic` |
-| `finetuning_course/Module_06_GPU_Internals/6.3_FlashAttention.md` | 6.3 FlashAttention | `planned-topic` |
-| `finetuning_course/Module_06_GPU_Internals/6.4_Mixed_Precision_Training.md` | 6.4 Mixed Precision Training | `planned-topic` |
+| `finetuning_course/Module_06_GPU_Internals/6.1_GPU_Architecture_Primer.md` | 6.1 GPU Architecture Primer | `draft` — mapped course lesson at [module 23](05_ai_platforms_data_systems_and_production_engineering/23_gpu_architecture_accelerators_and_ai_hardware/6.1_GPU_Architecture_Primer.md); source body unavailable |
+| `finetuning_course/Module_06_GPU_Internals/6.2_Kernel_Optimization_and_Fusion.md` | 6.2 Kernel Optimization and Fusion | `draft` — mapped course lesson at [module 23](05_ai_platforms_data_systems_and_production_engineering/23_gpu_architecture_accelerators_and_ai_hardware/6.2_Kernel_Optimization_and_Fusion.md); source body unavailable |
+| `finetuning_course/Module_06_GPU_Internals/6.3_FlashAttention.md` | 6.3 FlashAttention | `draft` — mapped course lesson at [module 23](05_ai_platforms_data_systems_and_production_engineering/23_gpu_architecture_accelerators_and_ai_hardware/6.3_FlashAttention.md); source body unavailable |
+| `finetuning_course/Module_06_GPU_Internals/6.4_Mixed_Precision_Training.md` | 6.4 Mixed Precision Training | `draft` — mapped course lesson at [module 23](05_ai_platforms_data_systems_and_production_engineering/23_gpu_architecture_accelerators_and_ai_hardware/6.4_Mixed_Precision_Training.md); source body unavailable |
 
 <a id="ft-alignment-core"></a>
 
 ### Fine-tuning Module 07 / cheat sheet 05 — SFT, reward modeling and PPO
 
-**Status:** planned. **Existing destination:** [04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/INDEX.md](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/INDEX.md).
+**Status:** partially drafted. **Existing destination:** [04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/INDEX.md](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/INDEX.md). Submodules 7.1–7.4 are new mapped drafts; focused sheets, bounded case, independent review and empirical validation remain open.
 
 **Learning outcome.** Explain why post-training matters and distinguish SFT, reward-model training and RLHF with PPO by data, objectives and failure boundaries.
 
@@ -733,16 +733,16 @@ CUDA: prerequisites → H100 → programming → barriers → TMA/copy → WGMMA
 | Exact source node | Role / proposed focused-sheet topic | Disposition |
 |---|---|---|
 | `finetuning_course/LLM_Finetuning_Cheat_Sheets/05_Post_Training_SFT_RLHF_PPO.md` | 05 Post Training SFT RLHF PPO | `planned-topic` |
-| `finetuning_course/Module_07_Post_Training_Alignment/7.1_Why_Post_Training_Matters.md` | 7.1 Why Post Training Matters | `planned-topic` |
-| `finetuning_course/Module_07_Post_Training_Alignment/7.2_Supervised_Fine_Tuning.md` | 7.2 Supervised Fine Tuning | `planned-topic` |
-| `finetuning_course/Module_07_Post_Training_Alignment/7.3_Reward_Modeling.md` | 7.3 Reward Modeling | `planned-topic` |
-| `finetuning_course/Module_07_Post_Training_Alignment/7.4_RLHF_with_PPO.md` | 7.4 RLHF with PPO | `planned-topic` |
+| `finetuning_course/Module_07_Post_Training_Alignment/7.1_Why_Post_Training_Matters.md` | 7.1 Why Post Training Matters | `draft` — mapped course lesson at [module 21](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/7.1_Why_Post_Training_Matters.md); source body unavailable |
+| `finetuning_course/Module_07_Post_Training_Alignment/7.2_Supervised_Fine_Tuning.md` | 7.2 Supervised Fine Tuning | `draft` — mapped course lesson at [module 21](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/7.2_Supervised_Fine_Tuning.md); source body unavailable |
+| `finetuning_course/Module_07_Post_Training_Alignment/7.3_Reward_Modeling.md` | 7.3 Reward Modeling | `draft` — mapped course lesson at [module 21](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/7.3_Reward_Modeling.md); source body unavailable |
+| `finetuning_course/Module_07_Post_Training_Alignment/7.4_RLHF_with_PPO.md` | 7.4 RLHF with PPO | `draft` — mapped course lesson at [module 21](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/7.4_RLHF_with_PPO.md); source body unavailable |
 
 <a id="ft-alignment-grpo"></a>
 
 ### Fine-tuning Module 07 — DPO, GRPO, process supervision and constitutional feedback
 
-**Status:** planned. **Existing destination:** [04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/INDEX.md](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/INDEX.md).
+**Status:** partially drafted. **Existing destination:** [04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/INDEX.md](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/INDEX.md). Submodules 7.5, 7.6 and 7.8 are new mapped drafts; the clipped 7.7 filename remains unresolved; focused sheets, bounded case, independent review and empirical validation remain open.
 
 **Learning outcome.** Differentiate DPO, Group Relative Policy Optimization, visible reasoning/process-supervision topics and Constitutional AI/RLAIF from the reward-model/PPO baseline.
 
@@ -762,16 +762,16 @@ CUDA: prerequisites → H100 → programming → barriers → TMA/copy → WGMMA
 |---|---|---|
 | `finetuning_course/LLM_Finetuning_Cheat_Sheets/06_Preference_Optimization_DPO_Variants.md` | 06 Preference Optimization DPO Variants | `planned-topic` |
 | `finetuning_course/Module_07_Post_Training_Alignment` | Source scope/container — not a completed lesson | `source-container` |
-| `finetuning_course/Module_07_Post_Training_Alignment/7.5_Direct_Preference_Optimization.md` | 7.5 Direct Preference Optimization | `planned-topic` |
-| `finetuning_course/Module_07_Post_Training_Alignment/7.6_GRPO_Group_Relative_Policy_Optimization.md` | 7.6 GRPO Group Relative Policy Optimization | `planned-topic` |
+| `finetuning_course/Module_07_Post_Training_Alignment/7.5_Direct_Preference_Optimization.md` | 7.5 Direct Preference Optimization | `draft` — mapped course lesson at [module 21](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/7.5_Direct_Preference_Optimization.md); source body unavailable |
+| `finetuning_course/Module_07_Post_Training_Alignment/7.6_GRPO_Group_Relative_Policy_Optimization.md` | 7.6 GRPO Group Relative Policy Optimization | `draft` — mapped course lesson at [module 21](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/7.6_GRPO_Group_Relative_Policy_Optimization.md); source body unavailable |
 | `finetuning_course/Module_07_Post_Training_Alignment/7.7_Reasoning_Training_and_Process_Supervision… [TRUNCATED/UNVERIFIED]` | OPEN: clipped filename; teach only visible prefix: UNVERIFIED] | `unresolved-source` |
-| `finetuning_course/Module_07_Post_Training_Alignment/7.8_Constitutional_AI_and_RLAIF.md` | 7.8 Constitutional AI and RLAIF | `planned-topic` |
+| `finetuning_course/Module_07_Post_Training_Alignment/7.8_Constitutional_AI_and_RLAIF.md` | 7.8 Constitutional AI and RLAIF | `draft` — mapped course lesson at [module 21](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/7.8_Constitutional_AI_and_RLAIF.md); source body unavailable |
 
 <a id="ft-peft"></a>
 
 ### Fine-tuning Module 08 / cheat sheet 07 — PEFT and model merging
 
-**Status:** partial, unreviewed drafts; advanced PEFT and model merging remain planned. **Existing destination:** [04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/INDEX.md](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/INDEX.md). Draft sheets: [LoRA](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/Cheat_Sheets/01_LoRA_Parameter_Efficient_Finetuning.md) and [quantized-base adapters](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/Cheat_Sheets/02_QLoRA_Quantized_Base_Adapter_Finetuning.md); neither verifies unavailable source contents.
+**Status:** partial, unreviewed drafts; mapped source submodules 8.1, 8.2, 8.4 and 8.5 are covered (8.2 by the existing LoRA sheet); 8.3 remains unresolved. **Existing destination:** [04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/INDEX.md](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/INDEX.md). Draft sheets: [LoRA](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/Cheat_Sheets/01_LoRA_Parameter_Efficient_Finetuning.md) and [quantized-base adapters](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/Cheat_Sheets/02_QLoRA_Quantized_Base_Adapter_Finetuning.md); neither verifies unavailable source contents.
 
 **Learning outcome.** Select full versus parameter-efficient adaptation, LoRA, visible QLoRA/quantization-aware fine-tuning, advanced PEFT and model merging/weight averaging.
 
@@ -791,17 +791,17 @@ CUDA: prerequisites → H100 → programming → barriers → TMA/copy → WGMMA
 |---|---|---|
 | `finetuning_course/LLM_Finetuning_Cheat_Sheets/07_Parameter_Efficient_Finetuning_PEFT.md` | 07 Parameter Efficient Finetuning PEFT | `planned-topic` |
 | `finetuning_course/Module_08_PEFT_Model_Merging` | Source scope/container — not a completed lesson | `source-container` |
-| `finetuning_course/Module_08_PEFT_Model_Merging/8.1_Why_PEFT_and_the_Fine_Tuning_Spectrum.md` | 8.1 Why PEFT and the Fine Tuning Spectrum | `planned-topic` |
-| `finetuning_course/Module_08_PEFT_Model_Merging/8.2_LoRA_Low_Rank_Adaptation.md` | 8.2 LoRA Low Rank Adaptation | `planned-topic` |
+| `finetuning_course/Module_08_PEFT_Model_Merging/8.1_Why_PEFT_and_the_Fine_Tuning_Spectrum.md` | 8.1 Why PEFT and the Fine Tuning Spectrum | `draft` — mapped course lesson at [module 21](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/8.1_Why_PEFT_and_the_Fine_Tuning_Spectrum.md); source body unavailable |
+| `finetuning_course/Module_08_PEFT_Model_Merging/8.2_LoRA_Low_Rank_Adaptation.md` | 8.2 LoRA Low Rank Adaptation | `draft` — mapped to existing [LoRA cheat sheet](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/Cheat_Sheets/01_LoRA_Parameter_Efficient_Finetuning.md); original source body unavailable |
 | `finetuning_course/Module_08_PEFT_Model_Merging/8.3_QLoRA_and_Quantization_Aware_Fine_Tuning… [TRUNCATED/UNVERIFIED]` | OPEN: clipped filename; teach only visible prefix: UNVERIFIED] | `unresolved-source` |
-| `finetuning_course/Module_08_PEFT_Model_Merging/8.4_Advanced_PEFT_Methods.md` | 8.4 Advanced PEFT Methods | `planned-topic` |
-| `finetuning_course/Module_08_PEFT_Model_Merging/8.5_Model_Merging_and_Weight_Averaging.md` | 8.5 Model Merging and Weight Averaging | `planned-topic` |
+| `finetuning_course/Module_08_PEFT_Model_Merging/8.4_Advanced_PEFT_Methods.md` | 8.4 Advanced PEFT Methods | `draft` — mapped course lesson at [module 21](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/8.4_Advanced_PEFT_Methods.md); source body unavailable |
+| `finetuning_course/Module_08_PEFT_Model_Merging/8.5_Model_Merging_and_Weight_Averaging.md` | 8.5 Model Merging and Weight Averaging | `draft` — mapped course lesson at [module 21](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/8.5_Model_Merging_and_Weight_Averaging.md); source body unavailable |
 
 <a id="ft-evaluation"></a>
 
 ### Fine-tuning Module 09 / cheat sheet 11 — evaluation and debugging
 
-**Status:** planned. **Existing destination:** [05_ai_platforms_data_systems_and_production_engineering/28_ai_evaluation_monitoring_and_continuous_improvement/INDEX.md](05_ai_platforms_data_systems_and_production_engineering/28_ai_evaluation_monitoring_and_continuous_improvement/INDEX.md).
+**Status:** partial, unreviewed drafts for mapped source submodules 9.1–9.3; visible submodules 9.4–9.6 remain planned. **Existing destination:** [05_ai_platforms_data_systems_and_production_engineering/28_ai_evaluation_monitoring_and_continuous_improvement/INDEX.md](05_ai_platforms_data_systems_and_production_engineering/28_ai_evaluation_monitoring_and_continuous_improvement/INDEX.md).
 
 **Learning outcome.** Interpret training/loss metrics, perplexity, comprehensive benchmarks, LLM-as-judge/human evaluation, training-failure diagnostics and infrastructure profiling.
 
@@ -821,9 +821,9 @@ CUDA: prerequisites → H100 → programming → barriers → TMA/copy → WGMMA
 |---|---|---|
 | `finetuning_course/LLM_Finetuning_Cheat_Sheets/11_Evaluation_Debugging_Training.md` | 11 Evaluation Debugging Training | `planned-topic` |
 | `finetuning_course/Module_09_Evaluation_Debugging` | Source scope/container — not a completed lesson | `source-container` |
-| `finetuning_course/Module_09_Evaluation_Debugging/9.1_Training_Metrics_and_Loss_Analysis.md` | 9.1 Training Metrics and Loss Analysis | `planned-topic` |
-| `finetuning_course/Module_09_Evaluation_Debugging/9.2_Perplexity_and_Language_Model_Metrics.md` | 9.2 Perplexity and Language Model Metrics | `planned-topic` |
-| `finetuning_course/Module_09_Evaluation_Debugging/9.3_Evaluation_Benchmarks_Comprehensive.md` | 9.3 Evaluation Benchmarks Comprehensive | `planned-topic` |
+| `finetuning_course/Module_09_Evaluation_Debugging/9.1_Training_Metrics_and_Loss_Analysis.md` | 9.1 Training Metrics and Loss Analysis | `draft` — mapped course lesson at [module 28](05_ai_platforms_data_systems_and_production_engineering/28_ai_evaluation_monitoring_and_continuous_improvement/9.1_Training_Metrics_and_Loss_Analysis.md); source body unavailable |
+| `finetuning_course/Module_09_Evaluation_Debugging/9.2_Perplexity_and_Language_Model_Metrics.md` | 9.2 Perplexity and Language Model Metrics | `draft` — mapped course lesson at [module 28](05_ai_platforms_data_systems_and_production_engineering/28_ai_evaluation_monitoring_and_continuous_improvement/9.2_Perplexity_and_Language_Model_Metrics.md); source body unavailable |
+| `finetuning_course/Module_09_Evaluation_Debugging/9.3_Evaluation_Benchmarks_Comprehensive.md` | 9.3 Evaluation Benchmarks Comprehensive | `draft` — mapped course lesson at [module 28](05_ai_platforms_data_systems_and_production_engineering/28_ai_evaluation_monitoring_and_continuous_improvement/9.3_Evaluation_Benchmarks_Comprehensive.md); source body unavailable |
 | `finetuning_course/Module_09_Evaluation_Debugging/9.4_LLM_as_Judge_and_Human_Evaluation.md` | 9.4 LLM as Judge and Human Evaluation | `planned-topic` |
 | `finetuning_course/Module_09_Evaluation_Debugging/9.5_Debugging_Common_Training_Failures.md` | 9.5 Debugging Common Training Failures | `planned-topic` |
 | `finetuning_course/Module_09_Evaluation_Debugging/9.6_Infrastructure_Benchmarking_and_Profiling.md` | 9.6 Infrastructure Benchmarking and Profiling | `planned-topic` |

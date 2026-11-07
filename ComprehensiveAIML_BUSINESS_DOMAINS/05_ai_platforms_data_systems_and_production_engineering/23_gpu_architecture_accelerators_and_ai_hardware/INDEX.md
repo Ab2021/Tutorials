@@ -8,7 +8,7 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | GPU memory and parallelism | partial: [H100 architecture and resource limits](Cheat_Sheets/01_H100_Architecture_and_Resource_Limits.md) and [roofline diagnosis](Cheat_Sheets/01_Roofline_Arithmetic_Intensity_and_Kernel_Diagnosis.md) are unreviewed drafts |
+| 1 | GPU memory and parallelism | Unreviewed H100/roofline cheat-sheet drafts; Module 06.1–6.4 mapped lessons drafted |
 | 2 | TPU/NPU/accelerator landscape | planned |
 | 3 | interconnects and clusters | planned |
 | 4 | precision and quantisation | planned |
@@ -22,6 +22,16 @@ After this module, a learner can turn a real problem into an appropriate technic
 
 - [Case Studies](./Case_Studies/INDEX.md): application briefs that deliberately include data, constraints, architecture, evaluation, risk, and operating plan.
 - [Cheat Sheets](./Cheat_Sheets/INDEX.md): compact references for repeat use while designing, reviewing, or debugging.
+
+## Authored source submodules
+
+The visible Module 06 titles are mapped from [`Train/Templates/directory.txt`](../../../Templates/directory.txt). These lessons are new drafts; the original source lesson bodies were not available.
+
+- [6.1 — GPU Architecture Primer](6.1_GPU_Architecture_Primer.md) — draft; execution hierarchy, memory/bandwidth, roofline reasoning and benchmarking.
+
+- [6.2 — Kernel Optimization and Fusion](6.2_Kernel_Optimization_and_Fusion.md) — draft; profiling, memory traffic, tiling, fusion tradeoffs, numerical validation and benchmarking.
+- [6.3 — FlashAttention](6.3_FlashAttention.md) — draft; tiled exact attention, online softmax, IO/memory accounting, mask correctness and kernel validation.
+- [6.4 — Mixed-Precision Training](6.4_Mixed_Precision_Training.md) — draft; range versus precision, accumulation policy, loss scaling, overflow and validation.
 
 ## Dependency notes
 

@@ -13,6 +13,7 @@
 | 3 | checkpointing and fault recovery | [draft cheat sheet](../Cheat_Sheets/01_Distributed_Training_Checkpoint_and_Recovery.md); broader topic planned |
 | 4 | cluster scheduling | planned |
 | 5 | cost and throughput tuning | planned |
+| 6 | training memory accounting | Source submodules 4.1, 4.4 and 5.1–5.6 drafted; 4.2–4.3 and 5.7 remain unresolved; other topics planned |
 
 ## What competence looks like
 
@@ -22,6 +23,20 @@ After this module, a learner can turn a real problem into an appropriate technic
 
 - [Case Studies](./Case_Studies/INDEX.md): application briefs that deliberately include data, constraints, architecture, evaluation, risk, and operating plan.
 - [Cheat Sheets](./Cheat_Sheets/INDEX.md): compact references for repeat use while designing, reviewing, or debugging.
+
+## Authored source submodules
+
+Visible Module 04 and 05 source titles are mapped from [`Train/Templates/directory.txt`](../../../Templates/directory.txt). Original lesson bodies were not available; clipped filenames remain unresolved.
+
+- [4.1 — Memory Components During Training](4.1_Memory_Components_During_Training.md) — draft; persistent state, activations, workspaces, allocator metrics and OOM diagnosis.
+
+- [4.4 — Gradient Accumulation](4.4_Gradient_Accumulation.md) — draft; effective batch, target normalization, update cadence, distributed reduction and partial windows.
+- [5.1 — Data Parallelism](5.1_Data_Parallelism.md) — draft; replicated state, process groups, gradient synchronization, batch accounting and scale-out diagnostics.
+- [5.2 — ZeRO: Zero Redundancy Optimizer](5.2_ZeRO_Zero_Redundancy_Optimizer.md) — draft; optimizer/gradient/parameter sharding, stage memory formulas, communication and checkpoint ownership.
+- [5.3 — Tensor Parallelism](5.3_Tensor_Parallelism.md) — draft; column/row layouts, local shapes, collective boundaries, topology and parity checks.
+- [5.4 — Context Parallelism](5.4_Context_Parallelism.md) — draft; sequence ownership, cross-shard attention, global positions, target counts and validation.
+- [5.5 — Pipeline Parallelism](5.5_Pipeline_Parallelism.md) — draft; microbatch schedules, bubble estimates, stage balance, activation residency and boundary validation.
+- [5.6 — Expert Parallelism](5.6_Expert_Parallelism.md) — draft; expert placement, token dispatch/return, capacity, load imbalance, rank mapping and validation.
 
 ## Dependency notes
 
