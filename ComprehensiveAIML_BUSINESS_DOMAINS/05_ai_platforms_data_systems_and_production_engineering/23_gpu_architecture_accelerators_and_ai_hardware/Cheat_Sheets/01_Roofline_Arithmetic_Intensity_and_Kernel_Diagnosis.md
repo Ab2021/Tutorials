@@ -246,12 +246,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** compare requested bytes with transactions at the relevant level.
 - **Bounded intervention:** reorder thread-to-data mapping without changing values.
 - **Verification:** check output and device-memory traffic across aligned and offset inputs.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D02. Strided stores
 - **Symptom:** adjacent output lanes write distant addresses.
@@ -259,12 +253,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** compare store transaction efficiency over two layouts.
 - **Bounded intervention:** choose a contiguous output mapping where consumers permit.
 - **Verification:** validate downstream layout and whole-range time.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D03. Redundant global loads
 - **Symptom:** multiple threads reload the same value.
@@ -272,12 +260,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** compare cache-level and device-memory bytes.
 - **Bounded intervention:** share or tile reused values only when reuse is confirmed.
 - **Verification:** measure all relevant traffic and shared-memory pressure.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D04. Cache warmup bias
 - **Symptom:** a repeated launch fits in cache.
@@ -285,12 +267,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** compare cold and warm access protocols.
 - **Bounded intervention:** represent the intended production reuse explicitly.
 - **Verification:** report both distributions and hierarchy traffic.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D05. Write allocation overhead
 - **Symptom:** stored values induce more boundary traffic than payload.
@@ -298,12 +274,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** inspect read and write traffic independently.
 - **Bounded intervention:** adjust store strategy only if supported and safe.
 - **Verification:** confirm output visibility and actual traffic.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D06. Register spilling
 - **Symptom:** local memory traffic rises after fusion.
@@ -311,12 +281,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** compare compiler resource report and local-memory counters.
 - **Bounded intervention:** reduce live ranges or split the stage.
 - **Verification:** recheck correctness and end-to-end latency.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D07. Insufficient blocks
 - **Symptom:** small grids do not cover the device.
@@ -324,12 +288,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** compare grid size and active wave distribution.
 - **Bounded intervention:** batch independent inputs when semantics allow.
 - **Verification:** check latency and throughput at production batch sizes.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D08. Uneven tail blocks
 - **Symptom:** partial tiles do less useful work.
@@ -337,12 +295,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** inspect work distribution and edge fraction.
 - **Bounded intervention:** choose shape-aware tiling or a separate edge path.
 - **Verification:** test odd sizes and compare useful output.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D09. Long dependency chain
 - **Symptom:** few warps are eligible despite work in flight.
@@ -350,12 +302,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** inspect scheduler eligibility with instruction dependencies.
 - **Bounded intervention:** increase independent work without increasing spills excessively.
 - **Verification:** check generated instructions and execution time.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D10. Barrier imbalance
 - **Symptom:** some warps arrive early and wait.
@@ -363,12 +309,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** correlate barrier wait with producer completion.
 - **Bounded intervention:** balance work before the synchronization point.
 - **Verification:** run race checks and measure barrier stalls.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D11. Shared-memory bank conflicts
 - **Symptom:** shared accesses serialize within a warp.
@@ -376,12 +316,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** inspect shared access transactions against requested accesses.
 - **Bounded intervention:** change layout or padding with a proven index mapping.
 - **Verification:** test boundaries and shared transaction counts.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D12. Host launch overhead
 - **Symptom:** many short kernels dominate host-visible latency.
@@ -389,12 +323,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** inspect timeline and per-launch device durations.
 - **Bounded intervention:** batch or fuse only when outputs remain equivalent.
 - **Verification:** measure host-to-result latency without profiler overhead.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D13. Synchronization on host
 - **Symptom:** a host wait interrupts overlap.
@@ -402,12 +330,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** compare timeline with and without the specific wait.
 - **Bounded intervention:** defer only waits not required by data dependencies.
 - **Verification:** test cross-stream ordering and end-to-end results.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D14. Transfer bottleneck
 - **Symptom:** host-device copies dominate the request.
@@ -415,12 +337,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** measure transfer bytes and end-to-end critical path.
 - **Bounded intervention:** reduce copies or overlap independent stages.
 - **Verification:** validate buffer lifetime and latency distribution.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D15. Wrong precision roof
 - **Symptom:** single-precision work is compared with a tensor peak.
@@ -428,12 +344,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** inspect precision and executed instruction mix.
 - **Bounded intervention:** choose a roof matching executed operations.
 - **Verification:** recalculate intensity and report error tolerance.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D16. FMA miscount
 - **Symptom:** one instruction is counted as one operation.
@@ -441,12 +351,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** derive the count from the exact arithmetic convention.
 - **Bounded intervention:** use two operations per scalar fused multiply-add consistently.
 - **Verification:** reconcile static work and profiler convention.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D17. Mixed useful and executed FLOPs
 - **Symptom:** padding increases the reported operation rate.
@@ -454,12 +358,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** compare useful output per second and executed operations.
 - **Bounded intervention:** label both numerators separately.
 - **Verification:** measure latency and numerical agreement.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D18. Wrong bandwidth unit
 - **Symptom:** bytes are mixed with bits or binary units.
@@ -467,12 +365,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** write dimensional conversions explicitly.
 - **Bounded intervention:** normalize every quantity before plotting.
 - **Verification:** recompute with an independent unit check.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D19. Arithmetic overflow
 - **Symptom:** integer work-count multiplication wraps.
@@ -480,12 +372,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** calculate dimensions in a wide integer type.
 - **Bounded intervention:** use checked multiplication before conversion.
 - **Verification:** test dimensions near the representable boundary.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D20. Missing write bytes
 - **Symptom:** only input reads appear in the model.
@@ -493,12 +379,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** separate input, output and intermediate traffic.
 - **Bounded intervention:** include writes at the selected boundary.
 - **Verification:** compare totals with the profiler definition.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D21. Implicit workspace
 - **Symptom:** library kernels move an unmodeled workspace.
@@ -506,12 +386,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** trace all kernels and allocations in the measured range.
 - **Bounded intervention:** include workspace traffic and time in range accounting.
 - **Verification:** compare the complete call against the baseline.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D22. Cold-start compilation
 - **Symptom:** first invocation includes code generation.
@@ -519,12 +393,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** separate compilation, initialization and steady-state samples.
 - **Bounded intervention:** report cold and warmed paths separately.
 - **Verification:** repeat on a clean process and a warmed process.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D23. Clock variation
 - **Symptom:** effective compute and bandwidth change over time.
@@ -532,12 +400,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** record clocks, power and other GPU activity.
 - **Bounded intervention:** control or stratify environmental state.
 - **Verification:** compare distributions under representative conditions.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D24. Concurrent workloads
 - **Symptom:** another process consumes memory or compute resources.
@@ -545,12 +407,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** compare isolated and shared-device traces.
 - **Bounded intervention:** schedule or budget contention explicitly.
 - **Verification:** measure service latency with realistic concurrency.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D25. Profiler replay changes cache
 - **Symptom:** multiple passes observe a different cache state.
@@ -558,12 +414,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** compare replay settings with unprofiled behavior.
 - **Bounded intervention:** use a replay mode appropriate to the workload.
 - **Verification:** validate timing outside the profiler and compare metrics.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D26. Profiling short kernel
 - **Symptom:** instrumentation dominates the operation being studied.
@@ -571,12 +421,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** compare unprofiled batched timing with profile time.
 - **Bounded intervention:** collect a minimal relevant metric set.
 - **Verification:** repeat unprofiled timings and report dispersion.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D27. Tensor padding
 - **Symptom:** tile-aligned execution computes extra elements.
@@ -584,12 +428,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** compare useful dimensions with executed tile shape.
 - **Bounded intervention:** select a compatible tile or fallback path.
 - **Verification:** check odd shapes and useful throughput.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D28. Precision conversion
 - **Symptom:** format conversion consumes instructions or bandwidth.
@@ -597,12 +435,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** inspect conversion instruction mix and associated bytes.
 - **Bounded intervention:** retain a compatible representation across stages.
 - **Verification:** validate error budget and whole-pipeline timing.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D29. Sparse claim mismatch
 - **Symptom:** the count assumes hardware sparsity acceleration.
@@ -610,12 +442,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** inspect generated instruction family and actual format.
 - **Bounded intervention:** use the applicable dense roof when sparse support is absent.
 - **Verification:** check values, executed code and matched latency.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D30. Memory latency not bandwidth
 - **Symptom:** low bandwidth accompanies a long kernel.
@@ -623,12 +449,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** inspect eligible warps and outstanding requests.
 - **Bounded intervention:** increase independent requests or improve locality.
 - **Verification:** ensure speedup at the same output and workload.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D31. Instruction issue limit
 - **Symptom:** a pipeline is busy while arithmetic rate is low.
@@ -636,12 +456,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** inspect instruction mix and scheduler issue activity.
 - **Bounded intervention:** reduce unnecessary address or control instructions.
 - **Verification:** compare generated code and useful throughput.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D32. Branch divergence
 - **Symptom:** threads in a warp take different paths.
@@ -649,12 +463,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** compare branch distribution and memory activity.
 - **Bounded intervention:** reorganize data or work only if ordering permits.
 - **Verification:** test all branches and measure distribution-sensitive time.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D33. Atomic contention
 - **Symptom:** many threads update the same location.
@@ -662,12 +470,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** compare contended and distributed-key workloads.
 - **Bounded intervention:** aggregate locally before the global update.
 - **Verification:** validate ordering requirements and numerical tolerance.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D34. Reduction order
 - **Symptom:** parallel reassociation changes floating-point results.
@@ -675,12 +477,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** compare against a higher-precision reference by shape.
 - **Bounded intervention:** set an explicit tolerance or preserve required order.
 - **Verification:** test cancellation and extreme values.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D35. NaN propagation
 - **Symptom:** a fast path changes exceptional-value behavior.
@@ -688,12 +484,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** run explicit NaN infinity and signed-zero cases.
 - **Bounded intervention:** choose operations meeting the stated numerical contract.
 - **Verification:** compare bitwise or tolerance-based reference as required.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D36. Occupancy overfocus
 - **Symptom:** more active warps do not improve time.
@@ -701,12 +491,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** compare eligible issue and runtime before changing resources.
 - **Bounded intervention:** change occupancy only when latency hiding is limiting.
 - **Verification:** confirm no spills and compare performance distributions.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D37. Resource-limited tiling
 - **Symptom:** larger tiles reduce nominal bytes but lower residency.
@@ -714,12 +498,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** inspect registers shared memory and active blocks.
 - **Bounded intervention:** try a smaller tile while retaining enough reuse.
 - **Verification:** measure traffic and time across representative shapes.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D38. Misaligned access
 - **Symptom:** unaligned base pointers require extra transactions.
@@ -727,12 +505,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** compare aligned and intentionally shifted allocations.
 - **Bounded intervention:** align allocations or adapt the mapping safely.
 - **Verification:** test real offsets and memory bounds.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D39. Irregular gather
 - **Symptom:** useful bytes are much smaller than fetched sectors.
@@ -740,12 +512,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** compare sector requests and cache hit behavior.
 - **Bounded intervention:** reorder indices if application semantics allow.
 - **Verification:** include reorder cost and validate permutation inversion.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D40. Repeated output writes
 - **Symptom:** an intermediate is written and read between stages.
@@ -753,12 +519,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** compare device-memory and cache traffic for the full range.
 - **Bounded intervention:** fuse only if resource usage and semantics allow.
 - **Verification:** measure complete range and intermediate elimination.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D41. Pipeline imbalance
 - **Symptom:** a producer is slower than its consumer.
@@ -766,12 +526,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** inspect stage timing and buffer occupancy if available.
 - **Bounded intervention:** rebalance work or buffer depth under resource limits.
 - **Verification:** test ordering and end-to-end throughput.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D42. Wrong time window
 - **Symptom:** traffic comes from one launch but time from a range.
@@ -779,12 +533,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** align profiler launch identity and timed interval.
 - **Bounded intervention:** use a correctly synchronized same-scope timer.
 - **Verification:** cross-check range and per-kernel durations.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D43. Concurrent kernel timing
 - **Symptom:** isolated kernel time does not reproduce overlap.
@@ -792,12 +540,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** inspect the application timeline with concurrent kernels.
 - **Bounded intervention:** evaluate the full range rather than summing isolated times.
 - **Verification:** measure wall time under representative concurrency.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D44. Division by zero
 - **Symptom:** no bytes cross a chosen boundary.
@@ -805,12 +547,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** inspect counter validity and cache state.
 - **Bounded intervention:** report the undefined intensity instead of dividing.
 - **Verification:** recollect with a supported metric and known input.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D45. Sampling noise
 - **Symptom:** small observed differences vary between runs.
@@ -818,12 +554,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** compare repeated paired timings and distributions.
 - **Bounded intervention:** retain baseline until effect exceeds measurement noise.
 - **Verification:** repeat under controlled representative conditions.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D46. Shape distribution shift
 - **Symptom:** an optimization favors a rare large shape.
@@ -831,12 +561,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** weight measurements by current workload distribution.
 - **Bounded intervention:** dispatch by shape only if complexity is justified.
 - **Verification:** measure aggregate and tail latency under a holdout mix.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D47. Tightened error budget
 - **Symptom:** lower precision no longer meets downstream tolerance.
@@ -844,12 +568,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** compare against a high-precision reference on stress inputs.
 - **Bounded intervention:** restore precision or modify the accumulation strategy.
 - **Verification:** validate downstream metrics and edge cases.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D48. Wrong memory boundary
 - **Symptom:** L2 traffic is compared to device-memory bandwidth.
@@ -857,12 +575,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** inspect counter names and hierarchy definitions.
 - **Bounded intervention:** pair each byte counter with its own roof.
 - **Verification:** document the level and replot the workload.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D49. Racing shared memory
 - **Symptom:** a faster variant produces intermittent errors.
@@ -870,12 +582,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** use targeted race and initialization diagnostics.
 - **Bounded intervention:** add the synchronization required by the data dependency.
 - **Verification:** stress repeated varied schedules and compare outputs.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D50. Excessive recomputation
 - **Symptom:** reported intensity rises while latency worsens.
@@ -883,12 +589,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** compare useful FLOPs, executed instructions and time.
 - **Bounded intervention:** retain recomputation only if it saves a limiting transfer.
 - **Verification:** validate useful throughput and resource counters.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D51. Insufficient benchmark duration
 - **Symptom:** timer resolution obscures small kernel differences.
@@ -896,12 +596,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** time batches and divide by the exact number of launches.
 - **Bounded intervention:** amortize timing overhead without changing data reuse.
 - **Verification:** compare single-launch and batched conditions.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D52. Wrong bandwidth reference
 - **Symptom:** a read-only microbenchmark is used for mixed reads and writes.
@@ -909,12 +603,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** measure a reference with comparable direction and footprint.
 - **Bounded intervention:** label the reference empirical rather than an absolute law.
 - **Verification:** repeat for the real access mix and device configuration.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D53. Dynamic allocation in hot path
 - **Symptom:** allocation or initialization dominates a request.
@@ -922,12 +610,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** trace host and device activity around allocation.
 - **Bounded intervention:** reuse buffers if ownership and lifetime permit.
 - **Verification:** test concurrency and peak memory as well as time.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D54. Missing tail work
 - **Symptom:** a vectorized kernel skips final elements.
@@ -935,12 +617,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** test lengths around each vector and tile boundary.
 - **Bounded intervention:** add a bounds-safe tail path.
 - **Verification:** compare every output element for small adversarial lengths.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D55. Incorrect overlap assumption
 - **Symptom:** adding compute and transfer ceilings exaggerates lower bound.
@@ -948,12 +624,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** inspect the timeline and dependencies.
 - **Bounded intervention:** model maximum for overlap and sum only for proven serialization.
 - **Verification:** compare predictions with observed range duration.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D56. Compiler version change
 - **Symptom:** a rebuild changes register use or instructions.
@@ -961,12 +631,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** record binary hash compiler flags and generated code.
 - **Bounded intervention:** pin the toolchain during a controlled comparison.
 - **Verification:** rerun correctness and representative timings on both builds.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D57. Missing error check
 - **Symptom:** an asynchronous failure surfaces after the measured kernel.
@@ -974,12 +638,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** check launch status and synchronize at the diagnosis boundary.
 - **Bounded intervention:** propagate errors without changing production synchronization unnecessarily.
 - **Verification:** exercise an invalid-input path and the normal workload.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D58. Output not consumed
 - **Symptom:** a benchmark omits necessary downstream work.
@@ -987,12 +645,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** verify output use and the actual launched kernels.
 - **Bounded intervention:** benchmark the same observable output contract.
 - **Verification:** compare complete application results and end-to-end latency.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D59. Underestimated output size
 - **Symptom:** temporary outputs exceed the assumed traffic model.
@@ -1000,12 +652,6 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** derive sizes from actual shapes dtypes and layout.
 - **Bounded intervention:** include intermediate and metadata transfers where relevant.
 - **Verification:** compare byte estimates against boundary counters.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 ### D60. Incorrect comparison baseline
 - **Symptom:** variants use different shapes or numeric accuracy.
@@ -1013,14 +659,549 @@ Each scenario separates a competing explanation, a discriminating signal, a boun
 - **Discriminator:** hold input outputs warmup and scope constant.
 - **Bounded intervention:** choose a reference implementing identical semantics.
 - **Verification:** report any intentional difference and its effect.
-- **Scope:** compare the same shape, precision, boundary and output contract.
-- **Evidence:** HYPOTHETICAL; no production failure or optimization result is asserted.
-- **Guardrail:** revert if the correctness contract fails or representative latency worsens.
-- **Decision:** accept the hypothesis only if the predicted signal changes in the proposed experiment.
-- **Escalation:** if neither explanation fits, inspect the full range and revisit the measurement boundary.
-- **Record:** retain input, version, timing scope, counter definition and uncertainty with the result.
 
 **Takeaway:** Diagnose with a competing explanation and a falsifiable check before changing code.
+
+### 8.1 Numerical diagnosis laboratories
+
+All laboratories are constructed examples, not measurements or device specifications.
+For every bandwidth limit below, assume the indicated ceiling is valid for the access mix and interval.
+Rates use decimal units; a bound is not an expected runtime.
+The proposed counterfactuals are tests of hypotheses, not promises of improvement.
+
+#### L01. Vector addition and transaction waste
+- Contract: `c[i] = a[i] + b[i]` for N FP32 elements, with distinct arrays.
+- Useful arithmetic is N additions; useful payload is 8N input bytes and 4N output bytes.
+- Under one read per input and one write per output, intensity is N/(12N) = 1/12 FLOP/byte.
+- At an assumed 1.2 TB/s, the corresponding roof is 0.1 TFLOP/s.
+- For N = 1,000,000, compulsory payload is 12 MB and ideal transfer time is 10 microseconds.
+- A measured 18 MB at the same boundary implies 1/18 FLOP/byte, not 1/12.
+- If time is 20 microseconds, achieved traffic is 0.9 TB/s and useful rate is 0.05 TFLOP/s.
+- The extra 6 MB might reflect transactions, write handling, or other traffic in the range.
+- Compare aligned contiguous input against an offset view while holding N fixed.
+- Reject alignment as the sole cause if transaction bytes and latency do not respond.
+- Check aliasing and tail handling before treating either kernel as equivalent.
+
+#### L02. SAXPY and scalar reuse
+- Contract: `y[i] = a*x[i] + y[i]` with FP32 arrays and a scalar `a`.
+- Count an FMA as two FLOPs, including when the implementation uses separate multiply and add.
+- Ignoring the scalar's amortized load, payload is 4N for x, 4N for old y, and 4N for new y.
+- Intensity is 2/12 = 1/6 FLOP/byte under those payload assumptions.
+- At 1.2 TB/s, this gives a 0.2 TFLOP/s bandwidth ceiling.
+- One million elements require 12 MB and at least 10 microseconds at that ceiling.
+- If a scalar is redundantly fetched across the selected boundary, include those actual bytes.
+- The same input and output pointer is required for the in-place operation, but x/y aliasing needs a separate contract.
+- A low FLOP rate can be fully consistent with high bandwidth because useful arithmetic per byte is small.
+- Compare data sizes below and above cache capacity to distinguish cache residency from DRAM traffic.
+- Verify whether FMA contraction changes the permitted numerical result.
+
+#### L03. Dot product with partial reductions
+- Contract: sum N products of FP32 vectors and return one FP32 scalar.
+- Useful work is N multiplications and N-1 additions, or 2N-1 FLOPs.
+- Input payload is 8N bytes; a single scalar result adds four bytes.
+- Ignoring partial-reduction traffic, intensity approaches 0.25 FLOP/byte as N grows.
+- At N = 1024, work is 2047 FLOPs and payload is 8196 bytes.
+- The resulting intensity is approximately 0.2498 FLOP/byte.
+- At an assumed 1 TB/s, the transfer-only time lower bound is 8.196 nanoseconds.
+- This tiny lower bound does not account for launch latency or a dependency chain in the reduction.
+- A two-pass implementation writes and rereads partial sums; include both directions.
+- To distinguish launch overhead, vary N while keeping the implementation and timing scope fixed.
+- Check cancellation-heavy data because reassociation changes floating-point rounding.
+
+#### L04. Matrix-vector multiplication
+- Contract: dense FP32 matrix A of M rows and K columns times vector x.
+- Use 2MK FLOPs as the conventional FMA count and ignore final-add convention differences.
+- Under ideal reuse of x, payload is 4MK + 4K + 4M bytes for A, x and y.
+- At M = K = 1024, work is 2,097,152 FLOPs.
+- The ideal payload is 4,202,496 bytes and intensity is about 0.499 FLOP/byte.
+- At 2 TB/s, the bandwidth roof is about 0.998 TFLOP/s.
+- If x is reread from device memory for every row, add approximately 4MK rather than 4K bytes.
+- The resulting payload is 8,392,704 bytes and intensity is about 0.250 FLOP/byte.
+- A cache-level traffic counter can increase while device-memory traffic remains nearly unchanged.
+- Compare vector footprints that fit and do not fit in the relevant cache.
+- A packed matrix format may change both traffic and indexing cost, so compare whole-operation time.
+
+#### L05. Square matrix multiply, compulsory data
+- Contract: C = A*B for three distinct FP32 square matrices of order n; beta is zero.
+- Approximate useful work by 2n^3 FLOPs under the FMA convention.
+- If each input is read once and output is written once, payload is 12n^2 bytes.
+- The corresponding optimistic intensity is n/6 FLOP/byte.
+- At n = 1024, work is 2,147,483,648 FLOPs and payload is 12,582,912 bytes.
+- This gives about 170.67 FLOP/byte before any extra traffic.
+- At 2 TB/s and 60 TFLOP/s, the diagonal is 341.33 TFLOP/s and the compute roof is lower.
+- The assumed compulsory traffic is an idealization, not a guarantee of attainable reuse.
+- If beta is nonzero, reading old C adds 4n^2 bytes and changes the ideal intensity to n/8.
+- If tensor operations use lower-precision operands or padded tiles, adjust both byte and operation counts.
+- Verify numerical tolerance and the actual instruction family before selecting a compute ceiling.
+
+#### L06. Tile-level reuse in matrix multiply
+- Consider one output tile of 32 by 32 and one reduction slice of length 32.
+- It performs 2*32*32*32 = 65,536 conventional FLOPs.
+- A 32 by 32 FP32 A tile and a same-size B tile contain 8,192 bytes together.
+- With no output traffic in this slice accounting, intensity is 8 FLOP/byte.
+- The complete kernel must also account for output and any reread across reduction slices.
+- Reusing each input tile across multiple outputs is what raises intensity above scalar multiply-add.
+- Doubling the tile dimension can increase reuse but also increases shared-memory demand quadratically.
+- If two buffers hold both 32 by 32 input tiles, their FP32 footprint is 16,384 bytes.
+- Compare this footprint with the per-block shared-memory limit and occupancy allocation granularity.
+- If the same device-memory bytes remain after tiling, the original cache may already supply the reuse.
+- Test nonmultiples of tile sizes to expose edge predicates and extra executed work.
+
+#### L07. Seven-point stencil
+- Contract: one interior output is the weighted sum of its center and six neighbors.
+- Assume seven multiplications and six additions, giving 13 useful FLOPs per output.
+- With no inter-output reuse, seven FP32 reads plus one FP32 write require 32 bytes.
+- The no-reuse intensity is 13/32 = 0.40625 FLOP/byte.
+- Under ideal large-grid reuse with one input read and one output write per interior point, it approaches 13/8 = 1.625.
+- At 1.6 TB/s the corresponding diagonal roofs are 0.65 and 2.6 TFLOP/s.
+- These two cases are traffic scenarios, not guaranteed lower and upper timings for a real boundary policy.
+- Halo loads, boundary conditions, write policies and finite dimensions alter the actual count.
+- Compare L2 and DRAM traffic when tiling to see which hierarchy level gains reuse.
+- A shared-memory tile must load its halo and synchronize before consuming neighboring values.
+- Validate boundary cells separately from the interior because their mathematical contract can differ.
+
+#### L08. Sparse matrix-vector multiplication
+- Contract: CSR matrix with 1,000,000 nonzeros and 100,000 rows times an FP32 vector.
+- Use two conventional FLOPs per nonzero, for 2,000,000 useful FLOPs.
+- FP32 values and 32-bit column indices contribute 8,000,000 bytes.
+- The 100,001 32-bit row offsets contribute 400,004 bytes.
+- Writing 100,000 FP32 outputs adds 400,000 bytes.
+- If every referenced x value is loaded once per nonzero, x contributes another 4,000,000 bytes.
+- Total modeled payload is 12,800,004 bytes, giving about 0.15625 FLOP/byte.
+- At 1 TB/s, this payload gives a 12.8 microsecond transfer lower bound.
+- Repeated x indices may hit cache, while random accesses may fetch more than their four-byte payload.
+- Long rows can create load imbalance even when total bandwidth is low.
+- Compare row-length distribution, transaction amplification and cache hits before choosing a row mapping.
+
+#### L09. Histogram and atomic contention
+- Contract: map N input values to bins and increment one integer counter per value.
+- Floating-point work may be zero, so a FLOP roofline is not a useful primary representation.
+- Instead define useful work as N updates and report updates per second.
+- If each input is four bytes, input payload alone is 4N bytes.
+- Actual atomic read-modify-write traffic depends on cache, aggregation and hardware semantics.
+- For N = 1,000,000 and an input bandwidth limit of 1 TB/s, reading input takes at least 4 microseconds.
+- That lower bound says nothing about a single hot bin's serialization.
+- Hold N and the bin count fixed while comparing uniform and all-to-one key distributions.
+- A slowdown concentrated in the all-to-one case supports contention rather than input bandwidth alone.
+- Per-block aggregation trades extra local state and merging for fewer global atomic updates.
+- Check counter overflow and ensure the sum of bins equals the number of valid inputs.
+
+#### L10. Gather and sector utilization
+- Contract: 32 lanes each read one FP32 element from a source array.
+- The requested payload for one warp is 32*4 = 128 bytes.
+- Assume an illustrative transfer sector of 32 bytes at the selected boundary.
+- If all words occupy four distinct sectors, 128 bytes transfer and utilization is 100%.
+- If every lane requires a different sector, 1,024 bytes transfer and utilization is 12.5%.
+- These counts assume no overlap or hits from previous requests at that boundary.
+- The 8-fold transaction difference does not guarantee an 8-fold latency difference.
+- Sorting indices might improve locality but adds sorting cost and may alter output order.
+- Compare requested payload, sector count and downstream permutation cost for the complete operation.
+- Repeated addresses can be served differently from 32 distinct addresses and need their own case.
+- Confirm that reordering preserves duplicate-index and output-order semantics.
+
+#### L11. Shared-memory transpose
+- Contract: transpose a tile without changing its element values.
+- For a 32 by 32 FP32 tile, load and store payload together total 8,192 bytes.
+- A transpose has no inherent floating-point arithmetic, so count elements or bytes per second.
+- Assume 32 banks and one 32-bit word per bank mapping in the illustrative model.
+- A row-major shared array of width 32 maps a column's successive words to the same bank.
+- Padding the row stride to 33 maps successive column words to successive banks in this model.
+- The padded shared tile occupies 32*33*4 = 4,224 bytes instead of 4,096 bytes.
+- Hardware bank organization and instruction width must be checked for the actual target.
+- A conflict counter drop without a time drop can mean another stage is dominant.
+- Include synchronization between tile loads and transposed stores.
+- Test rectangular and partial tiles to detect out-of-bounds accesses and missing elements.
+
+#### L12. Reduction tree versus serial chain
+- Contract: sum 1,024 values, ignoring differences in floating-point association for the work count.
+- A serial chain performs 1,023 adds with a dependency depth of 1,023.
+- An ideal balanced tree performs the same 1,023 adds with depth 10.
+- The tree exposes parallel work but requires communication and synchronization between levels.
+- If an illustrative dependent-add latency is four cycles, the serial chain has a 4,092-cycle dependency bound.
+- The same simplistic latency model gives a 40-cycle arithmetic depth for the ideal tree.
+- Neither number includes instruction issue, communication, data movement or scheduling.
+- A block-wide reduction may require additional stages after individual warp reductions.
+- Compare eligible warps and dependency stalls, not occupancy alone.
+- Test exact integers and cancellation-prone floating values against the stated error tolerance.
+- Nondeterministic atomic reductions may additionally violate a reproducibility requirement.
+
+#### L13. Fusion and a cached intermediate
+- Contract: two elementwise stages produce and consume an N-element FP32 intermediate.
+- If the intermediate crosses DRAM in both directions, eliminating it saves 8N DRAM bytes.
+- At N = 10,000,000 this hypothetical saving is 80 MB.
+- At a valid 2 TB/s bandwidth limit, that byte difference represents 40 microseconds of ideal transfer time.
+- If the intermediate stays in cache, actual DRAM savings can be much smaller.
+- A fused version can increase register lifetime and introduce local-memory spill traffic.
+- Suppose fusion removes 80 MB but adds 20 MB of spills at the same boundary.
+- The net traffic reduction is then 60 MB, corresponding to 30 microseconds at 2 TB/s.
+- These are differences in bandwidth terms, not guaranteed differences in measured execution time.
+- Measure the full two-stage range and inspect both device-memory and cache-level traffic.
+- Validate any changed rounding caused by keeping intermediates in registers.
+
+#### L14. Recompute instead of load
+- Suppose one output requires either loading a four-byte value or recomputing it with eight extra FLOPs.
+- Let the original workload have 100 million useful FLOPs and transfer 100 million bytes.
+- Its useful intensity is 1 FLOP/byte and, at 1 TB/s, its bandwidth roof is 1 TFLOP/s.
+- For ten million eliminated loads, traffic falls by 40 million bytes under the assumed boundary behavior.
+- The new useful intensity is 100/60 = 1.667 useful FLOP/byte.
+- Executed arithmetic rises to 180 million FLOPs; executed intensity is 180/60 = 3 FLOP/byte.
+- At a compatible 2 TFLOP/s executed-compute ceiling, the added compute has a 90 microsecond bound.
+- The new transfer bound is 60 microseconds, while the original transfer bound was 100 microseconds.
+- The simplified lower bound therefore moves from 100 to 90 microseconds, not to 60.
+- If the eliminated load hit in cache, the assumed 40 MB DRAM saving is invalid.
+- Compare useful outputs per second and correctness, not executed FLOP/s alone.
+
+#### L15. Tensor padding overhead
+- Contract: an M by K times K by N product with dimensions M=N=K=100.
+- Suppose the chosen implementation executes dimensions padded independently to 128.
+- Useful conventional work is 2*100^3 = 2,000,000 FLOPs.
+- Executed tile work under this simplified padding model is 2*128^3 = 4,194,304 FLOPs.
+- Useful work is about 47.68% of executed work.
+- If execution takes 100 microseconds, executed throughput is about 41.94 GFLOP/s.
+- The same interval yields only 20 GFLOP/s of useful throughput.
+- A second algorithm with less padding can win despite a lower executed-operation rate.
+- Padding may also change traffic, masking, workspace size and epilogue cost.
+- Compare complete output-equivalent kernels for the actual shape distribution.
+- Check that padded values cannot contribute to valid outputs.
+
+#### L16. Mixed-precision input and accumulation
+- Contract: a dot product reads two FP16 vectors and accumulates in FP32.
+- Assuming no conversion traffic and one read of each element, input payload is 4N bytes.
+- Conventional useful work approaches 2N FLOPs, giving approximately 0.5 FLOP/byte.
+- The corresponding FP32-input calculation reads 8N bytes and approaches 0.25 FLOP/byte.
+- At 1 TB/s the respective bandwidth roofs are approximately 0.5 and 0.25 TFLOP/s.
+- These examples assume the same selected boundary and omit the final scalar write.
+- Conversion instructions and accumulation precision must match the chosen compute ceiling.
+- Lower input precision can change underflow, overflow and cancellation behavior.
+- If conversion is performed in a separate kernel, count its reads, writes and launch.
+- Measure numerical error on representative and adversarial input distributions.
+- A speedup that violates the error contract is not an acceptable optimization.
+
+#### L17. Cache-specific intensity
+- A workload performs 400 GFLOP while 100 GB crosses L2 and 20 GB crosses DRAM.
+- Its L2 intensity is 4 FLOP/byte, while its DRAM intensity is 20 FLOP/byte.
+- Assume L2 bandwidth 8 TB/s, DRAM bandwidth 2 TB/s and compatible compute 80 TFLOP/s.
+- The L2 diagonal is 32 TFLOP/s and the DRAM diagonal is 40 TFLOP/s.
+- The tightest of these assumed roofs is 32 TFLOP/s.
+- The corresponding lower time bounds are 12.5 ms for L2 and 10 ms for DRAM.
+- Compute contributes a 5 ms lower bound, so the combined maximum is 12.5 ms.
+- Multiplying DRAM intensity by L2 bandwidth would mix boundaries and incorrectly produce 160 TFLOP/s.
+- A working set may have a high DRAM intensity because cache reuse filters repeated accesses.
+- Inspect both counter definitions and ensure the traffic covers the same range as the FLOP count.
+- Neither diagonal proves that the actual workload is close to saturating its corresponding interface.
+
+#### L18. Latency and outstanding requests
+- Suppose a memory interface can sustain 1 TB/s and each request moves 32 bytes.
+- In an illustrative model, average request latency is 400 ns and the pipeline is otherwise unconstrained.
+- Little's law implies 1e12*400e-9 = 400,000 bytes must be in flight to sustain that rate.
+- At 32 bytes per request, this corresponds to 12,500 concurrent requests across the modeled interface.
+- If only 2,500 requests can be outstanding, the latency-limited rate is at most 200 GB/s in that model.
+- This is 20% of the assumed bandwidth ceiling despite the workload's low intensity.
+- Real requests may be merged, sized differently or served from different hierarchy levels.
+- More independent warps or independent loads per warp may increase concurrency.
+- Unrolling can also increase register use and reduce the number of resident warps.
+- Vary independent work while monitoring eligible warps and outstanding transactions.
+- A flat response suggests another limitation or an already-saturated concurrency resource.
+
+#### L19. Tile edge utilization
+- Suppose an output matrix is 100 by 100 and is covered with 32 by 32 output tiles.
+- Four tiles are needed in each dimension, giving 16 tiles and 16,384 tile positions.
+- Only 10,000 output positions are valid, so positional utilization is about 61.04%.
+- The remaining 6,384 positions must be masked or excluded from execution.
+- A 16 by 16 tile requires seven tiles per dimension, or 12,544 positions.
+- Its positional utilization is about 79.72%, but it may have less data reuse.
+- The fraction of valid positions is not automatically the fraction of useful instructions.
+- Some hardware instructions execute complete tiles even when stores are masked.
+- Smaller tiles can require more scheduling, more halo loads or more reduction slices.
+- Compare executed work, byte traffic, register use and latency across the same matrix shapes.
+- Test dimensions just below and above tile boundaries for indexing and performance cliffs.
+
+#### L20. Pipeline overlap and lower bounds
+- Suppose a range needs 4 ms of transfer and 6 ms of computation under their respective ceilings.
+- With ideal overlap, the lower bound is max(4, 6) = 6 ms.
+- With strictly sequential phases and the same phase durations, their sum is 10 ms.
+- Partial overlap can produce any duration between those two idealized cases, before other overhead.
+- A measured 8 ms is consistent with 2 ms of effective overlap in this simplified example.
+- But a timeline is needed to establish overlap rather than altered phase durations.
+- Chunking can introduce startup and drain bubbles even when steady-state stages overlap.
+- Double buffering consumes additional memory and needs correct producer-consumer synchronization.
+- Concurrent stages can contend for the same bandwidth, changing both durations.
+- Compare the whole range, not the isolated stage times alone.
+- Include data-dependency events and output visibility in the correctness contract.
+
+#### L21. Amdahl limit for kernel optimization
+- Suppose a request takes 10 ms, of which the target kernel accounts for 2 ms.
+- If that kernel is made twice as fast and the rest is unchanged, total time becomes 9 ms.
+- Overall speedup is 10/9, approximately 1.111, rather than 2.
+- Even eliminating the entire 2 ms kernel would leave 8 ms and cap speedup at 1.25.
+- If stages overlap, their isolated durations cannot be summed as independent request fractions.
+- Use critical-path timing to identify the fraction that actually contributes to end-to-end latency.
+- For a batch-throughput objective, queueing and pipeline utilization may change the relevant denominator.
+- A local roofline improvement can be real while the customer-visible result remains negligible.
+- Compare complete request latency under the same batching and concurrency.
+- Check whether optimization changes accuracy, allocation or preprocessing in other stages.
+- Report the timing distribution rather than extrapolating from a single fast sample.
+
+#### L22. Bandwidth comparison and uncertainty
+- Suppose an illustrative mixed-access reference transfers 120 GB in 0.06 s.
+- Its empirical bandwidth is 2 TB/s for that particular footprint and access mix.
+- A kernel transferring 60 GB in 0.04 s achieves 1.5 TB/s.
+- The ratio to the reference is 75%, not proof that the theoretical hardware maximum is 75% utilized.
+- If the 60 GB byte count has a 5% uncertainty, its implied bandwidth interval is 1.425 to 1.575 TB/s.
+- This interval holds time fixed and is not a statistical confidence interval.
+- A measured rate above the reference can be legitimate if the access mix differs.
+- Cache hits can also make source-level requested bytes exceed physical DRAM traffic.
+- Record read/write direction, working-set size, concurrency and clock state for the reference.
+- Repeat paired baseline and variant trials to reduce sensitivity to drift.
+- Do not mix profiler-replay duration with unprofiled application time.
+
+#### L23. Work inflation and useful throughput
+- Suppose two kernels compute the same 1 billion useful FLOPs.
+- Variant A executes 1 billion FLOPs in 2 ms, yielding 0.5 TFLOP/s useful and executed.
+- Variant B executes 2 billion FLOPs in 3 ms, yielding 0.667 TFLOP/s executed.
+- Variant B's useful rate is only 0.333 TFLOP/s and its latency is 50% higher.
+- Its larger executed rate therefore does not indicate a better implementation.
+- Redundant work can be introduced by padding, recomputation or alternative algorithms.
+- If extra arithmetic reduces traffic enough, it can still be worthwhile on a different workload.
+- Apply the compute ceiling to the operation convention used by that ceiling.
+- Apply the decision metric to output-equivalent work and its complete elapsed time.
+- For changed algorithms, confirm mathematical equivalence and error tolerance first.
+- Keep the same input distribution and result-consumption requirements for both variants.
+
+#### L24. Clock and precision sensitivity
+- Let a modeled kernel require 120 GFLOPs and 30 GB of traffic.
+- With C = 60 TFLOP/s and B = 2 TB/s, compute and memory bounds are 2 ms and 15 ms.
+- The maximum is 15 ms, so changing only C cannot lower this particular bound.
+- If traffic falls to 3 GB, the memory bound becomes 1.5 ms and compute becomes the tighter bound.
+- Halving C to 30 TFLOP/s then raises the compute bound to 4 ms.
+- These are sensitivity calculations, not claims about a named accelerator's clock behavior.
+- Different precision or instruction families require their own compatible compute ceilings.
+- A clock reduction can also change bandwidth, so holding B fixed is a modeling assumption.
+- Compare actual code generation and clock state before attributing a shift to arithmetic throughput.
+- On a short kernel, fixed launch overhead can dominate either lower bound.
+- Verify the precision change against range, rounding and exceptional-value requirements.
+
+#### L25. Persistent versus ordinary scheduling
+- Suppose 10,000 independent tasks each require 1,000 units of useful work.
+- Total useful work is 10 million units regardless of whether blocks persist.
+- Ordinary scheduling distributes tasks through multiple blocks; a persistent kernel loops over tasks.
+- Persistent blocks can reduce repeated setup but occupy resources for longer.
+- A global queue may introduce atomics, contention and unpredictable task ordering.
+- For task durations of 1 and 9 microseconds, equal task counts do not imply equal work.
+- Dynamic assignment can improve balance if queue overhead is smaller than the avoided idle time.
+- Compare per-block completion times and queue contention, not just the grid dimension.
+- Ensure enough persistent blocks exist to cover the device without blocking dependent work.
+- A cooperative synchronization scheme must respect its actual residency and launch requirements.
+- Check that all tasks execute exactly once and that any ordering constraints remain valid.
+
+#### L26. Circular-buffer pipeline depth
+- Suppose loading a tile takes 8 time units and consuming it takes 4 time units.
+- An ideal steady-state pipeline cannot finish tiles faster than one per 8 units.
+- If instead loading takes 4 and compute takes 8, the compute stage sets the same 8-unit interval.
+- More buffers cannot overcome the slower stage's sustained service time.
+- Additional buffering can hide latency when one buffer would otherwise leave a stage idle.
+- If one tile buffer costs 16 KiB, double buffering requires 32 KiB per block.
+- Triple buffering would require 48 KiB before other shared-memory allocations.
+- Larger per-block allocation can reduce active blocks and offset improved overlap.
+- Startup, drain and synchronization costs matter especially for few tiles.
+- Inspect producer and consumer waits and compare several depths for representative K sizes.
+- Verify that a buffer is not overwritten before all consumers finish reading it.
+
+#### L27. Warp specialization tradeoff
+- Divide a hypothetical block into producer and consumer warps with explicit tile handoff.
+- A producer-only warp does not directly contribute consumer arithmetic while it is producing data.
+- If a block has four warps and one is reserved for production, three remain for the consumer stage.
+- That 3/4 share is a scheduling description, not a throughput prediction.
+- Specialization can help when overlapping stages outweighs synchronization and reduced consumer capacity.
+- It can hurt when all warps would otherwise have sufficient independent memory and arithmetic work.
+- Compare stage-level issue activity and wait time for specialized and unspecialized implementations.
+- Changing the producer count also changes register and shared-memory pressure.
+- Correct handoff requires visibility and ordering supported by the actual synchronization primitive.
+- A producer that exits early can strand consumers at a barrier or leave a tile uninitialized.
+- Test short reductions and irregular final tiles as well as long steady-state runs.
+
+#### L28. Host-device transfer as an independent boundary
+- Suppose a request transfers 400 MB to a device over an assumed 25 GB/s link.
+- The ideal transfer bound is 0.4/25 = 0.016 s, or 16 ms.
+- A 2 ms device kernel cannot reduce the whole request below the link-bound term by optimizing compute alone.
+- Returning another 100 MB costs at least 4 ms if the same bandwidth applies and phases do not overlap.
+- With mandatory serial transfer directions, the two modeled transfer terms total 20 ms.
+- Concurrent bidirectional bandwidth can differ from the separate one-direction reference.
+- Pinned memory, staging, setup overhead and transfer granularity affect actual behavior.
+- Batching can amortize overhead but may increase latency and memory footprint.
+- Reusing device-resident inputs can eliminate transfers only when application semantics permit it.
+- Measure end-to-end synchronization, not just the asynchronous copy enqueue duration.
+- Check that the result is visible on the host before recording request completion.
+
+#### L29. Interpreting an apparent roof violation
+- Suppose work is 1 TFLOP and a range takes 10 ms, giving 100 TFLOP/s.
+- A proposed compute roof is 60 TFLOP/s, so the point appears above the roof.
+- If the 1 TFLOP count includes ten identical invocations while time covers one, scope is inconsistent.
+- If the count is useful work but the ceiling applies to a different precision, the comparison is also invalid.
+- If 60 TFLOP/s is merely a microbenchmark reference, a different instruction mix may exceed it.
+- A bit-per-second bandwidth figure mistaken for bytes per second introduces an eightfold unit error.
+- Asynchronous host timing can omit most of the device execution interval.
+- Check operation count, launch count, precision, interval, units and reference construction in that order.
+- Do not clamp the point to the roof; resolve the inconsistent assumption.
+- A strict compatible upper bound genuinely exceeded means at least one premise is false.
+- Preserve the raw counter and timing records for independent reconciliation.
+
+#### L30. Shape-weighted objective
+- Suppose 90% of requests use shape A and 10% use shape B, with baseline latencies 1 ms and 10 ms.
+- The arithmetic mean latency under this request mix is 0.9*1 + 0.1*10 = 1.9 ms.
+- A variant changes A to 0.8 ms but B to 15 ms.
+- Its mean becomes 0.9*0.8 + 0.1*15 = 2.22 ms, a regression in this objective.
+- A large improvement on frequent small shapes does not automatically offset a rare large regression.
+- The 90th, 95th or 99th percentile cannot be inferred from these means alone.
+- Batch composition, concurrency and queueing can change the actual latency distribution.
+- Use the observed workload mix rather than a convenient single matrix size.
+- Compare accuracy and output semantics for both shapes, including padding and tails.
+- Report per-shape timings alongside the aggregate so the tradeoff remains visible.
+- Reevaluate weights when the workload distribution changes.
+
+#### L31. Layer normalization with separate passes
+- Contract: normalize each row of 1,024 FP32 elements using its mean and population variance.
+- The mathematical mean is the sum divided by 1,024; variance is the mean squared deviation.
+- A naive three-pass implementation reads the row once for each statistic and once to normalize.
+- Ignoring parameter vectors and scalar statistics, those reads total 12,288 bytes per row.
+- Writing 1,024 FP32 normalized values adds 4,096 bytes, for 16,384 payload bytes.
+- An implementation that retains the row and writes once needs 8,192 payload bytes in the ideal case.
+- At an assumed 1 TB/s, the respective payload transfer terms are 16.384 ns and 8.192 ns per row.
+- Register spills or shared-memory staging can erode that theoretical traffic saving.
+- A cache may already service later reads, so a lower source-level load count need not halve DRAM traffic.
+- Compare DRAM bytes, cache-level bytes and spill instructions for the complete normalization.
+- Ensure epsilon placement, accumulation precision and variance definition match the reference.
+- Test constant rows, extreme magnitudes and N=1 rather than only random typical inputs.
+
+#### L32. Softmax and stable exponentials
+- Contract: for each row, compute exp(x_i - max(x)) divided by the sum of those exponentials.
+- The subtraction of the maximum prevents positive exponential overflow for finite row inputs.
+- A row of 2,048 FP32 values occupies 8,192 bytes; output occupies another 8,192 bytes.
+- Reading the row twice and writing the result gives 24,576 bytes of modeled payload.
+- Reading it once while retaining all necessary values would lower the ideal payload to 16,384 bytes.
+- At an assumed 2 TB/s, those payloads correspond to 12.288 ns and 8.192 ns respectively.
+- Exponential, division, reduction and synchronization costs can dominate those transfer terms.
+- FLOP conventions rarely price transcendental instructions consistently with a simple FMA ceiling.
+- Inspect the instruction mix and use an appropriate throughput reference for the exponential path.
+- Compare long and short rows to separate launch and reduction costs from steady-state traffic.
+- Define behavior explicitly for rows containing infinities, NaNs or only masked positions.
+- Verify both output tolerance and the intended normalization over unmasked elements.
+
+#### L33. Split-K matrix multiplication
+- Contract: partition the K dimension into four independent partial matrix products.
+- For M=N=1,024, each FP32 partial output contains 4,194,304 bytes.
+- Writing and rereading four partial matrices contributes 33,554,432 bytes before the final output write.
+- Writing the final 1,024 by 1,024 FP32 matrix adds 4,194,304 bytes.
+- The partial-output plus final-output payload is therefore 37,748,736 bytes.
+- At an assumed 2 TB/s, this payload alone implies at least 18.874368 microseconds of transfer time.
+- The unsplit ideal output write alone costs 4,194,304 bytes when beta is zero.
+- Split-K may expose more blocks when M and N are too small to occupy the device.
+- It also introduces a reduction, extra traffic and possibly an additional kernel launch.
+- Compare device occupancy and elapsed time at several K values with M and N fixed.
+- Include all partial-workspace traffic at the same boundary as the bandwidth reference.
+- Reassociation across split partitions can change results, requiring numerical validation.
+
+#### L34. Matrix multiplication epilogue
+- Contract: compute an FP32 matrix product followed by bias addition and an activation.
+- For a 1,024 by 1,024 output, one FP32 matrix occupies 4,194,304 bytes.
+- A separate activation that rereads and rewrites the output adds 8,388,608 payload bytes.
+- If the intermediate crosses DRAM in both directions, this is 8.388608 MB of additional DRAM traffic.
+- At an assumed 2 TB/s, the additional traffic term is 4.194304 microseconds.
+- A fused epilogue can avoid that intermediate transfer but may increase accumulator live ranges.
+- Bias traffic depends on layout, reuse, cache behavior and whether the bias is per row or column.
+- The activation's comparison, exponential or polynomial instructions require their own accounting.
+- An activation applied before the accumulator is rounded can produce a different numerical result.
+- Check register use and spill traffic before concluding that fusion reduced total movement.
+- Compare the entire product-plus-activation range rather than the GEMM kernel in isolation.
+- Test negative zero, infinities and NaNs if the activation contract specifies their behavior.
+
+#### L35. Batched small matrix products
+- Contract: multiply 1,000 independent pairs of 16 by 16 FP32 matrices with beta zero.
+- Each product has approximately 2*16^3 = 8,192 conventional useful FLOPs.
+- The batch therefore contains 8,192,000 useful FLOPs.
+- Reading both inputs and writing one output costs 3*16^2*4 = 3,072 bytes per product.
+- The batch payload is 3,072,000 bytes, and ideal intensity is 8/3 FLOP/byte.
+- At 1.5 TB/s, the bandwidth diagonal is 4 TFLOP/s under these assumptions.
+- The corresponding ideal payload transfer time is 2.048 microseconds for the full batch.
+- Launching 1,000 separate kernels instead of one batched operation can change the timing regime.
+- A batched library may use padding or workspace, so count its actual executed work and traffic.
+- Compare one batched launch with separate launches under the same output and synchronization contract.
+- Check strides and inter-matrix gaps; contiguous matrices are not guaranteed by the word batched.
+- Include irregular batch counts and nonstandard leading dimensions in correctness tests.
+
+#### L36. Vectorized memory operations and alignment
+- Consider 32 lanes each loading four consecutive FP32 values, for 512 requested bytes.
+- Assume the warp's requested region is contiguous and the modeled transfer unit is 32 bytes.
+- A 32-byte-aligned region occupies 16 sectors, or 512 transferred bytes.
+- Shifting that region by four bytes makes it span 17 sectors, or 544 transferred bytes.
+- The modeled transaction amplification is 544/512 = 1.0625, or 6.25%.
+- This sector calculation assumes no sector was already resident at the selected boundary.
+- Vectorized instructions can reduce instruction count without changing the physical payload.
+- A misaligned vector instruction may require a different implementation or violate its alignment contract.
+- Compare generated load instructions and sector counts for aligned and offset pointers.
+- Handle the remaining elements explicitly when N is not divisible by the vector width.
+- Verify that vector loads do not cross an allocation boundary, even when stores are masked.
+- Check aliasing assumptions before changing scalar code to a wider vectorized form.
+
+#### L37. Atomic aggregation by warp
+- Suppose a warp of 32 lanes increments counters for 32 keys.
+- If all lanes share one key, naive execution issues 32 logical increments to that key.
+- A correct warp aggregation can combine them into one atomic add of 32.
+- If all keys are distinct, aggregation cannot reduce the number of logical key updates.
+- For eight distinct keys each repeated four times, ideal grouping needs eight atomic adds.
+- The actual gain depends on grouping instructions, contention and hardware atomic behavior.
+- A count of issued atomic operations is not the same thing as DRAM transaction count.
+- Compare all-equal, eight-key and all-distinct input distributions with identical N.
+- If only the all-equal case improves, contention reduction is a plausible explanation.
+- Grouping must respect active-lane masks for partial warps and divergent control flow.
+- Integer addition can overflow; use the counter width and overflow semantics required by the contract.
+- For floating-point updates, reassociation can change the final value or reproducibility.
+
+#### L38. Convolution halo cost
+- Contract: compute a 16 by 16 output tile using a 3 by 3 stencil with stride one.
+- With no padding inside the input tile, the tile needs an 18 by 18 input region.
+- That region contains 324 input values for 256 output values.
+- FP32 input payload is 1,296 bytes and FP32 output payload is 1,024 bytes.
+- If each input tile value is loaded once, total payload is 2,320 bytes per tile.
+- Nine multiplications and eight additions per output give 4,352 useful FLOPs.
+- The ideal tile-local intensity is 4,352/2,320 ≈ 1.876 FLOP/byte.
+- Neighboring output tiles may reload overlapping halos, while caches may suppress DRAM reloads.
+- The count excludes filter coefficients; add them at the boundary where they actually cross.
+- A larger tile reduces halo fraction but consumes more shared memory and may lower residency.
+- Compare the 16 by 16 case with actual edge tiles and padding rules.
+- Validate boundary handling and coefficient layout against a direct reference implementation.
+
+#### L39. Hierarchy counter reconciliation
+- Suppose a range requests 8 GB of useful load payload at the instruction level.
+- The profiler reports 12 GB of L1-to-L2 request traffic and 4 GB of DRAM read traffic.
+- The 12/8 ratio is 1.5, but it is meaningful only if counter definitions cover the same loads.
+- The DRAM-to-L2 ratio is 4/12 = 1/3 under the simplified matching-scope assumption.
+- It is not automatically an L2 miss rate: sectors, writes, prefetches and aggregation can differ.
+- If the range also writes 2 GB to DRAM, total modeled DRAM traffic is 6 GB.
+- For 24 GFLOPs in 2 ms, achieved throughput is 12 TFLOP/s.
+- Its DRAM intensity is 24/6 = 4 FLOP/byte and achieved DRAM bandwidth is 3 TB/s.
+- Their product, 4 FLOP/byte times 3 TB/s, reproduces the 12 TFLOP/s throughput.
+- Compare read and write counters independently before interpreting an aggregate.
+- Check units, counter replay behavior and inclusion of other kernels in the range.
+- If the reported counters are sampled or estimated, retain their uncertainty with the result.
+
+#### L40. Interview: distinguishing two competing hypotheses
+- Question: a gather kernel reaches 15% of a matched DRAM reference; what should be changed first?
+- A correct answer does not infer saturation merely from a low arithmetic intensity.
+- Hypothesis one is insufficient memory-level parallelism due to dependent index loads.
+- Hypothesis two is excessive transferred sectors caused by scattered lane addresses.
+- For the first hypothesis, vary independent gathers per thread while tracking registers and eligible warps.
+- For the second, hold index values constant but reorder independent work to improve spatial locality.
+- If sector bytes fall and time falls while outstanding requests stay similar, locality gains support hypothesis two.
+- If eligible requests rise and time falls with similar bytes, greater concurrency supports hypothesis one.
+- Either experiment can change cache residency, so inspect both cache and DRAM boundary counters.
+- A third possibility is that the launch is too short for a meaningful steady-state comparison.
+- Reordering must preserve duplicate-index semantics and restore the requested output order.
+- Full credit explains what observation would falsify the proposed mechanism.
+
+**Primary source:** Williams, Waterman and Patterson, [Roofline: An Insightful Visual Performance Model for Multicore Architectures](https://doi.org/10.1145/1498765.1498785), *Communications of the ACM*, 2009.
+The original paper defines operational intensity using DRAM traffic after cache filtering; the hierarchy-specific variants here explicitly name other boundaries.
+The directory crosswalk also lists CUDA kernel-design topics on warp specialization, pipelining, circular buffering and persistent scheduling; filenames alone do not establish their unseen contents.
 
 ## 9. Complexity & Cost Analysis
 
@@ -1088,143 +1269,78 @@ All numerical inputs below are ILLUSTRATIVE; answers follow the assumptions and 
 - **Reasoning:** The boundary matters because cache traffic and device-memory traffic can differ.
 - **Follow-up:** What if the byte count is zero?
 - **Follow-up answer:** The quotient is undefined; report the boundary and diagnose counter validity.
-- **Evidence class:** DERIVED from the stated model; no benchmark is implied.
-- **Scoring:** full credit requires the answer and its boundary or justification.
-- **Partial credit:** a correct result without its key assumption.
-- **Red flag:** treating an illustrative ceiling as measured production performance.
-- **Support:** use the definitions, formulas and examples in Sections 3–5.
 
 ### Q02. What is the roofline bound?
 - **Answer:** The minimum of compatible compute throughput and bandwidth times intensity.
 - **Reasoning:** Each term is an independent bound on the same workload rate.
 - **Follow-up:** Does touching the bound guarantee correctness?
 - **Follow-up answer:** No; output correctness is independent of throughput.
-- **Evidence class:** DERIVED from the stated model; no benchmark is implied.
-- **Scoring:** full credit requires the answer and its boundary or justification.
-- **Partial credit:** a correct result without its key assumption.
-- **Red flag:** treating an illustrative ceiling as measured production performance.
-- **Support:** use the definitions, formulas and examples in Sections 3–5.
 
 ### Q03. Count one fused multiply-add.
 - **Answer:** Under the declared convention it is two floating-point operations.
 - **Reasoning:** One multiply and one add are counted although the operation is fused.
 - **Follow-up:** Does one instruction always equal two FLOP?
 - **Follow-up answer:** No; vector and matrix instructions cover multiple arithmetic operations.
-- **Evidence class:** DERIVED from the stated model; no benchmark is implied.
-- **Scoring:** full credit requires the answer and its boundary or justification.
-- **Partial credit:** a correct result without its key assumption.
-- **Red flag:** treating an illustrative ceiling as measured production performance.
-- **Support:** use the definitions, formulas and examples in Sections 3–5.
 
 ### Q04. For 2 TFLOP and 0.5 TB, find intensity.
 - **Answer:** 4 FLOP/byte.
 - **Reasoning:** Divide 2 by 0.5; the decimal tera factors cancel.
 - **Follow-up:** What if bytes fall to 0.4 TB?
 - **Follow-up answer:** Intensity becomes 5 FLOP/byte if work stays fixed.
-- **Evidence class:** DERIVED from the stated model; no benchmark is implied.
-- **Scoring:** full credit requires the answer and its boundary or justification.
-- **Partial credit:** a correct result without its key assumption.
-- **Red flag:** treating an illustrative ceiling as measured production performance.
-- **Support:** use the definitions, formulas and examples in Sections 3–5.
 
 ### Q05. With 60 TFLOP/s compute and 2 TB/s bandwidth, find the balance point.
 - **Answer:** 30 FLOP/byte.
 - **Reasoning:** Divide the compatible compute ceiling by bandwidth.
 - **Follow-up:** Is this a universal GPU threshold?
 - **Follow-up answer:** No; both ceilings vary with precision, boundary and operating conditions.
-- **Evidence class:** DERIVED from the stated model; no benchmark is implied.
-- **Scoring:** full credit requires the answer and its boundary or justification.
-- **Partial credit:** a correct result without its key assumption.
-- **Red flag:** treating an illustrative ceiling as measured production performance.
-- **Support:** use the definitions, formulas and examples in Sections 3–5.
 
 ### Q06. For intensity 4 and bandwidth 2 TB/s, what is the bandwidth roof?
 - **Answer:** 8 TFLOP/s.
 - **Reasoning:** Multiplying FLOP/byte by byte/s cancels bytes.
 - **Follow-up:** Is 8 TFLOP/s an observed result?
 - **Follow-up answer:** No; it is a conditional bound under illustrative assumptions.
-- **Evidence class:** DERIVED from the stated model; no benchmark is implied.
-- **Scoring:** full credit requires the answer and its boundary or justification.
-- **Partial credit:** a correct result without its key assumption.
-- **Red flag:** treating an illustrative ceiling as measured production performance.
-- **Support:** use the definitions, formulas and examples in Sections 3–5.
 
 ### Q07. A point is far under both roofs. Is it bandwidth-bound?
 - **Answer:** Not established.
 - **Reasoning:** Insufficient parallelism, dependencies, issue limits or launch overhead may dominate.
 - **Follow-up:** What is a useful next step?
 - **Follow-up answer:** Inspect scheduler eligibility, timeline and resource utilization before choosing a fix.
-- **Evidence class:** DERIVED from the stated model; no benchmark is implied.
-- **Scoring:** full credit requires the answer and its boundary or justification.
-- **Partial credit:** a correct result without its key assumption.
-- **Red flag:** treating an illustrative ceiling as measured production performance.
-- **Support:** use the definitions, formulas and examples in Sections 3–5.
 
 ### Q08. Why can fusion fail despite reducing an intermediate?
 - **Answer:** It may increase register pressure, spills or reduce occupancy.
 - **Reasoning:** The change can add traffic or reduce attainable issue rate.
 - **Follow-up:** How do you decide?
 - **Follow-up answer:** Measure full-range latency, boundary bytes, resources and correctness.
-- **Evidence class:** DERIVED from the stated model; no benchmark is implied.
-- **Scoring:** full credit requires the answer and its boundary or justification.
-- **Partial credit:** a correct result without its key assumption.
-- **Red flag:** treating an illustrative ceiling as measured production performance.
-- **Support:** use the definitions, formulas and examples in Sections 3–5.
 
 ### Q09. A roofline point is above its roof. What does that mean?
 - **Answer:** The comparison or assumed ceiling needs investigation.
 - **Reasoning:** Units, byte boundary, FLOP convention, timing scope or empirical ceiling may be mismatched.
 - **Follow-up:** Could a microbenchmark ceiling be exceeded legitimately?
 - **Follow-up answer:** Yes; a different access mix can exceed that empirical reference.
-- **Evidence class:** DERIVED from the stated model; no benchmark is implied.
-- **Scoring:** full credit requires the answer and its boundary or justification.
-- **Partial credit:** a correct result without its key assumption.
-- **Red flag:** treating an illustrative ceiling as measured production performance.
-- **Support:** use the definitions, formulas and examples in Sections 3–5.
 
 ### Q10. How do you compare useful and executed FLOPs?
 - **Answer:** Report both explicitly and use consistent throughput denominators.
 - **Reasoning:** Padding and recomputation can inflate executed FLOP/s without improving useful output.
 - **Follow-up:** What is the decision metric?
 - **Follow-up answer:** Output-equivalent latency or useful throughput under the workload objective.
-- **Evidence class:** DERIVED from the stated model; no benchmark is implied.
-- **Scoring:** full credit requires the answer and its boundary or justification.
-- **Partial credit:** a correct result without its key assumption.
-- **Red flag:** treating an illustrative ceiling as measured production performance.
-- **Support:** use the definitions, formulas and examples in Sections 3–5.
 
 ### Q11. What is the ideal time bound in the worked example?
 - **Answer:** 0.25 seconds.
 - **Reasoning:** The maximum of 2/60 seconds and 0.5/2 seconds is 0.25 seconds.
 - **Follow-up:** After 0.1 TB is eliminated under unchanged assumptions?
 - **Follow-up answer:** The bound becomes 0.2 seconds; this is not a measured result.
-- **Evidence class:** DERIVED from the stated model; no benchmark is implied.
-- **Scoring:** full credit requires the answer and its boundary or justification.
-- **Partial credit:** a correct result without its key assumption.
-- **Red flag:** treating an illustrative ceiling as measured production performance.
-- **Support:** use the definitions, formulas and examples in Sections 3–5.
 
 ### Q12. Does a larger tile always help?
 - **Answer:** No.
 - **Reasoning:** It can improve reuse while consuming more shared memory and registers.
 - **Follow-up:** What changed constraint could reverse the decision?
 - **Follow-up answer:** A smaller workload or tighter register budget can make reduced occupancy dominate.
-- **Evidence class:** DERIVED from the stated model; no benchmark is implied.
-- **Scoring:** full credit requires the answer and its boundary or justification.
-- **Partial credit:** a correct result without its key assumption.
-- **Red flag:** treating an illustrative ceiling as measured production performance.
-- **Support:** use the definitions, formulas and examples in Sections 3–5.
 
 ### Q13. How do you compare profiler and production timing?
 - **Answer:** Measure an unprofiled baseline with the same output and workload.
 - **Reasoning:** Profiler replay and instrumentation can alter overhead and cache conditions.
 - **Follow-up:** Which result is the production latency?
 - **Follow-up answer:** The representative unprofiled timing, subject to its sampling and environment limitations.
-- **Evidence class:** DERIVED from the stated model; no benchmark is implied.
-- **Scoring:** full credit requires the answer and its boundary or justification.
-- **Partial credit:** a correct result without its key assumption.
-- **Red flag:** treating an illustrative ceiling as measured production performance.
-- **Support:** use the definitions, formulas and examples in Sections 3–5.
 
 **Takeaway:** A strong answer explains the boundary, the calculation, and how the conclusion could fail.
 

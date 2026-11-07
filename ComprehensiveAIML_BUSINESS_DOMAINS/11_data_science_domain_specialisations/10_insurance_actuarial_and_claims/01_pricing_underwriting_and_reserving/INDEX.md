@@ -10,10 +10,10 @@
 |---:|---|---|
 | 1 | probability | planned |
 | 2 | life contingencies | planned |
-| 3 | ratemaking | planned |
+| 3 | ratemaking | partial: [non-life pricing sheet](Cheat_Sheets/03_NonLife_Pricing_Ratemaking.md), draft and unreviewed |
 | 4 | GLMs | planned |
 | 5 | underwriting | planned |
-| 6 | reserving | planned |
+| 6 | reserving | partial: [claims reserving methods](Cheat_Sheets/05_Claims_Reserving_Methods.md), draft and unreviewed; full reserving validation remains planned |
 | 7 | capital | planned |
 | 8 | reinsurance | planned |
 | 9 | Bayesian credibility | planned |
@@ -36,6 +36,6 @@ The [exact source crosswalk](../../../00_SOURCE_TOPIC_CROSSWALK.md) extends the 
 
 | Focused source brief | Required outputs / state |
 |---|---|
-| [Insurance actuarial probability, survival, pricing/GLM, reserving, reinsurance, EVT and Bayesian credibility](../../../00_SOURCE_COVERAGE_EDGE_INDUSTRY.md#insurance-actuarial) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |
+| [Insurance actuarial probability, survival, pricing/GLM, reserving, reinsurance, EVT and Bayesian credibility](../../../00_SOURCE_COVERAGE_EDGE_INDUSTRY.md#insurance-actuarial) | Non-life pricing and claims reserving sheets are unreviewed partial drafts; remaining focused work is planned |
 
 Source module numbers and course module numbers are different namespaces. Reuse matching existing lessons when authored, but do not drop distinct variants, cases, failure themes or source limitations.

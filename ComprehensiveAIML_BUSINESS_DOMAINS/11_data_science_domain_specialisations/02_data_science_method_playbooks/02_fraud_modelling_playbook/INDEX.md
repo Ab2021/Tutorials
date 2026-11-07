@@ -9,8 +9,8 @@
 | # | Topic | Status |
 |---:|---|---|
 | 1 | fraud fundamentals | planned |
-| 2 | class imbalance | planned |
-| 3 | cost-sensitive learning | planned |
+| 2 | class imbalance | [Imbalanced learning and thresholds](Cheat_Sheets/03_Imbalanced_Fraud_Learning_and_Thresholds.md) draft; broader scope planned |
+| 3 | cost-sensitive learning | [Imbalanced learning and thresholds](Cheat_Sheets/03_Imbalanced_Fraud_Learning_and_Thresholds.md) draft; broader scope planned |
 | 4 | feature engineering | planned |
 | 5 | ensembles | planned |
 | 6 | anomaly detection | planned |
@@ -40,6 +40,6 @@ The [exact source crosswalk](../../../00_SOURCE_TOPIC_CROSSWALK.md) extends the 
 
 | Focused source brief | Required outputs / state |
 |---|---|
-| [Fraud modeling](../../../00_SOURCE_COVERAGE_DATA_SCIENCE.md#ds-methods-02) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |
+| [Fraud modeling](../../../00_SOURCE_COVERAGE_DATA_SCIENCE.md#ds-methods-02) | Partial unreviewed drafts for imbalance, evaluation and calibration; remaining sheets and cases planned. |
 
 Source module numbers and course module numbers are different namespaces. Reuse matching existing lessons when authored, but do not drop distinct variants, cases, failure themes or source limitations.

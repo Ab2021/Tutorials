@@ -21,7 +21,7 @@
 | CASE-01-10-001 | [Retail CPG demand forecasting at scale](01_Retail_CPG_Demand_Forecasting_At_Scale.md) | Retail CPG | predictive-ml | Daily bounded store-SKU replenishment order | evaluation-mismatch | data-leakage; model-monitoring | not-measured | proposed | unreviewed | Illustrative arithmetic only; no backtest, pilot, or business outcome measured; editorial status draft. Source: `DS_Domain/Case_Studies_Production_ML_Systems/TimeSeries_Forecasting/01_Retail_CPG_Demand_Forecasting_At_Scale.md` (formerly PLAN-01-10-01). |
 | CASE-01-10-002 | [Ride-hailing demand forecasting for operational planning](02_Ride_Hailing_Demand_Forecasting.md) | Ride-hailing marketplace | predictive-ml | Next-hour zone request forecast for optional planning | evaluation-mismatch | data-leakage; model-monitoring | not-measured | proposed | unreviewed | Draft; historical Uber article plus illustrative design and arithmetic, no measured accuracy or causal impact. ETA remains planned. |
 | PLAN-01-10-03 | Financial volatility forecast | Time Series Forecasting | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
-| PLAN-01-10-04 | Energy load forecast | Time Series Forecasting | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
+| CASE-01-10-003 | [Energy load forecasting for day-ahead planning](03_Energy_Load_Forecasting.md) | Utility operations | predictive-ml | Day-ahead hourly net-load forecast for human planning | evaluation-mismatch | data-leakage; model-monitoring | not-measured | proposed | unreviewed | Draft; illustrative assumptions and arithmetic only, no measured outcomes; source title `DS_Domain/Case_Studies_Production_ML_Systems/TimeSeries_Forecasting/04_Energy_Load_Forecasting.md` (formerly PLAN-01-10-04). |
 | PLAN-01-10-05 | Server-metric anomaly detection | Time Series Forecasting | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
 
 ## 3. Canonical reusable patterns
@@ -43,7 +43,7 @@
 
 | Pattern | Cases | Theory/method links | Boundary to test |
 |---|---|---|---|
-| evaluation-mismatch | CASE-01-10-001; CASE-01-10-002; other cases planned | [Rolling-origin evaluation](https://otexts.com/fpp3/tscv.html) | Forecast error need not reflect inventory cost or marketplace policy outcomes |
+| evaluation-mismatch | CASE-01-10-001; CASE-01-10-002; CASE-01-10-003 | [Rolling-origin evaluation](https://otexts.com/fpp3/tscv.html) | Forecast error need not reflect inventory, marketplace, or utility planning consequences. |
 | distribution-shift | Market, season, policy, or user changes; planned cases | Forecasting and MLOps | Population and operational conditions |
 | human-in-the-loop | CASE-01-10-001; high-impact operational cases planned | Governance and operations workflows | Review capacity and override quality |
 
@@ -55,7 +55,8 @@
 - Establish whether ride-hailing request events, corrections, and zone maps can be reconstructed as of historical forecast origins.
 - Validate the request-count target and design a spillover-aware test of driver guidance before claiming policy impact.
 - Evaluate interval coverage and width by zone and time after mature labels become available.
-- Author ride-hailing ETA, financial volatility, energy load, and server-metric cases as separate planned decisions.
+- Author ride-hailing ETA, financial volatility, and server-metric cases as separate planned decisions.
+- Establish archived weather-vintage availability, load revisions, peak calibration, and an operationally credible comparison before evaluating the energy-load proposal.
 
 ## 6. Review and retirement log
 
@@ -64,6 +65,7 @@
 | 2026-11-06 | Collection | Planning catalog reviewed | Does not constitute review of later authored content. |
 | 2026-11-07 | CASE-01-10-001 | Draft added | Illustrative, proposed, unreviewed; review on changes to cutoff, inventory semantics, snapshots, or lead times. |
 | 2026-11-07 | CASE-01-10-002 | Draft added | Published historical context and illustrative proposed design; unreviewed and not measured. |
+| 2026-11-07 | CASE-01-10-003 | Draft added | Proposed and not measured; review if weather availability, target boundary, dispatch workflow or label revisions change. |
 
 ## 7. Pre-publish checks
 

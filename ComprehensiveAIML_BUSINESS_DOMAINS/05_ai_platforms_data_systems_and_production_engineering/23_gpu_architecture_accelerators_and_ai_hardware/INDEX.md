@@ -8,7 +8,7 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | GPU memory and parallelism | planned |
+| 1 | GPU memory and parallelism | partial: [H100 architecture and resource limits](Cheat_Sheets/01_H100_Architecture_and_Resource_Limits.md) and [roofline diagnosis](Cheat_Sheets/01_Roofline_Arithmetic_Intensity_and_Kernel_Diagnosis.md) are unreviewed drafts |
 | 2 | TPU/NPU/accelerator landscape | planned |
 | 3 | interconnects and clusters | planned |
 | 4 | precision and quantisation | planned |
@@ -49,7 +49,7 @@ The [exact source crosswalk](../../00_SOURCE_TOPIC_CROSSWALK.md) extends the ori
 |---|---|
 | [NVIDIA hardware, CUDA operations, nvidia-smi, MIG, container toolkit, Kubernetes, DCGM, DGX/Base Command and TensorRT](../../00_SOURCE_COVERAGE_AGENTS.md#agent-nca-infrastructure) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |
 | [CUDA source containers, indexes and collation utilities](../../00_SOURCE_COVERAGE_CUDA_TRAINING.md#cuda-source-artifacts) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |
-| [CUDA Module 01 / cheat sheet 01 — H100 architecture](../../00_SOURCE_COVERAGE_CUDA_TRAINING.md#cuda-h100) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |
+| [CUDA Module 01 / cheat sheet 01 — H100 architecture](../../00_SOURCE_COVERAGE_CUDA_TRAINING.md#cuda-h100) | H100 architecture sheet is an unreviewed partial draft; device validation and remaining focused work are planned |
 | [CUDA Module 02 / cheat sheet 02 — programming foundations](../../00_SOURCE_COVERAGE_CUDA_TRAINING.md#cuda-programming) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |
 | [CUDA Module 03 / cheat sheet 03 — asynchronicity and mbarrier](../../00_SOURCE_COVERAGE_CUDA_TRAINING.md#cuda-barriers) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |
 | [CUDA Module 04 / cheat sheet 04 — TMA and tensor maps](../../00_SOURCE_COVERAGE_CUDA_TRAINING.md#cuda-tma) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |

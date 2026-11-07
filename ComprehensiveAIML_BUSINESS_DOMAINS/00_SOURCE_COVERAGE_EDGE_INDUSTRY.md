@@ -406,7 +406,7 @@ Hidden folders and clipped filenames remain `unresolved-source`; visible prefixe
 
 ## Flink CEP/broadcast fraud, IoT session windows and financial reconciliation exactly-once
 
-**Teaching home:** [02_data_analytics_and_decision_science/09_data_streaming_event_systems_and_real_time_analytics/INDEX.md](02_data_analytics_and_decision_science/09_data_streaming_event_systems_and_real_time_analytics/INDEX.md). **Status:** mostly planned; an [event-time session-window sheet](02_data_analytics_and_decision_science/09_data_streaming_event_systems_and_real_time_analytics/Cheat_Sheets/03_Flink_Event_Time_Session_Windows_and_Stateful_Processing.md) is an unreviewed partial draft with a generic trace, not the unavailable source IoT case. Fraud CEP/broadcast and reconciliation cases remain planned.
+**Teaching home:** [streaming systems module](02_data_analytics_and_decision_science/09_data_streaming_event_systems_and_real_time_analytics/INDEX.md). **Status:** partial, unreviewed drafts include an [event-time session-window sheet](02_data_analytics_and_decision_science/09_data_streaming_event_systems_and_real_time_analytics/Cheat_Sheets/03_Flink_Event_Time_Session_Windows_and_Stateful_Processing.md) and a [hypothetical CEP/broadcast fraud case](02_data_analytics_and_decision_science/09_data_streaming_event_systems_and_real_time_analytics/Case_Studies/02_Flink_CEP_Streaming_Fraud_Detection.md). Neither reconstructs unavailable source content; the IoT and reconciliation cases remain planned.
 
 **Testable outcome.** Choose event-time, state and sink semantics independently for each source case.
 
@@ -427,7 +427,7 @@ Hidden folders and clipped filenames remain `unresolved-source`; visible prefixe
 | `Case_Studies_Streaming_Kafka_Flink_Redpanda/Flink_Stateful_Processing` | Source scope/container; not a completed lesson | `source-container` |
 | `Case_Studies_Streaming_Kafka_Flink_Redpanda/Flink_Stateful_Processing/00_FIXES_AND_TRADEOFFS.md` | FIXES AND TRADEOFFS | `planned-topic` |
 | `Case_Studies_Streaming_Kafka_Flink_Redpanda/Flink_Stateful_Processing/00_HLD_LLD_SYSTEM_DESIGN.md` | HLD LLD SYSTEM DESIGN | `planned-topic` |
-| `Case_Studies_Streaming_Kafka_Flink_Redpanda/Flink_Stateful_Processing/01_Real_Time_Fraud_Detection_CEP_Broadcast.md` | Real Time Fraud Detection CEP Broadcast | `planned-topic` |
+| `Case_Studies_Streaming_Kafka_Flink_Redpanda/Flink_Stateful_Processing/01_Real_Time_Fraud_Detection_CEP_Broadcast.md` | Real Time Fraud Detection CEP Broadcast | `partial-draft` |
 | `Case_Studies_Streaming_Kafka_Flink_Redpanda/Flink_Stateful_Processing/02_IoT_Telemetry_Analytics_Session_Windows.md` | IoT Telemetry Analytics Session Windows | `planned-topic` |
 | `Case_Studies_Streaming_Kafka_Flink_Redpanda/Flink_Stateful_Processing/03_Financial_Reconciliation_Exactly_Once.md` | Financial Reconciliation Exactly Once | `planned-topic` |
 
@@ -795,7 +795,7 @@ Hidden folders and clipped filenames remain `unresolved-source`; visible prefixe
 
 ## Insurance actuarial probability, survival, pricing/GLM, reserving, reinsurance, EVT and Bayesian credibility
 
-**Teaching home:** [11_data_science_domain_specialisations/10_insurance_actuarial_and_claims/01_pricing_underwriting_and_reserving/INDEX.md](11_data_science_domain_specialisations/10_insurance_actuarial_and_claims/01_pricing_underwriting_and_reserving/INDEX.md). **Status:** planned.
+**Teaching home:** [11_data_science_domain_specialisations/10_insurance_actuarial_and_claims/01_pricing_underwriting_and_reserving/INDEX.md](11_data_science_domain_specialisations/10_insurance_actuarial_and_claims/01_pricing_underwriting_and_reserving/INDEX.md). **Status:** mostly planned; [non-life pricing](11_data_science_domain_specialisations/10_insurance_actuarial_and_claims/01_pricing_underwriting_and_reserving/Cheat_Sheets/03_NonLife_Pricing_Ratemaking.md) and [claims reserving](11_data_science_domain_specialisations/10_insurance_actuarial_and_claims/01_pricing_underwriting_and_reserving/Cheat_Sheets/05_Claims_Reserving_Methods.md) are unreviewed partial drafts, not reproductions of the unavailable source lessons.
 
 **Testable outcome.** Compute a bounded actuarial estimate with exposure, censoring/development, model assumptions and uncertainty.
 

@@ -26,7 +26,7 @@ See the [original LoRA paper](https://arxiv.org/abs/2106.09685) for the techniqu
 **Version/review:** 1.0 / not reviewed.
 **Evidence:** DERIVED and ILLUSTRATIVE examples; no production results measured.
 **Retrieval cue:** Start at Section 4 for counts, Section 8 for diagnosis, and Section 11 for interview practice.
-**Source boundary:** The directory inventory identifies teaching topics, not accessible source lesson contents or benchmark evidence.
+**Source boundary:** [directory.txt Module_08_PEFT_Model_Merging](../../../../Templates/directory.txt) lists 8.2 LoRA and related PEFT topics; it is an inventory, not lesson text or benchmark evidence.
 **Teaching home:** [Module 21](../INDEX.md); [source plan, PEFT](../../../00_SOURCE_COVERAGE_CUDA_TRAINING.md#ft-peft).
 **Takeaway:** A small trainable adapter does not by itself guarantee a small training footprint or an acceptable model.
 ## 2. Concept Map / Mental Model
@@ -189,8 +189,6 @@ All cases below are HYPOTHETICAL diagnostic exercises; no incident is asserted.
 - Discriminating check: List trainable names and compare held-out loss.
 - Bounded action: Select intended modules and fix labels.
 - Verification: Verify gradients and paired task score.
-- Escalation: retain or restore the last accepted artifact if the signal persists.
-- Evidence boundary: this is a hypothetical mechanism, not a reported incident.
 ### Out of memory before backward
 - Symptom: Out of memory before backward.
 - Candidate cause: Base or temporary loading peak.
@@ -198,8 +196,6 @@ All cases below are HYPOTHETICAL diagnostic exercises; no incident is asserted.
 - Discriminating check: Measure device allocation by phase.
 - Bounded action: Use suitable base precision or placement.
 - Verification: Repeat representative load and training step.
-- Escalation: retain or restore the last accepted artifact if the signal persists.
-- Evidence boundary: this is a hypothetical mechanism, not a reported incident.
 ### Out of memory during backward
 - Symptom: Out of memory during backward.
 - Candidate cause: Long-sequence activations.
@@ -207,8 +203,6 @@ All cases below are HYPOTHETICAL diagnostic exercises; no incident is asserted.
 - Discriminating check: Profile peak by sequence length and allocation.
 - Bounded action: Reduce microbatch or checkpoint activations.
 - Verification: Measure full-step peak and throughput.
-- Escalation: retain or restore the last accepted artifact if the signal persists.
-- Evidence boundary: this is a hypothetical mechanism, not a reported incident.
 ### Training loss falls but evaluation fails
 - Symptom: Training loss falls but evaluation fails.
 - Candidate cause: Leakage or overfit.
@@ -216,8 +210,6 @@ All cases below are HYPOTHETICAL diagnostic exercises; no incident is asserted.
 - Discriminating check: Inspect group overlap and token templates.
 - Bounded action: Re-split groups and align formatting.
 - Verification: Rerun untouched holdout.
-- Escalation: retain or restore the last accepted artifact if the signal persists.
-- Evidence boundary: this is a hypothetical mechanism, not a reported incident.
 ### Adapter has no effect
 - Symptom: Adapter has no effect.
 - Candidate cause: Wrong base or adapter not loaded.
@@ -225,8 +217,6 @@ All cases below are HYPOTHETICAL diagnostic exercises; no incident is asserted.
 - Discriminating check: Log immutable base and adapter hashes.
 - Bounded action: Pin compatible artifact and invalidate cache.
 - Verification: Compare deterministic logits against base.
-- Escalation: retain or restore the last accepted artifact if the signal persists.
-- Evidence boundary: this is a hypothetical mechanism, not a reported incident.
 ### Initial model differs from base
 - Symptom: Initial model differs from base.
 - Candidate cause: Nonzero adapter initialization.
@@ -234,8 +224,6 @@ All cases below are HYPOTHETICAL diagnostic exercises; no incident is asserted.
 - Discriminating check: Disable dropout and inspect initial update norm.
 - Bounded action: Use documented initialization and matching inputs.
 - Verification: Compare initial logits within precision tolerance.
-- Escalation: retain or restore the last accepted artifact if the signal persists.
-- Evidence boundary: this is a hypothetical mechanism, not a reported incident.
 ### Quality falls after merge
 - Symptom: Quality falls after merge.
 - Candidate cause: Quantization and rounding.
@@ -243,8 +231,6 @@ All cases below are HYPOTHETICAL diagnostic exercises; no incident is asserted.
 - Discriminating check: Compare unmerged and merged logits before requantization.
 - Bounded action: Merge in suitable precision with correct metadata.
 - Verification: Evaluate merged artifact on held-out tasks.
-- Escalation: retain or restore the last accepted artifact if the signal persists.
-- Evidence boundary: this is a hypothetical mechanism, not a reported incident.
 ### Wrong tenant behavior
 - Symptom: Wrong tenant behavior.
 - Candidate cause: Adapter routing race.
@@ -252,8 +238,6 @@ All cases below are HYPOTHETICAL diagnostic exercises; no incident is asserted.
 - Discriminating check: Trace request-to-adapter immutable binding.
 - Bounded action: Pin authorized adapter for complete generation.
 - Verification: Run concurrent cross-tenant negative tests.
-- Escalation: retain or restore the last accepted artifact if the signal persists.
-- Evidence boundary: this is a hypothetical mechanism, not a reported incident.
 ### Checkpoint cannot resume
 - Symptom: Checkpoint cannot resume.
 - Candidate cause: Missing optimizer or scheduler state.
@@ -261,8 +245,6 @@ All cases below are HYPOTHETICAL diagnostic exercises; no incident is asserted.
 - Discriminating check: Inspect checkpoint manifest and state counters.
 - Bounded action: Restore complete compatible training state.
 - Verification: Compare next-step loss and parameters.
-- Escalation: retain or restore the last accepted artifact if the signal persists.
-- Evidence boundary: this is a hypothetical mechanism, not a reported incident.
 ### Toxicity regression
 - Symptom: Toxicity regression.
 - Candidate cause: Training distribution alters safety behavior.
@@ -270,8 +252,6 @@ All cases below are HYPOTHETICAL diagnostic exercises; no incident is asserted.
 - Discriminating check: Run fixed safety slices against both models.
 - Bounded action: Revise data or reject release.
 - Verification: Review blinded outputs and uncertainty.
-- Escalation: retain or restore the last accepted artifact if the signal persists.
-- Evidence boundary: this is a hypothetical mechanism, not a reported incident.
 ### Short examples improve but long ones fail
 - Symptom: Short examples improve but long ones fail.
 - Candidate cause: Sequence truncation.
@@ -279,8 +259,6 @@ All cases below are HYPOTHETICAL diagnostic exercises; no incident is asserted.
 - Discriminating check: Inspect token lengths and actual masks.
 - Bounded action: Correct truncation and evaluate long slices.
 - Verification: Check task metrics by length.
-- Escalation: retain or restore the last accepted artifact if the signal persists.
-- Evidence boundary: this is a hypothetical mechanism, not a reported incident.
 ### Instability at first updates
 - Symptom: Instability at first updates.
 - Candidate cause: Excessive learning rate or scale.
@@ -288,8 +266,6 @@ All cases below are HYPOTHETICAL diagnostic exercises; no incident is asserted.
 - Discriminating check: Inspect factor gradients and loss scaling.
 - Bounded action: Adjust configuration after isolating cause.
 - Verification: Run monitored training with finite checks.
-- Escalation: retain or restore the last accepted artifact if the signal persists.
-- Evidence boundary: this is a hypothetical mechanism, not a reported incident.
 **Takeaway:** Diagnose the competing causes with phase-specific evidence before changing rank or releasing a mitigation.
 ## 9. Complexity & Cost Analysis
 For one token, a dense base projection costs on the order of d_in*d_out multiply-adds.
@@ -325,52 +301,28 @@ The [support-domain adaptation case](../Case_Studies/01_support_domain_adaptatio
 ## 11. Interview / Exam Questions
 ### 1. What is frozen?
 **Answer:** The selected base weights remain fixed, while adapter factors are optimized. Other explicitly unfrozen parameters must be included in the trainable count.
-**Reasoning:** Apply the stated assumptions and check what is and is not controlled.
-**Boundary:** A numeric or operational claim outside those assumptions requires new evidence.
 ### 2. What is the shape of the update?
 **Answer:** For W of shape d_out by d_in, A is r by d_in and B is d_out by r. BA has the same shape as W.
-**Reasoning:** Apply the stated assumptions and check what is and is not controlled.
-**Boundary:** A numeric or operational claim outside those assumptions requires new evidence.
 ### 3. Count a rank-8 adapter on a 4096 square projection.
 **Answer:** 8*(4096+4096)=65,536 trainable scalar values, excluding bias and any extra trainable tensors.
-**Reasoning:** Apply the stated assumptions and check what is and is not controlled.
-**Boundary:** A numeric or operational claim outside those assumptions requires new evidence.
 ### 4. How many parameters for 32 blocks with query and value targeted?
 **Answer:** There are 64 independent projections; 64*65,536=4,194,304. Tying or unequal widths changes the answer.
-**Reasoning:** Apply the stated assumptions and check what is and is not controlled.
-**Boundary:** A numeric or operational claim outside those assumptions requires new evidence.
 ### 5. Why is rank eight not a guarantee of an eight-dimensional final model?
 **Answer:** Only the additive update has rank at most eight; adding it to an arbitrary full-rank base can yield a full-rank effective weight.
-**Reasoning:** Apply the stated assumptions and check what is and is not controlled.
-**Boundary:** A numeric or operational claim outside those assumptions requires new evidence.
 ### 6. Why can a small adapter still run out of memory?
 **Answer:** Frozen base weights, activations, temporary workspaces, allocator overhead and distributed buffers remain resident; long sequences may dominate peak.
-**Reasoning:** Apply the stated assumptions and check what is and is not controlled.
-**Boundary:** A numeric or operational claim outside those assumptions requires new evidence.
 ### 7. How do you distinguish training data leakage from a format bug?
 **Answer:** Inspect group overlap and compare actual tokenized prompts, targets and masks across splits. Correct each identified defect and re-evaluate on untouched groups.
-**Reasoning:** Apply the stated assumptions and check what is and is not controlled.
-**Boundary:** A numeric or operational claim outside those assumptions requires new evidence.
 ### 8. When should retrieval be preferred?
 **Answer:** For changing or attributable facts, test authorized retrieval because weights are not a freshness mechanism. Retrieval itself needs evidence, access control and evaluation.
-**Reasoning:** Apply the stated assumptions and check what is and is not controlled.
-**Boundary:** A numeric or operational claim outside those assumptions requires new evidence.
 ### 9. What changes when rank doubles?
 **Answer:** For fixed target shapes, factor count doubles. Under alpha/r scaling, holding alpha fixed halves the explicit scale; total memory and quality need not double.
-**Reasoning:** Apply the stated assumptions and check what is and is not controlled.
-**Boundary:** A numeric or operational claim outside those assumptions requires new evidence.
 ### 10. How do you validate merging?
 **Answer:** Pin base and adapter versions; compare merged and unmerged logits in suitable precision, then run the same held-out quality and safety suite on the deployed artifact.
-**Reasoning:** Apply the stated assumptions and check what is and is not controlled.
-**Boundary:** A numeric or operational claim outside those assumptions requires new evidence.
 ### 11. How would you test tenant isolation?
 **Answer:** Bind authorized adapter identity for the whole request, test concurrent cross-tenant requests and cache keys, and verify outputs and access logs; factors alone are not security boundaries.
-**Reasoning:** Apply the stated assumptions and check what is and is not controlled.
-**Boundary:** A numeric or operational claim outside those assumptions requires new evidence.
 ### 12. What does a paired evaluation require?
 **Answer:** Run base and adapted models on the same independent held-out groups with identical prompts and decoding, define metric denominators and uncertainty, and inspect safety and subgroup regressions.
-**Reasoning:** Apply the stated assumptions and check what is and is not controlled.
-**Boundary:** A numeric or operational claim outside those assumptions requires new evidence.
 **Takeaway:** Strong answers distinguish exact algebra, experiment design, and production evidence.
 ### Production decision drills
 Each drill is an ILLUSTRATIVE design exercise; proposed checks are not observed results.
@@ -379,511 +331,151 @@ Each drill is an ILLUSTRATIVE design exercise; proposed checks are not observed 
 - Failure under consideration: missing or duplicated module.
 - Evidence to collect: unique parameter identities.
 - First controlled action: enumerate shapes before attaching factors.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 #### Rank sweep
 - Decision input: rank and scaling.
 - Failure under consideration: confounded scale change.
 - Evidence to collect: fixed task set and training budget.
 - First controlled action: record both alpha and effective scale.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 #### Learning rate
 - Decision input: optimizer step size.
 - Failure under consideration: unstable or stalled convergence.
 - Evidence to collect: loss and gradient norms by step.
 - First controlled action: compare schedules under equal tokens.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 #### Token masking
 - Decision input: supervised target tokens.
 - Failure under consideration: learning from prompt or padding.
 - Evidence to collect: decoded examples and loss mask.
 - First controlled action: validate boundaries with hand-labeled samples.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 #### Data grouping
 - Decision input: customer and document identities.
 - Failure under consideration: correlated leakage across splits.
 - Evidence to collect: group intersection counts.
 - First controlled action: split before augmentation.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 #### Temporal evaluation
 - Decision input: event and cutoff timestamps.
 - Failure under consideration: future information in training.
 - Evidence to collect: latest training timestamp by group.
 - First controlled action: reserve a later test interval.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 #### Deduplication
 - Decision input: content hashes and near duplicates.
 - Failure under consideration: test contamination.
 - Evidence to collect: cross-split duplicate audit.
 - First controlled action: deduplicate with a documented policy.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 #### Rare slices
 - Decision input: slice membership.
 - Failure under consideration: aggregate hides regression.
 - Evidence to collect: per-slice numerator and denominator.
 - First controlled action: predefine minimum sample and escalation.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 #### Safety regression
 - Decision input: harm categories.
 - Failure under consideration: task optimization degrades refusal.
 - Evidence to collect: paired blinded review.
 - First controlled action: block release on material harm.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 #### Factuality
 - Decision input: source-supported claims.
 - Failure under consideration: confident unsupported answer.
 - Evidence to collect: claim-level evidence review.
 - First controlled action: retain retrieval and citations.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 #### Output schema
 - Decision input: valid structured responses.
 - Failure under consideration: syntactically valid but wrong values.
 - Evidence to collect: parse and semantic validation separately.
 - First controlled action: check downstream contract.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 #### Quantized base
 - Decision input: weight representation.
 - Failure under consideration: accuracy or kernel mismatch.
 - Evidence to collect: matched precision comparisons.
 - First controlled action: record quantization configuration.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 #### Merge precision
 - Decision input: merge dtype.
 - Failure under consideration: rounding makes merged model differ.
 - Evidence to collect: logit comparison before requantization.
 - First controlled action: test exact deployment artifact.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 #### Adapter cache
 - Decision input: base and adapter versions.
 - Failure under consideration: stale adapter reused.
 - Evidence to collect: request trace and cache identity.
 - First controlled action: key on immutable compatible versions.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 #### Tenant routing
 - Decision input: authorization identity.
 - Failure under consideration: wrong adapter applied.
 - Evidence to collect: concurrent negative tests.
 - First controlled action: bind identity to generation session.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 #### Rollback
 - Decision input: previous accepted artifact.
 - Failure under consideration: missing dependent base.
 - Evidence to collect: restore drill and manifest.
 - First controlled action: keep compatible base and tokenizer.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 #### Training resume
 - Decision input: optimizer and RNG state.
 - Failure under consideration: non-equivalent restart.
 - Evidence to collect: compare step counter and sample order.
 - First controlled action: save full training state.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 #### Context length
 - Decision input: tokenized sequence length.
 - Failure under consideration: truncation changes labels.
 - Evidence to collect: length histogram and actual masks.
 - First controlled action: evaluate representative long examples.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 #### Optimizer memory
 - Decision input: moments and master weights.
 - Failure under consideration: state exceeds assumptions.
 - Evidence to collect: dtype inventory at step.
 - First controlled action: sum allocated state per device.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 #### Activation memory
 - Decision input: microbatch and sequence lengths.
 - Failure under consideration: peak occurs in backward.
 - Evidence to collect: phase-level peak allocation.
 - First controlled action: measure after warmup.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 #### Evaluation uncertainty
 - Decision input: independent group count.
 - Failure under consideration: false confidence from correlated rows.
 - Evidence to collect: group bootstrap or appropriate intervals.
 - First controlled action: report interval and sample unit.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 #### Production monitoring
 - Decision input: quality proxy and latency.
 - Failure under consideration: proxy hides harmful failure.
 - Evidence to collect: audited outcome sample.
 - First controlled action: define ownership and alert response.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 #### Distribution shift
 - Decision input: input and task mix.
 - Failure under consideration: offline result does not transfer.
 - Evidence to collect: time and segment comparisons.
 - First controlled action: collect consented representative labels.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 #### Serving throughput
 - Decision input: batch mix and concurrency.
 - Failure under consideration: adapter path launch overhead.
 - Evidence to collect: end-to-end latency distribution.
 - First controlled action: benchmark real adapter mix.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 #### License and privacy
 - Decision input: training data permission.
 - Failure under consideration: unauthorized reuse.
 - Evidence to collect: dataset lineage and retention audit.
 - First controlled action: exclude unapproved records.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 #### Reproducibility
 - Decision input: base code and data revisions.
 - Failure under consideration: artifact cannot be reconstructed.
 - Evidence to collect: immutable manifest completeness.
 - First controlled action: record seeds and environment.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 #### Evaluation budget
 - Decision input: number of candidate adapters.
 - Failure under consideration: overfitting to validation.
 - Evidence to collect: predeclared final untouched test.
 - First controlled action: limit repeated test access.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 #### Preference leakage
 - Decision input: human reviewer identity.
 - Failure under consideration: correlated subjective judgments.
 - Evidence to collect: reviewer and group stratification.
 - First controlled action: use blinded adjudication.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 #### Cross-domain retention
 - Decision input: general capability slices.
 - Failure under consideration: specialization causes forgetting.
 - Evidence to collect: paired general-task comparison.
 - First controlled action: set regression guardrails.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 #### Failure fallback
 - Decision input: service health and model quality.
 - Failure under consideration: bad adapter stays active.
 - Evidence to collect: reversion trigger and exercise.
 - First controlled action: route to accepted baseline.
-- Establish an explicit owner before changing the candidate.
-- Record the exact base and adapter revision for the comparison.
-- Keep evaluation groups separate from the training inputs.
-- Preserve the same prompt and decoding settings for paired comparisons.
-- Record the denominator and missing cases for every reported rate.
-- Inspect whether one subgroup carries most of the observed change.
-- Do not interpret an absent measurement as a passing result.
-- If the check fails, retain the prior accepted configuration.
-- Re-run the targeted check after the bounded correction.
-- Re-run relevant safety and quality guardrails before rollout.
-- Record uncertainty and the conditions under which the conclusion transfers.
-- An example plan is not evidence that the check was executed.
 ### Additional worked decisions
 These examples are ILLUSTRATIVE and use the assumptions explicitly stated.
 #### Unequal projection shapes
@@ -1014,6 +606,540 @@ Ten customers may still be too few for a stable interval.
 Report the number of customers as well as the number of requests.
 Recruit more independent groups when the decision requires tighter uncertainty.
 **Takeaway:** The production decision depends on the actual estimand, artifact, and population, not a single aggregate count.
+### Derivation lab: gradients and initialization
+For a single vector, let y = Wx + sBAx, with s = alpha/r.
+Let g = dL/dy and z = Ax; all vectors are columns.
+The loss differential is dL = g^T dy.
+Holding x fixed, the B contribution is s g^T(dB)z.
+Thus dL/dB = s g z^T, an outer product of shape d_out by r.
+The A contribution is s g^T B(dA)x.
+Thus dL/dA = s B^T g x^T, of shape r by d_in.
+The input gradient is W^T g + s A^T B^T g.
+A frozen W has no weight update, but its transpose can still propagate gradients.
+If B starts at zero, dL/dA is zero on the first backward pass.
+If A and g are nonzero, dL/dB need not be zero at that same pass.
+After B changes, a subsequent backward pass can update A as well.
+If both factors start at zero, both factor gradients vanish under this loss path.
+Regularization or another loss path could alter that conclusion.
+Take x=(1,2), A=[1,0], B=(0,0)^T, g=(3,4), s=2.
+Here z=1, so dL/dB=(6,8)^T.
+The initial dL/dA is [0,0] because B is zero.
+With learning rate 0.1 and plain SGD, the new B is (-0.6,-0.8)^T.
+At the same x and g, B^T g=-5 and dL/dA=[-10,-20].
+This second gradient is conditional on holding g fixed, not a claim about a real network.
+Gradient accumulation sums or averages such contributions according to the implementation.
+A zero factor gradient on the first step is therefore not by itself a broken adapter.
+A persistently zero B gradient instead warrants checking inputs, masks and graph connectivity.
+A detached adapter path also blocks learning even if factors are marked trainable.
+Inspect gradients before the optimizer clears them.
+Weight decay may move parameters even when the data gradient is zero.
+The factor gradients are not the same as the gradient of an unconstrained dense update.
+The factorization couples their optimization and changes the accessible update trajectory.
+### Derivation lab: factor symmetries and rank
+For any invertible r by r matrix R, BA = (BR)(R^-1 A).
+Consequently individual factor magnitudes are not uniquely determined by the effective update.
+For a scalar c other than zero, (cB)(A/c)=BA.
+A large norm of B alone therefore does not prove a large functional change.
+For example B=(2,0)^T and A=[3,0] produce [[6,0],[0,0]].
+Replacing B by (20,0)^T and A by [0.3,0] produces the same matrix.
+Their separate squared norms differ, despite equal dense updates.
+Factor-wise weight decay can therefore distinguish equivalent factorizations.
+Rank is at most r, but linearly dependent columns can make it smaller.
+For B=[[1,1],[0,0]] and A=[[1,0],[0,1]], BA has rank one.
+The nominal rank is two although the realized update has only one nonzero singular value.
+A singular-value inspection of BA can diagnose unused capacity.
+For large matrices, use a small-factor method or an approximation rather than materializing BA unnecessarily.
+Do not infer a globally optimal rank from one checkpoint spectrum.
+A small singular value can still matter on an important input direction.
+The update response on an input x depends on Ax, not just on ||BA||.
+If x lies in the null space of A, the adapter contributes zero for that x.
+The null space can contain relevant examples even when training loss decreases.
+For A=[1,0], x=(0,1) is such an input.
+For x=(1,0), the same A passes a nonzero coordinate to B.
+Evaluation should therefore include examples spanning meaningful input conditions.
+A nonlinear stack of adapted layers is not equivalent to a single low-rank end-to-end map.
+Intervening attention and nonlinearities alter how layerwise changes compose.
+Even one full-rank W plus a rank-one update can have full rank.
+With W=I_2 and BA=diag(1,0), the effective matrix diag(2,1) has rank two.
+Conversely, a low-rank update can reduce the rank of W.
+With W=I_2 and BA=diag(-1,0), the effective matrix has rank one.
+Neither example predicts task quality; both only establish algebraic possibilities.
+### Derivation lab: target approximation
+Consider a desired dense update D=diag(6,3,1).
+Its singular values are 6, 3 and 1.
+For an unconstrained rank-k approximation in Frobenius norm, truncated SVD keeps the k largest singular values.
+At k=1, the optimal approximation is diag(6,0,0).
+The squared residual is 3^2+1^2=10.
+The residual Frobenius norm is sqrt(10), approximately 3.162.
+At k=2, the optimal approximation is diag(6,3,0).
+Its squared residual is 1 and its residual norm is 1.
+At k=3 the residual is zero.
+The squared norm of D is 36+9+1=46.
+Rank one captures 36/46, approximately 78.26%, of squared Frobenius energy.
+Rank two captures 45/46, approximately 97.83%.
+This approximation result assumes the target dense update is already known.
+It does not say the low-rank training objective will find the truncated SVD.
+Frobenius error also weights all matrix coordinates equally.
+A task distribution can concentrate on a discarded direction.
+For x=(0,0,1), the rank-two approximation outputs zero while D outputs (0,0,1).
+Thus high retained matrix energy can coexist with complete error on that input.
+A loss-weighted or data-weighted criterion may lead to different priorities.
+If two singular values tie at the cutoff, the best rank-k subspace need not be unique.
+This is an offline diagnostic, not a substitute for held-out behavioral evaluation.
+The full target update might itself be noisy or overfit.
+Comparing spectra requires compatible target shapes and consistent normalization.
+The memory required to compute an exact SVD can exceed that of the adapter.
+#### Allocation exercise: square attention
+Assume one independent 4096 by 4096 dense weight, with no trainable bias.
+The base matrix contains 16,777,216 scalar entries.
+With rank 8, A has 32768 entries and B has 32768 entries.
+The first adapter therefore contains 65,536 trainable entries.
+At rank 16, A and B together contain 131,072 entries.
+The rank increase adds 65,536 trainable entries per target.
+At two bytes per factor entry, the extra factor payload is 131,072 bytes.
+This payload excludes gradients, optimizer state, metadata and the frozen weight.
+At fixed alpha=16, alpha/r changes from 2.00 to 1.00.
+Keeping the original scale instead requires alpha=32 at rank 16.
+The factor count comparison does not establish a quality difference.
+If the target is shared across layers, count one factor pair per actual allocation.
+If every layer owns a separate pair, multiply these counts by the number of layers.
+Check that the stored weight orientation matches the runtime's linear convention.
+The example is derived arithmetic for an assumed shape, not a measured workload.
+#### Allocation exercise: grouped value
+Assume one independent 1024 by 4096 dense weight, with no trainable bias.
+The base matrix contains 4,194,304 scalar entries.
+With rank 8, A has 32768 entries and B has 8192 entries.
+The first adapter therefore contains 40,960 trainable entries.
+At rank 16, A and B together contain 81,920 entries.
+The rank increase adds 40,960 trainable entries per target.
+At two bytes per factor entry, the extra factor payload is 81,920 bytes.
+This payload excludes gradients, optimizer state, metadata and the frozen weight.
+At fixed alpha=16, alpha/r changes from 2.00 to 1.00.
+Keeping the original scale instead requires alpha=32 at rank 16.
+The factor count comparison does not establish a quality difference.
+If the target is shared across layers, count one factor pair per actual allocation.
+If every layer owns a separate pair, multiply these counts by the number of layers.
+Check that the stored weight orientation matches the runtime's linear convention.
+The example is derived arithmetic for an assumed shape, not a measured workload.
+#### Allocation exercise: expansion projection
+Assume one independent 11008 by 4096 dense weight, with no trainable bias.
+The base matrix contains 45,088,768 scalar entries.
+With rank 4, A has 16384 entries and B has 44032 entries.
+The first adapter therefore contains 60,416 trainable entries.
+At rank 8, A and B together contain 120,832 entries.
+The rank increase adds 60,416 trainable entries per target.
+At two bytes per factor entry, the extra factor payload is 120,832 bytes.
+This payload excludes gradients, optimizer state, metadata and the frozen weight.
+At fixed alpha=8, alpha/r changes from 2.00 to 1.00.
+Keeping the original scale instead requires alpha=16 at rank 8.
+The factor count comparison does not establish a quality difference.
+If the target is shared across layers, count one factor pair per actual allocation.
+If every layer owns a separate pair, multiply these counts by the number of layers.
+Check that the stored weight orientation matches the runtime's linear convention.
+The example is derived arithmetic for an assumed shape, not a measured workload.
+#### Allocation exercise: vocabulary-side head
+Assume one independent 32000 by 2048 dense weight, with no trainable bias.
+The base matrix contains 65,536,000 scalar entries.
+With rank 2, A has 4096 entries and B has 64000 entries.
+The first adapter therefore contains 68,096 trainable entries.
+At rank 4, A and B together contain 136,192 entries.
+The rank increase adds 68,096 trainable entries per target.
+At two bytes per factor entry, the extra factor payload is 136,192 bytes.
+This payload excludes gradients, optimizer state, metadata and the frozen weight.
+At fixed alpha=4, alpha/r changes from 2.00 to 1.00.
+Keeping the original scale instead requires alpha=8 at rank 4.
+The factor count comparison does not establish a quality difference.
+If the target is shared across layers, count one factor pair per actual allocation.
+If every layer owns a separate pair, multiply these counts by the number of layers.
+Check that the stored weight orientation matches the runtime's linear convention.
+The example is derived arithmetic for an assumed shape, not a measured workload.
+#### Allocation exercise: bottleneck projection
+Assume one independent 128 by 512 dense weight, with no trainable bias.
+The base matrix contains 65,536 scalar entries.
+With rank 8, A has 4096 entries and B has 1024 entries.
+The first adapter therefore contains 5,120 trainable entries.
+At rank 16, A and B together contain 10,240 entries.
+The rank increase adds 5,120 trainable entries per target.
+At two bytes per factor entry, the extra factor payload is 10,240 bytes.
+This payload excludes gradients, optimizer state, metadata and the frozen weight.
+At fixed alpha=16, alpha/r changes from 2.00 to 1.00.
+Keeping the original scale instead requires alpha=32 at rank 16.
+The factor count comparison does not establish a quality difference.
+If the target is shared across layers, count one factor pair per actual allocation.
+If every layer owns a separate pair, multiply these counts by the number of layers.
+Check that the stored weight orientation matches the runtime's linear convention.
+The example is derived arithmetic for an assumed shape, not a measured workload.
+#### Allocation exercise: audio cross-modal projection
+Assume one independent 3072 by 768 dense weight, with no trainable bias.
+The base matrix contains 2,359,296 scalar entries.
+With rank 8, A has 6144 entries and B has 24576 entries.
+The first adapter therefore contains 30,720 trainable entries.
+At rank 16, A and B together contain 61,440 entries.
+The rank increase adds 30,720 trainable entries per target.
+At two bytes per factor entry, the extra factor payload is 61,440 bytes.
+This payload excludes gradients, optimizer state, metadata and the frozen weight.
+At fixed alpha=16, alpha/r changes from 2.00 to 1.00.
+Keeping the original scale instead requires alpha=32 at rank 16.
+The factor count comparison does not establish a quality difference.
+If the target is shared across layers, count one factor pair per actual allocation.
+If every layer owns a separate pair, multiply these counts by the number of layers.
+Check that the stored weight orientation matches the runtime's linear convention.
+The example is derived arithmetic for an assumed shape, not a measured workload.
+#### Allocation exercise: expert expansion
+Assume one independent 14336 by 4096 dense weight, with no trainable bias.
+The base matrix contains 58,720,256 scalar entries.
+With rank 4, A has 16384 entries and B has 57344 entries.
+The first adapter therefore contains 73,728 trainable entries.
+At rank 8, A and B together contain 147,456 entries.
+The rank increase adds 73,728 trainable entries per target.
+At two bytes per factor entry, the extra factor payload is 147,456 bytes.
+This payload excludes gradients, optimizer state, metadata and the frozen weight.
+At fixed alpha=8, alpha/r changes from 2.00 to 1.00.
+Keeping the original scale instead requires alpha=16 at rank 8.
+The factor count comparison does not establish a quality difference.
+If the target is shared across layers, count one factor pair per actual allocation.
+If every layer owns a separate pair, multiply these counts by the number of layers.
+Check that the stored weight orientation matches the runtime's linear convention.
+The example is derived arithmetic for an assumed shape, not a measured workload.
+### Interview drill: optimizer and batching
+**Question:** Does freezing W make backpropagation through W unnecessary?
+**Answer:** No; earlier adapters require input gradients through later frozen operations.
+For y=Wx, the input gradient is W^T g even when dL/dW is not retained.
+A framework may avoid storing a weight gradient while still computing that input gradient.
+**Question:** Are eight microbatches equivalent to one batch eight times larger?
+**Answer:** Only under compatible loss normalization, optimizer timing and stochastic behavior.
+Accumulate gradients for eight microbatches, then perform one optimizer step for a comparable update.
+Eight optimizer steps instead change both moments and parameters eight times.
+If supervised-token counts vary, average by total supervised tokens for the token-level objective.
+Averaging eight microbatch means equally weights microbatches, not necessarily tokens.
+Dropout and random data order can prevent bitwise equivalence even with matching normalization.
+Activation memory is usually governed by microbatch shape, not merely effective batch size.
+**Question:** Is an adapter checkpoint sufficient for exact training resumption?
+**Answer:** Not necessarily; restore optimizer, scheduler, step, scaler and random states as applicable.
+Also restore data position, sample order and distributed configuration where relevant.
+An adapter-only export may be adequate for inference but omits training-state information.
+Even with state restored, nondeterministic kernels can prevent bitwise reproduction.
+Compare the next training step under a documented reproducibility tolerance.
+**Question:** Does the alpha/r ratio alone determine the update size?
+**Answer:** No; factor values and input direction also matter.
+The same explicit scale applied to different BA matrices gives different residuals.
+The same BA can produce different outputs for different x.
+Record the scale convention, initialization and optimizer with every rank comparison.
+### Interview drill: deployment and safety
+**Question:** Why might merged and unmerged inference differ numerically?
+**Answer:** Arithmetic ordering and precision change rounding, especially after requantization.
+In exact arithmetic, (W+sBA)x = Wx+sB(Ax).
+Floating-point matrix multiplication is not generally associative.
+A quantized base may need dequantization before adding the update.
+Requantizing the resulting dense weight introduces an additional approximation.
+Compare logits first at matched inputs and precision, then test behavior on held-out cases.
+**Question:** Can one adapter be safely loaded onto any checkpoint of the same architecture?
+**Answer:** No; shape compatibility is necessary but not sufficient.
+The learned update depends on the particular frozen base and target naming convention.
+Tokenizer and prompt-template changes can also alter behavior without changing tensor shapes.
+Pin the base revision, adapter configuration and tokenizer as an artifact set.
+**Question:** Does an adapter isolate confidential tenant training examples?
+**Answer:** No; it can encode or reveal information learned during training.
+Access control, data minimization and leakage testing remain necessary.
+Binding an adapter to the wrong request is a routing failure, not a rank failure.
+Do not switch an adapter mid-generation without an explicitly supported cache policy.
+Key-value caches may contain activations produced by the prior model configuration.
+A cache must be scoped to compatible model, adapter, prompt and request identity.
+**Question:** What if aggregate task quality rises while a critical subgroup regresses?
+**Answer:** Apply the prespecified subgroup and safety decision rules rather than averaging the regression away.
+Inspect sample size and uncertainty before interpreting the magnitude.
+A failed guardrail requires investigation or a fallback, not an automatic release.
+All these cases are hypothetical; no production behavior is asserted.
+### Worked lab: shared and fused targets
+Suppose a block computes query, key and value using one fused weight.
+Its input width is 8 and the concatenated output width is 24.
+A single rank-2 fused adapter has 2*(8+24)=64 entries.
+Partition its B matrix vertically into query, key and value row groups.
+All three groups multiply the same A and therefore share an input-side subspace.
+Alternatively attach three independent rank-2 adapters to three separate 8 by 8 weights.
+Each pair has 2*(8+8)=32 entries.
+All three independent pairs contain 96 entries.
+Their three A matrices can learn different input-side subspaces.
+The fused and independent choices therefore differ in both capacity and count.
+A fused rank-2 update has rank at most two across the concatenated output.
+Three independent rank-2 updates can have concatenated rank as high as six, subject to input width.
+A library that adapts only query and value slices may implement a different masking scheme.
+Inspect the actual wrapper and allocated factor shapes rather than guessing from the module name.
+Now suppose an embedding and output projection share one parameter object.
+Two names do not imply two independent base storages.
+If separate adapters are attached at the two uses, however, their factors are distinct.
+If the same factor pair is reused at both uses, count that pair once.
+Reusing one factor pair also couples its gradients from the two paths.
+Shared storage and shared adapter factors are separate design decisions.
+A transpose at the output use can make the factor orientation nontrivial.
+Check both forward paths against a small explicit matrix example.
+Merging into a tied base can unexpectedly change every consumer of that storage.
+A reversible unmerged comparison can expose this coupling before artifact creation.
+Never assume that a fused QKV name guarantees three identical output widths.
+Grouped-query attention commonly has smaller key/value widths than query width.
+For input width 8, query output 8 and key/value outputs 2 each, the fused output is 12.
+A rank-2 fused pair has 2*(8+12)=40 entries.
+Separate rank-2 query and value pairs have 2*(8+8)+2*(8+2)=52 entries.
+The second configuration does not modify key, while the first can modify all fused output rows.
+Counts alone cannot establish that the two target sets are functionally equivalent.
+### Worked lab: finite precision and merging
+Let W=[[1,0],[0,1]], A=[1,2], B=[3,4]^T and s=0.5.
+The outer product BA is [[3,6],[4,8]].
+The scaled update is [[1.5,3],[2,4]].
+The exact merged matrix is [[2.5,3],[2,5]].
+For x=[2,1]^T, the base output is [2,1]^T.
+The adapter coordinate Ax equals 4.
+The scaled adapter output is [6,8]^T.
+Their sum is [8,9]^T.
+The merged matrix applied to x also gives [8,9]^T in exact arithmetic.
+This check covers both factor orientation and scale for this tiny case.
+If scale is incorrectly applied twice, the adapter output becomes [3,4]^T instead.
+If scale is omitted, the adapter output becomes [12,16]^T instead.
+Such errors can be obscured by comparing only generated text.
+Use deterministic tensor-level inputs and compare intermediate values when diagnosing a merge.
+A floating-point tolerance must reflect the chosen dtype and operation ordering.
+Absolute tolerance matters near zero, while relative tolerance matters at larger magnitudes.
+Large logits can yield small probability differences, or small margins can flip an argmax.
+Thus passing a numerical tolerance alone does not replace downstream evaluation.
+Consider a toy quantizer that rounds every value to the nearest integer.
+Rounding the merged matrix above gives [[2,3],[2,5]] under ties-to-even.
+Its output on x is [7,9]^T rather than [8,9]^T.
+This deliberately simple example illustrates quantization error, not a production format.
+Actual quantizers can use block scales, zero points and other rounding rules.
+Merging may require a higher-precision temporary dense matrix.
+That temporary allocation can be much larger than the adapter factors.
+Measure peak memory during merge separately from inference memory.
+Keep an immutable unmerged base and adapter if reversible rollback is required.
+Repeated merging into the same weight can accidentally apply the update twice.
+A merge operation should check whether its input artifact is already merged.
+### Worked lab: loss masks and objective reductions
+Suppose two sequences have supervised target counts 2 and 6.
+Their individual supervised-token losses sum to 4 and 9 respectively.
+Their per-example means are 2 and 1.5.
+The example-weighted mean is (2+1.5)/2=1.75.
+The token-weighted mean is (4+9)/(2+6)=1.625.
+Both are valid objectives, but they weight examples differently.
+For the token-weighted objective, a long response contributes more tokens to the numerator.
+Masking an instruction token removes it from both numerator and denominator.
+Masking a padding token should not change the loss if it was already excluded correctly.
+A shifted causal target must align each logit with the following token label.
+An off-by-one shift can train the wrong prediction even when tensor shapes match.
+Inspect decoded tokens alongside label IDs and the mask at boundary positions.
+For multi-turn dialogue, specify whether prior assistant turns contribute to the loss.
+Separators and end-of-sequence tokens need an explicit supervision policy.
+If truncation removes the entire answer, the sample has zero supervised tokens.
+Exclude or handle zero-token examples explicitly to avoid division by zero.
+For a packed batch, prevent unintended cross-document attention if isolation is required.
+Concatenation alone does not automatically enforce document boundaries.
+The training loss can fall while formatting differs from the serving prompt.
+Run the same tokenizer and chat-template revision in both paths where intended.
+A tokenizer change can invalidate saved token IDs even when text remains the same.
+A fixed random split can still leak if near-duplicate documents cross it.
+Split by the intended generalization unit before deriving packed training samples.
+Audit overlap at document, customer or conversation level as appropriate.
+The evaluation loss denominator must be stated before comparing runs.
+A token-weighted objective need not align with request-level success.
+Include task-specific success criteria and failure analysis in the held-out evaluation.
+### Worked lab: memory by training phase
+Suppose frozen base payload is 12 GiB and adapter payload is 32 MiB.
+Assume adapter gradients consume another 32 MiB.
+Assume Adam's two moments together consume 128 MiB.
+Assume no master copy and no sharding in this deliberately simplified accounting.
+Before activations and workspace, these tensors total 12 GiB plus 192 MiB.
+Since 192 MiB is 0.1875 GiB, the subtotal is 12.1875 GiB.
+Add a hypothetical 2 GiB of live activations at backward peak.
+Add a hypothetical 1 GiB of concurrent temporary workspace.
+The resulting tensor subtotal is 15.1875 GiB.
+This excludes runtime allocations, fragmentation and any other simultaneous buffers.
+A nominal 16 GiB device therefore has only 0.8125 GiB before those exclusions.
+These numbers are a constructed budget, not a model-fit guarantee.
+If activation checkpointing cuts the assumed live activations to 1 GiB, subtotal becomes 14.1875 GiB.
+That calculation does not predict the extra recomputation time.
+If an FP32 master copy of the 32 MiB two-byte factors is used, it adds 64 MiB.
+Optimizer implementations can allocate their state lazily at the first step.
+A run may consequently fit forward and backward but fail on the first optimizer step.
+Measure loading, forward, backward, optimizer step and checkpoint saving separately.
+A peak that combines maxima from different times is a conservative sum, not necessarily an observed peak.
+Conversely, leaving out concurrent temporaries understates the actual peak.
+For sharded training, distinguish persistent shards from transient all-gathered tensors.
+CPU offload moves some storage and traffic to the host rather than eliminating it.
+Long sequences affect activation memory and possibly attention workspace.
+A rank reduction can save adapter state without resolving a dominant activation peak.
+Record allocated and reserved memory separately when the allocator exposes both.
+Checkpoint serialization can create host-side or device-side copies depending on the implementation.
+### Worked lab: paired decisions and uncertainty
+Suppose 40 independent evaluation groups each receive both configurations.
+Both are correct on 24 groups and both are wrong on 6 groups.
+The adapter alone is correct on 7 groups; the base alone is correct on 3.
+The four paired cells sum to 40.
+Baseline accuracy is (24+3)/40=67.5%.
+Adapter accuracy is (24+7)/40=77.5%.
+The paired point difference is (7-3)/40=10 percentage points.
+Discordant pairs determine the observed net change in this binary example.
+Aggregate accuracies alone do not reveal how many examples changed direction.
+The discordant count is 10, which is limited evidence for a precise improvement estimate.
+An exact paired test can use the discordant counts under its stated null assumptions.
+A confidence interval for the difference is more useful than a binary significance label alone.
+If multiple requests share a customer, the customer may be the appropriate resampling unit.
+If groups were sampled nonrandomly, uncertainty from that sampling design must be acknowledged.
+Choose a minimum meaningful improvement before viewing the results.
+Also define unacceptable subgroup or safety regressions before comparing candidates.
+Missing outputs should be counted or separately reported under a prespecified policy.
+Changing a policy after inspecting failures can bias the comparison.
+Use a development set for selecting rank and an untouched holdout for the final decision.
+Repeatedly choosing candidates on the same holdout turns it into a development set.
+A new holdout or appropriate nested evaluation can reduce this selection effect.
+A small aggregate gain may not justify additional operational complexity.
+A quality gain does not establish improved latency or reduced memory.
+Those claims require representative measurements of the deployed configuration.
+### Worked lab: exact rank-one optimization step
+Use a two-dimensional input, a two-dimensional output, rank one and scale s=1.
+Set x=(1,2)^T, target t=(0,1)^T and frozen W=I_2.
+Initialize A=[1,0] and B=(0,0)^T so the adapter initially contributes zero.
+The initial output is y=(1,2)^T and the residual y-t is (1,1)^T.
+For L=0.5*||y-t||^2, the initial loss is 1.
+The output gradient g=y-t equals (1,1)^T.
+The bottleneck activation Ax equals 1.
+Therefore dL/dB=g(Ax)^T=(1,1)^T.
+Because B is zero, dL/dA=(0,0) on this first step.
+With plain SGD at learning rate 0.1, B becomes (-0.1,-0.1)^T.
+The same step leaves A=[1,0] unchanged.
+On the same input after the step, the adapter output is (-0.1,-0.1)^T.
+The new prediction is (0.9,1.9)^T and the residual is (0.9,0.9)^T.
+The new loss is 0.5*(0.9^2+0.9^2)=0.81.
+Recomputing the gradient at that point gives g=(0.9,0.9)^T.
+Now B^T g=-0.18, so dL/dA=(-0.18,-0.36).
+The next A update with the same learning rate would produce [1.018,0.036].
+This second A update assumes ordinary simultaneous SGD using the current gradients.
+The example uses one sample twice only to expose the algebra, not to model generalization.
+With a batch, each example contributes an outer product to the factor gradients.
+Averaging those contributions before a step differs from sequentially updating after each sample.
+If the data loss gradient is zero, an optimizer with decoupled weight decay can still change factors.
+An Adam update differs from this worked SGD trajectory because it uses moment estimates and normalization.
+### Worked lab: unequal per-layer rank allocation
+Consider two independent targets with shapes 1024 by 1024 and 4096 by 1024.
+Their per-rank adapter costs are 2048 and 5120 entries, respectively.
+Allocating rank 8 to each target requires 8*2048+8*5120=57,344 entries.
+At 2 bytes per factor entry, the factor payload is 114,688 bytes.
+An alternative allocation of ranks 16 and 8 requires 16*2048+8*5120=73,728 entries.
+The alternative adds 16,384 entries and 32,768 bytes of factor payload.
+By contrast, increasing only the second target from rank 8 to rank 12 costs 4*5120=20,480 entries.
+The second increase costs more despite adding only half as many rank units.
+A fixed parameter budget therefore constrains ranks differently for differently shaped matrices.
+Suppose the available budget is exactly 57,344 entries.
+Ranks 16 and 4 use 16*2048+4*5120=53,248 entries.
+The unused remainder is 4096 entries, sufficient for two more rank units on the first target.
+Ranks 18 and 4 therefore use the full 57,344-entry budget.
+Both allocations meet the same factor-count budget but constrain different update spaces.
+Holding count constant does not hold activation memory or per-module kernel overhead constant.
+Rank choices should also respect each matrix's minimum dimension and library constraints.
+If rank exceeds a matrix dimension, the factorization cannot increase update rank beyond that dimension.
+Per-layer selection based on the final holdout would contaminate that holdout.
+Use a development set for allocation choices and reserve a separate final evaluation.
+A candidate with lower average loss may still regress on a protected task or subgroup.
+### Worked lab: accumulation with variable supervised tokens
+Take two microbatches containing 2 and 6 supervised tokens.
+Suppose their summed losses are 4 and 9, giving means 2 and 1.5.
+Averaging the two means gives 1.75, which assigns each microbatch half the weight.
+The global token-mean loss is (4+9)/8=1.625.
+To accumulate the global token-mean gradient, weight the two mean-loss gradients by 2/8 and 6/8.
+Equivalently, accumulate summed-loss gradients and divide once by the total of 8 tokens.
+The same principle applies across distributed workers when their token counts differ.
+If the distributed framework averages worker gradients, its reduction factor must be included.
+For two workers, one with 2 tokens and one with 6, averaging their local means gives the wrong token objective.
+Scaling each local mean by twice its fraction of global tokens compensates for a subsequent two-worker average.
+Those multipliers are 0.5 for the first worker and 1.5 for the second.
+The resulting averaged gradient is 0.25*g1+0.75*g2, the desired token weighting.
+This assumes g1 and g2 are gradients of the respective local token means.
+If the runtime sums rather than averages worker gradients, these multipliers are not appropriate.
+Gradient clipping before accumulation need not equal clipping the final accumulated gradient.
+For scalar gradients 3 and 4, clipping each to magnitude 2 and summing gives 4.
+Summing first gives 7, which clips to 2 under the same bound.
+Record clipping placement when comparing supposedly equivalent effective batch sizes.
+Check for an all-masked microbatch before normalizing by its supervised-token count.
+A zero-token microbatch contributes zero summed loss and zero token count under this objective.
+### Worked lab: rank-one update versus full matrix update
+Let the target dense update be D=[[2,0],[0,1]].
+For x=(1,0)^T, D produces (2,0)^T.
+For x=(0,1)^T, D produces (0,1)^T.
+A rank-one update U=diag(2,0) reproduces the first response exactly.
+It produces zero on the second input, leaving residual (0,1)^T.
+A rank-one update V=diag(0,1) instead reproduces the second response exactly.
+It leaves residual (2,0)^T on the first input.
+For squared output error with equal probability on the two inputs, U has expected error 0.5.
+Under the same distribution, V has expected error 2.
+If the first input has probability 0.1 and the second 0.9, U has expected error 0.9.
+Under that skewed distribution, V has expected error 0.4.
+The preferable rank-one direction therefore depends on the input distribution.
+This example compares only two candidate matrices, not every possible rank-one matrix.
+A distribution-weighted optimization may select a different factorization or direction.
+If training underrepresents a rare critical slice, a rank constraint can intensify the trade-off.
+A larger rank can represent D exactly, but that does not establish better held-out quality.
+Changing rank also changes the number of learned parameters and may change optimization behavior.
+Evaluate the slice and the aggregate rather than treating matrix approximation error as task success.
+### Worked lab: interpreting update norms
+Suppose ||W||_F=100 and ||sBA||_F=2 for a selected matrix.
+The ratio of update norm to base norm is 2%, a dimensionless matrix-level summary.
+For input x, the residual is sBAx and obeys ||sBAx||_2 <= ||sBA||_2 ||x||_2.
+The spectral norm ||sBA||_2 is no greater than the Frobenius norm ||sBA||_F.
+Consequently the displayed Frobenius norm yields an upper bound of 2||x||_2.
+A small global norm ratio does not bound the relative output change when Wx is near zero.
+For W=diag(100,0.01), the base output on x=(0,1)^T has norm 0.01.
+Adding U=diag(0,1) changes that output by 1, one hundred times its original norm.
+The Frobenius norm of U is 1 while ||W||_F is approximately 100.
+Thus the global update-to-base norm ratio is approximately 1% in this example.
+This discrepancy is an input-direction effect, not a contradiction of the norm bound.
+Inspect activation-conditioned residuals on representative data when diagnosing large behavioral shifts.
+Relative output ratios require care when the baseline output norm is close to zero.
+A low update norm does not establish that sensitive data cannot be memorized.
+A high update norm does not by itself establish that an adapter is unsafe or defective.
+Track per-target norms as a diagnostic alongside task outcomes and gradient behavior.
+Factor norms separately can change under equivalent rescalings of A and B.
+Compare the effective product or its action on inputs when factorization symmetry matters.
+### Worked lab: adapter lifecycle and compatibility
+Assume a service hosts one frozen base and two separately trained adapters, X and Y.
+A request authorized for X must not inherit Y merely because Y is already cached.
+The request binding should include an immutable adapter version, not only a mutable display name.
+A compatible base revision must be part of the binding and artifact manifest.
+Two adapter files with identical factor shapes may still have been trained on different bases.
+Shape validation catches incompatible dimensions but cannot prove semantic compatibility.
+A model revision that renames target modules can make a previously valid mapping ambiguous.
+Fail closed when the expected target list cannot be resolved exactly.
+If factors are loaded asynchronously, keep the request waiting or reject it until the intended version is ready.
+A partial load must not silently execute with some adapted modules missing.
+For deterministic debugging, compare selected module outputs with adapters disabled and enabled.
+A nonzero output difference establishes activation of the path, not task improvement.
+For an end-to-end regression, check tokenizer, prompt, adapter and base versions together.
+The same generated text does not prove the logits or hidden states are identical.
+When merging for serving, retain an auditable relationship to the original base and factors.
+A merged artifact for X must not be treated as the unmodified base when loading Y.
+Otherwise Y would be applied on top of X unless explicitly designed and evaluated that way.
+For a rollback, restore the full compatible artifact set and invalidate incompatible caches.
+A key-value cache produced with one adapter should not be reused under another by default.
+The model's adapter factors do not replace tenant authorization or input data controls.
+Log artifact identifiers without logging sensitive request contents unless authorized.
+These are design checks for hypothetical systems, not statements about a particular runtime.
+### Worked lab: repeated model selection and reliability
+Suppose four rank candidates are evaluated on the same development set.
+The highest observed score may benefit from favorable sampling noise.
+Choosing that candidate makes its development score an optimistic estimate of final performance.
+An independent holdout estimates the selected candidate without repeating the same selection step.
+If the holdout is used repeatedly to choose new ranks, it becomes part of development.
+Predefine a selection rule combining the primary metric with required safety guardrails.
+Report the number of candidates tried, the selection criterion and any excluded runs.
+A single seed cannot separate a method difference from training randomness.
+Repeated seeds can expose instability, but are not a substitute for independent evaluation groups.
+For paired evaluation, use the same cases and scoring procedure for base and adapter.
+If generation is stochastic, define how seeds or repeated samples enter the comparison.
+Different decoding temperatures can confound the adapter effect.
+A per-request score and a per-token loss are different estimands with different denominators.
+A mean can conceal a high-severity regression on a small but important subset.
+When a subgroup has few cases, report its count and uncertainty rather than claiming precision.
+If no examples cover a required risk, the correct status is unmeasured, not passed.
+A production canary can measure behavior only for traffic it actually receives.
+Routing changes during the canary can alter its case mix and confound the comparison.
+Preserve a baseline and specify rollback triggers before deploying a candidate.
+No constructed numerical result in this sheet is evidence of measured deployment performance.
 ## 12. Quick Reference Card
 | Item | Value |
 |---|---|

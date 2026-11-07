@@ -553,6 +553,756 @@ Mitigate service impact with a safe rollback where appropriate, and confirm both
 Trap: changing register caps, clocks and batch size together and attributing the result to one of them.
 Source: F10–F11.
 
+### Architecture and resource clinic: versioned vendor evidence
+
+The following vendor statements are **SOURCED**, not measurements by this author.
+The reference is NVIDIA's [Hopper Tuning Guide, CUDA 12.4.1 archive, revision 1.0](https://docs.nvidia.com/cuda/archive/12.4.1/hopper-tuning-guide/index.html), sections 1.4.1–1.4.3 [S7].
+This versioned source is historical documentation, not a promise that every H100 deployment has identical usable resources.
+Query the installed device and match documentation to the actual toolkit before making a launch decision.
+The guide uses KB for shared-memory capacities; binary KiB is used in the exercises below.
+
+#### SM capacity versus admission
+
+The guide states that compute capability 9.0 supports a maximum of 64 concurrent warps per SM.
+It reports 64K 32-bit registers per SM and up to 255 registers per thread.
+It also reports a maximum of 32 resident thread blocks per SM.
+Those are separate ceilings: reaching one does not mean the others have been reached.
+The guide lists 228 KB of shared memory per SM and a maximum 227 KB per block.
+Its 1 KB per-block CUDA reservation helps explain why per-block addressable shared memory is smaller than the SM maximum.
+The shared-memory limit available for a particular launch also depends on the selected configuration and kernel.
+The documented static shared-memory limit is 48 KB for architectural compatibility.
+Dynamic allocations above that limit require explicit opt-in under the documented rules.
+An opt-in request is not evidence that a particular launch will fit or succeed.
+The guide lists selectable shared-memory carveout capacities, from 0 through 228 KB.
+A requested preferred carveout is not a substitute for inspecting the effective configuration.
+Increasing the shared-memory portion changes the capacity available for the unified L1/shared-memory arrangement.
+Whether a larger carveout helps depends on the workload's shared-memory need and cache behavior.
+For thread-block clusters, the guide recommends `cudaOccupancyMaxActiveClusters`.
+Ordinary block occupancy alone does not account for cluster placement.
+
+#### Comparing Hopper and A100 without manufacturing a benchmark
+
+The same versioned guide compares H100's 228 KB shared-memory capacity per SM with A100's 164 KB.
+The arithmetic difference is 64 KB per SM under those documented figures.
+The ratio is 228/164, approximately 1.3902, or approximately 39.0% more.
+That is a capacity comparison, not a prediction that a kernel is 39% faster.
+The guide compares the combined H100 L1/texture/shared capacity of 256 KB with 192 KB for A100.
+The arithmetic difference is 64 KB, and 256/192 is approximately 1.333.
+The guide describes 50 MB H100 L2 versus 40 MB A100 L2.
+That ratio is 1.25; it does not imply a 25% larger hit rate.
+Actual cache usefulness depends on reuse distance, traffic, competing workloads and policy.
+The guide reports twice the FP32 operations per cycle per SM for compute capability 9.0 versus 8.0.
+This comparison is per cycle per SM, not per device and not an application benchmark.
+Device SM counts, sustained clocks, instruction mix and dependencies must be considered separately.
+The same guide describes H100 support for HBM3 and HBM2e, depending on product.
+It describes an HBM3 bandwidth of up to 3 TB/s in its historical product context.
+An “up to” figure is neither the specification of every H100 SKU nor a measured workload rate.
+The guide compares fourth-generation NVLink's aggregate bidirectional 900 GB/s with A100's 600 GB/s.
+Those are stated aggregate bidirectional product figures, not a one-way bandwidth guarantee between a selected pair.
+NVSwitch routing, link connectivity, partitions and other traffic alter the applicable path.
+The NVLink comparison must not be substituted for a PCIe bandwidth figure.
+
+#### Architectural mechanisms and non-equivalences
+
+The guide describes TMA as a Hopper extension of asynchronous copies available in Ampere.
+It describes transfers of one- through five-dimensional tensors between global and shared memory.
+It also describes supported shared-memory transfers between SMs in a cluster.
+The relevant copy form, layout restrictions and synchronization rules depend on the actual API and toolkit.
+Avoid equating a TMA transfer's issuance with completion or visibility to consumers.
+The guide states that the portable maximum cluster size is eight blocks.
+It notes an H100-specific nonportable size of 16 when the documented opt-in is enabled.
+That nonportable capability is not a portability promise to other devices or partition configurations.
+Distributed shared memory permits cluster blocks to access one another's shared-memory regions under its programming contract.
+It is not an ordinary device-wide shared address space.
+Each block's shared-memory allocation remains associated with that block.
+Remote access therefore needs correct peer-block lifetime and cluster synchronization.
+The guide describes inline compression for eligible allocations through the driver API.
+Compression can reduce physical data transfer when the contents are compressible.
+It does not reduce the allocation's reserved footprint according to the guide.
+Compression support must be queried and requested; do not assume all allocations use it.
+Compare physical traffic and application-visible bytes only when their definitions are clear.
+
+#### Evidence audit before using a number
+
+Identify whether a statement is a device maximum, an API constraint, a measured counter or an assumption.
+Identify whether its units are bytes, binary multiples, decimal multiples, instructions or operations.
+Confirm whether the source describes one SM, one GPU, one direction, or an entire fabric.
+Record the source version, section, device SKU, and any relevant opt-in or configuration.
+Separate historical A100/H100 architectural comparisons from present system availability.
+Do not apply an H100 guide's aggregate number to a MIG instance without checking that instance.
+Do not treat a source's marketing maximum as a measured ceiling for an individual kernel.
+Report vendor figures and the conditions under which the proposed deployment differs.
+
+### Numerical laboratory: independent resource and performance questions
+
+All cases in this laboratory are **ILLUSTRATIVE** and arithmetically checked.
+Their inputs are constructed unless explicitly identified as values taken from [S7].
+They do not claim a measured H100 execution, validated kernel, price or deployment result.
+Every resource calculation is an upper bound subject to the explicitly omitted hardware constraints.
+For these examples, 1 KiB means 1,024 bytes and 1 MiB means 1,024 KiB.
+
+#### Case A — partial warps and block count
+
+Assume a 70-thread block, a 32-thread warp, and a modeled limit of 64 resident warps per SM.
+The block uses ceil(70/32) = 3 warp slots.
+Two of the three warps have 32 threads, and the third has six participating threads.
+One block therefore has 70/96, approximately 72.92%, populated thread slots.
+Assume all other resource limits allow 20 such blocks.
+Twenty blocks require 20 × 3 = 60 resident warp slots.
+The corresponding modeled occupancy is 60/64 = 93.75%.
+Twenty-one blocks would require 63 warp slots, but this example caps residency at 20 for another stated reason.
+The number of participating threads is 20 × 70 = 1,400.
+The number of represented thread slots is 20 × 96 = 1,920.
+High warp occupancy can therefore coexist with partially populated warps.
+The arithmetic does not measure lane utilization, divergence or actual issue efficiency.
+Boundary: if the hardware's thread or allocation limit is tighter, fewer blocks can reside.
+
+#### Case B — rounded register allocation changes a conclusion
+
+Assume a hypothetical register pool of 65,536 32-bit registers.
+Assume a 256-thread block whose compiler report states 33 registers per thread.
+Without rounding, one would estimate 256 × 33 = 8,448 registers per block.
+That naive estimate gives floor(65,536/8,448) = 7 blocks.
+Now assume, only for this exercise, an actual allocation of 9,216 registers per block after rounding.
+The modeled rounded bound becomes floor(65,536/9,216) = 7 blocks.
+Seven blocks consume 64,512 registers and leave 1,024.
+Eight blocks would consume 73,728 and do not fit.
+Change only the hypothetical rounded allocation to 9,472 registers per block.
+The bound then falls to floor(65,536/9,472) = 6 blocks.
+Six blocks consume 56,832 registers; seven require 66,304.
+This comparison shows a discrete admission cliff rather than a smooth proportional change.
+The invented rounded allocations are not a claim about H100 allocation granularity.
+Obtain the real allocation behavior from the matching toolchain and documentation.
+
+#### Case C — static plus dynamic shared memory
+
+Assume a modeled 128 KiB shared-memory budget per SM.
+The block has 12 KiB static shared memory and requests 28 KiB dynamically.
+For this exercise, assume no reservation, rounding or other allocation overhead.
+The combined footprint is 12 + 28 = 40 KiB per block.
+The shared-only bound is floor(128/40) = 3 blocks.
+Three blocks use 120 KiB; a fourth would need 160 KiB.
+If dynamic shared memory rises to 36 KiB, the footprint becomes 48 KiB.
+The bound becomes floor(128/48) = 2 blocks.
+Two blocks use 96 KiB; three require 144 KiB.
+Comparing dynamic requests alone would miss the static component.
+Per-block feasibility, real reservations and actual carveout remain separate checks.
+Do not treat the 128 KiB budget as a documented H100 carveout.
+
+#### Case D — when a register cap introduces traffic
+
+Assume a baseline moves 800 MiB across a particular measured boundary per invocation.
+Assume the capped variant moves 1,000 MiB at the same boundary.
+The increase is 200 MiB, or 200/800 = 25%.
+Suppose both perform the same logical work and the additional traffic is confirmed to be spill-related.
+At an illustrative effective 1,000 MiB/ms boundary bandwidth, the extra traffic alone has a 0.2 ms service-time equivalent.
+That is 200 MiB divided by 1,000 MiB/ms.
+It is not necessarily 0.2 ms of additional elapsed time because traffic can overlap other work.
+Suppose unprofiled latency rises from 1.6 ms to 1.9 ms.
+The absolute difference is 0.3 ms and the relative increase is 0.3/1.6 = 18.75%.
+If the extra traffic is local-memory traffic but hits L2, it need not all cross the HBM boundary.
+Measure the same counter boundary in both variants.
+Compiler spill reports plus traffic and controlled reversal provide stronger evidence than occupancy alone.
+
+#### Case E — waves and underfilled final wave
+
+Assume 80 SMs, two resident blocks per SM and a grid of 350 blocks.
+The idealized device-wide simultaneous capacity is 80 × 2 = 160 blocks.
+The idealized minimum number of waves is ceil(350/160) = 3.
+The first two full waves contain 320 blocks in total.
+The remaining wave contains 350 − 320 = 30 blocks.
+Its fraction of the 160-block capacity is 30/160 = 18.75%.
+This is a scheduling-capacity sketch, not a guarantee of synchronized waves.
+Blocks can have different durations and can be admitted as resources become free.
+If the grid instead has 320 blocks, the same idealized model has two full waves.
+That does not prove 320 blocks finish sooner if each block performs more work.
+Wave estimates are useful for recognizing small-grid underfill, not predicting latency exactly.
+Cluster constraints and partitioning can invalidate the assumed device-wide capacity.
+
+#### Case F — tensor tile storage
+
+Assume a matrix multiply stages one 64 × 32 input tile and one 32 × 64 input tile.
+Assume both inputs use two bytes per element.
+The first tile contains 2,048 elements and requires 4,096 bytes.
+The second tile also requires 4,096 bytes.
+One pair of staged tiles therefore requires 8,192 bytes, or 8 KiB.
+Two staged pairs require 16 KiB before padding, swizzling, barriers or metadata.
+At a hypothetical 96 KiB SM budget, the shared-only double-buffer bound is floor(96/16) = 6 blocks.
+The single-buffer bound is floor(96/8) = 12 blocks.
+These are only resource bounds; registers, warps and block limits can be tighter.
+If double buffering saves waits but doubles staging, measure whether overlap offsets reduced residency.
+Accumulator storage is not included in this shared-memory estimate.
+The arithmetic assumes dense tiles; edge masking and packed layouts can change the actual footprint.
+
+#### Case G — arithmetic intensity at two boundaries
+
+Assume an operation performs 12 billion floating-point operations.
+At the HBM boundary, suppose measured traffic is 3 billion bytes.
+Its HBM arithmetic intensity is 12/3 = 4 FLOP/byte.
+At a cache boundary, suppose traffic is 12 billion bytes.
+Its cache-boundary arithmetic intensity is 12/12 = 1 FLOP/byte.
+The same operation can therefore have two different correct intensities.
+Assume compatible illustrative bandwidth ceilings of 2 TB/s at HBM and 8 TB/s at the cache boundary.
+Both products produce 8 TFLOP/s: 4 × 2 and 1 × 8.
+Assume a compatible compute ceiling of 20 TFLOP/s.
+The combined modeled roof is min(8, 8, 20) = 8 TFLOP/s.
+This is an upper-bound model under the chosen traffic and ceilings.
+Mixing 4 FLOP/byte with the 8 TB/s cache ceiling would incorrectly produce 32 TFLOP/s.
+State whether FLOPs include multiply-add as two operations and keep the convention consistent.
+If a cache or bandwidth counter includes unrelated traffic, the computed intensity is not kernel-specific.
+
+#### Case H — transfer size, direction and rate
+
+Assume a one-way payload of 4 GiB and an elapsed transfer time of 40 ms.
+Using binary units, the rate is 4/0.040 = 100 GiB/s.
+The corresponding decimal payload is 4 × 1,073,741,824 bytes.
+Dividing by 0.040 seconds gives approximately 107.37 GB/s.
+This is a constructed calculation, not an H100 NVLink measurement.
+If the reverse direction simultaneously transfers the same payload in the same interval, the summed bidirectional rate is 200 GiB/s.
+The individual directional rate is still 100 GiB/s.
+Do not compare the one-way value directly to a summed bidirectional headline.
+Synchronization, measurement scope and whether both directions overlap must be reported.
+An application may have smaller messages and dependencies that make its effective rate lower.
+
+#### Case I — matrix arithmetic and numerical tolerance
+
+Assume dense matrices A with shape 128 × 64 and B with shape 64 × 256.
+The output has shape 128 × 256, or 32,768 elements.
+Under the convention of two FLOPs per multiply-add, the modeled work is 2 × 128 × 64 × 256.
+The resulting count is 4,194,304 FLOPs.
+This convention ignores the small difference between K multiplications and K − 1 additions per exact dot product.
+Suppose a reference value is 0.002 and a candidate returns 0.0023.
+The absolute error is 0.0003.
+The relative error against the nonzero reference is 0.0003/0.002 = 15%.
+At a reference of zero, this relative-error definition is undefined.
+Use an application-approved absolute and relative tolerance and document the zero-reference rule.
+The worked values do not justify accepting or rejecting any particular model.
+
+#### Case J — Amdahl-style kernel optimization
+
+Assume a service stage takes 10 ms, of which the target kernel takes 4 ms.
+Other work takes 6 ms and is assumed unchanged.
+Suppose an optimization halves only that kernel's execution time.
+The new total is 6 + 4/2 = 8 ms.
+The stage speedup is 10/8 = 1.25 times, not two times.
+The latency reduction is (10 − 8)/10 = 20%.
+If batching, transfer overlap or queueing changes, this simple additive model is invalid.
+An isolated kernel result must be checked against the actual end-to-end metric.
+The 10 ms and 4 ms inputs are illustrative, not observed production measurements.
+
+#### Case K — GPU memory budget
+
+Assume an illustrative usable device-memory budget of 70 GiB.
+Weights occupy 32 GiB, persistent runtime allocations 4 GiB, and workspace 8 GiB.
+The fixed subtotal is 32 + 4 + 8 = 44 GiB.
+Reserve 10 GiB for fragmentation, transients and operational headroom.
+The remaining budget for concurrent requests is 70 − 44 − 10 = 16 GiB.
+If each request consumes 0.5 GiB under the same conditions, the arithmetic ceiling is 32 requests.
+At 0.75 GiB per request, floor(16/0.75) = 21 requests.
+Twenty-one requests use 15.75 GiB; twenty-two use 16.5 GiB.
+This capacity arithmetic does not establish acceptable latency or safe request admission.
+The real service needs measured peaks, variable sequence lengths and allocator behavior.
+MIG partitions and other processes change the available memory budget.
+The assumed 70 GiB is not a statement about the usable memory of any specific H100.
+
+#### Case L — cost per successful result
+
+Assume a device rental rate of 6 currency units per hour and 3,600 successful requests per hour.
+The device-only cost per successful request is 6/3,600 = 0.001667 currency units.
+Suppose a faster variant completes 4,000 attempts per hour but 200 fail the quality contract.
+Its successful rate is 3,800 per hour.
+At the same illustrative device rate, device-only cost per success is 6/3,800, approximately 0.001579.
+The improvement is approximately 5.26% relative to the baseline cost per success.
+This is not a real cloud price, a benchmark, or a full cost of ownership.
+Include host, network, storage, idle time and retries before making an economic decision.
+Quality failures can have costs beyond the device-time arithmetic.
+
+### Profiling field guide: from launch to causality
+
+This is an operational recipe, not a claim that these commands were executed here.
+Use the installed tool's help and matching documentation because options and counters change by release.
+Obtain permission before profiling a shared production system or accessing customer inputs.
+Sanitize traces and filenames if workload metadata is sensitive.
+
+#### 1. Establish the experiment
+
+Write the expected input, output, tolerance and service-level decision before changing a kernel.
+Select representative shapes plus small, boundary, sparse and unusually large cases.
+Record the exact GPU model, UUID, partition profile, driver and runtime.
+Record toolkit, compiler, flags, binary hash and library versions.
+Record host CPU placement, NUMA topology, device pairings and competing workloads.
+Retain the dataset generation seed or a privacy-safe reproducible input.
+Separate warm-up from timed trials, and record how each is performed.
+Measure the end-to-end service path as well as the isolated kernel.
+Keep a rollback-capable baseline and define the acceptance threshold in advance.
+Treat thermal and power behavior as experimental variables rather than invisible constants.
+
+#### 2. Inspect launch and compilation
+
+Compile with the toolchain's supported verbose resource reporting, such as `nvcc --ptxas-options=-v` when applicable.
+Capture the compiler version, target architecture and full command with its output.
+Read register count, static shared memory and any spill report for the particular kernel.
+Record runtime dynamic shared-memory bytes separately from compiler-reported static allocation.
+Confirm the grid, block dimensions and, if used, cluster dimensions.
+Check the returned launch error and the later synchronization error at appropriate boundaries.
+Remember that a successful launch does not establish numerical correctness.
+Use device and function attribute queries to discover limits relevant to the actual process.
+Do not infer occupancy from source-level local variables.
+The compiler may specialize, inline or eliminate work under different build flags.
+
+#### 3. Establish correct timing
+
+Use a synchronization method appropriate to the work being timed.
+For device execution on a stream, CUDA events can bound work ordered in that stream.
+Include any cross-stream dependencies required to represent the operation.
+Host wall-clock timing is appropriate for a broader host-to-result path when synchronization is explicit.
+Do not mix launch-only host timing with completed-kernel device timing.
+Run enough independent repetitions to describe variability rather than reporting only the best run.
+Report median and a relevant tail percentile with sample count and environment.
+Randomize or interleave variants when drift could favor the order of execution.
+Investigate outliers instead of deleting them without a predeclared rule.
+Profiling runs are diagnostic; keep a separate unprofiled baseline for the performance decision.
+
+#### 4. Inspect scheduling and occupancy
+
+Use Nsight Compute's version-matched occupancy and scheduler sections [S4].
+Distinguish theoretical occupancy, achieved active warps and eligible warps.
+Inspect the reported limiting resources rather than guessing from a single percentage.
+Low achieved occupancy with adequate theoretical capacity can indicate a small grid, short duration or uneven work.
+High active warps with few eligible warps suggests investigating dependencies or waiting, not automatically adding blocks.
+High eligibility with poor issue behavior requires examining scheduler and execution-pipeline constraints.
+Counter definitions, sampling and scope must match the version being used.
+For clusters, use the cluster-aware occupancy API and consider cluster scheduling granularity.
+Compare the profile against unprofiled runtime to identify profiler perturbation.
+
+#### 5. Inspect memory at the correct boundary
+
+Start with a traffic hypothesis: redundant loads, poor coalescing, spills or weak reuse.
+Inspect the memory workload sections for the installed profiler and GPU.
+Compare requested bytes and transferred sectors only using the metric definitions for that release.
+A high sector-to-request ratio can signal waste, but alignment and access shape matter.
+Separate local-memory traffic from explicit shared-memory staging and ordinary global loads.
+Inspect cache and device-memory traffic separately.
+If traffic is small but latency remains high, investigate dependencies and instruction throughput.
+If the cache hit rate changes between candidates, explain why HBM bytes may differ.
+Use a controlled one-change experiment to distinguish layout effects from tile-size effects.
+Do not assume a bandwidth counter alone proves a memory bottleneck.
+
+#### 6. Inspect instructions and arithmetic
+
+Use generated-code inspection tools appropriate to the compiled binary [S5].
+Compare instruction types, conversions, address arithmetic and branch behavior across candidates.
+Determine whether the intended matrix instructions are actually present when this is relevant.
+Disassembly is evidence of code generation, not proof that a particular path dominates runtime.
+Use profiler instruction and pipeline activity to connect generated code to execution.
+Distinguish input precision, intermediate conversion and accumulation precision.
+Validate extreme values and cancellation against a suitable reference.
+If the input workload varies in shape, inspect each materially different execution path.
+Do not compare a sparse peak with dense work unless the operation and counting convention match.
+
+#### 7. Synchronization and correctness
+
+Use Compute Sanitizer tools only within their documented supported coverage [S6].
+Select the relevant memory, race, initialization or synchronization checks for the issue.
+Instrumentation can alter scheduling and may not expose every race or unsupported instruction path.
+Review producer-to-consumer ownership and barrier scope even when a tool reports no error.
+For asynchronous copies, check initialization, arrival, completion, wait and buffer reuse.
+For cluster communication, check that remote shared-memory access completes before the owning block exits.
+For cross-stream work, record the event or other dependency connecting producer and consumer.
+Use edge sizes that cross tile and alignment boundaries.
+Compare results repeatedly under representative concurrency.
+Correctness precedes latency comparison.
+
+#### 8. Identify the causal lever
+
+Write the predicted observation for each competing explanation before running a variant.
+For register pressure, expect a change in allocation or spills when the live range changes.
+For shared capacity, expect a change in the corresponding occupancy limit when the footprint changes.
+For memory reuse, expect boundary-specific traffic changes when reuse is improved.
+For launch underfill, expect sensitivity to grid size or work partitioning at fixed per-item work.
+For synchronization stalls, expect a change in wait behavior when a correct pipeline is adjusted.
+Reject an explanation when its predicted signal is absent under a valid test.
+One correlated counter is not sufficient to establish a causal mechanism.
+If multiple changes are unavoidable, document the confounding and run a targeted follow-up.
+Keep both failed and successful experiments to avoid selecting only favorable noise.
+
+#### 9. Production deployment decision
+
+Roll out a correct candidate gradually using the established release process.
+Track successful throughput, end-to-end latency, numerical quality and error rate together.
+Track device memory headroom and relevant clock, power, thermal and hardware-error signals.
+Inspect workload shape drift and co-tenant changes after deployment.
+Compare against a concurrent control when practical, not only a historical best run.
+Define a rollback trigger that does not require interpreting a single noisy sample.
+Retain the previous binary and its compatible runtime configuration.
+Escalate hardware faults and recurring data corruption to the responsible platform owner.
+Repeat qualification after driver, toolkit, SKU, topology or model changes.
+An optimization is not approved solely because a profiler reports a larger percentage.
+
+### Additional interview practice: reasoning under constraints
+
+**Q16. A 70-thread block runs on 32-thread warps. How many warps are allocated?**
+Answer: Three warp slots are needed because ceil(70/32) = 3.
+There are 26 unpopulated thread slots in the final modeled group of 96.
+The result says nothing by itself about branch divergence among the 70 active threads.
+Trap: using floor(70/32) and losing the final partial warp.
+
+**Q17. Can a shared-memory carveout increase while performance falls?**
+Answer: Yes; the candidate can gain shared capacity while changing cache capacity or increasing staging.
+Compare the actual launch configuration, cache traffic, occupancy and unprofiled latency.
+Trap: treating the carveout as free extra on-chip memory.
+
+**Q18. Why does a 50 MB L2 not imply every 45 MB workload hits in cache?**
+Answer: Access patterns, competing traffic, replacement, metadata and configuration affect effective reuse.
+Measure hit behavior at the relevant boundary with a representative workload.
+Trap: treating nominal cache size as a guaranteed per-kernel reservation.
+
+**Q19. Why is 900 GB/s bidirectional not automatically a 900 GB/s one-way pairwise rate?**
+Answer: The quoted [S7] number aggregates directions and links for a product configuration.
+The chosen device pair may use only a subset of links or a shared path.
+Trap: comparing an aggregate specification to a single-direction transfer measurement.
+
+**Q20. What does a register spill mean for an HBM counter?**
+Answer: Spilled values use local-memory accesses, but those accesses can interact with caches.
+Some may reach HBM and some may not; inspect compiler evidence and relevant traffic counters.
+Trap: equating each spilled byte with one observed HBM byte.
+
+**Q21. What is the benefit and cost of double buffering?**
+Answer: It can overlap movement with computation when completion and reuse are correctly synchronized.
+It also increases storage and can lower residency or raise setup overhead.
+Compare output and unprofiled time at representative sizes.
+Trap: claiming double buffering is always faster.
+
+**Q22. How does a cluster change ordinary occupancy reasoning?**
+Answer: Blocks have cluster-level placement and lifetime constraints, so independent per-SM block bounds are incomplete.
+Use the applicable cluster-aware occupancy API and check the requested cluster size and portability.
+Trap: multiplying a per-SM estimate by the number of SMs as a guaranteed cluster count.
+
+**Q23. Why can a smaller tile improve occupancy but worsen execution time?**
+Answer: It can reduce shared or register pressure while increasing redundant loads, instructions or synchronization.
+Verify correctness and compare traffic, issue behavior and repeated timings.
+Trap: choosing a tile solely by theoretical occupancy.
+
+**Q24. How would you compare H100 with A100 fairly?**
+Answer: Match workload, dtype, correctness, software, power policy and measurement boundary.
+Report exact SKUs, costs, device counts and relevant topology.
+Per-SM architectural differences are not whole-system benchmark results.
+Trap: extrapolating the documented per-cycle FP32 ratio directly to application speedup.
+
+**Q25. A 350-block grid runs on an illustrative 80-SM device with two blocks per SM. How many idealized waves?**
+Answer: ceil(350/(80 × 2)) = 3, with 30 blocks remaining after two full capacity waves.
+Actual scheduling can overlap waves and uneven block runtimes affect the timeline.
+Trap: asserting that the last 30 blocks all start simultaneously.
+
+**Q26. A kernel moves 3 billion HBM bytes for 12 billion FLOPs. What is its intensity?**
+Answer: 4 FLOP/byte at the specified HBM boundary.
+Use an HBM-compatible bandwidth ceiling and the same FLOP convention.
+Trap: substituting L2 bytes or a different-precision peak without relabeling the calculation.
+
+**Q27. How should a team react to a profiler-only speedup?**
+Answer: Repeat the comparison without profiling and examine replay, sampling and clock differences.
+Check the production service metric and numerical correctness before rollout.
+Trap: assuming instrumented timing equals customer latency.
+
+**Q28. What is required before accepting a lower-precision Tensor Core path?**
+Answer: Demonstrate supported instructions, valid layout and acceptable error on representative and edge inputs.
+Also test downstream model or business quality, not merely elementwise closeness.
+Trap: using a generic relative tolerance near zero.
+
+**Q29. What does inline compression save?**
+Answer: For eligible compressible data it can reduce physical traffic according to [S7].
+The guide explicitly says it does not shrink the reserved allocation footprint.
+Trap: counting compressed traffic savings as extra device-memory capacity.
+
+**Q30. How would you determine whether TMA is appropriate?**
+Answer: Verify supported descriptor, layout, synchronization and target architecture first.
+Compare a correct ordinary-copy baseline against TMA for representative tile sizes and concurrency.
+Trap: assuming one issuing thread eliminates all setup, barrier or resource costs.
+
+**Q31. A service spends 4 ms of 10 ms in the optimized kernel; the kernel becomes twice as fast. What is the total speedup?**
+Answer: With all other work unchanged and additive, total time falls to 8 ms.
+The total speedup is 10/8 = 1.25 times.
+Trap: promising a twofold service speedup from a twofold kernel speedup.
+
+**Q32. What does an occupancy estimate fail to prove?**
+Answer: It does not prove launch correctness, eligible-warp availability, throughput or numerical accuracy.
+It is an admission prediction under a particular kernel and device configuration.
+Trap: reporting theoretical occupancy as observed utilization.
+
+**Q33. Why can two H100 partitions differ?**
+Answer: Their instance profiles and resource allocations may differ, and contention or workload can also differ.
+Record and query each partition rather than applying full-device figures blindly.
+Trap: treating identical product names as identical available capacity.
+
+**Q34. How do you verify an optimization that changes output only for edge tiles?**
+Answer: Check bounds, masks, strides and padding against a trusted reference on sizes around tile boundaries.
+Then check numerical precision if the indexing is correct.
+Trap: immediately widening tolerances to hide an address error.
+
+**Q35. When should a kernel improvement be rejected despite better throughput?**
+Answer: Reject it when correctness, security, latency objectives or memory headroom fail the deployment contract.
+Compare cost per successful result, not raw attempts, and preserve rollback capability.
+Trap: accepting a fast result outside the application's quality budget.
+
+### Resource-accounting workshop: allocation and feasibility
+
+All capacities and timings in this workshop are **ILLUSTRATIVE**, not H100 specifications or measured outcomes.
+The calculations use binary KiB, where 1 KiB is 1,024 bytes.
+They describe a single homogeneous SM unless a different scope is explicitly stated.
+Actual allocations, legal launches and placement must be checked with the target device and toolkit.
+
+**Case A — register allocation rounds up.**
+Suppose a fictional SM has 65,536 registers available to resident blocks.
+Each block has 256 threads, or eight 32-thread warps.
+Suppose the compiler reports 65 registers per thread.
+Assume, for this example only, that each warp's register allocation rounds up to a multiple of 256 registers.
+The unrounded allocation per warp is 32 × 65 = 2,080 registers.
+Rounding 2,080 up to the next multiple of 256 gives 2,304 registers per warp.
+Eight warps therefore consume 8 × 2,304 = 18,432 registers per block.
+The register bound is floor(65,536 / 18,432) = 3 blocks.
+Three blocks use 55,296 registers, leaving 10,240 registers unused.
+Four blocks would need 73,728 registers and do not fit this register pool.
+The naïve unrounded estimate is floor(65,536 / 16,640) = 3 blocks here.
+The matching result is coincidental; it does not establish that rounding can be ignored.
+At 64 registers per thread the assumed rounded allocation is 16,384 registers per block.
+The corresponding bound is four blocks, assuming all other limits admit four.
+One additional register per thread therefore crosses a capacity threshold in this constructed case.
+This example does not assert that the assumed register granularity applies to H100.
+Consult the installed occupancy calculator and compiled-kernel information for the real allocation.
+
+**Case B — shared-memory allocation rounds up.**
+Assume a fictional SM provides 100 KiB of shared memory to blocks.
+Each block requests 32.1 KiB including static and dynamic allocations.
+Assume allocation is rounded up to a 1 KiB unit for this exercise.
+Each resident block consumes 33 KiB under that fictional rule.
+The shared-memory bound is floor(100 / 33) = 3 blocks.
+Four blocks would consume 132 KiB, exceeding the assumed capacity.
+If a layout change raises the unrounded request to 33.1 KiB, allocation becomes 34 KiB.
+Then floor(100 / 34) = 2 blocks, with 32 KiB left over.
+The unused capacity does not allow a third 34 KiB block.
+Check per-block maximums separately: an allocation can fit the SM pool yet be illegal for one block.
+The requested dynamic shared-memory amount and any opt-in attribute must agree with the launch.
+The effective shared/L1 configuration can change available capacity.
+The allocation unit in this example is deliberately invented and must not be used as a hardware rule.
+
+**Case C — multiple independent residency limits.**
+Assume a block has 192 threads and uses six warps.
+Suppose the rounded resource accounting gives a register limit of four blocks.
+Suppose shared memory permits three blocks, thread capacity permits five, and warp capacity permits six.
+Suppose the architectural block count permits eight.
+The resulting independent-resource upper bound is min(4, 3, 5, 6, 8) = 3 blocks per SM.
+Three blocks contribute 18 resident warps.
+If the fictional maximum is 48 resident warps, theoretical occupancy is 18/48 = 37.5%.
+The number 48 is an example assumption, not a device claim.
+Reducing register use alone cannot raise this particular bound while shared memory remains the tightest limit.
+Reducing shared use to admit four blocks changes the upper bound to four.
+Four blocks contribute 24 warps, or 50% of the assumed 48-warp maximum.
+The new active-warp fraction is not evidence that execution time improved.
+If the kernel depends on special launch placement or clusters, the independent bound may still be unattainable.
+
+**Case D — a partial warp consumes capacity.**
+Assume a 100-thread block and a 32-thread warp.
+The warp count is ceil(100/32) = 4, not 100/32 rounded down.
+The final warp has four participating thread indices and 28 unused lane positions.
+With a fictional limit of 32 resident warps, the warp-only bound is floor(32/4) = 8 blocks.
+If the same SM admits at most 768 threads, the thread bound is floor(768/100) = 7 blocks.
+The combined bound cannot exceed seven blocks before checking registers, shared memory and block limits.
+Seven blocks contain 700 requested threads and occupy 28 warp slots.
+Their theoretical warp occupancy under the assumed limit is 28/32 = 87.5%.
+The fraction of useful lanes in the allocated warp slots is 700/(28 × 32) = 78.125%.
+Lane utilization and occupancy describe different denominators and must not be multiplied into a throughput prediction.
+Partial warps also do not imply all participating lanes take the same branch.
+
+### Concurrency workshop: grids, streams and cooperative placement
+
+**Case E — waves and a long tail.**
+Assume 12 SMs and an independent-block limit of three blocks per SM.
+The instantaneous modeled capacity is 12 × 3 = 36 blocks.
+For a grid of 100 blocks, ceil(100/36) = 3 idealized capacity waves.
+Two full capacity waves account for 72 blocks, leaving 28 blocks.
+This is a count of capacity-sized groups, not a promise of a global wave barrier.
+If every block took exactly 10 arbitrary time units and all slots stayed busy, the idealized duration would be 30 units.
+Unequal block durations, launch overhead and runtime scheduling invalidate that simple duration.
+If just one block takes 25 units while others take 10, its placement affects the observed tail.
+Measure per-block work imbalance or representative input skew before blaming occupancy.
+Do not infer that 28 blocks in the last group occupy every SM uniformly.
+
+**Case F — two kernels share a device.**
+Assume a fictional SM has 64 KiB of shared memory and enough registers, warp slots and block slots for the following blocks.
+Kernel A requests 40 KiB per block; kernel B requests 24 KiB per block.
+One A and one B block sum to 64 KiB and are resource-compatible in this simplified model.
+Two A blocks would need 80 KiB and cannot coexist on that SM under the assumption.
+Two B blocks need 48 KiB, leaving 16 KiB.
+Compatibility is necessary but not sufficient for observed concurrent execution.
+Grid arrival, stream dependencies, scheduler decisions and other resource allocations also matter.
+Concurrency can increase contention for execution units, cache, memory bandwidth or interconnect.
+Separate streams permit ordering independence where the API contract allows it; they do not guarantee simultaneous kernel execution.
+Record each stream's dependencies and buffer ownership before interpreting a timeline.
+Compare concurrent completion time with the same work serialized under matched conditions.
+Also compare individual latency and total successful throughput: they answer different objectives.
+Never overlap writes to the same memory unless the program supplies a correct synchronization and ownership protocol.
+
+**Case G — concurrent kernels compete for registers.**
+Assume a fictional 65,536-register SM, ignoring rounding and all other limits.
+An A block uses 32,768 registers; a B block uses 24,576 registers.
+One of each uses 57,344 registers, leaving 8,192.
+A second B block would raise consumption to 81,920 registers, which does not fit.
+Two A blocks exactly consume the assumed register pool.
+Two B blocks consume 49,152 registers and leave 16,384.
+This arithmetic establishes possible combinations, not a guarantee that any specific mixture is scheduled.
+If either kernel has a large shared-memory footprint, repeat the calculation for that resource as well.
+For heterogeneous blocks, do not simply take the minimum of each kernel's standalone block counts.
+Instead evaluate the resource sum for each proposed mixture.
+On the real system account for allocation units, per-block feasibility and any scheduler or partition restrictions.
+
+**Case H — producer and consumer across streams.**
+Suppose stream P launches a kernel that writes buffer X.
+Suppose stream C launches a kernel that reads X.
+Independent stream order alone does not establish that P's write finishes before C reads.
+Record an event after the producer in P and make C wait on that event before launching the consumer.
+Use the correct device, event and stream semantics for the installed runtime.
+Keep X allocated until all asynchronous uses have completed.
+If X is reused for the next request, establish a separate dependency on the previous consumer's completion.
+If producer and consumer run in the same stream, their stream order supplies the relevant execution order.
+This example is an ordering sketch, not a substitute for checking API-specific memory visibility rules.
+Profile the resulting timeline only after validating the output for repeated and overlapping requests.
+A fast consumer reading stale data is a correctness failure, not useful concurrency.
+
+**Case I — cluster placement is not ordinary per-SM placement.**
+Assume an illustrative four-block cluster and 20 blocks in the grid.
+The launch contains five complete clusters if the applicable launch contract permits those dimensions.
+An ordinary per-SM estimate of two blocks does not establish how many such clusters can reside concurrently.
+Cluster placement must satisfy the architecture's co-scheduling and resource rules.
+Use the cluster-aware occupancy interface supported by the installed CUDA version.
+Check permitted cluster dimensions and any device-specific or portability restrictions.
+If blocks access distributed shared memory, the owner block must remain alive for the required access lifetime.
+Use the documented cluster synchronization and completion protocol rather than inventing an inter-block global barrier.
+The example says nothing about the cluster size supported by a specific H100 configuration.
+
+### Profiling workshop: distinguish causes with matched evidence
+
+**Experiment 1 — occupancy versus issue readiness.**
+Choose a correct baseline and record its binary, launch, input shapes and resource usage.
+Create a variant that changes register pressure without changing the mathematical operation.
+Use the compiler report and occupancy tooling to confirm whether the limiting resource actually changed.
+Inspect eligible-warp and scheduler observations using definitions for the installed profiler.
+If modeled occupancy rises but eligible warps do not, investigate dependencies, synchronization and instruction mix.
+If eligible warps rise but elapsed time does not improve, inspect execution-pipeline or memory saturation.
+If spills appear, inspect their local-memory traffic and whether the data reaches the measured memory boundary.
+Keep unprofiled timing separate from instrumented timing.
+Repeat across representative shapes; one shape cannot characterize a variable workload.
+No particular observation is guaranteed by the proposed change.
+
+**Experiment 2 — HBM traffic versus cache reuse.**
+Suppose the operation logically reads 128 MiB and writes 64 MiB.
+The minimal logical payload in this model is 192 MiB, excluding all extra operations.
+Suppose an illustrative counter reports 256 MiB crossing the selected HBM boundary.
+The measured-to-logical ratio is 256/192 = 4/3, approximately 1.33.
+This hypothetical ratio can motivate investigation of rereads, writes, access granularity and other traffic.
+It does not identify which mechanism caused the difference.
+Counter semantics, compression and the capture range can also affect the comparison.
+Suppose a second run reports 128 MiB at the same boundary.
+That smaller figure could reflect cache reuse or different accounting; it does not prove either explanation.
+Compare warm and cold protocols with identical work and explicitly state the cache state.
+Use a boundary-compatible bandwidth calculation and report bytes as decimal or binary units consistently.
+These numbers are invented teaching inputs, not H100 counter measurements.
+
+**Experiment 3 — asynchronous pipeline depth.**
+Construct a correct single-buffer baseline with a documented completion wait.
+Construct a double-buffer version with independent producer and consumer ownership for each buffer.
+Account for the second buffer, barrier state, alignment and any additional registers.
+Verify that each buffer is not overwritten until its previous consumer has finished.
+Check correctness on zero-length or minimal cases where supported and on edge tiles.
+Compare the shared-memory and register admission limits before measuring time.
+Inspect a timeline and relevant wait behavior to test the overlap hypothesis.
+If occupancy falls, determine whether additional overlap compensates using unprofiled timing.
+If runtime improves only for large tiles, retain shape-specific evidence rather than declaring a universal result.
+If runtime worsens, investigate setup and synchronization overhead as competing hypotheses.
+Preserve the baseline for rollback and for future toolkit changes.
+
+**Experiment 4 — underfilled grid versus resource pressure.**
+For an illustrative 120-SM device with 60 independent blocks, no more than 60 SMs can host a block at once.
+That statement assumes each block occupies only one SM and excludes cluster-specific placement.
+More per-SM occupancy cannot create more than 60 independent blocks from that grid.
+Increasing parallel decomposition may expose more blocks but can add work and coordination.
+Compare an equivalent finer decomposition only after validating its output and accounting for overhead.
+If the grid instead has 1,200 blocks, block scarcity is less likely to explain the initial launch underfill.
+That larger grid still does not guarantee balanced work, high occupancy or sustained throughput.
+Check block duration distribution and resource limits to distinguish the alternatives.
+The 120-SM device is fictional and is not a specification for any H100 SKU.
+
+**Experiment 5 — instrumentation and replay.**
+First collect repeated unprofiled end-to-end and kernel timings with the same workload.
+Then collect a limited profiler set sufficient to test the leading hypothesis.
+Check whether the profiler replays the kernel or changes the cache state for the requested metrics.
+State whether the workload is deterministic and whether replay preserves its inputs and dependencies.
+For stateful kernels, ensure replay cannot silently alter the workload or output interpretation.
+If metrics conflict with unprofiled behavior, investigate instrumentation and sampling scope before changing code.
+Compare timing distributions, not only the fastest individual run.
+Record co-tenancy, power and clock conditions as potential confounders.
+Do not treat a profiler percentage as a direct customer-facing performance metric.
+Choose rollout based on correctness and representative unprofiled service behavior.
+
+### Interview drill: capacity, bandwidth and latency
+
+**Q36. A block uses 20 KiB shared memory and the assumed per-SM budget is 96 KiB. What is the shared bound?**
+Answer: floor(96/20) = 4 blocks before allocation rounding and all other constraints.
+Four blocks use 80 KiB; five would use 100 KiB and exceed the assumed budget.
+Trap: calling the remaining 16 KiB enough for a fifth block.
+
+**Q37. A 160-thread block runs on 32-thread warps; three blocks fit on a fictional 40-warp SM. What occupancy results?**
+Answer: Five warps per block yield 15 active warps and 15/40 = 37.5% theoretical occupancy.
+The 40-warp maximum is an illustrative premise, not an H100 claim.
+Trap: dividing 480 active threads by a warp count rather than a thread count.
+
+**Q38. A modeled kernel performs 24 billion operations and transfers 6 billion bytes across HBM. What intensity results?**
+Answer: 24/6 = 4 operations per byte under the stated counting convention.
+Compare only with a compute ceiling and HBM bandwidth ceiling that use compatible units and precision.
+Trap: using logical source bytes if the stated traffic is measured at HBM.
+
+**Q39. A fictional bandwidth ceiling is 2 TB/s and the intensity is 4 operations per byte. What is the bandwidth roof?**
+Answer: 2 TB/s × 4 operations/byte = 8 tera-operations/s.
+This decimal-unit result is an upper model under the stated assumptions, not a measured H100 rate.
+The effective roof is also constrained by the relevant compute ceiling.
+Trap: claiming the kernel necessarily reaches either ceiling.
+
+**Q40. An illustrative request spends 3 ms queued, 2 ms transferring and 5 ms computing, without overlap. What is latency?**
+Answer: 3 + 2 + 5 = 10 ms for this explicitly serial request path.
+If compute falls to 2.5 ms and all other terms stay fixed, latency is 7.5 ms.
+The ratio 10/7.5 is approximately 1.33, not a twofold end-to-end speedup.
+Trap: adding durations that actually overlap or ignoring changed queueing under load.
+
+**Q41. Can two streams with no dependency still serialize?**
+Answer: Yes; stream independence permits overlap but resource limits, implementation and workload may prevent it.
+Confirm with a timeline, then inspect resource usage and configuration.
+Trap: interpreting API concurrency as a guarantee of physical simultaneity.
+
+**Q42. A 256-thread block uses 80 registers per thread without rounding. How many registers does it request?**
+Answer: 256 × 80 = 20,480 registers in this simplified arithmetic.
+A fictional 65,536-register pool permits floor(65,536/20,480) = 3 such blocks by registers alone.
+Trap: asserting that real allocation ignores granularity or that all other limits permit three.
+
+**Q43. How do you compare a full GPU and a partition?**
+Answer: Query the resources visible to each instance and identify its actual partition profile and workload isolation.
+Use compatible software, workload, correctness checks and measurement boundaries.
+Trap: scaling full-device specifications linearly without checking the partition's assigned resources.
+
+**Q44. Why can a kernel with fewer HBM bytes be slower?**
+Answer: It may execute more instructions, use more synchronization, reduce occupancy or stress another boundary.
+Test these competing mechanisms with matched counters and repeated unprofiled timings.
+Trap: assuming HBM is the limiting resource without evidence.
+
+**Q45. What evidence is needed for a hardware-specific claim?**
+Answer: Identify the exact SKU, configuration and primary source for a specification.
+For a performance claim, additionally provide the workload, setup, measurement procedure and result provenance.
+Trap: treating a vendor peak or an invented example as an observed application result.
+
+**SOURCED:** [S7] NVIDIA, *Hopper Tuning Guide*, CUDA 12.4.1 archive, guide revision 1.0, sections 1.4.1–1.4.3; consulted 2026-11-07.
+Link: https://docs.nvidia.com/cuda/archive/12.4.1/hopper-tuning-guide/index.html .
+Scope: documented H100/compute-capability-9.0 characteristics and explicitly stated A100 comparisons.
+Limitations: historical guide, vendor figures, not independently reproduced and not a substitute for installed-device queries.
+Review trigger: new GPU SKU, driver, CUDA toolkit, profiler, runtime configuration or workload.
+
 ### Primary Sources and Reproducibility Record
 
 - [S1] NVIDIA, [Hopper Tuning Guide](https://docs.nvidia.com/cuda/hopper-tuning-guide/), CUDA documentation; architecture and CUDA tuning, version is the live documentation version; review trigger: CUDA release or GPU architecture change.

@@ -380,725 +380,605 @@ A positive offline result would still not establish a production outcome or caus
 No real incident or failed production test is claimed.
 The following are hypothetical diagnostic exercises; competing explanations must be separated before a fix.
 ### 12.1. Revoked document remains searchable
-Classification: hypothetical failure, not an observed incident.
 Trigger: An answer cites a page after the employee loses access.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+A revocation can expose a document even if the text has not changed.
 Competing causes: A stale ACL cache or a failed deletion event can both explain the symptom.
 First discriminating check: Compare live policy-decision output with cached entitlement and event timestamps.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Freeze responses using the affected entitlement and invalidate its cached grants.
 Proposed correction: Deny the source immediately and purge derived representations.
 Mitigation boundary: Caching a denial too long can hide newly granted access.
 Verification plan: Re-run revoke and regrant fixtures across all index replicas.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+Security approves recovery after the live decision and every serving replica deny the revoked identity.
 ### 12.2. Hidden title appears in refusal
-Classification: hypothetical failure, not an observed incident.
 Trigger: The refusal names a restricted appendix.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+The restricted title itself can reveal that a confidential policy exists.
 Competing causes: A logging template or an overly specific abstention generator may leak metadata.
 First discriminating check: Inspect the response assembly trace without exposing the hidden title to the requester.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Replace the response with the same wording used when no accessible evidence exists.
 Proposed correction: Use a generic refusal and restrict diagnostic traces.
 Mitigation boundary: Overly generic operator logs can impede incident diagnosis.
 Verification plan: Test both content and metadata leakage using canary titles.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+Security reviews user-visible refusals and restricts access to trace metadata.
 ### 12.3. Expired policy answers current question
-Classification: hypothetical failure, not an observed incident.
 Trigger: An old version provides the visible numeric cap.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+The employee could follow a cap that was valid only in a previous period.
 Competing causes: Missing effective metadata or a wrong timezone conversion are competing causes.
 First discriminating check: Compare source timestamps, effective interval and request timezone.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Quarantine the suspect version from current-date answers while preserving authorized historical access.
 Proposed correction: Block uncertain versions and correct the timestamp mapping.
 Mitigation boundary: Removing a valid historical document can break explicitly historical questions.
 Verification plan: Run boundary tests immediately before and after the effective instant.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The policy owner confirms the effective interval before the indexing team restores it.
 ### 12.4. Future policy applied too early
-Classification: hypothetical failure, not an observed incident.
 Trigger: The answer cites a policy effective next month.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+Publishing a policy early does not make it effective immediately.
 Competing causes: Sorting by latest publish time or incorrectly treating draft as active can explain it.
 First discriminating check: Compare publish status with effective-from and current request time.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Exclude the future version from present-date evidence while retaining its scheduled activation.
 Proposed correction: Filter on publication state and effective interval.
 Mitigation boundary: Suppressing advance notices may harm a separate future-planning task.
 Verification plan: Test a future-effective document alongside the current one.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The policy owner checks the activation boundary in the jurisdiction’s time zone.
 ### 12.5. Regional exception omitted
-Classification: hypothetical failure, not an observed incident.
 Trigger: A generic limit is shown without a local exception.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+A general cap can be wrong for an employee covered by a local exception.
 Competing causes: Chunk boundaries may hide the exception or jurisdiction inference may be wrong.
 First discriminating check: Inspect retrieved neighbors and the explicitly supplied user locale.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Suppress the combined answer until the region and applicable appendix are resolved.
 Proposed correction: Retrieve related exception sections and ask for missing jurisdiction.
 Mitigation boundary: Unverified user location should not silently become an entitlement.
 Verification plan: Test matched policy and exception pairs across regions.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The regional policy owner adjudicates whether the exception overrides or supplements the base rule.
 ### 12.6. Question requires two passages
-Classification: hypothetical failure, not an observed incident.
 Trigger: The answer cites only a general rule.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+Retrieving the general rule alone gives an incomplete answer when an exception also applies.
 Competing causes: A top-k cutoff or single-passage sufficiency check may omit the second source.
 First discriminating check: Compare the adjudicated required evidence set to selected chunks.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Return an abstention rather than presenting partial evidence as the complete policy.
 Proposed correction: Use a multi-passage completeness gate and abstain if incomplete.
 Mitigation boundary: Increasing k can add noise and increase prompt-injection exposure.
 Verification plan: Evaluate questions requiring rule plus exception together.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The evaluation lead labels both passages as necessary and reviews the resulting evidence set.
 ### 12.7. Citation ID is valid but claim unsupported
-Classification: hypothetical failure, not an observed incident.
 Trigger: The link opens but does not justify the assertion.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+A citation that exists is not evidence that the cited words entail the claim.
 Competing causes: The generator may attach a generic source or the citation validator may check only IDs.
 First discriminating check: Compare each atomic claim to its cited span with blinded reviewers.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Reject the unsupported claim even if the link resolves and the document is authorized.
 Proposed correction: Require claim-level support and reject unsupported claims.
 Mitigation boundary: Automated entailment models can themselves misclassify nuances.
 Verification plan: Audit citation precision on held-out annotated claims.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+A policy reviewer checks the specific cited span against each material answer claim.
 ### 12.8. Wrong source linked
-Classification: hypothetical failure, not an observed incident.
 Trigger: The text is relevant but clicking leads to another policy.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+A passage-to-URL mismatch prevents the user from verifying the asserted rule.
 Competing causes: A chunk-to-URI mapping defect or a duplicated document ID can explain it.
 First discriminating check: Trace chunk ID through manifest to original version and URI.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Disable the faulty citation mapping rather than substituting an unrelated valid link.
 Proposed correction: Rebuild the affected mapping from immutable source identifiers.
 Mitigation boundary: A blanket index rollback can restore a revoked page.
 Verification plan: Test URI resolution for sampled chunks and duplicate-ID fixtures.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The connector owner compares immutable document IDs, source revisions and canonical links.
 ### 12.9. Retrieved text contains prompt injection
-Classification: hypothetical failure, not an observed incident.
 Trigger: A document tells the model to ignore access restrictions.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+Untrusted policy text can carry instructions aimed at overriding the assistant’s task.
 Competing causes: The source may be compromised or a benign document may quote an attack example.
 First discriminating check: Inspect the source revision and contextual provenance under restricted access.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Do not follow embedded commands; remove the compromised source from serving pending review.
 Proposed correction: Treat source instructions as data and withhold tools and secrets.
 Mitigation boundary: Stripping all imperative language may destroy legitimate policy instructions.
 Verification plan: Exercise injection fixtures and verify both answer and tool boundaries.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+Security examines whether the source was altered and tests instruction isolation at the model boundary.
 ### 12.10. User attempts role spoofing
-Classification: hypothetical failure, not an observed incident.
 Trigger: A question says the user is an administrator.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+An asserted role in question text is not an authenticated entitlement.
 Competing causes: The application may trust the prompt or propagate a client-supplied entitlement.
 First discriminating check: Compare request identity token and authorization service inputs.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Ignore the claimed role and evaluate the principal from the signed session.
 Proposed correction: Derive identity and rights only from trusted session context.
 Mitigation boundary: An identity-service outage may reduce availability under fail-closed operation.
 Verification plan: Test forged role fields and prompt-based privilege assertions.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+Identity owners test forged role claims against both retrieval and final response paths.
 ### 12.11. Search returns no candidates
-Classification: hypothetical failure, not an observed incident.
 Trigger: A known policy is absent from top results.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+An empty candidate set can be a genuine corpus gap or a search failure.
 Competing causes: The connector may have missed the page or query vocabulary may differ.
 First discriminating check: Check source inventory, index manifest and lexical versus vector candidates.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Offer authorized portal search rather than guessing from model memory.
 Proposed correction: Repair ingestion if missing; tune retrieval only if indexed.
 Mitigation boundary: Query expansion can surface more irrelevant sensitive candidates.
 Verification plan: Use a held-out known-item set and reconcile indexed inventory.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The retrieval owner checks indexing coverage and exact-match queries against the known source.
 ### 12.12. High retrieval score but wrong policy
-Classification: hypothetical failure, not an observed incident.
 Trigger: A highly similar obsolete page ranks first.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+Semantic similarity does not establish applicability or effective status.
 Competing causes: Semantic similarity may ignore effective date or duplicate text may skew ranking.
 First discriminating check: Inspect current-status metadata and ranked versions.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Reject the obsolete candidate before ranking eligible documents for the current request.
 Proposed correction: Apply eligibility filters before ranking and prefer authoritative active versions.
 Mitigation boundary: A hard current-only filter is wrong for historical questions.
 Verification plan: Test current and historical questions against identical version families.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The search owner compares rank features with the policy version’s validity metadata.
 ### 12.13. Important table loses structure
-Classification: hypothetical failure, not an observed incident.
 Trigger: A meal-cap table becomes a sequence of unattached numbers.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+Flattening a matrix can attach a valid amount to the wrong city or employee group.
 Competing causes: Parser extraction or multi-column reading order may corrupt context.
 First discriminating check: Compare source rendering with extracted cells and row headers.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Exclude the broken table from answers until row and column associations are restored.
 Proposed correction: Use structured table extraction and reject low-confidence parses.
 Mitigation boundary: OCR repair may create plausible but incorrect numeric values.
 Verification plan: Have reviewers compare table fixtures to source and verify units.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The ingestion owner compares extracted cells and headings with the source rendering.
 ### 12.14. Scanned page has OCR error
-Classification: hypothetical failure, not an observed incident.
 Trigger: A cap of 60 is extracted as 80.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+An OCR digit error can change the reimbursement limit while leaving the sentence fluent.
 Competing causes: Low-resolution OCR or a font-specific glyph confusion may be responsible.
 First discriminating check: Inspect page image and OCR confidence on the affected span.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Quarantine low-confidence numeric extractions and route them for source-image review.
 Proposed correction: Route low-confidence numeric fields to human verification.
 Mitigation boundary: Raising thresholds can delay indexing of legitimate updates.
 Verification plan: Use known numeric OCR fixtures and sample current policy pages.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The document owner verifies the original number before an amended index is promoted.
 ### 12.15. Two current policies disagree
-Classification: hypothetical failure, not an observed incident.
 Trigger: Two authorized sources offer different caps.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+Two current authorized sources with incompatible limits cannot both determine one unqualified cap.
 Competing causes: A missing jurisdiction qualifier or an unapproved duplicate can create conflict.
 First discriminating check: Compare owner, applicability, dates and publication status.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Present the conflict without choosing a winner and direct the user to policy support.
 Proposed correction: Abstain and escalate unresolved contradictions to policy owners.
 Mitigation boundary: Automatically choosing the newer page may disregard source authority.
 Verification plan: Evaluate a conflicting-source fixture and the escalation route.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The policy owner resolves precedence and republishes an authoritative version.
 ### 12.16. Incorrect no-answer response
-Classification: hypothetical failure, not an observed incident.
 Trigger: The assistant abstains despite an available supporting policy.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+An unjustified abstention increases manual work even though an authorized answer exists.
 Competing causes: Retrieval failure or an excessively strict sufficiency threshold can explain it.
 First discriminating check: Check whether complete authorized evidence appears in candidate and selected sets.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Keep the portal fallback available while investigating the failed evidence path.
 Proposed correction: Fix the first failing stage rather than forcing an answer.
 Mitigation boundary: Relaxing the gate can raise unsupported-answer risk.
 Verification plan: Report answerable-case abstention and unsupported rate together.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The evaluation lead distinguishes retrieval misses from an overly strict sufficiency gate.
 ### 12.17. Correct-looking unauthorized answer
-Classification: hypothetical failure, not an observed incident.
 Trigger: The final answer coincides with hidden material.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+An answer matching hidden content is still a leak if it was derived from an unauthorized source.
 Competing causes: The model may have received unauthorized context or guessed a common value.
 First discriminating check: Inspect restricted generation input and candidate authorization trace.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Block the output and preserve a restricted provenance trace for security review.
 Proposed correction: Remove unauthorized context and reject unverifiable claims.
 Mitigation boundary: The identical public fact may also appear in an authorized source.
 Verification plan: Use unique secret canaries to distinguish leakage from coincidental overlap.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+Security distinguishes exposure through retrieved evidence, model memory and a coincidental public value.
 ### 12.18. Stale entitlement cache
-Classification: hypothetical failure, not an observed incident.
 Trigger: A recent group change is not reflected.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+An entitlement cached before a group removal can continue granting access after revocation.
 Competing causes: Cache TTL or delayed identity propagation may be responsible.
 First discriminating check: Compare authoritative identity and policy-decision timestamps.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Stop relying on the cached grant until the policy decision point confirms current rights.
 Proposed correction: Fail closed when freshness is unknown and honor revocation events.
 Mitigation boundary: Disabling all caches may exceed the latency budget.
 Verification plan: Test revocation at multiple cache ages and during an outage.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+Identity and platform owners agree a revocation propagation contract and exercise it.
 ### 12.19. Cross-user cache leak
-Classification: hypothetical failure, not an observed incident.
 Trigger: One employee sees another employee response.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+A cached answer keyed only by question can disclose another user’s authorized evidence.
 Competing causes: Cache key may omit identity context or document authorization may change after caching.
 First discriminating check: Inspect key dimensions and reauthorization on cache hit.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Disable shared response caching for the affected endpoint and invalidate existing entries.
 Proposed correction: Partition by security context and reauthorize every cited source.
 Mitigation boundary: Per-user caching increases storage and can still be stale.
 Verification plan: Test identical queries from users with different permissions.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The platform owner tests isolation by principal, policy revision, time and relevant context.
 ### 12.20. Shared model session retains content
-Classification: hypothetical failure, not an observed incident.
 Trigger: A later user receives text from a previous request.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+A shared conversation state can carry source text between unrelated employee sessions.
 Competing causes: Conversation state may be reused or logs may be accidentally replayed.
 First discriminating check: Inspect session IDs, gateway isolation and context assembly.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Terminate the affected session pool and prevent reuse across security principals.
 Proposed correction: Use tenant-scoped isolated sessions and clear request state.
 Mitigation boundary: Provider-side session behavior requires contractual and technical review.
 Verification plan: Run cross-session canary tests in an approved environment.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The model gateway owner tests state isolation and provider retention guarantees.
 ### 12.21. Source deleted but vector persists
-Classification: hypothetical failure, not an observed incident.
 Trigger: A deleted policy appears in vector candidates.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+A vector can persist after the source is deleted and still produce a candidate ID.
 Competing causes: Deletion may have reached the object store but not every vector replica.
 First discriminating check: Compare deletion ledger to index replica watermarks.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Deny the deleted document at request time while removing all index and cache derivatives.
 Proposed correction: Block the document ID at serving and purge all derived vectors.
 Mitigation boundary: A deny list alone is not a complete retention deletion process.
 Verification plan: Verify absence after compaction and replica reconciliation.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The index owner reconciles deletion tombstones with every replica and snapshot.
 ### 12.22. Out-of-order updates restore old content
-Classification: hypothetical failure, not an observed incident.
 Trigger: An earlier ingestion event overwrites a newer policy.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+An older event arriving late can overwrite a newer publication state without version ordering.
 Competing causes: A retry can arrive late or independent connectors may disagree on ordering.
 First discriminating check: Inspect source revisions and event sequence.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Pause the affected document pipeline and keep the last verified manifest active.
 Proposed correction: Apply conditional writes against authoritative revision.
 Mitigation boundary: Source clocks are not reliable revision ordering unless guaranteed.
 Verification plan: Replay events in reverse order and verify final state.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The ingestion owner compares monotonic source revisions and rejects stale events.
 ### 12.23. Failed index promotion
-Classification: hypothetical failure, not an observed incident.
 Trigger: Some servers use new chunks with an old embedding model.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+An embedding mismatch can make nearest-neighbor scores meaningless without producing an obvious error.
 Competing causes: Non-atomic deployment or missing compatibility metadata may be responsible.
 First discriminating check: Compare manifest and model IDs across serving replicas.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Stop promotion and route traffic to the last compatible index-model pair.
 Proposed correction: Promote a signed compatible bundle atomically.
 Mitigation boundary: A rollback to a previous index must preserve revocations.
 Verification plan: Run mixed-version rollout and rollback fixtures.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The release owner verifies model fingerprint, vector dimension and manifest compatibility on each replica.
 ### 12.24. Authorization service outage
-Classification: hypothetical failure, not an observed incident.
 Trigger: All policy answers become unavailable.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+An authorization outage is not permission to answer using stale or unverified grants.
 Competing causes: An upstream outage or local network error can cause indistinguishable timeouts.
 First discriminating check: Inspect health signals and scoped dependency metrics.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Fail closed and offer the independent portal if its own access control is available.
 Proposed correction: Fail closed and route the user to the existing portal.
 Mitigation boundary: Unsafe stale authorization trades availability for potential disclosure.
 Verification plan: Inject timeouts and verify no evidence reaches the model.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The identity service owner measures recovery and investigates dependency health without exposing document existence.
 ### 12.25. Generation provider outage
-Classification: hypothetical failure, not an observed incident.
 Trigger: Retrieval succeeds but no answer arrives.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+A generation outage need not make authorized search snippets unavailable if that fallback is separately validated.
 Competing causes: Provider throttling or a local gateway timeout may be responsible.
 First discriminating check: Separate gateway status, quota and provider responses.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Return a safe unavailable response or approved search-only results rather than fabricating an answer.
 Proposed correction: Return manual search with a bounded retry policy.
 Mitigation boundary: Unbounded retries amplify load and cost.
 Verification plan: Exercise rate-limit and timeout fixtures with admission control.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The model gateway owner checks provider errors and retry budgets before restoring generation.
 ### 12.26. Reranker receives restricted text
-Classification: hypothetical failure, not an observed incident.
 Trigger: Final output is safe but an external reranker sees hidden content.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+A third-party reranker receiving restricted text is a disclosure even if the user never sees it.
 Competing causes: Authorization was applied after reranking or a filter was misconfigured.
 First discriminating check: Audit data flow and boundary-specific request payloads.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Disable the external reranker and prevent restricted candidate text leaving the trust boundary.
 Proposed correction: Move live authorization before any external reranker call.
 Mitigation boundary: A trusted in-boundary reranker still requires least-privilege controls.
 Verification plan: Use forbidden canaries and inspect approved test-provider traces.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+Security reviews provider data handling and verifies authorization occurs before any external transfer.
 ### 12.27. Prompt contains excessive source text
-Classification: hypothetical failure, not an observed incident.
 Trigger: A relevant detail is lost or latency spikes.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+Too much context can bury qualifiers and consume capacity without improving the evidence set.
 Competing causes: Too many chunks or duplicate context may exhaust the input budget.
 First discriminating check: Measure tokens by component and inspect duplicate passages.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Reduce selected evidence to complete authorized spans rather than truncating arbitrary text.
 Proposed correction: Select minimum sufficient distinct evidence and preserve exceptions.
 Mitigation boundary: Aggressive truncation can remove a policy qualifier.
 Verification plan: Test long documents with critical text near chunk boundaries.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The retrieval owner evaluates relevance, qualifier retention and token use together.
 ### 12.28. Answer invents currency
-Classification: hypothetical failure, not an observed incident.
 Trigger: The policy states a number but no currency.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+A number without a currency cannot justify an answer specifying dollars, euros or another unit.
 Competing causes: The model may fill a familiar currency or parser may have omitted a header.
 First discriminating check: Check the original page and extracted table header.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+State the missing unit or abstain; do not fill it in from locale assumptions.
 Proposed correction: State units only when supported and ask for clarification otherwise.
 Mitigation boundary: Suppressing the amount entirely may be safer than guessing but less useful.
 Verification plan: Test missing-unit and inherited-header examples.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The policy owner adds the unit to the source or confirms the authoritative context.
 ### 12.29. Historical request uses current policy
-Classification: hypothetical failure, not an observed incident.
 Trigger: The employee asks about last year but receives today’s cap.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+A historical expense question requires the policy effective on the event date, not necessarily today.
 Competing causes: Date parsing may ignore the requested interval or the index may retain only current documents.
 First discriminating check: Inspect interpreted date and source effective interval.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Ask for the relevant date when absent and search authorized historical versions when available.
 Proposed correction: Use explicit as-of selection when authorized historical sources exist.
 Mitigation boundary: Retention requirements may prohibit keeping certain old content.
 Verification plan: Test historical, current and ambiguous-time questions.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The policy owner checks that the chosen interval covers the event and the user can access it now.
 ### 12.30. Question includes personal details
-Classification: hypothetical failure, not an observed incident.
 Trigger: An employee includes a medical condition in a travel query.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+A medical detail in a question introduces sensitive data unrelated to the routine policy lookup.
 Competing causes: The application may log raw prompts or send unnecessary details to a provider.
 First discriminating check: Inspect governed logs and model-gateway payload under approved access.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Avoid echoing the detail and apply approved redaction before provider transmission and logging.
 Proposed correction: Minimize and redact unnecessary fields before external processing.
 Mitigation boundary: Redaction can remove context needed for the policy question.
 Verification plan: Use synthetic sensitive examples and check utility and leakage.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+Privacy owners review retention, access controls and whether the question needs human handling.
 ### 12.31. Feedback leaks a document
-Classification: hypothetical failure, not an observed incident.
 Trigger: A thumbs-down report stores the whole restricted source.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+Feedback attachments can copy restricted policy text into a less protected support queue.
 Competing causes: Feedback UI may include the full context or an operator export may widen access.
 First discriminating check: Trace feedback payload and access permissions.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Disable automatic source attachment and restrict already captured feedback under the deletion policy.
 Proposed correction: Store minimal identifiers and gate source reconstruction by authorization.
 Mitigation boundary: Removing all context can make error triage difficult.
 Verification plan: Review feedback exports and test least-privilege access.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The support and privacy owners inspect the feedback data path and access permissions.
 ### 12.32. Metric rewards unsafe guessing
-Classification: hypothetical failure, not an observed incident.
 Trigger: A score rises because guessed answers match common values.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+A guessed common cap can be numerically correct while lacking supporting authorized evidence.
 Competing causes: The benchmark may score only string matching or omit unanswerable questions.
 First discriminating check: Inspect labels, authorized evidence and adjudication rules.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Do not reward a match unless claim-level support and authorization also pass.
 Proposed correction: Score supported answers and abstention separately.
 Mitigation boundary: Overly strict evidence matching can reject valid alternative passages.
 Verification plan: Use adversarial unsupported-but-plausible answer cases.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The evaluation lead separates answer accuracy, evidence support and unauthorized disclosure metrics.
 ### 12.33. Unanswerable prevalence changes
-Classification: hypothetical failure, not an observed incident.
 Trigger: Aggregate score falls after a new user cohort joins.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+A cohort with more unanswerable questions changes aggregate performance without changing conditional behavior.
 Competing causes: The cohort may ask harder questions or the system may have regressed.
 First discriminating check: Compare stratified rates and mix-adjusted results over time.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Report answerable and unanswerable performance separately before attributing the shift to the model.
 Proposed correction: Investigate cohort-specific performance before changing the system.
 Mitigation boundary: Mix adjustment cannot replace raw user-impact reporting.
 Verification plan: Recompute metrics with fixed and observed population weights.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The analyst standardizes the cohort mix and reviews per-group denominators.
 ### 12.34. Evaluation labels are stale
-Classification: hypothetical failure, not an observed incident.
 Trigger: A correct current answer is judged wrong against an old cap.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+A frozen label tied to an old policy can incorrectly penalize a correct new answer.
 Competing causes: Policy changed after labels were created or the answer ignored as-of time.
 First discriminating check: Compare label snapshot, policy revision and request time.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Suspend comparisons against mismatched policy snapshots until the label is re-adjudicated.
 Proposed correction: Version labels by source snapshot and relabel when appropriate.
 Mitigation boundary: Relabeling after seeing model output risks biased adjudication.
 Verification plan: Test a policy update against frozen historical and new-current sets.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The evaluation owner records the policy revision and effective time used for each label.
 ### 12.35. Near-duplicate test leakage
-Classification: hypothetical failure, not an observed incident.
 Trigger: Holdout results are unusually high.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+Paraphrases of the same source question in tuning and holdout sets inflate apparent generalization.
 Competing causes: Paraphrases may occur in both tuning and test partitions.
 First discriminating check: Cluster questions by semantic and source relation before partitioning.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Quarantine related question families from the final holdout and rerun selection on a clean split.
 Proposed correction: Move related variants into a single split and freeze it.
 Mitigation boundary: Over-clustering may reduce coverage of legitimate variants.
 Verification plan: Audit nearest neighbors across partitions with human review.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The evaluation owner groups by source policy and question intent before partitioning.
 ### 12.36. Model judge agrees with wrong answer
-Classification: hypothetical failure, not an observed incident.
 Trigger: Automated evaluation marks an unsupported answer correct.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+A model judge may prefer a fluent answer despite a missing or contradictory citation.
 Competing causes: The judge may rely on general knowledge or share generator biases.
 First discriminating check: Compare blinded expert decisions and supplied source evidence.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Route disputed and high-risk claims to human adjudication rather than accepting the judge alone.
 Proposed correction: Use expert adjudication on risk-critical cases and calibrate judge outputs.
 Mitigation boundary: Human reviewers can also disagree and need an adjudication protocol.
 Verification plan: Track disagreement by source type and answerability stratum.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The evaluation lead measures judge agreement and audits false approvals against source spans.
 ### 12.37. Manual baseline is disadvantaged
-Classification: hypothetical failure, not an observed incident.
 Trigger: Candidate appears faster because baseline users lack portal training.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+An untrained manual-search cohort makes a speed comparison favor the assistant for the wrong reason.
 Competing causes: Unequal onboarding or different corpus snapshots may confound comparison.
 First discriminating check: Audit assigned training, tasks and portal access.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Pause interpretation of the comparison until both workflows receive equivalent onboarding.
 Proposed correction: Standardize context and randomize task order where feasible.
 Mitigation boundary: Extra training may not reflect normal operating conditions.
 Verification plan: Report both realistic and controlled baseline conditions.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The study owner balances participants and tasks and records whether answers were correct.
 ### 12.38. User overtrusts the answer
-Classification: hypothetical failure, not an observed incident.
 Trigger: The user treats guidance as an expense approval.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+An employee can mistake a cited informational response for a binding reimbursement decision.
 Competing causes: The UI may omit scope language or make citations hard to inspect.
 First discriminating check: Observe task behavior in a privacy-approved usability study.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Display the informational boundary alongside the answer and link to the actual approval workflow.
 Proposed correction: Make informational scope and source links salient.
 Mitigation boundary: A disclaimer alone does not prevent overreliance.
 Verification plan: Test whether users verify consequential claims in realistic tasks.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The product owner tests whether users understand the distinction before exposing the feature broadly.
 ### 12.39. Escalation channel is unavailable
-Classification: hypothetical failure, not an observed incident.
 Trigger: An abstaining user cannot reach a policy owner.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+A safe abstention is not operationally useful if no policy support route can receive the question.
 Competing causes: The help-desk route may be wrong or the queue may be overloaded.
 First discriminating check: Test the link and confirm owner coverage and queue status.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Show available portal guidance and support hours without promising immediate resolution.
 Proposed correction: Provide an approved alternate route or clearly state service hours.
 Mitigation boundary: Routing every low-risk query to a human can overwhelm the queue.
 Verification plan: Monitor escalation delivery and resolution without exposing sensitive queries.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The support owner monitors queue availability and defines an outage contact path.
 ### 12.40. A source owner changes
-Classification: hypothetical failure, not an observed incident.
 Trigger: A new version lacks an accountable approver.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+A published policy without an accountable owner may lack a reliable conflict-resolution path.
 Competing causes: Ownership metadata may be stale or an organizational transfer may be incomplete.
 First discriminating check: Compare portal ownership with approved governance records.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Exclude the unowned version from answerable evidence until responsibility is assigned.
 Proposed correction: Quarantine updates until the owner is confirmed.
 Mitigation boundary: Excessive quarantine can leave the index outdated.
 Verification plan: Exercise ownership transfer in the runbook.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+Governance confirms the new owner and publication authority before release.
 ### 12.41. Question is ambiguous
-Classification: hypothetical failure, not an observed incident.
 Trigger: The user asks about meals without specifying location.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+A meal question without location may have several mutually exclusive applicable limits.
 Competing causes: The policy may depend on jurisdiction or trip type.
 First discriminating check: Inspect the required policy qualifiers and the question context.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Ask the employee to clarify the relevant location instead of choosing a default jurisdiction.
 Proposed correction: Ask a neutral clarification without revealing hidden policies.
 Mitigation boundary: Repeated questions can degrade usability.
 Verification plan: Test ambiguous prompts and verify no unsupported assumptions.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The policy team specifies which location attributes determine applicability.
 ### 12.42. Answer combines different effective dates
-Classification: hypothetical failure, not an observed incident.
 Trigger: A single response merges a current cap with a superseded exception.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+A current cap paired with an old exception can create a rule that never existed at any time.
 Competing causes: Retriever may collect versions independently or context assembly may omit date metadata.
 First discriminating check: Trace effective intervals for every selected chunk.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Suppress the composite response and rebuild evidence for one coherent effective instant.
 Proposed correction: Require a consistent as-of context and flag incompatible evidence.
 Mitigation boundary: A comparison question may legitimately require multiple dates.
 Verification plan: Test both point-in-time and explicit change-over-time questions.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The retrieval owner verifies interval overlap and provenance of both cited passages.
 ### 12.43. System hides uncertainty
-Classification: hypothetical failure, not an observed incident.
 Trigger: The response sounds confident despite ambiguous evidence.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+Fluent language can hide unresolved policy ambiguity from a reader.
 Competing causes: Prompt style or a postprocessing template may remove uncertainty.
 First discriminating check: Compare evidence gate output with rendered text.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Use explicit uncertainty and escalation when evidence does not settle the question.
 Proposed correction: Preserve calibrated uncertainty and abstain when policy interpretation is unresolved.
 Mitigation boundary: Confidence language is not a substitute for evidence support.
 Verification plan: Review uncertain cases with policy owners and users.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The evaluation lead checks whether the answer states both the conflict and its practical boundary.
 ### 12.44. Unknown language request
-Classification: hypothetical failure, not an observed incident.
 Trigger: An employee submits a question in an unsupported language.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+An unsupported-language question may be misinterpreted even if the model produces fluent text.
 Competing causes: Language detection can misclassify a short query or translation can distort policy terms.
 First discriminating check: Check explicit language preference and a privacy-safe detection result.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Explain the English-only scope without guessing the meaning of sensitive content.
 Proposed correction: Route unsupported cases to the portal or an approved human service.
 Mitigation boundary: A blanket language block can exclude valid bilingual queries.
 Verification plan: Test short mixed-language prompts and false detections.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The product owner requires separate multilingual evaluation before expanding coverage.
 ### 12.45. Lexical index misses a synonym
-Classification: hypothetical failure, not an observed incident.
 Trigger: A paraphrase returns unrelated results.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+A keyword index can miss a concept when the employee uses different vocabulary from the source.
 Competing causes: Vocabulary mismatch or a stale index can produce the same symptom.
 First discriminating check: Check document presence and compare lexical with embedding retrieval.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Offer manual search and inspect the query terms before changing the retrieval method.
 Proposed correction: Improve query expansion or embedding retrieval after diagnosis.
 Mitigation boundary: Embedding matches can miss exact version identifiers.
 Verification plan: Compare stratified exact-term and paraphrase questions.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The search owner tests controlled synonyms and compares them with authorized vector retrieval.
 ### 12.46. Embedding index mixes models
-Classification: hypothetical failure, not an observed incident.
 Trigger: Relevant pages disappear after a model upgrade.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+An index built with one embedding model cannot safely be queried using an unrelated model’s vectors.
 Competing causes: Query and document vectors may use incompatible embedding versions.
 First discriminating check: Compare embedding version in request with index manifest.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Restore a matching query encoder and index manifest as a single release unit.
 Proposed correction: Rebuild and atomically switch matching query and document encoders.
 Mitigation boundary: A rollback must not reintroduce revoked content.
 Verification plan: Run compatibility checks before index promotion.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The release owner verifies embedding identifiers across builders, stores and serving instances.
 ### 12.47. Token budget hides qualifier
-Classification: hypothetical failure, not an observed incident.
 Trigger: The retrieved passage contains an exception beyond the prompt cutoff.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+A prompt cutoff can remove an exception that immediately follows an otherwise complete rule.
 Competing causes: Truncation policy or tokenization differences can drop material.
 First discriminating check: Inspect the exact model input and compare with source chunk.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Reject evidence bundles that split required qualifiers from the governing clause.
 Proposed correction: Preserve qualifiers and reject context that cannot fit safely.
 Mitigation boundary: Raising context size can increase cost and dilute attention.
 Verification plan: Use boundary fixtures where the qualifier is near truncation.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The context assembly owner tests token-budget boundaries using long source fixtures.
 ### 12.48. Index growth raises operating cost
-Classification: hypothetical failure, not an observed incident.
 Trigger: Storage and query cost exceed an approved budget.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+Retaining many revisions and derived vectors can increase storage and index maintenance expense.
 Competing causes: Duplicate versions or oversized embeddings may both contribute.
 First discriminating check: Attribute cost by version, source, index and traffic.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Pause nonessential backfills while preserving mandatory source retention and access controls.
 Proposed correction: Remove expired derived copies under retention rules and right-size after measurement.
 Mitigation boundary: Deleting retained historical versions can break required historical answers.
 Verification plan: Compare indexed inventory and cost before and after the controlled change.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The platform owner attributes cost to source versions, vector replicas and query volume before tuning.
 ### 12.49. Burst load overloads dependencies
-Classification: hypothetical failure, not an observed incident.
 Trigger: Normal average throughput looks safe but requests time out at opening time.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+A busy-start burst can exhaust a dependency even when the day’s mean throughput is low.
 Competing causes: A burst or retry storm can exceed per-second capacity.
 First discriminating check: Inspect fine-grained arrival, concurrency and dependency saturation.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Apply bounded queues and safe overload responses instead of unbounded retries.
 Proposed correction: Use admission control and bounded backoff with a portal fallback.
 Mitigation boundary: Overly aggressive shedding can block urgent legitimate requests.
 Verification plan: Run a safe load test at a measured representative burst profile.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+Operations reviews time-bucketed arrivals, concurrency, dependency limits and retry amplification.
 ### 12.50. User cannot open cited source
-Classification: hypothetical failure, not an observed incident.
 Trigger: A link is generated but the portal rejects access.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+A citation that cannot be opened does not let the employee independently inspect the evidence.
 Competing causes: Access may have been revoked between generation and click or the link may be malformed.
 First discriminating check: Compare link target, source status and current authorization.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Avoid presenting the broken link as actionable and offer the authorized portal route.
 Proposed correction: Recheck citations before display and provide a generic access-safe fallback.
 Mitigation boundary: A later revocation remains possible after the response is rendered.
 Verification plan: Exercise permission changes across request and click boundaries.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The connector owner checks link lifetime, identity propagation and document-level portal permissions.
 ### 12.51. Incomplete deletion from audit store
-Classification: hypothetical failure, not an observed incident.
 Trigger: A removed policy is absent from search but persists in traces.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+Deleting a source from search does not remove copies in audit traces or feedback stores.
 Competing causes: Trace retention or backup lifecycle may be independent of index purge.
 First discriminating check: Map all derived stores and retention obligations.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Restrict the affected records while applying the approved deletion or retention procedure.
 Proposed correction: Execute the approved deletion workflow across applicable stores.
 Mitigation boundary: Legal holds or audit obligations may constrain deletion.
 Verification plan: Verify each store and document exceptions with the responsible owner.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+Governance reconciles indexed content, logs and legal retention obligations with store owners.
 ### 12.52. Model update changes behavior
-Classification: hypothetical failure, not an observed incident.
 Trigger: The same evidence yields more confident unsupported claims.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+A provider model change can alter support behavior even when retrieval and prompts are unchanged.
 Competing causes: Provider model drift or prompt-version mismatch may be responsible.
 First discriminating check: Compare pinned model identifiers and replay the frozen evaluation set.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Pin or roll back the approved model version where supported and retain the safe fallback.
 Proposed correction: Pin or roll back the configuration and reassess before release.
 Mitigation boundary: Some providers cannot guarantee exact replay across backend changes.
 Verification plan: Track behavioral regressions on a fixed authorized test suite.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The model owner compares fixed evidence fixtures and claim-support judgments across versions.
 ### 12.53. Parser changes citation offsets
-Classification: hypothetical failure, not an observed incident.
 Trigger: A citation highlights the wrong sentence after reindexing.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+Parser normalization can shift text offsets so a link highlights an adjacent sentence.
 Competing causes: Normalization or character-encoding changes can shift offsets.
 First discriminating check: Compare source-version hash, parser revision and stored offsets.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Disable unreliable deep links while retaining a verified document-level citation if policy permits.
 Proposed correction: Bind offsets to exact normalized source version and rebuild links.
 Mitigation boundary: Offsets cannot be reused across content revisions safely.
 Verification plan: Test Unicode and whitespace transformations against source spans.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The ingestion owner binds offsets to the exact parsed version and tests round-trip highlighting.
 ### 12.54. Policy update arrives during generation
-Classification: hypothetical failure, not an observed incident.
 Trigger: A document is revoked after retrieval but before response.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+A permission or policy change after retrieval creates a time-of-check to time-of-use gap.
 Competing causes: An access change or a source withdrawal can create a time-of-check race.
 First discriminating check: Trace authorization and source-version times at each boundary.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Recheck authorization and applicability immediately before delivery and discard stale evidence.
 Proposed correction: Reauthorize and revalidate just before delivery.
 Mitigation boundary: No distributed check can make an external click permanently authorized.
 Verification plan: Use a deterministic revocation fixture at each pipeline stage.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+Security tests revocation during generation and defines the remaining consistency window.
 ### 12.55. Fallback itself exposes data
-Classification: hypothetical failure, not an observed incident.
 Trigger: An error message includes a restricted retrieval snippet.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+An exception handler can accidentally echo a restricted snippet into an otherwise safe error page.
 Competing causes: A generic exception logger or debug handler may render source text.
 First discriminating check: Review error-path templates and restricted logs.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Return a generic error and restrict diagnostic payloads to authorized operators.
 Proposed correction: Return generic messages and keep protected diagnostic identifiers.
 Mitigation boundary: Removing all diagnostics can prolong recovery.
 Verification plan: Inject exceptions after retrieval and inspect user-visible output.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The service owner injects failures at each stage and inspects response bodies and logs.
 ### 12.56. Ranking favors a popular obsolete page
-Classification: hypothetical failure, not an observed incident.
 Trigger: An older frequently viewed policy outranks the current one.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+Popularity can keep an obsolete policy highly ranked after a new version takes effect.
 Competing causes: Behavioral popularity may dominate authority or freshness features.
 First discriminating check: Inspect rank features alongside effective status.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Filter on applicable status before applying popularity-based ranking signals.
 Proposed correction: Apply eligibility and authority constraints before ranking.
 Mitigation boundary: Popularity may still help rank equally authoritative current pages.
 Verification plan: Test popular old pages against current low-traffic policies.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The retrieval owner compares rank traces for old and current revisions with the same query.
 ### 12.57. Conflicting access granularity
-Classification: hypothetical failure, not an observed incident.
 Trigger: A user may see a document but not one restricted section.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+Document-level access does not imply permission to see all sections of a mixed-access document.
 Competing causes: Document-level ACL inheritance may ignore section overrides.
 First discriminating check: Compare section ACL with the inherited document entitlement.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Apply the most restrictive section decision before any chunk reaches a model or reranker.
 Proposed correction: Check the most restrictive applicable resource permission.
 Mitigation boundary: Overly broad section filtering can hide authorized surrounding text.
 Verification plan: Test mixed-permission sections and chunk boundary inheritance.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+Security verifies inheritance and deny precedence using mixed-permission section fixtures.
 ### 12.58. Evaluation misses rare policy groups
-Classification: hypothetical failure, not an observed incident.
 Trigger: Overall score is high while a small region receives wrong answers.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+A strong aggregate metric can conceal systematically poor performance in a small jurisdiction.
 Competing causes: Sampling imbalance or a region-specific parser defect can produce this pattern.
 First discriminating check: Inspect subgroup counts, intervals and representative failures.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Report the affected group separately and do not average away critical policy errors.
 Proposed correction: Oversample critical groups for diagnosis and report appropriate weights.
 Mitigation boundary: Small subgroup estimates remain uncertain even after oversampling.
 Verification plan: Track per-group coverage and require policy-owner review.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The evaluation lead collects more appropriately governed cases and reports uncertainty for the slice.
 ### 12.59. Unsafe rollback
-Classification: hypothetical failure, not an observed incident.
 Trigger: A rollback restores a previously removed source.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+Rolling back an old index can resurrect a document that has since been revoked or deleted.
 Competing causes: The old manifest may precede a revocation or deletion.
 First discriminating check: Compare rollback snapshot to the current deny and deletion ledger.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Keep current deny rules and deletion tombstones active independently of the rolled-back index.
 Proposed correction: Enforce current revocations independently of index version.
 Mitigation boundary: Retaining old snapshots can conflict with deletion obligations.
 Verification plan: Rehearse rollback following a synthetic revocation.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The release owner rehearses rollback with post-snapshot revocations and verifies all replicas.
 ### 12.60. Successful answer lacks actionable source
-Classification: hypothetical failure, not an observed incident.
 Trigger: The answer is supported but user cannot locate the actual passage.
-The business consequence is that a policy answer may be unavailable, misleading, or inappropriately disclosed.
+A supported answer is hard to audit if its citation lands at the top of a long document.
 Competing causes: Citation may link only to a portal homepage or strip the section anchor.
 First discriminating check: Check source URI and section mapping against the rendered document.
-Containment: stop using affected evidence when its authorization or validity is uncertain.
+Provide a verified section anchor or passage locator without bypassing portal authorization.
 Proposed correction: Link to a stable version and precise section where available.
 Mitigation boundary: Some source systems cannot preserve anchors across revisions.
 Verification plan: Test link resolution and user navigation under normal permissions.
-Owner: the relevant platform, policy, or security owner records the diagnosis and approves recovery.
-Evidence status: no fixture or mitigation was executed in this case.
+The product owner checks that users can navigate from the citation to the supporting text.
 ## 13. Transferable Lesson
 Treat enterprise RAG as an evidence-and-permissions workflow, not a model that happens to see documents.
 The transferable principle is to bind each answer to authorized, applicable, sufficient evidence and to preserve an abstention path.
@@ -1146,258 +1026,162 @@ Scores use 0 for incorrect, 1 for partial, 2 for correct with assumptions, and 3
 #### Q01 / Framing / practitioner
 Candidate prompt: What is the bounded decision and who owns it?
 Given facts: Assume an internal employee policy portal and no authority to approve expenses.
-Interviewer note — clarification: Define population, permissions, time and evidence where relevant.
 Strong answer: The product owner decides whether to test cited assistance against manual search; a policy owner owns interpretation and the tool performs no approval.
 Reasoning: Define the user, output, comparison, and non-negotiable authorization boundary before choosing a model.
-Check: Trace the conclusion to the stated evidence and preserve its limitations.
 Acceptable alternative: A search-only improvement can be preferable if it satisfies the task without generation.
 Follow-up: What if expense approval is requested?
 Follow-up answer: Add a separate decision, permissions, confirmation and audit design; do not silently extend this case.
 Red flag: Treating an answer as a binding approval conflates guidance and action.
-Scoring 0: incorrect conclusion or unsafe boundary.
-Scoring 1: partially correct but omits a material assumption.
-Scoring 2: correct answer and assumptions with a coherent check.
-Scoring 3: correct answer plus a defensible alternative and boundary.
 Answer support: Sections 1–4 and 8.
 #### Q02 / Evidence / practitioner
 Candidate prompt: What does the illustrative evidence establish?
 Given facts: The 100-question table was constructed for teaching rather than collected from users.
-Interviewer note — clarification: Define population, permissions, time and evidence where relevant.
 Strong answer: It establishes only arithmetic and the consequences of specified assumptions, not observed quality or a business outcome.
 Reasoning: Separate illustrative inputs, derived calculations, proposed architecture, and unmeasured results.
-Check: Trace the conclusion to the stated evidence and preserve its limitations.
 Acceptable alternative: A published research result can support a general mechanism if the cited scope is accurately described.
 Follow-up: What evidence would support a pilot?
 Follow-up answer: Frozen representative evaluation, access-control tests, approved thresholds and owner sign-offs are necessary inputs.
 Red flag: Calling a synthetic 80% an actual retrieval measurement is fabrication.
-Scoring 0: incorrect conclusion or unsafe boundary.
-Scoring 1: partially correct but omits a material assumption.
-Scoring 2: correct answer and assumptions with a coherent check.
-Scoring 3: correct answer plus a defensible alternative and boundary.
 Answer support: Sections 6, 9 and 11.
 #### Q03 / Data / practitioner
 Candidate prompt: What is the correct unit for answerability labels?
 Given facts: Users have different access rights and policies have effective dates.
-Interviewer note — clarification: Define population, permissions, time and evidence where relevant.
 Strong answer: Label each question against a user authorization context and a specific corpus snapshot or effective time.
 Reasoning: The same text question can be answerable for one user and unanswerable for another.
-Check: Trace the conclusion to the stated evidence and preserve its limitations.
 Acceptable alternative: A role-level fixture can substitute only if all relevant users have identical verified access.
 Follow-up: What if a user loses access during the request?
 Follow-up answer: Reauthorize selected sources before delivery and fail closed if the check cannot be completed.
 Red flag: Scoring against all documents regardless of access makes an unsafe system appear better.
-Scoring 0: incorrect conclusion or unsafe boundary.
-Scoring 1: partially correct but omits a material assumption.
-Scoring 2: correct answer and assumptions with a coherent check.
-Scoring 3: correct answer plus a defensible alternative and boundary.
 Answer support: Sections 5a, 5d and 8b.
 #### Q04 / Calculation / practitioner
 Candidate prompt: Compute complete evidence coverage for 64 successes among 80 answerable questions.
 Given facts: All required authorized evidence must occur within the first five candidates.
-Interviewer note — clarification: Define population, permissions, time and evidence where relevant.
 Strong answer: 64/80 = 0.8 or 80%; 16 answerable questions do not meet this retrieval criterion.
 Reasoning: The unit is questions divided by questions and the denominator excludes unanswerable questions.
-Check: Trace the conclusion to the stated evidence and preserve its limitations.
 Acceptable alternative: Report recall at another cutoff if the cutoff is fixed and the definition remains explicit.
 Follow-up: What if eight missing cases become complete?
 Follow-up answer: 72/80 = 90%, with the same denominator and labeling assumptions.
 Red flag: Using 100 total questions as the denominator changes the metric.
-Scoring 0: incorrect conclusion or unsafe boundary.
-Scoring 1: partially correct but omits a material assumption.
-Scoring 2: correct answer and assumptions with a coherent check.
-Scoring 3: correct answer plus a defensible alternative and boundary.
 Answer support: Section 6a, R-01.
 #### Q05 / Calculation / practitioner
 Candidate prompt: Compute the unsupported-answer fraction on unanswerable cases.
 Given facts: There are 20 unanswerable questions; 18 correct abstentions and 2 unsupported answers.
-Interviewer note — clarification: Define population, permissions, time and evidence where relevant.
 Strong answer: 2/20 = 10%, while correct abstention is 18/20 = 90%.
 Reasoning: The two rates complement each other only because these constructed outcomes are exhaustive and exclusive.
-Check: Trace the conclusion to the stated evidence and preserve its limitations.
 Acceptable alternative: Report raw counts along with fractions, especially for this small sample.
 Follow-up: If one more abstention becomes unsupported?
 Follow-up answer: The rate becomes 3/20 = 15%; it is not the overall error rate for all 100 questions.
 Red flag: Claiming 10% applies to all users or all questions ignores the denominator.
-Scoring 0: incorrect conclusion or unsafe boundary.
-Scoring 1: partially correct but omits a material assumption.
-Scoring 2: correct answer and assumptions with a coherent check.
-Scoring 3: correct answer plus a defensible alternative and boundary.
 Answer support: Section 6a, R-02 and R-03.
 #### Q06 / Capacity / practitioner
 Candidate prompt: Estimate average busy-interval request rate.
 Given facts: 12,000 requests/day; 80% arrive in four hours uniformly; ignore retries.
-Interviewer note — clarification: Define population, permissions, time and evidence where relevant.
 Strong answer: 9,600/14,400 = about 0.667 requests/s and, at two searches per request, about 1.333 searches/s.
 Reasoning: Convert hours to seconds and multiply the request rate by searches per request.
-Check: Trace the conclusion to the stated evidence and preserve its limitations.
 Acceptable alternative: A trace-based simulator is better when realistic burst and dependency distributions are available.
 Follow-up: What if the same busy volume arrives in one hour?
 Follow-up answer: It becomes 2.667 requests/s and 5.333 searches/s, still excluding retries and bursts.
 Red flag: Calling the four-hour mean a peak or latency guarantee is unjustified.
-Scoring 0: incorrect conclusion or unsafe boundary.
-Scoring 1: partially correct but omits a material assumption.
-Scoring 2: correct answer and assumptions with a coherent check.
-Scoring 3: correct answer plus a defensible alternative and boundary.
 Answer support: Section 6b, W-01 and W-02.
 #### Q07 / Security / practitioner
 Candidate prompt: Where should permission checks happen?
 Given facts: The reranker or generator might be an external service.
-Interviewer note — clarification: Define population, permissions, time and evidence where relevant.
 Strong answer: Check authoritative permissions before restricted text crosses each less-trusted boundary and recheck selected evidence before response.
 Reasoning: Index filters may accelerate lookup but can be stale after a revocation.
-Check: Trace the conclusion to the stated evidence and preserve its limitations.
 Acceptable alternative: A verified short-lived entitlement snapshot may be acceptable only under explicitly approved revocation semantics.
 Follow-up: What if the authorization service times out?
 Follow-up answer: Fail closed, emit a generic unavailable response and offer the authorized portal fallback.
 Red flag: Sending all documents to the model and filtering the final answer is not access control.
-Scoring 0: incorrect conclusion or unsafe boundary.
-Scoring 1: partially correct but omits a material assumption.
-Scoring 2: correct answer and assumptions with a coherent check.
-Scoring 3: correct answer plus a defensible alternative and boundary.
 Answer support: Sections 4 and 8b.
 #### Q08 / Citation / practitioner
 Candidate prompt: Does a valid citation ID prove a claim?
 Given facts: A generated sentence includes an ID present in the selected evidence.
-Interviewer note — clarification: Define population, permissions, time and evidence where relevant.
 Strong answer: No; verify that the source is authorized, applicable and actually supports the atomic claim.
 Reasoning: Identifier membership establishes provenance linkage, not entailment or completeness.
-Check: Trace the conclusion to the stated evidence and preserve its limitations.
 Acceptable alternative: Human review can adjudicate difficult policy claims when an automated check is uncertain.
 Follow-up: What if the source supports only part of the sentence?
 Follow-up answer: Split the claim and cite each supported part or abstain from the unsupported portion.
 Red flag: Treating any clickable link as proof is a citation-quality error.
-Scoring 0: incorrect conclusion or unsafe boundary.
-Scoring 1: partially correct but omits a material assumption.
-Scoring 2: correct answer and assumptions with a coherent check.
-Scoring 3: correct answer plus a defensible alternative and boundary.
 Answer support: Sections 6c and 9.
 #### Q09 / Diagnosis / practitioner
 Candidate prompt: Why might a known policy not appear in an answer?
 Given facts: The symptom alone does not identify the failing component.
-Interviewer note — clarification: Define population, permissions, time and evidence where relevant.
 Strong answer: Check source ingestion and manifest first, then retrieval candidates, authorization, applicability and evidence selection.
 Reasoning: A missing index entry, a vocabulary mismatch and a legitimate access denial require different remedies.
-Check: Trace the conclusion to the stated evidence and preserve its limitations.
 Acceptable alternative: Start from a trace ID or a controlled known-item fixture if a user report lacks detail.
 Follow-up: What if the document is indexed but unauthorized?
 Follow-up answer: Do not tune ranking to surface it; verify the entitlement decision with authorized security staff.
 Red flag: Increasing top-k without checking access or ingestion is an undirected and potentially unsafe fix.
-Scoring 0: incorrect conclusion or unsafe boundary.
-Scoring 1: partially correct but omits a material assumption.
-Scoring 2: correct answer and assumptions with a coherent check.
-Scoring 3: correct answer plus a defensible alternative and boundary.
 Answer support: Sections 8 and 12.
 #### Q10 / Wrong method / practitioner
 Candidate prompt: Why not supply every company document to a long-context model?
 Given facts: Some documents are restricted and source versions can be stale.
-Interviewer note — clarification: Define population, permissions, time and evidence where relevant.
 Strong answer: The model would receive data the user may not access and may blend incompatible or obsolete sources.
 Reasoning: Context capacity is not an authorization engine, source-of-truth resolver, or evidence validator.
-Check: Trace the conclusion to the stated evidence and preserve its limitations.
 Acceptable alternative: Long context over an already authorized, bounded set can be evaluated if privacy and applicability are preserved.
 Follow-up: What if all users have identical access?
 Follow-up answer: Version selection, context relevance, injection, cost and citation support still need testing.
 Red flag: Assuming a model will reliably ignore forbidden text is an invalid security control.
-Scoring 0: incorrect conclusion or unsafe boundary.
-Scoring 1: partially correct but omits a material assumption.
-Scoring 2: correct answer and assumptions with a coherent check.
-Scoring 3: correct answer plus a defensible alternative and boundary.
 Answer support: Sections 5c and 8.
 #### Q11 / Evaluation / practitioner
 Candidate prompt: How should the candidate be compared with manual search?
 Given facts: A decision maker wants evidence of task improvement, not only better retrieval scores.
-Interviewer note — clarification: Define population, permissions, time and evidence where relevant.
 Strong answer: Use matched or randomized eligible tasks, the same authorized corpus, independent outcome scoring and latency/cost/safety guardrails.
 Reasoning: Report answerability strata, sample sizes, uncertainty, missing outcomes and subgroup performance.
-Check: Trace the conclusion to the stated evidence and preserve its limitations.
 Acceptable alternative: A paired offline benchmark is useful for development but cannot alone establish employee productivity impact.
 Follow-up: What if randomization is impossible?
 Follow-up answer: Report an observational comparison with its confounding limits rather than calling it causal.
 Red flag: Comparing different users or corpora without qualification can create a false advantage.
-Scoring 0: incorrect conclusion or unsafe boundary.
-Scoring 1: partially correct but omits a material assumption.
-Scoring 2: correct answer and assumptions with a coherent check.
-Scoring 3: correct answer plus a defensible alternative and boundary.
 Answer support: Section 9.
 #### Q12 / Uncertainty / practitioner
 Candidate prompt: Interpret the approximate interval for the illustrative coverage fraction.
 Given facts: Assume 64 successes in 80 independent representative Bernoulli trials for this teaching calculation.
-Interviewer note — clarification: Define population, permissions, time and evidence where relevant.
 Strong answer: The standard error is about 0.0447; the approximate normal 95% interval is 0.712 to 0.888.
 Reasoning: Compute sqrt(0.8*0.2/80), multiply by 1.96 and state sampling assumptions.
-Check: Trace the conclusion to the stated evidence and preserve its limitations.
 Acceptable alternative: A Wilson or exact binomial interval may be more appropriate; cluster-aware methods handle grouped observations.
 Follow-up: What if questions are paraphrases from the same employee?
 Follow-up answer: Independence may fail; use a cluster-aware design or resampling scheme and report the effective population.
 Red flag: Describing the interval as a guarantee for each future request is wrong.
-Scoring 0: incorrect conclusion or unsafe boundary.
-Scoring 1: partially correct but omits a material assumption.
-Scoring 2: correct answer and assumptions with a coherent check.
-Scoring 3: correct answer plus a defensible alternative and boundary.
 Answer support: Section 9a.
 #### Q13 / Changed constraint / practitioner
 Candidate prompt: How does the design change for historical policy questions?
 Given facts: The user asks which rule applied on a previous trip date.
-Interviewer note — clarification: Define population, permissions, time and evidence where relevant.
 Strong answer: Select sources effective at the requested date and authorized for the requester; cite the date and version.
 Reasoning: Current-only filtering would answer a different question, while retaining old content is subject to governance.
-Check: Trace the conclusion to the stated evidence and preserve its limitations.
 Acceptable alternative: If authorized history is unavailable, abstain and direct the user to the policy owner.
 Follow-up: What if the date is unspecified?
 Follow-up answer: Ask a neutral clarification or explicitly bound the answer to the current date if that is appropriate.
 Red flag: Blindly selecting the latest published document ignores the requested time.
-Scoring 0: incorrect conclusion or unsafe boundary.
-Scoring 1: partially correct but omits a material assumption.
-Scoring 2: correct answer and assumptions with a coherent check.
-Scoring 3: correct answer plus a defensible alternative and boundary.
 Answer support: Sections 5a and 12.
 #### Q14 / Injection / practitioner
 Candidate prompt: How should the system handle a retrieved instruction to ignore access controls?
 Given facts: The instruction appears inside a retrieved policy document.
-Interviewer note — clarification: Define population, permissions, time and evidence where relevant.
 Strong answer: Treat it as untrusted source content; never grant it instruction or tool authority and do not disclose hidden content.
 Reasoning: Separate application instructions and authorization enforcement from the source data passed to the model.
-Check: Trace the conclusion to the stated evidence and preserve its limitations.
 Acceptable alternative: Quarantine the document if compromised and investigate its revision with the source owner.
 Follow-up: What if a legitimate policy itself contains instructions to employees?
 Follow-up answer: The assistant may summarize the policy instruction as evidence without obeying it as a system command.
 Red flag: Assuming prompt wording alone enforces the access boundary is insufficient.
-Scoring 0: incorrect conclusion or unsafe boundary.
-Scoring 1: partially correct but omits a material assumption.
-Scoring 2: correct answer and assumptions with a coherent check.
-Scoring 3: correct answer plus a defensible alternative and boundary.
 Answer support: Sections 4 and 8b.
 #### Q15 / Operations / practitioner
 Candidate prompt: Describe safe rollback after a source is revoked.
 Given facts: An older index manifest exists and a bad model release must be reversed.
-Interviewer note — clarification: Define population, permissions, time and evidence where relevant.
 Strong answer: Roll back the model or compatible manifest while retaining current revocation enforcement and deletion obligations.
 Reasoning: An old snapshot can contain a now-forbidden document, so rollback must not restore its accessibility.
-Check: Trace the conclusion to the stated evidence and preserve its limitations.
 Acceptable alternative: Disable generation and use the portal until a safe bundle is available.
 Follow-up: What if the permission service is down during rollback?
 Follow-up answer: Fail closed; do not rely on the old manifest to authorize documents.
 Red flag: Restoring an old vector index without a current deny mechanism can re-expose revoked data.
-Scoring 0: incorrect conclusion or unsafe boundary.
-Scoring 1: partially correct but omits a material assumption.
-Scoring 2: correct answer and assumptions with a coherent check.
-Scoring 3: correct answer plus a defensible alternative and boundary.
 Answer support: Sections 8a and 12.
 #### Q16 / Tradeoff / practitioner
 Candidate prompt: How can excessive abstention be improved without encouraging guesses?
 Given facts: Many answerable questions are refused, but current unsupported-answer risk is unknown.
-Interviewer note — clarification: Define population, permissions, time and evidence where relevant.
 Strong answer: Identify whether evidence is absent from the corpus, retrieval candidates, selected context or answerability gate; fix the earliest cause and remeasure both outcomes.
 Reasoning: Abstention and unsupported answers are separate metrics with different denominators.
-Check: Trace the conclusion to the stated evidence and preserve its limitations.
 Acceptable alternative: Add an approved human escalation for ambiguous policies instead of lowering the gate.
 Follow-up: What if the evidence is present but applicability is disputed?
 Follow-up answer: Escalate to the policy owner rather than tuning a model to choose an interpretation.
 Red flag: Optimizing answer rate alone rewards unsupported guesses.
-Scoring 0: incorrect conclusion or unsafe boundary.
-Scoring 1: partially correct but omits a material assumption.
-Scoring 2: correct answer and assumptions with a coherent check.
-Scoring 3: correct answer plus a defensible alternative and boundary.
 Answer support: Sections 6a, 9 and 12.
 ## 15. Quick Reference Card
 | Field | Value |

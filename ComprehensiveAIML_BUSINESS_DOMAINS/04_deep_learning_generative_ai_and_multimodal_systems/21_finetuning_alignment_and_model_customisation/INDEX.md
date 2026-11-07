@@ -23,6 +23,8 @@ After this module, a learner can turn a real problem into an appropriate technic
 - [Case Studies](./Case_Studies/INDEX.md): application briefs that deliberately include data, constraints, architecture, evaluation, risk, and operating plan.
 - [Cheat Sheets](./Cheat_Sheets/INDEX.md): compact references for repeat use while designing, reviewing, or debugging.
 
+- [RoPE and position interpolation](Cheat_Sheets/03_RoPE_and_Position_Interpolation.md) — unreviewed draft on long-context adaptation, rotary geometry and serving boundaries; remaining context-extension topics and cases are planned.
+
 ## Dependency notes
 
 Prerequisites above are module identifiers. They are the minimum conceptual background, not a requirement to complete every earlier part. For a fast path, read the prerequisite indexes, then complete one module case before advancing.

@@ -9,7 +9,7 @@ This collection supports actuarial analysts and reviewers making exposure-normal
 | Level | Topic | Outcome and prerequisite | Status |
 |---|---|---|---|
 | Core | [03 Non-Life Pricing: Pure Premium, Frequency–Severity and Exposure](03_NonLife_Pricing_Ratemaking.md) | Reconcile earned exposure and claim counts; calculate and diagnose expected loss cost. Requires basic ratios, expected values and coverage terminology. | Draft; not reviewed |
-| Core | [05 Claims Reserving Methods](05_Claims_Reserving_Methods.md) | Develop a paid triangle, reconcile paid outstanding and distinguish incurred-based IBNR; requires ratios and claims terminology. | Incomplete draft; repetitive practice needs substantive revision and independent review |
+| Core | [05 Claims Reserving Methods](05_Claims_Reserving_Methods.md) | Develop a paid triangle, reconcile paid outstanding, distinguish incurred-based IBNR and investigate temporal, validation and uncertainty risks; requires ratios and claims terminology. | Draft; not independently reviewed |
 | Advanced | Actuarial model review | Assess assumptions, inputs and validation. | Planned |
 | Advanced | Rating-factor governance | Review factor decisions, permissible use and monitoring. | Planned |
 | Advanced | Reserving validation | Compare claim development assumptions and validation. | Planned |
@@ -75,7 +75,7 @@ No separate Common Issues file has been authored; the planned collection-level t
 | Artifact | Evidence and source | Editorial state | Maintenance trigger |
 |---|---|---|---|
 | [Non-life pricing sheet](03_NonLife_Pricing_Ratemaking.md) | Constructed examples and derived identities; source inventory names the topic, not its inaccessible contents. CAS *Basic Ratemaking*, fifth edition, 2016, is identified as an educational reference; detailed review remains open. | Version 1.0, draft; not independently reviewed | Exposure definition, claim development, contract terms, applicable guidance or source changes |
-| [Claims reserving sheet](05_Claims_Reserving_Methods.md) | Illustrative checked arithmetic and derived identities; [Friedland, *Estimating Unpaid Claims Using Basic Techniques*, CAS, 2010](https://www.casact.org/sites/default/files/database/studynotes_friedland_estimating.pdf) is the primary educational reference; the original source inventory contents are unavailable. | Version 1.0, draft; not independently reviewed | Claims handling, valuation basis, tail evidence, applicable guidance or source changes |
+| [Claims reserving sheet](05_Claims_Reserving_Methods.md) | Constructed examples and derived identities; [Friedland, *Estimating Unpaid Claims Using Basic Techniques*, CAS, 2010](https://www.casact.org/sites/default/files/database/studynotes_friedland_estimating.pdf), Mack's 1993 and 1999 papers, and ASOP 43 are linked for their stated scope. The original source inventory lists the filename; its contents were not inspected. | Version 1.2, draft; numerical, source and editorial independent review open | Claims handling, valuation basis, tail evidence, applicable guidance or source changes |
 
 The source crosswalk assigns the original `Insurance_Analytical_Modelling/Insurance_Cheat_Sheets/03_NonLife_Pricing_Ratemaking.md` topic to this module; this entry does not assert that the original file was inspected or reproduced.
 The source crosswalk also names `Insurance_Analytical_Modelling/Insurance_Cheat_Sheets/05_Claims_Reserving_Methods.md`; its original contents were unavailable and were not inspected or reproduced.

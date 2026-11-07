@@ -4,11 +4,11 @@
 
 ## 1. Accounting and meaning
 
-All **1,247 source entries** are assigned exactly once to an existing teaching home and an explicit anchored brief. This does not claim 1,247 distinct topics or lessons: source modules, cheat sheets, cases and repeated references overlap. Every visible technical title remains an explicit topic commitment in the linked registers; original course topics are retained.
+All **1,247 source entries** are assigned exactly once to an existing teaching home and an explicit anchored brief. This does not claim 1,247 distinct topics or lessons: source modules, cheat sheets, cases and repeated references overlap. Every visible technical title remains an explicit topic commitment in the linked registers; original course topics are retained. The counts below classify the original inventory, not the current editorial state: individual register entries may now be marked `partial-draft`.
 
 | Disposition | Source entries | Meaning |
 |---|---:|---|
-| planned-topic | 941 | Explicit visible technical topic/case/test-artifact scope assigned to a focused brief; most are not yet authored or reviewed |
+| planned-topic | 941 | Original inventory classification for explicit visible technical topic/case/test-artifact scope; linked registers track subsequent partial drafts, and most topics are not yet authored or reviewed |
 | supporting-artifact | 106 | Source navigation, generic exercises, references, PDFs, collators, archives and planning aids; not additional completed lessons |
 | source-container | 126 | Visible organizing directory; its known children are separately accounted |
 | unresolved-source | 74 | Collapsed contents or clipped names; preserve uncertainty and visible prefixes, never invent missing content |

@@ -110,7 +110,7 @@ CUDA: prerequisites → H100 → programming → barriers → TMA/copy → WGMMA
 
 ### CUDA Module 01 / cheat sheet 01 — H100 architecture
 
-**Status:** planned. **Existing destination:** [05_ai_platforms_data_systems_and_production_engineering/23_gpu_architecture_accelerators_and_ai_hardware/INDEX.md](05_ai_platforms_data_systems_and_production_engineering/23_gpu_architecture_accelerators_and_ai_hardware/INDEX.md).
+**Status:** mostly planned; [H100 architecture and resource limits](05_ai_platforms_data_systems_and_production_engineering/23_gpu_architecture_accelerators_and_ai_hardware/Cheat_Sheets/01_H100_Architecture_and_Resource_Limits.md) is an unreviewed partial draft, not a device-validated benchmark or a reproduction of the unavailable source files. **Existing destination:** [05_ai_platforms_data_systems_and_production_engineering/23_gpu_architecture_accelerators_and_ai_hardware/INDEX.md](05_ai_platforms_data_systems_and_production_engineering/23_gpu_architecture_accelerators_and_ai_hardware/INDEX.md).
 
 **Learning outcome.** Explain how a workload traverses the GigaThread engine, GPCs, streaming multiprocessors, SMSPs, warp schedulers/dispatch, registers, shared memory/L1, L2/HBM3, TMA and tensor cores, and where NVLink4 fits.
 
@@ -861,7 +861,7 @@ CUDA: prerequisites → H100 → programming → barriers → TMA/copy → WGMMA
 
 ### Fine-tuning Module 11 / cheat sheet 10 — context extension
 
-**Status:** planned. **Existing destination:** [04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/INDEX.md](04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/INDEX.md).
+**Status:** partial draft. [RoPE and position interpolation](04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation/Cheat_Sheets/03_RoPE_and_Position_Interpolation.md) is authored but unreviewed; the remaining training, inference, evaluation and case-study scope is planned. **Existing destination:** [foundation-model internals](04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals/INDEX.md).
 
 **Learning outcome.** Explain context utility, RoPE/position interpolation, long-context training, memory-efficient inference and evaluation without equating larger windows with reliable retrieval.
 
@@ -882,7 +882,7 @@ CUDA: prerequisites → H100 → programming → barriers → TMA/copy → WGMMA
 | `finetuning_course/LLM_Finetuning_Cheat_Sheets/10_Context_Length_Extension.md` | 10 Context Length Extension | `planned-topic` |
 | `finetuning_course/Module_11_Context_Length_Extension` | Source scope/container — not a completed lesson | `source-container` |
 | `finetuning_course/Module_11_Context_Length_Extension/11.1_Why_Context_Length_Matters.md` | 11.1 Why Context Length Matters | `planned-topic` |
-| `finetuning_course/Module_11_Context_Length_Extension/11.2_RoPE_and_Position_Interpolation.md` | 11.2 RoPE and Position Interpolation | `planned-topic` |
+| `finetuning_course/Module_11_Context_Length_Extension/11.2_RoPE_and_Position_Interpolation.md` | 11.2 RoPE and Position Interpolation | `partial-draft` |
 | `finetuning_course/Module_11_Context_Length_Extension/11.3_Long_Context_Training_Strategies.md` | 11.3 Long Context Training Strategies | `planned-topic` |
 | `finetuning_course/Module_11_Context_Length_Extension/11.4_Memory_Efficient_Long_Context_Inference.md` | 11.4 Memory Efficient Long Context Inference | `planned-topic` |
 | `finetuning_course/Module_11_Context_Length_Extension/11.5_Evaluation_of_Long_Context_Models.md` | 11.5 Evaluation of Long Context Models | `planned-topic` |

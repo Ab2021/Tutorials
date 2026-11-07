@@ -11,7 +11,7 @@
 > **Evidence:** DERIVED and ILLUSTRATIVE teaching material; no production results are claimed.
 > **Retrieval cue:** For suspiciously strong offline results, begin with the point-in-time checks in Sections 3 and 8.
 
-The graph-source entry and production case entry in the directory inventory are scope references, not accessible source content in this workspace.
+The directory inventory names “01_GNN_Fraud_AML_Ring_Detection” under Graph_ML and “05_GNN_Marketplace_Fraud_Ring_Detection” among production cases; these titles are scope references, not evidence of their contents.
 The crosswalk maps those entries to separate graph-method and case-library homes; this sheet lives in the graph-method home.
 No detailed claim about the unavailable files is attributed to their authors.
 A risk score supports prioritization; it is not proof, a legal finding, or a reason to deny service by itself.
@@ -302,9 +302,212 @@ No workload-specific speed or accuracy results have been measured for this sheet
 
 **Takeaway:** Reject unsafe options first, then demand incremental value against the simplest credible baseline.
 
+### Temporal reconstruction: adversarial clock trace
+The following transaction and review timeline is ILLUSTRATIVE; none of its events describe a real investigation.
+A decision for account A occurs at 10:00, and all times below use the same synchronized time zone.
+Transfer T1 occurs at 09:40 and reaches the feature service at 09:43, so it is eligible for A's 10:00 snapshot.
+Transfer T2 occurs at 09:50 but reaches the feature service at 10:04, so it is ineligible even though its event time is earlier.
+A shared-device observation occurs at 10:03 and arrives at 10:03, so it is ineligible on event time and availability time.
+A device record observed yesterday is corrected at 10:08; a replay at 10:00 must use the version available at 10:00.
+The serving service learns of a neighbor's confirmed outcome at 09:55, and that fact can be considered only if its target and policy allow it.
+An investigator confirms A at 10:30; that confirmation is A's outcome, not an input to the 10:00 decision.
+A graph edge manually created at 10:35 during that investigation is likewise unavailable to the earlier decision.
+At 10:10, a new decision for A may use T2, subject to its own window and authorization rules.
+That later decision must not inherit the 10:35 investigator-created edge or the 10:30 label.
+For each historical prediction, join to the last committed record version whose availability is no later than that prediction's cutoff.
+If timestamps tie at the cutoff, specify whether a committed sequence number orders the event before the decision.
+Without a reliable tie order, conservatively exclude ambiguous records rather than retrospectively inventing their availability.
+Use a serving-path availability clock rather than a source export timestamp when exports precede production ingestion.
+A warehouse arrival time is insufficient if the online graph could not yet read the corresponding write.
+Conversely, warehouse arrival after serving availability does not by itself prove that the online model lacked the event.
+For distributed snapshots, record a consistent watermark or per-partition offsets rather than a single unsupported wall clock.
+A watermark expresses a completeness claim under a specific ingestion contract, not a guarantee against all future corrections.
+Preserve the request-level snapshot identifier when available; it can be more precise than the service's nominal refresh schedule.
+If a source clock is untrusted, record uncertainty and prevent a record with an uncertain future timestamp from entering historical evaluation.
+Never repair an earlier snapshot by backdating a late-arriving record to the time it allegedly occurred.
+A historical rebuild should distinguish source facts, graph publication, cache visibility, and model fetch as separate transitions.
+The earliest possible serving time is the latest required transition, not the earliest timestamp among those systems.
+Deleting a record today may restrict retention of the old snapshot; replay design must obey the applicable deletion policy.
+When an authorized replay is impossible, report the resulting reproducibility limitation rather than synthesizing evidence.
+A useful negative-control test inserts a future-only edge into a test fixture and checks that earlier features remain unchanged.
+A second control changes a future label while holding all permitted historical data fixed and checks that the old prediction remains unchanged.
+A third control moves a permitted edge's availability across the decision boundary and checks the feature changes exactly at the declared ordering boundary.
+These tests establish specific invariants for the fixture; they do not prove that every production path is leak-free.
+### Typed-path reasoning and network structure
+A transfer path A→B→C encodes two directed payments, not proof that A controls C.
+Reversing A→B to B→A changes the economic interpretation even if an undirected connectivity algorithm gives the same component.
+A derived reverse message edge can be used computationally if its relation type is distinct from an actual reverse payment.
+A two-hop account→device→account path captures shared observed device use, not necessarily shared device ownership.
+A merchant, employer, household, or public terminal can induce a legitimate shared-device or shared-address pattern.
+A low-frequency identifier may be informative, but its rarity is not proof of a reliable identity linkage.
+If an identifier is assigned by a vendor, assess its collision, recycling, and missing-value behavior before using its degree.
+A default identifier such as an empty token should not form a normal edge connecting all affected accounts.
+A node that appears highly central because of a data integration default can dominate message aggregation without carrying meaningful evidence.
+A component analysis must say whether it treats edges as directed, which relation types it includes, and what time interval it covers.
+Weak connectivity ignores direction; strong connectivity requires directed paths in both directions between every pair of nodes in the component.
+A three-node chain A→B→C is weakly connected, but its three nodes are separate strongly connected components absent reverse paths.
+A temporal path needs an additional ordering rule: each edge's event and availability constraints must be consistent with the question asked.
+For an alleged transfer chain, an earlier outgoing transfer cannot be financed by a later incoming transfer without additional funds or evidence.
+Even correctly ordered transfers are not sufficient to trace specific money if balances and other payments are not accounted for.
+A cycle A→B→C→A can reflect circular movement, ordinary settlement, or unrelated transfers; context and amounts matter.
+A motif count should state whether repeated transfers create multiple occurrences and whether reciprocal edges count separately.
+Normalize counts by exposure when appropriate, but do not divide by a tiny exposure without an uncertainty or stability check.
+An account receiving from many senders can be a marketplace, payroll processor, charity, or mule account; profile the business context.
+A high out-degree can represent ordinary disbursement, while low out-degree can be suspicious in another workflow; neither sign is universal.
+The appropriate comparison group depends on account type, age, business model, geography, and observed opportunity to form edges.
+A network score may change when a benign bridge edge is removed; investigate that sensitivity before interpreting membership as stable.
+The time at which a link is detected can differ from the time the underlying relationship actually began.
+Store evidence provenance for both endpoints and the relation, including source, confidence, and permitted purpose.
+Record the distinction between an asserted relationship, a validated link, and an analyst hypothesis.
+An entity merge should retain original identifiers and reversible lineage so an incorrect linkage can be corrected.
+Entity resolution thresholds should be assessed on separately adjudicated pairs, including hard negatives from shared infrastructure.
+Do not use a final outcome to retrospectively establish an identity merge and then call the resulting historical feature independent evidence.
+A risk contribution assigned to a link is a model sensitivity or aggregation effect, not a measured causal effect of that link.
+### Worked examples: graph statistics and queue decisions
+All numerical inputs in this subsection are ILLUSTRATIVE; the computations are DERIVED and do not claim production performance.
+Consider one device used by four accounts, with eligible transaction counts 1, 2, 3, and 6 in a fixed window.
+The equal-weight mean count is (1+2+3+6)/4 = 3 transactions per account.
+The total count is 12 transactions, so the mean is not the total exposure of the device.
+If the account with count 6 appears twice because of a duplicate edge, the naive five-edge mean is 18/5 = 3.6.
+Whether that is an error depends on whether the intended unit is unique accounts or device-use events; the feature contract must decide.
+Suppose the same four account values have nonnegative reliability weights 1, 1, 2, and 2.
+Their weighted sum is 1+2+6+12 = 21, and the sum of weights is 6.
+The weighted mean is therefore 21/6 = 3.5 transactions per weighted account unit.
+This weighted result is defined only if the total weight is positive and every included value is finite.
+Changing weights changes the represented population; it does not automatically correct identity errors.
+Now suppose a device has 100 eligible neighbor accounts, and a uniform sample without replacement contains 10.
+Each account has inclusion probability 10/100 = 0.1 under that exact design.
+A single account present in the sample is not proof of importance, and 90 accounts remain unseen in that draw.
+If 20 of the 100 eligible accounts have a property, the expected sample count is 10×20/100 = 2.
+The actual sample count varies; treating the expectation as a guaranteed observed result would be incorrect.
+Under uniform sampling without replacement, the sample mean is unbiased for the fixed finite-neighborhood mean.
+That statement does not imply that a nonlinear fraud score based on the sample mean is unbiased.
+If relation-specific sampling probabilities differ, retain the probabilities and analyze whether an inverse-probability estimator fits the target.
+An account's zero inclusion probability prevents design-based recovery of its contribution without additional assumptions.
+Suppose a full queue has 80 candidates, of which 20 are mature confirmed positives under complete ascertainment.
+At capacity 10, model X selects 6 positives, so precision@10 is 6/10 = 0.60 and recall@10 is 6/20 = 0.30.
+At the same capacity, model Y selects 7 positives, yielding precision@10 of 0.70 and recall@10 of 0.35.
+The difference of one positive is illustrative and is not evidence that Y generalizes better.
+A paired comparison must use the same eligible candidate pool, decision time, outcome definition, and case deduplication policy.
+If two of X's selected positives are members of the same investigation case, account-level precision is not distinct-case yield.
+For example, six positive account alerts might represent only five distinct positive cases after deduplication.
+The exact case denominator must be frozen before reporting a metric, because later merges can alter historical totals.
+If only reviewed cases have labels, the 20-positive population denominator is unknown and the preceding recall calculation is unavailable.
+A stratified random audit of unreviewed cases can estimate missed positives when every relevant stratum has known positive inclusion probability.
+In a hypothetical unreviewed stratum of 100 cases, a simple random audit of 10 finds 2 positives.
+The estimated stratum positive total is 100×2/10 = 20, before accounting for uncertainty and nonresponse.
+That estimate is not the actual number of positives, and ten audited cases provide limited precision.
+If the review yields 6 confirmed positives and the audit estimate for unreviewed cases is 20, the plug-in recall estimate is 6/(6+20), approximately 0.231.
+The ratio is an estimate rather than an unbiasedness guarantee; uncertainty must account for the audit design and both numerator and denominator.
+If audit participation depends on hidden outcomes, known selection probabilities alone do not solve nonresponse bias.
+A mature independent outcome source can supplement the audit only for the fraud target and population it actually covers.
+### Evaluation design and delayed outcomes
+Define the prediction target before constructing the graph, including the target entity, outcome horizon, and adjudication standard.
+State the target's unit explicitly: a suspicious transaction, an account, a loss event, and an investigation case are different objects.
+Use an observation horizon long enough for the outcome process and disclose residual uncertainty about later discoveries.
+Do not call a no-chargeback transaction legitimate if chargeback coverage excludes a relevant fraud type.
+Separate event occurrence from discovery and from the time the discovery becomes available to training.
+A case closed without a finding can mean insufficient evidence, not a verified negative, depending on policy.
+Freeze training labels at the training cutoff and do not backfill a later adjudication into an earlier model build.
+Apply the same historical eligibility rules to unsupervised graph features; future topology is information even when it has no labels.
+Fit scalers, vocabularies, and thresholds only on permitted training data unless a deployment-valid transductive protocol is explicitly defined.
+For each evaluation seed, use the graph available to that seed rather than one graph built at the end of the evaluation period.
+A random split of adjacent transactions may leak case identity or later behavior even if each row has a separate identifier.
+A chronological split estimates future performance under the chosen historical overlap; it does not guarantee generalization to unseen entities.
+An entity-disjoint holdout probes a different question and may remove realistic historical relationships available in deployment.
+A component-disjoint holdout can be too severe when common infrastructure creates huge components; state the graph used to define components.
+Compare chronological and disjoint stress tests instead of presenting one as universally correct.
+When repeat customers span a temporal split, ensure their historical information is allowed and future outcomes do not flow backward.
+Deduplicate repeated labels from the same case when computing uncertainty, since observations within a ring can be correlated.
+A case- or cluster-level bootstrap can reflect dependence when its sampling units match the evaluation design and are sufficiently numerous.
+A confidence interval for one metric does not account for searching many models and selecting the best reported result.
+Use a held-out period or nested selection when comparing many graph variants, and disclose the number of variants explored.
+Randomized auditing should cover low scores as well as the selected queue when estimating missed outcomes.
+Track the audit sampling frame, selection probability, review completion, outcome maturation, and any excluded groups.
+An audit sample with zero inclusion probability for a region cannot identify that region's outcome prevalence by weighting alone.
+Performance measured after a blocking intervention can differ from untreated risk because the intervention changes subsequent outcomes.
+Do not interpret fewer observed losses among blocked transactions as proof that the model's untreated predictions were well calibrated.
+If a controlled policy experiment is permitted, predefine eligibility, randomization, safeguards, monitoring, and an analysis plan.
+Ethics, legal requirements, and customer protection may constrain randomization; an observational estimate then needs explicit assumptions.
+Compute calibration only against outcomes that match the prediction target and action policy, with maturity and coverage reported.
+A score trained for ranking is not necessarily an estimated probability even when it lies between zero and one.
+Monitor reviewer agreement and appeal reversals because label quality can shift with staffing, evidence access, or policy.
+### Production operations and investigator workflow
+A decision record should identify the candidate, decision timestamp, graph snapshot, feature version, model artifact, and queue policy.
+Record whether graph retrieval completed, timed out, or returned a deliberately truncated neighborhood.
+A zero neighbor count after a successful complete fetch differs from a zero inserted after a graph-service failure.
+Use an explicit missingness indicator and an approved fallback whose behavior has been evaluated for missing-graph traffic.
+A fallback score is not automatically comparable to the graph model's score; queue calibration and routing must reflect that distinction.
+Define an operational maximum for traversal depth, per-relation fanout, scanned edges, and request wall time.
+Returned-edge limits alone do not bound storage scans if selecting a sample requires examining a much larger adjacency list.
+Preserve sampling seeds or sampled edge identifiers when reproducibility is required and permitted by retention policy.
+If a query hits its work budget, return an incomplete flag instead of silently representing the partial neighborhood as complete.
+Track freshness separately for each source because one delayed edge type can alter a model even when aggregate ingestion looks healthy.
+Compare source offsets, publication watermarks, and serving visibility to distinguish upstream lag from cache propagation delay.
+A snapshot should not be promoted until required source partitions meet the declared completeness contract.
+A correction should be append-only or otherwise historically versioned so that older snapshots are not silently rewritten.
+A rollback must pin the graph schema and feature transformations compatible with the older model artifact.
+A model rollback alone does not repair a corrupted graph snapshot or an authorization defect in the graph service.
+When access control fails, stop unauthorized graph retrieval and follow the incident procedure rather than merely suppressing the displayed score.
+Apply tenant and purpose restrictions during traversal, including intermediate nodes, not only when formatting the final explanation.
+A deleted identifier may persist in cached edges, precomputed features, embeddings, training exports, and investigator attachments.
+Deletion handling must follow applicable retention and remediation policy rather than promising that all trained model influence can be removed instantly.
+An investigation package should identify the seed, permitted relationships, source timestamps, and why each item is relevant to the queue decision.
+The package should separate raw evidence from model-generated hypotheses and later analyst annotations.
+Show legitimate alternative explanations, including shared infrastructure and ordinary commercial relationships, alongside risk indicators.
+An investigator should be able to challenge an incorrect link and request correction without asserting a definitive alternative identity.
+Keep a history of case merges and splits so that duplicated work and outcome attribution can be reconstructed.
+A case-level positive finding should not automatically label every connected account as independently fraudulent.
+Where permitted, capture adverse-action explanations, review decisions, and appeal outcomes under the relevant governance process.
+A sudden backlog increase can arise from higher arrivals, slower handling, duplicates, or staffing loss; compare all four before changing thresholds.
+For a simple illustration, 55 new cases and 40 completed cases add 15 cases to the backlog in one period if no cases are otherwise removed.
+The next period begins with that added backlog; changing a score threshold cannot retroactively create investigator capacity.
+An incident runbook should specify who owns data repair, customer impact assessment, decision review, and service restoration.
+After recovery, reconcile missed requests and separately assess whether reprocessing old decisions is permissible and useful.
+Graph latency and fraud yield are workload-dependent; no throughput or lift is claimed without a measured deployment study.
+### Additional answered design questions
+**Question:** A future edge is removed but its effect remains in a precomputed embedding; is the replay safe?
+**Answer:** No; the embedding itself is a derived artifact and must be generated only from information permitted at the historical cutoff.
+**Question:** Can a transaction from 09:50 be used at 10:00 if its graph write is committed at 10:04?
+**Answer:** Not for the graph-serving path described above, because the 10:04 availability is after the decision.
+**Question:** Can the same transaction be used by a different model that independently received it at 09:51?
+**Answer:** Potentially, if that model's actual serving path and all other policy and time constraints permit the record.
+**Question:** A two-hop path includes a public kiosk; does it prove common control of the endpoints?
+**Answer:** No; a shared kiosk is a plausible benign bridge, and identity or intent requires independent evidence.
+**Question:** Why can a high-degree device dilute a mean even when one neighbor is strongly suspicious?
+**Answer:** Equal weighting divides the suspicious neighbor's contribution by the full eligible degree, so many other neighbors can reduce its influence.
+**Question:** If one message is 10 and nine are zero, what is their equal-weight mean?
+**Answer:** The mean is 10/10 = 1, although one neighbor's message is 10; neither number alone is a fraud probability.
+**Question:** Should the nine zero messages be removed to recover the value 10?
+**Answer:** Not without a separately justified eligibility rule; deleting inconvenient observations changes the estimand.
+**Question:** What does a component-disjoint holdout measure that a chronological holdout may not?
+**Answer:** It stresses generalization to graph regions excluded from training, under the chosen component definition and split construction.
+**Question:** Why might that holdout be unrealistic for an existing customer?
+**Answer:** Deployment may legitimately know earlier neighbors, while an entirely disjoint split removes that historical information.
+**Question:** If five reviewed cases are positive and unreviewed labels are missing, is recall 100%?
+**Answer:** No; the number of positive unreviewed cases is unknown, so population recall cannot be computed from those five alone.
+**Question:** A 10-case sample finds two positives; is the population prevalence exactly 20%?
+**Answer:** No; 20% is the sample proportion and an estimate under the sampling design, with substantial sampling uncertainty.
+**Question:** A reviewer confirms a ring; should every connected node inherit a positive label?
+**Answer:** No; preserve case-level findings and entity-level adjudication separately, leaving unsupported individual outcomes unknown.
+**Question:** Can a score explanation include a relationship discovered after the original decision?
+**Answer:** It can be presented as later investigative evidence if labeled as such, but not as an input explaining the earlier score.
+**Question:** Does attention weight prove that removing an edge will change a score by that weight?
+**Answer:** No; attention is an internal model quantity, and an edge-removal sensitivity is a separate intervention on the model input.
+**Question:** What must be compared when an edge-removal test is performed?
+**Answer:** Hold the model and remaining permissible snapshot fixed, specify how normalization changes, and report the resulting score difference as model sensitivity.
+**Question:** A new system claims a higher alert hit rate after halving the queue; is that a fair comparison?
+**Answer:** Not by itself; compare on the same eligible cohort and labor capacity, and show how many distinct cases and positives are selected.
+**Question:** How should an investigator handle an access-denied edge in an explanation?
+**Answer:** Do not disclose or traverse unauthorized data; use permitted evidence and record any explanation limitation under the access policy.
+**Question:** What happens when a graph service is unavailable and an empty graph is returned without a flag?
+**Answer:** The model may interpret an outage as genuine lack of connections, producing misleading features and invalid monitoring.
+**Question:** What evidence is needed to claim a real deployment improvement?
+**Answer:** A documented comparable evaluation or controlled rollout with population, period, outcome maturity, capacity, uncertainty, and operational constraints.
+
 ## Section 8 — Failure Modes & Edge Cases
 
-Every diagnostic below is HYPOTHETICAL, not a report of an observed incident.
+Every diagnostic below is HYPOTHETICAL, not a report of an observed incident. Preserve the decision time, graph snapshot, model version, and affected IDs; coordinate data, model, and policy owners. Associations are leads, not findings of fraud.
 The first three fields describe a symptom, a competing explanation, and a discriminating test.
 A negative diagnostic does not prove that all other failure modes are absent.
 A fix is complete only when a replay or a controlled production observation confirms the intended invariant.
@@ -313,901 +516,541 @@ A fix is complete only when a replay or a controlled production observation conf
 
 - **Trigger:** Offline graph contains a pre-decision transaction missing online.
 - **Competing hypotheses:** The event arrived after scoring, or the online fetch dropped an already available event.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Compare source event and serving-availability timestamps with the request trace.
 - **Expected signal:** A late availability timestamp supports temporal leakage; a missing successful write supports serving loss.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Enforce both event and availability cutoffs; separately repair dropped writes.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Replay the frozen request from an append-only availability log.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-02: Post-outcome relationship
 
 - **Trigger:** A strong edge appears only in positives.
 - **Competing hypotheses:** An investigator added it after a confirmed outcome, or it truly preceded the decision.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Trace the edge creator and creation timestamp against adjudication time.
 - **Expected signal:** Edges created by the case system after adjudication are downstream artifacts.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Exclude downstream artifacts from predecision features and preserve audit provenance.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Show that removing those edges changes offline features to the online values.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-03: Future label in neighborhood
 
 - **Trigger:** Neighbor fraud rate predicts almost perfectly.
 - **Competing hypotheses:** The feature uses labels learned after scoring, or it captures genuinely early known alerts.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Inspect each label availability timestamp used in the aggregate.
 - **Expected signal:** Any label availability after the seed decision violates the feature contract.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Recompute from labels available before each seed decision.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Compare a historical feature replay to the online feature log.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-04: Self-label contamination
 
 - **Trigger:** Training performance exceeds validation sharply.
 - **Competing hypotheses:** The seed label contributed to its own neighborhood statistic, or the model is overfit.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Remove the seed label and trace all aggregate paths to the seed.
 - **Expected signal:** A direct or cyclic path returning the seed label demonstrates contamination.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Use out-of-fold, self-excluded label aggregates with temporal eligibility.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Unit-test a tiny cycle with unique labels to verify exclusion.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-05: Entity overmerge
 
 - **Trigger:** One identity suddenly has thousands of peers.
 - **Competing hypotheses:** An identifier collision merged unrelated people, or a legitimate enterprise operates many accounts.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Inspect match evidence and identifier cardinality before and after the merge.
 - **Expected signal:** Weak common attributes across dissimilar records support an overmerge.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Split the identity using reversible provenance and conservative matching.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Replay prior scores and quantify customer and alert impact.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-06: Entity undersplit
 
 - **Trigger:** Repeated fraud actors remain disconnected.
 - **Competing hypotheses:** One actor has fragmented identifiers, or the apparent similarity reflects a shared service.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Inspect validated linkage evidence and downstream investigation outcomes.
 - **Expected signal:** Repeated strong independent identity evidence supports missed linkage.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Add a reviewed, time-versioned linkage rather than a global fuzzy merge.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Check link precision and recall on an independently adjudicated sample.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-07: Shared-device supernode
 
 - **Trigger:** Thousands of accounts share one device identifier.
 - **Competing hypotheses:** A public kiosk or default device token created a hub, or the device is genuinely controlled by a ring.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Inspect token generation, diversity, site context, and the time distribution.
 - **Expected signal:** A default token across many unrelated sessions suggests instrumentation or shared infrastructure.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Represent device reliability and relation type; cap or sample expansion.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Check that hub treatment does not erase confirmed small-ring signals.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-08: Transfer direction reversal
 
 - **Trigger:** Money-flow patterns appear backwards.
 - **Competing hypotheses:** The ingestion schema inverted sender and receiver, or an analyst interpreted a derived reverse relation as a payment.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Compare source transaction IDs and endpoint roles to stored directed edges.
 - **Expected signal:** Systematic reversal against source records identifies a mapping error.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Correct the mapping and distinguish computational reverse edges from transactions.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Replay a known sender-receiver ledger and compare flow conservation.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-09: Duplicate events
 
 - **Trigger:** Degree and transaction counts jump after a retry.
 - **Competing hypotheses:** At-least-once delivery duplicated writes, or the source emitted legitimate repeated payments.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Group by immutable source event ID and compare source payloads.
 - **Expected signal:** Identical source IDs with repeated writes indicate ingestion duplication.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Make edge ingestion idempotent while preserving distinct source events.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Replay the same batch twice and compare graph state.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-10: Correction overwritten
 
 - **Trigger:** Historical feature replay differs from old serving logs.
 - **Competing hypotheses:** A source correction overwrote the earlier value, or the original online result was stale.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Compare the version history and correction arrival time to the decision timestamp.
 - **Expected signal:** A correction recorded after the decision explains retrospective disagreement.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Store version history and select the version available at the decision.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Replay both before and after correction availability boundaries.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-11: Clock skew
 
 - **Trigger:** Events appear to arrive before they happened.
 - **Competing hypotheses:** Source and ingestion clocks differ, or event-time semantics are misunderstood.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Compare clock synchronization telemetry and representative source payloads.
 - **Expected signal:** A common offset across a source suggests clock skew.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Fix clock discipline and define conservative uncertainty handling.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Check ordering on monitored test events after the correction.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-12: Timezone conversion
 
 - **Trigger:** Daily graph changes at an unexpected hour.
 - **Competing hypotheses:** A local timestamp was parsed as UTC, or the reporting window uses a different zone.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Trace the raw timestamp, zone, daylight-saving rule, and normalized value.
 - **Expected signal:** A consistent zone offset or DST discontinuity supports a parsing defect.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Normalize explicit zone-aware timestamps and preserve the original.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Test timestamps around both daylight-saving transitions.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-13: Mutable device token
 
 - **Trigger:** One device appears to switch users impossibly often.
 - **Competing hypotheses:** A recycled token represents multiple devices, or a shared device really has many users.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Compare token lifetime, app version, and platform generation policy.
 - **Expected signal:** Known recycling or default token behavior weakens identity inference.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Version token namespaces and treat device use as a weak edge.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Validate with independently reviewed device ownership evidence.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-14: Train-test component overlap
 
 - **Trigger:** Validation precision looks unusually optimistic.
 - **Competing hypotheses:** Near-duplicate entities span the split, or legitimate historical graph structure is usable in deployment.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Compare entity overlap and connected components across train and test.
 - **Expected signal:** Duplicated customer records or outcome-derived edges across folds indicate contamination.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Use temporal holdout and report entity-disjoint or component-disjoint stress tests.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Explain which known historical neighbors remain permissible at deployment.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-15: Full-graph normalization
 
 - **Trigger:** Test nodes influence training despite a time split.
 - **Competing hypotheses:** Normalization statistics were computed on the full graph, or a declared transductive setup allowed them.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Trace when degree and normalization statistics were calculated.
 - **Expected signal:** Future topology in training-time statistics violates an inductive historical simulation.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Fit transformations on permitted training snapshots and replay evaluation snapshots.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Check that altering future edges cannot alter earlier training features.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-16: Unreviewed cases labeled negative
 
 - **Trigger:** Precision seems stable while recall collapses.
 - **Competing hypotheses:** Unreviewed positives were assigned negative, or the underlying fraud mix truly changed.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Compare label provenance and the fraction of unreviewed candidates by score bucket.
 - **Expected signal:** Large policy-dependent unknown buckets indicate selective labels.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Keep unknown outcomes distinct and collect randomized audit labels.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Report audited estimates with inclusion probabilities and uncertainty.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-17: Delayed chargebacks
 
 - **Trigger:** Recent test cohorts appear cleaner than older ones.
 - **Competing hypotheses:** Outcomes have not matured, or controls reduced fraud.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Plot outcome discovery against decision age by cohort.
 - **Expected signal:** An increasing cumulative outcome curve indicates delayed feedback.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Restrict primary comparison to mature cohorts and report censoring.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Recompute older cohorts at matched observation ages.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-18: Changed review policy
 
 - **Trigger:** Model precision rises after a threshold change.
 - **Competing hypotheses:** Reviewers selected a different case mix, or model ranking actually improved.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Compare models on the same pre-policy candidate cohort and fixed capacity.
 - **Expected signal:** A lift that disappears under a shared candidate pool suggests selection effects.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Separate ranking changes from review-policy changes.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Use a controlled shadow or randomized comparison where ethically permitted.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-19: Top-k duplicates
 
 - **Trigger:** A queue is full but few distinct networks are investigated.
 - **Competing hypotheses:** Many account alerts refer to one case, or the incident genuinely requires multiple independent reviews.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Cluster alerts by explicit case identity and inspect the queue before and after deduplication.
 - **Expected signal:** Many repeated case identifiers demonstrate capacity being consumed by duplicates.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Rank or diversify at the investigator case grain with traceable member alerts.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Measure distinct cases reviewed and fraud found under the same labor budget.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-20: Case merge after review
 
 - **Trigger:** Case metrics change retroactively.
 - **Competing hypotheses:** Multiple alerts were merged into one investigation, or outcomes were corrected.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Track case-merge versions and outcome attribution at each reporting cutoff.
 - **Expected signal:** A change in case identity without score changes points to metric grain.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Freeze the evaluation unit or version case memberships for reproducible reports.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Reconcile counts of alerts, cases, and outcomes at each snapshot.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-21: High-degree traversal timeout
 
 - **Trigger:** Tail latency spikes on a small fraction of seeds.
 - **Competing hypotheses:** One hub causes fanout explosion, or the graph store has an unrelated I/O bottleneck.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Correlate examined edges and hub degrees with per-request timing.
 - **Expected signal:** Latency tracking examined-edge count supports expansion as the cause.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Bound per-relation fanout and total work; return explicit incomplete status.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Load-test degree-stratified traffic and compare tail latency with quality.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-22: Sampling bias
 
 - **Trigger:** A bounded neighborhood misses a known fraud cluster.
 - **Competing hypotheses:** Sampling systematically favors recent or frequent edges, or the cluster is absent at decision time.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Record sampled and eligible neighbor IDs and selection probabilities.
 - **Expected signal:** A rare relation consistently excluded by policy indicates sampling bias.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Stratify samples by relation or reserve budget for rare evidence.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Measure recall and variability against full neighborhoods on a feasible audit set.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-23: Sampling instability
 
 - **Trigger:** The same account gets different scores on repeated requests.
 - **Competing hypotheses:** Random sampling changes neighbors, or features changed between requests.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Fix snapshot and model version, then repeat with controlled sampling seeds.
 - **Expected signal:** Variance under a fixed snapshot indicates sampling-induced instability.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Use reproducible sampling or average within an explicit latency budget.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Measure ranking changes near the investigation threshold.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-24: Stale graph cache
 
 - **Trigger:** Online predictions use old relationships.
 - **Competing hypotheses:** The cache missed invalidation, or ingestion was legitimately delayed.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Compare source availability, cache version, and request snapshot timestamp.
 - **Expected signal:** A newer committed version absent from cache implicates cache propagation.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Repair invalidation and expose graph freshness to the serving policy.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Inject a known edge and trace its visibility end to end.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-25: Online-offline feature skew
 
 - **Trigger:** Training and serving values disagree for the same example.
 - **Competing hypotheses:** Different aggregation code or a mismatched as-of snapshot is in use.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Replay the same entity, cutoff, source versions, and model version in both paths.
 - **Expected signal:** Differences with identical inputs isolate transform or serialization divergence.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Unify feature semantics and preserve an offline-online parity fixture.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Compare exact feature values on edge cases including empty neighborhoods.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-26: Missing neighborhood default
 
 - **Trigger:** New accounts score strangely low.
 - **Competing hypotheses:** An empty neighborhood was silently mapped to zero, or genuinely low-risk evidence is present.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Inspect missing flags separately from numeric aggregate values.
 - **Expected signal:** A spike in exact default values for new accounts suggests missingness confusion.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Add a missing indicator and a documented fallback policy.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Evaluate cold-start slices and outage scenarios independently.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-27: Zero-weight aggregation
 
 - **Trigger:** A weighted mean yields NaN or infinity.
 - **Competing hypotheses:** All eligible weights are zero, or numeric precision overflowed.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Log the denominator and individual finite weights for failed requests.
 - **Expected signal:** A zero denominator confirms an undefined weighted mean.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Use a missing-neighborhood representation instead of dividing by zero.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Test empty, all-zero, extreme, and mixed weights.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-28: Graph drift
 
 - **Trigger:** Model performance declines on a stable volume.
 - **Competing hypotheses:** Relation composition changed, or labels matured differently across cohorts.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Compare degree, node types, edge types, freshness, and outcome maturity by cohort.
 - **Expected signal:** Structural shift preceding performance decline motivates a graph-drift investigation.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Reassess relation construction and retrain only with valid mature data.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Compare a stable tabular baseline and audited cohort slices.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-29: Proxy discrimination
 
 - **Trigger:** One community receives disproportionate alerts.
 - **Competing hypotheses:** A weak shared-location feature proxies protected status, or underlying exposure differs.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Audit score, review, and confirmed-outcome rates by legally appropriate group and context.
 - **Expected signal:** Large disparities require investigation but do not alone prove the cause.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Engage fairness, legal, and domain owners; restrict unsupported proxy use.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Monitor appeals and subgroup errors after any policy change.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-30: Investigator overload
 
 - **Trigger:** Backlog rises despite high model precision.
 - **Competing hypotheses:** Arrivals exceed review throughput, or case complexity increased.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Measure incoming distinct cases, completed cases, and handling time distributions.
 - **Expected signal:** Sustained arrival above completion explains persistent backlog growth.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Reduce workload, increase capacity, or revise prioritization with risk ownership.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Track aging, throughput, and unresolved high-risk cases.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-31: Leak through blocking action
 
 - **Trigger:** Downstream account closure is a powerful feature.
 - **Competing hypotheses:** Closure was triggered by the same risk label, or a prior independent closure is legitimate evidence.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Trace action trigger, execution time, and causal dependency.
 - **Expected signal:** An action triggered by the outcome being predicted is downstream leakage.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Exclude downstream actions and keep independent prior actions only if time-safe.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Use a causal provenance review and retrospective feature replay.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-32: Outcome leakage through component
 
 - **Trigger:** A component suddenly becomes highly predictive.
 - **Competing hypotheses:** A later network investigation created links among confirmed accounts, or earlier connections were already present.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Compare edge creation times and provenance with the first investigation timestamp.
 - **Expected signal:** A wave of investigator-created edges after confirmation indicates leakage.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Separate observed transactional relations from later investigative annotations.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Demonstrate identical predictions when future annotations are removed.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-33: Incorrect negative horizon
 
 - **Trigger:** Many negatives later become positive.
 - **Competing hypotheses:** The fixed label horizon is too short, or the target definition changed.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Compare late positive discovery rates by cohort age and target policy.
 - **Expected signal:** Substantial late discovery indicates immature negative labeling.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Lengthen the horizon or explicitly model unresolved outcomes.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Reassess performance after the chosen maturity period.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-34: Fraud ring double counting
 
 - **Trigger:** Reported detected loss exceeds plausible account exposure.
 - **Competing hypotheses:** Losses were summed across overlapping ring members, or payments really have independent losses.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Join losses to unique transaction and recovery IDs.
 - **Expected signal:** The same loss ID attributed to multiple accounts confirms double counting.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Deduplicate at the loss-event grain and account for recoveries.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Reconcile the final loss ledger with finance totals.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-35: Unstable threshold
 
 - **Trigger:** Alert volume oscillates around the budget.
 - **Competing hypotheses:** Tied scores or bursty candidate arrivals dominate the boundary.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Inspect score ties, candidate arrival profile, and threshold update schedule.
 - **Expected signal:** Large tie blocks near the cutoff explain unstable selected sets.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Use deterministic tie breaks and a documented batch or pacing policy.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Measure daily capacity utilization and rank churn.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-36: Unavailable graph service
 
 - **Trigger:** Scoring failures increase during an upstream incident.
 - **Competing hypotheses:** Graph storage is unavailable, or the model server itself is failing.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Compare graph-fetch errors and latency with model process health.
 - **Expected signal:** Graph-specific errors with healthy inference identify the dependency.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Use an approved tabular or rules fallback with missing-graph status.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Exercise recovery and monitor decisions by serving path.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-37: Model-version mismatch
 
 - **Trigger:** Replayed scores do not match historical scores.
 - **Competing hypotheses:** The model artifact differs, or the feature snapshot differs.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Pin artifact checksum and feature snapshot separately in a controlled replay.
 - **Expected signal:** A mismatch only after model substitution identifies artifact drift.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Record immutable model, feature, and graph versions for each score.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Reproduce a stored request with its original artifacts.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-38: Hidden fanout cap
 
 - **Trigger:** Offline graph model outperforms online.
 - **Competing hypotheses:** Serving silently truncates neighborhoods, or its graph freshness differs.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Compare fetched neighbor IDs, fanout limits, and snapshot versions.
 - **Expected signal:** Systematic missing neighbors at exactly the cap indicate truncation.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Train and evaluate with serving-equivalent sampling and report incompleteness.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Measure quality and latency over the actual degree distribution.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-39: Explainer path includes future edge
 
 - **Trigger:** An analyst sees a plausible but historically impossible rationale.
 - **Competing hypotheses:** The explanation used the current graph rather than the scoring snapshot.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Compare every explanation edge availability with the decision timestamp.
 - **Expected signal:** Any edge unavailable at scoring invalidates the purported historical explanation.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Generate explanation paths from the exact versioned scoring snapshot.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Replay explanations after adding a later edge and confirm they do not change.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-40: Misread attention weights
 
 - **Trigger:** Reviewers treat a large attention weight as proof of causation.
 - **Competing hypotheses:** Weights were presented as explanations, or reviewers overinterpreted a ranking cue.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Check interface language and test whether perturbing the edge changes the prediction.
 - **Expected signal:** A high weight without a stable score effect shows why the weight alone is insufficient.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Present provenance and model sensitivity as leads, not legal evidence.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Validate explanations with investigators and preserve appeal channels.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-41: Privacy-boundary traversal
 
 - **Trigger:** A graph query crosses a tenant boundary.
 - **Competing hypotheses:** An authorization filter was omitted, or entity identifiers collided across tenants.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Trace tenant-scoped keys and graph-fetch authorization decisions.
 - **Expected signal:** A fetched edge outside the permitted tenant confirms an access-control defect.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Enforce authorization at data access and isolate identifier namespaces.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Test adversarial cross-tenant paths and audit access logs.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-42: Deletion not propagated
 
 - **Trigger:** A deleted identifier remains in a derived embedding.
 - **Competing hypotheses:** The deletion reached the source but not caches or training datasets.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Trace deletion requests through graph, cache, features, embeddings, and lineage.
 - **Expected signal:** A retained derived artifact after its deletion deadline indicates propagation failure.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Apply the approved deletion and model-remediation policy across derivatives.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Verify removal with lineage-based checks and independent access audit.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-43: Contradictory graph labels
 
 - **Trigger:** A node has both confirmed fraud and confirmed legitimate labels.
 - **Competing hypotheses:** Labels refer to different events or times, or adjudications conflict.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Inspect label target grain, effective time, and adjudication history.
 - **Expected signal:** Different transaction targets can coexist without a contradiction.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Represent target and version explicitly; route real disputes to review.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Test outcome joins on multiple transactions per account.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-44: Component explosion
 
 - **Trigger:** Most of the population joins one graph component.
 - **Competing hypotheses:** A shared payment processor or device hub connects many benign entities, or linkage rules overmerged accounts.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Break down edges responsible for component growth by relation type.
 - **Expected signal:** Removing a generic infrastructure relation in analysis fragments the component.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Define relation-aware components or bounded motifs rather than declaring one giant ring.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Audit retained and lost links against known cases.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-45: Cold-start distribution
 
 - **Trigger:** New entities are underrepresented in training.
 - **Competing hypotheses:** Graph methods require historical edges, or the candidate population changed.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Report degree-zero rates and performance by entity age.
 - **Expected signal:** A concentrated decline for new nodes indicates cold-start weakness.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Combine self features and a separate cold-start policy.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Hold out new entities by time and monitor their outcomes.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-46: Circular review evidence
 
 - **Trigger:** Model features include reviewer suspicion from a prior model.
 - **Competing hypotheses:** The prior decision reflects a model score, or it is independent investigator evidence.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Trace reviewer annotation provenance and the information presented to reviewers.
 - **Expected signal:** Annotations made after viewing the model score can encode feedback.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Separate independently observed facts from model-generated suggestions.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Use blinded or randomized review when feasible and ethically approved.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-47: Outcome attribution error
 
 - **Trigger:** A ring investigation credits all linked accounts as confirmed fraud.
 - **Competing hypotheses:** The case outcome was incorrectly broadcast to members, or each member was separately adjudicated.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Compare entity-level evidence and adjudication records to case-level status.
 - **Expected signal:** Only case-level evidence with no member findings does not establish member guilt.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Keep case and entity labels distinct and retain unknown member outcomes.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Audit a sample of case-to-member label assignments.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-48: Threshold calibration shift
 
 - **Trigger:** A score labeled 0.8 no longer corresponds to observed frequency.
 - **Competing hypotheses:** Base rates changed, or label ascertainment changed with the review policy.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Compare calibration on mature randomly audited cases across periods.
 - **Expected signal:** A shift on an unbiased audit set supports changed calibration.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Recalibrate on a representative mature sample and document uncertainty.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Monitor reliability by cohort and action policy.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-49: Graph build partial failure
 
 - **Trigger:** A scheduled snapshot has unexpectedly low degree.
 - **Competing hypotheses:** A source partition failed, or actual activity dropped.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Compare source offsets, partition completion markers, and edge counts by source.
 - **Expected signal:** Missing completion markers identify an incomplete build.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Mark the snapshot incomplete and use a documented fallback.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Rebuild idempotently and reconcile source counts before activation.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-50: Community detection instability
 
 - **Trigger:** Small data changes substantially alter assigned rings.
 - **Competing hypotheses:** The clustering algorithm is unstable, or a high-impact bridge is real.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Vary seed and perturb uncertain edges while holding the snapshot fixed.
 - **Expected signal:** Large membership changes across seeds indicate algorithmic instability.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Report uncertainty and avoid treating a cluster assignment as a finding.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Review stability and investigator utility before operational use.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-51: Loss-of-label signal
 
 - **Trigger:** Neighbor label feature suddenly becomes mostly missing.
 - **Competing hypotheses:** The label pipeline is delayed, or fraud has decreased.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Compare label stream lag, availability watermark, and case outcomes.
 - **Expected signal:** A stalled watermark with stable event volume supports pipeline delay.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Use a missingness-aware fallback and repair the label stream.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Check that recovered labels do not retroactively enter old predictions.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-52: Data poisoning
 
 - **Trigger:** Many accounts intentionally share a benign high-degree identifier.
 - **Competing hypotheses:** Adversaries are manipulating a graph feature, or the identifier is a legitimate public service.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Inspect sudden coordination, relation provenance, and independently verified activity.
 - **Expected signal:** A coordinated burst with weak evidence suggests manipulation but is not proof.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Limit weak-edge influence and add analyst review for coordinated changes.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Test adversarial edge insertion against both ranking and false positives.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-53: Score gaming
 
 - **Trigger:** Fraudsters split transfers across new accounts to evade thresholds.
 - **Competing hypotheses:** The rule is vulnerable to fragmentation, or behavior changed innocently.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Compare aggregate flow patterns and account creation sequences under time-safe windows.
 - **Expected signal:** A shift from large transfers to coordinated small transfers is a lead, not proof.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Use bounded multi-entity features alongside policy review.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Evaluate on later cohorts and monitor unintended impact on legitimate users.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-54: Wrong capacity unit
 
 - **Trigger:** A top-100 account ranking exceeds daily investigator capacity.
 - **Competing hypotheses:** Accounts were equated with cases, or cases have variable review effort.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Measure distinct investigations and handling minutes for the selected accounts.
 - **Expected signal:** More than the available handling minutes demonstrates a capacity mismatch.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Rank case bundles with effort estimates and retain an escalation path.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Compare actual labor minutes and outcomes against the budget.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-55: Score censoring by intervention
 
 - **Trigger:** Observed fraud loss falls for the high-score group.
 - **Competing hypotheses:** Intervention prevented loss, or high scores were false positives.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Compare treatment and outcomes under an authorized randomized or quasi-experimental design.
 - **Expected signal:** A policy-driven gap in observation prevents naive loss comparisons.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Estimate intervention effects with a defensible design and legal oversight.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Report policy, uncertainty, and any remaining confounding.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-56: Feature decay bug
 
 - **Trigger:** Older relationships receive more weight than recent relationships.
 - **Competing hypotheses:** The decay sign is reversed, or event ages were computed with the wrong timezone.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Calculate weights for two known ages with fixed decision time.
 - **Expected signal:** Older weight exceeding newer weight under a decreasing rule indicates a defect.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Correct age calculation and verify nonnegative eligible ages.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Test equal ages, future events, and very old events.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-57: Cross-relation normalization
 
 - **Trigger:** A generic device hub overwhelms rare bank-transfer links.
 - **Competing hypotheses:** All relation types share one denominator, or message scales differ.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Inspect per-relation counts and contribution magnitudes before combination.
 - **Expected signal:** Dominance by one relation despite small per-edge signals supports scale imbalance.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Normalize by relation and validate relation-specific weights.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Run ablations and inspect both quality and subgroup false positives.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-58: Evaluation cohort mismatch
 
 - **Trigger:** Graph model appears better than baseline.
 - **Competing hypotheses:** Different eligible candidates or label maturity were used, or the improvement is real.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Join candidate IDs and decision windows across model evaluations.
 - **Expected signal:** Nonidentical candidate sets prevent a clean paired comparison.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Re-evaluate both models on the same time-safe cohort and capacity.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Report paired uncertainty and cohort exclusions.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-59: Unbounded two-hop expansion
 
 - **Trigger:** Memory rises sharply after adding one GNN layer.
 - **Competing hypotheses:** Fanout multiplies across layers, or tensors are retained unnecessarily.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Trace distinct sampled nodes, sampled edges, and activation memory by layer.
 - **Expected signal:** Growth matching fanout expansion supports graph expansion as the dominant mechanism.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Reduce fanout or layers and test the lost relational coverage.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Measure memory and quality at each workload percentile.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### F-60: Stale intervention policy
 
 - **Trigger:** A historically good model generates costly low-value alerts.
 - **Competing hypotheses:** Fraud tactics changed, or the old action policy no longer matches capacity.
-- **Diagnostic input:** Preserve the original decision time, model version, graph snapshot, and affected case IDs.
 - **Discriminating check:** Compare case mix, review effort, and mature outcomes against historical periods.
 - **Expected signal:** Quality decline restricted to a changed action path suggests policy mismatch.
-- **Interpretation:** This signal supports the stated mechanism but is not a complete causal proof.
-- **If absent:** Investigate the competing explanation and check the integrity of the diagnostic logs.
 - **Bounded correction:** Revisit decision thresholds and graph features with policy owners.
-- **Safety boundary:** Do not convert an association or model output into an automatic finding of fraud.
 - **Verification:** Monitor both fraud outcomes and customer harm after change.
-- **Operational owner:** The data or model owner coordinates with the investigation policy owner.
-- **Evidence status:** HYPOTHETICAL teaching scenario; no incident is asserted.
 
 ### Evaluation design: a concrete review protocol
 
@@ -1449,6 +1292,8 @@ The [fraud evaluation sheet](../../../11_data_science_domain_specialisations/02_
 
 ## Section 11 — Interview / Exam Questions
 
+Score each answer from 0 (incorrect) to 3 (correct, assumption-aware, and defensible at its boundary); Section 3–10 examples are illustrative.
+
 These are constructed practice questions, not claims about a named employer's interview process.
 Each answer states its assumptions; a defensible alternative must preserve the same decision-time and evaluation constraints.
 
@@ -1468,9 +1313,7 @@ Each answer states its assumptions; a defensible alternative must preserve the s
 
 **Red flag:** Assuming a shared edge establishes intent or common control.
 
-**Scoring:** 0 incorrect; 1 partial; 2 correct with assumptions; 3 correct and defends the boundary.
 
-**Answer support:** Sections 3–10; the example inputs are illustrative.
 
 #### Q2 — Event time versus availability
 
@@ -1486,9 +1329,7 @@ Each answer states its assumptions; a defensible alternative must preserve the s
 
 **Red flag:** Filtering only on the transaction event timestamp.
 
-**Scoring:** 0 incorrect; 1 partial; 2 correct with assumptions; 3 correct and defends the boundary.
 
-**Answer support:** Sections 3–10; the example inputs are illustrative.
 
 #### Q3 — Unknown versus negative
 
@@ -1504,9 +1345,7 @@ Each answer states its assumptions; a defensible alternative must preserve the s
 
 **Red flag:** Treating missing labels as confirmed legitimate outcomes.
 
-**Scoring:** 0 incorrect; 1 partial; 2 correct with assumptions; 3 correct and defends the boundary.
 
-**Answer support:** Sections 3–10; the example inputs are illustrative.
 
 ### Level 2 — Derivation / Apply
 
@@ -1524,9 +1363,7 @@ Each answer states its assumptions; a defensible alternative must preserve the s
 
 **Red flag:** Dividing by zero or silently treating absence as a measured zero.
 
-**Scoring:** 0 incorrect; 1 partial; 2 correct with assumptions; 3 correct and defends the boundary.
 
-**Answer support:** Sections 3–10; the example inputs are illustrative.
 
 #### Q5 — Weighted messages
 
@@ -1542,9 +1379,7 @@ Each answer states its assumptions; a defensible alternative must preserve the s
 
 **Red flag:** Treating arbitrary weighted features as a fraud probability.
 
-**Scoring:** 0 incorrect; 1 partial; 2 correct with assumptions; 3 correct and defends the boundary.
 
-**Answer support:** Sections 3–10; the example inputs are illustrative.
 
 #### Q6 — Point-in-time trace
 
@@ -1560,9 +1395,7 @@ Each answer states its assumptions; a defensible alternative must preserve the s
 
 **Red flag:** Using the complete end-of-day graph as the decision graph.
 
-**Scoring:** 0 incorrect; 1 partial; 2 correct with assumptions; 3 correct and defends the boundary.
 
-**Answer support:** Sections 3–10; the example inputs are illustrative.
 
 #### Q7 — Precision and recall at capacity
 
@@ -1578,9 +1411,7 @@ Each answer states its assumptions; a defensible alternative must preserve the s
 
 **Red flag:** Using only reviewed outcomes as the denominator for population recall.
 
-**Scoring:** 0 incorrect; 1 partial; 2 correct with assumptions; 3 correct and defends the boundary.
 
-**Answer support:** Sections 3–10; the example inputs are illustrative.
 
 ### Level 3 — Judgement / Design / Debug
 
@@ -1598,9 +1429,7 @@ Each answer states its assumptions; a defensible alternative must preserve the s
 
 **Red flag:** Assuming the most complex method is necessarily best.
 
-**Scoring:** 0 incorrect; 1 partial; 2 correct with assumptions; 3 correct and defends the boundary.
 
-**Answer support:** Sections 3–10; the example inputs are illustrative.
 
 #### Q9 — Suspicious offline lift
 
@@ -1616,9 +1445,7 @@ Each answer states its assumptions; a defensible alternative must preserve the s
 
 **Red flag:** Declaring the model successful from offline precision alone.
 
-**Scoring:** 0 incorrect; 1 partial; 2 correct with assumptions; 3 correct and defends the boundary.
 
-**Answer support:** Sections 3–10; the example inputs are illustrative.
 
 #### Q10 — High-degree hub
 
@@ -1634,9 +1461,7 @@ Each answer states its assumptions; a defensible alternative must preserve the s
 
 **Red flag:** Marking every connected user fraudulent or silently truncating all hubs.
 
-**Scoring:** 0 incorrect; 1 partial; 2 correct with assumptions; 3 correct and defends the boundary.
 
-**Answer support:** Sections 3–10; the example inputs are illustrative.
 
 #### Q11 — Investigation capacity
 
@@ -1652,9 +1477,7 @@ Each answer states its assumptions; a defensible alternative must preserve the s
 
 **Red flag:** Equating 40 accounts with 40 independent investigations.
 
-**Scoring:** 0 incorrect; 1 partial; 2 correct with assumptions; 3 correct and defends the boundary.
 
-**Answer support:** Sections 3–10; the example inputs are illustrative.
 
 #### Q12 — Evaluation under policy feedback
 
@@ -1670,9 +1493,7 @@ Each answer states its assumptions; a defensible alternative must preserve the s
 
 **Red flag:** Counting every unreviewed case as a negative.
 
-**Scoring:** 0 incorrect; 1 partial; 2 correct with assumptions; 3 correct and defends the boundary.
 
-**Answer support:** Sections 3–10; the example inputs are illustrative.
 
 #### Q13 — Neighbor-label self leakage
 
@@ -1688,9 +1509,7 @@ Each answer states its assumptions; a defensible alternative must preserve the s
 
 **Red flag:** Assuming that removing only explicit self-loops removes every cyclic leakage path.
 
-**Scoring:** 0 incorrect; 1 partial; 2 correct with assumptions; 3 correct and defends the boundary.
 
-**Answer support:** Sections 3–10; the example inputs are illustrative.
 
 #### Q14 — Explanation and appeal
 
@@ -1706,9 +1525,7 @@ Each answer states its assumptions; a defensible alternative must preserve the s
 
 **Red flag:** Treating an attention weight as proof of a causal or legal finding.
 
-**Scoring:** 0 incorrect; 1 partial; 2 correct with assumptions; 3 correct and defends the boundary.
 
-**Answer support:** Sections 3–10; the example inputs are illustrative.
 
 #### Q15 — Fanout and reproducibility
 
@@ -1724,9 +1541,7 @@ Each answer states its assumptions; a defensible alternative must preserve the s
 
 **Red flag:** Equating a returned-edge cap with a complete resource bound.
 
-**Scoring:** 0 incorrect; 1 partial; 2 correct with assumptions; 3 correct and defends the boundary.
 
-**Answer support:** Sections 3–10; the example inputs are illustrative.
 
 **Takeaway:** Strong answers distinguish what was knowable, what was observed, and what a constrained reviewer can actually act on.
 

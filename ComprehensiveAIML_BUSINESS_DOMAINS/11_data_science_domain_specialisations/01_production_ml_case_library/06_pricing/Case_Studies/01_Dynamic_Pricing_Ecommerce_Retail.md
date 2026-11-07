@@ -192,6 +192,59 @@ If replenishment is delayed, a multi-day inventory model may reverse the one-day
 **Not tried:** no historical regression, randomized price test, or deployment has been executed.
 **Highest leverage:** identify price response in the eligible region before treating a ranking as actionable.
 
+### Additional worked decisions and interview defenses
+The examples below are hypothetical calculations under explicitly stated assumptions, not observations from a pilot.
+**Break-even demand at 90:** matching the baseline contribution of 2,800 requires 2,800 / 25 = 112 fulfilled units.
+The assumed 100 units fall short by 12 units, so 90 is inferior in the original one-day comparison.
+The threshold is meaningful only when the merchandise and variable cost assumptions remain valid at the higher volume.
+**Break-even demand at 110:** matching 2,800 requires 2,800 / 45 ≈ 62.22 fulfilled units.
+If units must be whole, at least 63 fulfilled units are required to exceed the baseline, yielding 2,835.
+The assumed 60 units earn 2,700, and 62 units would earn only 2,790.
+These are deterministic thresholds, not confidence bounds on a real demand curve.
+**Incremental comparison:** the move from 100 to 90 adds 20 units but lowers the margin on all units.
+The extra 20 units at margin 25 contribute 500, while reducing the margin on the original 80 units costs 800.
+The net change is 500 − 800 = −300, matching the difference between 2,500 and 2,800.
+The decomposition assumes the original 80 sales can be treated as retained for accounting; it does not identify individual buyers.
+**Higher-price comparison:** the move from 100 to 110 sacrifices 20 assumed units.
+The 60 remaining units each earn 10 more, adding 600, while 20 lost units would have contributed 700 at baseline.
+The net change is 600 − 700 = −100, matching the candidate totals.
+This comparison does not say that the same 60 customers would buy at both prices.
+**Inventory uncertainty:** suppose demand is equally likely to be 20 or 100 units, with 50 units available.
+Expected demand is 60, but expected fulfilled units are (20 + 50) / 2 = 35.
+Using min(60, 50) would incorrectly predict 50 fulfilled units, overstating this expectation by 15.
+At a hypothetical unit margin of 35, the correct expected contribution is 35 × 35 = 1,225.
+The shortcut instead gives 50 × 35 = 1,750, an overstatement of 525 before any stock opportunity cost.
+The two-point distribution is illustrative and cannot be assumed from a mean demand forecast.
+**Multi-day opportunity:** assume 50 units are available today and no replenishment arrives tomorrow.
+Selling all 50 today at a contribution of 25 each yields 1,250 and leaves nothing for tomorrow.
+If instead all 50 could be sold tomorrow at a contribution of 35 each, waiting yields 1,750.
+The 500 difference illustrates why scarce inventory has option value beyond today’s margin.
+This comparison requires the stated certain demand tomorrow and ignores discounting, holding cost and customer effects.
+**Offer composition:** suppose a compliant 100 shelf price receives a separate 10-unit coupon.
+With merchandise cost 60 and variable cost 5, the paid-price unit contribution is 90 − 60 − 5 = 25.
+Without the coupon it is 35, so the coupon costs 10 per fulfilled unit under these assumptions.
+At 80 units the difference is 800; this is not a causal estimate of the coupon’s demand effect.
+Any actual floor must be checked against the correct contractual measure, not an invented universal margin rule.
+**Substitution:** suppose an illustrative discounted SKU gains 20 units at margin 25.
+Its incremental contribution is 500 if all other units and margins remain unchanged.
+If 15 of those purchases displace a substitute earning 40 per unit, the substitute loses 600.
+The combined contribution change is 500 − 600 = −100 before other spillovers.
+The calculation assumes exactly 15 displaced sales; a randomized category-level design would be needed to estimate displacement.
+**Experiment denominator:** suppose an assigned cluster contains 10 eligible product-days and earns 2,000 mature contribution.
+Its contribution per eligible product-day is 2,000 / 10 = 200, including zero-sale days.
+If only eight of those days have sales, dividing by eight gives 250 and changes the estimand.
+Availability can itself be affected by pricing, so excluding stockout days can create selection bias.
+For unequal cluster sizes, the planned weighting and variance estimator must match the eligible product-day estimand.
+**Interview defense:** a high-quality sales forecast alone cannot identify how sales would change under a different price.
+The merchant may have chosen that price using demand information absent from the training panel.
+Randomized, feasible price variation addresses preassignment confounding in expectation, not all interference or implementation failures.
+A cluster randomized policy test answers whether the proposed policy beats baseline over the specified horizon.
+A separate local price-grid test answers a different question about response at the tested prices and population.
+Neither test automatically supports extrapolation to new markets, products, seasons or unrestricted price changes.
+An interval covering both meaningful harm and meaningful benefit is inconclusive even if the point estimate is positive.
+A statistically precise lift is not sufficient if price validity, customer protection or other hard guardrails fail.
+The launch recommendation remains to retain a currently valid approved baseline until credible evidence and approvals exist.
+
 ## 7. The Finding
 For the constructed one-day example, retain the 100 price: modeled contribution is 2,800 versus 2,500 at 90 and 2,700 at 110.
 These values are a calculation from assumed demand, not a measured or causal business outcome.
@@ -271,9 +324,9 @@ Capacity validation would model peak reads, maximum concurrent publication, cach
 No component percentile is added to claim an end-to-end p99.
 
 ## 9. Evaluation & Validation
-The intended primary estimand is the treatment-minus-control mean mature contribution per eligible randomized product-cluster-day over the prespecified pilot horizon.
-The numerator sums finance-reconciled contribution from all eligible cluster-days, including zero-sale days.
-The denominator is all eligible randomized cluster-days, not only purchasers or exposed checkout sessions.
+The intended primary estimand is the treatment-minus-control mean mature contribution per eligible product-day within randomized clusters over the prespecified pilot horizon.
+The numerator sums finance-reconciled contribution from all eligible product-days, including zero-sale days.
+The denominator is all eligible product-days in assigned clusters, not only purchasers or exposed checkout sessions; inference accounts for cluster assignment.
 The comparison is intention-to-treat: assigned policy versus baseline policy, regardless of compliance.
 Assign mutually substitutable products within a market together where feasible; randomize independent market-category clusters in time blocks.
 The exact cluster definition and minimum sample size require a pre-pilot design based on availability, correlation, interference and variance.
@@ -292,6 +345,46 @@ A separate local randomized price-grid design can estimate response at permitted
 Counterfactual claims need consistency, randomized or defensibly adjusted assignment, overlap and an explicit interference boundary.
 Observational adjustment alone cannot guarantee removal of unmeasured merchant information.
 Check pre-treatment balance, treatment delivery, missingness and alternative exposure definitions without replacing the primary estimand.
+For the pilot, freeze the eligible assortment and its rule versions before assigning each experimental block.
+If a product becomes legally ineligible after assignment, stop its exposure without erasing the original assignment record.
+Document how its subsequent outcomes enter the prespecified intention-to-treat estimand and report the operational withdrawal separately.
+If eligibility changes are widespread, the planned target population may no longer describe the desired launch population.
+Define the policy contrast as the complete assignment-to-price procedure, including merchant overrides and valid fallback behavior.
+Comparing only days where the model price was served would select on post-assignment implementation outcomes.
+Monitor delivery compliance as a diagnostic, with reasons such as rule rejection, missing stock input and merchant override.
+Do not interpret a compliant-days-only contrast as causal without additional assumptions or a separately justified design.
+An assigned cluster may contain products with very different baseline turnover and contribution.
+Prespecify whether the primary product-day mean weights larger clusters more heavily and use an estimator consistent with assignment probabilities.
+An unweighted average of cluster means instead targets an average cluster and can answer a different business question.
+For example, a cluster with 10 eligible product-days and total contribution 2,000 has a mean of 200 per product-day.
+A second cluster with two eligible product-days and total contribution 200 has a mean of 100 per product-day.
+The pooled mean is 2,200 / 12 ≈ 183.33 per product-day, while the equal-cluster mean is (200 + 100) / 2 = 150.
+Neither number is a treatment effect; both are hypothetical single-arm summaries illustrating different weights.
+If treatment probabilities vary across blocks, use a prespecified assignment-aware estimator rather than naively pooling different allocations.
+Record the block schedule, assignment seed, eligible cluster roster and allocation probabilities before outcomes are examined.
+Resolve missing finance records by reconciliation and report missingness by assigned arm rather than silently treating unknown outcomes as zero.
+Run a sensitivity analysis for plausible missing outcomes if reconciliation cannot recover every eligible product-day.
+Set the return-maturity cutoff before evaluating the primary outcome and disclose any later ledger correction separately.
+Separate safety monitoring from efficacy testing: an urgent invalid-price incident can require stopping even when no efficacy look is scheduled.
+Stopping for safety does not establish whether the pricing policy would otherwise have improved contribution.
+If the prespecified interval is too wide to exclude material harm, do not equate a positive point estimate with launch readiness.
+Any expansion should define its new eligible population and verify that evidence and safeguards plausibly transfer to that population.
+The daily movement limit also creates carryover: yesterday's assigned price changes today's permitted candidate set.
+Therefore a cluster switched between policies midway through the test may not immediately represent a fresh policy assignment.
+Prefer a fixed policy assignment over the evaluation horizon unless a switchback design explicitly models such carryover.
+If switchbacks are necessary, prespecify transition handling and recognize that a washout period may not erase inventory effects.
+Track the price path and stock remaining at each transition to explain how earlier assignments affect later feasibility.
+Do not use a post-switch price constraint violation as a reason to relax a customer-protection rule.
+Competitor prices may also change during the pilot, but matching their timestamps does not identify a competitive reaction.
+Randomization can still estimate the policy effect in the competitive environment experienced by the enrolled clusters.
+Transporting that effect to a market where competitors respond differently requires a separate substantive argument.
+If the optimizer uses a treatment-specific demand model updated during the experiment, the adaptive update is part of the policy being tested.
+Freeze or document the learning schedule in advance so that investigators know which policy each cluster was assigned to receive.
+For a local price-grid study, retain positive assignment probability for each permitted price in the targeted context.
+Zero probability for a candidate leaves its demand response unidentified by that randomized design.
+Selection of a price after inspecting many noisy candidate estimates can exaggerate its expected advantage.
+Evaluate the selected policy on independent randomized data or use a prespecified method accounting for selection.
+The same data should not be presented as both an unbiased selection sample and a definitive policy win.
 Status: no experiment, analysis, sample-size calculation or statistical result has been executed.
 Decision: not measured; preregister and obtain approvals before any pilot.
 
@@ -308,7 +401,7 @@ No effective market, implementation date, or model version exists in this exerci
 **Source declaration:** Figures elsewhere are constructed teaching values, not measurements of any named organization or realized impact.
 | Metric | Baseline | Treatment | Change / uncertainty | Evidence / limitation |
 |---|---|---|---|---|
-| Mature contribution per eligible cluster-day | Not measured | Not measured | Not available | No pilot or finance data |
+| Mature contribution per eligible product-day | Not measured | Not measured | Not available | No pilot or finance data |
 | Invalid-price rate | Not measured | Not measured | Not available | No live deployment |
 | Complaint rate | Not measured | Not measured | Not available | No customer outcomes |
 | Price consistency SLI | Not measured | Not measured | Not available | Proposed target only |
@@ -320,761 +413,545 @@ The decision owner would compare the interval and guardrails with preregistered 
 No incident occurred in this constructed case; all diagnostic scenarios below are **hypothetical**.
 Each scenario is a distinguishable failure hypothesis, not a claim that the system was built or that a mitigation succeeded.
 ### F-01. Promotions confound price
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Sales rise when price falls during a campaign.
 - **First evidence:** Check campaign timing and randomized price contrasts.
 - **Candidate mechanism:** Promotion exposure rather than price may drive lift.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** Campaign demand may rise even without a discount.
 - **Discriminating test:** Compare within randomized campaign strata.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Pause causal use of observational coefficients.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Experimentation lead coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Log campaign assignment and prohibit changing promotion allocation with price.
+- **Verification:** Compare randomized price contrasts within campaign strata; check arm-level campaign balance.
 ### F-02. Merchant anticipates demand
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** High prices correlate with strong sales.
 - **First evidence:** Compare merchant forecasts available before the change.
 - **Candidate mechanism:** Expected demand may cause the price decision.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** An omitted local event may drive both merchant forecasts and purchases.
 - **Discriminating test:** Audit forecast logs against assignment.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Keep manual baseline until randomized contrasts exist.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Pricing science coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Timestamp merchant forecasts before approval and retain override reasons.
+- **Verification:** Compare randomized contrasts within forecast strata; forecasts cannot reveal every private signal.
 ### F-03. Stockout censoring
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** A low-price day shows unexpectedly few units.
 - **First evidence:** Inspect in-stock minutes and replenishment events.
 - **Candidate mechanism:** Actual demand may exceed observed fulfilled units.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A checkout outage can suppress fulfilled units despite full availability.
 - **Discriminating test:** Compare availability-aware exposures across arms.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Do not interpret low sales as low demand.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Inventory science coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Record stock intervals and reservations independently of order events.
+- **Verification:** Reconstruct in-stock minutes alongside checkout failures; do not condition the primary effect on stockout.
 ### F-04. Missing zero-sales days
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Estimated demand exceeds reality.
 - **First evidence:** Reconcile panel days against eligible catalog calendar.
 - **Candidate mechanism:** An inner join may remove valid zero outcomes.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A listing outage can also produce no orders but is not an available zero-sales day.
 - **Discriminating test:** Count no-order eligible days before and after join.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Rebuild the panel with explicit zero units.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Data engineering coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Generate the panel from the effective eligibility calendar before joining orders.
+- **Verification:** Compare calendar keys with the panel and separately classify unlisted intervals.
 ### F-05. Future cost leakage
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Backtest contribution is implausibly accurate.
 - **First evidence:** Compare cost ingestion timestamps to decision cutoff.
 - **Candidate mechanism:** Later vendor invoices may overwrite historical cost.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A genuinely stable cost schedule can also make predictions accurate.
 - **Discriminating test:** Reconstruct as-known cost snapshots.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Invalidate leaked backtest and retrain.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Finance data coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Keep bitemporal cost records and reject versions ingested after cutoff.
+- **Verification:** Rebuild the as-known snapshot and compare recommendations with the original backtest.
 ### F-06. Late exposure events
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Some assigned products appear never shown.
 - **First evidence:** Inspect event-time versus ingestion-time lag.
 - **Candidate mechanism:** Telemetry delay may mimic treatment noncompliance.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A cache or publishing failure can prevent exposure rather than delay telemetry.
 - **Discriminating test:** Reconcile catalog access logs with exposure stream.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Hold analysis until agreed lateness window.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Observability lead coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Monitor ingestion lag and retain catalog request logs with version IDs.
+- **Verification:** Reconcile late events to catalog requests after the agreed watermark.
 ### F-07. Duplicate orders
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Contribution appears to jump after retry storm.
 - **First evidence:** Count order-line IDs and delivery attempts.
 - **Candidate mechanism:** At-least-once delivery may duplicate ledger records.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A genuine surge in distinct order lines can follow a campaign.
 - **Discriminating test:** Compare immutable order IDs with event IDs.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Deduplicate by order-line lifecycle semantics.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Commerce data coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Make lifecycle event IDs idempotent without collapsing legitimate partial shipments.
+- **Verification:** Match deduplicated lines to settled orders and preserve separate refund events.
 ### F-08. Partial refunds omitted
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Revenue improves while realized profit falls.
 - **First evidence:** Reconcile return ledger by original order line.
 - **Candidate mechanism:** Return liability may be missing or delayed.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** An increase in fulfillment fees can reduce profit even when refunds are complete.
 - **Discriminating test:** Compare mature cohorts with and without refund adjustments.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Use mature contribution for launch decision.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Finance coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Link each refund to its original line and define the maturity cutoff with finance.
+- **Verification:** Reconcile gross and net contribution for equally mature cohorts.
 ### F-09. Incorrect currency conversion
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** A market appears unprofitable across all prices.
 - **First evidence:** Inspect currency code and effective exchange-rate timestamps.
 - **Candidate mechanism:** Cross-currency joins may mix local and reporting units.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A legitimate vendor price increase can reduce margin in local currency.
 - **Discriminating test:** Recompute a sampled receipt in local currency.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Quarantine affected market until reconciled.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Finance data coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Require currency and timestamp on cost and exchange-rate records.
+- **Verification:** Convert one receipt using the recorded rate and reconcile against the local ledger.
 ### F-10. Tax treatment mismatch
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Checkout margin differs from modeled margin.
 - **First evidence:** Trace tax-inclusive and tax-exclusive price fields.
 - **Candidate mechanism:** Tax may be counted as revenue or subtracted twice.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A change in shipping or discount allocation can also explain the margin gap.
 - **Discriminating test:** Reconcile a receipt with finance definitions.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Freeze affected product calculations.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Tax and finance coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Specify tax-inclusive and tax-exclusive fields and validate their currency units.
+- **Verification:** Rebuild a receipt from shelf price through tax and finance contribution.
 ### F-11. Price rounding breach
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** A candidate looks valid before publication but not after rounding.
 - **First evidence:** Compare pre-round and published prices against effective bounds.
 - **Candidate mechanism:** Currency rounding can cross a floor or ceiling.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A changed floor effective at publication can invalidate an otherwise correctly rounded price.
 - **Discriminating test:** Run constraint checks after quantization.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Reject invalid candidate rather than silently clamp.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Pricing engineering coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Quantize to currency precision before checking all effective bounds.
+- **Verification:** Test boundary values on both sides of every floor and ceiling.
 ### F-12. Movement measured from wrong baseline
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Daily price jumps farther than permitted.
 - **First evidence:** Inspect prior approved versus proposed price.
 - **Candidate mechanism:** An unpublished recommendation may be treated as the previous price.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A legitimate emergency override may have changed the last published price.
 - **Discriminating test:** Replay with authoritative publication history.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Restore an approved valid manifest.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Catalog engineering coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Read the authoritative active manifest, not a prior proposed candidate.
+- **Verification:** Recompute the percentage movement from the actual approved published value.
 ### F-13. Contradictory rules
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** All candidates fail the constraint gate.
 - **First evidence:** Inspect effective floor ceiling and movement limits.
 - **Candidate mechanism:** A rule update may make the grid infeasible.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** An outdated candidate grid can be empty despite mutually consistent rules.
 - **Discriminating test:** Evaluate each rule against the same timestamp.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Withdraw or escalate instead of publishing invalid fallback.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Merchant operations coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Evaluate bounds and grid construction under the same effective timestamp.
+- **Verification:** Show the merchant the failing constraints and confirm any replacement passes all rules.
 ### F-14. Stale inventory snapshot
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Markdown occurs just before stock exhaustion.
 - **First evidence:** Compare feed timestamps and physical reservation state.
 - **Candidate mechanism:** Delayed inventory may overstate sellable stock.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A real demand surge can exhaust accurate inventory faster than expected.
 - **Discriminating test:** Reconcile inventory service and warehouse snapshots.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Freeze markdowns for affected products.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Inventory operations coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Enforce maximum inventory age and reconcile reservations before markdown approval.
+- **Verification:** Trace snapshot, reservation and sales events through the decision cutoff.
 ### F-15. Double-counted reservations
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Optimizer acts as if inventory is scarce.
 - **First evidence:** Trace allocated units through inventory fields.
 - **Candidate mechanism:** Reservations may already be excluded from sellable stock.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A physical stock adjustment can also reduce availability legitimately.
 - **Discriminating test:** Recalculate availability from the authoritative contract.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Use baseline until the definition is corrected.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Inventory engineering coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Document whether the authoritative sellable field already excludes allocations.
+- **Verification:** Reconcile a known reservation lifecycle against warehouse and catalog totals.
 ### F-16. Replenishment promise fails
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Projected stock remains high but availability collapses.
 - **First evidence:** Compare expected receipts with received units.
 - **Candidate mechanism:** Supplier delays can invalidate the availability forecast.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A demand surge can consume stock even when a delivery arrives on schedule.
 - **Discriminating test:** Inspect supplier confirmations and actual receipts.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Constrain markdowns and reassess horizon.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Supply chain coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Separate confirmed receipts from forecast replenishment and retain arrival timestamps.
+- **Verification:** Compare promised, received and reserved quantities over the pricing horizon.
 ### F-17. Shared-stock interference
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Control products sell out during treatment.
 - **First evidence:** Map shared inventory pools and substitution paths.
 - **Candidate mechanism:** Treatment demand can consume stock available to control.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A common supplier delay can affect both clusters without treatment spillover.
 - **Discriminating test:** Inspect stock movements by randomized cluster.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Redesign clusters around inventory pools.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Experimentation lead coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Build cluster boundaries from shared stock pools before assignment.
+- **Verification:** Trace pool-level withdrawals and compare within-pool assignment histories.
 ### F-18. Cross-product cannibalization
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** A promoted SKU gains while category contribution drops.
 - **First evidence:** Compare category-level units and contribution by assignment.
 - **Candidate mechanism:** Demand may move from a substitute rather than increase.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** An unrelated category demand decline can offset an individual SKU gain.
 - **Discriminating test:** Measure prespecified category-level effect.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Evaluate portfolio outcome before expansion.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Category owner coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Prespecify category contribution and include substitutes in the randomization design.
+- **Verification:** Compare whole-category mature contribution by assigned cluster.
 ### F-19. Unsupported price extrapolation
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Model proposes the most extreme allowed price.
 - **First evidence:** Inspect historical and randomized support by price.
 - **Candidate mechanism:** A flexible model can extrapolate beyond observed variation.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A boundary price can genuinely maximize contribution within supported prices.
 - **Discriminating test:** Plot response and uncertainty inside the local support.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Restrict candidates to supported intervals.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Pricing science coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Store support counts and uncertainty for each candidate and market context.
+- **Verification:** Inspect randomized local response before interpreting a boundary optimum.
 ### F-20. Flat response from bad join
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Predicted demand is identical for all candidate prices.
 - **First evidence:** Trace candidate price into the model feature vector.
 - **Candidate mechanism:** Feature overwrite or stale cache can remove variation.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** An insensitive model may genuinely predict a flat local response despite correct wiring.
 - **Discriminating test:** Replay one SKU at distinct valid candidate values.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Disable optimizer until candidate features differ.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** ML engineering coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Assert that candidate-price inputs reach the feature transform unchanged.
+- **Verification:** Trace transformed values and outputs for distinct approved candidates.
 ### F-21. Model monotonicity violation
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Higher prices predict implausibly larger demand.
 - **First evidence:** Inspect comparable randomized observations and price features.
 - **Candidate mechanism:** Confounding or data errors can produce a positive association.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A premium-quality signal or small-sample noise can yield a positive local response.
 - **Discriminating test:** Compare response across similar supported contexts.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Require review; do not blindly enforce a false universal law.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Pricing science coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Flag positive slopes for review without imposing a universal demand law.
+- **Verification:** Inspect randomized price contrasts and confidence intervals within comparable contexts.
 ### F-22. Outlier-driven margin
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** One product dominates the aggregate uplift.
 - **First evidence:** Inspect product-level influence and data validity.
 - **Candidate mechanism:** A legitimate high-volume item or a data error can dominate.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A valid high-volume SKU may legitimately dominate total business contribution.
 - **Discriminating test:** Recompute with and without the item as sensitivity.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Investigate before applying any exclusion.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Experimentation lead coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Prespecify influence diagnostics without silently removing influential products.
+- **Verification:** Audit the line-level records and report the full estimate plus sensitivity.
 ### F-23. Wrong price displayed
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Product page and checkout show different prices.
 - **First evidence:** Compare manifest version and cache headers on both surfaces.
 - **Candidate mechanism:** Cache invalidation or propagation may be incomplete.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A shopper may have accepted an earlier binding price rather than a stale display.
 - **Discriminating test:** Trace a single SKU across all surfaces.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Stop changes and honor applicable commitments.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Commerce on-call coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Propagate version and effective-time metadata across listing, cart and checkout.
+- **Verification:** Trace one complete journey and distinguish contractual price holds from version drift.
 ### F-24. Stale safe-price fallback
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Catalog outage triggers an expired previous price.
 - **First evidence:** Compare fallback effective interval and current rules.
 - **Candidate mechanism:** A previously valid price may now be prohibited.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A catalog outage may occur while the cached manifest remains valid.
 - **Discriminating test:** Exercise outage replay after an effective-date change.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Withdraw affected offer if no valid fallback exists.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Commerce on-call coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Require effective-time and rule-version validation before any fallback is served.
+- **Verification:** Exercise outage handling across a simulated expiry and rule update.
 ### F-25. Duplicate publish
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** An operator retries after a timeout and sees repeated updates.
 - **First evidence:** Inspect decision IDs and catalog write audit.
 - **Candidate mechanism:** The first request may have succeeded despite timeout.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** Two independently approved changes may legitimately share the same price.
 - **Discriminating test:** Replay identical idempotency key in staging.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Stop retries until write status is reconciled.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Platform engineering coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Bind each idempotency key to one immutable manifest payload.
+- **Verification:** Retry the same request and compare committed versions with approval records.
 ### F-26. Split-brain price owner
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Two services publish competing price manifests.
 - **First evidence:** Inspect authorization and overlapping effective intervals.
 - **Candidate mechanism:** Multiple writers can race without a shared authority.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A scheduled successor manifest may legitimately begin after the previous interval ends.
 - **Discriminating test:** Compare version histories and writer identities.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Revoke unauthorized writer and reconcile state.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Security and platform coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Enforce a single authorized writer and reject overlapping active intervals.
+- **Verification:** Reconstruct writer identities and exact effective intervals before revoking access.
 ### F-27. Unauthorized override
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** A price changes without approved merchant action.
 - **First evidence:** Trace principal approval ID and signature.
 - **Candidate mechanism:** An overprivileged service or compromised credential may write.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** An authorized emergency override may lack a linked ticket because of logging failure.
 - **Discriminating test:** Compare policy logs to the approved change record.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Revoke access and restore a compliant price.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Security on-call coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Require scoped credentials and an auditable emergency approval path.
+- **Verification:** Match the writer identity, signature and emergency record before attributing intent.
 ### F-28. Invalid approval after rule change
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** A formerly approved manifest violates new bounds.
 - **First evidence:** Compare approval time and rule effective time.
 - **Candidate mechanism:** Approval may refer to an obsolete rule set.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A rule may not yet be effective at the proposed start time.
 - **Discriminating test:** Re-evaluate manifest against current rules.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Block publish and obtain new approval.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Pricing governance coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Bind approval to the rule version and revalidate at publication time.
+- **Verification:** Recompute eligibility at the manifest start and inspect the approval binding.
 ### F-29. Treatment assignment imbalance
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** One arm has far fewer eligible clusters.
 - **First evidence:** Check assignment ledger before looking at outcomes.
 - **Candidate mechanism:** Hashing, eligibility or instrumentation can create imbalance.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** Unequal cluster sizes can produce unequal product counts under balanced cluster assignment.
 - **Discriminating test:** Compare assigned cluster counts to planned allocation.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Pause enrollment and diagnose without reallocating ad hoc.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Experimentation lead coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Check planned allocation on assigned independent clusters within blocks.
+- **Verification:** Compare assignment counts with the planned randomization mechanism before outcomes.
 ### F-30. Post-treatment eligibility filter
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Treatment looks profitable after dropping unavailable products.
 - **First evidence:** Reconstruct eligibility at randomization time.
 - **Candidate mechanism:** Treatment itself may cause stockouts and exclusions.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A preassignment exclusion can legitimately remove an ineligible product.
 - **Discriminating test:** Compare intention-to-treat with filtered analysis.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Restore prespecified denominator.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Experimentation lead coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Freeze eligibility and denominator membership before randomized assignment.
+- **Verification:** Reconstruct the original cohort and report the filtered analysis only as diagnostic.
 ### F-31. Underpowered cluster test
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Point estimate is large but confidence interval is wide.
 - **First evidence:** Count independent clusters rather than product-days.
 - **Candidate mechanism:** Within-cluster correlation reduces effective information.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** Large between-cluster outcome variance can widen intervals even with low intracluster correlation.
 - **Discriminating test:** Inspect cluster-level outcome variation.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Continue only under the prespecified design or conclude inconclusive.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Statistician coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Plan power using plausible cluster sizes, correlation and outcome variance.
+- **Verification:** Recompute uncertainty at the assignment unit under the preregistered analysis.
 ### F-32. Network contamination
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Customers observe more than one experimental market.
 - **First evidence:** Inspect delivery geography and cross-market customer journeys.
 - **Candidate mechanism:** A shared audience can dilute the treatment contrast.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** Cross-market delivery restrictions can make apparent overlapping views non-purchasable.
 - **Discriminating test:** Measure cross-market exposure with privacy safeguards.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Reassign broader clusters or narrow the target.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Experimentation lead coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Map customer journeys and delivery boundaries during cluster design.
+- **Verification:** Estimate cross-market exposure using approved privacy-preserving linkage.
 ### F-33. Sequential peeking
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** A result crosses a threshold after repeated checks.
 - **First evidence:** Review the preregistered monitoring schedule.
 - **Candidate mechanism:** Unplanned repeated testing inflates false positive risk.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A prespecified sequential boundary may validly allow an early decision.
 - **Discriminating test:** Compare actual looks with the planned stopping rule.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Do not declare a win; analyze under a valid design.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Statistician coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Record analysis looks and use the agreed alpha-spending or other valid rule.
+- **Verification:** Compare every actual look and stopping decision with the registered plan.
 ### F-34. Model drift
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Candidate ranking changes sharply in a new season.
 - **First evidence:** Compare covariate distributions and calibration by time.
 - **Candidate mechanism:** Seasonality or a pipeline error can change predicted demand.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A seasonal shift may be real even when the feature pipeline is healthy.
 - **Discriminating test:** Check data freshness and holdout calibration separately.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Revert to the approved rule pending review.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** ML operations coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Monitor input freshness separately from mature outcome calibration.
+- **Verification:** Recalculate calibration on a time-later cohort after reconciling feature delivery.
 ### F-35. Feedback loop
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Frequent markdowns train the model on selected inventory.
 - **First evidence:** Inspect historical policy and selection into each price.
 - **Candidate mechanism:** The policy determines which counterfactuals are observed.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A supplier change may cause markdowns and demand changes simultaneously.
 - **Discriminating test:** Compare randomized exploration with policy-selected days.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Do not treat policy data as unconfounded.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Pricing science coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Log historical policy, assignment probabilities and merchant overrides.
+- **Verification:** Contrast randomized exploration with selected markdowns without claiming observational equivalence.
 ### F-36. Model version skew
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Offline approved recommendation differs from served value.
 - **First evidence:** Compare manifest model checksum with approval artifact.
 - **Candidate mechanism:** Publisher may load a different artifact or transform.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A later merchant override can legitimately differ from the model recommendation.
 - **Discriminating test:** Recompute the same decision with recorded inputs.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Block mismatched manifests and restore compatible version.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** ML platform coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Bind model checksum, transforms, rules and approval to the manifest.
+- **Verification:** Recompute the approved recommendation and separately trace subsequent overrides.
 ### F-37. Late finance corrections
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** A pilot win reverses after refunds arrive.
 - **First evidence:** Plot cumulative contribution by maturity age.
 - **Candidate mechanism:** Returns and chargebacks are delayed labels.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A different product mix can change the result even without delayed refunds.
 - **Discriminating test:** Compare equally mature cohorts across arms.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Delay final decision until the agreed window.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Finance coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Publish preliminary and mature cohorts with fixed age and correction policy.
+- **Verification:** Compare both arms at the same maturity and reconcile all late adjustments.
 ### F-38. Order attribution ambiguity
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Reported treatment revenue exceeds ledger revenue.
 - **First evidence:** Trace order-line allocation to product and market.
 - **Candidate mechanism:** A multi-item order may be joined more than once.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** Order-level discounts may be allocated differently without duplicate order lines.
 - **Discriminating test:** Reconcile sum of attributed lines to ledger totals.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Hold outcome report until attribution balances.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Analytics engineering coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Define one allocation rule and enforce line-level conservation against finance totals.
+- **Verification:** Sum allocated revenue and costs across all lines and compare to each order ledger.
 ### F-39. Margin floor violation
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** A transaction falls below required contribution margin.
 - **First evidence:** Compare actual fees and discounts with policy inputs.
 - **Candidate mechanism:** An unmodeled promotion can stack with a valid shelf price.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** Higher actual fulfillment charges can breach contribution requirements without a coupon.
 - **Discriminating test:** Replay checkout with all active discounts.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Disable the conflicting promotion or withdraw SKU.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Merchant operations coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Validate the complete checkout offer and current cost assumptions against the floor.
+- **Verification:** Reconstruct the paid-price margin for the affected order including variable fees.
 ### F-40. Promotion stacking
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Displayed shelf price is compliant but paid price is not.
 - **First evidence:** Trace coupon and loyalty deductions at checkout.
 - **Candidate mechanism:** Several independently valid offers can combine unsafely.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A promised earlier cart price can differ from the current shelf price legitimately.
 - **Discriminating test:** Test complete offer composition against rules.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Block conflicting offer combination.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Commerce and legal coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Specify eligible coupon combinations and apply approved cart-price policy consistently.
+- **Verification:** Evaluate each permitted coupon combination against the paid-price rule.
 ### F-41. Legal policy uncertainty
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** A pilot includes a newly restricted product.
 - **First evidence:** Compare eligibility list with approved legal scope.
 - **Candidate mechanism:** Catalog classification or requirements may have changed.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A product may have been correctly excluded but remain visible under baseline pricing.
 - **Discriminating test:** Obtain a jurisdiction-specific legal determination.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Exclude affected products pending approval.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Legal coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Maintain effective-dated legal scope separately from dynamic-price assignment.
+- **Verification:** Trace the classification, approval and assignment at the decision time.
 ### F-42. Sensitive segment disparity
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Complaint rates rise for a customer group.
 - **First evidence:** Compare exposure-adjusted complaints and uncertainty.
 - **Candidate mechanism:** Price, accessibility or support-channel differences can all contribute.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** Differences in access to support channels can alter complaint counts independently of harm.
 - **Discriminating test:** Audit eligible exposure and treatment across approved groups.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Pause affected rollout and investigate customer impact.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Fairness reviewer coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Agree exposure denominators and privacy-approved group definitions before launch.
+- **Verification:** Compare reporting channels and treatment exposure with uncertainty and missingness.
 ### F-43. Small subgroup inference
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** One segment appears unaffected despite few observations.
 - **First evidence:** Inspect group counts and interval width.
 - **Candidate mechanism:** Low power can conceal meaningful harm.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** The segment may genuinely have little impact, but the data may not distinguish that from harm.
 - **Discriminating test:** Report uncertainty and missingness alongside rates.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Avoid declaring the guardrail passed from a null test.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Statistician coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Set minimum reportable group sizes and an escalation rule for wide intervals.
+- **Verification:** Report effect intervals and suppress unsafe small cells under approved privacy policy.
 ### F-44. Cold-start product
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** A new SKU has no prior price variation.
 - **First evidence:** Inspect similar-product evidence and support overlap.
 - **Candidate mechanism:** No local elasticity estimate may exist.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A new SKU may have rich evidence from an otherwise comparable predecessor.
 - **Discriminating test:** Compare baseline demand features without extrapolating price effect.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Use approved manual price until evidence exists.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Merchant coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Define similarity and price-support criteria before borrowing evidence.
+- **Verification:** Compare predecessor attributes and randomized support without assuming transportability.
 ### F-45. Price war feedback
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Competitor repricing follows repeated changes.
 - **First evidence:** Inspect timestamps and external market context.
 - **Candidate mechanism:** Competitors and the retailer can respond to common shocks.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A shared supplier-cost shock can cause simultaneous retailer and competitor repricing.
 - **Discriminating test:** Avoid interpreting correlation as a competitor reaction.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Apply approved movement limits and merchant review.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Category strategy coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Require merchant review of external-price signals and retain their observation times.
+- **Verification:** Compare timing with public cost shocks; temporal order alone does not prove reaction.
 ### F-46. Demand spike outside forecast
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Event-driven traffic exceeds predicted units.
 - **First evidence:** Compare campaign calendar, sessions and available stock.
 - **Candidate mechanism:** A real demand shock or broken feature feed can look similar.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A tracking failure may inflate session counts while sales remain stable.
 - **Discriminating test:** Cross-check independent traffic and campaign records.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Freeze changes if input integrity is uncertain.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Operations coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Compare independent traffic, campaign and availability feeds before changing prices.
+- **Verification:** Reconcile sessions with orders and known campaign schedules.
 ### F-47. Batch overrun
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Price manifest misses the daily cutoff.
 - **First evidence:** Inspect queue time, input completeness and per-stage duration.
 - **Candidate mechanism:** Data delay and insufficient compute have different remedies.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A delayed approval can miss the cutoff even when compute finishes on time.
 - **Discriminating test:** Trace a single batch through its stage timestamps.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Retain an approved still-valid price and investigate.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Data platform coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Set stage deadlines for inputs, scoring, approval and publication separately.
+- **Verification:** Trace timestamps and identify the first stage that exceeded its allocated window.
 ### F-48. Cache stampede
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** A bulk price update causes read latency spikes.
 - **First evidence:** Inspect invalidation rate and cache miss concurrency.
 - **Candidate mechanism:** Simultaneous expiry can overload catalog backends.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A backend deployment can increase latency independently of cache invalidation.
 - **Discriminating test:** Compare misses and backend saturation during publication.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Throttle publication and serve compliant cached values.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Commerce on-call coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Rate-limit invalidations and test cache refill under representative concurrency.
+- **Verification:** Correlate misses, backend saturation and deployment timing before attributing cause.
 ### F-49. Rollback schema mismatch
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** An old manifest cannot load after deployment.
 - **First evidence:** Inspect schema compatibility and rule version.
 - **Candidate mechanism:** Restoring an artifact alone may not restore valid state.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A still-compatible old manifest can nevertheless violate a new pricing rule.
 - **Discriminating test:** Test rollback using current validation rules.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Withdraw affected offers if no compatible approved manifest exists.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Release engineering coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Rehearse rollback against current schemas and current effective rules.
+- **Verification:** Load a prior approved manifest in a controlled exercise and validate its eligibility.
 ### F-50. Audit log gap
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** A customer dispute cannot be reconstructed.
 - **First evidence:** Trace decision ID from display through order.
 - **Candidate mechanism:** Missing joins or retention expiry can break evidence.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** An expired retention period may be intentional under the approved privacy policy.
 - **Discriminating test:** Replay a sample journey from immutable records.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Preserve available records and escalate rather than infer.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Governance coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Define minimum audit fields, retention and access alongside privacy requirements.
+- **Verification:** Trace a synthetic journey within the approved retention window.
 ### F-51. Incorrect sample window
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** An apparent treatment change is a holiday effect.
 - **First evidence:** Compare matched calendar blocks and randomization timestamps.
 - **Candidate mechanism:** Seasonality and staggered rollout can confound time comparisons.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** Concurrent treatment and control can both rise during a holiday.
 - **Discriminating test:** Analyze concurrent randomized controls within blocks.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Do not use simple before-after attribution.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Experimentation lead coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Block assignment by calendar and analyze concurrent controls within those blocks.
+- **Verification:** Recompute the treatment contrast within matched blocks rather than comparing before and after.
 ### F-52. Unexpected negative margin
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** Higher volume coincides with lower contribution.
 - **First evidence:** Decompose per-unit contribution and quantity by arm.
 - **Candidate mechanism:** Fees, returns or product mix may overwhelm revenue.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** Higher returns can reduce contribution even with unchanged paid prices.
 - **Discriminating test:** Reconcile treatment and control cost components.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Stop expansion until finance validates the decomposition.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Finance coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Reconcile price, quantity, fees, merchandise cost and refunds by assignment.
+- **Verification:** Check the component totals against the finance ledger for equally mature cohorts.
 ### F-53. Unstable rules across regions
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** A price is valid in one market but invalid in another.
 - **First evidence:** Inspect market-specific rule and currency identifiers.
 - **Candidate mechanism:** Rules may be cached without the market key.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A legitimate market-specific floor can make the same price valid in only one region.
 - **Discriminating test:** Replay identical SKU across two market contexts.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Quarantine incorrect scope and invalidate caches.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Catalog engineering coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Include market, currency and effective rule version in every cache key.
+- **Verification:** Replay the SKU in both markets with their own independent rule sets.
 ### F-54. Inventory opportunity cost ignored
-- **Provenance:** HYPOTHETICAL; this is a teaching diagnostic, not an observed incident.
 - **Trigger / symptom:** One-day profit rises while later lost sales increase.
 - **First evidence:** Inspect sell-through and replenishment over the full horizon.
 - **Candidate mechanism:** A one-day optimizer can consume scarce stock too early.
-- **Competing explanation:** A genuine demand or assortment change can produce a superficially similar aggregate signal.
+- **Competing explanation:** A supplier delay may reduce later sales even if the first-day price was unchanged.
 - **Discriminating test:** Compare multi-day contribution and stockout timing.
-- **Interpretation:** A test supporting the candidate mechanism narrows the investigation; it does not alone establish all downstream impact.
 - **Containment:** Add an approved inventory-horizon constraint or defer.
-- **Blast radius:** Limit investigation to affected product, market, rule version and time interval before considering wider rollback.
 - **Responsible role:** Inventory science coordinates the investigation and records the decision.
-- **Prevention:** Encode the relevant input, assignment or publication invariant as an owned automated check where feasible.
-- **Verification:** Replay the affected product-day against the corrected contract, then reconcile the affected ledger and customer-facing state.
-- **Limitation:** A replay checks the specified mechanism; it does not prove absence of every other cause.
+- **Prevention:** Prespecify a replenishment horizon and inventory reserve before optimization.
+- **Verification:** Compare total horizon contribution and stockout timing across assigned policies.
 
 ## 13. Transferable Lesson
 | Field | Lesson |
@@ -1113,195 +990,195 @@ Scoring for each question: 0 incorrect; 1 partial; 2 correct with explicit assum
 Questions are prompts for a design discussion, not claims of actual interview or project experience.
 #### Q01 — Framing
 - **Candidate prompt:** What decision and baseline are being compared?
-- **Given facts:** Use the illustrative case assumptions; no real company results are supplied.
-- **Clarify:** State the decision unit, relevant constraints and evidence status before answering.
+- **Given facts:** One public price applies per SKU, market and trading day; fixed approved pricing is the comparator.
+- **Clarify:** Identify the owner, decision timing and actions before selecting a model.
 - **Strong answer:** The action is one approved SKU-market-day public price; compare constrained policy with the fixed approved rule.
-- **Reasoning check:** Tie the result to the stated population, time window and units where applicable.
+- **Reasoning check:** Distinguish the recommendation artifact from the merchant-approved customer price.
 - **Acceptable alternative:** A manual review can remain the decision if evidence is weak.
 - **Follow-up:** What if no candidate satisfies current rules?
 - **Follow-up answer:** Publish no invalid price; escalate and use only a rule-validated safe state.
 - **Red flag:** Calling the task pure demand prediction omits the action and constraints.
-- **Scoring:** Apply the 0–3 rubric above; full credit requires defending the boundary.
+- **Scoring:** Full credit requires explaining the no-valid-candidate escalation rather than inventing a fallback.
 - **Answer support:** Sections 1–4.
 #### Q02 — Objective
 - **Candidate prompt:** Why not maximize conversion?
-- **Given facts:** Use the illustrative case assumptions; no real company results are supplied.
-- **Clarify:** State the decision unit, relevant constraints and evidence status before answering.
+- **Given facts:** Revenue and conversion are proxies; finance defines mature contribution after variable costs.
+- **Clarify:** Ask which costs and return adjustments vary with price and volume.
 - **Strong answer:** Conversion ignores unit margin, refunds, fulfillment and inventory opportunity cost, so it can choose a lower-contribution price.
-- **Reasoning check:** Tie the result to the stated population, time window and units where applicable.
+- **Reasoning check:** Use the 90-versus-100 example to show 9,000 versus 8,000 revenue but 2,500 versus 2,800 contribution.
 - **Acceptable alternative:** Revenue may be a secondary metric if finance approves contribution as primary.
 - **Follow-up:** What if fixed costs differ by price?
 - **Follow-up answer:** Include price-dependent costs in the objective before comparing.
 - **Red flag:** Equating more orders with more profit is wrong.
-- **Scoring:** Apply the 0–3 rubric above; full credit requires defending the boundary.
+- **Scoring:** Full credit requires recognizing customer and inventory protections as hard constraints.
 - **Answer support:** Sections 3 and 6.
 #### Q03 — Calculation
 - **Candidate prompt:** Calculate contribution at price 100 with 80 units, cost 60 and variable cost 5.
-- **Given facts:** Use the illustrative case assumptions; no real company results are supplied.
-- **Clarify:** State the decision unit, relevant constraints and evidence status before answering.
+- **Given facts:** The hypothetical price, quantity and two unit costs are 100, 80, 60 and 5.
+- **Clarify:** Confirm all 80 units are fulfilled and cost assumptions already include relevant returns.
 - **Strong answer:** Unit contribution is 100−60−5 = 35 currency per unit; 80 × 35 = 2,800 currency per day.
-- **Reasoning check:** Tie the result to the stated population, time window and units where applicable.
+- **Reasoning check:** Check that currency per unit multiplied by units per day yields currency per day.
 - **Acceptable alternative:** A receipt-level sum is equivalent under the stated constant costs.
 - **Follow-up:** What if cost becomes 70?
 - **Follow-up answer:** The same quantity gives 80 × 25 = 2,000.
 - **Red flag:** Subtracting costs once per day rather than per unit is dimensionally incorrect.
-- **Scoring:** Apply the 0–3 rubric above; full credit requires defending the boundary.
+- **Scoring:** Full credit includes the 2,000 recalculation at merchandise cost 70.
 - **Answer support:** Section 6.
 #### Q04 — Sensitivity
 - **Candidate prompt:** Which candidate wins when unit cost becomes 70, holding the given demand fixed?
-- **Given facts:** Use the illustrative case assumptions; no real company results are supplied.
-- **Clarify:** State the decision unit, relevant constraints and evidence status before answering.
+- **Given facts:** The candidate prices are 90, 100 and 110 with respective quantities 100, 80 and 60.
+- **Clarify:** Hold the variable cost at 5 and demand fixed while changing merchandise cost to 70.
 - **Strong answer:** Contributions are 100×15 = 1,500, 80×25 = 2,000, and 60×35 = 2,100; choose 110.
-- **Reasoning check:** Tie the result to the stated population, time window and units where applicable.
+- **Reasoning check:** Compare 1,500, 2,000 and 2,100 before selecting the highest contribution.
 - **Acceptable alternative:** Choose no change if those assumed demands lack support.
 - **Follow-up:** What if only 50 units can be sold with original costs?
 - **Follow-up answer:** Assuming deterministic demand, contributions become 1,250, 1,750 and 2,250.
 - **Red flag:** Treating that toy cap as expected stochastic sales is invalid.
-- **Scoring:** Apply the 0–3 rubric above; full credit requires defending the boundary.
+- **Scoring:** Full credit distinguishes a conditional calculation from evidence that demand remains fixed.
 - **Answer support:** Section 6.
 #### Q05 — Causal inference
 - **Candidate prompt:** Why is regressing sales on price alone unreliable?
-- **Given facts:** Use the illustrative case assumptions; no real company results are supplied.
-- **Clarify:** State the decision unit, relevant constraints and evidence status before answering.
+- **Given facts:** Merchants choose prices while campaigns and expected demand can also affect purchases.
+- **Clarify:** Ask which pre-price information merchants used and how campaigns were allocated.
 - **Strong answer:** Merchants may lower price during campaigns or raise it when demand is already expected to be high; these factors also affect sales.
-- **Reasoning check:** Tie the result to the stated population, time window and units where applicable.
+- **Reasoning check:** Draw the common causes of price and demand rather than interpreting correlation as response.
 - **Acceptable alternative:** A well-justified observational design can supplement, but does not automatically replace, randomization.
 - **Follow-up:** What if randomized treatment cannot be assigned?
 - **Follow-up answer:** Retain baseline or use a carefully justified quasi-experiment with explicit untestable assumptions.
 - **Red flag:** A high predictive fit does not establish the causal price effect.
-- **Scoring:** Apply the 0–3 rubric above; full credit requires defending the boundary.
+- **Scoring:** Full credit names an identification strategy and its unresolved assumptions.
 - **Answer support:** Sections 5 and 9.
 #### Q06 — Data grain
 - **Candidate prompt:** How do you prevent stockout days from masquerading as zero demand?
-- **Given facts:** Use the illustrative case assumptions; no real company results are supplied.
-- **Clarify:** State the decision unit, relevant constraints and evidence status before answering.
+- **Given facts:** The outcome records fulfilled units and inventory availability can change within a day.
+- **Clarify:** Separate listed, in-stock, out-of-stock and telemetry-missing intervals.
 - **Strong answer:** Use product-market-day panels, stock availability timestamps and exposure data; fulfilled sales are censored when stock runs out.
-- **Reasoning check:** Tie the result to the stated population, time window and units where applicable.
+- **Reasoning check:** Explain why observed sales provide only a lower bound on latent demand during a stockout.
 - **Acceptable alternative:** A censored-demand model is possible if its assumptions are defended.
 - **Follow-up:** What if the product was not listed?
 - **Follow-up answer:** Exclude that period from the eligible opportunity denominator according to preassignment rules.
 - **Red flag:** Dropping all low-stock days after treatment can create selection bias.
-- **Scoring:** Apply the 0–3 rubric above; full credit requires defending the boundary.
+- **Scoring:** Full credit retains assigned stockout days in the policy effect while discussing censoring.
 - **Answer support:** Sections 5a and 9.
 #### Q07 — Leakage
 - **Candidate prompt:** Which timestamp determines whether a cost feature is usable?
-- **Given facts:** Use the illustrative case assumptions; no real company results are supplied.
-- **Clarify:** State the decision unit, relevant constraints and evidence status before answering.
+- **Given facts:** A cost can be effective before cutoff but first ingested after that cutoff.
+- **Clarify:** Ask for both effective time and availability time for the cost version.
 - **Strong answer:** The feature must have been available to the decision system by the cutoff, not merely have an earlier business effective date.
-- **Reasoning check:** Tie the result to the stated population, time window and units where applicable.
+- **Reasoning check:** Reconstruct the decision using only the cost known by cutoff, then reconcile mature costs separately.
 - **Acceptable alternative:** An immutable as-known snapshot or bitemporal join can implement that rule.
 - **Follow-up:** What if late invoices revise past costs?
 - **Follow-up answer:** Use as-known costs for prediction and mature finance data for outcome reconciliation.
 - **Red flag:** Using the latest overwritten cost creates hindsight leakage.
-- **Scoring:** Apply the 0–3 rubric above; full credit requires defending the boundary.
+- **Scoring:** Full credit identifies hindsight leakage even if the late invoice describes an earlier transaction.
 - **Answer support:** Section 5d.
 #### Q08 — Experiments
 - **Candidate prompt:** What would you randomize for a public-price experiment?
-- **Given facts:** Use the illustrative case assumptions; no real company results are supplied.
-- **Clarify:** State the decision unit, relevant constraints and evidence status before answering.
+- **Given facts:** Customers see a public market price and substitutes can share stock across clusters.
+- **Clarify:** Map delivery boundaries, substitution and stock pools before choosing independent units.
 - **Strong answer:** Randomize sufficiently independent market-category or inventory-pool clusters in blocks, with public prices consistent within a cluster.
-- **Reasoning check:** Tie the result to the stated population, time window and units where applicable.
+- **Reasoning check:** Explain why session-level randomization can expose shoppers to inconsistent prices.
 - **Acceptable alternative:** Another unit is valid if it avoids cross-arm price exposure and shared-stock interference.
 - **Follow-up:** What if customers shop across markets?
 - **Follow-up answer:** Measure contamination and enlarge clusters or narrow scope if interference is material.
 - **Red flag:** Independent session prices can break public consistency and contaminate controls.
-- **Scoring:** Apply the 0–3 rubric above; full credit requires defending the boundary.
+- **Scoring:** Full credit specifies cluster assignment and acknowledges residual cross-market interference.
 - **Answer support:** Section 9.
 #### Q09 — Inference
 - **Candidate prompt:** Why not use each product-day as an independent observation?
-- **Given facts:** Use the illustrative case assumptions; no real company results are supplied.
-- **Clarify:** State the decision unit, relevant constraints and evidence status before answering.
+- **Given facts:** Assignment occurs at cluster level while observations repeat across products and days.
+- **Clarify:** Ask how many clusters and blocks were randomized and whether cluster sizes vary.
 - **Strong answer:** Repeated days and products within a randomized cluster are correlated; the independent assignment unit governs uncertainty.
-- **Reasoning check:** Tie the result to the stated population, time window and units where applicable.
+- **Reasoning check:** Explain that correlated outcomes cannot create independent assignments by multiplying days.
 - **Acceptable alternative:** A cluster-aware model or suitable randomization inference can be used when assumptions hold.
 - **Follow-up:** What if there are few clusters?
 - **Follow-up answer:** Use a method suited to the finite assignment design or redesign; report limited precision.
 - **Red flag:** A tiny standard error from pseudoreplication is misleading.
-- **Scoring:** Apply the 0–3 rubric above; full credit requires defending the boundary.
+- **Scoring:** Full credit chooses a finite-cluster-appropriate analysis and reports uncertainty honestly.
 - **Answer support:** Section 9.
 #### Q10 — Sizing
 - **Candidate prompt:** How much batch work is implied by 10,000 SKUs and 11 prices?
-- **Given facts:** Use the illustrative case assumptions; no real company results are supplied.
-- **Clarify:** State the decision unit, relevant constraints and evidence status before answering.
+- **Given facts:** The batch has 10,000 decisions and 11 candidate evaluations each over two hours.
+- **Clarify:** Differentiate candidate throughput from shopper read traffic and end-to-end latency.
 - **Strong answer:** There are 110,000 candidate evaluations per day, or about 15.28 per second averaged over two hours.
-- **Reasoning check:** Tie the result to the stated population, time window and units where applicable.
+- **Reasoning check:** Divide 110,000 by 7,200 seconds, not by the number of decisions.
 - **Acceptable alternative:** Actual sizing requires measured per-evaluation cost, dependency traffic and peak behavior.
 - **Follow-up:** What if all work arrives in the last ten minutes?
 - **Follow-up answer:** The average becomes about 183.33 evaluations per second in that interval, before concurrency or overhead.
 - **Red flag:** Calling the daily average a measured peak capacity is wrong.
-- **Scoring:** Apply the 0–3 rubric above; full credit requires defending the boundary.
+- **Scoring:** Full credit calculates the ten-minute rate and declines to call it measured capacity.
 - **Answer support:** Section 8d.
 #### Q11 — Reliability
 - **Candidate prompt:** A price publish times out; should the client immediately publish a new decision ID?
-- **Given facts:** Use the illustrative case assumptions; no real company results are supplied.
-- **Clarify:** State the decision unit, relevant constraints and evidence status before answering.
+- **Given facts:** A timeout does not reveal whether the catalog committed the request.
+- **Clarify:** Ask whether a decision ID identifies immutable content and whether status is queryable.
 - **Strong answer:** First reconcile whether the original write succeeded; retry with the same idempotency key under the bounded retry policy.
-- **Reasoning check:** Tie the result to the stated population, time window and units where applicable.
+- **Reasoning check:** Explain why retrying the same ID is different from generating a new publication.
 - **Acceptable alternative:** A read-after-write status endpoint can support reconciliation.
 - **Follow-up:** What if the catalog is unavailable and the prior price expired?
 - **Follow-up answer:** Withdraw the affected offer and escalate rather than serve an unvalidated price.
 - **Red flag:** A new ID on every retry can duplicate effects.
-- **Scoring:** Apply the 0–3 rubric above; full credit requires defending the boundary.
+- **Scoring:** Full credit addresses rule validation and withdrawal when no compliant fallback exists.
 - **Answer support:** Section 8.
 #### Q12 — Debugging
 - **Candidate prompt:** Sales fall after a markdown; what would you inspect first?
-- **Given facts:** Use the illustrative case assumptions; no real company results are supplied.
-- **Clarify:** State the decision unit, relevant constraints and evidence status before answering.
+- **Given facts:** A markdown and lower fulfilled sales occur together in the hypothetical scenario.
+- **Clarify:** Ask whether the price actually appeared, stock was available and exposure was comparable.
 - **Strong answer:** Compare in-stock time, exposure, actual displayed price and campaign context; stockout, telemetry and true demand changes are competing explanations.
-- **Reasoning check:** Tie the result to the stated population, time window and units where applicable.
+- **Reasoning check:** Contrast demand response with stockout censoring, logging delay and campaign changes.
 - **Acceptable alternative:** A randomized contrast helps when assignment and exposure are intact.
 - **Follow-up:** What if stockout times are missing?
 - **Follow-up answer:** Treat demand as unidentified for that interval and investigate inventory telemetry.
 - **Red flag:** Declaring negative elasticity from fulfilled sales alone ignores censoring.
-- **Scoring:** Apply the 0–3 rubric above; full credit requires defending the boundary.
+- **Scoring:** Full credit states what evidence distinguishes these explanations without claiming a causal result.
 - **Answer support:** Sections 5 and 12.
 #### Q13 — Governance
 - **Candidate prompt:** How does rollback handle committed orders and changed rules?
-- **Given facts:** Use the illustrative case assumptions; no real company results are supplied.
-- **Clarify:** State the decision unit, relevant constraints and evidence status before answering.
+- **Given facts:** Rollback must respect current rules and preserve binding committed order terms.
+- **Clarify:** Identify the authority for incident response and the applicable effective manifest.
 - **Strong answer:** Stop new publications, validate an approved compatible manifest against current rules, restore and reconcile surfaces, and honor applicable committed order terms.
-- **Reasoning check:** Tie the result to the stated population, time window and units where applicable.
+- **Reasoning check:** Separate stopping new writes from restoring state and honoring accepted orders.
 - **Acceptable alternative:** Withdraw affected offers if no valid manifest exists.
 - **Follow-up:** What if the old schema is no longer accepted?
 - **Follow-up answer:** Use a compatible approved artifact or withdraw; never force an invalid old manifest.
 - **Red flag:** Rewriting past order prices or bypassing current constraints is unsafe.
-- **Scoring:** Apply the 0–3 rubric above; full credit requires defending the boundary.
+- **Scoring:** Full credit requires compatible validated artifacts or withdrawal, not unconditional replay.
 - **Answer support:** Sections 8 and 10.
 #### Q14 — Evaluation
 - **Candidate prompt:** What denominator should the primary experiment metric use?
-- **Given facts:** Use the illustrative case assumptions; no real company results are supplied.
-- **Clarify:** State the decision unit, relevant constraints and evidence status before answering.
-- **Strong answer:** All eligible randomized cluster-days, including zero-sale days, for both assigned arms; report mature contribution divided by that denominator.
-- **Reasoning check:** Tie the result to the stated population, time window and units where applicable.
+- **Given facts:** The pilot assigns policies to clusters and measures mature contribution over a fixed horizon.
+- **Clarify:** Clarify preassignment eligibility, product-day weighting and cluster-level treatment assignment.
+- **Strong answer:** All eligible product-days in randomized clusters, including zero-sale days, for both assigned arms; divide mature contribution by that denominator and account for clustered assignment.
+- **Reasoning check:** Include zero-sale and treatment-induced stockout product-days in the assigned-arm denominator.
 - **Acceptable alternative:** A total contribution estimand can be useful if prespecified and cluster exposure is appropriately handled.
 - **Follow-up:** What if treatment creates stockouts?
-- **Follow-up answer:** Keep those cluster-days in the intention-to-treat outcome and study stockouts as a mechanism and guardrail.
+- **Follow-up answer:** Keep those product-days in the intention-to-treat outcome and study stockouts as a mechanism and guardrail.
 - **Red flag:** Restricting to purchasers or available days after assignment induces selection.
-- **Scoring:** Apply the 0–3 rubric above; full credit requires defending the boundary.
+- **Scoring:** Full credit explains how post-treatment filtering changes the estimand.
 - **Answer support:** Section 9.
 #### Q15 — Transfer
 - **Candidate prompt:** How would the design change for perishable hotel rooms?
-- **Given facts:** Use the illustrative case assumptions; no real company results are supplied.
-- **Clarify:** State the decision unit, relevant constraints and evidence status before answering.
+- **Given facts:** Hotel capacity expires by room-night and may be shared among booking channels.
+- **Clarify:** Identify booking horizon, cancellation rules and shared inventory before adapting the design.
 - **Strong answer:** Model remaining room-night inventory and booking horizon; unused rooms expire, and capacity constraints are time-specific.
-- **Reasoning check:** Tie the result to the stated population, time window and units where applicable.
+- **Reasoning check:** Contrast expiring rooms with replenishable goods and the resulting inventory opportunity cost.
 - **Acceptable alternative:** A fixed-rule comparator and bounded randomized policy remain useful if legally and operationally feasible.
 - **Follow-up:** What if different booking channels share capacity?
 - **Follow-up answer:** Randomize or account for shared-capacity interference at a suitable unit.
 - **Red flag:** Copying replenishable inventory assumptions unmodified is not justified.
-- **Scoring:** Apply the 0–3 rubric above; full credit requires defending the boundary.
+- **Scoring:** Full credit retains a credible comparator and addresses interference across booking channels.
 - **Answer support:** Section 13.
 #### Q16 — Uncertainty
 - **Candidate prompt:** Does the toy contribution ranking prove that price 100 is optimal in production?
-- **Given facts:** Use the illustrative case assumptions; no real company results are supplied.
-- **Clarify:** State the decision unit, relevant constraints and evidence status before answering.
+- **Given facts:** The demand and cost values in the example were invented for teaching, not estimated.
+- **Clarify:** Ask whether demand is causal, costs mature and each candidate is rule-compliant.
 - **Strong answer:** No; it is conditional arithmetic using invented demand and costs, with no real data, identification, uncertainty or implementation evidence.
-- **Reasoning check:** Tie the result to the stated population, time window and units where applicable.
+- **Reasoning check:** Show that the 100 ranking depends on the assumed quantities, costs and one-day horizon.
 - **Acceptable alternative:** It is still useful as an auditable example of objective and sensitivity.
 - **Follow-up:** What would change the decision?
 - **Follow-up answer:** Credible causal estimates, uncertainty, mature costs, inventory dynamics and cleared constraints could change the ranking.
 - **Red flag:** Presenting the illustrative 2,800 as actual observed profit fabricates evidence.
-- **Scoring:** Apply the 0–3 rubric above; full credit requires defending the boundary.
+- **Scoring:** Full credit explicitly rejects a production optimality or realized-profit claim.
 - **Answer support:** Sections 6, 7 and 11.
 
 ## 15. Quick Reference Card

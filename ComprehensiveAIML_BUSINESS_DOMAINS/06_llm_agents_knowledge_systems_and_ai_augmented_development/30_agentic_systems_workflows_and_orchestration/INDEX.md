@@ -23,6 +23,10 @@ After this module, a learner can turn a real problem into an appropriate technic
 - [Case Studies](./Case_Studies/INDEX.md): application briefs that deliberately include data, constraints, architecture, evaluation, risk, and operating plan.
 - [Cheat Sheets](./Cheat_Sheets/INDEX.md): compact references for repeat use while designing, reviewing, or debugging.
 
+### Authored case draft
+
+- [Enterprise agent approval gate](./Case_Studies/01_enterprise_agent_approval_gate.md) — hypothetical ticket-writing workflow covering approval binding, retries, production controls and interview decisions. Draft; not reviewed or deployed. The broader topics above remain planned.
+
 ## Dependency notes
 
 Prerequisites above are module identifiers. They are the minimum conceptual background, not a requirement to complete every earlier part. For a fast path, read the prerequisite indexes, then complete one module case before advancing.

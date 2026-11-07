@@ -398,7 +398,7 @@ Hidden folders and clipped filenames remain `unresolved-source`; visible prefixe
 
 ## Forecasting production decisions
 
-**Teaching home:** [11_data_science_domain_specialisations/01_production_ml_case_library/10_time_series_forecasting/INDEX.md](11_data_science_domain_specialisations/01_production_ml_case_library/10_time_series_forecasting/INDEX.md). **Status:** mostly planned; unreviewed drafts cover [retail demand](11_data_science_domain_specialisations/01_production_ml_case_library/10_time_series_forecasting/Case_Studies/01_Retail_CPG_Demand_Forecasting_At_Scale.md) and [ride-hailing demand](11_data_science_domain_specialisations/01_production_ml_case_library/10_time_series_forecasting/Case_Studies/02_Ride_Hailing_Demand_Forecasting.md). ETA and the remaining cases are planned; the unavailable original cases were not inspected.
+**Teaching home:** [11_data_science_domain_specialisations/01_production_ml_case_library/10_time_series_forecasting/INDEX.md](11_data_science_domain_specialisations/01_production_ml_case_library/10_time_series_forecasting/INDEX.md). **Status:** mostly planned; unreviewed drafts cover [retail demand](11_data_science_domain_specialisations/01_production_ml_case_library/10_time_series_forecasting/Case_Studies/01_Retail_CPG_Demand_Forecasting_At_Scale.md), [ride-hailing demand](11_data_science_domain_specialisations/01_production_ml_case_library/10_time_series_forecasting/Case_Studies/02_Ride_Hailing_Demand_Forecasting.md), and [energy load](11_data_science_domain_specialisations/01_production_ml_case_library/10_time_series_forecasting/Case_Studies/03_Energy_Load_Forecasting.md). ETA and the remaining cases are planned; the unavailable original cases were not inspected.
 
 **Testable outcome.** Frame, design and challenge each of the five separately listed production cases; do not combine independent decisions into one narrative.
 
@@ -420,7 +420,7 @@ Hidden folders and clipped filenames remain `unresolved-source`; visible prefixe
 | `DS_Domain/Case_Studies_Production_ML_Systems/TimeSeries_Forecasting/01_Retail_CPG_Demand_Forecasting_At_Scale.md` | Retail CPG Demand Forecasting At Scale | `planned-topic` |
 | `DS_Domain/Case_Studies_Production_ML_Systems/TimeSeries_Forecasting/02_RideHailing_ETA_Demand_Forecasting.md` | RideHailing ETA Demand Forecasting | `planned-topic` |
 | `DS_Domain/Case_Studies_Production_ML_Systems/TimeSeries_Forecasting/03_Financial_Time_Series_Volatility_Forecasting.md` | Financial Time Series Volatility Forecasting | `planned-topic` |
-| `DS_Domain/Case_Studies_Production_ML_Systems/TimeSeries_Forecasting/04_Energy_Load_Forecasting.md` | Energy Load Forecasting | `planned-topic` |
+| `DS_Domain/Case_Studies_Production_ML_Systems/TimeSeries_Forecasting/04_Energy_Load_Forecasting.md` | Energy Load Forecasting | `partial-draft`: [hypothetical energy load case](11_data_science_domain_specialisations/01_production_ml_case_library/10_time_series_forecasting/Case_Studies/03_Energy_Load_Forecasting.md); source inaccessible |
 | `DS_Domain/Case_Studies_Production_ML_Systems/TimeSeries_Forecasting/05_Server_Metrics_Anomaly_Detection.md` | Server Metrics Anomaly Detection | `planned-topic` |
 
 **Independent case briefs (not measured; proposed):**
@@ -527,7 +527,7 @@ Hidden folders and clipped filenames remain `unresolved-source`; visible prefixe
 
 ## Fraud modeling
 
-**Teaching home:** [11_data_science_domain_specialisations/02_data_science_method_playbooks/02_fraud_modelling_playbook/INDEX.md](11_data_science_domain_specialisations/02_data_science_method_playbooks/02_fraud_modelling_playbook/INDEX.md). **Status:** planned.
+**Teaching home:** [fraud modelling playbook](11_data_science_domain_specialisations/02_data_science_method_playbooks/02_fraud_modelling_playbook/INDEX.md). **Status:** partial, unreviewed drafts cover [imbalance and thresholds](11_data_science_domain_specialisations/02_data_science_method_playbooks/02_fraud_modelling_playbook/Cheat_Sheets/03_Imbalanced_Fraud_Learning_and_Thresholds.md), [evaluation](11_data_science_domain_specialisations/02_data_science_method_playbooks/02_fraud_modelling_playbook/Cheat_Sheets/01_Fraud_Evaluation_Calibration_and_Capacity.md) and [calibration](11_data_science_domain_specialisations/02_data_science_method_playbooks/02_fraud_modelling_playbook/Cheat_Sheets/02_Calibration_and_Probability_Scoring.md); remaining topics are planned.
 
 **Testable outcome.** Derive, compute, select and diagnose every explicitly registered focused topic below, in prerequisite order.
 
@@ -550,9 +550,9 @@ Hidden folders and clipped filenames remain `unresolved-source`; visible prefixe
 | `DS_Domain/Fraud_Modelling_Cheat_Sheets/01_Fraud_Taxonomy_Industry_Landscape.md` | Fraud Taxonomy Industry Landscape | `planned-topic` |
 | `DS_Domain/Fraud_Modelling_Cheat_Sheets/02_Data_Foundations_Fraud.md` | Data Foundations Fraud | `planned-topic` |
 | `DS_Domain/Fraud_Modelling_Cheat_Sheets/03_Feature_Engineering_Fraud.md` | Feature Engineering Fraud | `planned-topic` |
-| `DS_Domain/Fraud_Modelling_Cheat_Sheets/04_Imbalanced_Learning.md` | Imbalanced Learning | `planned-topic` |
+| `DS_Domain/Fraud_Modelling_Cheat_Sheets/04_Imbalanced_Learning.md` | Imbalanced Learning | `partial-draft` |
 | `DS_Domain/Fraud_Modelling_Cheat_Sheets/05_Supervised_Fraud_Models.md` | Supervised Fraud Models | `planned-topic` |
-| `DS_Domain/Fraud_Modelling_Cheat_Sheets/06_Evaluation_Metrics_Fraud.md` | Evaluation Metrics Fraud | `planned-topic` |
+| `DS_Domain/Fraud_Modelling_Cheat_Sheets/06_Evaluation_Metrics_Fraud.md` | Evaluation Metrics Fraud | `partial-draft` |
 | `DS_Domain/Fraud_Modelling_Cheat_Sheets/07_Rule_Based_Systems_Hybrid.md` | Rule Based Systems Hybrid | `planned-topic` |
 | `DS_Domain/Fraud_Modelling_Cheat_Sheets/08_Anomaly_Detection_Unsupervised.md` | Anomaly Detection Unsupervised | `planned-topic` |
 | `DS_Domain/Fraud_Modelling_Cheat_Sheets/09_Network_Graph_Analytics.md` | Network Graph Analytics | `planned-topic` |
@@ -856,7 +856,7 @@ Hidden folders and clipped filenames remain `unresolved-source`; visible prefixe
 
 ## Search and AdTech methods
 
-**Teaching home:** [11_data_science_domain_specialisations/02_data_science_method_playbooks/09_search_adtech_playbook/INDEX.md](11_data_science_domain_specialisations/02_data_science_method_playbooks/09_search_adtech_playbook/INDEX.md). **Status:** planned.
+**Teaching home:** [11_data_science_domain_specialisations/02_data_science_method_playbooks/09_search_adtech_playbook/INDEX.md](11_data_science_domain_specialisations/02_data_science_method_playbooks/09_search_adtech_playbook/INDEX.md). **Status:** mostly planned; [BM25 and classical retrieval](11_data_science_domain_specialisations/02_data_science_method_playbooks/09_search_adtech_playbook/Cheat_Sheets/02_BM25_and_Classical_Retrieval.md) is an unreviewed draft; original source contents are unavailable.
 
 **Testable outcome.** Derive, compute, select and diagnose every explicitly registered focused topic below, in prerequisite order.
 
@@ -877,7 +877,7 @@ Hidden folders and clipped filenames remain `unresolved-source`; visible prefixe
 | `DS_Domain/Search_AdTech_Cheat_Sheets` | Source scope/container; not a completed lesson | `source-container` |
 | `DS_Domain/Search_AdTech_Cheat_Sheets/00_PLANNING_REPORT.md` | PLANNING REPORT | `supporting-artifact` |
 | `DS_Domain/Search_AdTech_Cheat_Sheets/01_Search_Fundamentals_IR.md` | Search Fundamentals IR | `planned-topic` |
-| `DS_Domain/Search_AdTech_Cheat_Sheets/02_BM25_TF_IDF_Classical_Retrieval.md` | BM25 TF IDF Classical Retrieval | `planned-topic` |
+| `DS_Domain/Search_AdTech_Cheat_Sheets/02_BM25_TF_IDF_Classical_Retrieval.md` | BM25 TF IDF Classical Retrieval | `partial-draft`: [BM25 and classical retrieval](11_data_science_domain_specialisations/02_data_science_method_playbooks/09_search_adtech_playbook/Cheat_Sheets/02_BM25_and_Classical_Retrieval.md); source inaccessible |
 | `DS_Domain/Search_AdTech_Cheat_Sheets/03_Learning_to_Rank.md` | Learning to Rank | `planned-topic` |
 | `DS_Domain/Search_AdTech_Cheat_Sheets/04_Neural_Search_Dense_Retrieval.md` | Neural Search Dense Retrieval | `planned-topic` |
 | `DS_Domain/Search_AdTech_Cheat_Sheets/05_Query_Understanding_NLP.md` | Query Understanding NLP | `planned-topic` |

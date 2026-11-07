@@ -19,7 +19,7 @@ review_trigger: Spotify corrects the source or materially changes stack ownershi
 ---
 # Spotify personalization versus experimentation
 
-**Unreviewed draft.** Published evidence and instructional design are deliberately separated. The numerical inputs, proposed operational controls, and architecture diagrams are illustrative, not Spotify disclosures.
+**Unreviewed draft.** The original case referenced by the assignment was unavailable and has not been inspected; this document does not reconstruct its contents. Published evidence and instructional design are deliberately separated. The numerical inputs, proposed operational controls, and architecture diagrams are illustrative, not Spotify disclosures.
 
 ## 1. The One-Line Framing
 Given a personalization system and a comparable baseline, separate the low-latency ML system that chooses user experiences from the experimentation system that evaluates whole variants, so product teams can assess user outcomes without conflating selection with causal evidence.
@@ -115,6 +115,26 @@ For a real run, retain experiment configuration, code revision, data snapshot, p
 Log assignment algorithm and salt under appropriate access control; a seed alone cannot reproduce changing data or nondeterministic execution.
 No Spotify experiment can be independently reproduced from the article alone.
 
+### Claim ledger
+| ID | Claim | Evidence and scope | Limitation |
+|---|---|---|---|
+| CLM-01 | Personalization and experimentation use separate, integrated stacks | Published, S1 | No causal effect of separation is measured |
+| CLM-02 | The article places contextual bandits in the ML stack | Published, S1 | No named model architecture is disclosed |
+| CLM-03 | The source reports 58 teams and 520 mobile Home experiments | Published, S1 | The counts are activity, not independent successes or impact |
+| CLM-04 | The invented retention example has a two-point difference | Illustrative, E1–E2 | Not a Spotify observation |
+The original assignment case is unavailable and uninspected; S1 is a separate public source, not a reconstruction of that case.
+
+### Critical assumptions register
+| ID | Assumption or constraint | Check | Consequence and fallback | Owner / trigger |
+|---|---|---|---|---|
+| A-01 | Eligibility precedes policy exposure | Compare event timestamps and rule versions | Post-treatment eligibility invalidates the intended assignment contrast; restart enrollment after correction | Experiment owner / rule change |
+| A-02 | Stable assignment across devices | Audit identity transitions and arm switches | Cross-arm contamination changes the delivered contrast; evaluate cluster or account-level design | Identity owner / identity migration |
+| A-03 | Outcomes mature uniformly | Compare ingestion delays by arm and client | Differential censoring biases observed rates; defer analysis and investigate missingness | Data owner / late-data alert |
+| A-04 | Shared policy learning does not create unmodeled interference | Trace training data by assignment | Spillovers change the estimand; isolate training or randomize at a suitable cluster | ML owner / online-learning change |
+| C-01 | Serving must meet a locally specified deadline | Measure end-to-end tail latency at peak load | Slow personalization cannot be evaluated as if every request received it; use a tested fallback | Service owner / traffic change |
+| C-02 | Data use must be authorized | Review consent and feature lineage with responsible privacy team | Unauthorized features cannot be used; remove affected data and follow applicable remediation process | Privacy owner / new feature |
+All assumptions and controls are proposed for the teaching design; none is a verified Spotify internal control.
+
 ## 6. Analysis Walkthrough
 The supported architectural finding is organizational separation with integration, not a quantified lift.
 Step 1: distinguish the feature that adapts recommendations from the experiment that compares complete features.
@@ -158,6 +178,30 @@ An overlapping interval or non-significant result does not establish equivalence
 If users share accounts or influence one another, independent-user uncertainty can be too small; cluster appropriately.
 If the policy adapts to observations across both groups, shared training may violate the assumed no-interference comparison.
 
+### Illustrative sample-ratio diagnostic
+Suppose a nominally equal experiment assigns 10,400 users to control and 9,600 to treatment.
+The expected count is 10,000 in each arm under the declared assignment configuration.
+Pearson's statistic is (10400−10000)²/10000 + (9600−10000)²/10000 = 32.
+For one degree of freedom, that is far beyond the conventional 3.84 threshold for a single 5% test.
+This calculation assumes a fixed allocation, independent assignment units, and no legitimate ramp or stratification affecting expected counts.
+Repeated automated monitoring needs an appropriate alerting policy rather than interpreting every check at a nominal 5% level.
+An imbalance identifies a discrepancy with the expected allocation, not its cause and not necessarily the direction of bias.
+Compare pre-assignment eligibility, assignment service output, durable assignment records, and downstream joins in that order.
+If the mismatch appears only after the client renders content, investigate exposure or instrumentation rather than the randomizer alone.
+Do not repair the discrepancy by dropping users from the larger arm after seeing the outcomes.
+An unresolved assignment defect makes the planned causal interpretation unreliable even if the reported lift looks favorable.
+
+### Illustrative delayed-data sensitivity
+Suppose control has 4,000 observed returners among 10,000 assigned, but 200 users have incomplete outcome feeds.
+Suppose treatment has 4,200 observed returners among 10,000 assigned, with 400 incomplete feeds.
+If every incomplete user is actually a non-returner, the observed difference remains 2 percentage points.
+If every missing control user returned and no missing treatment user returned, the difference becomes 0 percentage points.
+If no missing control user returned and every missing treatment user returned, the difference becomes 6 percentage points.
+These extreme bounds assume each missing feed corresponds to one distinct user whose return status is otherwise unknown.
+They are not confidence intervals and do not address sampling variation.
+The width shows why differential completeness can dominate an apparently precise sampling interval.
+Recover events or use a justified missing-data method before making a product decision.
+
 ### Illustrative serving workload
 Suppose peak arrival is 2,000 requests per second and each instance can sustain 250 requests per second under the actual request mix.
 ```text
@@ -172,6 +216,403 @@ With one instance unavailable, nine × 250 × 0.8 = 1,800 requests/s; provision 
 At 3,000 requests/s, the same assumptions require 15 instances before redundancy.
 Throughput arithmetic does not prove p99 latency, feature-store capacity, memory adequacy, or failover correctness.
 These workload numbers are invented teaching assumptions, not Spotify infrastructure facts.
+
+### Extended decision laboratories
+The following independent exercises use constructed inputs and proposed procedures.
+They are not records of Spotify experiments, deployments, incidents, or measurements.
+Their purpose is to connect the policy-level decision to calculations and operational choices.
+
+#### Laboratory 1: Assignment versus delivery
+Assume 1,000 users are assigned to each of two policies.
+In control, 900 users receive the assigned policy and 450 of all assigned users return.
+In treatment, 700 users receive the assigned policy and 480 of all assigned users return.
+The intention-to-treat rates are 450/1,000 = 45% and 480/1,000 = 48%.
+The assignment effect estimate is therefore 3 percentage points.
+The policy delivery rates are 90% and 70%, a 20-point gap.
+Delivery is a post-assignment event and may depend on user or device characteristics.
+Dividing 480 by 700 would mix all returners with a delivered-only denominator.
+Even if the numerator were restricted to delivered users, the groups would not necessarily be comparable.
+A treatment delivery failure is part of the deployed assignment experience under this estimand.
+Diagnose whether the gap is caused by capacity, routing, compatibility, or event loss.
+A corrected candidate policy might have a different effect, which this assignment contrast does not identify.
+Report the delivery breakdown alongside the assignment effect rather than replacing the primary denominator.
+If failures violate an agreed reliability guardrail, stop or roll back according to the launch contract.
+A later experiment can assess the corrected system without rewriting the historical assignment.
+
+#### Laboratory 2: Event-time maturity
+Suppose enrollment occurs over seven consecutive days.
+Each user is evaluated for a full 28 days after their own assignment.
+Outcome events may arrive up to two days after they occur.
+The first assigned user becomes analyzable after 30 days under that lateness rule.
+The last user becomes analyzable six days later than the first if enrollment day one is the origin.
+A dashboard generated on day 30 therefore cannot compare all assigned users on a complete 28-day outcome.
+A control and treatment imbalance in enrollment dates can create apparent differences even with equal true behavior.
+The analysis table should contain assignment time, window end, data watermark, and maturity status.
+Do not classify an immature user as a non-returner merely because no event has arrived yet.
+A fixed calendar window is a different estimand from an individual 28-day window.
+Late events beyond the cutoff can be audited in a frozen backfill without silently changing the published metric.
+If the ingestion delay changes after launch, estimate its distribution separately by source and arm.
+The chosen watermark trades decision speed against the risk of incomplete outcomes.
+Near-real-time operational checks may use provisional data, explicitly distinguished from final causal analysis.
+If a safety metric demands immediate action, its stop rule does not require waiting for the primary outcome to mature.
+
+#### Laboratory 3: Stratified assignment and aggregation
+Suppose 800 established and 200 new users are allocated to each arm.
+Among established users, 400 control and 416 treatment users return.
+Among new users, 40 control and 44 treatment users return.
+The established-user rates are 50% and 52%, an increase of 2 percentage points.
+The new-user rates are 20% and 22%, also an increase of 2 percentage points.
+Overall rates are 440/1,000 = 44% and 460/1,000 = 46%.
+The overall difference is 2 percentage points because the same population weights are used in both arms.
+The established cohort contributes 0.8 × 2 = 1.6 percentage points to the weighted difference.
+The new cohort contributes 0.2 × 2 = 0.4 percentage points.
+Stratum membership must be fixed before treatment if it is used for a causal subgroup contrast.
+If allocation probabilities differ by stratum, an unweighted arm average need not represent the target population.
+Use prespecified target weights and an estimator consistent with the actual stratified randomization.
+A small cohort has less precision even if its point estimate equals the larger cohort's estimate.
+An apparent difference between subgroup effects needs an interaction contrast, not one significant and one nonsignificant test.
+The source provides no such cohort-level results; this is a numerical teaching exercise.
+
+#### Laboratory 4: Aggregation reversal
+Suppose control contains 900 established users and 100 new users.
+Their control return counts are 450 and 20, giving rates of 50% and 20%.
+Suppose treatment contains 100 established users and 900 new users.
+Their treatment return counts are 55 and 225, giving rates of 55% and 25%.
+Treatment is better by 5 percentage points within each cohort.
+Nevertheless, the unadjusted control rate is 470/1,000 = 47%.
+The unadjusted treatment rate is 280/1,000 = 28%.
+The aggregate difference is minus 19 percentage points because the cohort mixes differ sharply.
+With a common 50/50 target mix, control is 35% and treatment is 40%.
+The standardized contrast is therefore plus 5 percentage points for that specified target population.
+In a properly randomized experiment, such a large compositional difference calls for an assignment and eligibility investigation.
+Standardization cannot repair arbitrary post-treatment subgroup definitions or hidden confounding.
+The correct target weights depend on the business population, not on whichever mix produces a preferred result.
+Preserve both raw and standardized figures, the weights, and the reason for using them.
+Do not claim this constructed reversal occurred in the source's organization.
+
+#### Laboratory 5: Minimum detectable difference
+Consider a hypothetical equal-sized two-arm comparison with control rate approximately 40%.
+For planning, approximate both arm variances by 0.4 × 0.6 = 0.24.
+Use a two-sided 5% significance threshold and 80% power, with normal quantiles approximately 1.96 and 0.84.
+For a desired 2-percentage-point difference, the approximation is n per arm = 2 × 0.24 × (1.96 + 0.84)² / 0.02².
+The numerator is 0.48 × 7.84 = 3.7632.
+Dividing by 0.0004 gives 9,408 users per arm before additional design adjustments.
+This is a planning approximation, not a guarantee of power under every true treatment rate.
+If the desired detectable difference halves to one point, the squared denominator falls by a factor of four.
+The same approximation then gives 37,632 users per arm.
+The required sample may grow under clustering, attrition, uneven allocation, or multiplicity adjustment.
+If only half the eligible population can be enrolled each week, calendar duration follows from the eligible flow, not total registered accounts.
+Mature observation time must be added after the final assignment.
+A low-powered study can still show a large observed effect by chance.
+A nonsignificant result does not demonstrate that a clinically or commercially relevant effect is absent.
+Choose the detectable difference from a decision threshold and resource tradeoff rather than from the observed result.
+
+#### Laboratory 6: Clustered exposure
+Suppose the randomization unit is a household rather than an individual listener.
+Assume ten listeners per household on average and an intracluster correlation of 0.05 for a simplified planning exercise.
+The equal-cluster-size design effect is 1 + (10 − 1) × 0.05 = 1.45.
+An individual-level calculation that calls for 9,408 listeners per arm would require approximately 13,642 listeners per arm after multiplying by 1.45.
+At ten listeners per household, round upward to at least 1,365 households per arm under this simplified approximation.
+The effective sample size of 14,500 listeners would be approximately 14,500/1.45 = 10,000.
+This approximation assumes similar cluster sizes and the stated correlation.
+Highly unequal household sizes can require a more careful design calculation.
+Assignment must remain stable for the entire household if the household is the randomized unit.
+Inference should reflect the randomization unit rather than treating every listening event as independently randomized.
+Shared devices may still create identity errors even when households are randomized.
+If only a few clusters are randomized, ordinary large-sample cluster approximations can be unreliable.
+A design-based or other small-cluster method should match the actual allocation procedure.
+The household outcome and the individual-weighted outcome answer different business questions.
+Neither the cluster size nor the correlation in this exercise is a company measurement.
+
+#### Laboratory 7: Relative versus absolute effects
+Assume control retention is 4% and treatment retention is 5% in one population.
+The absolute change is 1 percentage point.
+The relative change is (5% − 4%)/4% = 25%.
+Assume another population moves from 40% to 41%.
+Its absolute change is also 1 percentage point, but its relative change is 2.5%.
+With 10,000 assigned users per arm, each one-point improvement corresponds to 100 additional observed returners per 10,000.
+The same absolute change may have different commercial value across populations if downstream value differs.
+A relative metric can look dramatic when the baseline is very small.
+A relative metric is undefined at a zero baseline.
+The ratio of two noisy estimates also needs suitable uncertainty analysis.
+Present the baseline, both arm rates, absolute effect, relative effect, and interval together.
+Do not extrapolate a sample effect to all users unless the target population and deployment assumptions support that projection.
+A percentage-point effect is not the percentage of users whose individual behavior was caused to change.
+Some individuals may be helped while others are harmed even when the average effect is positive.
+The examples are arithmetic illustrations rather than observed retention changes.
+
+#### Laboratory 8: Missing-outcome bounds
+Assume control has 10,000 users, with 4,000 confirmed returns and 100 unknown outcomes.
+Assume treatment has 10,000 users, with 4,100 confirmed returns and 300 unknown outcomes.
+A lower bound for control retention is 40%; its upper bound is 41%.
+A lower bound for treatment retention is 41%; its upper bound is 44%.
+The smallest possible treatment-minus-control difference is 41% − 41% = 0 points.
+The largest possible difference is 44% − 40% = 4 points.
+The simple observed difference treating unknowns as non-returners is 1 point.
+The bounds require that the confirmed returns and unknown outcomes are mutually exclusive categories.
+They are worst-case identification bounds, not a 95% confidence interval.
+A narrower analysis requires additional defensible assumptions about why data are missing.
+Compare missingness by assignment, device version, geography, and data pipeline before choosing such assumptions.
+If missingness is caused by treatment-dependent client crashes, assuming missing completely at random is especially weak.
+A successful backfill should be reconciled against independent event totals and duplicate rules.
+If the possible effect spans the decision threshold, defer the decision or redesign measurement.
+Do not interpret a missing return record as verified non-return without a complete source feed.
+
+#### Laboratory 9: Sample-ratio mismatch under a ramp
+Imagine the first 4,000 users enter a 50/50 allocation.
+That stage expects 2,000 users per arm.
+The next 6,000 users enter a 90/10 control-to-treatment allocation.
+That stage expects 5,400 control and 600 treatment users.
+The correct total expectation is therefore 7,400 control and 2,600 treatment.
+Comparing the final counts with a 5,000/5,000 expectation would falsely suggest a severe mismatch.
+Expected counts must reflect the allocation configuration in force at each assignment time.
+A ramp must also specify whether previously assigned users remain sticky when the allocation changes.
+Rehashing all users on a ramp change may switch treatment and alter the policy contrast.
+For a randomized ramp, the inference procedure must account for differing inclusion probabilities and calendar time when relevant.
+If rollout policy changes in response to early outcomes, the stopping and analysis plan must account for that adaptation.
+A versioned configuration log supports reconstruction of the appropriate expected distribution.
+Inspect allocation within each ramp stage before using a single aggregate discrepancy statistic.
+If stage counts match but one client deviates, focus on client-specific eligibility or identity propagation.
+The allocation percentages here are invented and are not a disclosed Spotify configuration.
+
+#### Laboratory 10: Guardrails and utility
+Suppose a candidate increases seven-day listening by 4% relative to control.
+Suppose the prespecified discovery guardrail falls by 3 percentage points.
+The primary metric and guardrail have different units and cannot be subtracted directly.
+A launch decision requires a predeclared rule explaining whether the discovery drop is acceptable.
+One possible rule is to reject a candidate if the discovery decrease exceeds a specified tolerance.
+Another is to defer pending a product review of long-term user value and measurement validity.
+A higher listening value can arise from repeatedly presenting already familiar content.
+A lower discovery value could instead reflect a broken new-artist event definition.
+Investigate the metric pipeline before interpreting the guardrail as a behavioral tradeoff.
+Do not redefine the guardrail after observing the treatment result merely to make the launch pass.
+Multiple guardrails increase the chance of chance findings if all are interpreted as standalone discoveries.
+Distinguish a safety stop rule from a claim of statistically established harm.
+Report uncertainty for both the primary metric and the guardrail when sample variation matters.
+Consider whether creator exposure concentration moves even if average user discovery is stable.
+The values and decision rules are illustrative, not attributed to Spotify.
+
+#### Laboratory 11: Latency budget decomposition
+Assume an illustrative request deadline of 150 milliseconds measured at the serving boundary.
+Reserve 15 milliseconds for request parsing and eligibility checks.
+Reserve 20 milliseconds for experiment assignment lookup.
+Reserve 35 milliseconds for feature retrieval and 45 milliseconds for policy inference.
+Reserve 15 milliseconds for catalog filtering and response construction.
+The named components sum to 130 milliseconds, leaving 20 milliseconds of explicit slack.
+This sum is a planning budget, not a mathematical identity for the end-to-end p99.
+Percentiles generally do not add to produce the percentile of a sum, especially when components are correlated.
+Measure the full request distribution and its dependency spans under realistic load.
+A cache hit may have a different latency and freshness profile from a miss.
+Timeouts should reserve enough time for the fallback path rather than consuming the entire deadline.
+A retry can increase load and tail latency during an already degraded dependency incident.
+Track timeout and fallback rates by assigned arm to identify differential delivery.
+A low average latency can hide a severe p99 problem for a minority of users.
+The numerical deadline and component budgets are invented for this exercise.
+
+#### Laboratory 12: Queueing and headroom
+Assume one serving instance sustains 250 requests per second at a measured acceptable workload.
+At a target utilization of 80%, the planning capacity per instance is 200 requests per second.
+For 2,000 requests per second, the capacity calculation gives 10 instances.
+To withstand one instance failure at the same target utilization, use at least 11 instances.
+With 11 instances and one failure, 10 remain and their target capacity is exactly 2,000 requests per second.
+At 2,200 requests per second, the same one-failure condition requires 12 instances.
+This arithmetic assumes homogeneous capacity and traffic distributed evenly across healthy instances.
+It does not establish that an autoscaler can add instances before a sudden burst arrives.
+It also does not account for shared feature-store or network bottlenecks.
+A fallback service can become the limiting dependency when many candidate requests fail together.
+Load tests should include the real request mix, cache behavior, feature sizes, and concurrency distribution.
+A rollout that doubles model memory can reduce per-node capacity even if per-request compute stays unchanged.
+Deployment surge capacity and fault-zone loss may require more than one spare instance.
+Cost estimates should price provisioned capacity, not only the number of successfully served requests.
+The workload is invented; no Spotify capacity conclusion follows from it.
+
+#### Laboratory 13: Reward delay in an adaptive policy
+Suppose a policy chooses between familiar and exploratory recommendations.
+An immediate reward counts whether a track is played for a short threshold duration.
+A long-term objective measures whether the user returns during a later seven-day window.
+The immediate event can arrive within seconds while the return outcome takes weeks to mature.
+An adaptive allocator driven only by the immediate reward can favor familiar content before discovery benefits appear.
+Updating on incomplete long-term outcomes creates a different bias if newer users have had less opportunity to return.
+One option is to freeze the policy during a fixed evaluation window.
+Another is to evaluate a policy that learns online, including its learning rule as part of the treatment.
+Separate training streams can avoid a treatment arm changing the control policy through shared feedback.
+Shared training can instead be part of the intended deployment, but then interference must be explicitly addressed.
+A short-term surrogate needs empirical validation against the long-term business objective.
+Its correlation with the long-term metric alone does not prove that optimizing it causes long-term improvement.
+Investigate policy-induced distribution shifts before carrying a surrogate relationship across variants.
+If delayed reward is the main constraint, faster traffic allocation does not automatically mean faster valid decisions.
+The source's qualitative concern is published; this particular policy and reward example is illustrative.
+
+#### Laboratory 14: Propensity support in offline evaluation
+Suppose a logging policy recommends track A with probability 0.8 and track B with probability 0.2 in a context.
+A candidate policy recommends A with probability 0.4 and B with probability 0.6 in the same context.
+The importance weight for an observed A action is 0.4/0.8 = 0.5.
+The importance weight for an observed B action is 0.6/0.2 = 3.
+An inverse-propensity weighted contribution multiplies the observed reward by the corresponding weight.
+Suppose one A observation has reward 1 and one B observation has reward 0.
+Their contributions are 0.5 and 0, with a simple mean of 0.25 over those two logged observations.
+This tiny sample is only an arithmetic demonstration and is not a reliable policy-value estimate.
+The logged probabilities must correspond to the actual action-selection process at decision time.
+If the logging policy assigns B zero probability, the candidate's B value is not identified by these weights.
+Very small propensities produce large weights and potentially severe variance.
+Weight clipping may reduce variance but introduces bias and changes the estimator's properties.
+A logged slate, position effects, and interactions between items can complicate the action definition.
+Offline estimates can screen candidates, but an online randomized system comparison addresses a different source of uncertainty.
+No Spotify logging propensities or replay result are asserted here.
+
+#### Laboratory 15: Metric joins and cardinality
+Assume a user has one assignment record, three recommendation requests, and four listening events.
+A raw join of requests to listening events on user ID alone produces twelve rows.
+Counting those rows as listening events would triple the user's true event count.
+Counting them as requests would quadruple the true request count.
+Aggregate each event family to the appropriate user-window grain before joining for a user-level metric.
+Alternatively, use a carefully specified temporal attribution rule when the question requires request-level linkage.
+A left join from the assignment table retains assigned users with no recorded outcomes.
+A missing outcome row may mean no behavior, a delayed event, or a failed join; distinguish those cases.
+Deduplicate events using a documented event identity and tie-breaking rule.
+A many-to-many identity mapping can silently expand both counts and weights.
+Inspect key uniqueness and row counts at every transformation boundary.
+Use the same event-time window and time-zone convention in both arms.
+A data-quality check should include synthetic records with known expected counts where permitted.
+Recomputing a metric after a join fix requires versioning the analysis artifact and explaining the change.
+These data contracts are proposed controls rather than disclosures about Spotify's schema.
+
+#### Laboratory 16: Cost and experiment duration
+Assume a candidate needs 12 additional serving instances for 30 days during an experiment.
+Assume an illustrative all-in compute price of 0.40 currency units per instance-hour.
+The instance-hours are 12 × 30 × 24 = 8,640.
+The incremental compute estimate is 8,640 × 0.40 = 3,456 currency units.
+Assume an additional 1,000 currency units for data processing and 500 for operational review.
+The simple subtotal is 3,456 + 1,000 + 500 = 4,956 currency units.
+The currency unit and prices are hypothetical and are not an external price quotation.
+This subtotal excludes storage, network egress, training, licensing, failed work, and opportunity cost unless added separately.
+If the baseline would have required six of the twelve instances anyway, only the incremental six belong in an incremental comparison.
+At the same unit price, six instances for 30 days cost 1,728 currency units.
+A longer experiment increases compute expense but may reduce uncertainty about the decision.
+An early stop may save infrastructure cost while creating invalid inference if its rule was not planned.
+Capacity reserved for failover may be charged even when no failure occurs.
+A credible business case should compare expected benefit with the full incremental cost and uncertainty.
+No source in this case supplies an actual Spotify infrastructure price or experiment budget.
+
+#### Laboratory 17: Catalog and availability
+A music catalog changes as items are added, removed, or become unavailable in a region.
+A historical evaluation must use the catalog that was eligible at each historical decision time.
+Using today's availability in a past replay can exclude items that were valid then or include items that did not yet exist.
+A policy artifact and a catalog snapshot together determine which candidates can actually be served.
+Licensing and territorial availability must be enforced by the authoritative current eligibility mechanism.
+A feature indicating an artist's future popularity would leak information into historical training examples.
+A candidate policy might appear more diverse merely because its eligible catalog is larger.
+Compare policies under the same eligibility rules unless catalog access itself is the intended treatment.
+If an availability feed fails, the serving contract should specify safe behavior rather than assuming every item remains playable.
+Record the catalog version or equivalent audit reference at decision time where feasible.
+A replay that lacks historical availability should state that limitation and avoid pretending to reproduce the original choice set.
+A recommendation that is ranked highly but cannot be played can reduce trust and inflate impression counts without listening value.
+Monitor eligibility filtering and empty-result rates separately from model scoring latency.
+Regional differences require enough traffic and a prespecified interpretation before making subgroup claims.
+These are general design considerations, not descriptions of Spotify's proprietary rights infrastructure.
+
+#### Laboratory 18: Cold-start comparison
+Suppose 2,000 new users are randomized equally to a contextual candidate and a popularity baseline.
+Among assigned control users, 300 return; among assigned treatment users, 330 return.
+The observed rates are 30% and 33%, yielding a 3-percentage-point difference.
+If half the candidate users receive fallback because their features are unavailable, the estimate includes that fallback experience.
+Feature availability should be measured before the request or at decision time with clear versioning.
+A missing feature can mean a genuinely new user, a delayed pipeline, or a client instrumentation error.
+A default vector should not be confused with a real observation that happens to equal the default.
+The baseline may be competitive because sparse history limits the candidate's personalization signal.
+The candidate may perform better after the user accumulates interactions, making observation window choice important.
+A subgroup defined by behavior after assignment can introduce selection bias.
+A tenure group defined from pre-assignment account age is more suitable for a prespecified subgroup contrast.
+If treatment changes the rate at which users generate features, analyzing only feature-rich users is especially misleading.
+Inspect guardrails for users with little history even if the overall experiment is positive.
+Avoid claiming the small sample difference is conclusive without a suitable interval and decision rule.
+The counts and policies are invented, not Spotify performance results.
+
+#### Laboratory 19: Interference from shared training
+Assume a treatment policy recommends more emerging artists than control.
+Treatment interactions enter a shared model training dataset used by both policies the next day.
+The control model can then learn from treatment-driven interactions.
+Control outcomes are no longer independent of the treatment assignments of other users.
+A user-level assignment contrast may still describe the mixed deployed system under that allocation.
+It may not predict the outcome of moving the entire population to treatment.
+One design isolates feedback and model artifacts by arm during the experiment.
+This isolation increases infrastructure cost and may create models unlike the eventual shared production model.
+Another design randomizes larger clusters and treats within-cluster spillovers as part of the intervention.
+Cluster randomization reduces the number of independent units and may increase uncertainty.
+A switchback design can compare policies over time but requires attention to carryover and time trends.
+Specify whether user recommendations, training data, and model parameters are shared before choosing the design.
+The experiment contract should include update cadence, data cutoff, and artifact lineage.
+A policy that changes during the test should be described as an algorithm plus learning procedure, not a frozen model.
+No shared-training arrangement is asserted for the published source.
+
+#### Laboratory 20: Rollback and causal interpretation
+Assume an experiment begins with a candidate artifact and later rolls back due to a latency incident.
+The experiment assignment remains stable, but the served treatment changes after the rollback.
+An intention-to-treat estimate over the entire period describes assignment to that operational rollout strategy.
+It does not isolate the effect of continuously receiving the original candidate.
+The incident can affect user behavior through waiting time and missing recommendations as well as model quality.
+A time-filtered analysis that removes the outage may condition on an event influenced by treatment.
+Before using a restricted period, specify what causal question that period answers and whether selection is defensible.
+Preserve deployment timestamps, regional propagation times, and actual artifact identifiers.
+A control-plane rollback request is not proof that every serving replica has switched.
+Verify data-plane artifact versions and fallback traffic after the change.
+If a cached response can outlive the rollback, its time-to-live affects the period of mixed exposure.
+Communicate whether the incident requires stopping enrollment, stopping treatment delivery, or both.
+After recovery, decide whether a fresh randomized experiment is needed for the revised artifact.
+Retain the original result and incident context rather than silently replacing it with a clean-window estimate.
+This scenario is hypothetical and does not describe an incident reported in S1.
+
+#### Laboratory 21: Practical significance and decision loss
+Assume a launch costs 20,000 currency units per month in incremental infrastructure and support.
+Assume each additional retained user produces an estimated 5 currency units per month in contribution.
+A break-even calculation requires 20,000/5 = 4,000 additional retained users per month.
+For 1,000,000 eligible users, that is 4,000/1,000,000 = 0.4 percentage points.
+This simplified threshold assumes the retention gain and contribution value apply to the same population and month.
+It also assumes a linear contribution per additional retained user and excludes uncertainty in that value.
+An estimated effect of 0.2 points would imply 2,000 extra users and 10,000 currency units before other effects.
+An estimated effect of 0.6 points would imply 6,000 extra users and 30,000 currency units before other effects.
+A confidence interval spanning both values leaves the decision economically uncertain even when the point estimate is positive.
+A user-safety or rights constraint can rule out launch regardless of estimated financial benefit.
+The analysis must distinguish incremental retained users from all observed users who return under treatment.
+Do not multiply a relative lift by total population without first applying the baseline rate.
+If contribution differs by cohort, use a prespecified population-weighted estimate rather than a convenient average.
+A finite experiment may not determine long-run contribution because retention and costs can change over time.
+The economic inputs are invented; no currency or price source is claimed.
+
+#### Laboratory 22: Inference under repeated looks
+Suppose a fixed-horizon test has a nominal two-sided false-positive rate of 5% under its assumptions.
+That guarantee applies to the prespecified decision at the planned analysis time.
+Looking daily and shipping on the first favorable ordinary p-value changes the decision procedure.
+The individual p-value threshold does not by itself control the probability of ever crossing that threshold.
+The exact inflation depends on the dependence between looks and the stopping rule.
+A valid sequential design can specify boundaries or a compatible always-valid inference procedure in advance.
+The analysis must follow the actual randomization and timing assumptions of the chosen method.
+Operational monitoring may still look continuously for outages and safety failures.
+A safety stop should be recorded separately from a claim that a primary product effect is statistically established.
+If unplanned efficacy peeking occurred, disclose it and avoid presenting the final ordinary interval as if the original fixed-horizon plan were followed.
+A fresh independent confirmation can provide evidence after an exploratory early signal.
+Adjusting the analysis after observing the most favorable look does not recreate a prespecified design automatically.
+The cost of a false launch and a missed improvement should guide the monitoring plan.
+Repeated monitoring can also affect metric selection if only the strongest outcome is highlighted.
+These statements describe general experimental-design choices, not an observed Spotify monitoring procedure.
+
+#### Laboratory 23: Instrumentation reconciliation
+Suppose an assignment ledger records 5,000 treatment users for a completed enrollment period.
+The serving ledger records at least one request for 4,000 of those users.
+The client exposure ledger records at least one visible recommendation for 3,600 users.
+The return-event table records 2,000 users with a later return during the defined window.
+These counts represent different stages and are not expected to be equal.
+The request-to-assignment fraction is 4,000/5,000 = 80%.
+The visible-exposure-to-requester fraction is 3,600/4,000 = 90%.
+The assigned-user return rate is 2,000/5,000 = 40% if the outcome feed is complete.
+The 1,000 assigned users without requests must not automatically be labeled as assignment failures.
+They may simply never open the relevant surface during the observation period.
+The 400 requesters without visible exposure require investigation of response, rendering, and logging boundaries.
+A comparison with control should use the same definitions and maturity cutoff.
+If client event loss is differential by treatment, observed exposure differences can be instrumentation artifacts.
+If actual rendering fails more in treatment, that operational defect is part of the treatment experience.
+Join checks should ensure every stage count uses distinct users rather than raw event rows.
+The counts are fabricated to illustrate reconciliation, not a measured production funnel.
 
 ## 7. The Finding
 Spotify reports that personalization and experimentation serve complementary but different functions: ML builds and serves personalized systems, while Confidence supports evaluation of whole system variants. Contextual bandits belong to the former in Spotify's architecture; non-contextual experimental bandits are not used there according to the article. The scale figures document activity, not causal impact. Appropriate local implementations still need measured latency, trustworthy assignment, mature outcomes and independent review.
@@ -267,562 +708,242 @@ No actual incident is documented in S1; the following are illustrative diagnosti
 - Symptom: unequal arm counts at enrollment.
 - Competing explanations: hash bug or eligibility change.
 - First discriminating check: compare assignment counts by client and configuration.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: pause enrollment and preserve assignments.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: correct allocation without relabeling historical users.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 02: Exposure mismatch — illustrative
 - Symptom: treatment has fewer impressions.
 - Competing explanations: client rendering failure or instrumentation loss.
 - First discriminating check: compare server decisions with client impressions by version.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: restore rendering or logging.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: retain assigned users in intention-to-treat.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 03: Identity churn — illustrative
 - Symptom: one person appears in both arms.
 - Competing explanations: unstable identifiers or shared devices.
 - First discriminating check: trace identity transitions without exposing raw identifiers.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: freeze an approved identity mapping.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: report contamination and cluster when justified.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 04: Feature staleness — illustrative
 - Symptom: relevance falls in recent sessions.
 - Competing explanations: delayed ingestion or a weak model.
 - First discriminating check: compare feature event times and fallback rates.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: restore feature freshness or fall back safely.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: reassess outcomes after recovery.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 05: Future leakage — illustrative
 - Symptom: offline score jumps unrealistically.
 - Competing explanations: future events or accidental target joins.
 - First discriminating check: audit event-time cutoffs and join keys.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: rebuild snapshots at decision time.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: rerun offline evaluation before release.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 06: Training-serving skew — illustrative
 - Symptom: offline performance does not transfer.
 - Competing explanations: different transforms or missing online values.
 - First discriminating check: compare paired feature vectors for sampled requests.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: unify or version transformations.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: monitor parity and online outcomes.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 07: Model version drift — illustrative
 - Symptom: same assignment serves different artifacts.
 - Competing explanations: deployment drift or intentional rollout.
 - First discriminating check: join decision logs to release manifests.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: restore intended variant mapping.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: analyze period-specific exposure without post-selection.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 08: Unrecorded fallback — illustrative
 - Symptom: candidate appears identical to control.
 - Competing explanations: model failure or assignment routing failure.
 - First discriminating check: compare assigned, intended and actual policy IDs.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: restore candidate or stop experiment.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: report treatment adherence separately.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 09: Outcome delay — illustrative
 - Symptom: retention seems to collapse.
 - Competing explanations: immature cohorts or logging outage.
 - First discriminating check: compare cohort age and event ingestion delay.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: wait for maturity or repair collection.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: do not impute improvement from missing users.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 10: Duplicate outcomes — illustrative
 - Symptom: retention rate exceeds feasible range.
 - Competing explanations: duplicate events or wrong aggregation grain.
 - First discriminating check: count distinct users versus event rows.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: deduplicate by documented event identity.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: recalculate metrics from versioned inputs.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 11: Metric definition drift — illustrative
 - Symptom: dashboard disagrees with analysis.
 - Competing explanations: different time zones or windows.
 - First discriminating check: compare SQL definitions and population filters.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: pin one reviewed definition.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: backfill only with auditable lineage.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 12: Selection bias — illustrative
 - Symptom: exposed users show a large lift.
 - Competing explanations: treatment changes exposure or filtering.
 - First discriminating check: compare all-assigned and exposed-only analyses.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: use assignment-based primary analysis.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: treat exposure analysis as descriptive.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 13: Shared training interference — illustrative
 - Symptom: control gradually changes after treatment starts.
 - Competing explanations: cross-arm feedback or external seasonality.
 - First discriminating check: inspect training inputs and deployment histories.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: isolate training or redesign estimand.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: interpret prior comparison as potentially contaminated.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 14: Concurrent experiment interaction — illustrative
 - Symptom: effect changes when another test starts.
 - Competing explanations: interaction or coincident population shift.
 - First discriminating check: inspect overlap assignments and prespecified interactions.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: coordinate allocation or test factorially.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: avoid opportunistic subgroup claims.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 15: Time-of-week imbalance — illustrative
 - Symptom: one arm wins only on weekdays.
 - Competing explanations: allocation schedule or natural usage seasonality.
 - First discriminating check: compare arm counts and outcomes by assignment date.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: restore concurrent randomized enrollment.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: avoid attributing temporal composition to policy.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 16: Delayed reward bias — illustrative
 - Symptom: bandit favors quick clicks.
 - Competing explanations: slow reward or genuinely lower long-term value.
 - First discriminating check: compare mature cohorts by reward delay.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: delay updates or redesign reward.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: evaluate whole policy on mature outcomes.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 17: Discovery regression — illustrative
 - Symptom: listening rises while novelty falls.
 - Competing explanations: familiarity bias or content supply change.
 - First discriminating check: inspect novelty and catalog exposure with listening.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: adjust policy objective or stop rollout.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: retain long-term guardrails.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 18: Latency regression — illustrative
 - Symptom: candidate improves reward but misses deadline.
 - Competing explanations: larger model or slow feature dependency.
 - First discriminating check: trace latency by dependency and version.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: reduce cost or route to approved fallback.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: compare end-to-end tail latency.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 19: Hot key overload — illustrative
 - Symptom: some requests time out.
 - Competing explanations: skewed popular entities or uneven partitions.
 - First discriminating check: inspect load distribution and per-key latency.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: rebalance or cache eligible immutable data.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: verify correctness under peak load.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 20: Insufficient capacity — illustrative
 - Symptom: errors spike during traffic ramp.
 - Competing explanations: underprovisioning or retry amplification.
 - First discriminating check: compare arrival, completion and retry rates.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: reduce ramp and restore service headroom.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: load-test representative request mix.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 21: Unsafe retry — illustrative
 - Symptom: duplicate decisions or events appear.
 - Competing explanations: unbounded retries or missing idempotency.
 - First discriminating check: correlate request identifiers and retry attempts.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: bound retries and deduplicate appropriately.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: monitor duplicate rate and outcome counts.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 22: Stale assignment — illustrative
 - Symptom: users switch variants after configuration update.
 - Competing explanations: cache invalidation or identity change.
 - First discriminating check: compare assignment timestamps and configuration versions.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: restore stickiness for active experiment.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: retain assignment history for analysis.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 23: Policy feedback loop — illustrative
 - Symptom: narrow content exposure reinforces itself.
 - Competing explanations: biased feedback or actual preference concentration.
 - First discriminating check: inspect exposure diversity and exploration support.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: adjust exploration subject to safety constraints.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: measure long-term outcomes experimentally.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 24: Positivity violation — illustrative
 - Symptom: offline counterfactual estimate is unstable.
 - Competing explanations: some actions never shown or bad propensity logs.
 - First discriminating check: inspect propensity distribution by context.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: collect supported exploration where ethical.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: do not extrapolate unsupported actions.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 25: Privacy violation — illustrative
 - Symptom: restricted signal enters a feature.
 - Competing explanations: bad permission enforcement or stale consent.
 - First discriminating check: audit feature lineage and authorization decisions.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: block the signal and follow incident procedure.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: retrain or delete artifacts when required.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 26: Late deletion — illustrative
 - Symptom: deleted records remain in derived tables.
 - Competing explanations: incomplete propagation or delayed batch.
 - First discriminating check: trace deletion marker through data lineage.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: execute approved deletion workflow.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: audit downstream artifacts and retention.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 27: Sample size shortfall — illustrative
 - Symptom: interval is too wide for a decision.
 - Competing explanations: low enrollment or high variance.
 - First discriminating check: compare planned and realized eligible population.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: extend only under valid preplanned inference.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: report uncertainty instead of declaring equivalence.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 28: Multiple comparisons — illustrative
 - Symptom: one of many slices appears significant.
 - Competing explanations: chance or genuine heterogeneous effect.
 - First discriminating check: review the entire set and selection procedure.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: use prespecified contrasts and appropriate correction.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: replicate discovery in a fresh experiment.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 29: Guardrail conflict — illustrative
 - Symptom: primary improves while discovery worsens.
 - Competing explanations: objective tradeoff or measurement defect.
 - First discriminating check: validate both metrics and segment outcomes.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: apply the predeclared tradeoff and stop rule.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: escalate unresolved product decisions.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 30: Rollback inconsistency — illustrative
 - Symptom: flag rolls back but old policy persists.
 - Competing explanations: cached artifact or control-plane lag.
 - First discriminating check: trace configuration propagation and serving versions.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: invalidate safely and verify the served version.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: test rollback before future ramps.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 31: Logging join failure — illustrative
 - Symptom: many assigned users lack outcomes.
 - Competing explanations: key mismatch or genuine inactivity.
 - First discriminating check: compare join-key completeness and known synthetic events.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: repair joins without excluding inactive users.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: recompute completeness by arm.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 32: Simpson reversal — illustrative
 - Symptom: aggregate lift reverses in every cohort.
 - Competing explanations: composition imbalance or weighting error.
 - First discriminating check: reconcile common cohort weights and counts.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: use prespecified standardized estimates.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: retain aggregate intention-to-treat as appropriate.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 33: Incorrect unit — illustrative
 - Symptom: sessions treated as independent users.
 - Competing explanations: analytics grain mismatch or repeated exposure.
 - First discriminating check: count users and sessions per assignment unit.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: aggregate or use valid clustered inference.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: review uncertainty at assignment grain.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 34: Policy mapping error — illustrative
 - Symptom: candidate serves wrong model.
 - Competing explanations: configuration typo or stale resolver.
 - First discriminating check: compare intended experiment mapping with actual artifact IDs.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: stop ramp and restore approved mapping.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: test mappings before enrollment.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 35: Catalog rights change — illustrative
 - Symptom: recommendation availability drops.
 - Competing explanations: licensing constraint or stale availability data.
 - First discriminating check: compare serving eligibility with current rights feed.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: filter unavailable content and use safe fallback.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: check availability before exposure.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 36: Cold-start degradation — illustrative
 - Symptom: new users receive poor recommendations.
 - Competing explanations: sparse features or missing identity.
 - First discriminating check: compare outcomes and fallback rates by tenure.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: use approved cold-start policy.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: measure separately without changing primary population.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 37: Nonstationary catalog — illustrative
 - Symptom: offline replay overstates performance.
 - Competing explanations: stale items or changing availability.
 - First discriminating check: replay against historical availability snapshots.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: rebuild evaluation with time-correct catalog.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: validate online with appropriate safeguards.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 38: Operational metric blindness — illustrative
 - Symptom: analysis shows uplift during an outage.
 - Competing explanations: outcomes missing or selective fallback.
 - First discriminating check: align service incidents with assignment and logging.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: repair telemetry and bound claims.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: jointly review service and product metrics.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 39: Cross-device incompatibility — illustrative
 - Symptom: variant looks weak on one client.
 - Competing explanations: unsupported feature or rendering bug.
 - First discriminating check: compare assignment, rendering and client versions.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: disable incompatible clients before enrollment.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: publish eligibility and compatibility tests.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 ### Diagnostic 40: Experimental peeking — illustrative
 - Symptom: early noisy win triggers rollout.
 - Competing explanations: optional stopping or real early effect.
 - First discriminating check: inspect decision timestamps and sequential plan.
-- Expected signal: a cause tied to the defect should align with the affected boundary or time period.
-- Counterevidence: a healthy boundary under representative load weakens that explanation but does not prove the alternative.
 - Immediate containment: apply the prespecified sequential method or continue.
-- Preserve the randomized assignment record and incident timeline while containing impact.
-- Analysis consequence: determine whether eligibility, outcome measurement or actual treatment differs by arm.
-- Avoid a post-treatment exclusion that would silently change the target population.
 - Recovery criterion: prespecify monitoring rules.
-- Prevention: assign a boundary owner, add a specific alert and rehearse the relevant recovery path.
-- Verification after correction: compare a fresh representative period against the contract and inspect both arms.
-- Residual uncertainty: observational diagnostics alone do not prove the causal impact of the defect.
 
 ### Illustrative launch review: eligibility
 - Identify the legal entity and product surface under evaluation.
@@ -921,6 +1042,16 @@ No actual incident is documented in S1; the following are illustrative diagnosti
 - Assign ownership for the final decision and follow-up monitoring.
 - Revisit the architecture if feature, latency or experiment requirements change.
 
+### Incident analysis principles
+These diagnostics are hypothetical; S1 documents no incident corresponding to them.
+A signal at one boundary must be reconciled with upstream and downstream records before a root cause is declared.
+An assignment discrepancy, a serving discrepancy, and a missing outcome are different failure classes.
+During containment, preserve original assignments and timestamps to support later analysis.
+Pause or rollback according to the experiment's predefined user-safety and reliability rules.
+A corrected service does not retroactively repair biased or missing historical records.
+Document the affected interval and assess whether the intended estimand still matches the operational intervention.
+Avoid treating a clean dashboard after recovery as proof that the historical treatment effect is unbiased.
+
 ## 13. Transferable Lesson
 Keep adaptive decision-making and causal evaluation conceptually separate even if their systems share interfaces.
 The source supports this lesson for Spotify's reported infrastructure and objectives, not as a universal theorem.
@@ -957,13 +1088,9 @@ Offline ranking metrics can screen policies but need not predict long-horizon ou
 **Reasoning:** Prediction optimizes a policy, whereas randomized assignment supports a system-level comparison.
 **Follow-up:** Could one physical platform host both?
 **Follow-up answer:** Yes, provided logical contracts and independent evaluation remain clear.
-**Acceptable alternative:** A different design is acceptable if its estimand, assumptions and operational boundaries are explicit.
 **Red flag:** Claiming that ML predictions themselves prove causal lift.
 **Scoring:** Strong: identify both boundaries and explain why integration is necessary.
 **Answer support:** S1 sections on separation and integration.
-**Interviewer probe:** Ask the candidate to separate the public claim from any implementation assumption.
-**Interviewer check:** Require the candidate to identify at least one condition that could invalidate the answer.
-**Boundary:** An illustrative calculation or proposal is not an observed Spotify result.
 
 #### Question 02: Where does Spotify put contextual bandits?
 **Candidate prompt:** Where does Spotify put contextual bandits?
@@ -971,13 +1098,9 @@ Offline ranking metrics can screen policies but need not predict long-horizon ou
 **Reasoning:** The policy conditions decisions on user characteristics and needs model-serving infrastructure.
 **Follow-up:** Are experimental traffic-allocation MABs the same thing?
 **Follow-up answer:** No: non-contextual MABs adapt aggregate allocation among variants.
-**Acceptable alternative:** A different design is acceptable if its estimand, assumptions and operational boundaries are explicit.
 **Red flag:** Saying Spotify uses contextual bandits as its experiment allocator.
 **Scoring:** Strong: distinguish contextual policy from allocation methodology.
 **Answer support:** S1 technical and overlap sections.
-**Interviewer probe:** Ask the candidate to separate the public claim from any implementation assumption.
-**Interviewer check:** Require the candidate to identify at least one condition that could invalidate the answer.
-**Boundary:** An illustrative calculation or proposal is not an observed Spotify result.
 
 #### Question 03: Does Spotify use MABs for experimentation?
 **Candidate prompt:** Does Spotify use MABs for experimentation?
@@ -985,13 +1108,9 @@ Offline ranking metrics can screen policies but need not predict long-horizon ou
 **Reasoning:** The authors cite multi-objective tradeoffs, delayed outcomes and practical usability.
 **Follow-up:** Are bandits always wrong elsewhere?
 **Follow-up answer:** No; different reward delays and objectives can change the tradeoff.
-**Acceptable alternative:** A different design is acceptable if its estimand, assumptions and operational boundaries are explicit.
 **Red flag:** Generalizing Spotify’s choice into a universal prohibition.
 **Scoring:** Strong: state the qualified published claim and alternatives.
 **Answer support:** S1 one-dimensional focus section.
-**Interviewer probe:** Ask the candidate to separate the public claim from any implementation assumption.
-**Interviewer check:** Require the candidate to identify at least one condition that could invalidate the answer.
-**Boundary:** An illustrative calculation or proposal is not an observed Spotify result.
 
 #### Question 04: What do 58 and 520 establish?
 **Candidate prompt:** What do 58 and 520 establish?
@@ -999,13 +1118,9 @@ Offline ranking metrics can screen policies but need not predict long-horizon ou
 **Reasoning:** These are activity counts with no disclosed success or causal effect.
 **Follow-up:** Can one infer average simultaneous experiments?
 **Follow-up answer:** No; the source gives neither overlap nor duration.
-**Acceptable alternative:** A different design is acceptable if its estimand, assumptions and operational boundaries are explicit.
 **Red flag:** Presenting 520 as a percentage improvement.
 **Scoring:** Strong: quote population, period and limitation.
 **Answer support:** S1 build-tools-that-scale section.
-**Interviewer probe:** Ask the candidate to separate the public claim from any implementation assumption.
-**Interviewer check:** Require the candidate to identify at least one condition that could invalidate the answer.
-**Boundary:** An illustrative calculation or proposal is not an observed Spotify result.
 
 #### Question 05: Why test a contextual bandit with A/B testing?
 **Candidate prompt:** Why test a contextual bandit with A/B testing?
@@ -1013,13 +1128,9 @@ Offline ranking metrics can screen policies but need not predict long-horizon ou
 **Reasoning:** The internal reward and arm choices do not establish the policy effect on user outcomes.
 **Follow-up:** What if both policies learn online?
 **Follow-up answer:** Specify and isolate learning dynamics or define the intended interaction in the estimand.
-**Acceptable alternative:** A different design is acceptable if its estimand, assumptions and operational boundaries are explicit.
 **Red flag:** Claiming each internal action must be the randomized experiment arm.
 **Scoring:** Strong: define policy-level treatment and a relevant comparator.
 **Answer support:** S1 contextual-bandit and evaluation sections.
-**Interviewer probe:** Ask the candidate to separate the public claim from any implementation assumption.
-**Interviewer check:** Require the candidate to identify at least one condition that could invalidate the answer.
-**Boundary:** An illustrative calculation or proposal is not an observed Spotify result.
 
 #### Question 06: Compute the illustrative retention difference.
 **Candidate prompt:** Compute the illustrative retention difference.
@@ -1027,13 +1138,9 @@ Offline ranking metrics can screen policies but need not predict long-horizon ou
 **Reasoning:** The counts are 4200/10000 and 4000/10000; 0.02/0.40 equals 0.05.
 **Follow-up:** What if the control rate is zero?
 **Follow-up answer:** The relative change is undefined; the absolute difference remains meaningful.
-**Acceptable alternative:** A different design is acceptable if its estimand, assumptions and operational boundaries are explicit.
 **Red flag:** Confusing a 2 percentage-point increase with 2% relative lift.
 **Scoring:** Strong: show denominators and distinguish absolute and relative scales.
 **Answer support:** Section 6 E1; all inputs illustrative.
-**Interviewer probe:** Ask the candidate to separate the public claim from any implementation assumption.
-**Interviewer check:** Require the candidate to identify at least one condition that could invalidate the answer.
-**Boundary:** An illustrative calculation or proposal is not an observed Spotify result.
 
 #### Question 07: How uncertain is that difference?
 **Candidate prompt:** How uncertain is that difference?
@@ -1041,13 +1148,9 @@ Offline ranking metrics can screen policies but need not predict long-horizon ou
 **Reasoning:** Use the independent two-proportion standard error and 1.96 normal multiplier under the stated assumptions.
 **Follow-up:** What changes when users are clustered?
 **Follow-up answer:** Use a design and uncertainty estimator appropriate for the randomization and cluster structure.
-**Acceptable alternative:** A different design is acceptable if its estimand, assumptions and operational boundaries are explicit.
 **Red flag:** Reporting a narrow independent-user interval despite strong clustering.
 **Scoring:** Strong: calculate and state approximation assumptions.
 **Answer support:** Section 6 E2.
-**Interviewer probe:** Ask the candidate to separate the public claim from any implementation assumption.
-**Interviewer check:** Require the candidate to identify at least one condition that could invalidate the answer.
-**Boundary:** An illustrative calculation or proposal is not an observed Spotify result.
 
 #### Question 08: What is the primary analysis population?
 **Candidate prompt:** What is the primary analysis population?
@@ -1055,13 +1158,9 @@ Offline ranking metrics can screen policies but need not predict long-horizon ou
 **Reasoning:** Restricting to exposed users conditions on a post-assignment event and can induce bias.
 **Follow-up:** Can actual exposure be analyzed?
 **Follow-up answer:** Yes, as a clearly labeled diagnostic or with an appropriate causal compliance design.
-**Acceptable alternative:** A different design is acceptable if its estimand, assumptions and operational boundaries are explicit.
 **Red flag:** Dropping treatment users who failed to receive the candidate.
 **Scoring:** Strong: connect denominator to intention-to-treat estimand.
 **Answer support:** Sections 5a and 9 illustrative protocol.
-**Interviewer probe:** Ask the candidate to separate the public claim from any implementation assumption.
-**Interviewer check:** Require the candidate to identify at least one condition that could invalidate the answer.
-**Boundary:** An illustrative calculation or proposal is not an observed Spotify result.
 
 #### Question 09: Diagnose fewer treatment impressions.
 **Candidate prompt:** Diagnose fewer treatment impressions.
@@ -1069,13 +1168,9 @@ Offline ranking metrics can screen policies but need not predict long-horizon ou
 **Reasoning:** Compare assignment counts, server decisions and client impressions by arm and client version.
 **Follow-up:** Should exposed-only lift decide launch?
 **Follow-up answer:** No; preserve the assigned population and investigate differential noncompliance.
-**Acceptable alternative:** A different design is acceptable if its estimand, assumptions and operational boundaries are explicit.
 **Red flag:** Assuming a sample-ratio mismatch at assignment from an exposure mismatch.
 **Scoring:** Strong: propose discriminating signals and a safe action.
 **Answer support:** Diagnostic 02.
-**Interviewer probe:** Ask the candidate to separate the public claim from any implementation assumption.
-**Interviewer check:** Require the candidate to identify at least one condition that could invalidate the answer.
-**Boundary:** An illustrative calculation or proposal is not an observed Spotify result.
 
 #### Question 10: Why can immediate listening be misleading?
 **Candidate prompt:** Why can immediate listening be misleading?
@@ -1083,13 +1178,9 @@ Offline ranking metrics can screen policies but need not predict long-horizon ou
 **Reasoning:** Single-objective rewards need not represent multiple user and product goals.
 **Follow-up:** Does a lower novelty metric alone prove harm?
 **Follow-up answer:** No; define and validate discovery and evaluate the whole set of outcomes.
-**Acceptable alternative:** A different design is acceptable if its estimand, assumptions and operational boundaries are explicit.
 **Red flag:** Treating every engagement increase as a sustainable user benefit.
 **Scoring:** Strong: articulate a tradeoff and a measurable guardrail.
 **Answer support:** S1 multi-objective discussion.
-**Interviewer probe:** Ask the candidate to separate the public claim from any implementation assumption.
-**Interviewer check:** Require the candidate to identify at least one condition that could invalidate the answer.
-**Boundary:** An illustrative calculation or proposal is not an observed Spotify result.
 
 #### Question 11: How do delayed outcomes affect adaptive allocation?
 **Candidate prompt:** How do delayed outcomes affect adaptive allocation?
@@ -1097,13 +1188,9 @@ Offline ranking metrics can screen policies but need not predict long-horizon ou
 **Reasoning:** Updating on immature observations can favor immediate proxies or uneven cohorts.
 **Follow-up:** What if an outcome is immediate and reliable?
 **Follow-up answer:** Faster adaptive allocation may be feasible but timing and inferential design still matter.
-**Acceptable alternative:** A different design is acceptable if its estimand, assumptions and operational boundaries are explicit.
 **Red flag:** Assuming every business outcome is available immediately.
 **Scoring:** Strong: tie delay to allocation and measurement validity.
 **Answer support:** S1 delayed-metric discussion.
-**Interviewer probe:** Ask the candidate to separate the public claim from any implementation assumption.
-**Interviewer check:** Require the candidate to identify at least one condition that could invalidate the answer.
-**Boundary:** An illustrative calculation or proposal is not an observed Spotify result.
 
 #### Question 12: Size the illustrative request-serving pool.
 **Candidate prompt:** Size the illustrative request-serving pool.
@@ -1111,13 +1198,9 @@ Offline ranking metrics can screen policies but need not predict long-horizon ou
 **Reasoning:** The effective target capacity is 200 requests/s per instance; 2000/200 is ten.
 **Follow-up:** How many with one instance of headroom?
 **Follow-up answer:** Eleven under the stated homogeneous capacity and single-failure assumption.
-**Acceptable alternative:** A different design is acceptable if its estimand, assumptions and operational boundaries are explicit.
 **Red flag:** Inferring p99 latency or Spotify capacity from this fluid estimate.
 **Scoring:** Strong: show capacity units and identify excluded constraints.
 **Answer support:** Section 6 W1.
-**Interviewer probe:** Ask the candidate to separate the public claim from any implementation assumption.
-**Interviewer check:** Require the candidate to identify at least one condition that could invalidate the answer.
-**Boundary:** An illustrative calculation or proposal is not an observed Spotify result.
 
 #### Question 13: What if a policy learns from both experimental arms?
 **Candidate prompt:** What if a policy learns from both experimental arms?
@@ -1125,13 +1208,9 @@ Offline ranking metrics can screen policies but need not predict long-horizon ou
 **Reasoning:** Control outcomes may be affected by treatment observations through shared model updates.
 **Follow-up:** How could the experiment change?
 **Follow-up answer:** Separate training feedback or explicitly design and estimate a policy with shared effects.
-**Acceptable alternative:** A different design is acceptable if its estimand, assumptions and operational boundaries are explicit.
 **Red flag:** Assuming randomization alone eliminates all cross-arm spillovers.
 **Scoring:** Strong: identify mechanism and offer a design-dependent remedy.
 **Answer support:** Section 9 interference discussion.
-**Interviewer probe:** Ask the candidate to separate the public claim from any implementation assumption.
-**Interviewer check:** Require the candidate to identify at least one condition that could invalidate the answer.
-**Boundary:** An illustrative calculation or proposal is not an observed Spotify result.
 
 #### Question 14: How would you handle a candidate-serving outage?
 **Candidate prompt:** How would you handle a candidate-serving outage?
@@ -1139,13 +1218,9 @@ Offline ranking metrics can screen policies but need not predict long-horizon ou
 **Reasoning:** Fallback is noncompliance; silently relabeling units would bias or change the question.
 **Follow-up:** When should the experiment stop?
 **Follow-up answer:** Apply prespecified operational stop rules and involve the accountable owner.
-**Acceptable alternative:** A different design is acceptable if its estimand, assumptions and operational boundaries are explicit.
 **Red flag:** Excluding failed candidate requests to inflate observed quality.
 **Scoring:** Strong: cover user safety, logging and estimand.
 **Answer support:** Section 8b illustrative failed trace.
-**Interviewer probe:** Ask the candidate to separate the public claim from any implementation assumption.
-**Interviewer check:** Require the candidate to identify at least one condition that could invalidate the answer.
-**Boundary:** An illustrative calculation or proposal is not an observed Spotify result.
 
 #### Question 15: What if the only outcome is immediate and there is one objective?
 **Candidate prompt:** What if the only outcome is immediate and there is one objective?
@@ -1153,13 +1228,9 @@ Offline ranking metrics can screen policies but need not predict long-horizon ou
 **Reasoning:** The source gives context-specific reasons, not a theorem forbidding bandits.
 **Follow-up:** Would contextual choices still be personalization?
 **Follow-up answer:** Yes: conditioning decisions on user features is a personalized policy that needs evaluation.
-**Acceptable alternative:** A different design is acceptable if its estimand, assumptions and operational boundaries are explicit.
 **Red flag:** Assuming Spotify’s specific organizational choice applies unchanged to every product.
 **Scoring:** Strong: change the recommendation while preserving the evaluation boundary.
 **Answer support:** S1 bandit limitations and context sections.
-**Interviewer probe:** Ask the candidate to separate the public claim from any implementation assumption.
-**Interviewer check:** Require the candidate to identify at least one condition that could invalidate the answer.
-**Boundary:** An illustrative calculation or proposal is not an observed Spotify result.
 
 #### Question 16: How would you assess a reported policy lift from an observational replay?
 **Candidate prompt:** How would you assess a reported policy lift from an observational replay?
@@ -1167,13 +1238,9 @@ Offline ranking metrics can screen policies but need not predict long-horizon ou
 **Reasoning:** Historical exposure, propensity support and feedback selection can bias replay.
 **Follow-up:** What if some actions have zero historical probability?
 **Follow-up answer:** Their counterfactual outcomes are not identified by inverse propensity weighting alone.
-**Acceptable alternative:** A different design is acceptable if its estimand, assumptions and operational boundaries are explicit.
 **Red flag:** Assigning infinite or invented weights to unsupported actions.
 **Scoring:** Strong: discuss support, logging and a credible online evaluation.
 **Answer support:** Sections 5 and 9; diagnostic 24.
-**Interviewer probe:** Ask the candidate to separate the public claim from any implementation assumption.
-**Interviewer check:** Require the candidate to identify at least one condition that could invalidate the answer.
-**Boundary:** An illustrative calculation or proposal is not an observed Spotify result.
 
 ## 15. Quick Reference Card
 | Field | Value |

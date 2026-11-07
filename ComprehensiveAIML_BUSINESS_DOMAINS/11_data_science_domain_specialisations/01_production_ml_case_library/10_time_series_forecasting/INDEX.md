@@ -9,14 +9,14 @@
 | # | Topic | Status |
 |---:|---|---|
 | 1 | time-series data quality | planned |
-| 2 | baselines | planned |
+| 2 | baselines | partial: [retail demand](Case_Studies/01_Retail_CPG_Demand_Forecasting_At_Scale.md) and [ride-hailing demand](Case_Studies/02_Ride_Hailing_Demand_Forecasting.md) are illustrative unreviewed drafts |
 | 3 | feature engineering | planned |
-| 4 | probabilistic forecasts | planned |
+| 4 | probabilistic forecasts | partial: [energy load forecasting case](Case_Studies/03_Energy_Load_Forecasting.md); illustrative and unreviewed |
 | 5 | hierarchies | planned |
 | 6 | intermittency | planned |
 | 7 | deep forecasting | planned |
 | 8 | anomaly detection | planned |
-| 9 | backtesting | planned |
+| 9 | backtesting | partial: [ride-hailing forecasting case](Case_Studies/02_Ride_Hailing_Demand_Forecasting.md); actual backtest and broader methods remain unmeasured |
 | 10 | forecast operations | planned |
 
 ## Applied collections
@@ -34,6 +34,6 @@ The [exact source crosswalk](../../../00_SOURCE_TOPIC_CROSSWALK.md) extends the 
 
 | Focused source brief | Required outputs / state |
 |---|---|
-| [Forecasting production decisions](../../../00_SOURCE_COVERAGE_DATA_SCIENCE.md#ds-cases-10) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |
+| [Forecasting production decisions](../../../00_SOURCE_COVERAGE_DATA_SCIENCE.md#ds-cases-10) | Retail, ride-hailing demand and energy load cases are unreviewed drafts with illustrative results; ETA and other source cases remain planned |
 
 Source module numbers and course module numbers are different namespaces. Reuse matching existing lessons when authored, but do not drop distinct variants, cases, failure themes or source limitations.

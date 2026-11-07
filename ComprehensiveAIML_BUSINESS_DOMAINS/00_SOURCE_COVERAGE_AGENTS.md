@@ -327,7 +327,7 @@ Hidden folders and clipped filenames remain `unresolved-source`; visible prefixe
 
 ## Execution surfaces, identity, trust, approval gates, sandboxing and blast radius
 
-**Teaching home:** [09_trust_security_governance_and_product_leadership/49_ai_security_privacy_safety_and_red_teaming/INDEX.md](09_trust_security_governance_and_product_leadership/49_ai_security_privacy_safety_and_red_teaming/INDEX.md). **Status:** planned.
+**Teaching home:** [09_trust_security_governance_and_product_leadership/49_ai_security_privacy_safety_and_red_teaming/INDEX.md](09_trust_security_governance_and_product_leadership/49_ai_security_privacy_safety_and_red_teaming/INDEX.md). **Status:** mostly planned; [enterprise agent approval gate](06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/Case_Studies/01_enterprise_agent_approval_gate.md) is a hypothetical, unreviewed partial case, not a measured deployment or a reproduction of unavailable source files.
 
 **Testable outcome.** Bind approval to exact action content and isolate execution from model suggestions.
 

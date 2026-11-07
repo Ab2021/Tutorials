@@ -25,7 +25,7 @@ source_index: INDEX.md
 **Outcome:** trace a question through ingestion, chunking, retrieval, filtering, ranking, context assembly, generation and citations.
 **Scope:** text documents; multimodal parsing and agentic tool execution are adjacent topics, not assumed capabilities.
 **Teaching home:** [NLP and LLM Playbook](../INDEX.md); [source crosswalk](../../../../00_SOURCE_TOPIC_CROSSWALK.md).
-**Provenance:** the directory listing names the source sheet, but its contents have not been inspected here.
+**Provenance:** [directory inventory](../../../../../Templates/directory.txt) lines 648–665 names this topic; it is an inventory, not evidence of an implementation.
 **Status:** draft, unreviewed; this is not certification of implementation, security or production outcomes.
 **Evidence vocabulary:** ILLUSTRATIVE means invented inputs; DERIVED means consequences of stated definitions; OPEN means verification still required.
 **Prerequisites:** understand tokens, basic vector arithmetic, ranked lists, denominators and document permissions.
@@ -292,875 +292,924 @@ Do not paste sensitive passages into debugging logs merely to investigate them.
 
 ### Diagnostic 01: Missing PDF text
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Missing PDF text.
 **Candidate cause:** image-only page.
 **Competing explanation:** parser dropped a text layer.
 **Discriminating check:** compare rendered page with extracted text.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** run OCR with page provenance.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** re-query an annotated page.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 02: Misordered paragraphs
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Misordered paragraphs.
 **Candidate cause:** column order lost.
 **Competing explanation:** document actually has unusual sequence.
 **Discriminating check:** compare bounding boxes with reading order.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** use layout-aware extraction.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** inspect citations spanning columns.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 03: Table answer wrong
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Table answer wrong.
 **Candidate cause:** headers separated from cells.
 **Competing explanation:** source itself contains conflicting tables.
 **Discriminating check:** compare extracted rows against rendered table.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** retain row and header together.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** check question on a row with shared heading.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 04: Repeated headers dominate
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Repeated headers dominate.
 **Candidate cause:** boilerplate indexed in every chunk.
 **Competing explanation:** legitimate repeated warnings carry meaning.
 **Discriminating check:** compare term frequencies and page regions.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** strip only verified boilerplate.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** ensure warnings remain searchable.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 05: Footnote missing
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Footnote missing.
 **Candidate cause:** footnote detached from claim.
 **Competing explanation:** the source has no qualifying footnote.
 **Discriminating check:** inspect page geometry and source markers.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** link footnotes to their anchors.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** evaluate a question whose answer changes with the note.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 06: Bad OCR identifier
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Bad OCR identifier.
 **Candidate cause:** character confusion in scan.
 **Competing explanation:** query contains a genuinely different code.
 **Discriminating check:** compare pixels and text for ambiguous characters.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** correct extraction or index aliases with provenance.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** search both original and corrected identifier.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 07: Language mismatch
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Language mismatch.
 **Candidate cause:** analyzer lacks language support.
 **Competing explanation:** question uses a different language than source.
 **Discriminating check:** compare token output and language metadata.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** choose language-appropriate analyzers.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** measure multilingual recall by language.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 08: Unexpected Unicode
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Unexpected Unicode.
 **Candidate cause:** normalization differs at ingest and query.
 **Competing explanation:** characters are intentionally distinct identifiers.
 **Discriminating check:** inspect code points before normalization.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** apply consistent documented normalization.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** check exact-match cases including confusables.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 09: Version disappears
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Version disappears.
 **Candidate cause:** incremental ingest omitted update.
 **Competing explanation:** upstream document was intentionally removed.
 **Discriminating check:** compare source event sequence and index manifests.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** repair replay from source of truth.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** confirm version and deletion events reconcile.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 10: Old content persists
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Old content persists.
 **Candidate cause:** tombstone failed.
 **Competing explanation:** policy intentionally retains historical material.
 **Discriminating check:** compare effective date and deletion audit.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** propagate tombstones to all replicas.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** query after the permitted propagation window.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 11: Duplicate document
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Duplicate document.
 **Candidate cause:** same source ingested through two paths.
 **Competing explanation:** two separately authoritative copies exist.
 **Discriminating check:** compare canonical IDs and content hashes.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** deduplicate with owner-approved canonicalization.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** confirm citations resolve to intended source.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 12: Chunk starts mid-clause
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Chunk starts mid-clause.
 **Candidate cause:** fixed window cut a condition.
 **Competing explanation:** source clause genuinely starts there.
 **Discriminating check:** inspect adjacent offsets.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** use sentence-aware boundaries with limits.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** test a query requiring the condition.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 13: Chunk too large
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Chunk too large.
 **Candidate cause:** long sections dilute a key fact.
 **Competing explanation:** question genuinely needs broad context.
 **Discriminating check:** measure evidence location and token cost.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** split by meaningful subheading.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** compare span recall and answer support.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 14: Chunk too small
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Chunk too small.
 **Candidate cause:** qualifier separated from answer.
 **Competing explanation:** retriever scores the wrong topic.
 **Discriminating check:** inspect neighboring source spans.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** expand around authorized spans.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** check that negation and exceptions survive.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 15: Overlap explosion
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Overlap explosion.
 **Candidate cause:** stride nearly zero.
 **Competing explanation:** the corpus really contains many separate documents.
 **Discriminating check:** inspect C and O per parser.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** reduce overlap after boundary tests.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** compare index size and boundary recall.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 16: Chunk ID collision
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Chunk ID collision.
 **Candidate cause:** ID excludes version or offset.
 **Competing explanation:** the source system reused identifiers.
 **Discriminating check:** trace ID construction across versions.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** include immutable version and span identity.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** rebuild and verify deterministic mappings.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 17: Parent expansion leak
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Parent expansion leak.
 **Candidate cause:** child is public but parent includes private section.
 **Competing explanation:** source ACL is actually uniform.
 **Discriminating check:** compare permissions for every expanded span.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** recheck each span before assembly.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** attempt mixed-permission parent retrieval.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 18: Wrong heading attached
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Wrong heading attached.
 **Candidate cause:** parser hierarchy shifted.
 **Competing explanation:** document author placed misleading heading.
 **Discriminating check:** compare extracted hierarchy to source structure.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** repair hierarchy parser.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** evaluate heading-sensitive query.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 19: Stale embedding
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Stale embedding.
 **Candidate cause:** content updated without vector update.
 **Competing explanation:** query model changed independently.
 **Discriminating check:** compare content hash and embedding manifest.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** re-embed changed chunks atomically.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** compare retrieval before and after controlled update.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 20: Embedding mismatch
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Embedding mismatch.
 **Candidate cause:** query and document model versions differ.
 **Competing explanation:** query preprocessing changed language distribution.
 **Discriminating check:** compare model and preprocessing fingerprints.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** route to matching index version.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** check fixed probe queries across migration.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 21: Zero vector
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Zero vector.
 **Candidate cause:** empty text or invalid encoder output.
 **Competing explanation:** legitimate vector is unexpectedly all zero.
 **Discriminating check:** inspect input and vector norm.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** reject and quarantine invalid embeddings.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** verify no undefined cosine enters index.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 22: Dimension mismatch
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Dimension mismatch.
 **Candidate cause:** wrong index selected.
 **Competing explanation:** model upgrade changed output shape.
 **Discriminating check:** compare vector schema and routing metadata.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** bind endpoint to compatible index.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** test routing across all active versions.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 23: ANN misses item
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** ANN misses item.
 **Candidate cause:** search approximation too aggressive.
 **Competing explanation:** embedding itself ranks item poorly.
 **Discriminating check:** compare ANN with exact search on sampled eligible pool.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** tune search effort or index construction.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** measure ANN recall and latency jointly.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 24: Filter leaves too few
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Filter leaves too few.
 **Candidate cause:** post-filter removes ineligible candidates.
 **Competing explanation:** authorized corpus lacks supporting material.
 **Discriminating check:** compare scoped exact search and filtered ANN.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** use secure prefilter or adaptive eligible retrieval.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** measure eligible recall at fixed latency.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 25: Rare code not found
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Rare code not found.
 **Candidate cause:** lexical tokenizer split the identifier.
 **Competing explanation:** source contains another code.
 **Discriminating check:** inspect analyzer output at index and query.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** add exact identifier field.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** test punctuation and case variants.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 26: Synonym not found
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Synonym not found.
 **Candidate cause:** lexical vocabulary mismatch.
 **Competing explanation:** the query is genuinely ambiguous.
 **Discriminating check:** compare semantic and lexical candidate sets.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** add dense retrieval or curated synonyms.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** measure paraphrase slice without harming exact IDs.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 27: Dense search misses exact ID
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Dense search misses exact ID.
 **Candidate cause:** embedding underweights characters.
 **Competing explanation:** the ID does not exist in the corpus.
 **Discriminating check:** compare exact lexical lookup.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** add lexical branch to hybrid retrieval.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** measure ID-query recall.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 28: Hybrid gets worse
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Hybrid gets worse.
 **Candidate cause:** fusion weights or list depths misconfigured.
 **Competing explanation:** one branch adds mostly noise.
 **Discriminating check:** compare per-branch and fused ranked lists.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** tune fusion on held-out relevance judgments.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** evaluate distinct exact and paraphrase slices.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 29: RRF tie surprises
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** RRF tie surprises.
 **Candidate cause:** rank contributions are nearly equal.
 **Competing explanation:** stable tie-breaker is absent.
 **Discriminating check:** calculate individual contributions and tie policy.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** use deterministic documented tie-breaking.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** repeat the identical query across replicas.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 30: Reranker degrades
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Reranker degrades.
 **Candidate cause:** model domain mismatch.
 **Competing explanation:** correct candidate is absent before reranking.
 **Discriminating check:** measure candidate recall and rank changes.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** train or select domain-appropriate reranker.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** compare paired queries with confidence intervals.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 31: Reranker sees secrets
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Reranker sees secrets.
 **Candidate cause:** candidate filtering occurs after external call.
 **Competing explanation:** vendor is authorized but logs are uncontrolled.
 **Discriminating check:** trace raw data to every processing boundary.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** apply current policy before transfer.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** test denied principals and external traces.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 32: Noisy high scores
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Noisy high scores.
 **Candidate cause:** scores not calibrated across branches.
 **Competing explanation:** query class changed over time.
 **Discriminating check:** inspect score distributions per branch and query type.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** fuse ranks or calibrate on validation data.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** check held-out threshold reliability.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 33: Overaggressive threshold
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Overaggressive threshold.
 **Candidate cause:** relevant low-score material excluded.
 **Competing explanation:** there truly is no authorized answer.
 **Discriminating check:** inspect labeled false negatives by slice.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** choose a threshold against explicit cost tradeoffs.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** remeasure abstention and unsupported-answer rates.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 34: Duplicate context
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Duplicate context.
 **Candidate cause:** overlapping chunks all win ranking.
 **Competing explanation:** several copies are independently needed.
 **Discriminating check:** compare source offsets and coverage.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** deduplicate overlapping spans without dropping qualifiers.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** test cross-boundary evidence coverage.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 35: Missing exception
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Missing exception.
 **Candidate cause:** context packing prioritizes one high-score chunk.
 **Competing explanation:** exception absent from source corpus.
 **Discriminating check:** inspect candidate-to-context trace.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** reserve space for required exception evidence.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** evaluate exception-bearing questions.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 36: Context overflow
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Context overflow.
 **Candidate cause:** token estimate uses wrong tokenizer.
 **Competing explanation:** generation reserve was not allocated.
 **Discriminating check:** compare actual request token accounting.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** count with serving tokenizer and include overhead.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** test maximum-size prompts at boundary.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 37: Truncated evidence
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Truncated evidence.
 **Candidate cause:** server silently drops tail.
 **Competing explanation:** assembler packed beyond its own limit.
 **Discriminating check:** inspect actual sent prompt and truncation telemetry.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** enforce budget before submission.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** verify last citation span is present.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 38: Irrelevant context
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Irrelevant context.
 **Candidate cause:** candidate pool includes broad topical matches.
 **Competing explanation:** the question is ambiguous.
 **Discriminating check:** inspect query intent and ranked evidence.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** apply targeted reranking and clarification.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** measure precision and downstream support.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 39: Outdated answer
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Outdated answer.
 **Candidate cause:** historical source ranks above current source.
 **Competing explanation:** current document is unavailable.
 **Discriminating check:** compare source effective dates and version lineage.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** prefer valid-time evidence under a documented rule.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** test before and after a policy change.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 40: Unresolved conflict
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Unresolved conflict.
 **Candidate cause:** sources apply to different jurisdictions.
 **Competing explanation:** sources truly contradict for same scope.
 **Discriminating check:** inspect dates jurisdiction and authority.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** surface conflict or escalate.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** evaluate competing-policy questions.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 41: Answer cites wrong span
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Answer cites wrong span.
 **Candidate cause:** citation mapping shifted during preprocessing.
 **Competing explanation:** generator attached a plausible but unsupported citation.
 **Discriminating check:** resolve offsets against source version and claim.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** repair mapping and check entailment.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** audit claims individually after rechunking.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 42: Citation link denied
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Citation link denied.
 **Candidate cause:** authorization changed since answer generation.
 **Competing explanation:** citation service uses wrong principal.
 **Discriminating check:** re-evaluate source permission at click time.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** return access-safe denial without exposing content.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** test revocation between answer and click.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 43: Citation link stale
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Citation link stale.
 **Candidate cause:** source was replaced without immutable version.
 **Competing explanation:** source retention policy removed old version.
 **Discriminating check:** resolve document ID version and locator.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** retain permitted immutable reference or record unavailability.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** check historical citation resolution.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 44: Unsupported synthesis
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Unsupported synthesis.
 **Candidate cause:** model infers a conclusion beyond sources.
 **Competing explanation:** sources omit an intermediate condition.
 **Discriminating check:** map each claim to cited evidence.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** require explicit uncertainty or abstention.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** adjudicate unsupported-claim rate.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 45: Prompt injection
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Prompt injection.
 **Candidate cause:** document instructs model to ignore system policy.
 **Competing explanation:** legitimate quoted instructions are task data.
 **Discriminating check:** inspect source provenance and instruction boundaries.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** treat retrieved text as untrusted and constrain tools.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** run adversarial retrieval tests.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 46: Instruction hidden in metadata
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Instruction hidden in metadata.
 **Candidate cause:** title or filename is injected.
 **Competing explanation:** display rendering concatenates fields without boundaries.
 **Discriminating check:** inspect full prompt including metadata.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** delimit and sanitize untrusted metadata.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** test title and filename injection cases.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 47: Cache leaks answer
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Cache leaks answer.
 **Candidate cause:** cache key omits principal or policy scope.
 **Competing explanation:** upstream service returned a wrong identity.
 **Discriminating check:** inspect key components and identity propagation.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** partition cache by effective authorization context.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** test two users with disjoint access.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 48: Cache survives revocation
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Cache survives revocation.
 **Candidate cause:** invalidation lags policy changes.
 **Competing explanation:** authorization recheck is skipped on cache hit.
 **Discriminating check:** trace policy version on cache reuse.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** recheck access or invalidate by policy event.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** revoke access and repeat cached request.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 49: Log reveals private text
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Log reveals private text.
 **Candidate cause:** raw chunks logged in shared telemetry.
 **Competing explanation:** redaction is bypassed on error path.
 **Discriminating check:** inspect access controls and sample schemas without exposing content.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** log IDs and protected metadata rather than raw passages.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** exercise failure paths under least privilege.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 50: Cross-tenant retrieval
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Cross-tenant retrieval.
 **Candidate cause:** tenant filter omitted.
 **Competing explanation:** tenant identity mapped incorrectly.
 **Discriminating check:** trace authenticated tenant to index query.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** enforce tenant isolation at trusted boundary.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** test adversarial cross-tenant requests.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 51: ACL stale
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** ACL stale.
 **Candidate cause:** index policy snapshot lags revocation.
 **Competing explanation:** source policy service itself is stale.
 **Discriminating check:** compare authoritative policy timestamp and index metadata.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** use fresh policy decision and fail closed.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** measure revocation propagation and denied access.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 52: Group membership stale
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Group membership stale.
 **Candidate cause:** identity token outlives group change.
 **Competing explanation:** policy decision ignores token expiry.
 **Discriminating check:** compare membership change and credential issuance times.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** refresh claims within policy freshness requirement.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** test removal using existing sessions.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 53: Time-of-check race
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Time-of-check race.
 **Candidate cause:** permission changes after candidate search.
 **Competing explanation:** content version changes independently.
 **Discriminating check:** trace decision time and disclosure time.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** recheck immediately before each disclosure.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** inject a revocation between stages.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 54: Policy service outage
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Policy service outage.
 **Candidate cause:** dependency unavailable.
 **Competing explanation:** policy denies user correctly.
 **Discriminating check:** distinguish timeout from explicit denial safely.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** fail closed or use an approved scoped fallback.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** fault-inject outage without unrestricted fallback.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 55: Unanswerable question
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Unanswerable question.
 **Candidate cause:** gold corpus lacks the fact.
 **Competing explanation:** retrieval missed an existing fact.
 **Discriminating check:** run expert source search within authorized corpus.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** improve abstention or retrieval based on finding.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** measure no-answer discrimination.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 56: Incomplete labels
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Incomplete labels.
 **Candidate cause:** pooling missed relevant candidates.
 **Competing explanation:** candidate is genuinely nonrelevant.
 **Discriminating check:** blindly adjudicate newly surfaced passages.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** expand and version relevance judgments.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** remeasure metrics after adjudication.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 57: Chunk-label drift
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Chunk-label drift.
 **Candidate cause:** chunk boundaries changed.
 **Competing explanation:** source content changed too.
 **Discriminating check:** compare stable source offsets across versions.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** label source spans and remap chunks.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** audit labels after chunker migration.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 58: Leakage in test set
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Leakage in test set.
 **Candidate cause:** near-duplicate documents cross splits.
 **Competing explanation:** questions are independently authored but similar.
 **Discriminating check:** cluster source lineage and question templates.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** split by source family and time.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** audit overlap before reporting results.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 59: Judge overestimates
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Judge overestimates.
 **Candidate cause:** LLM judge follows injected text.
 **Competing explanation:** rubric treats topicality as entailment.
 **Discriminating check:** compare blinded human adjudication and judge rationales.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** harden rubric and isolate evidence as data.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** measure disagreement on adversarial cases.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 60: Judge underestimates
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Judge underestimates.
 **Candidate cause:** valid paraphrase not recognized.
 **Competing explanation:** answer adds an unsupported assertion.
 **Discriminating check:** compare claim decomposition and expert decisions.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** adjudicate and refine rubric.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** report per-slice agreement and uncertainty.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 61: Click metric misleads
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Click metric misleads.
 **Candidate cause:** users click prominent citations regardless of support.
 **Competing explanation:** users rarely need citations for easy queries.
 **Discriminating check:** compare randomized placements and audited support.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** use click signals alongside claim-level judgments.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** monitor groundedness separately from engagement.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 62: Latency regression
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Latency regression.
 **Candidate cause:** reranker queue saturates.
 **Competing explanation:** retrieval index latency has increased.
 **Discriminating check:** compare stage-level latency and queue time.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** cap candidate work or scale measured bottleneck.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** compare tail latency and answer quality.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 63: Embedding cost surge
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Embedding cost surge.
 **Candidate cause:** overlap creates excess indexed tokens.
 **Competing explanation:** reingestion repeats unchanged content.
 **Discriminating check:** compare token counts by version and source.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** deduplicate and skip unchanged hashes.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** measure cost and boundary recall together.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 64: Slow update propagation
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Slow update propagation.
 **Candidate cause:** batch job delays indexing.
 **Competing explanation:** source event was never received.
 **Discriminating check:** compare event times at each pipeline stage.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** repair event delivery or reduce batch interval.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** measure freshness lag distribution.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 65: Uneven query quality
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Uneven query quality.
 **Candidate cause:** evaluation averages hide a minority language slice.
 **Competing explanation:** the slice has different permission constraints.
 **Discriminating check:** stratify by language and eligible corpus.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** improve language-specific analysis or retrieval.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** report slice counts and uncertainty.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 66: Sensitive answer in output
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Sensitive answer in output.
 **Candidate cause:** evidence is authorized but answer violates purpose policy.
 **Competing explanation:** model generated unsupported sensitive details.
 **Discriminating check:** trace claims to sources and applicable output rules.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** enforce task-specific disclosure policy.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** test permitted retrieval with prohibited output.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
 ### Diagnostic 67: Deleted source in backup
 
-**Provenance:** HYPOTHETICAL; no incident or production observation is asserted.
 **Symptom:** Deleted source in backup.
 **Candidate cause:** backup retention differs from serving retention.
 **Competing explanation:** deletion event never reached restoration process.
 **Discriminating check:** inspect retention rules and restore workflow.
-**Interpretation:** do not select a correction until the check distinguishes these explanations.
 **Bounded correction:** apply deletion controls during restore.
-**Safety boundary:** preserve effective authorization and source provenance during investigation and repair.
 **Verification:** exercise a restore with tombstone replay.
-**Rollback condition:** revert the change if the relevant protected slice worsens or the permission invariant fails.
 
+
+### Engineering contract: identities and trust boundaries
+
+A request begins with an authenticated principal, not a display name supplied in a prompt.
+The identity provider authenticates that principal; authorization still requires an independent policy decision.
+Bind the subject identifier to a tenant and a session with a defined lifetime.
+A delegated service identity must not silently inherit the service's full corpus privileges for end-user queries.
+If delegation is used, pass the user's constrained authority or evaluate both user and service permissions.
+The requested action may differ between search, reading content, exporting, and sharing a citation.
+A source can allow discovery of a title while denying access to its full text.
+Treat titles and snippets as data that can themselves require authorization.
+Resource identifiers must resolve to the exact version or source state evaluated by the policy engine.
+Policy input should include resource ownership, tenant, classification, purpose, and any required environmental attributes.
+Only attributes actually supported by the policy contract should affect the decision.
+Untrusted request text must not be allowed to set its own clearance, tenant, or group membership.
+Group membership should come from an authoritative identity source with a documented freshness guarantee.
+A policy decision is valid only within its explicit scope and lifetime.
+Indefinite caching of an allow decision defeats later revocation.
+If a policy decision point returns an error, distinguish unavailable policy from an affirmative allow.
+An unavailable decision should stop disclosure unless an independently authorized fallback is defined.
+A fallback cannot be an unrestricted search that merely hides final citations.
+Index metadata can accelerate filtering but may lag authoritative permission changes.
+Record the index snapshot and the policy decision version separately.
+A vector store holding confidential embeddings is itself a protected processor and storage boundary.
+Similarity scores, identifiers, titles, and result counts may reveal sensitive information even without source text.
+Do not return raw candidate IDs or scores across a boundary without authorization for that metadata.
+An internal search process may need broader index access than an end user, under a separate service policy.
+That internal privilege is not authority to expose every candidate to downstream services.
+A prefilter should operate on a trusted server-side eligible set, not a client-supplied filter alone.
+When an engine supports only postfiltering, treat its execution environment as trusted for all scanned content.
+Before candidates leave that environment, enforce effective policy on every returned item.
+Overfetching eligible results can restore some candidate coverage after filtering, but has no security magic.
+A query with no eligible matches must not reveal whether an inaccessible document matched.
+Different response sizes, error messages, timing, and citation identifiers can create side channels.
+Specify acceptable disclosure of existence and mitigate the channels appropriate to the threat model.
+A multi-tenant index needs tenant isolation in both the search constraint and every direct object lookup.
+A guessed citation identifier must not bypass tenant isolation at the source endpoint.
+When a chunk combines multiple protected regions, either split it by policy or apply the most restrictive effective policy.
+Do not infer that all pages of a parent document share the same permissions.
+Parent expansion, neighboring chunks, and source previews each introduce additional resources to authorize.
+Deduplication must preserve the policy of every contributing source, not copy the least restrictive ACL.
+A copied passage in a public document and a private original may have different source rights.
+Use the authorization of the actual cited source and verify that redistribution is permitted.
+Do not expose a private source merely because equivalent public text is available elsewhere.
+A cross-encoder hosted externally is a disclosure recipient, even if it returns only scores.
+The user, retrieval backend, reranker, generator, observability sink, and citation viewer are distinct recipients.
+For each recipient, evaluate data classification, contract, residency, and permitted processing purpose.
+Do not send restricted text to a model vendor solely because the end user may read it.
+An authorized user does not automatically authorize every subprocess or third-party service.
+Minimize sent spans and strip unrelated sensitive fields before an allowed external call.
+If redaction changes a material clause, mark the evidence incomplete rather than pretending it is intact.
+Store a redaction policy version with the prompt trace where retention is permitted.
+Use encrypted transport and storage according to the system's threat model and key-management policy.
+Encryption protects confidentiality in transit and at rest; it does not replace authorization at read time.
+A service account's logs need their own access policy and retention period.
+Avoid putting retrieved source text, credentials, or full prompts in broad operational logs.
+Prefer opaque request IDs and policy-approved, minimized metadata for routine telemetry.
+Restrict detailed traces to a controlled debugging workflow with a documented purpose and expiration.
+A model provider's retention and training terms are separate from the local application's log policy.
+The model's output may restate a restricted input, so output storage also needs an access decision.
+A later user opening a shared conversation is a new recipient, not a continuation of the original authorization.
+Recheck access to supporting evidence before replaying a stored answer to that later user.
+If a claim is derived from multiple sources, losing permission to any necessary source can invalidate the claim.
+A response-time guard should suppress that claim or regenerate it from currently authorized evidence.
+Merely deleting the revoked citation while retaining its fact still discloses the underlying information.
+When whole-answer provenance cannot be reconstructed, fail closed on the affected stored answer.
+If permissions change while tokens are streaming, define whether delivery must stop and how revocation is detected.
+A per-request snapshot gives a simpler contract but permits access until that snapshot expires.
+A stricter revocation requirement needs bounded rechecks or an interrupt mechanism during streaming.
+Neither approach provides instantaneous revocation without a defined synchronization and delivery contract.
+A citation link must authorize the viewer independently when opened, including on a different device.
+A signed URL grants a capability to its holder; its expiration and sharing risks must match policy.
+Do not put durable credentials or unrestricted source URLs inside generated text.
+Cache keys should partition by tenant, principal or effective scope, source snapshot, and relevant policy version.
+If contextual attributes affect policy, the cache contract must include them or force reauthorization.
+A cached answer cannot be safely shared merely because two users issued the same question.
+An event-driven invalidation mechanism needs handling for missed, delayed, duplicate, and reordered events.
+A policy revision check or bounded expiry can limit exposure when invalidation is delayed.
+The correct bound is a product and security requirement, not a universal number.
+Check backups, replicas, search indexes, reranker caches, and analytics exports when a source is deleted.
+Retention obligations may permit some protected records to remain even when ordinary retrieval is disabled.
+Separate deletion of user-visible access from physical erasure and from legally required preservation.
+Record which artifact was removed, where, and when, without leaking the removed content into the audit record.
+
+### Production trace: from source to claim
+
+Assign each source a canonical identifier that survives renaming without conflating independent documents.
+Record source system, owner, document type, language, acquisition time, and source version.
+Distinguish document creation time, effective time, index time, and request time.
+A document published today can describe a policy effective next month.
+An older document can remain authoritative for a historical question.
+A freshness filter should therefore use the time meaning required by the question, not ingestion time alone.
+Keep a content digest for integrity and change detection, not as proof of authorship.
+A digest collision-resistant enough for engineering use still does not establish source authority.
+Store a trusted acquisition record or signature where the source system offers one.
+Extraction must preserve page numbers, section names, and stable locators when possible.
+For tables, retain column names, row headings, units, and relevant footnotes with each extracted value.
+A cell containing 12 is uninterpretable without its measure, unit, row, and effective period.
+For scanned pages, retain the rendered page reference and confidence information where available.
+OCR confidence is a triage signal, not a guarantee that a digit or negation is correct.
+Preserve negation and exception clauses when splitting sentences into search units.
+A chunk identifier should include or resolve to document version and extraction or chunking revision.
+Maintain a mapping from each chunk back to exact source spans.
+If normalization changes offsets, preserve a map to the original text or use a stable alternate locator.
+A citation should identify the source version and the cited span, not just an indexed chunk number.
+Chunk identifiers can become invalid when a document is reparsed or the chunk size changes.
+A source-span locator allows comparisons across alternative chunkers when the source version is unchanged.
+When a source changes, old offsets cannot be silently applied to the new text.
+Maintain a versioned source snapshot or resolve the citation against the historical version.
+If historical access is prohibited or the version has been deleted, show an access-safe unavailable state.
+A source URL that points only to the latest version cannot substantiate a historical quotation by itself.
+Record extractor, normalization, tokenizer, chunker, embedding model, and index build versions.
+An embedding model change requires re-embedding the corpus or maintaining explicitly separated compatible indexes.
+Query vectors and document vectors from incompatible spaces must not be compared merely because dimensions match.
+During migration, route each query to an index paired with its query encoder and metric.
+A model version alias that changes silently undermines reproducibility.
+Record the resolved artifact version where the serving interface exposes it.
+A hybrid index may update lexical and dense representations at different times.
+Track the high-water mark for each index and expose a consistent freshness contract to clients.
+If only one index has a new document, fusion can still return it, but the ranking reflects partial ingestion.
+A snapshot identifier should bind chunk data, metadata, and the retrieval configuration used for a trace.
+For reproducibility, also retain the query rewrite, filters, top-k settings, and rank fusion parameters when allowed.
+Do not assume nondeterministic model output can be recreated exactly from a prompt alone.
+Record generator version, decoding settings, and provider limitations separately from the evidence snapshot.
+Represent the answer as atomic material claims wherever practical.
+Associate each claim with one or more source spans and distinguish direct quotes from paraphrases.
+A direct quote needs exact text, including omitted context marked under the applicable quotation convention.
+A paraphrase requires semantic support without adding an unsupported condition or numerical precision.
+Multiple citations may jointly support a conclusion even if neither source supports it alone.
+If an inference joins sources, document the join key, time scope, and reasoning needed to connect them.
+Two sources can disagree because they refer to different locations rather than because either is wrong.
+Check jurisdiction, audience, entity, unit, and effective period before resolving apparent conflicts.
+Source authority is a policy or editorial determination, not a similarity ranking.
+Where no authoritative conflict rule exists, report both positions or escalate.
+Avoid averaging conflicting rules or dates unless the task explicitly calls for a justified aggregation.
+A citation coverage metric counts links; an entailment review asks whether each linked span supports the claim.
+Both are needed because perfect link coverage can coexist with wholly unsupported claims.
+Resolve citations before delivery and confirm that the displayed source is the version actually used.
+If a link fails, do not replace it with a different version without rechecking claim support.
+Record unresolved provenance as unknown, not as a source with invented authority.
+
+### Adversarial retrieval and evidence handling
+
+Retrieved documents are data, even if they contain role labels or imperative text.
+A webpage can say that prior instructions are obsolete; the statement does not acquire system authority.
+A document can contain legitimate procedural instructions that the user asks the assistant to summarize.
+Summarizing those instructions differs from obeying them as instructions to the assistant.
+Keep trusted system and developer instructions structurally separate from retrieved material.
+Mark retrieved spans as untrusted with stable delimiters, but do not treat delimiters as a complete defense.
+An adversary may include fake delimiters, forged tool results, or role-like tags in source text.
+Serialize content so source characters cannot alter the surrounding message structure.
+Apply source encoding or escaping appropriate to the actual transport and parser.
+The generator must not be the sole enforcement point for access control or tool permissions.
+A prompt asking the model not to leak secrets is not a substitute for withholding unauthorized secrets.
+Restrict available tools, destinations, and operations using code outside the model.
+This sheet does not assume that the RAG answerer can execute arbitrary tool calls.
+If a product later adds tools, reauthorize each call and require approval where its contract demands it.
+A retrieved instruction to send the prompt to an external URL is not an authorized user request.
+A retrieved link may itself contain an attacker-controlled destination or tracking parameter.
+Do not automatically fetch links or follow redirects solely because retrieved content requests it.
+If link fetching is an allowed product feature, enforce network egress restrictions and destination validation.
+A citation viewer should render untrusted HTML safely rather than executing source scripts.
+File names, document titles, and metadata can also contain instruction-like attacks.
+Apply the same data-versus-instruction distinction to metadata and retrieved text.
+A poisoned document can be relevant to a query while deliberately supplying false facts.
+Relevance ranking does not certify document integrity, ownership, or truth.
+Restrict who can publish to indexed sources and review high-impact source changes.
+Monitor suspicious corpus changes using metadata and approved samples, not unrestricted content dumps.
+A repeated attacker phrase can dominate a lexical retriever without being authoritative.
+A semantically optimized poisoned paragraph can also attract dense retrieval.
+Evaluate poisoning resistance using controlled test documents in an isolated test corpus.
+Test instructions that demand role changes, secret disclosure, citation laundering, and unauthorized actions.
+Test the same attack in body text, tables, headings, metadata, and source excerpts.
+Include benign quoted attack examples to measure whether the defense overblocks legitimate discussion.
+A source may legitimately quote a malicious message for security analysis.
+The correct answer can describe the quoted text without carrying out its instruction.
+Use harmless synthetic secrets and callback endpoints controlled by the test operator.
+Measure actual unauthorized disclosure or action rather than only whether the output contains an attack phrase.
+A refusal that still includes a protected secret is not a successful security outcome.
+Judge models can themselves follow instructions embedded in answers or retrieved evidence.
+Use isolated evaluation prompts, constrained outputs, and human review of adversarial samples.
+An automatic judge's explanation may reveal sensitive source text and needs the same data handling controls.
+Treat prompt-injection resistance as an evaluated property with unresolved risk, not a blanket guarantee.
+
+### Evaluation design and counterfactual tests
+
+Define the end-user task and the decision that an answer is intended to support.
+Construct evaluation questions from the permitted population without exposing private examples in public reports.
+Use document-family or time-based splits when related sources or revisions could leak across sets.
+Reserve a final test set until the retrieval and prompting decisions have been selected.
+Training on a test question or repeatedly tuning against it invalidates its role as an independent holdout.
+Label the principal, action, policy snapshot, and question time for each evaluation query.
+Gold relevance must include only evidence accessible to that principal under the stated snapshot.
+A source that was accessible last week may not belong to today's eligible set.
+Label supporting spans, not only documents, when claims depend on specific clauses.
+A relevant document can contain both a supporting passage and a contradictory or obsolete passage.
+Label whether the answer requires all evidence units or any one alternative source.
+For conjunctive questions, finding one required span is not complete evidence coverage.
+For alternative sources, avoid double-counting equivalent copies as independently required facts.
+Maintain a separate no-answer set with evidence that the eligible corpus was searched adequately.
+Absence judgments are provisional when the corpus inventory or relevance labels are incomplete.
+Include permission-denied cases without requiring the system to reveal that a forbidden source exists.
+Record a third state for ambiguous or disputed labels instead of forcing every item into relevant or irrelevant.
+Specify the adjudication process and preserve disagreement where experts cannot resolve it.
+Measure retrieval on the same corpus snapshot, principal, query set, and relevance version when comparing systems.
+Compare exact vector retrieval to approximate retrieval within the identical authorized population.
+Exact vector neighbors are a reference for approximation fidelity, not ground truth for semantic relevance.
+A perfect ANN match can still retrieve irrelevant documents if the embedding representation is poor.
+A poor ANN match can coexist with good task relevance if substitute results answer the question.
+Measure both neighbor overlap and gold relevance, with their different denominators stated.
+Measure candidate recall before reranking and evidence coverage after packing.
+If candidate recall is high and context recall falls, investigate reranking, deduplication, and token packing.
+If context contains support but answers fail, inspect generation, claim mapping, and citation validation.
+If the answer is supported but unhelpful, task usefulness and response clarity need separate assessment.
+Distinguish unsupported material claims from minor stylistic differences that do not change the decision.
+Define whether one unsupported critical claim makes the entire answer a failure.
+Treat a cited but inaccessible source as an authorization failure, not merely a broken link.
+Track false abstention on answerable questions and unsupported answering on unanswerable questions.
+A system that always refuses may have zero unsupported answers but poor task completion.
+A system that always answers may have high completion but unacceptable unsupported claims.
+Select operating points using explicit harm and utility assumptions, not an unqualified single score.
+Report micro averages when each claim should have equal weight and macro averages when each query should have equal weight.
+These averages can differ substantially when some answers contain many more claims.
+Report the distribution of number of claims per answer alongside claim-level support.
+Use paired comparisons because the same query is evaluated under both configurations.
+For correlated queries from one source family, account for the family as a sampling cluster.
+A confidence interval reflects the specified sampling procedure, not unknown systematic labeling bias.
+Report query counts and uncertainty for each subgroup before interpreting a difference.
+A zero observed security failure on a small sample is not proof of zero risk.
+Measure latency end to end, including authentication, policy evaluation, retries, queueing, and answer validation.
+Report error rates and timeouts alongside latency; excluding failed slow requests can mislead.
+Use production-like concurrency and document the workload before interpreting load-test numbers.
+Check that the evaluated provider configuration and data-processing boundary match the proposed use.
+Monitor the same protected quality slices after source, permissions, chunker, index, or model changes.
+Separate deliberate policy changes from regressions by evaluating against the correct historical snapshot.
+When new labels are added, recompute both systems against the same revised label set.
+A dashboard cannot substitute for an auditable sample of actual claims and source spans.
+
+### Worked counterexamples: independently checkable invented inputs
+
+**ILLUSTRATIVE:** A query has four eligible relevant spans and a candidate list of six distinct spans.
+The six candidates contain three relevant spans, so candidate recall is 3/4 = 0.75.
+After reranking, two relevant spans appear in the three selected context items.
+Context recall is 2/4 = 0.50 and observed precision is 2/3, approximately 0.667.
+The reranker or packer lost one candidate hit; this does not prove which component caused the loss.
+Compare the reranked list with the packed list to identify the first stage that dropped it.
+If a previously unseen source is introduced by a second retrieval call, the fixed-candidate ceiling no longer applies.
+
+**ILLUSTRATIVE:** A response contains eight material claims, six fully supported and two unsupported.
+Under an all-claims-equal definition, claim support is 6/8 = 0.75.
+If the two unsupported claims are the only safety-critical ones, the aggregate conceals the main risk.
+Report the critical-claim slice as 0/2 = 0 and describe the predefined criticality criterion.
+Suppose each of the eight claims has a citation but only six citations support their claims.
+Citation coverage is 8/8 = 1, whereas supported-claim rate remains 6/8 = 0.75.
+The difference demonstrates why link counting cannot establish factual support.
+
+**ILLUSTRATIVE:** There are 40 answerable and 20 unanswerable questions in a held-out set.
+A system answers 32 answerable questions correctly and abstains on the other eight.
+It correctly abstains on 15 unanswerable questions and gives unsupported answers on five.
+Answerable task success is 32/40 = 0.80 under this explicitly strict correctness definition.
+No-answer correct-abstention rate is 15/20 = 0.75.
+No-answer unsupported-answer rate is 5/20 = 0.25.
+The overall count of correct actions is 32+15 = 47 out of 60, approximately 0.783.
+The overall value hides the different error types, so retain the two slice metrics.
+These example counts are constructed, not measured performance or evidence of deployment.
+
+**ILLUSTRATIVE:** A prompt has a 4096-token combined limit and reserves 500 instruction tokens.
+The question uses 100 tokens, serialized framing uses 96, and output reserve is 600.
+The remaining evidence budget is 4096-500-100-96-600 = 2800 tokens by R3.
+A selection of four 650-token passages plus 100 tokens of citation labels totals 2700.
+The package fits with 100 tokens of remaining headroom under these assumptions.
+Adding a fifth 650-token passage would exceed the budget by 550 tokens.
+Do not silently truncate a source while presenting its citation as if the entire source was read.
+A separate provider input limit or hidden framing can make the nominal calculation insufficient.
+
+**ILLUSTRATIVE:** User U can read source A at retrieval time but loses access before response delivery.
+A generated claim derived only from A must be removed or regenerated from another authorized source.
+Retaining the fact while stripping the link is still an unauthorized disclosure.
+If no safe reconstruction is available, suppress the entire affected response.
+A response-time check cannot undo disclosure to a previously unauthorized model or logging service.
+Every earlier processor therefore needs its own permitted-purpose and data-access check.
+
+**ILLUSTRATIVE:** A cache contains a response derived from sources A and B.
+Both were authorized for user U when generated, but B is later revoked for user U.
+Even if the same user repeats the same query, the old answer cannot be replayed unchanged.
+Reauthorize both contributing sources and regenerate any claims that depended on B.
+If the cache stores only the answer text and no claim-to-source dependencies, selective removal is unreliable.
+Under a fail-closed contract, invalidate that entire cached answer instead.
+
+### Operational acceptance and change control
+
+Define security invariants before setting relevance or latency targets.
+Document which services may see each data class and what action each service may perform.
+Test denied access at index filtering, reranking, model prompting, output replay, and citation opening.
+Include access changes between retrieval and generation in the test schedule.
+Include multi-tenant identifiers that deliberately collide in non-security display fields.
+Record whether policy failure returns an access-safe error and whether retries preserve the same restriction.
+Test policy cache expiration and invalidation with delayed and reordered events.
+Test parent expansion where a neighboring chunk has a stricter policy than the matched chunk.
+Test logs and traces for leakage using synthetic markers rather than real secrets.
+Test that source deletions propagate to all indexes and caches within the defined contract.
+Test stale and newly effective source versions using questions with explicit as-of dates.
+Test that chunk revisions preserve citations or return an honest unavailable state.
+Use versioned configuration for model, index, policy integration, and evaluation definitions.
+Deploy only after the responsible owners accept unresolved risks and define operational guardrails.
+A canary or shadow comparison must respect the same authorization boundaries as the normal path.
+Do not send protected inputs to an experimental provider without the required processing authorization.
+A shadow system's outputs and logs can leak data even when no answer is shown to the user.
+Track quality, permission denials, policy errors, source freshness, and cost by supported slice.
+Alert on a security invariant breach independently of whether average retrieval quality improves.
+A rollback should restore a known compatible combination of query encoder, index, and chunk mapping.
+Rolling back only the query encoder while retaining incompatible document vectors can corrupt retrieval.
+Keep prior artifacts only for their approved retention period and access scope.
+After rollback, recheck source and permission freshness; old index snapshots may be unsafe.
+For an incident, preserve minimal authorized evidence and identify affected recipients and source versions.
+Contain unauthorized processing first, then investigate retrieval and generation quality separately.
+Do not describe a hypothetical procedure as an incident that actually occurred.
 
 ### Evidence-based evaluation protocol
 
@@ -1342,10 +1391,6 @@ Answers describe reasoning, alternatives and a common mistake; none reports an o
 **Application:** A model can still ignore, misread or contradict the evidence.
 **Boundary or alternative:** Alternatives include direct database lookup or a curated answer without generation.
 **Common error:** Red flag: claiming retrieval guarantees factuality.
-**Follow-up:** identify the input, policy or evidence change that would alter the answer.
-**Strong response:** names the affected pipeline stage and a discriminating check.
-**Scoring:** full credit requires the answer and the stated boundary; partial credit for an answer without its condition.
-**Support:** use the relevant definition, formula or invariant in Sections 3–10, not an unsupported production claim.
 
 ### Question 02: How many chunks cover 1000 tokens with length 300 and overlap 50?
 
@@ -1354,10 +1399,6 @@ Answers describe reasoning, alternatives and a common mistake; none reports an o
 **Application:** The last chunk ends at token 1000 and may be shorter than 300.
 **Boundary or alternative:** A structure-aware splitter can produce a different count.
 **Common error:** Red flag: divide by 300 while ignoring overlap.
-**Follow-up:** identify the input, policy or evidence change that would alter the answer.
-**Strong response:** names the affected pipeline stage and a discriminating check.
-**Scoring:** full credit requires the answer and the stated boundary; partial credit for an answer without its condition.
-**Support:** use the relevant definition, formula or invariant in Sections 3–10, not an unsupported production claim.
 
 ### Question 03: Why can a high precision at one still be insufficient?
 
@@ -1366,10 +1407,6 @@ Answers describe reasoning, alternatives and a common mistake; none reports an o
 **Application:** It finds one of two relevant chunks so recall is 0.5.
 **Boundary or alternative:** A second relevant result raises recall to 1 for that example.
 **Common error:** Red flag: treating one relevant hit as complete answer evidence.
-**Follow-up:** identify the input, policy or evidence change that would alter the answer.
-**Strong response:** names the affected pipeline stage and a discriminating check.
-**Scoring:** full credit requires the answer and the stated boundary; partial credit for an answer without its condition.
-**Support:** use the relevant definition, formula or invariant in Sections 3–10, not an unsupported production claim.
 
 ### Question 04: What should happen when an unauthorized passage is the closest vector?
 
@@ -1378,10 +1415,6 @@ Answers describe reasoning, alternatives and a common mistake; none reports an o
 **Application:** Retrieve within the authorized scope and recheck on disclosure.
 **Boundary or alternative:** If policy state is unavailable, follow a fail-closed contract.
 **Common error:** Red flag: let an external reranker read it and filter the final response.
-**Follow-up:** identify the input, policy or evidence change that would alter the answer.
-**Strong response:** names the affected pipeline stage and a discriminating check.
-**Scoring:** full credit requires the answer and the stated boundary; partial credit for an answer without its condition.
-**Support:** use the relevant definition, formula or invariant in Sections 3–10, not an unsupported production claim.
 
 ### Question 05: Can a cross-encoder repair a low-recall candidate set?
 
@@ -1390,10 +1423,6 @@ Answers describe reasoning, alternatives and a common mistake; none reports an o
 **Application:** It can improve ordering when the needed source is already present.
 **Boundary or alternative:** An additional retrieval or expansion stage changes the premise.
 **Common error:** Red flag: increasing reranker compute without checking candidate recall.
-**Follow-up:** identify the input, policy or evidence change that would alter the answer.
-**Strong response:** names the affected pipeline stage and a discriminating check.
-**Scoring:** full credit requires the answer and the stated boundary; partial credit for an answer without its condition.
-**Support:** use the relevant definition, formula or invariant in Sections 3–10, not an unsupported production claim.
 
 ### Question 06: How do you compare two different chunkers fairly?
 
@@ -1402,10 +1431,6 @@ Answers describe reasoning, alternatives and a common mistake; none reports an o
 **Application:** Measure source-span recall, answer support, latency and context cost.
 **Boundary or alternative:** Re-adjudicate uncertain mappings and report incomplete labels.
 **Common error:** Red flag: compare recall on old chunk IDs after redefining boundaries.
-**Follow-up:** identify the input, policy or evidence change that would alter the answer.
-**Strong response:** names the affected pipeline stage and a discriminating check.
-**Scoring:** full credit requires the answer and the stated boundary; partial credit for an answer without its condition.
-**Support:** use the relevant definition, formula or invariant in Sections 3–10, not an unsupported production claim.
 
 ### Question 07: Compute the RRF score for ranks 1 and 3 with K=60.
 
@@ -1414,10 +1439,6 @@ Answers describe reasoning, alternatives and a common mistake; none reports an o
 **Application:** A document appearing only at rank 1 scores approximately 0.016393.
 **Boundary or alternative:** The score is not a relevance probability.
 **Common error:** Red flag: treating K as the number of results rather than a smoothing constant.
-**Follow-up:** identify the input, policy or evidence change that would alter the answer.
-**Strong response:** names the affected pipeline stage and a discriminating check.
-**Scoring:** full credit requires the answer and the stated boundary; partial credit for an answer without its condition.
-**Support:** use the relevant definition, formula or invariant in Sections 3–10, not an unsupported production claim.
 
 ### Question 08: Why are source citations alone not enough?
 
@@ -1426,10 +1447,6 @@ Answers describe reasoning, alternatives and a common mistake; none reports an o
 **Application:** Evaluate each material claim against the specific version and span.
 **Boundary or alternative:** A response should qualify or abstain where evidence does not support the claim.
 **Common error:** Red flag: counting links instead of checking support.
-**Follow-up:** identify the input, policy or evidence change that would alter the answer.
-**Strong response:** names the affected pipeline stage and a discriminating check.
-**Scoring:** full credit requires the answer and the stated boundary; partial credit for an answer without its condition.
-**Support:** use the relevant definition, formula or invariant in Sections 3–10, not an unsupported production claim.
 
 ### Question 09: A retrieval metric improves but users receive worse answers; diagnose.
 
@@ -1438,10 +1455,6 @@ Answers describe reasoning, alternatives and a common mistake; none reports an o
 **Application:** Compare paired traces on the same eligible queries and source snapshots.
 **Boundary or alternative:** Audit whether required evidence survives context packing and whether citations entail claims.
 **Common error:** Red flag: infer answer improvement from a single retrieval metric.
-**Follow-up:** identify the input, policy or evidence change that would alter the answer.
-**Strong response:** names the affected pipeline stage and a discriminating check.
-**Scoring:** full credit requires the answer and the stated boundary; partial credit for an answer without its condition.
-**Support:** use the relevant definition, formula or invariant in Sections 3–10, not an unsupported production claim.
 
 ### Question 10: How does revocation affect retrieval caches?
 
@@ -1450,10 +1463,6 @@ Answers describe reasoning, alternatives and a common mistake; none reports an o
 **Application:** Reauthorize cached material before disclosure or invalidate on a trusted policy event.
 **Boundary or alternative:** Evaluate multi-user isolation and revocation races, including citation access.
 **Common error:** Red flag: assume a cache hit preserves the original permission indefinitely.
-**Follow-up:** identify the input, policy or evidence change that would alter the answer.
-**Strong response:** names the affected pipeline stage and a discriminating check.
-**Scoring:** full credit requires the answer and the stated boundary; partial credit for an answer without its condition.
-**Support:** use the relevant definition, formula or invariant in Sections 3–10, not an unsupported production claim.
 
 ### Question 11: How should a system answer when two current sources conflict?
 
@@ -1462,10 +1471,6 @@ Answers describe reasoning, alternatives and a common mistake; none reports an o
 **Application:** Do not arbitrarily select the passage with the higher cosine score.
 **Boundary or alternative:** A product-specific policy may identify an authoritative source if that rule is supported.
 **Common error:** Red flag: hide conflict because one source ranked first.
-**Follow-up:** identify the input, policy or evidence change that would alter the answer.
-**Strong response:** names the affected pipeline stage and a discriminating check.
-**Scoring:** full credit requires the answer and the stated boundary; partial credit for an answer without its condition.
-**Support:** use the relevant definition, formula or invariant in Sections 3–10, not an unsupported production claim.
 
 ### Question 12: How would you measure ANN approximation separately from embedding quality?
 
@@ -1474,10 +1479,6 @@ Answers describe reasoning, alternatives and a common mistake; none reports an o
 **Application:** Then compare both lists to relevance labels, which answers a different question.
 **Boundary or alternative:** Report latency, filter semantics and slice sizes with the approximation metric.
 **Common error:** Red flag: interpret poor relevance as proof that ANN approximation is at fault.
-**Follow-up:** identify the input, policy or evidence change that would alter the answer.
-**Strong response:** names the affected pipeline stage and a discriminating check.
-**Scoring:** full credit requires the answer and the stated boundary; partial credit for an answer without its condition.
-**Support:** use the relevant definition, formula or invariant in Sections 3–10, not an unsupported production claim.
 
 ### Question 13: What changes if the token budget is cut in half?
 
@@ -1486,10 +1487,6 @@ Answers describe reasoning, alternatives and a common mistake; none reports an o
 **Application:** Select complementary current passages and avoid redundant overlap.
 **Boundary or alternative:** If necessary facts no longer fit, answer partially or abstain according to the product policy.
 **Common error:** Red flag: silently truncate the last evidence passage and keep its citation.
-**Follow-up:** identify the input, policy or evidence change that would alter the answer.
-**Strong response:** names the affected pipeline stage and a discriminating check.
-**Scoring:** full credit requires the answer and the stated boundary; partial credit for an answer without its condition.
-**Support:** use the relevant definition, formula or invariant in Sections 3–10, not an unsupported production claim.
 
 ### Question 14: Why is a no-answer query a separate evaluation slice?
 
@@ -1498,10 +1495,6 @@ Answers describe reasoning, alternatives and a common mistake; none reports an o
 **Application:** Verify whether the fact is genuinely absent or merely missed by retrieval.
 **Boundary or alternative:** Report the policy population and time at which absence was judged.
 **Common error:** Red flag: define undefined recall as zero without documenting a convention.
-**Follow-up:** identify the input, policy or evidence change that would alter the answer.
-**Strong response:** names the affected pipeline stage and a discriminating check.
-**Scoring:** full credit requires the answer and the stated boundary; partial credit for an answer without its condition.
-**Support:** use the relevant definition, formula or invariant in Sections 3–10, not an unsupported production claim.
 
 
 **Takeaway:** defend each answer using a defined population, permission boundary and observable evidence.

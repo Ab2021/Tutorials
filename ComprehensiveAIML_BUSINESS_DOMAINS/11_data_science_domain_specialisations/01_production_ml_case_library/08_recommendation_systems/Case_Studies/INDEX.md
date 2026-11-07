@@ -2,6 +2,8 @@
 
 > **Mandatory authoring contract:** Every authored case follows the [course authoring and numerical standards](../../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master. This collection contains draft content and planned cases; evidence, implementation stage and editorial status remain separate. Publication checks remain open.
 
+The Netflix and Spotify drafts have been expanded and remain unreviewed; published claims and hypothetical analyses are distinguished in each case.
+
 ## 1. Collection metadata
 
 | Field | Value |

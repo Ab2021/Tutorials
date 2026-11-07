@@ -8,7 +8,7 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | taxonomy | planned |
+| 1 | taxonomy | partial unreviewed draft: [candidate generation and eligibility](Cheat_Sheets/01_Candidate_Generation_Eligibility_and_Ranking.md) |
 | 2 | collaborative filtering | planned |
 | 3 | content-based | planned |
 | 4 | hybrid | planned |
@@ -16,7 +16,7 @@
 | 6 | sequential models | planned |
 | 7 | knowledge graphs | planned |
 | 8 | bandits | planned |
-| 9 | metrics | planned |
+| 9 | metrics | partial unreviewed draft: [eligible retrieval recall](Cheat_Sheets/01_Candidate_Generation_Eligibility_and_Ranking.md#5-worked-numerical-example); broader ranking metrics planned |
 | 10 | features | planned |
 | 11 | e-commerce | planned |
 | 12 | streaming | planned |
@@ -46,6 +46,6 @@ The [exact source crosswalk](../../../00_SOURCE_TOPIC_CROSSWALK.md) extends the 
 
 | Focused source brief | Required outputs / state |
 |---|---|
-| [Recommender methods](../../../00_SOURCE_COVERAGE_DATA_SCIENCE.md#ds-methods-08) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |
+| [Recommender methods](../../../00_SOURCE_COVERAGE_DATA_SCIENCE.md#ds-methods-08) | Candidate generation sheet is an unreviewed partial draft; remaining focused sheets and cases are planned |
 
 Source module numbers and course module numbers are different namespaces. Reuse matching existing lessons when authored, but do not drop distinct variants, cases, failure themes or source limitations.

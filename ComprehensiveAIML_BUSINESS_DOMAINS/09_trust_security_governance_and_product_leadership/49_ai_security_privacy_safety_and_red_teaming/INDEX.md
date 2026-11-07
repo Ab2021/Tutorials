@@ -9,7 +9,7 @@
 | # | Topic | Status |
 |---:|---|---|
 | 1 | AI threat modelling | planned |
-| 2 | prompt injection and tool abuse | planned |
+| 2 | prompt injection and tool abuse | partial: [enterprise agent approval gate](../../06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/Case_Studies/01_enterprise_agent_approval_gate.md) is a hypothetical, unreviewed case |
 | 3 | data/model supply chain | planned |
 | 4 | red teaming | planned |
 | 5 | incident response | planned |
@@ -48,7 +48,7 @@ The [exact source crosswalk](../../00_SOURCE_TOPIC_CROSSWALK.md) extends the ori
 
 | Focused source brief | Required outputs / state |
 |---|---|
-| [Execution surfaces, identity, trust, approval gates, sandboxing and blast radius](../../00_SOURCE_COVERAGE_AGENTS.md#agent-trust-approvals) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |
+| [Execution surfaces, identity, trust, approval gates, sandboxing and blast radius](../../00_SOURCE_COVERAGE_AGENTS.md#agent-trust-approvals) | A hypothetical approval-gate case is an unreviewed partial draft; remaining focused work is planned |
 | [Fine-tuning Module 13 — safety, alignment and interpretability](../../00_SOURCE_COVERAGE_CUDA_TRAINING.md#ft-safety) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |
 
 Source module numbers and course module numbers are different namespaces. Reuse matching existing lessons when authored, but do not drop distinct variants, cases, failure themes or source limitations.

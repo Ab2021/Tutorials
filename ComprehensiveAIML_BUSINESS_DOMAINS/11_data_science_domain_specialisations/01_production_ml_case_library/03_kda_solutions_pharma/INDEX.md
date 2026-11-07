@@ -10,9 +10,9 @@
 |---:|---|---|
 | 1 | KDA framing | planned |
 | 2 | data ecosystem | planned |
-| 3 | HCP and patient analytics | planned |
+| 3 | HCP and patient analytics | partial: [illustrative HCP promotional-response case](Case_Studies/01_HCP_Promotional_Response_Driver_Analysis_Launch_Brand.md) is an unreviewed draft; patient analytics planned |
 | 4 | access and formulary | planned |
-| 5 | causal drivers | planned |
+| 5 | causal drivers | partial: [HCP offer experiment case](Case_Studies/01_HCP_Promotional_Response_Driver_Analysis_Launch_Brand.md); broader driver methods planned |
 | 6 | launch versus mature brands | planned |
 | 7 | validation and governance | planned |
 | 8 | technology stack | planned |
@@ -34,6 +34,6 @@ The [exact source crosswalk](../../../00_SOURCE_TOPIC_CROSSWALK.md) extends the 
 
 | Focused source brief | Required outputs / state |
 |---|---|
-| [Pharma key-driver analysis](../../../00_SOURCE_COVERAGE_DATA_SCIENCE.md#ds-cases-03) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |
+| [Pharma key-driver analysis](../../../00_SOURCE_COVERAGE_DATA_SCIENCE.md#ds-cases-03) | One illustrative HCP case is an unreviewed draft; other cases and focused sheets remain planned |
 
 Source module numbers and course module numbers are different namespaces. Reuse matching existing lessons when authored, but do not drop distinct variants, cases, failure themes or source limitations.

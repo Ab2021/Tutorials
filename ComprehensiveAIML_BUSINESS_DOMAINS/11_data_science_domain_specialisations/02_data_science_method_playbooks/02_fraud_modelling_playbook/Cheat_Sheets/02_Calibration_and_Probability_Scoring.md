@@ -399,6 +399,323 @@ A flexible map may overfit rare positives and produce overconfident plateaus.
 Compare maps on a later untouched cohort, not on their fitting data.
 If evidence is too sparse, report uncertainty and consider a conservative predeclared fallback.
 A fallback's behavior, coverage and harm need their own validation.
+### 7.1 Design a probability contract before selecting a map
+
+Specify the transaction population before looking at the outcomes.
+For example, include completed authorizations at the instant of authorization.
+Do not include later cancellations merely because their outcomes are easier to observe.
+Record the population's exclusions as executable eligibility predicates.
+Specify whether repeated authorizations on one order are separate prediction opportunities.
+An order-level event cannot be joined to transaction forecasts without an allocation rule.
+Record the prediction timestamp in UTC and retain the original source timestamp.
+Separate event time from ingestion time when reconstructing historical eligibility.
+Define the horizon as an interval relative to that prediction timestamp.
+State whether its endpoint is inclusive and whether weekends affect adjudication time.
+Define fraud using an adjudication standard rather than a review flag alone.
+Distinguish disputed, confirmed, reversed and unresolved outcomes.
+Explicitly choose which of these states counts as the positive event.
+An unresolved state is not automatically a negative event.
+Record the outcome revision timestamp and the reporting cutoff used for each analysis.
+Freeze predictions at the original decision time instead of rescoring with new features.
+Keep both the original model score and the served calibrated probability.
+Store the exact feature, model and calibrator artifact identifiers.
+Record any fallback probability and the reason the fallback was used.
+Store the decision and policy version alongside, but not inside, the probability definition.
+Name whether the target is the observed-policy event or an untreated potential outcome.
+The first target may change as the intervention policy changes.
+The second target is counterfactual for intervened cases and needs identification assumptions.
+A randomly sampled retrospective review does not reverse a prevented event.
+Use an independently observable endpoint or a permitted experiment for the causal question.
+Record the label source and its known blind spots.
+For example, a customer dispute is not necessarily the same event as confirmed fraud.
+A probability for one event cannot be judged using a different endpoint without qualification.
+For amount-weighted financial decisions, define loss severity in addition to event incidence.
+Transaction-weighted calibration does not imply dollar-weighted calibration.
+For a dollar-weighted analysis, predeclare the weights and the target population they induce.
+Do not substitute a dollar-weighted result for the transaction-level statement.
+Document which users may see the probability and which decisions it may inform.
+Treat a risk estimate as evidence for review, not as a factual finding about a person.
+Record the approval owner for policy changes and a safe operational fallback.
+Contract changes require a new comparison design, not an unexplained dashboard splice.
+
+### 7.2 Temporal partition and calibrator selection
+
+Use chronological splits to approximate the actual direction of deployment.
+Train the base model only on features available as of each historical decision.
+Reserve a subsequent interval for fitting candidate calibration maps.
+Reserve a later interval for selecting among candidates and operational thresholds.
+Keep a still-later untouched test cohort for the final comparison.
+Allow each cohort to mature according to the outcome contract before using labels.
+If windows overlap in outcome time, ensure labels used in training existed by the training cutoff.
+An event's prediction date alone is insufficient to establish label availability.
+Document whether customers or devices may recur across partitions.
+Recurring entities can be legitimate in deployment, but correlation affects uncertainty.
+If the intended application is new merchants, add a merchant-held-out evaluation.
+A random event split can conceal future drift and shared-entity dependence.
+Fit preprocessing inside each training fold to avoid leaking validation distributions.
+Calibration fitting consumes labels even when the base model weights are frozen.
+Consequently the calibrator-fit cohort is not an unbiased final evaluation cohort.
+Time-aware cross-fitting may produce out-of-fold calibration predictions when data are limited.
+Each out-of-fold prediction must be produced without its own label or future labels.
+Cross-fitting design must reflect the deployment's actual retraining schedule.
+An intercept-only adjustment assumes the log-odds slope and shape remain appropriate.
+It is often more stable than a flexible map when only a prevalence offset is plausible.
+Its apparent simplicity does not establish the prior-shift assumption.
+Logistic recalibration can modify both an intercept and a score slope.
+If input scores are probabilities, logit-transform only interior values under a declared boundary policy.
+For exact zero or one inputs, justify any clipping before taking logarithms.
+Keep unclipped raw values so numerical handling remains auditable.
+Isotonic regression can fit a general nondecreasing relationship on supported scores.
+It can create flat steps and can assign extreme outputs when labels are sparse.
+The library's behavior outside the fitted score range must be explicitly specified.
+Extrapolation is a separate engineering choice, not evidence about tail risk.
+Select methods using a predeclared proper score and diagnostic constraints.
+Compare all candidates on the identical rows with identical labels and weights.
+Report paired loss differences rather than unrelated point estimates.
+Use time-block or entity-cluster resampling when dependence requires it.
+Neither an interval nor an average loss guarantees acceptable tail behavior.
+If alternatives are statistically indistinguishable, consider complexity and operational risk.
+Do not declare a winner from repeated uncorrected comparisons on the final test.
+Freeze the chosen calibrator and its associated model as one deployable bundle.
+Changing the base model can invalidate a previously fitted calibration map.
+If no candidate is supported, retain the prior governed policy and collect better labels.
+
+### 7.3 Worked audit-weighting and missing-outcome examples
+
+**ILLUSTRATIVE:** A population contains 900 low-score and 100 high-score events.
+Suppose a randomized audit samples each low-score event with probability 0.10.
+Suppose it samples each high-score event with probability 0.50.
+These probabilities are design inclusion probabilities, not estimated fraud risks.
+An audit returns 90 low-score labels, of which 9 are positive.
+It returns 50 high-score labels, of which 20 are positive.
+The unweighted audited positive rate is 29/140, approximately 0.2071.
+That rate overrepresents the high-score stratum relative to the population.
+For the population positive count, use the Horvitz–Thompson weighted total.
+Validity: Every event has known positive inclusion probability and its sampled label is accurate.
+Derivation: Each observed event contributes its outcome divided by its inclusion probability.
+Its expected contribution over the audit randomization equals its fixed outcome.
+FORMULA [C10]: estimated total positives = sum over audited events of Y_i/q_i.
+WHERE: Y_i is the audited binary outcome and q_i is its design inclusion probability.
+CONSTRAINT: q_i > 0 for every target event; nonresponse needs additional treatment.
+NUMERICAL EXAMPLE: 9/0.10 + 20/0.50 = 90 + 40 = 130 estimated positives.
+INTERPRETATION: The design-weighted population rate estimate is 130/1,000 = 0.13.
+Boundary: This is one realization; the design-unbiased total is not an exact known outcome total.
+The two sample sizes coincidentally match their expected audit counts in this illustration.
+In another realization, the weighted total population count need not equal 1,000.
+Dividing by the known population count gives a design-unbiased mean under the stated design.
+A ratio of estimated weighted positives to estimated weighted exposure can reduce variability.
+That Hájek ratio is generally not exactly design-unbiased in finite samples.
+For a reliability bin, apply the same design weights to observed outcomes and forecasts.
+Report weighted observed rate and weighted mean prediction using identical bin membership.
+Record both raw audit counts and weighted exposure; neither alone describes precision.
+The sampling design, including stratification and clustering, determines variance estimation.
+Estimated label-observation probabilities add uncertainty beyond known audit probabilities.
+If some audited events do not respond, audit selection alone does not fix nonresponse bias.
+Investigate response rates by stratum, time and any observed predictors of response.
+If the probability of a trustworthy label is zero in a region, inverse weighting cannot recover it.
+Obtain permitted coverage or clearly label that region as unidentified.
+Large weights can make an estimate depend heavily on a small number of cases.
+An effective sample size diagnostic is (sum weights)^2 divided by sum squared weights.
+For weights 10, 10, 2 and 2, this is 24 squared divided by 208, approximately 2.77.
+That diagnostic is not a substitute for design-aware confidence intervals.
+Weight truncation can reduce variance but changes the estimator and can introduce bias.
+Report the cap and a sensitivity comparison if truncation is used.
+
+**ILLUSTRATIVE:** In a cohort of 100 events, 70 labels are resolved.
+Of those 70 resolved labels, 7 are positive and 63 are negative.
+The other 30 are genuinely unresolved at the reporting cutoff.
+Without additional assumptions, the final positive count lies between 7 and 37.
+Thus the cohort event rate lies between 0.07 and 0.37.
+The resolved-only rate, 7/70 = 0.10, is not necessarily the full-cohort rate.
+The bounds narrow only if additional credible information restricts unresolved outcomes.
+For example, if exactly 5 unresolved cases ultimately become positive, the final rate is 0.12.
+That hypothetical value is not identifiable from the observed 70 labels alone.
+Compare cohorts at equal ages and preserve the count still unresolved at each age.
+Estimate a delay model only when its censoring assumptions are defensible.
+Outcome-dependent delays can defeat a model assuming independent censoring.
+An audit that detects fraud earlier can itself change the apparent delay distribution.
+Stratify delay monitoring by policy and label channel where sample support permits.
+
+### 7.4 Convert risk into action only with incremental economics
+
+Ranking by fraud probability is not the same as ranking by prevented loss.
+A high-risk event can have low recoverable value or low intervention effectiveness.
+A moderate-risk event can have greater expected preventable loss.
+Define the no-action loss and each action's loss on a common currency basis.
+Include operational effort, customer friction and any intervention-related loss.
+Avoid double counting prevented loss when comparing action and no-action outcomes.
+Let p_i be the no-action event probability for event i.
+Let L_i be expected monetary loss conditional on that event, before intervention.
+Let r_i be the fraction of that loss prevented by a specific action.
+Let c_i be the action's incremental operational and customer cost.
+Validity: Conditional loss and prevention fraction are compatible with the target and action.
+Derivation: Expected no-action loss is p_i*L_i; preventable loss is p_i*L_i*r_i.
+Subtract the incremental action cost to obtain the net benefit of acting.
+FORMULA [C11]: incremental expected benefit d_i = p_i*L_i*r_i - c_i.
+WHERE: p_i and r_i are dimensionless; L_i and c_i are currency per event.
+CONSTRAINT: The simplified model assumes the action changes no other relevant outcomes.
+NUMERICAL EXAMPLE: p=0.20, L=100, r=0.50, c=3 gives d=10-3=7 currency.
+INTERPRETATION: Under these assumptions acting saves an expected 7 currency per eligible event.
+Boundary: A calibrated p alone does not identify r, loss severity or customer harm.
+Estimate r using credible causal evidence, not the rate observed in reviewed cases alone.
+If prevention affects event probability and conditional severity differently, model both effects.
+If a review can trigger multiple downstream actions, include the full action pathway.
+For a block, consider successful fraud prevention and the cost of denying legitimate transactions.
+For a soft challenge, consider completion, abandonment and fraudster adaptation.
+An expected-value calculation hides distributional harms unless those are separately examined.
+Some actions may be prohibited or require human authorization regardless of expected value.
+**ILLUSTRATIVE:** Case A has p=0.30, L=20, r=0.50, c=1.
+Its net benefit is 0.30*20*0.50-1 = 2 currency.
+Case B has p=0.10, L=200, r=0.50, c=1.
+Its net benefit is 0.10*200*0.50-1 = 9 currency.
+With one equal-duration slot and these inputs, B is selected despite its lower risk.
+That conclusion changes if the action effects or losses are materially different.
+If all benefits are negative, an upper-bound capacity constraint does not require filling slots.
+If all cases use one slot and benefits are additive, select the largest positive benefits.
+If review duration differs, the problem is not generally solved by risk ranking.
+Even benefit per minute can fail to solve the resulting discrete knapsack exactly.
+Account for deadlines, staffing skills and dependencies when they are operational constraints.
+Quantify sensitivity to uncertain prevention rates and cost estimates.
+A ranking that changes under small plausible changes warrants additional evidence.
+The policy evaluation should measure both expected value and actual downstream burden.
+
+### 7.5 Monitoring design, delayed feedback and response
+
+Partition monitoring into immediate data checks and delayed outcome checks.
+Immediate checks include eligible volume, missing features and serving failures.
+Compare missingness with the feature contract, not only with yesterday's value.
+Monitor raw score and calibrated probability distributions separately.
+A score drift alert does not by itself establish calibration drift.
+Track invalid probabilities, exact boundary outputs and fallback rates.
+Monitor traffic by model version and calibration version to detect mismatched bundles.
+Retain the model's predicted probability before any policy override.
+Track policy actions, capacity use, queue age and overrides as operational outcomes.
+For each outcome cohort, report its decision-time range and evaluation cutoff.
+Display age since decision and fraction of events with resolved labels.
+Report outcome metrics only for the declared maturity and observation rules.
+Separate label-source changes from changes in the underlying event definition.
+Track the rate of subsequent label revisions after initial closure.
+Compare observed outcomes with total predicted events in each mature cohort.
+The difference is meaningful only when labels represent the target population.
+Report bin counts, forecast support and intervals next to reliability gaps.
+Use fixed probability ranges for longitudinal comparisons when feasible.
+Also inspect quantile bins for tail detail, while displaying their changing boundaries.
+Monitor log loss and Brier loss against a prespecified baseline.
+Compare both on identical cohorts and identify any probability clipping.
+Monitor AUC and capacity-specific precision separately from calibration.
+When the cohort contains no positives or no negatives, AUC is undefined.
+Do not fill an undefined metric with zero or carry forward an old value.
+Distinguish a missing metric from a metric that breached its operational threshold.
+For audit-weighted metrics, retain inclusion probabilities and the sampling design version.
+Monitor the fraction of eligible events with positive audit inclusion probability.
+Track effective sample size and confidence intervals alongside weighted estimates.
+Investigate segment-level changes with predeclared segments and minimum evidence rules.
+Too many unplanned slices produce chance alarms even under stability.
+Escalate severe business harm even if a statistical test is inconclusive.
+Use repeated measures carefully: sequential monitoring changes false-alarm behavior.
+Calibrate alert thresholds to a stated false-alarm and detection-delay tradeoff.
+Route data-contract failures to serving or data owners before retraining the model.
+Route unresolved-label and audit-coverage failures to the investigation operations owner.
+Route confirmed model degradation to the model owner with a frozen evidence package.
+The package includes cohort SQL or equivalent lineage, artifacts, counts and metric definitions.
+Check whether a change coincides with an intervention, label or merchant-mix change.
+Recalibrating on a selected review queue can reinforce the original selection bias.
+An intercept adjustment should follow evidence for its assumptions, not merely a drifting mean.
+Shadow a candidate map before exposing it to decision-making.
+Shadow outcomes still reflect the active policy, not the candidate policy's causal effect.
+Use controlled rollout when policy effects and ethical constraints permit.
+Preserve audit coverage during rollout so future evaluation remains possible.
+Set a rollback trigger based on both operational safety and decision consequences.
+On rollback, restore a compatible model-map bundle and record the policy transition time.
+Reassess after mature outcomes arrive, including label revisions and subgroup impacts.
+Document residual uncertainty and the next scheduled assessment.
+
+### 7.6 Intervals, rare outcomes and calibration uncertainty
+
+A bin's event count is not the same thing as certainty about its event rate.
+For independent identically distributed Bernoulli outcomes, the count follows a binomial model.
+Independence can fail when several transactions come from one customer or fraud ring.
+Common shocks can create dependence across many customers in the same period.
+An interval based on independent rows may then be misleadingly narrow.
+Resample independent clusters or time blocks according to the actual dependence structure.
+The bootstrap resampling unit must preserve the dependence relevant to the estimand.
+If both account and calendar dependence matter, a one-way resample may still understate uncertainty.
+When few independent clusters exist, even a cluster bootstrap can be unreliable.
+Report the number of independent clusters as well as the total transaction count.
+Choose intervals before inspecting which subgroup appears most concerning.
+If reporting many intervals, distinguish exploratory analysis from confirmatory comparisons.
+A confidence interval is a property of a repeated-sampling procedure, not a posterior probability.
+It does not quantify misspecified labels, unmeasured selection or policy-induced target changes.
+For zero positives in n independent Bernoulli observations, exact binomial bounds remain nonzero.
+Validity: These observations share a fixed event probability and are independent.
+Derivation: The probability of zero events is (1-p)^n under the binomial model.
+For a one-sided 95% upper limit, solve (1-p)^n = 0.05 for p.
+FORMULA [C12]: upper limit = 1 - 0.05^(1/n), when zero positives are observed.
+WHERE: n is the positive integer number of independent observations; p is the event rate.
+CONSTRAINT: Common p, independence and a prespecified one-sided 95% confidence procedure.
+NUMERICAL EXAMPLE: n=100 gives upper limit approximately 0.0295.
+INTERPRETATION: Zero observed positives is compatible with rates approaching 3% at this confidence level.
+Boundary: This interval does not correct selective audits or a mislabeled cohort.
+The familiar approximation 3/n is close here but is not the exact expression.
+If forecasts vary within a bin, a binomial interval for one common event rate is a simplification.
+The predicted mean is itself estimated when the target population is sampled.
+For weighted audits, use a variance estimator consistent with the actual sampling design.
+For repeated merchants, consider whether sampling clusters rather than events is appropriate.
+Quantify uncertainty in metric differences using the same resampled records for both models.
+Paired differences exploit common outcomes and avoid pretending model scores are independent.
+Report an absolute loss difference, not only a percentage improvement over a tiny baseline.
+Define the denominator before presenting a relative gain.
+If the baseline loss is zero, the usual relative improvement ratio is undefined.
+Use absolute differences and report uncertainty when that denominator is near zero.
+Avoid interpreting an interval that overlaps zero as proof that two models are equivalent.
+An equivalence claim needs a predeclared practical margin and adequate statistical precision.
+For calibration slopes, consider separation or too few events before trusting an extreme estimate.
+Fitting a logistic recalibration on nearly separable data can yield unstable coefficients.
+Regularization changes the fitted estimator and must be selected without using final test labels.
+Record whether uncertainty includes calibrator fitting or only test-cohort sampling.
+Evaluation conditional on a frozen map and uncertainty over the whole training pipeline answer different questions.
+
+### 7.7 Reliability diagrams: an explicit construction
+
+Start with the same eligible mature cohort used by the numerical score comparison.
+Choose disjoint bins before inspecting outcomes when performing a confirmatory analysis.
+For fixed-width bins, specify which boundary receives a value exactly on an edge.
+Ensure the endpoint probability one is included in the final bin.
+For quantile bins, describe how tied probabilities are handled.
+Ties can prevent exactly equal bin sizes without splitting identical forecasts.
+Count rows and labels independently to expose a join that dropped unresolved cases.
+For each bin, calculate the number of valid forecasts.
+Calculate the number of trustworthy mature labels and their inclusion coverage.
+Calculate the mean forecast over the intended weighted population.
+Calculate the observed event rate using compatible sampling weights.
+Plot the forecast mean against the outcome rate with uncertainty bars.
+Overlay the diagonal representing agreement of bin means.
+Add a histogram or rug so readers can see where the model actually predicts.
+Mark empty bins as unsupported rather than drawing a fabricated rate.
+Mark bins with unresolved or selected labels as conditional on that observation process.
+If the mean forecast is 0.04 and the outcome rate is 0.06, the signed gap is +0.02.
+With 1,000 equally weighted cases, the forecast sum is 40 expected events.
+Sixty observed events exceed that expected count by 20 in this illustration.
+Random variation and dependence must be evaluated before calling the gap persistent.
+A bin containing forecasts from 0.01 to 0.09 can hide local over- and underprediction.
+Finer bins can reveal structure but increase sampling uncertainty.
+Smooth curves make the same tradeoff through their bandwidth or model assumptions.
+Compare multiple reasonable visualizations without selecting only the most flattering one.
+The chart should retain raw support counts even if rates are weighted.
+Use the same vertical scale when comparing charts to avoid visual exaggeration.
+Show the period, outcome horizon, label cutoff and model-map version in the caption.
+Separate historical-policy outcomes from experimental-arm outcomes.
+For subgroup charts, show denominator size and the corresponding overall reference.
+The overall reference can shift when the subgroup mix changes.
+An aggregate curve can move even when every subgroup's conditional curve is unchanged.
+This composition effect is distinct from deterioration within any subgroup.
+Examine comparable score regions before comparing subgroup gaps.
+Groups with no overlapping score support cannot support an equal-score comparison there.
+Small subgroup counts can make apparent disparities highly uncertain.
+Privacy rules may also limit how finely a sensitive group can be reported.
+Aggregate responsibly without erasing actionable harms or exposing individuals.
+The final chart is a diagnostic; it does not establish causal intervention impact.
+
 **Takeaway:** Select methods by the population, decision and evidence, not by a favored metric.
 
 ## 8. Failure Modes & Edge Cases
@@ -412,1024 +729,640 @@ No diagnostic result alone proves a cause; document the evidence before changing
 - **Symptom:** Probability histogram moves upward.
 - **Hypothesis A:** genuine event mix changed.
 - **Hypothesis B:** a feature serialization change altered scores.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** replay frozen events with old and new feature artifacts.
 - **Expected signal:** identical replay but changed live features.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** freeze risky rollout and repair the observed data contract.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** replay holdout and inspect live feature parity.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F02. Calibration intercept
 
 - **Symptom:** Mean predicted risk is too low.
 - **Hypothesis A:** prevalence increased under label shift.
 - **Hypothesis B:** outcomes matured differently across periods.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** compare mature random-audit prevalence and class-conditional score distributions.
 - **Expected signal:** higher prevalence with stable class-conditional score distributions.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** re-estimate the prior only if the label-shift assumptions hold.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** check later mature cohort and uncertainty.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F03. Calibration slope
 
 - **Symptom:** Extreme predictions are overconfident.
 - **Hypothesis A:** calibration model overfit.
 - **Hypothesis B:** distribution or label quality changed.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** compare slope on independent temporal cohorts and audit labels.
 - **Expected signal:** overconfidence persists on independently adjudicated labels.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** refit a constrained map on representative data.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** check slope and proper scores on untouched later data.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F04. Perfect ECE
 
 - **Symptom:** ECE is zero in a broad bin.
 - **Hypothesis A:** opposing local errors cancel.
 - **Hypothesis B:** sample happened to align with forecasts.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** inspect finer fixed bins with counts and uncertainty.
 - **Expected signal:** opposing positive and negative local gaps.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** report local gaps rather than hiding cancellation.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** repeat on later held-out cohort.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F05. Sparse tail
 
 - **Symptom:** Top-risk bin appears perfectly reliable.
 - **Hypothesis A:** few high-risk cases were observed.
 - **Hypothesis B:** genuine strong calibration in that region.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** show bin counts and interval and examine multiple mature cohorts.
 - **Expected signal:** wide interval around the observed rate.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** avoid tail-specific claims or pool with justified assumptions.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** measure future tail coverage and outcome counts.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F06. Zero events
 
 - **Symptom:** A bin contains no observed fraud.
 - **Hypothesis A:** true risk is low.
 - **Hypothesis B:** small sample or immature labels obscure positives.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** compare exposure and label age against the maturity contract.
 - **Expected signal:** few mature events or unresolved labels.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** report an upper interval rather than asserting zero risk.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** reassess after maturity and independent audit.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F07. AUC stable
 
 - **Symptom:** AUC stays stable while fraud loss rises.
 - **Hypothesis A:** base rate or loss severity rose.
 - **Hypothesis B:** ranker drift masked by unchanged overall AUC.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** compare prevalence, severity and capacity-specific ranking on mature cohorts.
 - **Expected signal:** higher prevalence with comparable pairwise ranking.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** reassess decision economics and capacity without claiming AUC caused loss.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** monitor realized loss and matched-cohort ranking.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F08. AUC falls after map
 
 - **Symptom:** AUC falls after recalibration.
 - **Hypothesis A:** isotonic plateaus introduced ties.
 - **Hypothesis B:** the learned mapping reverses scores.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** count new ties and inversions on the same records.
 - **Expected signal:** more ties without order inversions.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** use tie-aware analysis or a validated strictly monotone map.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** recompute pair counts on untouched data.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F09. Low Brier
 
 - **Symptom:** A low Brier score is interpreted as excellent.
 - **Hypothesis A:** rare prevalence makes a constant forecast strong.
 - **Hypothesis B:** probabilities genuinely improve over baseline.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** compare against a pre-estimated prior and report log loss and reliability.
 - **Expected signal:** model gains vanish relative to the constant baseline.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** retain an explicit baseline and measure resolution.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** repeat comparison on a later common cohort.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F10. Infinite log loss
 
 - **Symptom:** Log loss becomes infinite.
 - **Hypothesis A:** forecast assigned zero probability to a realized event.
 - **Hypothesis B:** numerical underflow turned a small positive value into zero.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** inspect pre-rounding logits and stored probability precision.
 - **Expected signal:** finite logits but stored probability rounded to zero.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** use stable log-domain evaluation and disclose any clipping.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** compare stable loss with high-precision reference.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F11. Brier disagreement
 
 - **Symptom:** Brier improves while log loss worsens.
 - **Hypothesis A:** a few confident errors dominate log loss.
 - **Hypothesis B:** different cohorts were used for the two metrics.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** join record IDs and inspect per-record loss differences.
 - **Expected signal:** same cohort with a small set of extreme log losses.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** investigate tail probabilities instead of choosing the flattering metric.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** recompute both scores on the matched frozen cohort.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F12. Threshold drift
 
 - **Symptom:** The same threshold creates too many alerts.
 - **Hypothesis A:** risk distribution shifted.
 - **Hypothesis B:** calibration changed without much rank change.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** compare score histogram, audit prevalence and reliability by bin.
 - **Expected signal:** observed bin rates differ at the same predicted probabilities.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** reassess mapping and capacity policy separately.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** monitor mature labels and alert volume after controlled rollout.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F13. Training leakage
 
 - **Symptom:** Holdout reliability looks implausibly perfect.
 - **Hypothesis A:** calibrator was fitted on the final test.
 - **Hypothesis B:** duplicated entities crossed splits.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** trace artifact lineage and entity membership across partitions.
 - **Expected signal:** test labels or entity duplicates appear in fitting data.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** rebuild chronological disjoint splits and refit.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** evaluate once on a new untouched cohort.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F14. Temporal leakage
 
 - **Symptom:** Early forecasts appear unrealistically accurate.
 - **Hypothesis A:** post-decision outcome information entered features.
 - **Hypothesis B:** timestamps were parsed in the wrong time zone.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** audit feature availability timestamps and raw time-zone conversion.
 - **Expected signal:** features first become available after decision time.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** remove unavailable features and correct timestamp contracts.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** replay historical decisions point in time.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F15. Case-control sampling
 
 - **Symptom:** Forecasts are systematically high after training.
 - **Hypothesis A:** positive cases were oversampled.
 - **Hypothesis B:** label shift occurred after deployment.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** reconstruct training inclusion odds and compare current mature prevalence.
 - **Expected signal:** sampling depended only on class and recorded odds explain the offset.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** apply justified prior-odds correction or recalibrate.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** test on a representative later sample.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F16. Unrecorded sampling
 
 - **Symptom:** Prior correction gives implausible probabilities.
 - **Hypothesis A:** selection also depended on features.
 - **Hypothesis B:** sampling inclusion probabilities were misrecorded.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** compare selection rates within outcome and score strata.
 - **Expected signal:** selection varies by score even after conditioning on outcome.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** replace prior-only correction with a defensible sampling model.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** validate on a randomized audit sample.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F17. Selective labels
 
 - **Symptom:** Reviewed alerts show different calibration from all events.
 - **Hypothesis A:** review policy selected high-risk records.
 - **Hypothesis B:** actual population relationship changed.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** compare randomized audit cases with policy-selected cases.
 - **Expected signal:** audit reveals a different rate within the same score band.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** use design-aware audit estimates where inclusion probabilities are positive.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** track audit coverage and uncertainty by score.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F18. No overlap
 
 - **Symptom:** An unreviewed score region has no labels.
 - **Hypothesis A:** policy never sampled it.
 - **Hypothesis B:** labels are delayed but will eventually arrive.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** inspect inclusion probabilities and follow-up by score band.
 - **Expected signal:** inclusion probability remains zero after maturity.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** declare the region unidentified and seek permitted random audit.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** verify positive coverage before estimating its rate.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F19. Audit weights
 
 - **Symptom:** Weighted rates fluctuate wildly.
 - **Hypothesis A:** a few inclusion probabilities are tiny.
 - **Hypothesis B:** duplicate joins inflate weighted contributions.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** inspect weight distribution and event-key uniqueness.
 - **Expected signal:** a few legitimate high weights dominate effective sample size.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** redesign sampling or report wide uncertainty; do not silently trim.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** check design and sensitivity to declared truncation.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F20. Label delay
 
 - **Symptom:** Recent cohorts seem to have lower fraud.
 - **Hypothesis A:** fraud reports are immature.
 - **Hypothesis B:** true fraud prevalence declined.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** plot cumulative resolution by cohort age and score band.
 - **Expected signal:** recent labels are much less complete at the same calendar date.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** compare equal-age cohorts and report unresolved outcomes.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** track delayed labels through the agreed horizon.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F21. Maturity bias
 
 - **Symptom:** Mature labels disagree with later adjudications.
 - **Hypothesis A:** early closure is correlated with fraud difficulty.
 - **Hypothesis B:** the adjudication policy changed.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** compare fixed-age and fully resolved outcomes within audit strata.
 - **Expected signal:** resolution speed differs systematically by outcome.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** treat unresolved outcomes explicitly and perform sensitivity bounds.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** reconcile later adjudications against frozen predictions.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F22. Policy feedback
 
 - **Symptom:** Post-deployment observed fraud drops.
 - **Hypothesis A:** the action prevented events.
 - **Hypothesis B:** the action prevented label observation.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** compare randomized permitted policy arms and observation rates.
 - **Expected signal:** observation changes without corresponding independent loss evidence.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** separate effect on outcome from effect on measurement.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** evaluate incremental effects on consistently measured outcomes.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F23. Counterfactual target
 
 - **Symptom:** A post-block label is used as no-block risk.
 - **Hypothesis A:** blocking changed the event.
 - **Hypothesis B:** the label definition is invariant to intervention.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** trace how the outcome can occur and be recorded under each action.
 - **Expected signal:** blocked cases cannot produce the same observed transaction outcome.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** define potential outcomes and obtain defensible counterfactual evidence.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** validate the target against an approved experimental or causal design.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F24. Subgroup cancellation
 
 - **Symptom:** Overall reliability looks good but one region complains.
 - **Hypothesis A:** group errors cancel.
 - **Hypothesis B:** small subgroup samples fluctuate.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** compare group-by-score rates with counts and intervals.
 - **Expected signal:** persistent opposite-sign deviations in sufficiently supported groups.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** investigate data and calibration by group with governance.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** check future group reliability and action harms.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F25. Group composition
 
 - **Symptom:** Overall calibration shifts despite stable group curves.
 - **Hypothesis A:** mix of groups changed.
 - **Hypothesis B:** within-group risk relationships changed.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** standardize aggregate rates to a fixed group mix.
 - **Expected signal:** standardized rates remain stable while mix changes.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** report both mix-adjusted and raw performance.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** monitor group proportions and within-group outcomes.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F26. Simpson reversal
 
 - **Symptom:** A group-level curve differs from the overall curve.
 - **Hypothesis A:** score composition differs by group.
 - **Hypothesis B:** a group-specific predictor relationship changed.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** compare overlapping fine score ranges with adequate support.
 - **Expected signal:** group gaps shrink after score stratification.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** avoid unsupported aggregate comparisons.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** replicate on a separate mature cohort.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F27. Covariate shift
 
 - **Symptom:** Input distributions change while reliability appears stable.
 - **Hypothesis A:** covariate shift preserves the outcome mechanism.
 - **Hypothesis B:** opposing concept changes happen to cancel.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** compare conditional outcomes within supported feature and score strata.
 - **Expected signal:** stable conditional rates on representative audit support.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** monitor support and reweight only under defensible assumptions.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** test forward calibration on the target population.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F28. Concept shift
 
 - **Symptom:** Reweighting old data fails to restore reliability.
 - **Hypothesis A:** the conditional outcome mechanism changed.
 - **Hypothesis B:** importance weights were estimated incorrectly.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** evaluate target outcomes in overlapping covariate regions and inspect weights.
 - **Expected signal:** persistent conditional outcome differences with stable weight estimates.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** refit or redesign using current representative labels.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** evaluate on later independent target data.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F29. Label shift violation
 
 - **Symptom:** Prior correction worsens target loss.
 - **Hypothesis A:** class-conditional score distributions changed.
 - **Hypothesis B:** target prevalence estimate is noisy.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** compare class-conditional score distributions using mature audits.
 - **Expected signal:** distributions differ beyond sampling uncertainty.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** stop relying solely on prior correction.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** compare a refitted map on a new target cohort.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F30. New merchant
 
 - **Symptom:** A new merchant has no calibration history.
 - **Hypothesis A:** score support is absent.
 - **Hypothesis B:** global calibration transfers adequately.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** check merchant feature and score support against training and audit data.
 - **Expected signal:** new score range falls outside historical support.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** route unsupported cases to governed fallback review.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** monitor labeled support before allowing calibrated automation.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F31. Score range
 
 - **Symptom:** Production scores exceed calibration training range.
 - **Hypothesis A:** model version changed.
 - **Hypothesis B:** normal seasonal variation generated extremes.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** compare model artifacts and training versus live score ranges.
 - **Expected signal:** artifact version changed or live range exceeds fit support.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** reject unsupported extrapolation or use a validated fallback.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** check boundary behavior in replay and live shadow mode.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F32. Stale map
 
 - **Symptom:** Calibration degrades after model retraining.
 - **Hypothesis A:** mapping was trained for the prior model.
 - **Hypothesis B:** only population prevalence changed.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** cross-evaluate old and new models with their own maps on a common cohort.
 - **Expected signal:** new raw score distribution mismatches the map input contract.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** pair each model with its fitted calibration artifact.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** verify model-map version compatibility in deployment.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F33. Feature skew
 
 - **Symptom:** Offline calibration is good but live reliability is poor.
 - **Hypothesis A:** online feature values differ.
 - **Hypothesis B:** labels are selected differently live.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** replay identical event snapshots through online and offline paths.
 - **Expected signal:** feature or score differences occur before labels are used.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** repair feature parity and backfill only with valid timestamps.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** run shadow parity and later outcome checks.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F34. Rounding
 
 - **Symptom:** A calibration plot has unexpected vertical bands.
 - **Hypothesis A:** stored probabilities were rounded.
 - **Hypothesis B:** model genuinely emits discrete probabilities.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** compare original logits with serialized outputs.
 - **Expected signal:** distinct logits collapse to the same stored value.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** preserve sufficient numerical precision end to end.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** check tie counts and loss before and after serialization.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F35. Out-of-range
 
 - **Symptom:** Stored probabilities exceed one.
 - **Hypothesis A:** a raw score was mislabeled as a probability.
 - **Hypothesis B:** serialization corrupted a probability.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** inspect model output schema and raw model interface.
 - **Expected signal:** raw output is an unbounded decision function.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** enforce typed output and map score to probability.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** verify contract on representative and boundary inputs.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F36. Wrong class
 
 - **Symptom:** Forecasts appear inversely calibrated.
 - **Hypothesis A:** positive class probability column was reversed.
 - **Hypothesis B:** target encoding changed.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** trace class order in model artifact, training labels and serving schema.
 - **Expected signal:** column order does not match fraud-positive target.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** correct class mapping with versioned schema.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** check known examples and mature reliability after deployment.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F37. Duplicate joins
 
 - **Symptom:** The estimated event rate changes after a label join.
 - **Hypothesis A:** one event has multiple label revisions.
 - **Hypothesis B:** the population actually changed.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** compare distinct event counts before and after the join.
 - **Expected signal:** multiple joined labels per event.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** select versioned as-of labels with a declared adjudication rule.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** reconcile event counts and totals.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F38. Wrong horizon
 
 - **Symptom:** Calibration drops after a reporting change.
 - **Hypothesis A:** label horizon changed.
 - **Hypothesis B:** true event probability changed.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** compare event definitions and maturity windows.
 - **Expected signal:** rates diverge when horizons differ but align at common horizon.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** restore the contract or train a horizon-specific model.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** verify cohort definitions and aligned outcomes.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F39. Timezone boundary
 
 - **Symptom:** Daily reliability spikes around midnight.
 - **Hypothesis A:** events were assigned to the wrong day.
 - **Hypothesis B:** real operational behavior changes at midnight.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** compare UTC and local timestamp conversions around transition periods.
 - **Expected signal:** spikes align with conversion or daylight-saving boundaries.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** normalize instants and preserve decision-time zone.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** recompute fixed windows and inspect boundary events.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F40. Missing values
 
 - **Symptom:** A subgroup risk forecast jumps.
 - **Hypothesis A:** missing features use a new default.
 - **Hypothesis B:** the genuine group event rate rose.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** compare missingness, online defaults and audit outcomes.
 - **Expected signal:** forecast jump tracks default changes before outcome maturity.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** restore the feature contract or retrain with explicit missingness.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** verify feature distributions and later outcomes.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F41. Target leakage
 
 - **Symptom:** A feature strongly predicts fraud.
 - **Hypothesis A:** it is a post-adjudication marker.
 - **Hypothesis B:** it is a legitimate pre-decision signal.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** trace data lineage and first availability per feature.
 - **Expected signal:** feature arrives after fraud determination.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** remove the leaked field and rebuild training snapshots.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** evaluate on fresh time-split records.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F42. Threshold selection
 
 - **Symptom:** Reported reliability is good only above the chosen cutoff.
 - **Hypothesis A:** threshold was tuned on the evaluation set.
 - **Hypothesis B:** the upper score region is genuinely better calibrated.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** inspect selection history and test the fixed cutoff on a later cohort.
 - **Expected signal:** large deterioration on the untouched later cohort.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** separate calibration fit, threshold selection and final evaluation.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** report full-range and threshold-specific results.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F43. Multi-model pooling
 
 - **Symptom:** A pooled plot hides a model-specific defect.
 - **Hypothesis A:** different model versions are mixed.
 - **Hypothesis B:** both versions share the same calibration function.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** stratify by model and map version at decision time.
 - **Expected signal:** a single version drives the deviation.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** roll back or refit the affected version rather than the pooled curve.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** check version-specific mature cohorts.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F44. Adaptive bins
 
 - **Symptom:** A week-to-week ECE change is hard to explain.
 - **Hypothesis A:** quantile bin boundaries moved.
 - **Hypothesis B:** probability quality genuinely changed.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** recompute on common fixed bins and show score support.
 - **Expected signal:** the apparent change disappears with common bins.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** report fixed-bin and quantile diagnostics together.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** retain versioned bin definitions.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F45. Confidence interval
 
 - **Symptom:** A narrow bin interval suggests high certainty.
 - **Hypothesis A:** events are correlated within accounts.
 - **Hypothesis B:** the analyst treated independent outcomes correctly.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** compare record-level and account-clustered intervals.
 - **Expected signal:** clustered uncertainty is materially wider.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** use a justified cluster-level resampling or model.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** assess coverage in a suitable simulation or design review.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F46. Multiple comparisons
 
 - **Symptom:** One of many slices shows a severe gap.
 - **Hypothesis A:** random noise from many slice inspections.
 - **Hypothesis B:** a genuine subgroup-specific defect.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** predefine critical slices and compare independent follow-up data.
 - **Expected signal:** the gap persists in held-out time and related evidence.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** investigate with multiplicity and practical importance in mind.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** monitor the prespecified slice with uncertainty.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F47. Calibration fit
 
 - **Symptom:** In-sample isotonic reliability looks perfect.
 - **Hypothesis A:** the step function memorized sparse labels.
 - **Hypothesis B:** there is enough data for a stable monotone map.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** compare fit and disjoint validation losses and map variability.
 - **Expected signal:** validation loss worsens and bootstrap maps vary sharply.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** simplify or pool with justified constraints.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** evaluate on a later untouched cohort.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F48. Flat logistic map
 
 - **Symptom:** Every forecast becomes nearly identical.
 - **Hypothesis A:** estimated slope is near zero.
 - **Hypothesis B:** serving dropped or standardized scores incorrectly.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** compare fitted slope and served input distribution with training.
 - **Expected signal:** served inputs are constant despite variable raw scores.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** repair preprocessing or reject the incompatible map.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** check output spread and versioned inputs in shadow traffic.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F49. Negative slope
 
 - **Symptom:** Calibration reverses risk ranking.
 - **Hypothesis A:** score direction was inverted.
 - **Hypothesis B:** training data shows a true inverse association.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** compare score orientation and label encoding on independent data.
 - **Expected signal:** schema direction conflicts with calibration training.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** fix orientation and refit with correct labels.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** check pairwise order and reliability on held-out events.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F50. Overfitted intercept
 
 - **Symptom:** An intercept adjustment looks beneficial.
 - **Hypothesis A:** the current window was used both to fit and score.
 - **Hypothesis B:** prevalence really shifted.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** evaluate a fixed adjustment on a later independent cohort.
 - **Expected signal:** gain vanishes out of sample.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** separate fitting and evaluation and report uncertainty.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** use rolling prospective evaluation.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F51. Population mismatch
 
 - **Symptom:** A merchant-level forecast is evaluated per transaction.
 - **Hypothesis A:** unit of analysis differs.
 - **Hypothesis B:** merchant risk truly transfers to transactions.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** trace keys, weighting and aggregation before comparison.
 - **Expected signal:** high-volume merchants receive unintended extra weight.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** define the intended estimand and aggregate accordingly.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** reconcile units, counts and weights.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F52. Repeated customers
 
 - **Symptom:** Intervals are too narrow.
 - **Hypothesis A:** transactions from the same customer are dependent.
 - **Hypothesis B:** the assumed sampling unit was correct.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** compare customer-clustered and transaction-level estimates.
 - **Expected signal:** clustered interval is wider.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** resample or model the actual dependence structure.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** document sampling unit and sensitivity.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F53. Unresolved disputes
 
 - **Symptom:** Chargeback labels contradict later reversals.
 - **Hypothesis A:** early labels are provisional.
 - **Hypothesis B:** different event definitions are being mixed.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** compare label revisions and contractual target definitions.
 - **Expected signal:** a substantial fraction reverses after the first snapshot.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** use a fixed adjudication cutoff and record revisions.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** monitor revision rates by cohort age.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F54. Missing calibration version
 
 - **Symptom:** Historical predictions cannot be reproduced.
 - **Hypothesis A:** map artifact was not retained.
 - **Hypothesis B:** a newer artifact was incorrectly joined.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** compare registry entries with decision logs.
 - **Expected signal:** missing or mismatched model-map identifiers.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** retain immutable artifacts and log identifiers per decision.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** replay sampled decisions using retained versions.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F55. Action costs
 
 - **Symptom:** A calibrated model yields harmful decisions.
 - **Hypothesis A:** costs or treatment effects were wrong.
 - **Hypothesis B:** risk probabilities were wrong.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** audit outcome calibration separately from intervention impact.
 - **Expected signal:** risk is reliable but action effect is weak or negative.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** revise the decision policy using measured incremental outcomes.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** measure action-level harms and benefits in a governed evaluation.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F56. Capacity constraint
 
 - **Symptom:** A cost threshold overloads investigators.
 - **Hypothesis A:** capacity is binding.
 - **Hypothesis B:** the score distribution was miscalculated.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** compare incoming eligible volume with available review slots.
 - **Expected signal:** expected alerts exceed feasible slots.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** optimize feasible incremental value rather than apply independent threshold blindly.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** check actual queue load and outcome quality.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F57. Intervention heterogeneity
 
 - **Symptom:** Highest-risk cases do not yield highest benefit.
 - **Hypothesis A:** review effectiveness differs across cases.
 - **Hypothesis B:** probability ranking is wrong.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** estimate risk and treatment effect separately where identification permits.
 - **Expected signal:** some high-risk cases have little preventable loss.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** allocate by defensible incremental value with capacity constraints.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** evaluate treatment effects and customer harms.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F58. Weight mismatch
 
 - **Symptom:** Offline reliability differs from live reporting.
 - **Hypothesis A:** sampling weights were omitted.
 - **Hypothesis B:** traffic genuinely changed.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** reconstruct inclusion design and compare weighted versus unweighted estimates.
 - **Expected signal:** weighted audit aligns while unweighted selected data differs.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** use known design weights and report variance.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** verify coverage and inclusion probabilities each period.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F59. Unknown drift
 
 - **Symptom:** A drift alarm fires without mature labels.
 - **Hypothesis A:** feature mix shifted harmlessly.
 - **Hypothesis B:** conditional risk changed.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** inspect support and missingness now and schedule mature audit comparison.
 - **Expected signal:** features move but no outcome evidence is yet available.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** bound automatic changes and flag outcome claim as unresolved.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** compare matured representative labels when available.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F60. Data outage
 
 - **Symptom:** All probabilities fall back to a constant.
 - **Hypothesis A:** model serving failed.
 - **Hypothesis B:** the actual risk distribution became homogeneous.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** check model service health, fallback flags and score entropy.
 - **Expected signal:** fallback flag coincides with constant scores.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** restore service or apply approved safe fallback.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** test recovery and measure fallback coverage.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F61. Calibration delay
 
 - **Symptom:** A recalibration job uses a recent cohort.
 - **Hypothesis A:** recent outcomes are immature.
 - **Hypothesis B:** the label pipeline is unusually fast and complete.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** inspect resolution by age and historical revision curves.
 - **Expected signal:** material outcome revisions arrive after the fit cutoff.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** fit on mature representative cohorts and disclose lag.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** re-evaluate after the full observation window.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F62. Metric denominator
 
 - **Symptom:** Reported average loss improves abruptly.
 - **Hypothesis A:** unlabeled rows were silently dropped.
 - **Hypothesis B:** the model genuinely improved.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** reconcile eligible, scored, mature and evaluated row counts.
 - **Expected signal:** coverage dropped in a difficult score region.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** report coverage and compare matched cohorts.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** assert row-count reconciliation in monitoring.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F63. Adversarial adaptation
 
 - **Symptom:** Calibration changes after policy launch.
 - **Hypothesis A:** fraud behavior adapted to controls.
 - **Hypothesis B:** observation or traffic mix changed.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** compare randomized audit outcomes, channel mix and time of policy change.
 - **Expected signal:** changes remain within comparable audited strata.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** update threat model and retrain only with representative evidence.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** track independent audit rates and policy changes.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 ### F64. Uncertainty communication
 
 - **Symptom:** A single calibration estimate is treated as exact.
 - **Hypothesis A:** sampling variability was omitted.
 - **Hypothesis B:** the estimated population is a complete fixed census.
-- **Diagnostic input:** Retain the original cohort definition, model and calibration versions.
 - **Discriminating check:** record sampling design and event dependence.
 - **Expected signal:** estimate comes from a small selected sample.
-- **Interpretation:** The signal supports the corresponding explanation but does not alone prove causality.
-- **Alternative path:** If the signal is absent, investigate the other hypothesis and measurement lineage.
 - **Bounded mitigation:** show a design-appropriate interval and selection limitations.
-- **Mitigation risk:** A change made from selected or immature labels can worsen full-population decisions.
-- **Prevention:** Version the cohort, source artifacts, selection policy and label maturity contract.
 - **Verification:** review interval method against the actual sampling unit.
-- **Evidence:** ILLUSTRATIVE scenario; no production result is asserted.
 
 **Takeaway:** Diagnose population, labels, artifacts and mechanics before changing a calibration map.
 
@@ -1492,79 +1425,66 @@ All numerical cohorts in this sheet are constructed and do not establish field p
 
 **Answer:** Among the relevant population of cases forecast 0.2, the event frequency is 0.2 in the population calibration statement. A single case is still uncertain; finite-sample frequency need not be exactly 0.2.
 
-**Reasoning check:** State the target population and the assumptions before applying this answer.
 
 ### Q02. Can a model have perfect ranking and poor calibration?
 
 **Answer:** Yes. Assign 0.9 to every positive and 0.8 to every negative: all pairs rank correctly, but neither forecast matches the constructed group event frequency.
 
-**Reasoning check:** State the target population and the assumptions before applying this answer.
 
 ### Q03. Can a calibrated model be useless for ranking?
 
 **Answer:** Yes. A constant forecast equal to the true prevalence is calibrated but ties all pairs, giving AUC 0.5 under half-credit ties.
 
-**Reasoning check:** State the target population and the assumptions before applying this answer.
 
 ### Q04. Compute Brier loss for forecasts 0.2 and 0.8 with outcomes 0 and 1.
 
 **Answer:** Both squared errors are 0.04, so their average is 0.04. The result is dimensionless and is specific to these two observations.
 
-**Reasoning check:** State the target population and the assumptions before applying this answer.
 
 ### Q05. Compute log loss for the same two records.
 
 **Answer:** Both realized outcomes have probability 0.8; the mean is -ln(0.8), approximately 0.223144 nats per event.
 
-**Reasoning check:** State the target population and the assumptions before applying this answer.
 
 ### Q06. Why can a low ECE be misleading?
 
 **Answer:** Within-bin over- and underprediction can cancel. The result also depends on binning and sampling, so inspect bin counts, uncertainty and local curves.
 
-**Reasoning check:** State the target population and the assumptions before applying this answer.
 
 ### Q07. What happens to AUC under a strictly increasing recalibration?
 
 **Answer:** Strict pairwise order and existing ties are preserved, hence AUC is unchanged in exact arithmetic. Isotonic plateaus can introduce ties and alter tie-adjusted AUC.
 
-**Reasoning check:** State the target population and the assumptions before applying this answer.
 
 ### Q08. How do you split data for calibration?
 
 **Answer:** Use earlier data for model fitting, a later disjoint cohort for fitting the map, and a still later untouched cohort for evaluation. Respect entity leakage, label maturity and policy selection.
 
-**Reasoning check:** State the target population and the assumptions before applying this answer.
 
 ### Q09. How do you correct class-prior shift from 0.5 to 0.1 when the source probability is 0.5?
 
 **Answer:** Under pure label shift, multiply source odds 1 by target/source prior-odds ratio 1/9. Convert odds 1/9 to probability 0.1; conditional score stability and source calibration are essential.
 
-**Reasoning check:** State the target population and the assumptions before applying this answer.
 
 ### Q10. Why are reviewed fraud labels insufficient for a population reliability plot?
 
 **Answer:** Review selection depends on score and action. Use a permitted random audit with known positive inclusion probabilities, account for maturity, and report uncertainty and unsupported regions.
 
-**Reasoning check:** State the target population and the assumptions before applying this answer.
 
 ### Q11. A forecast bin has 15 expected positives and 20 observed among 100 records. What is the gap?
 
 **Answer:** Observed frequency is 0.20, mean forecast is 0.15, and observed minus predicted is +0.05, or five percentage points. This sample gap is uncertain.
 
-**Reasoning check:** State the target population and the assumptions before applying this answer.
 
 ### Q12. With false-positive cost 1 and false-negative cost 9, what threshold follows?
 
 **Answer:** Under the two-action C9 assumptions, the threshold is 1/(1+9)=0.10. Act above it and explicitly resolve ties; this ignores capacity and heterogeneous action effects.
 
-**Reasoning check:** State the target population and the assumptions before applying this answer.
 
 ### Q13. If overall calibration is good, are all demographic slices calibrated?
 
 **Answer:** No. Two equal groups both forecast 0.5 can have event rates 0.2 and 0.8; aggregate calibration hides opposite subgroup errors. Inspect supported slices with uncertainty and governance.
 
-**Reasoning check:** State the target population and the assumptions before applying this answer.
 
 **Takeaway:** Strong answers define the estimand, calculate correctly, and name the failure boundary.
 

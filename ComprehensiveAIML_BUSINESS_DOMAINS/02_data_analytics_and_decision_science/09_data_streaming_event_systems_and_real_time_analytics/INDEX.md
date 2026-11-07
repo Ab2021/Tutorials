@@ -10,7 +10,7 @@
 |---:|---|---|
 | 1 | event schemas and contracts | planned |
 | 2 | Kafka and stream processing | [Kafka lag draft](Cheat_Sheets/01_Kafka_Consumer_Partitions_and_Lag.md); broader topic planned |
-| 3 | time windows and state | planned |
+| 3 | time windows and state | [Flink session-window draft](Cheat_Sheets/03_Flink_Event_Time_Session_Windows_and_Stateful_Processing.md) and [hypothetical CEP fraud case](Case_Studies/02_Flink_CEP_Streaming_Fraud_Detection.md); broader scope planned |
 | 4 | CDC and event sourcing | [CDC handoff draft](Cheat_Sheets/02_CDC_Ordering_Snapshot_and_Materialization.md); event sourcing and broader scope planned |
 | 5 | exactly-once trade-offs | planned |
 
@@ -48,7 +48,7 @@ The [exact source crosswalk](../../00_SOURCE_TOPIC_CROSSWALK.md) extends the ori
 | Focused source brief | Required outputs / state |
 |---|---|
 | [Streaming framework, HLD/LLD and fixes/tradeoffs source documents](../../00_SOURCE_COVERAGE_EDGE_INDUSTRY.md#stream-framework) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |
-| [Flink CEP/broadcast fraud, IoT session windows and financial reconciliation exactly-once](../../00_SOURCE_COVERAGE_EDGE_INDUSTRY.md#flink) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |
+| [Flink CEP/broadcast fraud, IoT session windows and financial reconciliation exactly-once](../../00_SOURCE_COVERAGE_EDGE_INDUSTRY.md#flink) | Partial, unreviewed CEP fraud case and session-window sheet; IoT and reconciliation cases remain planned. |
 | [Multi-tenant platform, Debezium CDC and tiered/infinite-retention design](../../00_SOURCE_COVERAGE_EDGE_INDUSTRY.md#kafka) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |
 | [Event-sourced CQRS orders, ecommerce clickstream analytics and SIEM/log aggregation](../../00_SOURCE_COVERAGE_EDGE_INDUSTRY.md#stream-design) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |
 

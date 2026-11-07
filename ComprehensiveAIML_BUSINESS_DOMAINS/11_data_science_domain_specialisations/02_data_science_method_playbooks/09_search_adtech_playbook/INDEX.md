@@ -9,7 +9,7 @@
 | # | Topic | Status |
 |---:|---|---|
 | 1 | search foundations | planned |
-| 2 | IR and BM25 | planned |
+| 2 | IR and BM25 | partial: [BM25 and classical retrieval](Cheat_Sheets/02_BM25_and_Classical_Retrieval.md), unreviewed draft |
 | 3 | neural retrieval | planned |
 | 4 | query understanding | planned |
 | 5 | LTR | planned |
@@ -45,6 +45,6 @@ The [exact source crosswalk](../../../00_SOURCE_TOPIC_CROSSWALK.md) extends the 
 
 | Focused source brief | Required outputs / state |
 |---|---|
-| [Search and AdTech methods](../../../00_SOURCE_COVERAGE_DATA_SCIENCE.md#ds-methods-09) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |
+| [Search and AdTech methods](../../../00_SOURCE_COVERAGE_DATA_SCIENCE.md#ds-methods-09) | BM25 and classical retrieval sheet is an unreviewed draft; other focused sheets and bounded cases remain planned |
 
 Source module numbers and course module numbers are different namespaces. Reuse matching existing lessons when authored, but do not drop distinct variants, cases, failure themes or source limitations.
