@@ -2,15 +2,15 @@
 
 ## Authoring standard
 
-Every authored sheet must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. This is a planned catalog, not completed sheets; expand to all 11 collection-index sections and a final Common Issues artifact (at least 25 complete issues) before publication. A card alone is not a completed sheet.
+Every authored sheet must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. This collection has one unreviewed course-topic draft; remaining sheets and the final Common Issues artifact (at least 25 complete issues) are planned. A card alone is not a completed sheet.
 
 ## Planned cheat sheets
 
 | # | Reference | Coverage | Status |
 |---:|---|---|---|
-| 1 | data model notation | Concise patterns, decision rules, assumptions, and common traps. | planned |
+| 1 | [Data contract checklist](01_Data_Contract_Checklist.md) | Ownership, grain, schema, quality, delivery and change controls. | Draft; unreviewed. |
 | 2 | warehouse query patterns | Concise patterns, decision rules, assumptions, and common traps. | planned |
-| 3 | data contract checklist | Concise patterns, decision rules, assumptions, and common traps. | planned |
+| 3 | metadata and lineage checklist | Concise patterns, decision rules, assumptions, and common traps. | planned |
 
 ## Suggested file naming
 

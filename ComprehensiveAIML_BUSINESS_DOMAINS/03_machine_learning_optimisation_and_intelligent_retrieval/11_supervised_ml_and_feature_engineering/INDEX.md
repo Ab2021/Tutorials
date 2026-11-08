@@ -12,7 +12,7 @@
 | 2 | linear trees and boosting | planned |
 | 3 | feature engineering | planned |
 | 4 | imbalance and calibration | planned |
-| 5 | validation and error analysis | planned |
+| 5 | validation and error analysis | [Model validation and error-analysis draft](Cheat_Sheets/01_Model_Validation_and_Error_Analysis.md); broader topic planned |
 
 ## What competence looks like
 
@@ -22,6 +22,10 @@ After this module, a learner can turn a real problem into an appropriate technic
 
 - [Case Studies](./Case_Studies/INDEX.md): application briefs that deliberately include data, constraints, architecture, evaluation, risk, and operating plan.
 - [Cheat Sheets](./Cheat_Sheets/INDEX.md): compact references for repeat use while designing, reviewing, or debugging.
+
+## Authored course-topic drafts
+
+- [Model Validation and Error Analysis](Cheat_Sheets/01_Model_Validation_and_Error_Analysis.md) — split selection, leakage audit, thresholding and slices; visible source inventory only.
 
 ## Dependency notes
 

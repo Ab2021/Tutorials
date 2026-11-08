@@ -3,3 +3,9 @@
 > **Mandatory authoring contract:** Every authored sheet must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. This is a planned catalog, not completed sheets; expand to all 11 collection-index sections and a final Common Issues artifact (at least 25 complete issues) before publication. A card alone is not a completed sheet.
 
 Use this collection for reusable reference cards that span multiple child domains. Each card states audience, decision, inputs, defaults, trade-offs, failure signals, and deeper links.
+
+## Draft reference sheets
+
+| Reference | Coverage | Status |
+|---|---|---|
+| [Insurance model risk and change control](01_Insurance_Model_Risk_and_Change_Control.md) | Inventory, change classification, monitoring and evidence controls. | Draft; unreviewed. |

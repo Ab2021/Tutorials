@@ -12,7 +12,7 @@
 | 2 | feature stores | planned |
 | 3 | CI/CD/CT for ML | planned |
 | 4 | deployment patterns | planned |
-| 5 | rollback and lifecycle controls | planned |
+| 5 | rollback and lifecycle controls | [ML release and rollback checklist draft](Cheat_Sheets/01_ML_Release_and_Rollback_Checklist.md); broader topic planned |
 
 ## What competence looks like
 
@@ -22,6 +22,10 @@ After this module, a learner can turn a real problem into an appropriate technic
 
 - [Case Studies](./Case_Studies/INDEX.md): application briefs that deliberately include data, constraints, architecture, evaluation, risk, and operating plan.
 - [Cheat Sheets](./Cheat_Sheets/INDEX.md): compact references for repeat use while designing, reviewing, or debugging.
+
+## Authored course-topic drafts
+
+- [ML Release and Rollback Checklist](Cheat_Sheets/01_ML_Release_and_Rollback_Checklist.md) — release bundles, promotion gates and rollback controls; visible source inventory only.
 
 ## Dependency notes
 

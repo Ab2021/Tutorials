@@ -33,3 +33,7 @@ These are planned catalogs, not completed cases or certified template-compliant 
 ## Relationship to the source audit
 
 The [detailed DS source plan](../00_SOURCE_COVERAGE_DATA_SCIENCE.md) explicitly registers every visible DS_Domain and Graph_ML source entry, all 55 production case titles, all ten method-cheat families, practical design and product-sense topics. These briefs extend the older local umbrella rows. The [exact crosswalk](../00_SOURCE_TOPIC_CROSSWALK.md) covers the other supplied families and preserves collapsed/truncated-source uncertainty; no hidden content is claimed covered.
+
+## Authored course-topic drafts
+
+- [Insurance model risk and change control](10_insurance_actuarial_and_claims/Cheat_Sheets/01_Insurance_Model_Risk_and_Change_Control.md) — course-topic draft; no insurer or regulation evaluated.

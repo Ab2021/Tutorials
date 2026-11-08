@@ -8,7 +8,7 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | tool schemas and ergonomics | planned |
+| 1 | tool schemas and ergonomics | [Tool schema and side-effect-boundaries draft](Cheat_Sheets/02_Tool_Schema_and_Side_Effect_Boundaries.md); broader topic planned |
 | 2 | MCP and protocol design | planned |
 | 3 | identity and OAuth | planned |
 | 4 | transaction safety | planned |
@@ -22,6 +22,10 @@ After this module, a learner can turn a real problem into an appropriate technic
 
 - [Case Studies](./Case_Studies/INDEX.md): application briefs that deliberately include data, constraints, architecture, evaluation, risk, and operating plan.
 - [Cheat Sheets](./Cheat_Sheets/INDEX.md): compact references for repeat use while designing, reviewing, or debugging.
+
+## Authored course-topic drafts
+
+- [Tool Schema and Side-Effect Boundaries](Cheat_Sheets/02_Tool_Schema_and_Side_Effect_Boundaries.md) — schema, semantic validation, authorization boundaries and retry recovery; visible source inventory only.
 
 ## Dependency notes
 

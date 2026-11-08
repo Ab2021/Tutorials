@@ -8,7 +8,7 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | capstone framing | planned |
+| 1 | capstone framing | [Capstone evidence-rubric draft](Cheat_Sheets/01_Capstone_Evidence_Rubric.md); broader topic planned |
 | 2 | data and architecture | planned |
 | 3 | implementation and evaluation | planned |
 | 4 | governance and rollout | planned |
@@ -22,6 +22,10 @@ After this module, a learner can turn a real problem into an appropriate technic
 
 - [Case Studies](./Case_Studies/INDEX.md): application briefs that deliberately include data, constraints, architecture, evaluation, risk, and operating plan.
 - [Cheat Sheets](./Cheat_Sheets/INDEX.md): compact references for repeat use while designing, reviewing, or debugging.
+
+## Authored course-topic drafts
+
+- [Capstone Evidence Rubric](Cheat_Sheets/01_Capstone_Evidence_Rubric.md) — evidence boundary, architecture, evaluation and operations review; visible source inventory only.
 
 ## Dependency notes
 

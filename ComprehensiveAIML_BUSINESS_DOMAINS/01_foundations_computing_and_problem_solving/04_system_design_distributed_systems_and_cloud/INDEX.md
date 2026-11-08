@@ -8,7 +8,7 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | requirements and capacity | planned |
+| 1 | requirements and capacity | [System-design flow draft](Cheat_Sheets/01_System_Design_Interview_Flow.md); remaining capacity scope planned |
 | 2 | storage and caching | planned |
 | 3 | queues and eventing | planned |
 | 4 | consistency and idempotency | planned |
@@ -22,6 +22,10 @@ After this module, a learner can turn a real problem into an appropriate technic
 
 - [Case Studies](./Case_Studies/INDEX.md): application briefs that deliberately include data, constraints, architecture, evaluation, risk, and operating plan.
 - [Cheat Sheets](./Cheat_Sheets/INDEX.md): compact references for repeat use while designing, reviewing, or debugging.
+
+## Authored course-topic drafts
+
+- [System Design Interview Flow](Cheat_Sheets/01_System_Design_Interview_Flow.md) — requirements, contracts, sizing, failure recovery and validation; visible source titles are inventory only, original bodies unavailable.
 
 ## Dependency notes
 

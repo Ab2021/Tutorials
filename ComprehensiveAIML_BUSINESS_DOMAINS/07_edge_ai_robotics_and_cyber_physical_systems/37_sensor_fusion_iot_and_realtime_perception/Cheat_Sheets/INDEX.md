@@ -1,6 +1,6 @@
 # Sensor Fusion, IoT and Real-Time Perception — Cheat Sheets
 
-**Status:** One research-education draft; other topics are planned. Follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master. This material is not clinical guidance, device approval or validation evidence.
+**Status:** Two research-education drafts; other topics are planned. Follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master. This material is not clinical guidance, device approval or validation evidence.
 
 ## 1. Overview
 
@@ -12,7 +12,7 @@ This collection is for engineers reasoning about sampled physical signals and ed
 |---|---|---|---|
 | Practitioner | [ECG sampling and aliasing](01_ecg_sampling_and_aliasing.md) | Calculate sample spacing, frequency folding and DFT bin spacing; requires basic signals and units | Draft; unreviewed |
 | Planned | Sensor fusion patterns | Combine sensors with stated timing, uncertainty and failure assumptions | Not written |
-| Planned | Calibration checklist | Identify drift, calibration conditions and verification | Not written |
+| Practitioner | [Sensor time synchronization and calibration](02_Sensor_Time_Sync_and_Calibration.md) | State clock, frame, uncertainty and recalibration contracts | Draft; unreviewed |
 | Planned | Telemetry schema | Define timestamps, provenance, units and quality flags | Not written |
 | Planned | Common Issues | Distinct collection-wide sensor diagnostics | Not written |
 

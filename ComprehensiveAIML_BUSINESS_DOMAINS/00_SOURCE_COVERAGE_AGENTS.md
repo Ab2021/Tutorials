@@ -63,7 +63,7 @@ Hidden folders and clipped filenames remain `unresolved-source`; visible prefixe
 
 ## Python async, concurrency, REST, WebSockets, LLM basics and Docker
 
-**Teaching home:** [01_foundations_computing_and_problem_solving/02_python_sql_linux_and_engineering_basics/INDEX.md](01_foundations_computing_and_problem_solving/02_python_sql_linux_and_engineering_basics/INDEX.md). **Status:** planned.
+**Teaching home:** [01_foundations_computing_and_problem_solving/02_python_sql_linux_and_engineering_basics/INDEX.md](01_foundations_computing_and_problem_solving/02_python_sql_linux_and_engineering_basics/INDEX.md). **Status:** partial, unreviewed drafts for every visible prerequisite title; original source bodies unavailable.
 
 **Testable outcome.** Trace asynchronous tasks, cancellation, API exchanges and isolated reproducible environments.
 
@@ -83,10 +83,10 @@ Hidden folders and clipped filenames remain `unresolved-source`; visible prefixe
 |---|---|---|
 | `Agents_Stack_Infra/Module_00_Prerequisites` | Source scope/container; not a completed lesson | `source-container` |
 | `Agents_Stack_Infra/Module_00_Prerequisites/code` | OPEN — code/  [contents not visible] | `unresolved-source` |
-| `Agents_Stack_Infra/Module_00_Prerequisites/01_python_async_and_concurrency.md` | python async and concurrency | `planned-topic` |
-| `Agents_Stack_Infra/Module_00_Prerequisites/02_rest_apis_and_websockets.md` | rest apis and websockets | `planned-topic` |
-| `Agents_Stack_Infra/Module_00_Prerequisites/03_llm_fundamentals.md` | llm fundamentals | `planned-topic` |
-| `Agents_Stack_Infra/Module_00_Prerequisites/04_docker_and_containers.md` | docker and containers | `planned-topic` |
+| `Agents_Stack_Infra/Module_00_Prerequisites/01_python_async_and_concurrency.md` | python async and concurrency | `draft` — mapped to [Module 02 sheet](01_foundations_computing_and_problem_solving/02_python_sql_linux_and_engineering_basics/Cheat_Sheets/01_Python_Async_and_Concurrency.md); source body unavailable |
+| `Agents_Stack_Infra/Module_00_Prerequisites/02_rest_apis_and_websockets.md` | rest apis and websockets | `draft` — mapped to [Module 02 sheet](01_foundations_computing_and_problem_solving/02_python_sql_linux_and_engineering_basics/Cheat_Sheets/02_REST_APIs_and_WebSockets.md); source body unavailable |
+| `Agents_Stack_Infra/Module_00_Prerequisites/03_llm_fundamentals.md` | llm fundamentals | `draft` — mapped to [Module 02 sheet](01_foundations_computing_and_problem_solving/02_python_sql_linux_and_engineering_basics/Cheat_Sheets/03_LLM_Fundamentals.md); source body unavailable |
+| `Agents_Stack_Infra/Module_00_Prerequisites/04_docker_and_containers.md` | docker and containers | `draft` — mapped to [Module 02 sheet](01_foundations_computing_and_problem_solving/02_python_sql_linux_and_engineering_basics/Cheat_Sheets/04_Docker_and_Containers.md); source body unavailable |
 | `Agents_Stack_Infra/Module_00_Prerequisites/exercises.md` | exercises | `supporting-artifact` |
 | `Agents_Stack_Infra/Module_00_Prerequisites/README.md` | README | `supporting-artifact` |
 

@@ -11,7 +11,7 @@
 | 1 | AI adoption map | planned |
 | 2 | model families and deployment modes | planned |
 | 3 | roles and career tracks | planned |
-| 4 | problem framing | planned |
+| 4 | problem framing | [AI use-case charter draft](Cheat_Sheets/01_AI_Use_Case_Charter.md); remaining framing scope planned |
 | 5 | technology due diligence | planned |
 
 ## What competence looks like
@@ -22,6 +22,10 @@ After this module, a learner can turn a real problem into an appropriate technic
 
 - [Case Studies](./Case_Studies/INDEX.md): application briefs that deliberately include data, constraints, architecture, evaluation, risk, and operating plan.
 - [Cheat Sheets](./Cheat_Sheets/INDEX.md): compact references for repeat use while designing, reviewing, or debugging.
+
+## Authored course-topic drafts
+
+- [AI Use-Case Charter](Cheat_Sheets/01_AI_Use_Case_Charter.md) — decision framing, baseline, intervention selection, risk/economics and promotion gates; source inventory only.
 
 ## Dependency notes
 

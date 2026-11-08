@@ -9,7 +9,7 @@
 | # | Topic | Status |
 |---:|---|---|
 | 1 | sensor characteristics | planned |
-| 2 | time sync and calibration | planned |
+| 2 | time sync and calibration | [Sensor time-sync and calibration draft](Cheat_Sheets/02_Sensor_Time_Sync_and_Calibration.md); broader topic planned |
 | 3 | Kalman and Bayesian filters | planned |
 | 4 | edge telemetry | planned |
 | 5 | perception latency | planned |
@@ -22,6 +22,10 @@ After this module, a learner can turn a real problem into an appropriate technic
 
 - [Case Studies](./Case_Studies/INDEX.md): application briefs that deliberately include data, constraints, architecture, evaluation, risk, and operating plan.
 - [Cheat Sheets](./Cheat_Sheets/INDEX.md): compact references for repeat use while designing, reviewing, or debugging.
+
+## Authored course-topic drafts
+
+- [Sensor Time Synchronization and Calibration](Cheat_Sheets/02_Sensor_Time_Sync_and_Calibration.md) — clock, frame, uncertainty and recalibration contracts; visible source inventory only.
 
 ## Dependency notes
 

@@ -8,7 +8,7 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | governance operating model | planned |
+| 1 | governance operating model | [AI governance operating-model draft](Cheat_Sheets/01_AI_Governance_Operating_Model.md); broader topic planned |
 | 2 | risk classification | planned |
 | 3 | impact assessments | planned |
 | 4 | documentation and audit trails | planned |
@@ -22,6 +22,10 @@ After this module, a learner can turn a real problem into an appropriate technic
 
 - [Case Studies](./Case_Studies/INDEX.md): application briefs that deliberately include data, constraints, architecture, evaluation, risk, and operating plan.
 - [Cheat Sheets](./Cheat_Sheets/INDEX.md): compact references for repeat use while designing, reviewing, or debugging.
+
+## Authored course-topic drafts
+
+- [AI Governance Operating Model](Cheat_Sheets/01_AI_Governance_Operating_Model.md) — ownership, evidence, release gates and reassessment; visible source inventory only.
 
 ## Dependency notes
 

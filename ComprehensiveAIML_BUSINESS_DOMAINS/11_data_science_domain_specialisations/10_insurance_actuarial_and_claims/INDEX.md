@@ -13,3 +13,7 @@
 ## Collection usage
 
 This family has its own cross-domain Case_Studies and Cheat_Sheets folders. Use these for comparisons that span its child domains; use each child collection for domain-specific material.
+
+## Authored course-topic drafts
+
+- [Insurance Model Risk and Change Control](Cheat_Sheets/01_Insurance_Model_Risk_and_Change_Control.md) — inventory, change controls and monitoring; visible source inventory only.

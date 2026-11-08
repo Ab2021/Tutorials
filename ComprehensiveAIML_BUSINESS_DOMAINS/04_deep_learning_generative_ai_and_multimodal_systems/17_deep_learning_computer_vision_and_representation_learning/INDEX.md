@@ -12,7 +12,7 @@
 | 2 | vision transformers | planned |
 | 3 | detection and segmentation | planned |
 | 4 | self-supervision | planned |
-| 5 | vision evaluation and error taxonomy | planned |
+| 5 | vision evaluation and error taxonomy | [Vision evaluation and error-taxonomy draft](Cheat_Sheets/01_Vision_Evaluation_and_Error_Taxonomy.md); broader topic planned |
 
 ## What competence looks like
 
@@ -22,6 +22,10 @@ After this module, a learner can turn a real problem into an appropriate technic
 
 - [Case Studies](./Case_Studies/INDEX.md): application briefs that deliberately include data, constraints, architecture, evaluation, risk, and operating plan.
 - [Cheat Sheets](./Cheat_Sheets/INDEX.md): compact references for repeat use while designing, reviewing, or debugging.
+
+## Authored course-topic drafts
+
+- [Vision Evaluation and Error Taxonomy](Cheat_Sheets/01_Vision_Evaluation_and_Error_Taxonomy.md) — task contracts, metric protocols, slices and failure analysis; visible source inventory only.
 
 ## Dependency notes
 

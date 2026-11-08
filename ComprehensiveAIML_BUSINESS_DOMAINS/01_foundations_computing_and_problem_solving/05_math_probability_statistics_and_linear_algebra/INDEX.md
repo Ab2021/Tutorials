@@ -8,7 +8,7 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | linear algebra | planned |
+| 1 | linear algebra | [Matrix and vector identities draft](Cheat_Sheets/01_Matrix_and_Vector_Identities.md); remaining linear-algebra scope planned |
 | 2 | calculus and gradients | planned |
 | 3 | probability distributions | planned |
 | 4 | estimation and hypothesis tests | planned |
@@ -22,6 +22,10 @@ After this module, a learner can turn a real problem into an appropriate technic
 
 - [Case Studies](./Case_Studies/INDEX.md): application briefs that deliberately include data, constraints, architecture, evaluation, risk, and operating plan.
 - [Cheat Sheets](./Cheat_Sheets/INDEX.md): compact references for repeat use while designing, reviewing, or debugging.
+
+## Authored course-topic drafts
+
+- [Matrix and Vector Identities](Cheat_Sheets/01_Matrix_and_Vector_Identities.md) — shapes, least squares, conditioning and validation; visible source inventory only.
 
 ## Dependency notes
 

@@ -8,7 +8,7 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | arrays trees graphs and heaps | planned |
+| 1 | arrays trees graphs and heaps | [DSA patterns and invariants draft](Cheat_Sheets/01_DSA_Patterns_and_Invariants.md); remaining structure scope planned |
 | 2 | hashing and sorting | planned |
 | 3 | dynamic programming | planned |
 | 4 | greedy and graph algorithms | planned |
@@ -22,6 +22,10 @@ After this module, a learner can turn a real problem into an appropriate technic
 
 - [Case Studies](./Case_Studies/INDEX.md): application briefs that deliberately include data, constraints, architecture, evaluation, risk, and operating plan.
 - [Cheat Sheets](./Cheat_Sheets/INDEX.md): compact references for repeat use while designing, reviewing, or debugging.
+
+## Authored course-topic drafts
+
+- [DSA Patterns and Invariants](Cheat_Sheets/01_DSA_Patterns_and_Invariants.md) — pattern selection, complexity assumptions, invariants and oracle validation; source inventory only.
 
 ## Dependency notes
 

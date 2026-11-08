@@ -1,12 +1,12 @@
 # Module 31 Cheat Sheets — Tools, MCP, Protocols and Enterprise Integrations
 
 ## 1. Overview
-For integration engineers familiar with APIs and authorization, this collection supports protocol lifecycle, tool boundaries and safe recovery decisions. The MCP sheet is an unreviewed draft; publication requires source, technical and security review.
+For integration engineers familiar with APIs and authorization, this collection supports protocol lifecycle, tool boundaries and safe recovery decisions. The MCP and tool-schema sheets are unreviewed drafts; publication requires source, technical and security review.
 
 ## 2. Topic ladder
 | Level | Topic and outcome | Prerequisite / skill | Status |
 |---|---|---|---|
-| Foundation | Tool schema guide: specify inputs and validation; distinguish valid syntax from valid business meaning. | JSON and API contracts. | Planned |
+| Foundation | [Tool schema and side-effect boundaries](02_Tool_Schema_and_Side_Effect_Boundaries.md): specify inputs, semantic validation, side effects and recovery. | JSON and API contracts. | Draft; unreviewed |
 | Core | MCP server checklist: trace initialization and discovery and diagnose a missing tool. | API lifecycle and authentication. | Planned |
 | Core | Side-effect risk matrix: classify operations and choose a safe retry boundary. | Transactions and authorization. | Planned |
 | Production | [MCP-01 Model Context Protocol](01_model_context_protocol.md): trace protocol and execution boundaries, sizing and recovery. | JSON-RPC, identity and distributed failure. | Draft; unreviewed; publication checks pending |
@@ -27,7 +27,7 @@ For integration engineers familiar with APIs and authorization, this collection 
 Read JSON-RPC messages, distinguish authentication from authorization, understand retries and transactions, and compute simple probabilities. The draft [header](01_model_context_protocol.md#section-1--file-header) states its scope and prerequisites.
 
 ## 6. What this collection does NOT cover
-Schema guide, server checklist and side-effect matrix are planned. Protocol compliance does not establish endpoint authorization or exactly-once business effects. The reference-informed briefs below are proposed work, not published coverage.
+The server checklist and full side-effect risk matrix are planned. Protocol compliance does not establish endpoint authorization or exactly-once business effects. The tool-schema draft is not a security certification or production integration recipe.
 
 ## 7. Master symbol glossary
 | Symbol / term | Meaning; unit / type / domain | First use |
