@@ -8,7 +8,7 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | data tests and expectations | planned |
+| 1 | data tests and expectations | [Data observability and incident-triage draft](Cheat_Sheets/01_Data_Observability_and_Incident_Triage.md); broader topic planned |
 | 2 | lineage and freshness | planned |
 | 3 | SLOs and error budgets | planned |
 | 4 | drift and data incidents | planned |
@@ -22,6 +22,10 @@ After this module, a learner can turn a real problem into an appropriate technic
 
 - [Case Studies](./Case_Studies/INDEX.md): application briefs that deliberately include data, constraints, architecture, evaluation, risk, and operating plan.
 - [Cheat Sheets](./Cheat_Sheets/INDEX.md): compact references for repeat use while designing, reviewing, or debugging.
+
+## Authored course-topic drafts
+
+- [Data Observability and Incident Triage](Cheat_Sheets/01_Data_Observability_and_Incident_Triage.md) — contracts, freshness, containment and reconciliation; visible source inventory only.
 
 ## Dependency notes
 

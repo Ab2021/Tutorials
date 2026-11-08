@@ -51,3 +51,21 @@ Executed on 2026-11-07 against the saved course files:
 | Shared numerical example smoke | 120,000-event backlog; 122,880,000 payload bytes = 117.1875 MiB; 600-second drain; no-backlog and zero-surplus boundaries checked |
 
 These checks verify the inventory, navigable planning surface, contract wiring and exercised arithmetic only. They do not certify inaccessible source content, future topic-specific equations, benchmark results, completed cases, issue counts or interview answers.
+
+## Current detailed-authoring pass
+
+The requested continuation covers Parts 01–11, every indexed descendant, and the root cross-domain collections. Directory ownership is partitioned between authoring workers; shared source registers and the root index remain integration-owned. Work in progress is not completed coverage.
+
+The requested GPT 5.6 Terra model override was rejected because per-call model selection is disabled. Workers use their configured model; medium effort was not selectable through the task interface.
+
+Source reconciliation executed for this pass:
+
+| Check | Observed result |
+|---|---|
+| `directory.txt` tree entries versus JSON assignments | 1,247 ordered entries match after normalization of documented clipping/extension annotations |
+| Duplicate normalized source assignments | 0 |
+| Missing teaching-home files | 0 |
+| Focused brief anchors and source-path occurrences | All 144 groups resolve; every assigned source path occurs in its register |
+| Inventory uncertainty | All 74 unresolved entries retained; hidden contents remain unavailable |
+
+This pass's source checks do not establish completed lessons, substantive depth, technical correctness, or publication review. Final content, navigation and numerical checks must follow authoring and integration.

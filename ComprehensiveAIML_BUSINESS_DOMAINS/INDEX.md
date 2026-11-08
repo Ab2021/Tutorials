@@ -130,6 +130,10 @@ This course contains a planned syllabus and a growing set of draft teaching file
 - [AI governance operating model](09_trust_security_governance_and_product_leadership/50_responsible_ai_governance_compliance_and_audits/Cheat_Sheets/01_AI_Governance_Operating_Model.md) — course-topic draft; no organization or regulation evaluated.
 - [Capstone evidence rubric](10_architecture_practice_and_portfolio_capstones/56_end_to_end_capstones_and_portfolio/Cheat_Sheets/01_Capstone_Evidence_Rubric.md) — course-topic draft; rubric score is illustrative.
 - [Experiment design and guardrails](02_data_analytics_and_decision_science/08_experimentation_causal_inference_and_decision_science/Cheat_Sheets/01_Experiment_Design_and_Guardrails.md) — course-topic draft; conversion arithmetic is illustrative.
+- [Anomaly detection triage](03_machine_learning_optimisation_and_intelligent_retrieval/12_unsupervised_ml_anomaly_detection_and_segmentation/Cheat_Sheets/01_Anomaly_Detection_Triage.md) — course-topic draft; queue arithmetic is illustrative.
+- [Permission-aware retrieval](04_deep_learning_generative_ai_and_multimodal_systems/20_rag_context_engineering_and_enterprise_knowledge/Cheat_Sheets/01_Permission_Aware_Retrieval.md) — course-topic draft; no authorization system inspected.
+- [Data observability and incident triage](05_ai_platforms_data_systems_and_production_engineering/27_data_quality_observability_and_reliability_engineering/Cheat_Sheets/01_Data_Observability_and_Incident_Triage.md) — course-topic draft; freshness example is illustrative.
+- [Memory lifecycle and retention](06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/Cheat_Sheets/01_Memory_Lifecycle_and_Retention.md) — course-topic draft; no user data or retention law evaluated.
 
 ## Learning parts
 

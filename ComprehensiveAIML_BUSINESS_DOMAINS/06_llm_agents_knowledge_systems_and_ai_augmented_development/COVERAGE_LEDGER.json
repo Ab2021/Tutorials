@@ -1,0 +1,1855 @@
+{
+  "scope": "Train/ComprehensiveAIML_BUSINESS_DOMAINS/06_llm_agents_knowledge_systems_and_ai_augmented_development",
+  "created": "2026-11-08",
+  "inventory_basis": "directory.txt + exact source crosswalk; source contents not established",
+  "original_module_topics": {
+    "30_agentic_systems_workflows_and_orchestration": [
+      "| 1 | agent boundaries | planned |",
+      "| 2 | workflow vs agent | planned |",
+      "| 3 | planning and reflection | planned |",
+      "| 4 | multi-agent orchestration | planned |",
+      "| 5 | durable state and recovery | planned |"
+    ],
+    "31_tools_mcp_protocols_and_enterprise_integrations": [
+      "| 1 | tool schemas and ergonomics | [Tool schema and side-effect-boundaries draft](Cheat_Sheets/02_Tool_Schema_and_Side_Effect_Boundaries.md); broader topic planned |",
+      "| 2 | MCP and protocol design | planned |",
+      "| 3 | identity and OAuth | planned |",
+      "| 4 | transaction safety | planned |",
+      "| 5 | integration testing | planned |"
+    ],
+    "32_agent_memory_context_management_and_personalisation": [
+      "| 1 | context assembly | planned |",
+      "| 2 | episodic and semantic memory | planned |",
+      "| 3 | memory write policies | planned |",
+      "| 4 | personalisation | planned |",
+      "| 5 | privacy and deletion | [Memory lifecycle and retention draft](Cheat_Sheets/01_Memory_Lifecycle_and_Retention.md); broader topic planned |"
+    ],
+    "33_coding_agents_ai_sdcl_and_developer_productivity": [
+      "| 1 | repository context | planned |",
+      "| 2 | agentic coding workflows | planned |",
+      "| 3 | test generation and review | planned |",
+      "| 4 | CI/CD integration | planned |",
+      "| 5 | developer metrics and risks | planned |"
+    ],
+    "34_conversational_ai_voice_agents_and_customer_operations": [
+      "| 1 | dialogue design | planned |",
+      "| 2 | real-time voice stack | planned |",
+      "| 3 | handoff to humans | planned |",
+      "| 4 | conversation analytics | planned |",
+      "| 5 | compliance and quality | planned |"
+    ]
+  },
+  "original_catalogs": {
+    "30_agentic_systems_workflows_and_orchestration/Case_Studies/INDEX.md": "# Module 30 Case Studies — Agentic Systems, Workflows and Orchestration\n\n## 1. Collection metadata\n\nOwner: enterprise agent security curriculum maintainers. Last reviewed: not reviewed. Review cadence: annually and on material threat, policy, or connector changes. Index version: 1.1. Canonical IDs: `CASE-2026-NNN`. Source of truth: this index and its linked case files. Audience: engineers, operators, security reviewers, and interview candidates. Editorial state, implementation stage, and evidence are independent. Apply the [case master](../../../../Templates/CASE_STUDY_CONTENT_MASTER_TEMPLATE.md) and [course standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md).\n\n## 2. Case catalog\n\n| Case ID | Case title / relative link | Domain | Case type | Decision / business question | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Key result or limitation | Document state |\n|---|---|---|---|---|---|---|---|---|---|---|---|\n| CASE-2026-030 | [Approval gate for an enterprise agent](01_enterprise_agent_approval_gate.md) | Enterprise agent security | llm-agentic | How should an assistant gate ticket actions despite untrusted documents? | `exact-action-approval` | `least-privilege-execution`, `idempotent-side-effects` | not-measured | proposed | not reviewed | No deployment or outcome measured; illustrative calculations only. | draft |\n\nPlanned, not case records: claims operations agent; research workflow with approval gates. Reference-informed briefs [PLAN-2026-IR005 and PLAN-2026-IR006](../../../00_REFERENCE_INFORMED_CASE_PLAN.md) remain plans; the latter shares recovery concepts but is not a published comparison.\n\n## 3. Canonical reusable pattern vocabulary\n\n| Pattern | Mechanism and diagnostic signature | Preconditions | Avoid / counterexample | Related case and theory | Deprecated synonyms |\n|---|---|---|---|---|---|\n| `exact-action-approval` | Reviewer authorizes a canonical immutable action, not a general model intention; stale hashes deny. | Independent authorization and trusted execution binding. | Cannot safely use if connector can change semantics without revalidation. | CASE-2026-030; [OWASP prompt injection](https://genai.owasp.org/llmrisk/llm01-prompt-injection/). | none |\n| `least-privilege-execution` | Restrict identities, resources, operations and duration; audit denied access. | Enforceable downstream authorization. | No protection against abuse of legitimately overbroad permissions. | CASE-2026-030; [NIST definition](https://csrc.nist.gov/glossary/term/least_privilege). | none |\n| `idempotent-side-effects` | Stable business operation key and sink reconciliation limit duplicate effects after uncertain responses. | Sink deduplication or queryable receipts. | Cannot claim exactly once with opaque non-idempotent endpoints. | CASE-2026-030; PLAN-2026-IR006 is a planned contrast. | none |\n\n## 4. Cross-case similarity and contrast map\n\n| Pattern | Supporting case(s) | Contrasting case(s) | Theory/methodology link | Boundary learned |\n|---|---|---|---|---|\n| Exact action approval | CASE-2026-030 is a proposed example, not empirical support. | Procurement recovery PLAN-2026-IR006 remains planned. | [OWASP LLM01:2025](https://genai.owasp.org/llmrisk/llm01-prompt-injection/). | A gate blocks unapproved effects only if execution uses the reviewed intent and an independent authorization check. |\n\n## 5. Questions and future-case backlog\n\n| Open question | Originating case | Needed evidence | Proposed next case or experiment | Priority | Owner role | Trigger / review date |\n|---|---|---|---|---|---|---|\n| Can reviewers recognize semantic manipulation without excessive delay? | CASE-2026-030 | Blinded, representative adjudicated reviews. | Controlled reviewer study with adversarial and benign packets. | High | Security research lead | Before pilot. |\n| Does the actual ticket connector deduplicate and expose authoritative receipts? | CASE-2026-030 | Connector contract and fault-injection evidence. | Replay/reconciliation test. | High | Integration lead | Before any write access. |\n| Can policy evaluation remain consistent at execution? | CASE-2026-030 | Revocation and race tests against the policy service. | Expiry and entitlement-change tests. | High | Authorization owner | Before pilot. |\n| How do procurement approvals differ? | PLAN-2026-IR006 | Actual sink and approval contract. | Develop planned procurement case. | Medium | Curriculum maintainer | When primary artifacts are available. |\n\n## 6. Review and retirement log\n\n| Case ID | Date | What changed | Evidence or market trigger | Action | Owner role |\n|---|---|---|---|---|---|\n| CASE-2026-030 | 2026-11-07 | Draft added; no substantive review claimed. | Illustrative security design and source inventory. | Updated; review pending. | Curriculum maintainer |\n\n## 7. Pre-publish index checks\n\n- [x] Unique case ID and draft link distinguished from planned briefs.\n- [x] Tags describe the proposed mechanism; evidence, stage, and editorial state are separate.\n- [x] No measured impact is claimed for this case.\n- [ ] Substantive case and index review, including source and link verification, completed.\n- [ ] Connector-specific security and recovery claims validated before any deployment.\n- [x] Unreviewed dates are not represented as review dates; no retired case is hidden.\n- [x] Catalog contains one authored draft; planning briefs are not counted as cases.\n",
+    "30_agentic_systems_workflows_and_orchestration/Cheat_Sheets/INDEX.md": "# Module 30 Cheat Sheets — Agentic Systems, Workflows and Orchestration\n\n## 1. Overview\nFor engineers familiar with transactions and distributed failures, this collection supports decisions about agent state, isolation, recovery and side effects. Two sheets are unreviewed drafts; production readiness requires independent review and workload-specific evidence.\n\n## 2. Topic ladder\n| Level | Topic and outcome | Prerequisite / skill | Status |\n|---|---|---|---|\n| Foundation | Agent-pattern catalog: compare patterns against a bounded task and failure counterexample. | Basic model/tool interactions. | Planned |\n| Core | Workflow selection: select an orchestration style and explain tradeoffs. | Agent-pattern concepts. | Planned |\n| Core | Handoff protocol: define ownership and validate a handoff under failure. | Workflow and identity basics. | Planned |\n| Production | [04 Sessions, state and lifecycle](04_agent_sessions_state_isolation_and_lifecycle.md): trace ownership and isolation. | Authentication, transactions and access control. | Draft; not reviewed |\n| Production | [05 Durable workflows](05_durable_workflows_and_idempotent_execution.md): analyze crash windows and bounded backlog. | Sheet 04, queues and rate arithmetic. | Draft; not reviewed; source contents unavailable |\n\n## 3. Quick topic lookup\n| Question | Exact section | Use and warning |\n|---|---|---|\n| Who owns session state? | [Definitions](04_agent_sessions_state_isolation_and_lifecycle.md#3-foundational-definitions) | Separate context from authoritative state. |\n| Can a timed-out write be retried? | [Failures](05_durable_workflows_and_idempotent_execution.md#8-failure-modes--edge-cases) | Inspect provider status and key contract; timeout is not failure proof. |\n| How does backlog grow? | [Formulas](05_durable_workflows_and_idempotent_execution.md#4-core-formulas-with-full-derivation) | Constant-rate queue model is not a latency guarantee. |\n\n## 4. Reading paths\n- **Beginner:** Learn authentication and database transactions; read [session definitions](04_agent_sessions_state_isolation_and_lifecycle.md#3-foundational-definitions) and its [mental model](04_agent_sessions_state_isolation_and_lifecycle.md#2-concept-map--mental-model). Pattern catalog remains planned.\n- **Practitioner:** Read sheet 04 then [05](05_durable_workflows_and_idempotent_execution.md), tracing ownership, checkpoints and external effects.\n- **Advanced:** Read both complete drafts, then use their failures and cards to reason through replay, tenant isolation and reconciliation; the workflow and handoff guides are planned extensions.\n\n## 5. Prerequisite skills\nUnderstand HTTP authentication, tenant authorization, transactions, leases, queue rates and retry ambiguity. Start with the [session header](04_agent_sessions_state_isolation_and_lifecycle.md#1-file-header) and its linked concurrency reference; then apply queue arithmetic in [05](05_durable_workflows_and_idempotent_execution.md#4-core-formulas-with-full-derivation).\n\n## 6. What this collection does NOT cover\nThe agent-pattern catalog, workflow selection and handoff protocol remain planned. Neither draft proves exactly-once external effects or validates a provider's contract; tool integration details require separate study. Reference-informed briefs below are proposals, not completed sheets.\n\n## 7. Master symbol glossary\n| Symbol / term | Meaning; unit / type / domain | First use |\n|---|---|---|\n| Session | Tenant-scoped durable interaction container; identifier, not authorization. | [04 definitions](04_agent_sessions_state_isolation_and_lifecycle.md#3-foundational-definitions) |\n| B | Pending backlog; nonnegative scalar jobs. | [05 definitions](05_durable_workflows_and_idempotent_execution.md#3-foundational-definitions) |\n| lambda, mu | Arrival and completion rates; jobs per second, nonnegative scalars under the stated model. | [05 definitions](05_durable_workflows_and_idempotent_execution.md#3-foundational-definitions) |\n\n## 8. Quick Reference Card directory\n| Card | Rule / use | Condition and avoid |\n|---|---|---|\n| [04 card](04_agent_sessions_state_isolation_and_lifecycle.md#12-quick-reference-card) | Trace state ownership and isolation. | An identifier is not proof of authorization. |\n| [05 card](05_durable_workflows_and_idempotent_execution.md#12-quick-reference-card) | Reconcile ambiguous effects before unsafe retry. | Provider semantics and key retention govern effect safety. |\n\n## 9. Common Issues locator\nThe final Common Issues artifact has not been authored; its count is unknown. Use the draft [session failures](04_agent_sessions_state_isolation_and_lifecycle.md#8-failure-modes--edge-cases) for isolation and ownership, and [workflow failures](05_durable_workflows_and_idempotent_execution.md#8-failure-modes--edge-cases) for a lost response: look up the stable operation key before retry. These are hypothetical diagnostics, not incident counts.\n\n## 10. Empirical sources, versions and collection maintenance\nOriginal source directories were unavailable and not inspected; the crosswalk identifies source titles only. Both sheets are drafts without independent review; their examples are not production measurements. Consult [standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [template](../../../../Templates/CHEAT_SHEET_CONTENT_MASTER_TEMPLATE.md); recheck provider contracts, retention, authorization and source versions on change. No review date is asserted. Each sheet requires all 12 sections and a final card.\n\n<!-- BEGIN INTERVIEW REFERENCE PLAN -->\n\n### Reference-informed additions to develop\n\nThese are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../00_REFERENCE_INFORMED_CASE_PLAN.md).\n\n| Related brief | Proposed cheat-sheet scope | Checks / counterexamples to include | Reference only | Status |\n|---|---|---|---|---|\n| PLAN-2026-IR005 | Immutable release manifests; compatibility gates; side-effect-free shadowing; staged canaries; incident containment | Bundle-compatibility tests, rollback drills, guardrail breaches and unresolved side effects after recovery. Boundary: A prompt-only rollback cannot restore all dependencies; example dwell times and canary percentages are not defaults. | [REF-IR005](../../../../INTERVIEW_CASES/Agentic_AI_System/INDEX/Agent_Release_And_Incident_Operations.md) | planned; not written |\n| PLAN-2026-IR006 | LangGraph checkpoints and interrupts; authenticated resume; approval binding and expiry; idempotent submission | Crash-window replay, duplicate webhooks, changed purchase payloads, checkpoint migration and reconciliation tests. Boundary: External APIs may not support exactly-once effects; approval waiting times and run counts are exercise assumptions. | [REF-IR006](../../../../INTERVIEW_CASES/Agentic_AI_System/Langraph/durable_human_approval_graph.md) | planned; not written |\n\nEach future cheat sheet needs its own explanation, preconditions, formulas or algorithms where relevant, failure signals and checked examples. Do not copy the interview narrative or its scenario figures into a reference sheet.\n\n<!-- END INTERVIEW REFERENCE PLAN -->\n\n## 11. Collection acceptance checklist\n- [ ] Author the three planned guides and final Common Issues artifact with at least 25 substantive issues.\n- [ ] Independently review both drafts, their 12-section structure, calculations, recovery claims and sources.\n- [ ] Verify current provider contracts, evidence, links and anchors before publication.\n- [ ] Record review dates and distinguish illustrative traces from observed incidents.\n",
+    "30_agentic_systems_workflows_and_orchestration/INDEX.md": "# Module 30 â€” Agentic Systems, Workflows and Orchestration\n\n> **Part:** [Part 06 â€” LLM Agents, Knowledge Systems and AI-Augmented Development](../INDEX.md)  \n> **Prerequisites:** 20,25,28  \n> **Purpose:** Design bounded agent workflows with state, planning, delegation, durable execution, and human oversight.\n\n## Topics to develop\n\n| # | Topic | Status |\n|---:|---|---|\n| 1 | agent boundaries | planned |\n| 2 | workflow vs agent | planned |\n| 3 | planning and reflection | planned |\n| 4 | multi-agent orchestration | planned |\n| 5 | durable state and recovery | planned |\n\n## What competence looks like\n\nAfter this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.\n\n## Collections\n\n- [Case Studies](./Case_Studies/INDEX.md): application briefs that deliberately include data, constraints, architecture, evaluation, risk, and operating plan.\n- [Cheat Sheets](./Cheat_Sheets/INDEX.md): compact references for repeat use while designing, reviewing, or debugging.\n\n### Authored case draft\n\n- [Enterprise agent approval gate](./Case_Studies/01_enterprise_agent_approval_gate.md) — hypothetical ticket-writing workflow covering approval binding, retries, production controls and interview decisions. Draft; not reviewed or deployed. The broader topics above remain planned.\n\n## Dependency notes\n\nPrerequisites above are module identifiers. They are the minimum conceptual background, not a requirement to complete every earlier part. For a fast path, read the prerequisite indexes, then complete one module case before advancing.\n\n<!-- BEGIN INTERVIEW REFERENCE PLAN -->\n\n## Reference-informed additions to develop\n\nThese are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../00_REFERENCE_INFORMED_CASE_PLAN.md).\n\n| Planning ID | Detailed topics to develop | Decision to address | Validation to design |\n|---|---|---|---|\n| PLAN-2026-IR005 | Immutable release manifests; compatibility gates; side-effect-free shadowing; staged canaries; incident containment | Which model, prompt, tools, index and policy versions can be promoted and recovered together? | Bundle-compatibility tests, rollback drills, guardrail breaches and unresolved side effects after recovery |\n| PLAN-2026-IR006 | LangGraph checkpoints and interrupts; authenticated resume; approval binding and expiry; idempotent submission | How can a purchase proceed only after approval of its exact version despite retries and restarts? | Crash-window replay, duplicate webhooks, changed purchase payloads, checkpoint migration and reconciliation tests |\n\nSee the local Case_Studies and Cheat_Sheets indexes for proposed outputs and source-reference links. These scope additions do not replace the original planned topics.\n\n<!-- END INTERVIEW REFERENCE PLAN -->\n\n## Source-tree coverage additions\n\nThe [exact source crosswalk](../../00_SOURCE_TOPIC_CROSSWALK.md) extends the original topic list with the focused briefs below. Each technical title in a linked register is a planned teaching commitment, not completed content. Follow the [master-template and numerical standards](../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) when authoring cases and sheets; hidden/clipped sources remain unresolved.\n\n| Focused source brief | Required outputs / state |\n|---|---|\n| [Agent source references, hidden folders, PDFs and incomplete exam/harness evidence](../../00_SOURCE_COVERAGE_AGENTS.md#agent-source-artifacts) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |\n| [Overloaded agent term, ten-layer stack, request path and boundary distinctions](../../00_SOURCE_COVERAGE_AGENTS.md#agent-stack-model) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |\n| [Control planes, session ownership, state management, isolation and run lifecycle](../../00_SOURCE_COVERAGE_AGENTS.md#agent-control-sessions) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |\n| [Runtime responsibilities, durable execution, LangGraph, workflow patterns and runtime choice](../../00_SOURCE_COVERAGE_AGENTS.md#agent-runtimes) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |\n| [Reflection, tool use, planning, multi-agent, orchestration, human review, composition and emerging patterns](../../00_SOURCE_COVERAGE_AGENTS.md#agent-patterns) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |\n| [OpenClaw gateway, sessions, lane-aware queues, WebSockets, runtime loop, file memory, concurrency and security](../../00_SOURCE_COVERAGE_AGENTS.md#agent-openclaw) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |\n| [Agentic architecture: loop lifecycle, orchestration, subagent context, enforcement/handoff, SDK hooks, decomposition, sessions and practice](../../00_SOURCE_COVERAGE_AGENTS.md#claude-architecture) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |\n| [Pharma landscape, cross-domain architecture, issues and implemented RAG/agent case research](../../00_SOURCE_COVERAGE_EDGE_INDUSTRY.md#pharma-patterns) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |\n| [LangGraph state, nodes/edges, agents, tools and multi-agent systems](../../00_SOURCE_COVERAGE_AGENTS.md#lang-graphs) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |\n\nSource module numbers and course module numbers are different namespaces. Reuse matching existing lessons when authored, but do not drop distinct variants, cases, failure themes or source limitations.\n",
+    "31_tools_mcp_protocols_and_enterprise_integrations/Case_Studies/INDEX.md": "# Module 31 Case Studies â€” Tools, MCP, Protocols and Enterprise Integrations\n\n## Authoring standard\n\nEvery authored case must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master: all 15 sections, bounded decision and baseline, traceable evidence, checked numerical walkthrough/sizing where applicable, failure diagnostics, 12–18 answered interview questions, and Section 15 last. This is a planned catalog, not completed cases; expand to all seven collection-index sections before publication. Evidence, implementation stage and editorial status remain separate.\n\n## Planned cases\n\n| # | Case | Required outcome | Status |\n|---:|---|---|---|\n| 1 | ERP action agent | Design the decision, architecture, metrics, risks, and validation plan. | planned |\n| 2 | secure document-search connector | Design the decision, architecture, metrics, risks, and validation plan. | planned |\n\n## Suggested file naming\n\nUse **01_case-slug.md**, then **02_case-slug.md**. Add **00_framework.md** only for shared constraints that every case needs.\n\n<!-- BEGIN INTERVIEW REFERENCE PLAN -->\n\n## Reference-informed additions to develop\n\nThese are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../00_REFERENCE_INFORMED_CASE_PLAN.md).\n\n| Planning ID | Proposed case brief | Editorial relationship | Type | Decision / business question | Primary pattern | Secondary patterns | Evidence | Stage | Planning reviewed | Result |\n|---|---|---|---|---|---|---|---|---|---|---|\n| PLAN-2026-IR006 | Recover procurement workflows without replaying approvals | Supporting curriculum; shared brief | llm-agentic | How can a purchase proceed only after approval of its exact version despite retries and restarts? | `idempotent-side-effects` | `human-in-the-loop`, `snapshot-consistency` | not-measured | proposed | 2026-11-06 |  |\n| PLAN-2026-IR014 | Separate extraction correctness from routing economics | Proposed home | llm-agentic | How should extraction contracts and model routes be accepted without confusing valid syntax with business success? | `evaluation-mismatch` | `idempotent-side-effects`, `cost-latency-tradeoff` | not-measured | proposed | 2026-11-06 |  |\n\n### Reference and transfer notes\n\n| Planning ID | Example reference only | Scope boundary |\n|---|---|---|\n| PLAN-2026-IR006 | [REF-IR006](../../../../INTERVIEW_CASES/Agentic_AI_System/Langraph/durable_human_approval_graph.md) | External APIs may not support exactly-once effects; approval waiting times and run counts are exercise assumptions |\n| PLAN-2026-IR014 | [REF-IR014](../../../../INTERVIEW_CASES/Agentic_AI_System/RAG_Infra_Research/Structured_Extraction_And_Cost_Routing.md) | Contains two reference problems: author separate narratives; valid JSON and cheap token prices do not establish successful outcomes |\n\nCase metadata, pattern definitions, supporting/contrasting references, structured backlog, review log and authoring checks for these additions are maintained in the linked central planning catalog. Existing planned rows elsewhere in this index retain their original status. A brief may be split or merged before canonical case IDs are assigned.\n\n<!-- END INTERVIEW REFERENCE PLAN -->\n",
+    "31_tools_mcp_protocols_and_enterprise_integrations/Cheat_Sheets/INDEX.md": "# Module 31 Cheat Sheets — Tools, MCP, Protocols and Enterprise Integrations\n\n## 1. Overview\nFor integration engineers familiar with APIs and authorization, this collection supports protocol lifecycle, tool boundaries and safe recovery decisions. The MCP and tool-schema sheets are unreviewed drafts; publication requires source, technical and security review.\n\n## 2. Topic ladder\n| Level | Topic and outcome | Prerequisite / skill | Status |\n|---|---|---|---|\n| Foundation | [Tool schema and side-effect boundaries](02_Tool_Schema_and_Side_Effect_Boundaries.md): specify inputs, semantic validation, side effects and recovery. | JSON and API contracts. | Draft; unreviewed |\n| Core | MCP server checklist: trace initialization and discovery and diagnose a missing tool. | API lifecycle and authentication. | Planned |\n| Core | Side-effect risk matrix: classify operations and choose a safe retry boundary. | Transactions and authorization. | Planned |\n| Production | [MCP-01 Model Context Protocol](01_model_context_protocol.md): trace protocol and execution boundaries, sizing and recovery. | JSON-RPC, identity and distributed failure. | Draft; unreviewed; publication checks pending |\n\n## 3. Quick topic lookup\n| Question | Exact section | Use and warning |\n|---|---|---|\n| What is the protocol versus executor boundary? | [Definitions](01_model_context_protocol.md#section-3--foundational-definitions) | Protocol success alone does not guarantee business success. |\n| What if a write times out? | [Failure modes](01_model_context_protocol.md#section-8--failure-modes--edge-cases) | Inspect authoritative status before retrying; outcome can be ambiguous. |\n| What do retries cost? | [Formulas](01_model_context_protocol.md#section-4--core-formulas-with-full-derivation) | Independence is a model assumption, not a service guarantee. |\n\n## 4. Reading paths\n- **Beginner:** Learn JSON, HTTP and authentication; read [definitions](01_model_context_protocol.md#section-3--foundational-definitions) and the [mental model](01_model_context_protocol.md#section-2--concept-map--mental-model); the schema guide is planned.\n- **Practitioner:** Read MCP-01 through [selection](01_model_context_protocol.md#section-7--comparison--selection-table) and failure cases, checking permissions and write semantics.\n- **Advanced:** Read the entire draft, including sizing and its card; use the server checklist and risk matrix only after they are authored.\n\n## 5. Prerequisite skills\nRead JSON-RPC messages, distinguish authentication from authorization, understand retries and transactions, and compute simple probabilities. The draft [header](01_model_context_protocol.md#section-1--file-header) states its scope and prerequisites.\n\n## 6. What this collection does NOT cover\nThe server checklist and full side-effect risk matrix are planned. Protocol compliance does not establish endpoint authorization or exactly-once business effects. The tool-schema draft is not a security certification or production integration recipe.\n\n## 7. Master symbol glossary\n| Symbol / term | Meaning; unit / type / domain | First use |\n|---|---|---|\n| MCP | Model Context Protocol; protocol for host/server interaction, not an executor guarantee. | [Definitions](01_model_context_protocol.md#section-3--foundational-definitions) |\n| p | Attempt failure probability; dimensionless scalar in [0,1], under the independent retry model. | [Formulas](01_model_context_protocol.md#section-4--core-formulas-with-full-derivation) |\n\n## 8. Quick Reference Card directory\n| Card | Rule / use | Condition and avoid |\n|---|---|---|\n| [MCP-01 card](01_model_context_protocol.md#section-12--quick-reference-card) | Separate protocol, permissions and executor effects. | Check versioned behavior and provider contract; never infer committed effects from timeout. |\n\n## 9. Common Issues locator\nThe final Common Issues artifact is not authored; its count is unknown. Use [MCP-01 failures](01_model_context_protocol.md#section-8--failure-modes--edge-cases): missing tools require checking discovery and principal filtering; write timeouts require authoritative status and reconciliation. These are hypothetical cases, not observed incident counts.\n\n## 10. Empirical sources, versions and collection maintenance\nThe original source directories were unavailable and not inspected. MCP-01 is a draft; version-sensitive protocol claims, security guidance and illustrative arithmetic need independent review. Consult [standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [template](../../../../Templates/CHEAT_SHEET_CONTENT_MASTER_TEMPLATE.md); recheck protocol versions, transport and authorization behavior when dependencies change. No review date or production measurement is asserted.\n\n<!-- BEGIN INTERVIEW REFERENCE PLAN -->\n\n### Reference-informed additions to develop\n\nThese are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../00_REFERENCE_INFORMED_CASE_PLAN.md).\n\n| Related brief | Proposed cheat-sheet scope | Checks / counterexamples to include | Reference only | Status |\n|---|---|---|---|---|\n| PLAN-2026-IR006 | LangGraph checkpoints and interrupts; authenticated resume; approval binding and expiry; idempotent submission | Crash-window replay, duplicate webhooks, changed purchase payloads, checkpoint migration and reconciliation tests. Boundary: External APIs may not support exactly-once effects; approval waiting times and run counts are exercise assumptions. | [REF-IR006](../../../../INTERVIEW_CASES/Agentic_AI_System/Langraph/durable_human_approval_graph.md) | planned; not written |\n| PLAN-2026-IR014 | Schema versioning; semantic checks; dead-letter replay; idempotency; quality-constrained tiered RAG routing | Gold field accuracy and reconciliation for extraction; full-path cost and grounded quality by tier for routing. Boundary: Contains two reference problems: author separate narratives; valid JSON and cheap token prices do not establish successful outcomes. | [REF-IR014](../../../../INTERVIEW_CASES/Agentic_AI_System/RAG_Infra_Research/Structured_Extraction_And_Cost_Routing.md) | planned; not written |\n\nEach future cheat sheet needs its own explanation, preconditions, formulas or algorithms where relevant, failure signals and checked examples. Do not copy the interview narrative or its scenario figures into a reference sheet.\n\n<!-- END INTERVIEW REFERENCE PLAN -->\n\n## 11. Collection acceptance checklist\n- [ ] Author all three planned guides and a final Common Issues artifact containing at least 25 substantive issues.\n- [ ] Independently review MCP-01's 12 sections, arithmetic, source versions and security boundaries.\n- [ ] Validate links and current protocol/provider behavior; record actual review dates and evidence.\n- [ ] Keep hypothetical diagnostics separate from observed incidents and measurements.\n",
+    "31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md": "# Module 31 â€” Tools, MCP, Protocols and Enterprise Integrations\n\n> **Part:** [Part 06 â€” LLM Agents, Knowledge Systems and AI-Augmented Development](../INDEX.md)  \n> **Prerequisites:** 04,20,30  \n> **Purpose:** Expose capabilities safely through tool schemas, protocols, authentication, authorization, and side-effect controls.\n\n## Topics to develop\n\n| # | Topic | Status |\n|---:|---|---|\n| 1 | tool schemas and ergonomics | [Tool schema and side-effect-boundaries draft](Cheat_Sheets/02_Tool_Schema_and_Side_Effect_Boundaries.md); broader topic planned |\n| 2 | MCP and protocol design | planned |\n| 3 | identity and OAuth | planned |\n| 4 | transaction safety | planned |\n| 5 | integration testing | planned |\n\n## What competence looks like\n\nAfter this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.\n\n## Collections\n\n- [Case Studies](./Case_Studies/INDEX.md): application briefs that deliberately include data, constraints, architecture, evaluation, risk, and operating plan.\n- [Cheat Sheets](./Cheat_Sheets/INDEX.md): compact references for repeat use while designing, reviewing, or debugging.\n\n## Authored course-topic drafts\n\n- [Tool Schema and Side-Effect Boundaries](Cheat_Sheets/02_Tool_Schema_and_Side_Effect_Boundaries.md) — schema, semantic validation, authorization boundaries and retry recovery; visible source inventory only.\n\n## Dependency notes\n\nPrerequisites above are module identifiers. They are the minimum conceptual background, not a requirement to complete every earlier part. For a fast path, read the prerequisite indexes, then complete one module case before advancing.\n\n<!-- BEGIN INTERVIEW REFERENCE PLAN -->\n\n## Reference-informed additions to develop\n\nThese are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../00_REFERENCE_INFORMED_CASE_PLAN.md).\n\n| Planning ID | Detailed topics to develop | Decision to address | Validation to design |\n|---|---|---|---|\n| PLAN-2026-IR006 | LangGraph checkpoints and interrupts; authenticated resume; approval binding and expiry; idempotent submission | How can a purchase proceed only after approval of its exact version despite retries and restarts? | Crash-window replay, duplicate webhooks, changed purchase payloads, checkpoint migration and reconciliation tests |\n| PLAN-2026-IR014 | Schema versioning; semantic checks; dead-letter replay; idempotency; quality-constrained tiered RAG routing | How should extraction contracts and model routes be accepted without confusing valid syntax with business success? | Gold field accuracy and reconciliation for extraction; full-path cost and grounded quality by tier for routing |\n\nSee the local Case_Studies and Cheat_Sheets indexes for proposed outputs and source-reference links. These scope additions do not replace the original planned topics.\n\n<!-- END INTERVIEW REFERENCE PLAN -->\n\n## Source-tree coverage additions\n\nThe [exact source crosswalk](../../00_SOURCE_TOPIC_CROSSWALK.md) extends the original topic list with the focused briefs below. Each technical title in a linked register is a planned teaching commitment, not completed content. Follow the [master-template and numerical standards](../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) when authoring cases and sheets; hidden/clipped sources remain unresolved.\n\n| Focused source brief | Required outputs / state |\n|---|---|\n| [Tool schemas, MCP, capability versus execution, tool risk, MCP server and Sourcegraph MCP](../../00_SOURCE_COVERAGE_AGENTS.md#agent-tools-mcp) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |\n| [API, Agent SDK, MCP, Claude Code, anti-patterns and decision-flow references](../../00_SOURCE_COVERAGE_AGENTS.md#claude-reference) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |\n| [Tool descriptions/boundaries, structured errors, distribution/tool choice, MCP integration, built-ins and practice](../../00_SOURCE_COVERAGE_AGENTS.md#claude-mcp) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |\n| [production anti-patterns and MCP integration](../../00_SOURCE_COVERAGE_AGENTS.md#scenario-15) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |\n| [LangChain foundations, ecosystem, LCEL, prompts/models/parsers](../../00_SOURCE_COVERAGE_AGENTS.md#lang-foundations) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |\n\nSource module numbers and course module numbers are different namespaces. Reuse matching existing lessons when authored, but do not drop distinct variants, cases, failure themes or source limitations.\n",
+    "32_agent_memory_context_management_and_personalisation/Case_Studies/INDEX.md": "# Module 32 Case Studies â€” Agent Memory, Context Management and Personalisation\n\n## Authoring standard\n\nEvery authored case must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master: all 15 sections, bounded decision and baseline, traceable evidence, checked numerical walkthrough/sizing where applicable, failure diagnostics, 12–18 answered interview questions, and Section 15 last. This is a planned catalog, not completed cases; expand to all seven collection-index sections before publication. Evidence, implementation stage and editorial status remain separate.\n\n## Planned cases\n\n| # | Case | Required outcome | Status |\n|---:|---|---|---|\n| 1 | Long-running analyst assistant | Design the decision, architecture, metrics, risks, and validation plan. | planned |\n| 2 | support copilot with customer memory | Design the decision, architecture, metrics, risks, and validation plan. | planned |\n\n## Suggested file naming\n\nUse **01_case-slug.md**, then **02_case-slug.md**. Add **00_framework.md** only for shared constraints that every case needs.",
+    "32_agent_memory_context_management_and_personalisation/Cheat_Sheets/INDEX.md": "# Module 32 Cheat Sheets â€” Agent Memory, Context Management and Personalisation\n\n## Authoring standard\n\nEvery authored sheet must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. This collection has one unreviewed course-topic draft; remaining sheets and the final Common Issues artifact (at least 25 complete issues) are planned. A card alone is not a completed sheet.\n\n## Planned cheat sheets\n\n| # | Reference | Coverage | Status |\n|---:|---|---|---|\n| 1 | [Memory lifecycle and retention](01_Memory_Lifecycle_and_Retention.md) | Memory distinctions, write/retrieval policy, lifecycle and deletion controls. | Draft; unreviewed. |\n| 2 | context budget guide | Concise patterns, decision rules, assumptions, and common traps. | planned |\n| 3 | retention decision tree | Concise patterns, decision rules, assumptions, and common traps. | planned |\n\n## Suggested file naming\n\nUse **01_reference-slug.md**, then **02_reference-slug.md**. Keep one concern per file so references remain scannable.",
+    "32_agent_memory_context_management_and_personalisation/INDEX.md": "# Module 32 â€” Agent Memory, Context Management and Personalisation\n\n> **Part:** [Part 06 â€” LLM Agents, Knowledge Systems and AI-Augmented Development](../INDEX.md)  \n> **Prerequisites:** 20,28,30  \n> **Purpose:** Manage working context, durable memory, user preferences, provenance, retention, and retrieval quality explicitly.\n\n## Topics to develop\n\n| # | Topic | Status |\n|---:|---|---|\n| 1 | context assembly | planned |\n| 2 | episodic and semantic memory | planned |\n| 3 | memory write policies | planned |\n| 4 | personalisation | planned |\n| 5 | privacy and deletion | [Memory lifecycle and retention draft](Cheat_Sheets/01_Memory_Lifecycle_and_Retention.md); broader topic planned |\n\n## What competence looks like\n\nAfter this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.\n\n## Collections\n\n- [Case Studies](./Case_Studies/INDEX.md): application briefs that deliberately include data, constraints, architecture, evaluation, risk, and operating plan.\n- [Cheat Sheets](./Cheat_Sheets/INDEX.md): compact references for repeat use while designing, reviewing, or debugging.\n\n## Authored course-topic drafts\n\n- [Memory Lifecycle and Retention](Cheat_Sheets/01_Memory_Lifecycle_and_Retention.md) — lifecycle, retrieval, correction and deletion controls; visible source inventory only.\n\n## Dependency notes\n\nPrerequisites above are module identifiers. They are the minimum conceptual background, not a requirement to complete every earlier part. For a fast path, read the prerequisite indexes, then complete one module case before advancing.\n\n## Source-tree coverage additions\n\nThe [exact source crosswalk](../../00_SOURCE_TOPIC_CROSSWALK.md) extends the original topic list with the focused briefs below. Each technical title in a linked register is a planned teaching commitment, not completed content. Follow the [master-template and numerical standards](../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) when authoring cases and sheets; hidden/clipped sources remain unresolved.\n\n| Focused source brief | Required outputs / state |\n|---|---|\n| [Context, memory, transcript, assembly, RAG, Self-RAG, memory lifecycle/types and Sourcegraph code context](../../00_SOURCE_COVERAGE_AGENTS.md#agent-context-memory) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |\n| [Hermes self-improvement, autonomous skills, persistent memory, user modeling, platform deployment, tools and OpenClaw comparison](../../00_SOURCE_COVERAGE_AGENTS.md#agent-hermes) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |\n| [Context preservation, escalation, error propagation, large-codebase exploration, human-review confidence, provenance/uncertainty and practice](../../00_SOURCE_COVERAGE_AGENTS.md#claude-reliability) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |\n| [LangGraph memory/persistence and session isolation](../../00_SOURCE_COVERAGE_AGENTS.md#lang-memory) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |\n\nSource module numbers and course module numbers are different namespaces. Reuse matching existing lessons when authored, but do not drop distinct variants, cases, failure themes or source limitations.",
+    "33_coding_agents_ai_sdcl_and_developer_productivity/Case_Studies/INDEX.md": "# Module 33 Case Studies â€” Coding Agents, AI SDLC and Developer Productivity\n\n## Authoring standard\n\nEvery authored case must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master: all 15 sections, bounded decision and baseline, traceable evidence, checked numerical walkthrough/sizing where applicable, failure diagnostics, 12–18 answered interview questions, and Section 15 last. This is a planned catalog, not completed cases; expand to all seven collection-index sections before publication. Evidence, implementation stage and editorial status remain separate.\n\n## Planned cases\n\n| # | Case | Required outcome | Status |\n|---:|---|---|---|\n| 1 | Modernise a legacy service | Design the decision, architecture, metrics, risks, and validation plan. | planned |\n| 2 | autonomous bug-fix safety review | Design the decision, architecture, metrics, risks, and validation plan. | planned |\n\n## Suggested file naming\n\nUse **01_case-slug.md**, then **02_case-slug.md**. Add **00_framework.md** only for shared constraints that every case needs.\n\n<!-- BEGIN INTERVIEW REFERENCE PLAN -->\n\n## Reference-informed additions to develop\n\nThese are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../00_REFERENCE_INFORMED_CASE_PLAN.md).\n\n| Planning ID | Proposed case brief | Editorial relationship | Type | Decision / business question | Primary pattern | Secondary patterns | Evidence | Stage | Planning reviewed | Result |\n|---|---|---|---|---|---|---|---|---|---|---|\n| PLAN-2026-IR010 | Compare specialized models with authorized shared-model baselines | Proposed home | llm-agentic | When do repository-aware completion or language adapters justify their added complexity? | `data-leakage` | `authorization-scope`, `evaluation-mismatch` | not-measured | proposed | 2026-11-06 |  |\n\n### Reference and transfer notes\n\n| Planning ID | Example reference only | Scope boundary |\n|---|---|---|\n| PLAN-2026-IR010 | [REF-IR010](../../../../INTERVIEW_CASES/Agentic_AI_System/Multimodal/Code_And_Multilingual_Models.md) | Split this reference into two independent future narratives; code-test passage does not prove security or language accuracy |\n\nCase metadata, pattern definitions, supporting/contrasting references, structured backlog, review log and authoring checks for these additions are maintained in the linked central planning catalog. Existing planned rows elsewhere in this index retain their original status. A brief may be split or merged before canonical case IDs are assigned.\n\n<!-- END INTERVIEW REFERENCE PLAN -->\n",
+    "33_coding_agents_ai_sdcl_and_developer_productivity/Cheat_Sheets/INDEX.md": "# Module 33 Cheat Sheets â€” Coding Agents, AI SDLC and Developer Productivity\n\n## Authoring standard\n\nEvery authored sheet must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. This is a planned catalog, not completed sheets; expand to all 11 collection-index sections and a final Common Issues artifact (at least 25 complete issues) before publication. A card alone is not a completed sheet.\n\n## Planned cheat sheets\n\n| # | Reference | Coverage | Status |\n|---:|---|---|---|\n| 1 | coding-agent workflow | Concise patterns, decision rules, assumptions, and common traps. | planned |\n| 2 | PR review rubric | Concise patterns, decision rules, assumptions, and common traps. | planned |\n| 3 | repo instruction template | Concise patterns, decision rules, assumptions, and common traps. | planned |\n\n## Suggested file naming\n\nUse **01_reference-slug.md**, then **02_reference-slug.md**. Keep one concern per file so references remain scannable.\n\n<!-- BEGIN INTERVIEW REFERENCE PLAN -->\n\n## Reference-informed additions to develop\n\nThese are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../00_REFERENCE_INFORMED_CASE_PLAN.md).\n\n| Related brief | Proposed cheat-sheet scope | Checks / counterexamples to include | Reference only | Status |\n|---|---|---|---|---|\n| PLAN-2026-IR010 | Fill-in-the-middle; repository/time splits; authorized code retrieval; multilingual sampling; language adapters | Sandboxed functional correctness and latency for code; native-reviewed grounding and worst-language regressions for support. Boundary: Split this reference into two independent future narratives; code-test passage does not prove security or language accuracy. | [REF-IR010](../../../../INTERVIEW_CASES/Agentic_AI_System/Multimodal/Code_And_Multilingual_Models.md) | planned; not written |\n\nEach future cheat sheet needs its own explanation, preconditions, formulas or algorithms where relevant, failure signals and checked examples. Do not copy the interview narrative or its scenario figures into a reference sheet.\n\n<!-- END INTERVIEW REFERENCE PLAN -->\n",
+    "33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md": "# Module 33 â€” Coding Agents, AI SDLC and Developer Productivity\n\n> **Part:** [Part 06 â€” LLM Agents, Knowledge Systems and AI-Augmented Development](../INDEX.md)  \n> **Prerequisites:** 02,03,04,30,31  \n> **Purpose:** Use AI to plan, write, test, review, and operate software while retaining verification and engineering discipline.\n\n## Topics to develop\n\n| # | Topic | Status |\n|---:|---|---|\n| 1 | repository context | planned |\n| 2 | agentic coding workflows | planned |\n| 3 | test generation and review | planned |\n| 4 | CI/CD integration | planned |\n| 5 | developer metrics and risks | planned |\n\n## What competence looks like\n\nAfter this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.\n\n## Collections\n\n- [Case Studies](./Case_Studies/INDEX.md): application briefs that deliberately include data, constraints, architecture, evaluation, risk, and operating plan.\n- [Cheat Sheets](./Cheat_Sheets/INDEX.md): compact references for repeat use while designing, reviewing, or debugging.\n\n## Dependency notes\n\nPrerequisites above are module identifiers. They are the minimum conceptual background, not a requirement to complete every earlier part. For a fast path, read the prerequisite indexes, then complete one module case before advancing.\n\n<!-- BEGIN INTERVIEW REFERENCE PLAN -->\n\n## Reference-informed additions to develop\n\nThese are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../00_REFERENCE_INFORMED_CASE_PLAN.md).\n\n| Planning ID | Detailed topics to develop | Decision to address | Validation to design |\n|---|---|---|---|\n| PLAN-2026-IR010 | Fill-in-the-middle; repository/time splits; authorized code retrieval; multilingual sampling; language adapters | When do repository-aware completion or language adapters justify their added complexity? | Sandboxed functional correctness and latency for code; native-reviewed grounding and worst-language regressions for support |\n\nSee the local Case_Studies and Cheat_Sheets indexes for proposed outputs and source-reference links. These scope additions do not replace the original planned topics.\n\n<!-- END INTERVIEW REFERENCE PLAN -->\n\n## Source-tree coverage additions\n\nThe [exact source crosswalk](../../00_SOURCE_TOPIC_CROSSWALK.md) extends the original topic list with the focused briefs below. Each technical title in a linked register is a planned teaching commitment, not completed content. Follow the [master-template and numerical standards](../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) when authoring cases and sheets; hidden/clipped sources remain unresolved.\n\n| Focused source brief | Required outputs / state |\n|---|---|\n| [Source-specific Claude Code harness philosophy, Go-native engine, five-verb skills, PLANS.md, parallelism and integration](../../00_SOURCE_COVERAGE_AGENTS.md#agent-claude-harness) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |\n| [CLAUDE.md hierarchy, commands/skills, path rules, plan versus direct mode, iterative refinement, CI/CD and practice](../../00_SOURCE_COVERAGE_AGENTS.md#claude-configuration) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |\n| [Support, code generation, multi-agent research, developer productivity, CI/CD and structured extraction scenarios](../../00_SOURCE_COVERAGE_AGENTS.md#claude-scenarios) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |\n| [Hands-on multi-tool agent, code configuration, extraction and multi-agent pipeline exercises](../../00_SOURCE_COVERAGE_AGENTS.md#claude-practice) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |\n\nSource module numbers and course module numbers are different namespaces. Reuse matching existing lessons when authored, but do not drop distinct variants, cases, failure themes or source limitations.\n",
+    "34_conversational_ai_voice_agents_and_customer_operations/Case_Studies/INDEX.md": "# Module 34 Case Studies â€” Conversational AI, Voice Agents and Customer Operations\n\n## Authoring standard\n\nEvery authored case must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master: all 15 sections, bounded decision and baseline, traceable evidence, checked numerical walkthrough/sizing where applicable, failure diagnostics, 12–18 answered interview questions, and Section 15 last. This is a planned catalog, not completed cases; expand to all seven collection-index sections before publication. Evidence, implementation stage and editorial status remain separate.\n\n## Planned cases\n\n| # | Case | Required outcome | Status |\n|---:|---|---|---|\n| 1 | Voice scheduling assistant | Design the decision, architecture, metrics, risks, and validation plan. | planned |\n| 2 | contact-centre QA automation | Design the decision, architecture, metrics, risks, and validation plan. | planned |\n\n## Suggested file naming\n\nUse **01_case-slug.md**, then **02_case-slug.md**. Add **00_framework.md** only for shared constraints that every case needs.\n\n<!-- BEGIN INTERVIEW REFERENCE PLAN -->\n\n## Reference-informed additions to develop\n\nThese are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../00_REFERENCE_INFORMED_CASE_PLAN.md).\n\n| Planning ID | Proposed case brief | Editorial relationship | Type | Decision / business question | Primary pattern | Secondary patterns | Evidence | Stage | Planning reviewed | Result |\n|---|---|---|---|---|---|---|---|---|---|---|\n| PLAN-2026-IR015 | Publish reviewed coaching scripts from current product evidence | Proposed home | llm-agentic | Which generated scripts are fit for an approved, versioned coaching registry? | `human-in-the-loop` | `eligibility-before-ranking`, `atomic-release-bundle` | not-measured | proposed | 2026-11-06 |  |\n| PLAN-2026-IR016 | Distinguish speech, speaker and extraction errors in call analytics | Supporting curriculum; shared brief | hybrid | Which customer objections can be reported with reliable speaker attribution and evidence? | `evaluation-mismatch` | `authorization-scope`, `human-in-the-loop` | not-measured | proposed | 2026-11-06 |  |\n| PLAN-2026-IR017 | Adapt domain ASR while preserving supported-domain quality | Supporting curriculum; shared brief | hybrid | Should a speech adapter be promoted, and to which evaluated product and language domains? | `rollout-regression` | `distribution-shift`, `evaluation-mismatch` | not-measured | proposed | 2026-11-06 |  |\n\n### Reference and transfer notes\n\n| Planning ID | Example reference only | Scope boundary |\n|---|---|---|\n| PLAN-2026-IR015 | [REF-IR015](../../../../INTERVIEW_CASES/Agentic_AI_System/Speech_STT/Approved_Objection_Response_Scripts.md) | Human approval and source maintenance remain necessary; the example word target is not a compliance standard |\n| PLAN-2026-IR016 | [REF-IR016](../../../../INTERVIEW_CASES/Agentic_AI_System/Speech_STT/Multilingual_Call_Objections.md) | Transcript matching does not prove audio fidelity; aggregate coaching themes must not become unvalidated individual scores |\n| PLAN-2026-IR017 | [REF-IR017](../../../../INTERVIEW_CASES/Agentic_AI_System/Speech_STT/Whisper_Adaptation_And_Evaluation.md) | Model-generated transcripts are not independent gold; audio resampling does not restore missing frequencies |\n\nCase metadata, pattern definitions, supporting/contrasting references, structured backlog, review log and authoring checks for these additions are maintained in the linked central planning catalog. Existing planned rows elsewhere in this index retain their original status. A brief may be split or merged before canonical case IDs are assigned.\n\n<!-- END INTERVIEW REFERENCE PLAN -->\n",
+    "34_conversational_ai_voice_agents_and_customer_operations/Cheat_Sheets/INDEX.md": "# Module 34 Cheat Sheets â€” Conversational AI, Voice Agents and Customer Operations\n\n## Authoring standard\n\nEvery authored sheet must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. This is a planned catalog, not completed sheets; expand to all 11 collection-index sections and a final Common Issues artifact (at least 25 complete issues) before publication. A card alone is not a completed sheet.\n\n## Planned cheat sheets\n\n| # | Reference | Coverage | Status |\n|---:|---|---|---|\n| 1 | voice-agent architecture | Concise patterns, decision rules, assumptions, and common traps. | planned |\n| 2 | conversation QA rubric | Concise patterns, decision rules, assumptions, and common traps. | planned |\n| 3 | handoff policy | Concise patterns, decision rules, assumptions, and common traps. | planned |\n\n## Suggested file naming\n\nUse **01_reference-slug.md**, then **02_reference-slug.md**. Keep one concern per file so references remain scannable.\n\n<!-- BEGIN INTERVIEW REFERENCE PLAN -->\n\n## Reference-informed additions to develop\n\nThese are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../00_REFERENCE_INFORMED_CASE_PLAN.md).\n\n| Related brief | Proposed cheat-sheet scope | Checks / counterexamples to include | Reference only | Status |\n|---|---|---|---|---|\n| PLAN-2026-IR015 | Product/date eligibility; grounded generation; native-language review; source dependencies; supersession triggers | Unsupported product claims, expired evidence, read-aloud time, reviewer agreement and agent usability. Boundary: Human approval and source maintenance remain necessary; the example word target is not a compliance standard. | [REF-IR015](../../../../INTERVIEW_CASES/Agentic_AI_System/Speech_STT/Approved_Objection_Response_Scripts.md) | planned; not written |\n| PLAN-2026-IR016 | Channel-aware ASR; VAD; code-switching; speaker roles; redaction; evidence spans; cohort aggregation | Human-gold WER, domain-term WER, role error, objection precision/recall and end-to-end report coverage. Boundary: Transcript matching does not prove audio fidelity; aggregate coaching themes must not become unvalidated individual scores. | [REF-IR016](../../../../INTERVIEW_CASES/Agentic_AI_System/Speech_STT/Multilingual_Call_Objections.md) | planned; not written |\n| PLAN-2026-IR017 | Whisper adaptation; LoRA and general replay; speaker/call/time splits; independent human gold; scoped deployment | Paired WER with uncertainty by domain and code-switch slice, real-time factor and supported-route regression gates. Boundary: Model-generated transcripts are not independent gold; audio resampling does not restore missing frequencies. | [REF-IR017](../../../../INTERVIEW_CASES/Agentic_AI_System/Speech_STT/Whisper_Adaptation_And_Evaluation.md) | planned; not written |\n\nEach future cheat sheet needs its own explanation, preconditions, formulas or algorithms where relevant, failure signals and checked examples. Do not copy the interview narrative or its scenario figures into a reference sheet.\n\n<!-- END INTERVIEW REFERENCE PLAN -->\n",
+    "34_conversational_ai_voice_agents_and_customer_operations/INDEX.md": "# Module 34 â€” Conversational AI, Voice Agents and Customer Operations\n\n> **Part:** [Part 06 â€” LLM Agents, Knowledge Systems and AI-Augmented Development](../INDEX.md)  \n> **Prerequisites:** 18,20,30,31  \n> **Purpose:** Design reliable, measurable customer-facing conversations with latency control, escalation, CRM integration, and QA.\n\n## Topics to develop\n\n| # | Topic | Status |\n|---:|---|---|\n| 1 | dialogue design | planned |\n| 2 | real-time voice stack | planned |\n| 3 | handoff to humans | planned |\n| 4 | conversation analytics | planned |\n| 5 | compliance and quality | planned |\n\n## What competence looks like\n\nAfter this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.\n\n## Collections\n\n- [Case Studies](./Case_Studies/INDEX.md): application briefs that deliberately include data, constraints, architecture, evaluation, risk, and operating plan.\n- [Cheat Sheets](./Cheat_Sheets/INDEX.md): compact references for repeat use while designing, reviewing, or debugging.\n\n## Dependency notes\n\nPrerequisites above are module identifiers. They are the minimum conceptual background, not a requirement to complete every earlier part. For a fast path, read the prerequisite indexes, then complete one module case before advancing.\n\n<!-- BEGIN INTERVIEW REFERENCE PLAN -->\n\n## Reference-informed additions to develop\n\nThese are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../00_REFERENCE_INFORMED_CASE_PLAN.md).\n\n| Planning ID | Detailed topics to develop | Decision to address | Validation to design |\n|---|---|---|---|\n| PLAN-2026-IR015 | Product/date eligibility; grounded generation; native-language review; source dependencies; supersession triggers | Which generated scripts are fit for an approved, versioned coaching registry? | Unsupported product claims, expired evidence, read-aloud time, reviewer agreement and agent usability |\n| PLAN-2026-IR016 | Channel-aware ASR; VAD; code-switching; speaker roles; redaction; evidence spans; cohort aggregation | Which customer objections can be reported with reliable speaker attribution and evidence? | Human-gold WER, domain-term WER, role error, objection precision/recall and end-to-end report coverage |\n| PLAN-2026-IR017 | Whisper adaptation; LoRA and general replay; speaker/call/time splits; independent human gold; scoped deployment | Should a speech adapter be promoted, and to which evaluated product and language domains? | Paired WER with uncertainty by domain and code-switch slice, real-time factor and supported-route regression gates |\n\nSee the local Case_Studies and Cheat_Sheets indexes for proposed outputs and source-reference links. These scope additions do not replace the original planned topics.\n\n<!-- END INTERVIEW REFERENCE PLAN -->\n\n## Source-tree coverage additions\n\nThe [exact source crosswalk](../../00_SOURCE_TOPIC_CROSSWALK.md) extends the original topic list with the focused briefs below. Each technical title in a linked register is a planned teaching commitment, not completed content. Follow the [master-template and numerical standards](../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) when authoring cases and sheets; hidden/clipped sources remain unresolved.\n\n| Focused source brief | Required outputs / state |\n|---|---|\n| [Streaming, real-time output and interruption](../../00_SOURCE_COVERAGE_AGENTS.md#lang-streaming) | Focused sheets with derivations/invariants and checked numerical examples; bounded cases with validation and failure analysis; planned |\n\nSource module numbers and course module numbers are different namespaces. Reuse matching existing lessons when authored, but do not drop distinct variants, cases, failure themes or source limitations.\n",
+    "Case_Studies/INDEX.md": "# Part 06 Case Studies â€” LLM Agents, Knowledge Systems and AI-Augmented Development\n\n> **Mandatory authoring contract:** Every authored case must follow the [course authoring and numerical standards](../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master: all 15 sections, bounded decision and baseline, traceable evidence, checked numerical walkthrough/sizing where applicable, failure diagnostics, 12–18 answered interview questions, and Section 15 last. This is a planned catalog, not completed cases; expand to all seven collection-index sections before publication. Evidence, implementation stage and editorial status remain separate.\n\n## Purpose\n\nThis collection will hold cross-module cases for **LLM Agents, Knowledge Systems and AI-Augmented Development**. Unlike module-specific cases, each case should require at least two modules from this part and show business context, constraints, architecture, metrics, trade-offs, failure modes, and evidence.\n\n## Planned case-study formats\n\n1. **Design case:** ambiguous requirements to a justified architecture.\n2. **Implementation case:** data/model/platform choices with validation steps.\n3. **Incident case:** symptom, blast radius, diagnosis, remediation, and prevention.\n4. **Decision case:** compare alternatives using cost, risk, quality, latency, and adoption criteria.\n\n## Candidate threads\n\n- Agentic Systems, Workflows and Orchestration: Claims operations agent; research workflow with approval gates\n- Tools, MCP, Protocols and Enterprise Integrations: ERP action agent; secure document-search connector\n- Agent Memory, Context Management and Personalisation: Long-running analyst assistant; support copilot with customer memory\n- Coding Agents, AI SDLC and Developer Productivity: Modernise a legacy service; autonomous bug-fix safety review\n- Conversational AI, Voice Agents and Customer Operations: Voice scheduling assistant; contact-centre QA automation",
+    "Cheat_Sheets/INDEX.md": "# Part 06 Cheat Sheets â€” LLM Agents, Knowledge Systems and AI-Augmented Development\n\n> **Mandatory authoring contract:** Every authored sheet must follow the [course authoring and numerical standards](../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. This is a planned catalog, not completed sheets; expand to all 11 collection-index sections and a final Common Issues artifact (at least 25 complete issues) before publication. A card alone is not a completed sheet.\n\n## Purpose\n\nThis collection will hold concise, versioned references for the modules in this part. A cheat sheet must link to a deeper module or external canonical source, state its assumptions, and favour decision rules over uncontextualised snippets.\n\n## Planned reference families\n\n- Agentic Systems, Workflows and Orchestration: agent-pattern catalog; workflow selection; handoff protocol\n- Tools, MCP, Protocols and Enterprise Integrations: tool schema guide; MCP server checklist; side-effect risk matrix\n- Agent Memory, Context Management and Personalisation: memory taxonomy; context budget guide; retention decision tree\n- Coding Agents, AI SDLC and Developer Productivity: coding-agent workflow; PR review rubric; repo instruction template\n- Conversational AI, Voice Agents and Customer Operations: voice-agent architecture; conversation QA rubric; handoff policy",
+    "INDEX.md": "# Part 06 â€” LLM Agents, Knowledge Systems and AI-Augmented Development\n\n> **Folder:** 06_llm_agents_knowledge_systems_and_ai_augmented_development  \n> **Purpose:** Reliable agent workflows, tool integrations, context engineering, and software-delivery automation.\n\n## Position in the programme\n\nPart 04 plus core platform/evaluation concepts from Part 05.\n\n## Modules\n\n| # | Module | Focus | Indexed topics |\n|---:|---|---|---:|\n| 30 | [Agentic Systems, Workflows and Orchestration](./30_agentic_systems_workflows_and_orchestration/INDEX.md) | Design bounded agent workflows with state, planning, delegation, durable execution, and human oversight. | 5 |\n| 31 | [Tools, MCP, Protocols and Enterprise Integrations](./31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md) | Expose capabilities safely through tool schemas, protocols, authentication, authorization, and side-effect controls. | 5 |\n| 32 | [Agent Memory, Context Management and Personalisation](./32_agent_memory_context_management_and_personalisation/INDEX.md) | Manage working context, durable memory, user preferences, provenance, retention, and retrieval quality explicitly. | 5 |\n| 33 | [Coding Agents, AI SDLC and Developer Productivity](./33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md) | Use AI to plan, write, test, review, and operate software while retaining verification and engineering discipline. | 5 |\n| 34 | [Conversational AI, Voice Agents and Customer Operations](./34_conversational_ai_voice_agents_and_customer_operations/INDEX.md) | Design reliable, measurable customer-facing conversations with latency control, escalation, CRM integration, and QA. | 5 |\n\n## Part-level collections\n\n- [Case studies](./Case_Studies/INDEX.md) connect multiple modules into cross-cutting system and business narratives.\n- [Cheat sheets](./Cheat_Sheets/INDEX.md) consolidate the part's reusable patterns, decision frameworks, and review checklists.\n\n## Completion rule\n\nA learner should be able to explain the design trade-offs, choose an evidence-based approach, and complete at least one case-study brief before moving on. Each module index records its own prerequisites and planned case/cheat-sheet coverage."
+  },
+  "source_entries": [
+    {
+      "source_path": ".claude",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-source-artifacts",
+      "disposition": "unresolved-source",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "agents",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-source-artifacts",
+      "disposition": "unresolved-source",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-source-artifacts",
+      "disposition": "source-container",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Agent_Stack_Cheat_Sheets",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-source-artifacts",
+      "disposition": "unresolved-source",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_01_Agent_Stack_Overview",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-stack-model",
+      "disposition": "source-container",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_01_Agent_Stack_Overview/code",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-stack-model",
+      "disposition": "unresolved-source",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_01_Agent_Stack_Overview/01_why_agent_is_overloaded.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-stack-model",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_01_Agent_Stack_Overview/02_ten_layer_stack_model.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-stack-model",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_01_Agent_Stack_Overview/03_the_request_path.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-stack-model",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_01_Agent_Stack_Overview/04_critical_boundary_distinctions.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-stack-model",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_01_Agent_Stack_Overview/05_what_breaks_when_layers_collapse.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-stack-model",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_01_Agent_Stack_Overview/06_builder_checklist.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-stack-model",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_01_Agent_Stack_Overview/exercises.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-stack-model",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_01_Agent_Stack_Overview/README.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-stack-model",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_03_Control_Planes_and_Sessions",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-control-sessions",
+      "disposition": "source-container",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_03_Control_Planes_and_Sessions/code",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-control-sessions",
+      "disposition": "unresolved-source",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_03_Control_Planes_and_Sessions/01_what_is_a_control_plane.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-control-sessions",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_03_Control_Planes_and_Sessions/02_session_ownership.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-control-sessions",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_03_Control_Planes_and_Sessions/03_state_management.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-control-sessions",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_03_Control_Planes_and_Sessions/04_session_isolation.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-control-sessions",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_03_Control_Planes_and_Sessions/05_run_lifecycle.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-control-sessions",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_03_Control_Planes_and_Sessions/exercises.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-control-sessions",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_03_Control_Planes_and_Sessions/README.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-control-sessions",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_04_Runtimes_and_Workflows",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-runtimes",
+      "disposition": "source-container",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_04_Runtimes_and_Workflows/code",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-runtimes",
+      "disposition": "unresolved-source",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_04_Runtimes_and_Workflows/01_what_is_a_runtime.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-runtimes",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_04_Runtimes_and_Workflows/02_durable_execution.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-runtimes",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_04_Runtimes_and_Workflows/03_langgraph_deep_dive.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-runtimes",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_04_Runtimes_and_Workflows/04_workflow_patterns.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-runtimes",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_04_Runtimes_and_Workflows/05_choosing_runtime.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-runtimes",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_04_Runtimes_and_Workflows/exercises.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-runtimes",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_04_Runtimes_and_Workflows/README.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-runtimes",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_05_Context_Memory_Retrieval",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "agent-context-memory",
+      "disposition": "source-container",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_05_Context_Memory_Retrieval/code",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "agent-context-memory",
+      "disposition": "unresolved-source",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_05_Context_Memory_Retrieval/01_context_vs_memory_vs_transcript.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "agent-context-memory",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_05_Context_Memory_Retrieval/02_context_assembly.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "agent-context-memory",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_05_Context_Memory_Retrieval/03_retrieval_augmented_generation.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "agent-context-memory",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_05_Context_Memory_Retrieval/04_self_rag.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "agent-context-memory",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_05_Context_Memory_Retrieval/05_memory_lifecycle.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "agent-context-memory",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_05_Context_Memory_Retrieval/06_memory_types_and_patterns.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "agent-context-memory",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_05_Context_Memory_Retrieval/07_sourcegraph_code_context.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "agent-context-memory",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_05_Context_Memory_Retrieval/exercises.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "agent-context-memory",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_05_Context_Memory_Retrieval/README.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "agent-context-memory",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_06_Tools_MCP_and_Capabilities",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "agent-tools-mcp",
+      "disposition": "source-container",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_06_Tools_MCP_and_Capabilities/code",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "agent-tools-mcp",
+      "disposition": "unresolved-source",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_06_Tools_MCP_and_Capabilities/01_tool_schemas_and_definitions.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "agent-tools-mcp",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_06_Tools_MCP_and_Capabilities/02_model_context_protocol.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "agent-tools-mcp",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_06_Tools_MCP_and_Capabilities/03_capability_vs_execution.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "agent-tools-mcp",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_06_Tools_MCP_and_Capabilities/04_tool_categories_and_risk.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "agent-tools-mcp",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_06_Tools_MCP_and_Capabilities/05_mcp_server_implementation.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "agent-tools-mcp",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_06_Tools_MCP_and_Capabilities/06_sourcegraph_mcp_integration.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "agent-tools-mcp",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_06_Tools_MCP_and_Capabilities/exercises.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "agent-tools-mcp",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_06_Tools_MCP_and_Capabilities/README.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "agent-tools-mcp",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_07_Agentic_Design_Patterns",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-patterns",
+      "disposition": "source-container",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_07_Agentic_Design_Patterns/code",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-patterns",
+      "disposition": "unresolved-source",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_07_Agentic_Design_Patterns/01_patterns_overview.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-patterns",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_07_Agentic_Design_Patterns/02_reflection_pattern.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-patterns",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_07_Agentic_Design_Patterns/03_tool_use_pattern.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-patterns",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_07_Agentic_Design_Patterns/04_planning_patterns.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-patterns",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_07_Agentic_Design_Patterns/05_multi_agent_patterns.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-patterns",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_07_Agentic_Design_Patterns/06_orchestration_patterns.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-patterns",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_07_Agentic_Design_Patterns/07_human_in_the_loop_pattern.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-patterns",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_07_Agentic_Design_Patterns/08_pattern_composition.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-patterns",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_07_Agentic_Design_Patterns/09_emerging_patterns_2025.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-patterns",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_07_Agentic_Design_Patterns/exercises.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-patterns",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_07_Agentic_Design_Patterns/README.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-patterns",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_10_OpenClaw_Architecture",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-openclaw",
+      "disposition": "source-container",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_10_OpenClaw_Architecture/code",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-openclaw",
+      "disposition": "unresolved-source",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_10_OpenClaw_Architecture/01_openclaw_overview.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-openclaw",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_10_OpenClaw_Architecture/02_gateway_and_sessions.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-openclaw",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_10_OpenClaw_Architecture/03_lane_aware_queue.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-openclaw",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_10_OpenClaw_Architecture/04_websocket_protocol.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-openclaw",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_10_OpenClaw_Architecture/05_agent_runtime_loop.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-openclaw",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_10_OpenClaw_Architecture/06_memory_as_files.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-openclaw",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_10_OpenClaw_Architecture/07_concurrency_and_invariants.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-openclaw",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_10_OpenClaw_Architecture/08_security_hardening.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-openclaw",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_10_OpenClaw_Architecture/exercises.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-openclaw",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_10_OpenClaw_Architecture/README.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-openclaw",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_11_Claude_Code_Harness",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "agent-claude-harness",
+      "disposition": "source-container",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_11_Claude_Code_Harness/code",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "agent-claude-harness",
+      "disposition": "unresolved-source",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_11_Claude_Code_Harness/01_harness_philosophy.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "agent-claude-harness",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_11_Claude_Code_Harness/02_go_native_engine.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "agent-claude-harness",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_11_Claude_Code_Harness/03_five_verb_skills.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "agent-claude-harness",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_11_Claude_Code_Harness/04_plans_md_anatomy.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "agent-claude-harness",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_11_Claude_Code_Harness/05_parallel_execution.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "agent-claude-harness",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_11_Claude_Code_Harness/06_advanced_features.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "agent-claude-harness",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_11_Claude_Code_Harness/07_integrating_harness.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "agent-claude-harness",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_11_Claude_Code_Harness/exercises.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "agent-claude-harness",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_11_Claude_Code_Harness/README.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "agent-claude-harness",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_12_Hermes_Self_Evolving_Agent",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "agent-hermes",
+      "disposition": "source-container",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_12_Hermes_Self_Evolving_Agent/code",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "agent-hermes",
+      "disposition": "unresolved-source",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_12_Hermes_Self_Evolving_Agent/01_self_improvement_architecture.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "agent-hermes",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_12_Hermes_Self_Evolving_Agent/02_autonomous_skill_generation.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "agent-hermes",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_12_Hermes_Self_Evolving_Agent/03_persistent_memory_system.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "agent-hermes",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_12_Hermes_Self_Evolving_Agent/04_user_modeling.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "agent-hermes",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_12_Hermes_Self_Evolving_Agent/05_multi_platform_deployment.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "agent-hermes",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_12_Hermes_Self_Evolving_Agent/06_tool_ecosystem.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "agent-hermes",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_12_Hermes_Self_Evolving_Agent/07_comparing_openclaw_and_hermes.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "agent-hermes",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_12_Hermes_Self_Evolving_Agent/exercises.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "agent-hermes",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Module_12_Hermes_Self_Evolving_Agent/README.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "agent-hermes",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/RESEARCH",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-source-artifacts",
+      "disposition": "unresolved-source",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/agentic ai.pdf",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-source-artifacts",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/agents whitepaper.pdf",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-source-artifacts",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/ai agents.pdf",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-source-artifacts",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/ai_engg.pdf",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-source-artifacts",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/all_content.txt",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-source-artifacts",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Contxt_engg_paul.pdf",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-source-artifacts",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/Embedding retrieval limitations.pdf",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-source-artifacts",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/gen ai use cases.pdf",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-source-artifacts",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/LLM sys design.pdf",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-source-artifacts",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/LLM system design.pdf",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-source-artifacts",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/prompt report.pdf",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-source-artifacts",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Agents_Stack_Infra/README.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "agent-source-artifacts",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "claude-reference",
+      "disposition": "source-container",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "claude-reference",
+      "disposition": "source-container",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/01_Domain1_Agentic_Architecture",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "claude-architecture",
+      "disposition": "source-container",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/01_Domain1_Agentic_Architecture/01_01_agentic_loop_lifecycle.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "claude-architecture",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/01_Domain1_Agentic_Architecture/01_02_multi_agent_orchestration.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "claude-architecture",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/01_Domain1_Agentic_Architecture/01_03_subagent_spawning_context.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "claude-architecture",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/01_Domain1_Agentic_Architecture/01_04_enforcement_and_handoff.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "claude-architecture",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/01_Domain1_Agentic_Architecture/01_05_agent_sdk_hooks.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "claude-architecture",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/01_Domain1_Agentic_Architecture/01_06_task_decomposition_strategies.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "claude-architecture",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/01_Domain1_Agentic_Architecture/01_07_session_management.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "claude-architecture",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/01_Domain1_Agentic_Architecture/01_08_domain1_practice_questions.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "claude-architecture",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/02_Domain2_Tool_Design_MCP",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "claude-mcp",
+      "disposition": "source-container",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/02_Domain2_Tool_Design_MCP/02_01_tool_descriptions_boundaries.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "claude-mcp",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/02_Domain2_Tool_Design_MCP/02_02_structured_error_responses.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "claude-mcp",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/02_Domain2_Tool_Design_MCP/02_03_tool_distribution_tool_choice.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "claude-mcp",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/02_Domain2_Tool_Design_MCP/02_04_mcp_server_integration.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "claude-mcp",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/02_Domain2_Tool_Design_MCP/02_05_builtin_tools.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "claude-mcp",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/02_Domain2_Tool_Design_MCP/02_06_domain2_practice_questions.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "claude-mcp",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/03_Domain3_Claude_Code_Config",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "claude-configuration",
+      "disposition": "source-container",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/03_Domain3_Claude_Code_Config/03_01_claude_md_hierarchy.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "claude-configuration",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/03_Domain3_Claude_Code_Config/03_02_slash_commands_and_skills.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "claude-configuration",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/03_Domain3_Claude_Code_Config/03_03_path_specific_rules.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "claude-configuration",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/03_Domain3_Claude_Code_Config/03_04_plan_mode_vs_direct.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "claude-configuration",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/03_Domain3_Claude_Code_Config/03_05_iterative_refinement.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "claude-configuration",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/03_Domain3_Claude_Code_Config/03_06_ci_cd_integration.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "claude-configuration",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/03_Domain3_Claude_Code_Config/03_07_domain3_practice_questions.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "claude-configuration",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/05_Domain5_Context_Reliability",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "claude-reliability",
+      "disposition": "source-container",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/05_Domain5_Context_Reliability/05_01_context_preservation.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "claude-reliability",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/05_Domain5_Context_Reliability/05_02_escalation_patterns.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "claude-reliability",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/05_Domain5_Context_Reliability/05_03_error_propagation.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "claude-reliability",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/05_Domain5_Context_Reliability/05_04_large_codebase_exploration.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "claude-reliability",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/05_Domain5_Context_Reliability/05_05_human_review_confidence.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "claude-reliability",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/05_Domain5_Context_Reliability/05_06_provenance_uncertainty.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "claude-reliability",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/05_Domain5_Context_Reliability/05_07_domain5_practice_questions.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "claude-reliability",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/06_Scenarios_Deep_Dive",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "claude-scenarios",
+      "disposition": "source-container",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/06_Scenarios_Deep_Dive/domains",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "claude-scenarios",
+      "disposition": "source-container",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/06_Scenarios_Deep_Dive/domains/15_Cross_Industry_Patterns",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "scenario-15",
+      "disposition": "source-container",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/06_Scenarios_Deep_Dive/domains/15_Cross_Industry_Patterns/15_01_production_anti_patterns.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "scenario-15",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/06_Scenarios_Deep_Dive/domains/15_Cross_Industry_Patterns/15_02_mcp_integration_production.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "scenario-15",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/06_Scenarios_Deep_Dive/06_01_customer_support_agent.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "claude-scenarios",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/06_Scenarios_Deep_Dive/06_02_code_generation_claude_code.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "claude-scenarios",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/06_Scenarios_Deep_Dive/06_03_multi_agent_research.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "claude-scenarios",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/06_Scenarios_Deep_Dive/06_04_developer_productivity.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "claude-scenarios",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/06_Scenarios_Deep_Dive/06_05_ci_cd_pipeline.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "claude-scenarios",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/06_Scenarios_Deep_Dive/06_06_structured_data_extraction.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "claude-scenarios",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/06_Scenarios_Deep_Dive/DOMAIN_INDEX.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "claude-scenarios",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/07_Hands_On_Exercises",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "claude-practice",
+      "disposition": "source-container",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/07_Hands_On_Exercises/07_01_exercise_multi_tool_agent.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "claude-practice",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/07_Hands_On_Exercises/07_02_exercise_claude_code_config.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "claude-practice",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/07_Hands_On_Exercises/07_03_exercise_data_extraction.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "claude-practice",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/07_Hands_On_Exercises/07_04_exercise_multi_agent_pipeline.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity/INDEX.md",
+      "plan_anchor": "claude-practice",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/08_Quick_Reference",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "claude-reference",
+      "disposition": "source-container",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/08_Quick_Reference/08_01_api_reference_card.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "claude-reference",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/08_Quick_Reference/08_02_agent_sdk_reference.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "claude-reference",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/08_Quick_Reference/08_03_mcp_reference.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "claude-reference",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/08_Quick_Reference/08_04_claude_code_reference.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "claude-reference",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/08_Quick_Reference/08_05_anti_patterns_cheatsheet.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "claude-reference",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/08_Quick_Reference/08_06_decision_flowcharts.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "claude-reference",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/part1",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "claude-reference",
+      "disposition": "unresolved-source",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/part2",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "claude-reference",
+      "disposition": "unresolved-source",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "Claude_Architect/course/[TRUNCATED/UNVERIFIED] instructor_8lsy243ftffjjy1cx9lm3o2bw_public_1773274827_Claud… (.pdf)",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "claude-reference",
+      "disposition": "unresolved-source",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "deep_dive/Pharma_Agentic_Case_Studies",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "pharma-patterns",
+      "disposition": "source-container",
+      "plan_file": "00_SOURCE_COVERAGE_EDGE_INDUSTRY.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "deep_dive/Pharma_Agentic_Case_Studies/00_FIXES_AND_TRADEOFFS.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "pharma-patterns",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_EDGE_INDUSTRY.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "deep_dive/Pharma_Agentic_Case_Studies/00_HLD_LLD_SYSTEM_DESIGN.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "pharma-patterns",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_EDGE_INDUSTRY.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "deep_dive/Pharma_Agentic_Case_Studies/00_INDEX.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "pharma-patterns",
+      "disposition": "supporting-artifact",
+      "plan_file": "00_SOURCE_COVERAGE_EDGE_INDUSTRY.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "deep_dive/Pharma_Agentic_Case_Studies/01_Landscape_Overview_Pharma_Agentic_AI.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "pharma-patterns",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_EDGE_INDUSTRY.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "deep_dive/Pharma_Agentic_Case_Studies/08_CrossDomain_Agentic_Architecture_Patterns_Pharma.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "pharma-patterns",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_EDGE_INDUSTRY.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "deep_dive/Pharma_Agentic_Case_Studies/09_Common_Issues_Pharma_Agentic_AI.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "pharma-patterns",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_EDGE_INDUSTRY.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "deep_dive/Pharma_Agentic_Case_Studies/10_RealWorld_Implemented_RAG_Agent_AgenticAI_Case_Studies.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "pharma-patterns",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_EDGE_INDUSTRY.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "LangGraph_LangChain_2025/LangGraph_LangChain_Cheat_Sheets/01_Foundations_Ecosystem.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "lang-foundations",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "LangGraph_LangChain_2025/LangGraph_LangChain_Cheat_Sheets/02_LCEL_Core_Concepts.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "lang-foundations",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "LangGraph_LangChain_2025/LangGraph_LangChain_Cheat_Sheets/03_Prompts_Models_Parsers.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "lang-foundations",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "LangGraph_LangChain_2025/LangGraph_LangChain_Cheat_Sheets/04_LangGraph_Architecture.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "lang-graphs",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "LangGraph_LangChain_2025/LangGraph_LangChain_Cheat_Sheets/05_Nodes_Edges_Control_Flow.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "lang-graphs",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "LangGraph_LangChain_2025/LangGraph_LangChain_Cheat_Sheets/06_Agents_Tool_Use.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "lang-graphs",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "LangGraph_LangChain_2025/LangGraph_LangChain_Cheat_Sheets/07_Multi_Agent_Systems.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "lang-graphs",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "LangGraph_LangChain_2025/LangGraph_LangChain_Cheat_Sheets/08_Memory_Persistence.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "lang-memory",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "LangGraph_LangChain_2025/LangGraph_LangChain_Cheat_Sheets/10_Streaming_Real_Time.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/34_conversational_ai_voice_agents_and_customer_operations/INDEX.md",
+      "plan_anchor": "lang-streaming",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "LangGraph_LangChain_2025/01_Foundations_and_Ecosystem.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "lang-foundations",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "LangGraph_LangChain_2025/02_LangChain_Core_Concepts.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/INDEX.md",
+      "plan_anchor": "lang-foundations",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "LangGraph_LangChain_2025/03_LangGraph_Architecture.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "lang-graphs",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "LangGraph_LangChain_2025/04_Agents_and_Tool_Use.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "lang-graphs",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "LangGraph_LangChain_2025/05_Multi_Agent_Systems.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md",
+      "plan_anchor": "lang-graphs",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "LangGraph_LangChain_2025/06_Memory_and_Persistence.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/INDEX.md",
+      "plan_anchor": "lang-memory",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    },
+    {
+      "source_path": "LangGraph_LangChain_2025/07_Streaming_and_Real_Time.md",
+      "destination": "06_llm_agents_knowledge_systems_and_ai_augmented_development/34_conversational_ai_voice_agents_and_customer_operations/INDEX.md",
+      "plan_anchor": "lang-streaming",
+      "disposition": "planned-topic",
+      "plan_file": "00_SOURCE_COVERAGE_AGENTS.md",
+      "editorial_status": "planned; no completion established",
+      "authored_artifacts": []
+    }
+  ],
+  "initial_authored_files": [
+    "30_agentic_systems_workflows_and_orchestration/Case_Studies/01_enterprise_agent_approval_gate.md",
+    "30_agentic_systems_workflows_and_orchestration/Cheat_Sheets/04_agent_sessions_state_isolation_and_lifecycle.md",
+    "30_agentic_systems_workflows_and_orchestration/Cheat_Sheets/05_durable_workflows_and_idempotent_execution.md",
+    "31_tools_mcp_protocols_and_enterprise_integrations/Cheat_Sheets/01_model_context_protocol.md",
+    "31_tools_mcp_protocols_and_enterprise_integrations/Cheat_Sheets/02_Tool_Schema_and_Side_Effect_Boundaries.md",
+    "32_agent_memory_context_management_and_personalisation/Cheat_Sheets/01_Memory_Lifecycle_and_Retention.md"
+  ],
+  "publication_state": "authoring in progress; no review asserted"
+}

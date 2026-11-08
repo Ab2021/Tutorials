@@ -79,3 +79,30 @@ The [exact source crosswalk](../../00_SOURCE_TOPIC_CROSSWALK.md) extends the ori
 | [Fine-tuning Module 00 — LLM foundations and modern training pipeline](../../00_SOURCE_COVERAGE_CUDA_TRAINING.md#ft-foundations) | Submodule lessons 0.1 and 0.2 drafted; focused sheets, a bounded case, independent review and empirical validation remain planned |
 
 Source module numbers and course module numbers are different namespaces. Reuse matching existing lessons when authored, but do not drop distinct variants, cases, failure themes or source limitations.
+
+## Local coverage and artifact identities
+
+This ledger preserves all five original topics, both original case rows, all three original sheet rows, the thirteen existing lessons, and the source-added syllabus. Editorial state is **draft**, independently of the proposed implementation stage and not-measured outcome evidence. Source filenames below identify visible inventory entries, not inspected original source bodies. No clipped filename is reconstructed.
+
+| Order | Commitment and measurable outcome | Lesson home | Sheet identity / required focused scope | Case identity / bounded decision |
+|---:|---|---|---|---|
+| 1 | Tokenisation and embeddings: reconcile bytes, token IDs, vocabulary rows and usable context | 0.1, plus local tokenisation lesson | SH19-02 token budgeting; SH19-04 sequence probability; tokenisation/embedding compatibility | CASE-19-01 original code-assistance model choice; CASE-19-05 whether weight changes are needed |
+| 2 | Attention and transformer blocks: derive shapes, dense counts, routed counts and overload boundaries | 1.1–1.4 | SH19-01 original transformer anatomy; focused attention, blocks, parameter counting and MoE sheets | CASE-19-06 dense versus routed feed-forward blocks |
+| 3 | Pretraining and scaling: distinguish objectives, scoped fits and token-indexed schedules | 3.1–3.3 | Independent objectives, scaling and hyperparameter sheets | CASE-19-07 fixed-compute model/token choice; CASE-19-04 IR009 |
+| 4 | Context architectures: distinguish usable context, positional extension, training and task evidence | 11.1, external 11.2, 11.3–11.5 | SH19-02 token budgeting; focused extension training, memory and positional-evaluation sheets; external RoPE reference unchanged | CASE-19-02 original long-context quality diagnosis |
+| 5 | Inference behaviour: distinguish sampling policy, prefill/decode, admission and exact speculation | Local inference-behaviour lesson | SH19-03 original model selection matrix; focused admission/cache and speculative-correctness sheets | CASE-19-03 IR007 latency/admitted throughput |
+| 6 | ft-foundations: factor sequence likelihood and trace training-stage artifact lineage | 0.1, 0.2 | Independent probability and training-stage contract sheets | CASE-19-05 unchanged model versus weight update |
+| 7 | claude-prompting: explicit criteria and few-shot prompting | Local prompting lesson | Independent criteria and few-shot sheets | CASE-19-08 extraction prompt and feedback budget |
+| 8 | claude-prompting: structured output/tool use and validation/retry feedback | Local prompting lesson | Independent schema/tool-contract and bounded-feedback sheets | CASE-19-08 |
+| 9 | claude-prompting: batch processing, multi-pass review and domain4 practice questions | Local prompting lesson | Independent batch/review sheets; answered practice inside the local lesson and interview packs | CASE-19-08 |
+| 10 | ft-alternative-architectures: Mamba selective state, RWKV recurrence and RetNet retention | Local architecture-specific lessons | Independent Mamba, RWKV and RetNet sheets | CASE-19-09 streaming-memory architecture choice |
+| 11 | ft-alternative-architectures: structured/unstructured pruning and sparsification | Local pruning lesson | Independent structured/unstructured pruning and sparsification reasoning | CASE-19-09 |
+| Final | Diagnose cross-topic failures without confusing symptoms with causes | All lessons | Final Common Issues artifact: at least 25 complete issues | Failure and recovery analysis in each case |
+
+### Provenance and publication boundary
+
+- Inventory: [`directory.txt`](../../../Templates/directory.txt), lines 223–231 (prompting), 842–855 (source sheets), 857–864 (foundations/architecture), 870–873 (pretraining), 919–924 (context), 951–953 (alternative architectures/pruning).
+- Focused commitments: [prompting](../../00_SOURCE_COVERAGE_AGENTS.md#claude-prompting), [foundations](../../00_SOURCE_COVERAGE_CUDA_TRAINING.md#ft-foundations), [transformers](../../00_SOURCE_COVERAGE_CUDA_TRAINING.md#ft-transformers), [pretraining](../../00_SOURCE_COVERAGE_CUDA_TRAINING.md#ft-pretraining), [context](../../00_SOURCE_COVERAGE_CUDA_TRAINING.md#ft-context), [alternatives](../../00_SOURCE_COVERAGE_CUDA_TRAINING.md#ft-alternative-architectures).
+- Supporting interview references: [IR007](../../00_REFERENCE_INFORMED_CASE_PLAN.md#ref-ir007-balance-interactive-inference-latency-and-admitted-throughput) and [IR009](../../00_REFERENCE_INFORMED_CASE_PLAN.md#ref-ir009-allocate-a-domain-training-budget-with-restart-headroom). Their scenarios and assumed figures are not measurements of the proposed local designs.
+- Every case/sheet must carry its own inventory link, precise sources, numerical inputs, evidence gaps, and independent editorial state. This ledger does not certify that a planned identity has an authored artifact.
+- Original source bodies remain unavailable; new teaching content may cover the visible technical titles using primary publications without pretending to reproduce inaccessible lessons. Runtime, quality, deployment and review outcomes remain not measured/not independently reviewed.

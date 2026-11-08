@@ -12,7 +12,7 @@
 | 2 | episodic and semantic memory | planned |
 | 3 | memory write policies | planned |
 | 4 | personalisation | planned |
-| 5 | privacy and deletion | planned |
+| 5 | privacy and deletion | [Memory lifecycle and retention draft](Cheat_Sheets/01_Memory_Lifecycle_and_Retention.md); broader topic planned |
 
 ## What competence looks like
 
@@ -22,6 +22,10 @@ After this module, a learner can turn a real problem into an appropriate technic
 
 - [Case Studies](./Case_Studies/INDEX.md): application briefs that deliberately include data, constraints, architecture, evaluation, risk, and operating plan.
 - [Cheat Sheets](./Cheat_Sheets/INDEX.md): compact references for repeat use while designing, reviewing, or debugging.
+
+## Authored course-topic drafts
+
+- [Memory Lifecycle and Retention](Cheat_Sheets/01_Memory_Lifecycle_and_Retention.md) — lifecycle, retrieval, correction and deletion controls; visible source inventory only.
 
 ## Dependency notes
 
