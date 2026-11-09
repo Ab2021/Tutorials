@@ -1,34 +1,59 @@
-# Module 55 Cheat Sheets â€” Incident Response, Failure Modes and Technical Leadership
+# Module 55 Cheat Sheets — Incident Response, Failure Modes and Technical Leadership
 
-## Authoring standard
+## 1. Overview
+This collection will teach incident command, data/model and LLM/agent failures, resilience drills, and prevention. Existing streaming cases are illustrative drafts, not empirical incident reports. No individual cheat sheet or Common Issues artifact exists.
 
-Every authored sheet must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. This is a planned catalog, not completed sheets; expand to all 11 collection-index sections and a final Common Issues artifact (at least 25 complete issues) before publication. A card alone is not a completed sheet.
-
-## Planned cheat sheets
-
-| # | Reference | Coverage | Status |
-|---:|---|---|---|
-| 1 | incident-response playbook | Concise patterns, decision rules, assumptions, and common traps. | planned |
-| 2 | failure-mode catalog | Concise patterns, decision rules, assumptions, and common traps. | planned |
-| 3 | postmortem template | Concise patterns, decision rules, assumptions, and common traps. | planned |
-
-## Suggested file naming
-
-Use **01_reference-slug.md**, then **02_reference-slug.md**. Keep one concern per file so references remain scannable.
-
-<!-- BEGIN INTERVIEW REFERENCE PLAN -->
-
-## Reference-informed additions to develop
-
-These are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../00_REFERENCE_INFORMED_CASE_PLAN.md).
-
-| Related brief | Proposed cheat-sheet scope | Checks / counterexamples to include | Reference only | Status |
+## 2. Topic ladder
+| Level | Topic | Outcome | Prerequisite | Status |
 |---|---|---|---|---|
-| PLAN-2026-IR005 | Immutable release manifests; compatibility gates; side-effect-free shadowing; staged canaries; incident containment | Bundle-compatibility tests, rollback drills, guardrail breaches and unresolved side effects after recovery. Boundary: A prompt-only rollback cannot restore all dependencies; example dwell times and canary percentages are not defaults. | [REF-IR005](../../../../INTERVIEW_CASES/Agentic_AI_System/INDEX/Agent_Release_And_Incident_Operations.md) | planned; not written |
-| PLAN-2026-IR028 | Hash collision amplification; catastrophic regex backtracking; pre-parse limits; bounded queues and downstream budgets | Adversarial near-match inputs, collision workload, CPU per request, timeout cascades and legitimate-input acceptance. Boundary: The hash and regex scenarios are separate; legacy runtime behavior and example input limits require fresh validation. | [REF-IR028](../../../../INTERVIEW_CASES/DSA/Production_DSA_Incidents/Algorithmic_DoS/hash_and_regex_resource_exhaustion.md) | planned; not written |
-| PLAN-2026-IR029 | Enqueue-time deduplication; paged adjacency; independent work budgets; deterministic traversal; explicit partial results | High-degree and cyclic graph replays, peak memory, examined edges, output completeness and candidate utility. Boundary: Depth and output-size limits alone do not bound expansion; source product degrees and outage figures are illustrative claims. | [REF-IR029](../../../../INTERVIEW_CASES/DSA/Production_DSA_Incidents/Graph_Traversal/bounded_bfs_incident.md) | planned; not written |
-| PLAN-2026-IR030 | Hash flooding; BFS OOM; regex backtracking; recursive DFS depth; ORM N+1; overflow; unstable ties; floating search termination | Reproduce each mechanism separately with bounded adversarial traces; track latency, memory, database calls and deterministic outputs. Boundary: Ten reconstructed incident units include recurring mechanisms; reported timings are not measured outcomes of this library. | [REF-IR030](../../../../INTERVIEW_CASES/DSA/Production_DSA_Incidents/INTERVIEW_CASE_STUDIES.md) | planned; not written |
+| Foundation | incident-response playbook | establish roles, evidence, containment, and decision clock | systems basics | planned |
+| Core | failure-mode catalog | distinguish signals, causes, mitigations, and verification | playbook | planned |
+| Core | postmortem template | derive prevention from an invariant failure | playbook | planned |
+| Advanced | IR005 release bundle | promote/recover compatible model/prompt/tool/index/policy bundle | versioning | planned |
+| Advanced | IR028 bounded parsing | contain collision/regex CPU amplification | DSA/security | planned |
+| Advanced | IR029 bounded graph traversal | return explicit partial results | graphs | planned |
+| Advanced | IR030 invariant failures | replay diverse algorithmic failure mechanisms | DSA | planned |
+| Final | Common Issues | >=25 complete issues | all sheets | planned; no file |
 
-Each future cheat sheet needs its own explanation, preconditions, formulas or algorithms where relevant, failure signals and checked examples. Do not copy the interview narrative or its scenario figures into a reference sheet.
+## 3. Quick topic lookup
+| Question | File | Use condition | Warning |
+|---|---|---|---|
+| Who decides containment? | planned playbook | active incident | restart is not diagnosis |
+| Why did CPU spike? | planned IR028 | adversarial parsing | size limit alone may fail |
+| Can traversal return partial output? | planned IR029 | bounded graph expansion | partial must be labeled |
 
-<!-- END INTERVIEW REFERENCE PLAN -->
+## 4. Reading paths — three options
+**Beginner:** playbook → failure catalog → postmortem. **Practitioner:** beginner path plus one existing streaming case and planned resilience drills. **Advanced:** all planned reference additions, recovery rehearsals, and the final issue artifact.
+
+## 5. Prerequisite skills
+Timestamped logs/metrics, queues and backpressure, data/model versioning, idempotency, complexity analysis, and operational communication. Source incident narratives referenced in the module are unavailable or reference-only.
+
+## 6. Exclusions and handoffs
+This is not an on-call authorization, security/legal policy, vendor runbook, or evidence of a real organization’s incident. Product-specific SLOs, safety decisions, and privacy notifications need local owners and primary sources.
+
+## 7. Master symbol glossary
+| Term | Meaning | Units/type | First planned use |
+|---|---|---|---|
+| `lambda`, `mu` | ingress/service rate | events/s | capacity diagnosis |
+| `B` | backlog | events | recovery calculation |
+| RTO | proposed recovery-time objective | time | playbook |
+| invariant | condition preserved across allowed transitions | predicate | postmortem |
+
+## 8. Quick Reference Card directory
+No cards exist; every future sheet must finish with a card. The two case cards do not fulfill this directory.
+
+## 9. Common Issues locator
+No final issue artifact exists. It must retain all 12 headings and contain at least 25 distinct complete entries with stable ID, category, provenance, causes, diagnostic signal, mitigation risk, correction, prevention, and verification.
+
+## 10. Sources, versions and maintenance
+| Source | Scope | Limitation | Trigger |
+|---|---|---|---|
+| [module index](../INDEX.md) | original topics and plans | planned curriculum | index change |
+| [stream incidents brief](../../../00_SOURCE_COVERAGE_EDGE_INDUSTRY.md#stream-incidents) | source scope | titles are not source bodies | body/version change |
+| [Lang issues brief](../../../00_SOURCE_COVERAGE_AGENTS.md#lang-issues) | issue syllabus | not completed issues | source review |
+
+## 11. Collection acceptance checklist
+- [ ] Each topic is authored as a 12-section substantive sheet.
+- [ ] All calculations/traces are checked and evidence boundaries honest.
+- [ ] Final >=25-issue artifact exists.
+- [ ] Primary sources, links, and changing dependency semantics are reviewed.

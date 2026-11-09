@@ -12,7 +12,7 @@
 | 2 | linear trees and boosting | planned |
 | 3 | feature engineering | planned |
 | 4 | imbalance and calibration | planned |
-| 5 | validation and error analysis | [Model validation and error-analysis draft](Cheat_Sheets/01_Model_Validation_and_Error_Analysis.md); broader topic planned |
+| 5 | validation and error analysis | [Model validation and error-analysis draft](Cheat_Sheets/01_Model_Validation_and_Error_Analysis.md); remaining broader topic coverage planned |
 
 ## What competence looks like
 

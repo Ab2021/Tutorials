@@ -12,6 +12,7 @@ This course contains a planned syllabus and a growing set of draft teaching file
 - [Biomedical edge, streaming, insurance and industry](00_SOURCE_COVERAGE_EDGE_INDUSTRY.md).
 - [Data science methods, 55 production case titles and graph ML](00_SOURCE_COVERAGE_DATA_SCIENCE.md).
 - [Reference-informed case and cheat-sheet plan](00_REFERENCE_INFORMED_CASE_PLAN.md) — 36 separate example references, not source-topic completion evidence.
+- [Current continuation and verification record](00_AUDIT_COVERAGE_MATRIX.md#current-detailed-authoring-pass) — all eleven parts and root collections are in scope; worker launches and source accounting are not module-completion claims.
 
 ## Authored drafts
 
@@ -134,6 +135,7 @@ This course contains a planned syllabus and a growing set of draft teaching file
 - [Permission-aware retrieval](04_deep_learning_generative_ai_and_multimodal_systems/20_rag_context_engineering_and_enterprise_knowledge/Cheat_Sheets/01_Permission_Aware_Retrieval.md) — course-topic draft; no authorization system inspected.
 - [Data observability and incident triage](05_ai_platforms_data_systems_and_production_engineering/27_data_quality_observability_and_reliability_engineering/Cheat_Sheets/01_Data_Observability_and_Incident_Triage.md) — course-topic draft; freshness example is illustrative.
 - [Memory lifecycle and retention](06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation/Cheat_Sheets/01_Memory_Lifecycle_and_Retention.md) — course-topic draft; no user data or retention law evaluated.
+- [Insurance model risk and change control](11_data_science_domain_specialisations/10_insurance_actuarial_and_claims/Cheat_Sheets/01_Insurance_Model_Risk_and_Change_Control.md) — short course-topic draft; does not complete the nested insurance governance syllabus.
 
 ## Learning parts
 

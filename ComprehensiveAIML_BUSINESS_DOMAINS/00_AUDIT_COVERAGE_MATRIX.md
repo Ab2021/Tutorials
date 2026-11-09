@@ -56,7 +56,7 @@ These checks verify the inventory, navigable planning surface, contract wiring a
 
 The requested continuation covers Parts 01–11, every indexed descendant, and the root cross-domain collections. Directory ownership is partitioned between authoring workers; shared source registers and the root index remain integration-owned. Work in progress is not completed coverage.
 
-The requested GPT 5.6 Terra model override was rejected because per-call model selection is disabled. Workers use their configured model; medium effort was not selectable through the task interface.
+The initial configured-model workers stopped with provider `usage_limit_reached` errors; their partial files and coverage ledgers are retained, not counted as completed modules. On 2026-11-09, session-only per-call model selection was enabled and thirteen replacement workers were launched with the explicit selector `openai-codex/gpt-5.6-terra:medium`: one for each part and two for root collections. Launch acceptance is not proof of completed authoring or available provider capacity.
 
 Source reconciliation executed for this pass:
 

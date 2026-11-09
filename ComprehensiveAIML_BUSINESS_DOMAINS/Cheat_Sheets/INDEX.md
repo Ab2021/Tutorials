@@ -2,94 +2,95 @@
 
 ## 1. Overview
 
-This planned collection supports architecture reviews across the course. Its sheets connect methods without replacing focused module references. No individual sheet or completed troubleshooting entry exists yet. [Course authoring contract](../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [master template](../../Templates/CHEAT_SHEET_CONTENT_MASTER_TEMPLATE.md) govern every future file. Owner: curriculum maintainer; collection version: 2.0-planned; substantive content review: not performed.
+This collection teaches cross-domain gates for system sizing, release, agent authorization, edge timing, evaluation, and investment comparison. It assumes explicit units, rates, service boundaries, and basic probability. Readiness means a reader can reconstruct an accounting boundary, compute the stated illustrative oracle, identify a disqualifying assumption, and choose a bounded fallback. The source-tree names consulted through [directory.txt](../../Templates/directory.txt) are syllabus provenance, not evidence of any architecture or outcome. Individual files are draft teaching artifacts; their illustrative quantities are not measured deployments.
 
 ## 2. Topic ladder
 
-| Level | ID | Planned sheet | Testable outcome and numerical/mechanism task | Prerequisites | Status |
-|---|---|---|---|---|---|
-| 1 | 01 | AI system design review | Turn a workload into explicit constraints; calculate throughput, concurrency and storage with units and limits | External: rates, units, service boundaries | planned |
-| 2 | 02 | Model-to-production launch checklist | Define quality/reliability gates and a rollback-compatible release; calculate an error budget for a stated window | 01; module-specific evaluation prerequisites | planned |
-| 2 | 03 | Agent risk and control matrix | Trace identity, tool authority, exact-action approval and retry state; calculate a bounded action/token budget | 01; agent and tool-contract modules | planned |
-| 2 | 04 | Edge and robotics deployment gate | Reject a design violating timing, memory, power or safe-state constraints; calculate a complete cycle budget | 01; sensor/control prerequisites | planned |
-| 3 | 05 | AI evaluation scorecard | Select denominators, uncertainty and guardrails across predictive, generative, agentic and multimodal tasks | 01–04; statistics and evaluation modules | planned |
-| 3 | 06 | AI investment and vendor assessment | Compare cost per useful outcome including failed work, review labor and sensitivity, without unsupported current prices | 01–05 | planned |
-| Final | 07 | 25 Common Issues | Distinguish 25 cross-domain failure mechanisms through diagnostic evidence, bounded fixes and verification | 01–06 | planned; 0 completed issues |
-
-Each row is an authoring brief, not a link to unwritten content. Split independent calculations into focused sheets when needed; preserve the sequence and update IDs before publication.
+| Level | ID | Sheet | Testable outcome | Prerequisites | Key skill | Status |
+|---|---|---|---|---|---|---|
+| 1 | 01 | [AI system design review](01_AI_System_Design_Review.md) | calculate capacity, backlog, storage, recovery | units/rates | conservation boundary | draft |
+| 2 | 02 | [Model-to-production launch checklist](02_Model_to_Production_Launch_Checklist.md) | select compatible release/rollback gates | 01 | error budget | draft |
+| 2 | 03 | [Agent risk and control matrix](03_Agent_Risk_and_Control_Matrix.md) | bind exact action approval | 01 | authority invariant | draft |
+| 2 | 04 | [Edge and robotics deployment gate](04_Edge_and_Robotics_Deployment_Gate.md) | reject infeasible timing/power design | 01 | cycle budget | draft |
+| 3 | 05 | [AI evaluation scorecard](05_AI_Evaluation_Scorecard.md) | choose denominator/comparator/guardrail | 01–04 | estimand | draft |
+| 3 | 06 | [AI investment and vendor assessment](06_AI_Investment_and_Vendor_Assessment.md) | compare cost per useful outcome | 01–05 | included-work ledger | draft |
+| Final | 07 | [25 Common Issues](07_25_Common_Issues.md) | distinguish and verify 25 failure patterns | 01–06 | diagnostic evidence | draft |
 
 ## 3. Quick topic lookup
 
-| Question | Planned destination | Use condition / warning |
-|---|---|---|
-| Can the system handle the workload? | 01, Sections 4–5 and 9 | Rates must include peaks, retries and state growth |
-| Can this release be recovered? | 02, Sections 7–8 | Model rollback alone may leave incompatible state |
-| May an agent execute this action? | 03, Sections 4 and 8 | Capability exposure is not permission |
-| Is an on-device cycle feasible? | 04, Sections 5 and 9 | Mean latency is not a worst-case guarantee |
-| Does the metric justify the decision? | 05, Sections 4–5 | Offline quality does not establish business impact |
-| Is the vendor cost comparison valid? | 06, Sections 7 and 9 | Require dated currency/prices and comparable work |
+| Question | File / section | Use condition | Failure warning |
+|---|---|---|---|
+| Can workload fit? | [01 §4–5](01_AI_System_Design_Review.md#4-core-formulas-with-full-derivation) | rates and boundary known | average hides burst |
+| Can release recover? | [02 §7–8](02_Model_to_Production_Launch_Checklist.md#7-comparison--selection-table) | state compatibility known | code rollback is incomplete |
+| May agent act? | [03 §4, §8](03_Agent_Risk_and_Control_Matrix.md#4-core-formulas-with-full-derivation) | exact approval exists | capability is not permission |
+| Is device feasible? | [04 §5, §9](04_Edge_and_Robotics_Deployment_Gate.md#5-worked-numerical-example) | tail/deadline modeled | mean latency is insufficient |
+| Does score justify decision? | [05 §4–5](05_AI_Evaluation_Scorecard.md#4-core-formulas-with-full-derivation) | denominator/comparator set | offline metric is not impact |
+| Is vendor comparison valid? | [06 §7, §9](06_AI_Investment_and_Vendor_Assessment.md#7-comparison--selection-table) | included work/date defined | unit price is incomplete |
+| What failure pattern applies? | [07 §8](07_25_Common_Issues.md#8-failure-modes--edge-cases) | observable signal available | symptom is not cause |
 
-## 4. Reading paths
+## 4. Reading paths — three options
 
-- **Beginner:** 01 → 02 → 03; assumes unit arithmetic and service basics. Optional: 04 for physical systems.
-- **Practitioner:** 01 → 02 → 03 → 04 → 05 → 06; complete each topic's external module prerequisites before its exercises.
-- **Advanced:** the practitioner path → 07, plus relevant source-specific sheets in the [source crosswalk](../00_SOURCE_TOPIC_CROSSWALK.md).
+- **Beginner:** 01 → 02 → 03. Objective: express a bounded decision and recovery path. Assumes unit arithmetic; 04 is an optional physical-systems extension.
+- **Practitioner:** 01 → 02 → 03 → 04 → 05 → 06. Objective: connect sizing, release, authority, device, evaluation, and economics without collapsing boundaries.
+- **Advanced:** 01 → 06 → 07, with all relevant earlier sheets. Objective: defend a decision under changed constraint and diagnose a contradiction. Optional extensions are the focused module indexes named below.
 
 ## 5. Prerequisite skills
 
-Use [Part 01 foundations](../01_foundations_computing_and_problem_solving/INDEX.md) for programming, systems and probability; [evaluation/platform modules](../05_ai_platforms_data_systems_and_production_engineering/INDEX.md) for model lifecycle and reliability; [edge modules](../07_edge_ai_robotics_and_cyber_physical_systems/INDEX.md) before device/control calculations. Specific earlier-sheet dependencies must be linked when those sheets exist.
+- Unit conversion, rates, counts, percentages, and dimensional checks; see [foundations](../01_foundations_computing_and_problem_solving/INDEX.md).
+- Model lifecycle, observability, and reliability vocabulary; see [platforms and production](../05_ai_platforms_data_systems_and_production_engineering/INDEX.md).
+- Sensor/control timing before Sheet 04; see [edge modules](../07_edge_ai_robotics_and_cyber_physical_systems/INDEX.md).
+- Agent tool contracts and approvals before Sheet 03; visible source navigation: [directory.txt](../../Templates/directory.txt#L63).
 
-## 6. Exclusions and handoffs
+## 6. What this collection does NOT cover
 
-Detailed GPU kernels, modality objectives, actuarial models and sector workflows belong to the focused [source-coverage plans](../00_AUDIT_COVERAGE_MATRIX.md). This collection covers cross-domain selection and operating gates, not every method's derivation. No vendor architecture, regulatory applicability or production benchmark is established by a planning row.
+It does not replace detailed GPU kernels, modality objectives, actuarial methods, sector workflows, legal applicability, vendor benchmark verification, or organization-specific architecture. Those handoffs remain in [source coverage plans](../00_AUDIT_COVERAGE_MATRIX.md). The visible sovereign-edge filename prefix is incomplete; no hidden contents are inferred.
 
 ## 7. Master symbol glossary
 
-Notation standard: fenced plain-text equations. Define symbols locally even when registered here.
-
-| Symbol | Meaning | Units / type | Domain | First planned use / overload warning |
+| Symbol/term | Meaning | Units/type | Domain | First use |
 |---|---|---|---|---|
-| lambda | Arrival rate | events/s; nonnegative scalar | Stated workload/window | 01; not a model regularization parameter here |
-| W | Mean time in a defined system | s; scalar | Stable accounting boundary | 01; not a weight matrix here |
-| L | Mean items in that system | items; scalar | Same population/window as lambda and W | 01; not loss here |
-| B | Backlog | events; nonnegative count | Defined queue/time | 01; distinguish bytes and batch size |
-| C_useful | Total included cost / successful useful outcomes | currency/outcome | Positive outcome denominator, dated prices | 06; not all requests are useful outcomes |
-
-Derivations and numerical examples remain to be authored; this glossary does not assert empirical queue or cost behavior.
+| lambda | arrival rate | events/s scalar | nonnegative, stated window | [01](01_AI_System_Design_Review.md) |
+| mu | completed service rate | events/s scalar | nonnegative, same boundary | [01](01_AI_System_Design_Review.md) |
+| B | backlog | events count | nonnegative | [01](01_AI_System_Design_Review.md) |
+| t | elapsed time | seconds scalar | nonnegative | [01](01_AI_System_Design_Review.md) |
+| E | allowed bad events | events count | explicit eligibility/window | [02](02_Model_to_Production_Launch_Checklist.md) |
+| A | authorized actions | action count/set | exact approval context | [03](03_Agent_Risk_and_Control_Matrix.md) |
+| T | cycle time | milliseconds scalar | defined control loop | [04](04_Edge_and_Robotics_Deployment_Gate.md) |
+| p | observed proportion | dimensionless scalar | declared population | [05](05_AI_Evaluation_Scorecard.md) |
+| C_useful | included cost/useful outcome | currency/outcome | dated workload basis | [06](06_AI_Investment_and_Vendor_Assessment.md) |
 
 ## 8. Quick Reference Card directory
 
-| Planned card | Core rule to establish | Critical assumption / avoid condition |
-|---|---|---|
-| 01, Section 12 | Dimensionally consistent workload sizing | Same accounting boundary; no tail-latency claim from a mean |
-| 02, Section 12 | Promote and recover a compatible release unit | State/schema rollback must be viable |
-| 03, Section 12 | Authorize exact actions, not just tools | Reject stale or mismatched approvals |
-| 04, Section 12 | Enforce device and safety budgets before optimization | Do not infer safe operation from offline accuracy |
-| 05, Section 12 | Validate decision metrics against comparators | Do not infer causality from uncontrolled changes |
-| 06, Section 12 | Compare cost per useful outcome | Avoid incompatible workload/price bases |
-| 07, Section 12 | Diagnose before mitigation | A symptom is not a confirmed cause |
-
-Cards are planned; no nonexistent section anchors are presented as working links.
+| Card | Core rule | Use condition | Critical assumption | Avoid |
+|---|---|---|---|---|
+| [01 §12](01_AI_System_Design_Review.md#12-quick-reference-card) | dimensionally consistent sizing | shared boundary | rates defined | tail claim from mean |
+| [02 §12](02_Model_to_Production_Launch_Checklist.md#12-quick-reference-card) | compatible release unit | reversible state | migration tested | code-only rollback |
+| [03 §12](03_Agent_Risk_and_Control_Matrix.md#12-quick-reference-card) | exact-action approval | signed context | expiry checked | capability equals permission |
+| [04 §12](04_Edge_and_Robotics_Deployment_Gate.md#12-quick-reference-card) | enforce cycle budget | worst-case modeled | safe state defined | offline accuracy=safety |
+| [05 §12](05_AI_Evaluation_Scorecard.md#12-quick-reference-card) | comparator plus guardrails | valid denominator | population fixed | causal claim from before/after |
+| [06 §12](06_AI_Investment_and_Vendor_Assessment.md#12-quick-reference-card) | cost/useful outcome | included work known | price date stated | quote-only comparison |
+| [07 §12](07_25_Common_Issues.md#12-quick-reference-card) | diagnose before mitigation | observable signal | competing causes listed | symptom as cause |
 
 ## 9. Common Issues locator
 
-Final artifact: planned `07_25_Common_Issues.md`; **target 25, completed 0**. Allocate distinct failures across sizing/overload, evaluation validity, authorization/retry state, rollout compatibility, device deadlines and economics. Populate real ISSUE IDs, categories, symptoms, discriminating diagnostics, provenance and anchors only when entries are authored. The template's four categories and separate provenance labels are mandatory.
+[07_25_Common_Issues.md](07_25_Common_Issues.md) contains 25 HYPOTHETICAL complete entries, ISSUE-001 through ISSUE-025, across all four required categories. Use its Section 8 index for the symptom and its detailed entry for provenance, competing causes, diagnostic, mitigation risk, correction, prevention, and verification.
 
-## 10. Sources, versions and maintenance
+## 10. Empirical sources, versions and collection maintenance
 
-| Record | Scope | State / review trigger |
-|---|---|---|
-| [Master template](../../Templates/CHEAT_SHEET_CONTENT_MASTER_TEMPLATE.md) | Structure, equations, questions, troubleshooting | Applicable; recheck on template revision |
-| [Course numerical standard](../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) | Canonical notation, evidence and checked-example requirements | Applicable; each sheet still needs its own verification |
-| Sheet-specific primary sources | API/hardware/method/price claims | Not collected; verify when authoring and on dependency/price changes |
+| Source | Precise use | Reviewed | Limitation / trigger |
+|---|---|---|---|
+| [Authoring standard](../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) | format, numerical/evidence rules | 2026-11-09 | recheck template revision |
+| [Cheat-sheet template](../../Templates/CHEAT_SHEET_CONTENT_MASTER_TEMPLATE.md) | 12 sections and collection navigation | 2026-11-09 | recheck template revision |
+| [Google SRE Workbook](https://sre.google/workbook/implementing-slos/) | SLO method vocabulary | 2026-11-09 | not workload evidence |
+| [NIST AI RMF 1.0](https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf) | risk vocabulary | 2026-11-09 | not certification |
+| [ROS 2 real-time tutorial](https://github.com/ros2/ros2_documentation/blob/jazzy/source/Tutorials/Demos/Real-Time-Programming.rst) | timing examples | 2026-11-09 | recheck ROS/version/device |
 
-All seven planned artifacts have technical checks, numerical checks and interview-answer checks pending. Authors/reviewers are not assigned. Quarterly catalog review and source/dependency changes trigger maintenance; no substantive sheet-review date is claimed.
+Illustrative arithmetic is hand-derived and independently recomputable from per-sheet oracle inputs; no runtime, benchmark, vendor price, hardware, or policy claim has been executed or verified as deployment evidence. Recheck sources, dependencies, workload, price date, and policy before using a conclusion.
 
-## 11. Acceptance checklist
+## 11. Collection acceptance checklist
 
-- [x] Planned ladder, scope, three paths and source handoffs are explicit.
-- [x] Unwritten sheets, cards and issues are not counted as completed.
-- [ ] Author focused sheets with all 12 sections, derivations/invariants, checked numerical examples and at least four diagnostic failures each.
-- [ ] Complete 10–15 answered interview questions per sheet and keep each card last.
-- [ ] Complete 25 distinct actionable issues with honest provenance.
-- [ ] Verify sources, prerequisite graph, calculations, paths/anchors, glossary, review records and publication gates.
+- [x] Seven indexed artifacts and eleven navigation sections exist in intended order.
+- [x] Symbol glossary, three reading paths, exclusions, card directory, and issue locator link real local files.
+- [x] Final troubleshooting artifact has 25 distinct ISSUE IDs with required categories and HYPOTHETICAL provenance.
+- [ ] Independently review individual-depth requirements, sources, assumptions, links, and all arithmetic before publication.
+- [ ] Execute any claimed deployment-specific benchmark, restore, load, or safety test before upgrading evidence labels.

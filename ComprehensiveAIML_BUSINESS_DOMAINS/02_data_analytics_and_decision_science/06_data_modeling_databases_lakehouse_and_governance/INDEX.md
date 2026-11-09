@@ -8,11 +8,11 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | dimensional and normalized models | planned |
+| 1 | dimensional and normalized models | [Data model grain and join safety](Cheat_Sheets/02_Data_Model_Grain_and_Join_Safety.md); draft, unreviewed |
 | 2 | transactional and analytical databases | planned |
 | 3 | lakehouse patterns | planned |
 | 4 | metadata lineage and catalogues | planned |
-| 5 | data contracts | [Data contract checklist draft](Cheat_Sheets/01_Data_Contract_Checklist.md); broader topic planned |
+| 5 | data contracts | [Expanded data-contract lesson](Cheat_Sheets/01_Data_Contract_Checklist.md); draft, unreviewed |
 
 ## What competence looks like
 

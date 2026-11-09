@@ -4,15 +4,15 @@
 > **Prerequisites:** 05,17,23  
 > **Purpose:** Build resource-bounded AI on microcontrollers and small computers with power, latency, memory, and update constraints.
 
-## Topics to develop
+## Topics and current teaching homes
 
-| # | Topic | Status |
-|---:|---|---|
-| 1 | embedded compute | planned |
-| 2 | TinyML lifecycle | planned |
-| 3 | sensor data pipelines | planned |
-| 4 | RTOS and scheduling | planned |
-| 5 | power and memory budgets | planned |
+| # | Topic | Teaching home | Status |
+|---:|---|---|---|
+| 1 | embedded compute | [01 Embedded Acquisition, Firmware and TinyML](Cheat_Sheets/01_Embedded_Acquisition_Firmware_and_TinyML.md) §§3–4, source laboratories | partial draft |
+| 2 | TinyML lifecycle | [01](Cheat_Sheets/01_Embedded_Acquisition_Firmware_and_TinyML.md) §§7–8 and planned deployment checklist | partial draft; lifecycle checklist planned |
+| 3 | sensor data pipelines | [01](Cheat_Sheets/01_Embedded_Acquisition_Firmware_and_TinyML.md) §§2–6 | partial draft |
+| 4 | RTOS and scheduling | [01](Cheat_Sheets/01_Embedded_Acquisition_Firmware_and_TinyML.md) §§4, 8 and Laboratory 04 | partial draft |
+| 5 | power and memory budgets | [01](Cheat_Sheets/01_Embedded_Acquisition_Firmware_and_TinyML.md) §§4.3, 9 and Laboratories 07/12 | partial draft |
 
 ## What competence looks like
 

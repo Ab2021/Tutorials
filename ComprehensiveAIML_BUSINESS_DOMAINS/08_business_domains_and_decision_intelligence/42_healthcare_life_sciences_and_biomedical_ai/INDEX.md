@@ -8,8 +8,8 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | clinical workflow design | planned |
-| 2 | biomedical signals | planned |
+| 1 | [clinical workflow design](Cheat_Sheets/01_Clinical_Decision_Support_Evidence_and_Handoff.md) | draft; evidence and handoff sheet is below publication line requirement |
+| 2 | [biomedical signals](Cheat_Sheets/02_Biomedical_Signal_Pipeline_and_Validation.md) | draft; signal pipeline sheet is below publication line requirement |
 | 3 | imaging and triage | planned |
 | 4 | drug discovery | planned |
 | 5 | validation and regulation | planned |

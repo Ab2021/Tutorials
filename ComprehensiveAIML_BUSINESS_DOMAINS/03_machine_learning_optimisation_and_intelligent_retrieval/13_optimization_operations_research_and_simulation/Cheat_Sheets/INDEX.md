@@ -4,17 +4,20 @@
 
 Every authored sheet must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. This is a planned catalog, not completed sheets; expand to all 11 collection-index sections and a final Common Issues artifact (at least 25 complete issues) before publication. A card alone is not a completed sheet.
 
-## Planned cheat sheets
+## Authored and planned cheat sheets
 
 | # | Reference | Coverage | Status |
 |---:|---|---|---|
-| 1 | optimisation formulation | Concise patterns, decision rules, assumptions, and common traps. | planned |
-| 2 | solver selection | Concise patterns, decision rules, assumptions, and common traps. | planned |
-| 3 | simulation experiment plan | Concise patterns, decision rules, assumptions, and common traps. | planned |
+| 1 | optimisation formulation | Variables, objective, constraints, duality and certificates. | planned |
+| 2 | solver selection | Exact, heuristic and simulation selection under runtime/certificate constraints. | planned |
+| 3 | simulation experiment plan | Event semantics, warm-up, replications and uncertainty. | planned |
+| 4 | network and scheduling models | Flow, cuts, precedence and schedule feasibility. | planned |
+| 5 | integer programming | Binaries, relaxations, branching and infeasibility. | planned |
+| 6 | metaheuristics | Neighborhoods, acceptance and reproducible comparisons. | planned |
+| 7 | [Interval greedy and weighted scheduling](07_interval_greedy_and_weighted_scheduling.md) | Half-open intervals, deterministic ties, exchange proof, weighted-DP boundary and subset oracle. | Draft; unreviewed. |
+| 8 | 25 Common Issues | Collection-wide diagnostics. | planned |
 
-## Suggested file naming
-
-Use **01_reference-slug.md**, then **02_reference-slug.md**. Keep one concern per file so references remain scannable.
+The authored sheet uses the visible inventory and [REF-IR025](../../../00_REFERENCE_INFORMED_CASE_PLAN.md#ref-ir025-choose-scheduling-algorithms-from-objective-and-constraints) as scope, not as evidence that the original lesson body or a deployed scheduler is available.
 
 <!-- BEGIN INTERVIEW REFERENCE PLAN -->
 

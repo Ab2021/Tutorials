@@ -1,38 +1,51 @@
-# Module 28 Case Studies â€” AI Evaluation, Monitoring and Continuous Improvement
+# Module 28 Case Studies — AI Evaluation, Monitoring and Continuous Improvement
 
-## Authoring standard
+**Status:** planning catalog; no authored `CASE-*` files. Future cases must follow the [course standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [case master](../../../Templates/CASE_STUDY_CONTENT_MASTER_TEMPLATE.md).
 
-Every authored case must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master: all 15 sections, bounded decision and baseline, traceable evidence, checked numerical walkthrough/sizing where applicable, failure diagnostics, 12–18 answered interview questions, and Section 15 last. This is a planned catalog, not completed cases; expand to all seven collection-index sections before publication. Evidence, implementation stage and editorial status remain separate.
+## 1. Collection metadata
 
-## Planned cases
+| Field | Value |
+|---|---|
+| Domain | evaluation design, human/judge assessment, monitoring, and regression gates |
+| Evidence boundary | proposed illustrative protocols; a score is not a deployment result |
+| Review trigger | task manifest, scorer, judge, rater protocol, policy, model, or traffic changes |
 
-| # | Case | Required outcome | Status |
-|---:|---|---|---|
-| 1 | RAG quality regression | Design the decision, architecture, metrics, risks, and validation plan. | planned |
-| 2 | agent tool-use failure analysis | Design the decision, architecture, metrics, risks, and validation plan. | planned |
+## 2. Case catalog
 
-## Suggested file naming
-
-Use **01_case-slug.md**, then **02_case-slug.md**. Add **00_framework.md** only for shared constraints that every case needs.
-
-<!-- BEGIN INTERVIEW REFERENCE PLAN -->
-
-## Reference-informed additions to develop
-
-These are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../00_REFERENCE_INFORMED_CASE_PLAN.md).
-
-| Planning ID | Proposed case brief | Editorial relationship | Type | Decision / business question | Primary pattern | Secondary patterns | Evidence | Stage | Planning reviewed | Result |
+| Case ID | Linked title | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result/limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-2026-IR001 | Gate retraining on corpus provenance and long-tail quality | Supporting curriculum; shared brief | hybrid | Which documents should be admitted or quarantined before the next training run? | `distribution-shift` | `data-leakage`, `evaluation-mismatch` | not-measured | proposed | 2026-11-06 |  |
-| PLAN-2026-IR008 | Block assistant releases on auditable quality and safety gates | Proposed home | llm-agentic | Does a candidate pass the required suites with enough evidence to justify promotion? | `evaluation-mismatch` | `data-leakage`, `rollout-regression` | not-measured | proposed | 2026-11-06 |  |
+| PLAN-28-01 | RAG quality regression | evaluation | llm-agentic | gate, roll back, or investigate | evaluation-mismatch | rollout-regression | not-measured | proposed | — | needs manifest and task-completion evidence |
+| PLAN-28-02 | Agent tool-use failure analysis | evaluation | incident | isolate contract failure | correctness-contract | idempotent-side-effects | not-measured | proposed | — | needs trace and sandbox evidence |
+| PLAN-2026-IR001 | Gate retraining on corpus provenance and long-tail quality | data/evaluation | hybrid | admit or quarantine documents | distribution-shift | data-leakage; evaluation-mismatch | not-measured | proposed | 2026-11-06 (planning) | source names/costs unverified |
+| PLAN-2026-IR008 | Block assistant releases on auditable quality and safety gates | evaluation | llm-agentic | determine release eligibility | evaluation-mismatch | data-leakage; rollout-regression | not-measured | proposed | 2026-11-06 (planning) | judge score is not deployment guarantee |
 
-### Reference and transfer notes
+## 3. Canonical reusable patterns
 
-| Planning ID | Example reference only | Scope boundary |
+- **Evaluation mismatch:** define the decision outcome and show why a proxy score is or is not adequate.
+- **Rollout regression:** compare candidate and baseline on a frozen manifest and production guardrails.
+- **Correctness contract:** score tool behavior against typed input, authorization, state, output, and side-effect rules.
+
+## 4. Similarity / contrast map
+
+| Case | Similarity | Critical distinction |
 |---|---|---|
-| PLAN-2026-IR001 | [REF-IR001](../../../../INTERVIEW_CASES/Agentic_AI_System/AI_engg_challenges/synthetic_corpus_contamination.md) | A synthetic-text classifier cannot establish authorship; source incident names and costs are unverified |
-| PLAN-2026-IR008 | [REF-IR008](../../../../INTERVIEW_CASES/Agentic_AI_System/LLM_Safety_Evaluation/release_evaluation_platform.md) | A judge score is not a deployment guarantee; workload volume and evaluation deadlines remain unspecified |
+| RAG regression and IR008 | manifests, slices, promotion gates | judge calibration does not establish user utility |
+| tool failure and RAG | traceable evidence and recovery | a correct answer can still have an unsafe tool side effect |
 
-Case metadata, pattern definitions, supporting/contrasting references, structured backlog, review log and authoring checks for these additions are maintained in the linked central planning catalog. Existing planned rows elsewhere in this index retain their original status. A brief may be split or merged before canonical case IDs are assigned.
+## 5. Questions and future-case backlog
 
-<!-- END INTERVIEW REFERENCE PLAN -->
+1. What population and critical slice are excluded by an aggregate score?
+2. Which contamination check applies before a benchmark becomes a gate?
+3. How is judge–human disagreement measured and adjudicated?
+4. Which failure blocks release even if the average metric improves?
+
+## 6. Review / retirement log
+
+| Date | Item | Decision | Reason |
+|---|---|---|---|
+| 2026-11-09 | catalog | retained as planned | no executed evaluation or monitored outcome |
+
+## 7. Pre-publish checks
+
+- [ ] Link a 15-section `CASE-*` with a versioned manifest, baseline, uncertainty, failure path, and Section 15 card.
+- [ ] Reconcile evidence label, stage, and editorial status; distinguish proposed protocol from executed test.

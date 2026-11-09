@@ -1,42 +1,55 @@
-# Module 25 Case Studies â€” Model Serving, Inference Optimisation and Cost
+# Module 25 Case Studies — Model Serving, Inference Optimisation and Cost
 
-## Authoring standard
+**Status:** planned catalog; no authored `CASE-*` files. Use the [course standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [case master](../../../Templates/CASE_STUDY_CONTENT_MASTER_TEMPLATE.md).
 
-Every authored case must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master: all 15 sections, bounded decision and baseline, traceable evidence, checked numerical walkthrough/sizing where applicable, failure diagnostics, 12–18 answered interview questions, and Section 15 last. This is a planned catalog, not completed cases; expand to all seven collection-index sections before publication. Evidence, implementation stage and editorial status remain separate.
+## 1. Collection metadata
 
-## Planned cases
+| Field | Value |
+|---|---|
+| Domain | online and batch model serving |
+| Evidence boundary | proposed illustrative designs; provider capability, price, and performance require dated primary evidence |
+| Review trigger | model/provider, routing policy, workload, SLO, tenant boundary, or cost change |
 
-| # | Case | Required outcome | Status |
-|---:|---|---|---|
-| 1 | Multi-model inference gateway | Design the decision, architecture, metrics, risks, and validation plan. | planned |
-| 2 | reduce p99 LLM latency | Design the decision, architecture, metrics, risks, and validation plan. | planned |
+## 2. Case catalog
 
-## Suggested file naming
-
-Use **01_case-slug.md**, then **02_case-slug.md**. Add **00_framework.md** only for shared constraints that every case needs.
-
-<!-- BEGIN INTERVIEW REFERENCE PLAN -->
-
-## Reference-informed additions to develop
-
-These are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../00_REFERENCE_INFORMED_CASE_PLAN.md).
-
-| Planning ID | Proposed case brief | Editorial relationship | Type | Decision / business question | Primary pattern | Secondary patterns | Evidence | Stage | Planning reviewed | Result |
+| Case ID | Linked title | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result/limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-2026-IR002 | Select model routes within hard customer constraints | Proposed home | llm-agentic | Which eligible provider and fallback path satisfy residency, capability, deadline and spend requirements? | `eligibility-before-ranking` | `cost-latency-tradeoff` | not-measured | proposed | 2026-11-06 |  |
-| PLAN-2026-IR004 | Customize tenant assistants without crossing isolation boundaries | Supporting curriculum; shared brief | llm-agentic | How should tenant adapters be trained, selected, versioned and rolled back? | `authorization-scope` | `atomic-release-bundle`, `rollout-regression` | not-measured | proposed | 2026-11-06 |  |
-| PLAN-2026-IR007 | Balance interactive inference latency and admitted throughput | Proposed home | hybrid | Which scheduling and KV-memory policy meets latency and isolation requirements at the admitted load? | `resource-admission` | `cost-latency-tradeoff`, `authorization-scope` | not-measured | proposed | 2026-11-06 |  |
-| PLAN-2026-IR014 | Separate extraction correctness from routing economics | Supporting curriculum; shared brief | llm-agentic | How should extraction contracts and model routes be accepted without confusing valid syntax with business success? | `evaluation-mismatch` | `idempotent-side-effects`, `cost-latency-tradeoff` | not-measured | proposed | 2026-11-06 |  |
+| PLAN-25-01 | Multi-model inference gateway | serving | llm-agentic | select eligible route | eligibility-before-ranking | cost-latency-tradeoff | not-measured | proposed | — | needs fault replay and current provider evidence |
+| PLAN-25-02 | Reduce p99 LLM latency | serving | hybrid | select intervention | resource-admission | correctness-contract | not-measured | proposed | — | needs workload-slice measurements |
+| PLAN-2026-IR002 | Select model routes within hard customer constraints | serving | llm-agentic | choose eligible provider/fallback | eligibility-before-ranking | cost-latency-tradeoff | not-measured | proposed | 2026-11-06 (planning) | source tables are not current guarantees |
+| PLAN-2026-IR004 | Customize tenant assistants without crossing isolation boundaries | serving | llm-agentic | adapter lifecycle and rollback | authorization-scope | atomic-release-bundle; rollout-regression | not-measured | proposed | 2026-11-06 (planning) | adapters do not establish isolation |
+| PLAN-2026-IR007 | Balance interactive inference latency and admitted throughput | serving | hybrid | scheduling/KV policy | resource-admission | cost-latency-tradeoff; authorization-scope | not-measured | proposed | 2026-11-06 (planning) | speculative decoding can be slower |
+| PLAN-2026-IR014 | Separate extraction correctness from routing economics | serving | llm-agentic | accept contracts/routes | evaluation-mismatch | idempotent-side-effects; cost-latency-tradeoff | not-measured | proposed | 2026-11-06 (planning) | valid JSON is not business success |
 
-### Reference and transfer notes
+## 3. Canonical reusable patterns
 
-| Planning ID | Example reference only | Scope boundary |
+- **Eligibility before ranking:** reject routes that violate residency, capability, authorization, or deadline before optimizing score or price.
+- **Resource admission:** reserve bounded KV, queue, and compute capacity before accepting work.
+- **Authorization scope:** bind cache, adapter, prompt, and tool state to the tenant and policy boundary.
+
+## 4. Similarity / contrast map
+
+| Cluster | Shared reasoning | Critical distinction |
 |---|---|---|
-| PLAN-2026-IR002 | [REF-IR002](../../../../INTERVIEW_CASES/Agentic_AI_System/AI_frontier_sys/constrained_provider_routing.md) | Revalidate provider capabilities and economics when authoring; source tables are not current service guarantees |
-| PLAN-2026-IR004 | [REF-IR004](../../../../INTERVIEW_CASES/Agentic_AI_System/Finetuning_LLM/multi_tenant_adapter_platform.md) | Adapters do not establish isolation or keep changing facts current; tenant counts and SLOs need new requirements |
-| PLAN-2026-IR007 | [REF-IR007](../../../../INTERVIEW_CASES/Agentic_AI_System/LLM_Inference/continuous_batching_serving.md) | GPU geometry, concurrency limits and speedups require workload measurements; speculative decoding can be slower |
-| PLAN-2026-IR014 | [REF-IR014](../../../../INTERVIEW_CASES/Agentic_AI_System/RAG_Infra_Research/Structured_Extraction_And_Cost_Routing.md) | Contains two reference problems: author separate narratives; valid JSON and cheap token prices do not establish successful outcomes |
+| routing and gateway | eligibility and fallback correctness | health is not authorization or capability evidence |
+| latency and batching | queue/KV/capacity accounting | lower mean latency can worsen tail isolation |
+| extraction and adapters | versioning and rollback | syntax validity is not domain correctness |
 
-Case metadata, pattern definitions, supporting/contrasting references, structured backlog, review log and authoring checks for these additions are maintained in the linked central planning catalog. Existing planned rows elsewhere in this index retain their original status. A brief may be split or merged before canonical case IDs are assigned.
+## 5. Questions and future-case backlog
 
-<!-- END INTERVIEW REFERENCE PLAN -->
+1. Which constraint makes a route ineligible before ranking?
+2. How are retry budgets, cancellation, and idempotency carried across a fallback?
+3. What target-equivalence test rejects a speedup that changes output policy?
+4. Which tenant-negative tests prove cache and adapter isolation?
+
+## 6. Review / retirement log
+
+| Date | Item | Decision | Reason |
+|---|---|---|---|
+| 2026-11-09 | catalog | retained as planned | no executed workload, provider verification, or authored case |
+
+## 7. Pre-publish checks
+
+- [ ] Assign `CASE-*` only to a linked 15-section case.
+- [ ] Check offered/accepted load, TTFT, inter-token latency, successful-task cost, and isolation failures on the same workload.
+- [ ] Preserve planned rows and reconcile source, evidence, stage, and review status.

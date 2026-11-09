@@ -1,16 +1,37 @@
-# Module 01 Case Studies â€” Program Orientation and AI Landscape
+# Module 01 Case Studies — Program Orientation and AI Landscape
 
-## Authoring standard
+## 1. Collection metadata
 
-Every authored case must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master: all 15 sections, bounded decision and baseline, traceable evidence, checked numerical walkthrough/sizing where applicable, failure diagnostics, 12–18 answered interview questions, and Section 15 last. This is a planned catalog, not completed cases; expand to all seven collection-index sections before publication. Evidence, implementation stage and editorial status remain separate.
+Illustrative decision cases for applying orientation concepts. Case evidence, implementation stage, and editorial status are separate. Source inventory: [`directory.txt`](../../../../Templates/directory.txt); original bodies are unavailable.
 
-## Planned cases
+## 2. Case catalog
 
-| # | Case | Required outcome | Status |
-|---:|---|---|---|
-| 1 | Select an AI use case portfolio | Design the decision, architecture, metrics, risks, and validation plan. | planned |
-| 2 | evaluate a vendor claim | Design the decision, architecture, metrics, risks, and validation plan. | planned |
+| Case ID | Linked title | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result/limitation |
+|---|---|---|---|---|---|---|---|---|---|---|
+| CASE-01-001 | [Select an AI use-case portfolio](01_Select_AI_Use_Case_Portfolio.md) | AI portfolio | analytical | pilot selection | evidence-to-operation decision | human-in-the-loop | illustrative | proposed | null | hand-derived, not measured |
+| PLAN-01-002 | Evaluate a vendor claim | AI procurement | analytical | accept/pilot/reject | vendor review | — | proposed | proposed | null | not authored |
 
-## Suggested file naming
+## 3. Canonical reusable patterns
 
-Use **01_case-slug.md**, then **02_case-slug.md**. Add **00_framework.md** only for shared constraints that every case needs.
+Use hard gates for data boundary, authority, reversibility, and operating capacity before comparing estimated value. Label arithmetic as illustrative until a test artifact exists.
+
+## 4. Similarity / contrast map
+
+CASE-01-001 chooses between internal opportunities; PLAN-01-002 assesses one external claim. Both require a baseline and acceptance protocol, but only the latter needs candidate-version and contract evidence.
+
+## 5. Questions / future-case backlog
+
+Author CASE-01-002 as a bounded vendor acceptance decision; add a source-grounded case only when a primary source permits precise attribution. Do not infer hidden container content.
+
+## 6. Review / retirement log
+
+| Date | Item | Editorial event | Evidence/stage change |
+|---|---|---|---|
+| 2026-11-09 | CASE-01-001 | draft authored | illustrative / proposed |
+
+## 7. Pre-publish checks
+
+- [x] Catalog preserves both original case threads.
+- [x] Authored case has 15 ordered sections and final card.
+- [ ] Each authored case reaches 1,000 substantive lines.
+- [ ] CASE-01-002, independent numerical/link review, and source verification.

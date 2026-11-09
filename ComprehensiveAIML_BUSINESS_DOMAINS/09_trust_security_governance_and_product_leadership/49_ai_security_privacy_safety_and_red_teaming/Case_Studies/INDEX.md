@@ -1,38 +1,53 @@
-# Module 49 Case Studies â€” AI Security, Privacy, Safety and Red Teaming
+# Module 49 Case Studies — AI Security, Privacy, Safety and Red Teaming
 
-## Authoring standard
+> **Collection status:** draft. Follow the [course standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [case master](../../../Templates/CASE_STUDY_CONTENT_MASTER_TEMPLATE.md). An index row is not a completed case; evidence level, implementation stage, and editorial state are independent.
 
-Every authored case must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master: all 15 sections, bounded decision and baseline, traceable evidence, checked numerical walkthrough/sizing where applicable, failure diagnostics, 12–18 answered interview questions, and Section 15 last. This is a planned catalog, not completed cases; expand to all seven collection-index sections before publication. Evidence, implementation stage and editorial status remain separate.
+## 1. Collection metadata
 
-## Planned cases
+**Domain:** AI security, privacy, safety, and red teaming. **Purpose:** bounded decisions about tool-enabled AI risk. **Case types:** `llm-agentic`, `incident`, and `analytical` as appropriate. **Evidence policy:** new examples are illustrative or not-measured unless a primary source is cited at claim level. **Source scope:** [directory inventory](../../../Templates/directory.txt:86-94), [trust brief](../../../00_SOURCE_COVERAGE_AGENTS.md#agent-trust-approvals), and [safety brief](../../../00_SOURCE_COVERAGE_CUDA_TRAINING.md#ft-safety); source bodies are unavailable.
 
-| # | Case | Required outcome | Status |
-|---:|---|---|---|
-| 1 | Agent data-exfiltration simulation | Design the decision, architecture, metrics, risks, and validation plan. | planned |
-| 2 | secure RAG design review | Design the decision, architecture, metrics, risks, and validation plan. | planned |
+## 2. Case catalog
 
-## Suggested file naming
+| Case ID | Linked title | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result/limitation | Editorial status |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| CASE-49-001 | [Approval-bound export](01_Agent_Data_Exfiltration_Simulation.md) | data export | llm-agentic | permit bounded export or retain manual baseline | authorization-scope | approval-payload-binding; evaluation-mismatch | illustrative | proposed | null | no execution/outcome measured | draft |
+| CASE-49-002 | Secure RAG design review | retrieval | llm-agentic | select retrieval/authorization boundary | authorization-scope | data-leakage | not-measured | proposed | null | planned | planned |
+| CASE-49-003 | Tenant adapter isolation | model customization | llm-agentic | train/select/rollback tenant adapter | authorization-scope | atomic-release-bundle; rollout-regression | not-measured | proposed | null | PLAN-2026-IR004 reference only | planned |
+| CASE-49-004 | Release evaluation gate | safety evaluation | llm-agentic | promote candidate after required suites | evaluation-mismatch | data-leakage; rollout-regression | not-measured | proposed | null | PLAN-2026-IR008 reference only | planned |
 
-Use **01_case-slug.md**, then **02_case-slug.md**. Add **00_framework.md** only for shared constraints that every case needs.
+## 3. Canonical reusable patterns
 
-<!-- BEGIN INTERVIEW REFERENCE PLAN -->
+| Pattern | Mechanism | Use when | Do not infer |
+|---|---|---|---|
+| authorization-scope | executor checks authenticated principal, tenant, purpose, quota, expiry | an AI proposal can cause effect | prompt text grants authority |
+| approval-payload-binding | reviewer sees and approves exact canonical payload | human decision is required | digest establishes semantic correctness |
+| evaluation-mismatch | oracle measures committed effect and benign task behavior | release score may hide harm | passing suite proves safety |
+| data-leakage | enforce time/tenant/purpose boundary through lineage | retrieval/adapters/evaluation may mix scope | filter name proves isolation |
+| atomic-release-bundle | promote compatible policy/model/tool/index state together | components interact | an alias rollback is sufficient |
 
-## Reference-informed additions to develop
+## 4. Similarity / contrast map
 
-These are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../00_REFERENCE_INFORMED_CASE_PLAN.md).
+CASE-49-001 and CASE-49-002 share tool/retrieval trust boundaries; the first focuses on an export effect, the second on secure information access. CASE-49-003 focuses on adapter/session isolation rather than tool execution. CASE-49-004 focuses on evidence for promotion rather than runtime authorization. All require an explicit baseline and a denial/recovery trace; none may claim a company outcome from the planning references.
 
-| Planning ID | Proposed case brief | Editorial relationship | Type | Decision / business question | Primary pattern | Secondary patterns | Evidence | Stage | Planning reviewed | Result |
-|---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-2026-IR004 | Customize tenant assistants without crossing isolation boundaries | Supporting curriculum; shared brief | llm-agentic | How should tenant adapters be trained, selected, versioned and rolled back? | `authorization-scope` | `atomic-release-bundle`, `rollout-regression` | not-measured | proposed | 2026-11-06 |  |
-| PLAN-2026-IR008 | Block assistant releases on auditable quality and safety gates | Supporting curriculum; shared brief | llm-agentic | Does a candidate pass the required suites with enough evidence to justify promotion? | `evaluation-mismatch` | `data-leakage`, `rollout-regression` | not-measured | proposed | 2026-11-06 |  |
+## 5. Questions / future-case backlog
 
-### Reference and transfer notes
+- What secure-RAG access policy handles document revocation during a live session?
+- Which tenant adapter artifact tuple must be pinned at inference and rollback?
+- What evaluation manifest constitutes a critical safety gate, and which failures are inconclusive?
+- How should an incident case distinguish model text harm from committed external harm?
+- Which visible safety source topic requires a separate case rather than a supporting sheet?
 
-| Planning ID | Example reference only | Scope boundary |
-|---|---|---|
-| PLAN-2026-IR004 | [REF-IR004](../../../../INTERVIEW_CASES/Agentic_AI_System/Finetuning_LLM/multi_tenant_adapter_platform.md) | Adapters do not establish isolation or keep changing facts current; tenant counts and SLOs need new requirements |
-| PLAN-2026-IR008 | [REF-IR008](../../../../INTERVIEW_CASES/Agentic_AI_System/LLM_Safety_Evaluation/release_evaluation_platform.md) | A judge score is not a deployment guarantee; workload volume and evaluation deadlines remain unspecified |
+## 6. Review / retirement log
 
-Case metadata, pattern definitions, supporting/contrasting references, structured backlog, review log and authoring checks for these additions are maintained in the linked central planning catalog. Existing planned rows elsewhere in this index retain their original status. A brief may be split or merged before canonical case IDs are assigned.
+| Date | Item | Review event | Outcome | Trigger for recheck |
+|---|---|---|---|---|
+| 2026-11-09 | CASE-49-001 | authored illustrative draft | not reviewed; no result measured | any executor/identity/policy change |
+| 2026-11-09 | CASE-49-002–004 | catalog reconciliation | planned only | authoring begins |
 
-<!-- END INTERVIEW REFERENCE PLAN -->
+## 7. Pre-publish checks
+
+- [x] Original two case rows retained; reference-informed cases crosswalked.
+- [x] One bounded illustrative case links its supporting sheets and declares evidence boundary.
+- [ ] Every catalog case has 15 full sections, 12–18 fully developed interview answers, checked arithmetic/traces, and at least 1,000 substantive lines.
+- [ ] All case claims have primary evidence or remain expressly illustrative/not-measured.
+- [ ] Local navigation and artifacts have been independently reviewed; no case is published.

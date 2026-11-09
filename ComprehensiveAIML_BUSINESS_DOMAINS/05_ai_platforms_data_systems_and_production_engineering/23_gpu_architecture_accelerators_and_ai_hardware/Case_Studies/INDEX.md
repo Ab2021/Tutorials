@@ -1,36 +1,58 @@
-# Module 23 Case Studies â€” GPU Architecture, Accelerators and AI Hardware
+# Module 23 Case Studies — GPU Architecture, Accelerators and AI Hardware
 
-## Authoring standard
+**Collection status:** planning catalog; no `CASE-*` artifact is authored.  
+**Contract:** [course standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [case master](../../../Templates/CASE_STUDY_CONTENT_MASTER_TEMPLATE.md). A future case needs all 15 sections, a checked calculation, 12–18 answered interview questions, and a final Section 15 card.
 
-Every authored case must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master: all 15 sections, bounded decision and baseline, traceable evidence, checked numerical walkthrough/sizing where applicable, failure diagnostics, 12–18 answered interview questions, and Section 15 last. This is a planned catalog, not completed cases; expand to all seven collection-index sections before publication. Evidence, implementation stage and editorial status remain separate.
+## 1. Collection metadata
 
-## Planned cases
+| Field | Value |
+|---|---|
+| Domain | GPU architecture, accelerators, and AI hardware |
+| Canonical case types | `streaming-systems`, `incident`, or genuinely integrated `hybrid` |
+| Evidence boundary | Illustrative/proposed unless a case cites an accessible primary source; no vendor-workload result is implied |
+| Source limits | The visible source tree names topics, but original lesson bodies are unavailable |
+| Editorial state | planned; review when device, compiler, workload, or measured constraints change |
 
-| # | Case | Required outcome | Status |
-|---:|---|---|---|
-| 1 | Size an inference cluster | Design the decision, architecture, metrics, risks, and validation plan. | planned |
-| 2 | profile memory-bound training | Design the decision, architecture, metrics, risks, and validation plan. | planned |
+## 2. Case catalog
 
-## Suggested file naming
-
-Use **01_case-slug.md**, then **02_case-slug.md**. Add **00_framework.md** only for shared constraints that every case needs.
-
-<!-- BEGIN INTERVIEW REFERENCE PLAN -->
-
-## Reference-informed additions to develop
-
-These are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../00_REFERENCE_INFORMED_CASE_PLAN.md).
-
-| Planning ID | Proposed case brief | Editorial relationship | Type | Decision / business question | Primary pattern | Secondary patterns | Evidence | Stage | Planning reviewed | Result |
+| Case ID | Linked title | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result/limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-2026-IR007 | Balance interactive inference latency and admitted throughput | Supporting curriculum; shared brief | hybrid | Which scheduling and KV-memory policy meets latency and isolation requirements at the admitted load? | `resource-admission` | `cost-latency-tradeoff`, `authorization-scope` | not-measured | proposed | 2026-11-06 |  |
+| CASE-2026-023-001 | [Size an inference cluster](01_Size_an_Inference_Cluster.md) | hardware | hybrid | select capacity and admission policy | resource-admission | cost-latency-tradeoff | illustrative | proposed | — | draft; workload trace and device measurements remain required |
+| PLAN-23-02 | Profile memory-bound training | hardware | incident | choose the bottleneck-removal change | resource-accounting | correctness-contract | not-measured | proposed | — | needs profiler and numerical-parity evidence |
+| PLAN-2026-IR007 | Balance interactive inference latency and admitted throughput | hardware/serving | hybrid | scheduling and KV-memory policy | resource-admission | cost-latency-tradeoff; authorization-scope | not-measured | proposed | 2026-11-06 (planning) | reference only; geometry and speedups unmeasured |
 
-### Reference and transfer notes
+## 3. Canonical reusable patterns
 
-| Planning ID | Example reference only | Scope boundary |
-|---|---|---|
-| PLAN-2026-IR007 | [REF-IR007](../../../../INTERVIEW_CASES/Agentic_AI_System/LLM_Inference/continuous_batching_serving.md) | GPU geometry, concurrency limits and speedups require workload measurements; speculative decoding can be slower |
+- **Resource admission:** accept work only when a defined memory, compute, and deadline budget remains; test rejection and recovery, not just average throughput.
+- **Resource accounting:** account for a named boundary (registers, shared memory, HBM, host link, or network) with units and ownership.
+- **Cost–latency tradeoff:** compare successful-request cost, tail latency, and capacity headroom under the same workload.
+- **Correctness contract:** require numerical or target-equivalence checks before adopting a performance change.
 
-Case metadata, pattern definitions, supporting/contrasting references, structured backlog, review log and authoring checks for these additions are maintained in the linked central planning catalog. Existing planned rows elsewhere in this index retain their original status. A brief may be split or merged before canonical case IDs are assigned.
+## 4. Similarity / contrast map
 
-<!-- END INTERVIEW REFERENCE PLAN -->
+| Case | Shares | Contrasts with | Transfer boundary |
+|---|---|---|---|
+| PLAN-23-01 | admission and capacity reasoning with serving cases | training has long-lived state rather than interactive deadlines | device-count arithmetic is not achieved latency |
+| PLAN-23-02 | profiling and parity validation with distributed-training cases | hardware counters do not explain data/label quality | optimize only the measured limiting boundary |
+| PLAN-2026-IR007 | batching and KV accounting with Module 25 | authorization scope is a serving concern | speculative decoding can be slower |
+
+## 5. Questions and future-case backlog
+
+1. What device, dtype, shapes, and traffic boundary make a roofline calculation relevant?
+2. Which trace captures peak concurrency, arrivals, cancellation, and KV residency?
+3. What numerical invariant detects an invalid fused or reduced-precision kernel?
+4. How is a failed request recovered without double-counting or cross-tenant cache exposure?
+5. Which primary vendor or operator source supports a non-illustrative architecture claim?
+
+## 6. Review / retirement log
+
+| Date | Item | Decision | Reason |
+|---|---|---|---|
+| 2026-11-09 | Collection catalog | retained as planned | no primary workload evidence or authored cases |
+
+## 7. Pre-publish checks
+
+- [ ] Assign stable `CASE-*` IDs only when the linked files exist.
+- [ ] Reconcile the 11 catalog columns with each file's metadata and evidence label.
+- [ ] Verify source date/version, workload units, arithmetic, architecture failure/recovery path, and all links.
+- [ ] Keep proposed validation distinct from executed validation and preserve this catalog's planned rows.

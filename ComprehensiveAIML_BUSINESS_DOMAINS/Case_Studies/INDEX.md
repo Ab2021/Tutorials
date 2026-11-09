@@ -6,26 +6,27 @@
 |---|---|
 | Owner | Curriculum maintainer; individual authors unassigned |
 | Audience and boundary | Cross-domain architecture and decision practice; focused methods remain in module collections |
-| Index version / review cadence | 2.0-planned / quarterly and on evidence or dependency change |
-| Substantive case review | Not performed; no authored cases in this catalog |
-| Case identity | PLAN-XD-NNN identifies a brief; crosswalk to stable CASE-XD-NNN when authoring |
+| Index version / review cadence | 3.0-draft / quarterly and on evidence or dependency change |
+| Substantive case review | Not performed; six authored illustrative design exercises await independent review |
+| Case identity | `CASE-XD-NNN` identifies an authored case; `PLAN-XD-NNN` remains the preserved original brief identity |
 | Source of truth | This INDEX for cross-domain briefs; source-specific topics are in the root source crosswalk |
 | Authoring authority | [Case master template](../../Templates/CASE_STUDY_CONTENT_MASTER_TEMPLATE.md) and [course numerical standard](../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) |
+| Editorial-state convention | `draft` is separate from evidence and implementation stage; no draft is a deployment claim |
 
 ## 2. Case catalog
 
-Every row is **editorial state: planned**, **stage: proposed**, **evidence: not-measured**. Titles are plain text because case files do not exist.
+Every row is **editorial state: draft**, **stage: proposed**, **evidence: illustrative / not-measured outcome**. Links lead to authored design exercises; their constructed values and proposed tests are not organization measurements.
 
 | Case ID | Case title / relative link | Domain | Case type | Decision / business question | Primary pattern | Secondary pattern(s) | Evidence | Stage | Last reviewed | Key result or limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-XD-001 | Enterprise knowledge agent with controlled actions | Enterprise knowledge | llm-agentic | Which retrieved answers and tool actions may be released under exact-user permissions and approval constraints? | authorization-scope | human-in-the-loop; idempotent-side-effects | not-measured | proposed | not reviewed | Compare authorized retrieval, abstention and action completion; include token-budget arithmetic and replayed approval failures |
-| PLAN-XD-002 | Predictive-maintenance-to-robotics operating loop | Industrial operations | hybrid | When should a detected fault cause review, maintenance scheduling or a controlled physical stop? | safe-state-boundary | delayed-feedback; cost-latency-tradeoff | not-measured | proposed | not reviewed | Fault labels, control timing and safety evidence unavailable; calculate a cycle budget and test dropout/deadline paths |
-| PLAN-XD-003 | Regulated healthcare multimodal assistant | Healthcare | llm-agentic | Which document/signal-supported responses can aid a clinician, and which require abstention or expert escalation? | human-in-the-loop | authorization-scope; evaluation-mismatch | not-measured | proposed | not reviewed | Clinical benefit unmeasured; compute slice sensitivity and review load, validate site/time boundaries |
-| PLAN-XD-004 | Real-time financial crime platform | Payments and investigations | hybrid | Which events should be blocked or queued for investigation at fixed review capacity? | delayed-feedback | evaluation-mismatch; idempotent-side-effects | not-measured | proposed | not reviewed | No measured fraud reduction; calculate precision-at-capacity and queue drain under replay/label delay |
-| PLAN-XD-005 | Sustainable supply-chain control tower | Supply chain | hybrid | Which inventory/transport exception actions improve service within capacity, cost and emissions constraints? | constrained-allocation | human-in-the-loop; evaluation-mismatch | not-measured | proposed | not reviewed | Scenario assumptions only; compare feasible allocations and sensitivity before operational trials |
-| PLAN-XD-006 | Global model-platform incident | AI platform operations | incident | Which containment and recovery sequence restores useful responses without incompatible state or duplicate effects? | compatible-recovery | idempotent-side-effects; cost-latency-tradeoff | not-measured | proposed | not reviewed | Hypothetical incident exercise, not an observed outage; calculate backlog/error-budget impact and validate replay/rollback |
+| CASE-XD-001 (PLAN-XD-001) | [Enterprise knowledge agent with controlled actions](01_enterprise_knowledge_agent_controlled_actions.md) | Enterprise knowledge | llm-agentic | Which retrieved answers and tool actions may be released under exact-user permissions and approval constraints? | authorization-scope | human-in-the-loop; idempotent-side-effects | illustrative; outcome not measured | proposed | not reviewed | Derived queue/recovery arithmetic; authorization, approval, and action results require replay |
+| CASE-XD-002 (PLAN-XD-002) | [Predictive-maintenance-to-robotics operating loop](02_predictive_maintenance_robotics_operating_loop.md) | Industrial operations | hybrid | When should a detected fault cause review, maintenance scheduling or a controlled physical stop? | safe-state-boundary | delayed-feedback; cost-latency-tradeoff | illustrative; outcome not measured | proposed | not reviewed | Fault labels, control timing, and safety evidence unavailable; HIL validation remains required |
+| CASE-XD-003 (PLAN-XD-003) | [Regulated healthcare multimodal assistant](03_regulated_healthcare_multimodal_assistant.md) | Healthcare | llm-agentic | Which document/signal-supported responses can aid a clinician, and which require abstention or expert escalation? | human-in-the-loop | authorization-scope; evaluation-mismatch | illustrative; outcome not measured | proposed | not reviewed | No clinical benefit claim; site/time/slice review and clinician validation remain required |
+| CASE-XD-004 (PLAN-XD-004) | [Real-time financial crime platform](04_real_time_financial_crime_platform.md) | Payments and investigations | hybrid | Which events should be blocked or queued for investigation at fixed review capacity? | delayed-feedback | evaluation-mismatch; idempotent-side-effects | illustrative; outcome not measured | proposed | not reviewed | No fraud reduction claim; capacity-aware replay and mature-label protocol required |
+| CASE-XD-005 (PLAN-XD-005) | [Sustainable supply-chain control tower](05_sustainable_supply_chain_control_tower.md) | Supply chain | hybrid | Which inventory/transport exception actions improve service within capacity, cost and emissions constraints? | constrained-allocation | human-in-the-loop; evaluation-mismatch | illustrative; outcome not measured | proposed | not reviewed | Scenario assumptions only; feasibility, emissions factors, and planner trial require validation |
+| CASE-XD-006 (PLAN-XD-006) | [Global model-platform incident](06_global_model_platform_incident.md) | AI platform operations | incident | Which containment and recovery sequence restores useful responses without incompatible state or duplicate effects? | compatible-recovery | idempotent-side-effects; cost-latency-tradeoff | illustrative; outcome not measured | proposed | not reviewed | Hypothetical incident exercise; restore/replay and duplicate-effect testing remain required |
 
-For each brief, select sources and source basis before drafting; illustrative values must not become claimed results. Register full data/decision/workload assumptions and pass/fail rules before interpreting outcomes.
+Each authored case keeps the original bounded decision, source uncertainty, full data/decision/workload assumptions, pass/fail rules, and a labeled illustrative source basis. Illustrative values must not become claimed results.
 
 ## 3. Canonical reusable patterns
 
@@ -68,15 +69,15 @@ These are proposed teaching comparisons, not empirical support.
 | Case ID | Date | What changed | Evidence or market trigger | Action | Owner role |
 |---|---|---|---|---|---|
 | All PLAN-XD briefs | 2026-11-06 | Added bounded decisions, evidence limits and numerical/validation work; adopted master structure | Course coverage reconciliation | Planning update only; no case reviewed or published | Curriculum maintainer |
+| CASE-XD-001 through CASE-XD-006 | 2026-11-09 | Authored illustrative draft cases, stable CASE IDs, decision ledgers, quantitative traces, recovery probes, and interview packs | Course authoring completion pass | Draft only; no source verification, experiment, pilot, or independent review is claimed | Curriculum maintainer |
 
 [Reference-informed case and cheat-sheet plan](../00_REFERENCE_INFORMED_CASE_PLAN.md): 36 example files inform separate future briefs. They are references only, not completed cases or established results. Preserve their own stable planning IDs and source limitations.
 
 ## 7. Pre-publish checks
 
-- [x] Six unique planning IDs; unwritten cases and missing outcomes are explicit.
-- [x] Decision, type, evidence and stage are recorded independently.
-- [ ] Draft all 15 sections with claim/source ledgers and a checked numerical walkthrough.
-- [ ] Specify data/workload cutoffs, baselines, alternatives, uncertainty and falsification protocols.
-- [ ] Validate operational boundaries, failures, sizing and recovery where applicable.
-- [ ] Complete 12–18 answered interview questions with follow-ups; keep Section 15 last.
-- [ ] Verify sources, links/anchors, pattern relationships, review records and every master-template publication gate.
+- [x] Six preserved planning IDs crosswalked to six stable CASE IDs; authored files and missing outcomes are explicit.
+- [x] Decision, type, evidence, editorial state, and implementation stage are recorded independently.
+- [x] Each draft has all 15 sections, a source/claim boundary, a hand-derived checked numerical walkthrough, sensitivity, and proposed reproducibility inputs.
+- [x] Each draft specifies data/workload cutoffs, baseline, alternatives, uncertainty, falsification protocol, failure diagnostics, recovery reasoning, and 15 answered interview questions; Section 15 is last.
+- [ ] Execute the listed replay, recovery, capacity, hardware-in-loop, clinical, financial-crime, supply-chain, and review validation protocols where applicable.
+- [ ] Verify authoritative primary sources, links/anchors, external requirements, pattern relationships, independent review records, and every master-template publication gate.

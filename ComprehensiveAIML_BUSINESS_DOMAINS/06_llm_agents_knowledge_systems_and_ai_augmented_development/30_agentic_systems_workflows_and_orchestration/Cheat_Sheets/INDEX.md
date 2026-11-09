@@ -1,12 +1,12 @@
 # Module 30 Cheat Sheets — Agentic Systems, Workflows and Orchestration
 
 ## 1. Overview
-For engineers familiar with transactions and distributed failures, this collection supports decisions about agent state, isolation, recovery and side effects. Two sheets are unreviewed drafts; production readiness requires independent review and workload-specific evidence.
+For engineers familiar with transactions and distributed failures, this collection supports decisions about request ownership, agent state, isolation, recovery and side effects. The boundary sheet is an unreviewed draft; production readiness requires independent review and workload-specific evidence.
 
 ## 2. Topic ladder
 | Level | Topic and outcome | Prerequisite / skill | Status |
 |---|---|---|---|
-| Foundation | Agent-pattern catalog: compare patterns against a bounded task and failure counterexample. | Basic model/tool interactions. | Planned |
+| Foundation | [01 Agent boundaries and request ownership](01_agent_boundaries_and_request_ownership.md): assign decision, state, retry and effect ownership to a bounded request path. | Basic model/tool interactions and HTTP identity. | Draft; not reviewed |
 | Core | Workflow selection: select an orchestration style and explain tradeoffs. | Agent-pattern concepts. | Planned |
 | Core | Handoff protocol: define ownership and validate a handoff under failure. | Workflow and identity basics. | Planned |
 | Production | [04 Sessions, state and lifecycle](04_agent_sessions_state_isolation_and_lifecycle.md): trace ownership and isolation. | Authentication, transactions and access control. | Draft; not reviewed |
@@ -15,24 +15,25 @@ For engineers familiar with transactions and distributed failures, this collecti
 ## 3. Quick topic lookup
 | Question | Exact section | Use and warning |
 |---|---|---|
+| Where does a model proposal become an authorized action? | [Boundaries](01_agent_boundaries_and_request_ownership.md#4-core-formulas-with-full-derivation) | Require adapter-side canonical arguments and policy; schema validity is insufficient. |
 | Who owns session state? | [Definitions](04_agent_sessions_state_isolation_and_lifecycle.md#3-foundational-definitions) | Separate context from authoritative state. |
 | Can a timed-out write be retried? | [Failures](05_durable_workflows_and_idempotent_execution.md#8-failure-modes--edge-cases) | Inspect provider status and key contract; timeout is not failure proof. |
-| How does backlog grow? | [Formulas](05_durable_workflows_and_idempotent_execution.md#4-core-formulas-with-full-derivation) | Constant-rate queue model is not a latency guarantee. |
 
 ## 4. Reading paths
-- **Beginner:** Learn authentication and database transactions; read [session definitions](04_agent_sessions_state_isolation_and_lifecycle.md#3-foundational-definitions) and its [mental model](04_agent_sessions_state_isolation_and_lifecycle.md#2-concept-map--mental-model). Pattern catalog remains planned.
-- **Practitioner:** Read sheet 04 then [05](05_durable_workflows_and_idempotent_execution.md), tracing ownership, checkpoints and external effects.
-- **Advanced:** Read both complete drafts, then use their failures and cards to reason through replay, tenant isolation and reconciliation; the workflow and handoff guides are planned extensions.
+- **Beginner:** Read [01](01_agent_boundaries_and_request_ownership.md), then learn authentication and database transactions; read [session definitions](04_agent_sessions_state_isolation_and_lifecycle.md#3-foundational-definitions) and its [mental model](04_agent_sessions_state_isolation_and_lifecycle.md#2-concept-map--mental-model).
+- **Practitioner:** Read sheets [01](01_agent_boundaries_and_request_ownership.md), 04, then [05](05_durable_workflows_and_idempotent_execution.md), tracing ownership, checkpoints and external effects.
+- **Advanced:** Read all three drafts, then use their failures and cards to reason through replay, tenant isolation and reconciliation; the workflow and handoff guides are planned extensions.
 
 ## 5. Prerequisite skills
 Understand HTTP authentication, tenant authorization, transactions, leases, queue rates and retry ambiguity. Start with the [session header](04_agent_sessions_state_isolation_and_lifecycle.md#1-file-header) and its linked concurrency reference; then apply queue arithmetic in [05](05_durable_workflows_and_idempotent_execution.md#4-core-formulas-with-full-derivation).
 
 ## 6. What this collection does NOT cover
-The agent-pattern catalog, workflow selection and handoff protocol remain planned. Neither draft proves exactly-once external effects or validates a provider's contract; tool integration details require separate study. Reference-informed briefs below are proposals, not completed sheets.
+The workflow-selection and handoff-protocol guides remain planned. The boundary draft does not establish any framework or provider contract; neither it nor the two production-focused drafts prove exactly-once external effects. Tool integration details require separate study. Reference-informed briefs below are proposals, not completed sheets.
 
 ## 7. Master symbol glossary
 | Symbol / term | Meaning; unit / type / domain | First use |
 |---|---|---|
+| Run / effect key | Versioned attempt / stable intended business operation identifier; opaque strings, tenant-scoped. | [01 definitions](01_agent_boundaries_and_request_ownership.md#3-foundational-definitions) |
 | Session | Tenant-scoped durable interaction container; identifier, not authorization. | [04 definitions](04_agent_sessions_state_isolation_and_lifecycle.md#3-foundational-definitions) |
 | B | Pending backlog; nonnegative scalar jobs. | [05 definitions](05_durable_workflows_and_idempotent_execution.md#3-foundational-definitions) |
 | lambda, mu | Arrival and completion rates; jobs per second, nonnegative scalars under the stated model. | [05 definitions](05_durable_workflows_and_idempotent_execution.md#3-foundational-definitions) |
@@ -40,6 +41,7 @@ The agent-pattern catalog, workflow selection and handoff protocol remain planne
 ## 8. Quick Reference Card directory
 | Card | Rule / use | Condition and avoid |
 |---|---|---|
+| [01 card](01_agent_boundaries_and_request_ownership.md#12-quick-reference-card) | Bind model proposals to an authorized adapter and reconcile the same effect key. | A timeout is ambiguity, not failure proof. |
 | [04 card](04_agent_sessions_state_isolation_and_lifecycle.md#12-quick-reference-card) | Trace state ownership and isolation. | An identifier is not proof of authorization. |
 | [05 card](05_durable_workflows_and_idempotent_execution.md#12-quick-reference-card) | Reconcile ambiguous effects before unsafe retry. | Provider semantics and key retention govern effect safety. |
 

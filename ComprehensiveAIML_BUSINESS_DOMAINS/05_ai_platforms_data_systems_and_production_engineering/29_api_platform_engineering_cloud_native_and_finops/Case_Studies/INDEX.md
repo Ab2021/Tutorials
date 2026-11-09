@@ -1,38 +1,51 @@
-# Module 29 Case Studies â€” API Platform Engineering, Cloud-Native Systems and FinOps
+# Module 29 Case Studies — API Platform Engineering, Cloud-Native Systems and FinOps
 
-## Authoring standard
+**Status:** planning catalog; no authored `CASE-*` files. Future cases must follow the [course standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [case master](../../../Templates/CASE_STUDY_CONTENT_MASTER_TEMPLATE.md).
 
-Every authored case must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master: all 15 sections, bounded decision and baseline, traceable evidence, checked numerical walkthrough/sizing where applicable, failure diagnostics, 12–18 answered interview questions, and Section 15 last. This is a planned catalog, not completed cases; expand to all seven collection-index sections before publication. Evidence, implementation stage and editorial status remain separate.
+## 1. Collection metadata
 
-## Planned cases
+| Field | Value |
+|---|---|
+| Domain | API contracts, cloud-native operations, tenancy, platform product, and FinOps |
+| Evidence boundary | illustrative/proposed; prices, capabilities, and tenancy claims require dated primary evidence |
+| Review trigger | API version, tenancy policy, control plane, capacity, chargeback rule, or provider contract change |
 
-| # | Case | Required outcome | Status |
-|---:|---|---|---|
-| 1 | Internal AI platform design | Design the decision, architecture, metrics, risks, and validation plan. | planned |
-| 2 | cloud-cost anomaly response | Design the decision, architecture, metrics, risks, and validation plan. | planned |
+## 2. Case catalog
 
-## Suggested file naming
-
-Use **01_case-slug.md**, then **02_case-slug.md**. Add **00_framework.md** only for shared constraints that every case needs.
-
-<!-- BEGIN INTERVIEW REFERENCE PLAN -->
-
-## Reference-informed additions to develop
-
-These are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../00_REFERENCE_INFORMED_CASE_PLAN.md).
-
-| Planning ID | Proposed case brief | Editorial relationship | Type | Decision / business question | Primary pattern | Secondary patterns | Evidence | Stage | Planning reviewed | Result |
+| Case ID | Linked title | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result/limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-2026-IR002 | Select model routes within hard customer constraints | Supporting curriculum; shared brief | llm-agentic | Which eligible provider and fallback path satisfy residency, capability, deadline and spend requirements? | `eligibility-before-ranking` | `cost-latency-tradeoff` | not-measured | proposed | 2026-11-06 |  |
-| PLAN-2026-IR022 | Bound global API admission with token leases | Supporting curriculum; shared brief | hybrid | Which admission policy remains within its global budget during contention or coordinator failure? | `resource-admission` | `correctness-contract`, `bounded-work` | not-measured | proposed | 2026-11-06 |  |
+| PLAN-29-01 | Internal AI platform design | platform | hybrid | select boundaries and product contract | authorization-scope | resource-admission | not-measured | proposed | — | needs customer/workload discovery |
+| PLAN-29-02 | Cloud-cost anomaly response | FinOps | incident | contain spend safely | cost-latency-tradeoff | resource-admission | not-measured | proposed | — | needs billing/reconciliation evidence |
+| PLAN-2026-IR002 | Select model routes within hard customer constraints | platform | llm-agentic | choose eligible fallback | eligibility-before-ranking | cost-latency-tradeoff | not-measured | proposed | 2026-11-06 (planning) | provider facts need revalidation |
+| PLAN-2026-IR022 | Bound global API admission with token leases | platform | hybrid | keep within global budget | resource-admission | correctness-contract; bounded-work | not-measured | proposed | 2026-11-06 (planning) | token bucket differs from exact rolling window |
 
-### Reference and transfer notes
+## 3. Canonical reusable patterns
 
-| Planning ID | Example reference only | Scope boundary |
+- **Authorization scope:** bind identity, tenant, capabilities, data, cache, and billing ownership at the API boundary.
+- **Resource admission:** debit a globally bounded budget atomically or use a clearly bounded lease/failure policy.
+- **Cost–latency tradeoff:** allocate spend using successful work, tail risk, and service objectives rather than request count alone.
+
+## 4. Similarity / contrast map
+
+| Cluster | Shared reasoning | Critical distinction |
 |---|---|---|
-| PLAN-2026-IR002 | [REF-IR002](../../../../INTERVIEW_CASES/Agentic_AI_System/AI_frontier_sys/constrained_provider_routing.md) | Revalidate provider capabilities and economics when authoring; source tables are not current service guarantees |
-| PLAN-2026-IR022 | [REF-IR022](../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/Rate_Limiting/distributed_token_buckets.md) | Periodic usage reporting alone is not coordinated allocation; token buckets and exact rolling windows have different contracts |
+| platform and routing | eligibility, policy, and observable contracts | provider health is not tenancy authorization |
+| FinOps and rate limiting | bounded admission and accounting | periodic reporting is not coordinated allocation |
 
-Case metadata, pattern definitions, supporting/contrasting references, structured backlog, review log and authoring checks for these additions are maintained in the linked central planning catalog. Existing planned rows elsewhere in this index retain their original status. A brief may be split or merged before canonical case IDs are assigned.
+## 5. Questions and future-case backlog
 
-<!-- END INTERVIEW REFERENCE PLAN -->
+1. What API contract remains compatible across model and policy upgrades?
+2. How are tenant isolation and charge ownership tested under retries?
+3. Which lease failure mode may over-admit or over-reject work?
+4. What cost metric excludes failed or abandoned work, and why?
+
+## 6. Review / retirement log
+
+| Date | Item | Decision | Reason |
+|---|---|---|---|
+| 2026-11-09 | catalog | retained as planned | no authored case, billing data, or primary provider evidence |
+
+## 7. Pre-publish checks
+
+- [ ] Link a 15-section `CASE-*` with tenancy, admission, recovery, capacity, and cost arithmetic.
+- [ ] Reconcile catalog evidence/stage/status; verify dated provider and pricing claims before publication.

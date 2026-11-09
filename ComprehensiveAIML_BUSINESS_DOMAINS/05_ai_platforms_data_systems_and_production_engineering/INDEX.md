@@ -29,6 +29,8 @@ Parts 01-04; production practices apply across modelling choices.
 A learner should be able to explain the design trade-offs, choose an evidence-based approach, and complete at least one case-study brief before moving on. Each module index records its own prerequisites and planned case/cheat-sheet coverage.
 
 ## Exact local coverage ledger
+The current, artifact-level completion boundary is tracked in the [local coverage ledger](./COVERAGE_LEDGER.md). It records partial drafts separately from template-conformant completed teaching artifacts.
+
 
 This ledger was established before this expansion from the seven module indexes, their collection catalogs, and the machine-readable [source crosswalk](../00_SOURCE_TOPIC_CROSSWALK.json).
 The [visible inventory](../../Templates/directory.txt) is provenance, not access to original lesson bodies.

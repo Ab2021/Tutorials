@@ -8,11 +8,11 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | AI adoption map | planned |
-| 2 | model families and deployment modes | planned |
+| 1 | AI adoption map | [AI market map draft](Cheat_Sheets/02_AI_Market_Map.md); adoption measurement extension planned |
+| 2 | model families and deployment modes | [AI market map draft](Cheat_Sheets/02_AI_Market_Map.md); detailed model-family scope planned |
 | 3 | roles and career tracks | planned |
 | 4 | problem framing | [AI use-case charter draft](Cheat_Sheets/01_AI_Use_Case_Charter.md); remaining framing scope planned |
-| 5 | technology due diligence | planned |
+| 5 | technology due diligence | [Technology due-diligence draft](Cheat_Sheets/03_Technology_Due_Diligence.md); candidate evidence remains OPEN |
 
 ## What competence looks like
 
@@ -25,7 +25,10 @@ After this module, a learner can turn a real problem into an appropriate technic
 
 ## Authored course-topic drafts
 
-- [AI Use-Case Charter](Cheat_Sheets/01_AI_Use_Case_Charter.md) — decision framing, baseline, intervention selection, risk/economics and promotion gates; source inventory only.
+- [AI Use-Case Charter](Cheat_Sheets/01_AI_Use_Case_Charter.md) — decision framing, baseline, intervention selection, risk/economics and promotion gates.
+- [AI Market Map](Cheat_Sheets/02_AI_Market_Map.md) — capability, deployment, control boundary, review capacity, and selection gates.
+- [Technology Due Diligence](Cheat_Sheets/03_Technology_Due_Diligence.md) — claim interpretation, acceptance tests, total-cost assumptions, and evidence expiry.
+- [Select an AI Use-Case Portfolio](Case_Studies/01_Select_AI_Use_Case_Portfolio.md) — illustrative feasibility-first portfolio decision.
 
 ## Dependency notes
 

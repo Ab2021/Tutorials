@@ -4,15 +4,15 @@
 > **Prerequisites:** 05,11  
 > **Purpose:** Learn modern neural representations for images, video, spatial data, and transfer learning.
 
-## Topics to develop
+## Topics and current artifact state
 
-| # | Topic | Status |
+| # | Topic | Current artifact / boundary |
 |---:|---|---|
-| 1 | CNNs and attention | planned |
-| 2 | vision transformers | planned |
-| 3 | detection and segmentation | planned |
-| 4 | self-supervision | planned |
-| 5 | vision evaluation and error taxonomy | [Vision evaluation and error-taxonomy draft](Cheat_Sheets/01_Vision_Evaluation_and_Error_Taxonomy.md); broader topic planned |
+| 1 | CNNs and attention | [Draft sheet](Cheat_Sheets/02_CNNs_Attention_and_Transfer_Learning.md); full publication-depth expansion remains open. |
+| 2 | vision transformers | [Draft sheet](Cheat_Sheets/03_Vision_Transformers.md); full publication-depth expansion remains open. |
+| 3 | detection and segmentation | [Draft sheet](Cheat_Sheets/04_Detection_and_Segmentation.md); full publication-depth expansion remains open. |
+| 4 | self-supervision | [Draft sheet](Cheat_Sheets/05_Self_Supervision_and_Contrastive_Learning.md); full publication-depth expansion remains open. |
+| 5 | vision evaluation and error taxonomy | [Existing incomplete draft](Cheat_Sheets/01_Vision_Evaluation_and_Error_Taxonomy.md); broader topic and template expansion remain open. |
 
 ## What competence looks like
 

@@ -8,11 +8,11 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | agent boundaries | planned |
+| 1 | [agent boundaries](./Cheat_Sheets/01_agent_boundaries_and_request_ownership.md) | draft; not reviewed |
 | 2 | workflow vs agent | planned |
 | 3 | planning and reflection | planned |
 | 4 | multi-agent orchestration | planned |
-| 5 | durable state and recovery | planned |
+| 5 | durable state and recovery | partial draft coverage in cheat sheets 04–05; not reviewed |
 
 ## What competence looks like
 

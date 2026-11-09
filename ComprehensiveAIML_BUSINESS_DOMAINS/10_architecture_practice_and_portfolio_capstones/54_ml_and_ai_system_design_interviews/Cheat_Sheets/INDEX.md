@@ -1,33 +1,59 @@
-# Module 54 Cheat Sheets â€” ML and AI System Design Interviews
+# Module 54 Cheat Sheets — ML and AI System Design Interviews
 
-## Authoring standard
+## 1. Overview
+This collection will teach requirement discovery, ML/LLM architecture, capacity/cost, and trade-off communication. No individual sheet exists yet; planning rows are not links or completed lessons.
 
-Every authored sheet must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. This is a planned catalog, not completed sheets; expand to all 11 collection-index sections and a final Common Issues artifact (at least 25 complete issues) before publication. A card alone is not a completed sheet.
-
-## Planned cheat sheets
-
-| # | Reference | Coverage | Status |
-|---:|---|---|---|
-| 1 | interview framework | Concise patterns, decision rules, assumptions, and common traps. | planned |
-| 2 | architecture whiteboard prompts | Concise patterns, decision rules, assumptions, and common traps. | planned |
-| 3 | metric selection | Concise patterns, decision rules, assumptions, and common traps. | planned |
-
-## Suggested file naming
-
-Use **01_reference-slug.md**, then **02_reference-slug.md**. Keep one concern per file so references remain scannable.
-
-<!-- BEGIN INTERVIEW REFERENCE PLAN -->
-
-## Reference-informed additions to develop
-
-These are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../00_REFERENCE_INFORMED_CASE_PLAN.md).
-
-| Related brief | Proposed cheat-sheet scope | Checks / counterexamples to include | Reference only | Status |
+## 2. Topic ladder
+| Level | File/topic | Outcome | Prerequisite | Status |
 |---|---|---|---|---|
-| PLAN-2026-IR020 | Routing production behavior; coordinated rolling counters; distributed positional inverted indexes | Coherent-snapshot queries, concurrent admission accounting, shard failure tests and search-reference comparisons. Boundary: Three units continue earlier routing, admission and search topics; this is not a new independent evidence dataset. | [REF-IR020](../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/CASE_STUDIES_03.md) | planned; not written |
-| PLAN-2026-IR026 | Cache policies; ranks/range queries; sketches; prefix/nearest-neighbor search; graphs; scheduling; online windows | Operation traces, exact small-data oracles, measured memory/latency and stated approximation or distributed guarantees. Boundary: Eight teaching units plus rapid prompts; approximate structures, local proofs and service guarantees must be distinguished. | [REF-IR026](../../../../INTERVIEW_CASES/DSA/index_basics/INTERVIEW_CASE_STUDIES.md) | planned; not written |
-| PLAN-2026-IR034 | Profile caching; safe typeahead publication; ranked score updates; Bloom-filter crawler admission | Failure replays and reference histories; freshness, exact versus approximate results and false-positive consequences. Boundary: Four teaching units overlap focused examples; Bloom false positives and stale ranks need product-specific tolerance. | [REF-IR034](../../../../INTERVIEW_CASES/DSA/Sys_Des_DSA/INTERVIEW_SYSTEM_DESIGN_CASES.md) | planned; not written |
+| Foundation | interview framework | turn ambiguity into a decision contract | prior system/ML basics | planned |
+| Core | architecture whiteboard prompts | draw owned data/control/failure paths | framework | planned |
+| Core | metric selection | define objective, guardrails, denominator | statistics | planned |
+| Advanced | IR020 routing/counters/search | defend distributed correctness contract | DSA/distributed systems | planned |
+| Advanced | IR026 operation-mix structures | select structure under resource/failure bounds | DSA | planned |
+| Advanced | IR034 cache/typeahead/rank/dedupe | state freshness and consistency contract | DSA/serving | planned |
+| Final | Common Issues | diagnose at least 25 complete issues | all sheets | planned; no file |
 
-Each future cheat sheet needs its own explanation, preconditions, formulas or algorithms where relevant, failure signals and checked examples. Do not copy the interview narrative or its scenario figures into a reference sheet.
+## 3. Quick topic lookup
+| Question | File | Section | Warning |
+|---|---|---|---|
+| What do I ask first? | planned interview framework | decision contract | tools are not requirements |
+| Which metric matters? | planned metric selection | objective/guardrails | proxy can reverse value |
+| Is a cache safe to publish? | planned IR034 sheet | consistency contract | stale rank is not exact rank |
 
-<!-- END INTERVIEW REFERENCE PLAN -->
+## 4. Reading paths — three options
+**Beginner:** framework → architecture prompts → metrics. **Practitioner:** beginner path plus capacity/cost and one bounded design case. **Advanced:** all planned DSA reference additions, then failure/recovery drills. Paths become links only when files exist.
+
+## 5. Prerequisite skills
+Problem decomposition; queues and rates; ML evaluation; basic retrieval; distributed consistency; and complexity analysis. The module index lists course-module prerequisites. No hidden source body is assumed available.
+
+## 6. Exclusions and handoffs
+This collection does not certify interview performance, production architecture, vendor behavior, or benchmark results. Algorithm-specific proofs and implementation belong in their relevant DSA homes; visible interview examples remain reference-only.
+
+## 7. Master symbol glossary
+| Symbol | Meaning | Units/type | First planned use |
+|---|---|---|---|
+| `lambda` | arrival rate | requests/s | capacity sheet |
+| `mu` | service rate | requests/s | capacity sheet |
+| `B` | backlog | requests | capacity sheet |
+| `p` | probability, never feature count | dimensionless | metrics sheet |
+
+## 8. Quick Reference Card directory
+No cards exist. Each authored sheet must end in its own card; planned names above are not card links.
+
+## 9. Common Issues locator
+No issue file exists. The final file must retain 12 headings and contain >=25 distinct complete issues with required categories, provenance, competing causes, diagnostics, correction, prevention, and verification.
+
+## 10. Sources, versions and maintenance
+| Source | Scope | Limitation | Trigger |
+|---|---|---|---|
+| [Module index](../INDEX.md) | five original topics and three plans | planned syllabus only | index/source change |
+| [REF-IR020](../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/CASE_STUDIES_03.md) | reference example | not evidence of implementation | source review |
+| [REF-IR026](../../../../INTERVIEW_CASES/DSA/index_basics/INTERVIEW_CASE_STUDIES.md) | reference example | methods must be separately authored | source review |
+| [REF-IR034](../../../../INTERVIEW_CASES/DSA/Sys_Des_DSA/INTERVIEW_SYSTEM_DESIGN_CASES.md) | reference example | no proprietary results | source review |
+
+## 11. Collection acceptance checklist
+- [ ] Every original and reference-informed commitment has a substantive artifact.
+- [ ] Every sheet has 12 sections, checked task, diagnostics, interview answers, and final card.
+- [ ] A complete final Common Issues artifact exists.
+- [ ] Primary factual sources and unstable claims are version-pinned and reviewed.
