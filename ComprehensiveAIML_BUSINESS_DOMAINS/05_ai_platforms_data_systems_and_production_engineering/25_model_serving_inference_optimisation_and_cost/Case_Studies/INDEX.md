@@ -1,6 +1,6 @@
 # Module 25 Case Studies — Model Serving, Inference Optimisation and Cost
 
-**Status:** planned catalog; no authored `CASE-*` files. Use the [course standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [case master](../../../Templates/CASE_STUDY_CONTENT_MASTER_TEMPLATE.md).
+**Status:** planned catalog; no authored `CASE-*` files. Use the [course standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [case master](../../../../Templates/CASE_STUDY_CONTENT_MASTER_TEMPLATE.md).
 
 ## 1. Collection metadata
 

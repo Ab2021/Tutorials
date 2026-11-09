@@ -10,9 +10,10 @@ These planned reference cards support repeatable decisions in Fraud Modelling. T
 
 | # | Reference | Coverage | Status |
 |---:|---|---|---|
-| 1 | Fraud metric and cost matrix | Decision rules, inputs, metrics, trade-offs, and failure signals. | planned |
-| 2 | Label-delay and feedback-loop checklist | Decision rules, inputs, metrics, trade-offs, and failure signals. | planned |
-| 3 | Real-time feature and alerting patterns | Decision rules, inputs, metrics, trade-offs, and failure signals. | planned |
+| 1 | [Fraud taxonomy and decision grain](01_Fraud_Taxonomy_and_Decision_Grain.md) | Payment, claims, account/application, AML, and marketplace decision grains; labels, losses, timing, and graph boundaries. | draft; ILLUSTRATIVE/DERIVED |
+| 2 | Decision cut-offs and loss matrices | Action-conditioned losses, capacity-constrained thresholds, calibration boundaries, and policy guardrails. | draft started |
+| 3 | Label-delay and feedback-loop checklist | Decision rules, inputs, metrics, trade-offs, and failure signals. | planned |
+| 4 | Real-time feature and alerting patterns | Decision rules, inputs, metrics, trade-offs, and failure signals. | planned |
 
 ## Required card fields
 

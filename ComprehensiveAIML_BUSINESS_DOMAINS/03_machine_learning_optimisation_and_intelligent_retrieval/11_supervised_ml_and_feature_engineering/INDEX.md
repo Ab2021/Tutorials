@@ -8,7 +8,7 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | problem formulation | planned |
+| 1 | problem formulation | [Problem Formulation and Losses draft](Cheat_Sheets/02_Problem_Formulation_and_Losses.md); other formulation extensions planned |
 | 2 | linear trees and boosting | planned |
 | 3 | feature engineering | planned |
 | 4 | imbalance and calibration | planned |
@@ -25,6 +25,7 @@ After this module, a learner can turn a real problem into an appropriate technic
 
 ## Authored course-topic drafts
 
+- [Problem Formulation and Losses](Cheat_Sheets/02_Problem_Formulation_and_Losses.md) — action contract, loss derivation, capacity-bound policy, label maturity and decision-boundary diagnostics; illustrative examples only.
 - [Model Validation and Error Analysis](Cheat_Sheets/01_Model_Validation_and_Error_Analysis.md) — split selection, leakage audit, thresholding and slices; visible source inventory only.
 
 ## Dependency notes

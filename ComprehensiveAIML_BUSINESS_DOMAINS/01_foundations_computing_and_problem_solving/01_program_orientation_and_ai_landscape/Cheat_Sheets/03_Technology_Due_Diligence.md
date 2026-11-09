@@ -18,6 +18,8 @@ source_index: "INDEX.md"
 
 # Technology Due Diligence: Claims, Tests, and Operating Boundaries
 
+## 1. File Header
+
 > **Purpose:** Turn a technology claim into a bounded acceptance test and a decision record rather than a feature checklist.
 > **Prerequisites:** [AI Use-Case Charter](01_AI_Use_Case_Charter.md), [AI Market Map](02_AI_Market_Map.md), basic arithmetic with fractions and currency.
 > **Key outcome:** Given a candidate system claim, write the evidence request, test population, pass/fail threshold, and decision consequence.
@@ -224,6 +226,169 @@ Accessed 2026-11-09. Recheck these sources and any candidate-specific claims at 
 12. **What changes for nonreversible automated action?** Add strict authorization, durable audit, idempotency, approval or segregation, failure recovery, and a narrow rollout.
 
 **Takeaway:** Good due diligence makes rejection, adoption, and “collect more evidence” equally defensible outcomes.
+
+### 11.1 Claim-ledger practice and evidence expiry
+
+| Claim ID | Bounded claim | Required artifact | What it cannot prove | Expiry trigger |
+|---|---|---|---|---|
+| DD-C01 | candidate returns an answer for a declared request format | versioned input/output trace | quality on unseen work | model or prompt change |
+| DD-C02 | candidate meets a rubric on held-out cases | frozen cases, rubric, scorer, configuration | future field benefit | population or workflow change |
+| DD-C03 | candidate keeps a declared field inside a permitted route | field-flow, configuration, contract, access test | every future integration path | subprocessor or integration change |
+| DD-C04 | candidate cost fits stated demand | dated quote and usage model | future price or retry behavior | price, volume, or output change |
+| DD-C05 | candidate can be recovered or exited | export, restore, retention and ownership evidence | painless migration at full scale | schema or term change |
+| DD-C06 | candidate action is controlled | approval, identity, idempotency, audit, rollback trace | correctness of business judgment | action or authority expansion |
+
+A claim ledger is not a vendor scorecard.
+It links each decision-relevant statement to the artifact that could contradict it.
+The ledger should preserve unfavorable and inconclusive evidence.
+An absent artifact is recorded as OPEN, not converted into a favorable assumption.
+Evidence expiry is a property of the claim’s dependencies, not a calendar ritual alone.
+A model-version update can expire quality and repeatability evidence.
+A new data connector can expire route and retention evidence.
+A change in output length can expire cost estimates.
+A new action permission can expire approval and recovery evidence.
+A workload spike can expire capacity conclusions.
+
+### 11.2 Acceptance-test design examples
+
+**Claim:** “The assistant is accurate.”\n
+Interpretation requires a task, eligible population, rubric, threshold, abstention treatment, and scorer.\n
+Test ordinary cases, boundary cases, and cases where the correct response is abstention or escalation.\n
+Record model, prompt, retrieval corpus, tool configuration, and candidate version before execution.\n
+Do not edit cases or instructions after candidate outputs are inspected.\n
+Report all exclusions with a reason and owner.\n
+
+**Claim:** “The system is secure.”\n
+Interpretation requires threat scope, identities, data classes, routes, configuration, and failure response.\n
+Request evidence that maps to the actual candidate configuration rather than a related product family.\n
+Test that unauthorized identity, stale permission, and malformed input paths fail safely.\n
+Do not infer a complete security conclusion from a general certification or a sales statement.\n
+Record where evidence is unavailable, out of date, or does not cover an integration.\n
+
+**Claim:** “The system is cheaper.”\n
+Interpretation requires baseline cost, volume, fixed cost, variable usage, retries, reviewer time, support, and exit terms.\n
+Use the same time window and eligible-unit definition on both sides.\n
+Model range scenarios for output length, error correction, and demand.\n
+Do not compare a candidate’s marginal API price with a baseline’s fully loaded workflow cost unless the decision is explicitly marginal.\n
+State whether a lower price comes with a quality, latency, control, or lock-in tradeoff.\n
+
+**Claim:** “The system is enterprise ready.”\n
+Interpretation requires an operating owner, monitoring, identity, release process, incident response, capacity policy, fallback, and exit path.\n
+Ask which of these is provided by the candidate and which remains the adopting organization’s work.\n
+Test a failed dependency, version rollback, permission revocation, and duplicate request if they apply.\n
+Do not treat a roadmap feature as a currently available control.\n
+Record the maximum scope actually exercised by an evaluation.\n
+
+### 11.3 Uncertainty in small acceptance tests
+
+The pass rate `p=n_pass/n_test` is a descriptive proportion for the tested cases.
+It does not give a confidence interval or a future guarantee without additional statistical assumptions and design.
+A 90% gate on 10 cases allows one failure but provides little evidence about rare high-consequence failures.
+A 90% gate on 1,000 poorly representative cases can still miss the actual decision boundary.
+The appropriate test size depends on consequence, expected failure mechanisms, population heterogeneity, and decision reversibility.
+Hard gates should include adversarial or policy-critical cases even if they are rare.
+Score disagreement should be measured and adjudicated rather than hidden in a single pass count.
+An inconclusive test can justify collecting more evidence instead of forcing adoption or rejection.
+
+### 11.4 Detailed due-diligence failure diagnoses
+
+**DD-F07 — Evidence artifact does not match deployed configuration.**\n
+Symptom: a report looks favorable but names a different region, model, integration, or control setting.\n
+Competing causes: harmless naming inconsistency; genuine configuration drift; product-family confusion; unapproved change.\n
+Diagnostic: map every report identifier to the intended deployment version and route.\n
+Expected signal: one or more material controls have no artifact for the actual candidate.\n
+Mitigation: mark the claim OPEN and prevent reliance for promotion.\n
+Correction: obtain scoped evidence or reduce deployment to covered configuration.\n
+Verification: reviewer can traverse artifact-to-configuration mapping without inference.\n
+
+**DD-F08 — Evaluation set becomes a tuning set.**\n
+Symptom: quality improves repeatedly without a separate final assessment.\n
+Competing causes: legitimate bug fix; overfitting to examples; rubric drift; evaluator expectation bias.\n
+Diagnostic: inspect change history and determine whether final cases informed prompt, retrieval, or rules.\n
+Expected signal: repeated candidate changes were selected using the purported holdout.\n
+Mitigation: retire contaminated set from final evidence.\n
+Correction: create a fresh held-out set and freeze it before the next selection.\n
+Verification: change log proves no final-case access before final run.\n
+
+**DD-F09 — Contract language is treated as operational behavior.**\n
+Symptom: policy says a control exists, while configuration or integration bypasses it.\n
+Competing causes: documentation lag; misunderstood responsibility split; deployment error; unsupported feature.\n
+Diagnostic: execute a bounded configuration and access-path test.\n
+Expected signal: observed behavior differs from assumed route, retention, or authorization.\n
+Mitigation: restrict data or scope until observed behavior is understood.\n
+Correction: reconcile contract, configuration, and operating procedures.\n
+Verification: repeat test with evidence ledger updated to actual boundary.\n
+
+**DD-F10 — Exit evidence is absent until an incident.**\n
+Symptom: the organization cannot export state, reconstruct decisions, or switch service after a material failure.\n
+Competing causes: proprietary format; incomplete logs; retention gap; contractual restriction; untested restore.\n
+Diagnostic: perform a limited export and restore of representative records before dependency deepens.\n
+Expected signal: missing fields, unverifiable history, or unacceptable recovery time.\n
+Mitigation: preserve canonical records outside candidate-specific state where possible.\n
+Correction: negotiate terms, build export, or narrow dependence.\n
+Verification: restore result matches sampled source records under declared tolerance.\n
+
+**Takeaway:** Due diligence remains useful only when each claim is tied to a configuration, an observable test, a limitation, and an expiry trigger.
+
+### 11.5 Supplier and integration boundary questions
+
+For every candidate, identify the legal supplier and every technical service that receives, stores, transforms, or logs a field.
+Identify model, hosting, retrieval, identity, observability, content-filter, and support components.
+Ask whether each component is configured by the supplier, adopter, or joint operating procedure.
+Ask what version identifier is exposed at request time and what change notice exists.
+Ask whether content is retained, cached, sampled, or used for improvement under actual terms.
+Ask which geographic, tenant, and identity boundaries are technically enforced.
+Ask which failures are visible to the adopter and which remain visible only to the supplier.
+Ask how incident evidence, audit trails, and deletion requests traverse component boundaries.
+Ask whether an exit exports raw records, derived artifacts, prompts, configurations, evaluation assets, and decision history.
+Ask which dependency can silently change cost, latency, behavior, or security posture.
+
+### 11.6 Unavailable-source evidence rule
+
+The visible directory inventory records `GLCC`, `learn`, `raw`, and `speechtotxt` as inaccessible containers.
+None provides candidate-specific assurance, benchmark, contract, architecture, or test result.
+For a due-diligence claim, the correct ledger status is OPEN.
+The evidence request is a content or filesystem export preserving source-node identity and access limitation.
+The interim decision is to rely only on visible reviewed artifacts or retain the baseline.
+Do not infer that an opaque folder contains favorable, unfavorable, or relevant evidence.
+
+```text
+FORMULA [DD-04]: E_ready = n_resolved_required / n_required
+WHERE: E_ready [fraction] is the share of predeclared required evidence
+       artifacts resolved and scoped to the candidate; the counts are
+       artifact inventory, not a quality score.
+CONSTRAINT: a hard-gate artifact missing from the numerator blocks promotion
+            even when E_ready is high; no weight turns absence into proof.
+NUMERICAL EXAMPLE: ILLUSTRATIVE 7 of 8 required artifacts are resolved;
+                   E_ready=7/8=0.875=87.5%.
+INTERPRETATION: if the missing artifact is the data-route test, the candidate
+                remains blocked despite an 87.5% inventory-completion figure.
+```
+
+Independent arithmetic: `0.875*8=7`.
+Boundary: counts cannot rank importance; a missing note differs from a missing hard-gate control test.
+Decision consequence: record evidence completeness and gate status separately.
+
+### 11.7 Interview extensions
+
+**What is the difference between an evidence gap and a failed test?**
+An evidence gap is OPEN because a relevant artifact is absent, inaccessible, or out of scope.
+A failed test violates a predeclared condition under a stated protocol.
+Both can block promotion but require different correction paths.
+
+**Why can 87.5% evidence readiness still require rejection?**
+Evidence completeness is not a compensating score.
+The missing 12.5% may be the only artifact resolving a prohibited data route or action boundary.
+
+**How do you challenge a candidate’s “no retention” statement?**
+Map fields, request path, cache, logs, support access, configuration, terms, and actual test evidence.
+Its scope must match proposed deployment rather than a generic product description.
+
+**What is a wrong way to evaluate exit readiness?**
+Accept a promise that export is available without exporting and restoring representative records.
+That confuses an untested contractual statement with operational evidence.
+
+**Takeaway:** Candidate evidence must map to actual supplier, configuration, integration, and control boundary; inventory completeness never overrides a hard gate.
 
 ## 12. Quick Reference Card
 

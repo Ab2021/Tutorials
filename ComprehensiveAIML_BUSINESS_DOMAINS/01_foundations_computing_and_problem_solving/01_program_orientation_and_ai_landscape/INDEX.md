@@ -1,6 +1,6 @@
-# Module 01 â€” Program Orientation and AI Landscape
+# Module 01 — Program Orientation and AI Landscape
 
-> **Part:** [Part 01 â€” Foundations, Computing and Problem Solving](../INDEX.md)  
+> **Part:** [Part 01 — Foundations, Computing and Problem Solving](../INDEX.md)  
 > **Prerequisites:** None  
 > **Purpose:** A decision-first map of roles, value chains, current technology shifts, and evidence standards.
 
@@ -8,11 +8,11 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | AI adoption map | [AI market map draft](Cheat_Sheets/02_AI_Market_Map.md); adoption measurement extension planned |
-| 2 | model families and deployment modes | [AI market map draft](Cheat_Sheets/02_AI_Market_Map.md); detailed model-family scope planned |
-| 3 | roles and career tracks | planned |
-| 4 | problem framing | [AI use-case charter draft](Cheat_Sheets/01_AI_Use_Case_Charter.md); remaining framing scope planned |
-| 5 | technology due diligence | [Technology due-diligence draft](Cheat_Sheets/03_Technology_Due_Diligence.md); candidate evidence remains OPEN |
+| 1 | AI adoption map | [AI market map draft](Cheat_Sheets/02_AI_Market_Map.md); adoption measurement coverage drafted, manuscript expansion remains |
+| 2 | model families and deployment modes | [AI market map draft](Cheat_Sheets/02_AI_Market_Map.md); model-family and deployment scope drafted, manuscript expansion remains |
+| 3 | roles and career tracks | [AI market map draft](Cheat_Sheets/02_AI_Market_Map.md#111-roles-adoption-and-model-family-decision-drills); operating roles drafted, career-track scope remains planned |
+| 4 | problem framing | [AI use-case charter](Cheat_Sheets/01_AI_Use_Case_Charter.md); complete manuscript draft, unreviewed |
+| 5 | technology due diligence | [Technology due-diligence draft](Cheat_Sheets/03_Technology_Due_Diligence.md); claim-ledger extension drafted, candidate evidence remains OPEN |
 
 ## What competence looks like
 

@@ -8,11 +8,14 @@ This collection teaches visual representation selection, ViT token budgeting, de
 
 | Level | File | Outcome | Prerequisites | Key skill | Status |
 |---|---|---|---|---|---|
-| Foundation | [02 CNNs, attention and transfer](02_CNNs_Attention_and_Transfer_Learning.md) | compute geometry/weights and choose adaptation baseline | convolution, grouped splits | CNN-01–03 | draft |
-| Core | [03 Vision transformers](03_Vision_Transformers.md) | budget patch tokens and select attention structure | 02 | VIT-01–02 | draft |
-| Core | [04 Detection and segmentation](04_Detection_and_Segmentation.md) | trace matching and choose output grain | evaluation protocol | DET-01–02 | draft |
-| Core | [05 Self-supervision](05_Self_Supervision_and_Contrastive_Learning.md) | audit pair semantics and contrastive loss | 02 | SSL-01 | draft |
-| Evaluation | [01 Vision evaluation](01_Vision_Evaluation_and_Error_Taxonomy.md) | specify task, split, slices and error taxonomy | all above | metric contract | incomplete draft |
+| Foundation | [02 CNNs, attention and transfer](02_CNNs_Attention_and_Transfer_Learning.md) | compute geometry/weights and choose adaptation baseline | convolution, grouped splits | CNN-01–03 | incomplete: repeated generic drill/interview/inspection prose requires replacement |
+| Foundation | [01 Vision evaluation](01_Vision_Evaluation_and_Error_Taxonomy.md) | specify task, split, slices and error taxonomy before model comparison | 02; task contract | metric contract | incomplete draft |
+| Core | Augmentation library — original planned scope | select transforms whose label, geometry and deployment invariances remain valid | 02; coordinate and label conventions | augmentation contracts, interpolation and slice checks | planned; self-supervised pair contracts do not replace supervised augmentation coverage |
+| Core | [03 Vision transformers](03_Vision_Transformers.md) | budget patch tokens and select attention structure | 02; frozen evaluation protocol | VIT-01–02 | draft |
+| Core | [04 Detection and segmentation](04_Detection_and_Segmentation.md) | trace matching and choose output grain | 01; coordinate conventions | DET-01–02 | draft |
+| Evaluation | Detection metrics — original planned scope | derive matching, precision/recall, AP and aggregation rules under frozen IoU, class and ignore policies | 01 and 04 | metric denominators and threshold counterexamples | planned; the detection draft is partial coverage, not a completed focused reference |
+| Core | [05 Self-supervision](05_Self_Supervision_and_Contrastive_Learning.md) | audit pair semantics and contrastive loss | 02; frozen evaluation protocol | SSL-01 | draft |
+| Core | Vision model selection — original planned scope | compare simple image baselines, pretrained encoders and task heads against label, compute and deployment constraints | 01–04; evaluation protocol | selection evidence and disqualifying conditions | planned; existing architecture drafts provide partial related coverage |
 | Production | Common Issues | diagnose cross-topic failures | all sheets | issue protocol | not authored |
 
 ## 3. Quick topic lookup
@@ -27,10 +30,10 @@ This collection teaches visual representation selection, ViT token budgeting, de
 
 ## 4. Reading paths
 
-- **Beginner:** 02 → 01; learn representation geometry then task/split contract.
-- **Practitioner:** 02 → 03 → 04 → 01; choose encoder and output under a frozen evaluation protocol.
-- **Advanced:** 02 → 03 → 05 → 04 → 01; add contrastive-data and attention-cost reasoning.
-- **Optional:** Read 05 before 03 when unlabelled visual data is the binding resource.
+- **Beginner:** 02 → 01; learn representation geometry, then define the task/split protocol before selecting advanced methods.
+- **Practitioner:** 02 → 01 → augmentation library → 03 → 04 → detection metrics → vision model selection; every architecture comparison occurs under the already defined evaluation protocol. Named additions remain planned prerequisites, not completed lessons.
+- **Advanced:** practitioner route → 05 → all relevant source-specific variants → final Common Issues; add contrastive-data, attention-cost and production-failure reasoning. Planned prerequisites must be authored before this route is complete.
+- **Optional:** Read 05 after 01 when unlabelled visual data is the binding resource; its pair contract still uses the existing evaluation protocol.
 
 ## 5. Prerequisite skills
 
@@ -79,7 +82,9 @@ Recheck inputs, label policy, device, target population and any model implementa
 ## 11. Acceptance checklist
 
 - [x] Four focused sheets have real paths and 12 ordered headings.
-- [ ] Every authored individual file has the required 1,000 substantive lines; these drafts do not yet meet that course gate.
+- [x] `02_CNNs_Attention_and_Transfer_Learning.md` meets the 1,000-line manuscript gate.
+ 
+- [ ] Sheets 01 and 03–05 remain below that gate and are not thereby complete.
 - [ ] The existing evaluation draft requires expansion to all 12 headings and answered interview pack.
 - [ ] Augmentation, source-specific biosignal variants, 25-issue artifact, two bounded cases and full case catalog remain unauthored.
 - [x] Formula examples are explicitly illustrative and hand-checked, not executed benchmarks.

@@ -73,7 +73,7 @@ It does not replace detailed GPU kernels, modality objectives, actuarial methods
 
 ## 9. Common Issues locator
 
-[07_25_Common_Issues.md](07_25_Common_Issues.md) contains 25 HYPOTHETICAL complete entries, ISSUE-001 through ISSUE-025, across all four required categories. Use its Section 8 index for the symptom and its detailed entry for provenance, competing causes, diagnostic, mitigation risk, correction, prevention, and verification.
+[07_25_Common_Issues.md](07_25_Common_Issues.md) indexes 25 HYPOTHETICAL teaching entries, ISSUE-001 through ISSUE-025, across all four categories. Their required distinct investigations have not been reviewed to completion, so the file is a draft locator rather than a claim of 25 complete issues.
 
 ## 10. Empirical sources, versions and collection maintenance
 
@@ -91,6 +91,6 @@ Illustrative arithmetic is hand-derived and independently recomputable from per-
 
 - [x] Seven indexed artifacts and eleven navigation sections exist in intended order.
 - [x] Symbol glossary, three reading paths, exclusions, card directory, and issue locator link real local files.
-- [x] Final troubleshooting artifact has 25 distinct ISSUE IDs with required categories and HYPOTHETICAL provenance.
+- [ ] Final troubleshooting artifact has 25 ISSUE IDs and categories; entry-specific investigations remain incomplete and require review.
 - [ ] Independently review individual-depth requirements, sources, assumptions, links, and all arithmetic before publication.
 - [ ] Execute any claimed deployment-specific benchmark, restore, load, or safety test before upgrading evidence labels.

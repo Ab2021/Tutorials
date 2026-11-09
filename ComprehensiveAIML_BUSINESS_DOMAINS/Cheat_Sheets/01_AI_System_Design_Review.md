@@ -27,6 +27,22 @@ source_index: "INDEX.md"
 > **Evidence:** DERIVED and ILLUSTRATIVE arithmetic; SOURCED references are method guidance; no workload is measured.
 > **Retrieval cue:** If an attractive result lacks a discriminating test, begin at Section 8.
 
+## 1. File Header
+
+**Reader task:** Review a proposed AI system as an accountable flow of events, state, decisions, and recovery actions. The output is not an architecture diagram; it is a pass, hold, or fail decision with a declared operating envelope and a reversible fallback.
+
+**Scope boundary:** This sheet applies before a design is approved for a named workload. It covers admission, service, queues, latency budgets, state, retries, storage, observability, and recovery. It does not prove a vendor's performance, a model's quality, legal compliance, or safety of a physical system.
+
+**Required review record:** Name the decision owner; the user-visible population; the time window; the event identity; the components included; the clock used; the source/version of each input; each hard constraint; the fallback; and the artifact that could falsify the conclusion. A missing field makes the decision HOLD, rather than silently defaulting it.
+
+**Input/output contract:** Inputs are rates, sizes, deadlines, service behavior, state transitions, and evidence labels with units. Outputs are an envelope such as `lambda <= 1000 events/s for 10 min with payload <= 1 KiB`, a list of untested assumptions, and an action: pass, hold, or fail. A pass does not generalize outside its stated envelope.
+
+**Evidence rule:** All numerical inputs in this sheet are ILLUSTRATIVE. Arithmetic is DERIVED from those inputs. No load test, restore drill, benchmark, or production behavior is claimed as VERIFIED.
+
+**Review order:** First establish an accounting boundary; second test conservation and compatibility; third test failure and recovery; last compare alternatives. Reversing that order encourages a preferred design to define its own evidence.
+
+Takeaway: a design review is a bounded decision procedure, not a vocabulary test.
+
 ## 2. Concept Map / Mental Model
 ```text
 [Decision claim + accounting boundary] -> [inputs with units/timestamps]
@@ -218,6 +234,80 @@ Takeaway: a recommendation must carry its disqualifier and fallback.
 - **Prevention:** encode invariant in acceptance gate and retain test artifact.
 - **Verification:** rerun boundary case, record expected/actual output, confirm guardrail.
 Takeaway: distinguish competing causes before making a mitigation permanent.
+
+### Review traces: turn claims into checks
+
+#### Trace A — admission and overload
+
+**Claim under review:** “The service can accept 1,200 events/s.” This statement is incomplete until it says whether acceptance means socket receipt, durable enqueue, model completion, or successful downstream side effect.
+
+1. Set the event identity to one client request after deduplication.
+2. Set the boundary to accepted events at the durable queue during a ten-minute interval.
+3. Record arrivals, completions, rejections, and retries separately; a retry is a new arrival at the queue but not necessarily a new user intent.
+4. Apply conservation: queue change equals arrivals minus terminal completions minus explicitly discarded events.
+5. Compare the calculated backlog with buffer capacity *after* metadata, replication, and retention are included.
+6. Require a recovery path with a positive spare rate; otherwise a buffer only postpones failure.
+
+**Worked trace:** At 1,200 accepted events/s and 1,000 terminal completions/s, the queue grows by 200 events/s. After 600 s it has 120,000 additional events. If the stated 150,000-event buffer is shared with another consumer, the remaining headroom is unknown; the result is HOLD, not “80% utilized.” If recovery serves 1,400/s while new arrivals are 800/s, the spare rate is 600/s and the illustrative drain is 200 s. That drain is invalid if retries increase recovery arrivals or completions include failures that are re-enqueued.
+
+**Discriminating artifacts:** per-second arrival/completion series, queue depth sampled on the same clock, disposition counts, payload distribution, and a replay that preserves idempotency keys. CPU utilization alone cannot distinguish overload from a downstream stall.
+
+#### Trace B — latency budget ownership
+
+**Claim under review:** “The 250 ms deadline is feasible.” Start by declaring the observation point: user click to rendered response, not model invocation to first token.
+
+| Budget segment | Owner | Illustrative allocation | What consumes it | Falsifying observation |
+|---|---:|---:|---|---|
+| client and network | client/platform | 45 ms | request transit and response transit | a geographic or packet-loss slice exceeds allocation |
+| admission and queue | serving | 35 ms | validation, queue wait, dispatch | queue-age percentile consumes the budget before inference |
+| retrieval | data service | 55 ms | index lookup and fetch | cache-miss tail exceeds allocation |
+| inference | model serving | 80 ms | prefill, decode, batching | batch wait plus execution exceeds allocation |
+| policy and response | application | 35 ms | tool policy, serialization, logging | a synchronous dependency adds unaccounted wait |
+
+The allocations sum to 250 ms, leaving no slack. A reviewer should not add “only 10 ms” to any serial segment without removing 10 ms elsewhere or changing the deadline. Concurrent branches use the maximum completed branch plus joining overhead only when their start and finish behavior is demonstrated; summing them would be conservative for elapsed time but can conceal a join dependency.
+
+**Boundary case:** p50 values can fit every row while p99 queue waiting violates the total. The needed evidence is a percentile distribution under a declared arrival pattern and dependency condition, not a mean of means.
+
+#### Trace C — state and rollback
+
+**Claim under review:** “The release is reversible.” A code image is only one component of release state.
+
+| State surface | Before change | Change hazard | Reversal test | Safe fallback |
+|---|---|---|---|---|
+| schema | reader understands v1 | v2 writer removes/renames meaning | v1 reader consumes v2-written record | expand schema; delay contraction |
+| cache | value interpreted by old code | new key or serialization persists | clear/isolate cache then read with old image | versioned key and expiry |
+| model artifact | model and feature contract match | new output semantics reach consumer | old consumer handles new/absent field | dual-read or route to review |
+| external action | request is pending | action commits outside system | duplicate and compensation behavior recorded | require approval or manual execution |
+| queue | message points to compatible handler | old worker cannot parse message | replay representative retained message | drain or quarantine before rollback |
+
+A successful image redeploy is not a rollback test. The review record must specify which state can be restored, which action can only be compensated, the maximum tolerated recovery time, and who can authorize the fallback.
+
+### Evidence ledger for a review packet
+
+| Claim | Minimum artifact | Decision if absent | Why the artifact is discriminating |
+|---|---|---|---|
+| capacity envelope | arrival/completion traces with units and window | HOLD | exposes imbalance and burst shape |
+| tail deadline | end-to-end percentile trace by cohort | HOLD | connects latency to the user-visible boundary |
+| durable acceptance | acknowledgement semantics and failure trace | FAIL if side effect precedes durability | separates receipt from recoverable work |
+| retry safety | stable idempotency key and duplicate test | FAIL for external action | distinguishes replay from repeat effect |
+| release reversibility | compatibility plus restore exercise | HOLD | tests state, not only code |
+| authorization | signed, expiring exact-action approval | FAIL | distinguishes ability from permission |
+| business value | shared-denominator comparator and guardrail | HOLD | avoids proxy-to-impact leap |
+| cost claim | included-work ledger and dated price basis | HOLD | exposes omitted labor and failed work |
+
+### Sensitivity ledger
+
+A sensitivity analysis changes one material assumption while retaining the accounting boundary. It is not a list of optimistic and pessimistic adjectives.
+
+| Changed input | Base result | Changed result | Decision consequence |
+|---|---:|---:|---|
+| service rate 1,000 -> 1,100 events/s | 120,000-event backlog | 60,000 events | buffer requirement halves, but overload remains |
+| payload 1,024 -> 2,048 bytes/event | 117.1875 MiB payload | 234.375 MiB payload | storage, replication, and transfer estimates must be recomputed |
+| recovery arrivals 800 -> 1,400 events/s | 200 s drain | no drain because spare rate is zero | recovery plan fails |
+| overload duration 600 -> 900 s | 120,000 events | 180,000 events | 150,000-event buffer is insufficient |
+| duplicate rate 0 -> 5% | 120,000 physical events | logical intent count is lower | cost and value denominators must distinguish both |
+
+Takeaway: a robust decision states which changed input reverses it.
 
 ## 9. Complexity & Cost Analysis
 | Operation | Time/resource | Assumption | Scaling hazard | Measurement |

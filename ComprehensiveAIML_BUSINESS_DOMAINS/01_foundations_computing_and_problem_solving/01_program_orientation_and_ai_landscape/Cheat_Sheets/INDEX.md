@@ -8,9 +8,9 @@ These draft sheets teach decision framing, capability/deployment classification,
 
 | Level | File | Outcome | Prerequisite | Status |
 |---|---|---|---|---|
-| Foundation | [01 AI Use-Case Charter](01_AI_Use_Case_Charter.md) | define decision, baseline, risk and gate | none | draft |
-| Foundation | [02 AI Market Map](02_AI_Market_Map.md) | choose capability/control category | 01 | draft |
-| Core | [03 Technology Due Diligence](03_Technology_Due_Diligence.md) | turn claims into acceptance tests | 01–02 | draft |
+| Foundation | [01 AI Use-Case Charter](01_AI_Use_Case_Charter.md) | define decision, baseline, risk and gate | none | draft; complete manuscript, unreviewed |
+| Foundation | [02 AI Market Map](02_AI_Market_Map.md) | choose capability/control category | 01 | draft; expansion required |
+| Core | [03 Technology Due Diligence](03_Technology_Due_Diligence.md) | turn claims into acceptance tests | 01–02 | draft; expansion required |
 | Final | Common Issues | diagnose recurring framing/claim failures | all sheets | not authored |
 
 ## 3. Quick topic lookup
@@ -49,9 +49,9 @@ This collection does not certify security, legal compliance, vendor performance,
 
 | File | Card | Core rule | Critical assumption |
 |---|---|---|---|
-| 01 | §8 | charter before model choice | baseline is observable |
-| 02 | §12 | `q*N <= r` | stable-rate sizing approximation |
-| 03 | §12 | hard gates precede scores | candidate scope is known |
+| 01 | [§12](01_AI_Use_Case_Charter.md#12-quick-reference-card) | charter before model choice | baseline is observable |
+| 02 | [§12](02_AI_Market_Map.md#12-quick-reference-card) | `q*N <= r` | stable-rate sizing approximation |
+| 03 | [§12](03_Technology_Due_Diligence.md#12-quick-reference-card) | hard gates precede scores | candidate scope is known |
 
 ## 9. Common Issues locator
 

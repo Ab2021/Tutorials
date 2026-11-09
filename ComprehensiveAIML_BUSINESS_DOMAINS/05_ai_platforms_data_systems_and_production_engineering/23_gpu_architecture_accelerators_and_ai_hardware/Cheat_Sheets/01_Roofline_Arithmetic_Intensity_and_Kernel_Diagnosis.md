@@ -21,6 +21,7 @@ source_index: "INDEX.md"
 
 **Outcome:** Calculate a boundary-specific arithmetic intensity, construct a conditional roof, and choose the next discriminating experiment.
 **Teaching home:** [module 23](../INDEX.md); [CUDA kernel design plan](../../../00_SOURCE_COVERAGE_CUDA_TRAINING.md#cuda-kernel).
+**Source inventory:** [directory.txt](../../../../Templates/directory.txt), especially line 391, lists `CUDA/Module_08_Kernel_Design/01_roofline_model_and_arithmetic_intensity.md`; the [exact source crosswalk](../../../00_SOURCE_TOPIC_CROSSWALK.md) records its teaching destination. This is syllabus provenance, not access to the original source body.
 **Source scope:** `CUDA/Module_08_Kernel_Design/01_roofline_model_and_arithmetic_intensity.md` is a visible crosswalk topic; its contents are not assumed available.
 **Audience:** engineers who can read CUDA code and use dimensional analysis.
 **Evidence:** DERIVED means consequence of stated assumptions; ILLUSTRATIVE means constructed, not measured.
@@ -1262,87 +1263,109 @@ Do not infer end-to-end cost from a single isolated kernel's roofline point.
 
 ## 11. Interview / Exam Questions
 
-All numerical inputs below are ILLUSTRATIVE; answers follow the assumptions and counting conventions in Sections 3–5.
+All numerical inputs below are **ILLUSTRATIVE**. They test the stated conventions; none is a device measurement.
 
-### Q01. What is arithmetic intensity?
-- **Answer:** Work divided by bytes transferred across a named memory boundary.
-- **Reasoning:** The boundary matters because cache traffic and device-memory traffic can differ.
-- **Follow-up:** What if the byte count is zero?
-- **Follow-up answer:** The quotient is undefined; report the boundary and diagnose counter validity.
+### Q01 / Level 1 / boundary definition
+**Prompt and given facts:** Define arithmetic intensity for a kernel that performs work while moving data through a cache hierarchy.
+**Clarifications and acceptable assumptions:** Name one boundary, such as HBM, before reporting bytes.
+**Answer:** `I_h = W / Q_h`: useful work `W` divided by bytes `Q_h` crossing named boundary `h`. A source-level load is not automatically an HBM byte because it can hit in cache. A divide-by-zero byte count is invalid, not “infinite performance.”
+**Alternative answers and when defensible:** Executed rather than useful FLOPs are defensible only if explicitly reported as an instruction-efficiency analysis.
+**Follow-up:** How does a warm cache change the statement? It can change `Q_h`, so retain the cache-state protocol.
+**Trap/red flag and why it is wrong:** “FLOPs divided by input size” silently substitutes a payload estimate for a measured boundary.
+**Scoring:** 0 undefined; 1 ratio without boundary; 2 correct definition; 3 explains cache distinction.
+**Answer source:** Sections 3 and equation R1.
 
-### Q02. What is the roofline bound?
-- **Answer:** The minimum of compatible compute throughput and bandwidth times intensity.
-- **Reasoning:** Each term is an independent bound on the same workload rate.
-- **Follow-up:** Does touching the bound guarantee correctness?
-- **Follow-up answer:** No; output correctness is independent of throughput.
+### Q02 / Level 1 / compatible roof
+**Prompt and given facts:** State the roofline bound and its most important validity condition.
+**Clarifications and acceptable assumptions:** Compute and bandwidth ceilings must use the same precision, operation convention and workload interval.
+**Answer:** `P <= min(C, B_h * I_h)`. `C` is a compatible compute ceiling and `B_h` is bandwidth at the same boundary. Dimensional analysis gives `(byte/s)*(FLOP/byte)=FLOP/s`.
+**Alternative answers and when defensible:** Multiple hierarchy roofs are useful when each has separately measured traffic and a compatible ceiling.
+**Follow-up:** Does touching a roof prove output correctness? No; throughput and numerical correctness are separate contracts.
+**Trap/red flag and why it is wrong:** Combining an FP16 tensor ceiling with FP32-counted work creates a meaningless comparison.
+**Scoring:** 0 wrong relation; 1 names two roofs; 2 states minimum and compatibility; 3 gives units and boundary condition.
+**Answer source:** Section 4, equations R2–R3.
 
-### Q03. Count one fused multiply-add.
-- **Answer:** Under the declared convention it is two floating-point operations.
-- **Reasoning:** One multiply and one add are counted although the operation is fused.
-- **Follow-up:** Does one instruction always equal two FLOP?
-- **Follow-up answer:** No; vector and matrix instructions cover multiple arithmetic operations.
+### Q03 / Level 2 / checked calculation
+**Prompt and given facts:** A fictional kernel performs 24 GFLOP and transfers 6 GB across its stated HBM boundary in 2 ms. Find intensity, achieved throughput and achieved bandwidth.
+**Clarifications and acceptable assumptions:** Use decimal giga units consistently; the traffic includes reads and writes for the measured range.
+**Answer:** `I=24/6=4 FLOP/byte`; `P=24 GFLOP/0.002 s=12 TFLOP/s`; `B=6 GB/0.002 s=3 TB/s`. Sanity check: `I*B=4*3=12 TFLOP/s`.
+**Alternative answers and when defensible:** Binary units are acceptable only if every input and resulting rate is converted consistently.
+**Follow-up:** If traffic is actually L2 bytes, what changes? Label the intensity L2-specific and compare it with an L2-compatible ceiling.
+**Trap/red flag and why it is wrong:** Dividing 24 GFLOP by 2 ms and calling it bandwidth confuses work rate with byte rate.
+**Scoring:** 0 incorrect units; 1 one correct ratio; 2 all three values; 3 includes the independent product check.
+**Answer source:** Sections 4–5 and laboratory L39.
 
-### Q04. For 2 TFLOP and 0.5 TB, find intensity.
-- **Answer:** 4 FLOP/byte.
-- **Reasoning:** Divide 2 by 0.5; the decimal tera factors cancel.
-- **Follow-up:** What if bytes fall to 0.4 TB?
-- **Follow-up answer:** Intensity becomes 5 FLOP/byte if work stays fixed.
+### Q04 / Level 2 / balance point
+**Prompt and given facts:** With a fictional compatible compute ceiling of 60 TFLOP/s and bandwidth ceiling of 2 TB/s, find the balance intensity and classify a 4 FLOP/byte kernel.
+**Clarifications and acceptable assumptions:** Ceilings use decimal units and the same operation count.
+**Answer:** `I_balance=C/B=60/2=30 FLOP/byte`. The 4 FLOP/byte point has a bandwidth roof of 8 TFLOP/s, below 60, so the *model* is bandwidth-limited.
+**Alternative answers and when defensible:** “Potentially bandwidth-limited” is preferable when the byte count or attainable bandwidth has not been established.
+**Follow-up:** What if achieved bandwidth is only 0.5 TB/s? The attained transfer rate predicts 2 TFLOP/s, which calls for diagnosis rather than a new theoretical roof.
+**Trap/red flag and why it is wrong:** Declaring 4 FLOP/byte universally memory-bound ignores the device, precision and boundary.
+**Scoring:** 0 wrong division; 1 correct number only; 2 correct classification; 3 states its conditional nature.
+**Answer source:** Equation R4 and Section 5.
 
-### Q05. With 60 TFLOP/s compute and 2 TB/s bandwidth, find the balance point.
-- **Answer:** 30 FLOP/byte.
-- **Reasoning:** Divide the compatible compute ceiling by bandwidth.
-- **Follow-up:** Is this a universal GPU threshold?
-- **Follow-up answer:** No; both ceilings vary with precision, boundary and operating conditions.
+### Q05 / Level 2 / traffic model
+**Prompt and given facts:** Derive the ideal FP32 payload for dense `M×K` by `K×N` GEMM with one read of each input and one new output write.
+**Clarifications and acceptable assumptions:** Four bytes per value; exclude workspace, padding and beta-times-existing-output.
+**Answer:** Element count is `MK+KN+MN`; multiplying by four yields `Q_ideal=4(MK+KN+MN)` bytes. For `M=N=K=1024`, this is `12,582,912` bytes or 12 MiB. The work estimate is `2MNK=2,147,483,648 FLOP`.
+**Alternative answers and when defensible:** Including a C read is correct when the epilogue computes nonzero beta; state that changed contract.
+**Follow-up:** Why can measured HBM bytes exceed this? Reloads, transaction inefficiency, workspace and other operations can cross the boundary.
+**Trap/red flag and why it is wrong:** Calling the payload a benchmark bandwidth measurement turns an ideal lower-bound model into evidence.
+**Scoring:** 0 omits an operand; 1 correct count; 2 correct bytes and qualification; 3 names beta/caching boundary.
+**Answer source:** Section 9, equations R7–R8.
 
-### Q06. For intensity 4 and bandwidth 2 TB/s, what is the bandwidth roof?
-- **Answer:** 8 TFLOP/s.
-- **Reasoning:** Multiplying FLOP/byte by byte/s cancels bytes.
-- **Follow-up:** Is 8 TFLOP/s an observed result?
-- **Follow-up answer:** No; it is a conditional bound under illustrative assumptions.
+### Q06 / Level 3 / ambiguous diagnosis
+**Prompt and given facts:** A gather kernel is at 15% of a matched DRAM reference and has low intensity. Choose the first diagnostic experiment.
+**Clarifications and acceptable assumptions:** The kernel is correct; both dependent-index latency and scattered sectors are plausible.
+**Answer:** Do not tune from intensity alone. Hold logical work fixed and separately vary independent gathers per thread (tests memory-level parallelism) and index ordering (tests locality). Record eligible work, sector bytes, cache/DRAM bytes and unprofiled time.
+**Alternative answers and when defensible:** A timeline/latency experiment is defensible if it preserves the workload and exposes dependency chains.
+**Follow-up:** What signal supports locality? Sector traffic and time fall while outstanding-request opportunity remains similar.
+**Trap/red flag and why it is wrong:** “It is bandwidth-bound, so vectorize” assumes saturation and may violate alignment or fail to address dependencies.
+**Scoring:** 0 one-cause assertion; 1 proposes profiling; 2 separates hypotheses; 3 states falsifying signals.
+**Answer source:** Section 8, laboratory L40.
 
-### Q07. A point is far under both roofs. Is it bandwidth-bound?
-- **Answer:** Not established.
-- **Reasoning:** Insufficient parallelism, dependencies, issue limits or launch overhead may dominate.
-- **Follow-up:** What is a useful next step?
-- **Follow-up answer:** Inspect scheduler eligibility, timeline and resource utilization before choosing a fix.
+### Q07 / Level 3 / fusion selection
+**Prompt and given facts:** A candidate fusion removes a 64 MiB intermediate but increases register use and changes reduction order. Should it ship?
+**Clarifications and acceptable assumptions:** No runtime or parity result has been measured.
+**Answer:** Not yet. First define an output tolerance/reference and test ordinary, extreme and edge shapes. Then compare full-range unprofiled latency, resources, spill/local traffic and boundary bytes under identical inputs. Reduced bytes may be offset by spills, lower residency or synchronization.
+**Alternative answers and when defensible:** Retaining separate kernels is defensible when parity, maintainability or shape variability dominates a speculative traffic saving.
+**Follow-up:** If parity passes but latency worsens at small shapes? Keep the baseline or use a size-gated dispatch only after validating the dispatcher.
+**Trap/red flag and why it is wrong:** “Fewer launches always wins” ignores increased live state and launch overhead’s workload dependence.
+**Scoring:** 0 ships from byte estimate; 1 requests benchmark; 2 includes correctness and resources; 3 gives a changed-shape decision.
+**Answer source:** Sections 7–8.
 
-### Q08. Why can fusion fail despite reducing an intermediate?
-- **Answer:** It may increase register pressure, spills or reduce occupancy.
-- **Reasoning:** The change can add traffic or reduce attainable issue rate.
-- **Follow-up:** How do you decide?
-- **Follow-up answer:** Measure full-range latency, boundary bytes, resources and correctness.
+### Q08 / Level 3 / impossible point
+**Prompt and given facts:** A plotted point lies above a selected roof. What must be checked before calling it a breakthrough?
+**Clarifications and acceptable assumptions:** The roof was built from a microbenchmark; the application range includes several kernels.
+**Answer:** Reconcile FLOP convention, byte boundary, time range, dtype, workload, cache state, counter semantics and whether the empirical roof applies. A point can exceed an irrelevant microbenchmark ceiling without violating physics.
+**Alternative answers and when defensible:** Repeating the measurement is useful after scope reconciliation, not as a substitute for it.
+**Follow-up:** What if all definitions match? Audit timing/counter collection and revise the ceiling only with documented evidence.
+**Trap/red flag and why it is wrong:** Treating every above-roof point as faster-than-possible mistakes a scoped model for a universal law.
+**Scoring:** 0 celebrates result; 1 says “units”; 2 lists scope reconciliation; 3 distinguishes theoretical and empirical ceilings.
+**Answer source:** Sections 4 and 8.
 
-### Q09. A roofline point is above its roof. What does that mean?
-- **Answer:** The comparison or assumed ceiling needs investigation.
-- **Reasoning:** Units, byte boundary, FLOP convention, timing scope or empirical ceiling may be mismatched.
-- **Follow-up:** Could a microbenchmark ceiling be exceeded legitimately?
-- **Follow-up answer:** Yes; a different access mix can exceed that empirical reference.
+### Q09 / Level 3 / profiler versus service timing
+**Prompt and given facts:** A profiled kernel is 20% faster than the baseline, but unprofiled end-to-end latency has not changed.
+**Clarifications and acceptable assumptions:** The profiler may replay work and the service includes queueing, transfers and neighboring kernels.
+**Answer:** Preserve the unprofiled baseline as the service evidence. Inspect range coverage, replay behavior, changed cache state and critical-path time; then measure the complete representative request distribution. The kernel observation is a hypothesis, not a deployment result.
+**Alternative answers and when defensible:** Profiling a narrower counter set is defensible if it reduces perturbation and tests a named mechanism.
+**Follow-up:** If only long requests improve? Report that slice and decide whether its volume justifies complexity.
+**Trap/red flag and why it is wrong:** Replacing customer latency with a profiler percentage confuses instrumentation output with the decision metric.
+**Scoring:** 0 deploys on profiler result; 1 asks for end-to-end timing; 2 identifies perturbation; 3 ties slice result to rollout decision.
+**Answer source:** Sections 8–10.
 
-### Q10. How do you compare useful and executed FLOPs?
-- **Answer:** Report both explicitly and use consistent throughput denominators.
-- **Reasoning:** Padding and recomputation can inflate executed FLOP/s without improving useful output.
-- **Follow-up:** What is the decision metric?
-- **Follow-up answer:** Output-equivalent latency or useful throughput under the workload objective.
+### Q10 / Level 3 / verification boundary
+**Prompt and given facts:** A team claims a tile increase “improved the model” because a roofline estimate rose. What evidence is required to correct the claim?
+**Clarifications and acceptable assumptions:** The tile changes memory layout and numerical reduction order.
+**Answer:** Separate three claims: the estimate predicts a changed upper bound; correctness requires comparison with a reference and declared tolerance; improvement requires representative unprofiled workload measurement with setup and uncertainty. A higher roof alone proves none of the latter two.
+**Alternative answers and when defensible:** If output is bitwise required, use that contract instead of a tolerance; otherwise justify a numerical error metric and acceptance limit.
+**Follow-up:** What if the new tile is faster but fails tolerance? Reject it or redesign accumulation; performance cannot waive the output contract.
+**Trap/red flag and why it is wrong:** Calling a model bound an achieved benchmark collapses derived, illustrative and measured evidence.
+**Scoring:** 0 accepts roofline as proof; 1 asks for timing; 2 separates performance and correctness; 3 states evidence labels and rollback.
+**Answer source:** Sections 5, 7 and 10.
 
-### Q11. What is the ideal time bound in the worked example?
-- **Answer:** 0.25 seconds.
-- **Reasoning:** The maximum of 2/60 seconds and 0.5/2 seconds is 0.25 seconds.
-- **Follow-up:** After 0.1 TB is eliminated under unchanged assumptions?
-- **Follow-up answer:** The bound becomes 0.2 seconds; this is not a measured result.
-
-### Q12. Does a larger tile always help?
-- **Answer:** No.
-- **Reasoning:** It can improve reuse while consuming more shared memory and registers.
-- **Follow-up:** What changed constraint could reverse the decision?
-- **Follow-up answer:** A smaller workload or tighter register budget can make reduced occupancy dominate.
-
-### Q13. How do you compare profiler and production timing?
-- **Answer:** Measure an unprofiled baseline with the same output and workload.
-- **Reasoning:** Profiler replay and instrumentation can alter overhead and cache conditions.
-- **Follow-up:** Which result is the production latency?
-- **Follow-up answer:** The representative unprofiled timing, subject to its sampling and environment limitations.
-
-**Takeaway:** A strong answer explains the boundary, the calculation, and how the conclusion could fail.
+**Takeaway:** A defensible roofline answer states a measurable boundary, checks units, proposes a falsifiable diagnosis, and refuses to turn an upper bound into a benchmark.
 
 ## 12. Quick Reference Card
 

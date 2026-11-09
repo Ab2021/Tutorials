@@ -1,7 +1,7 @@
 # Part 05 Case Studies — AI Platforms, Data Systems and Production Engineering
 
 **Collection status:** planning catalog; no part-level `CASE-*` artifact exists.  
-**Contract:** [course standards](../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [case master](../../Templates/CASE_STUDY_CONTENT_MASTER_TEMPLATE.md). Part cases must integrate at least two Part 05 modules without duplicating their canonical module case.
+**Contract:** [course standards](../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [case master](../../../Templates/CASE_STUDY_CONTENT_MASTER_TEMPLATE.md). Part cases must integrate at least two Part 05 modules without duplicating their canonical module case.
 
 ## 1. Collection metadata
 

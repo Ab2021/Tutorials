@@ -1,6 +1,6 @@
 # Module 29 Cheat Sheets — API Platform Engineering, Cloud-Native Systems and FinOps
 
-**Status:** planned collection; no individual sheet exists. Use the [course standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [cheat-sheet master](../../../Templates/CHEAT_SHEET_CONTENT_MASTER_TEMPLATE.md). A completed sheet has 12 sections, >=1,000 substantive lines, checked arithmetic/trace, four diagnostics, answered interview pack, and final card.
+**Status:** planned collection; no individual sheet exists. Use the [course standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [cheat-sheet master](../../../../Templates/CHEAT_SHEET_CONTENT_MASTER_TEMPLATE.md). A completed sheet has 12 sections, >=1,000 substantive lines, checked arithmetic/trace, four diagnostics, answered interview pack, and final card.
 
 ## 1. Overview
 

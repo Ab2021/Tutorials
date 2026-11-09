@@ -1,6 +1,6 @@
 # Module 27 Case Studies — Data Quality, Observability and Reliability Engineering
 
-**Status:** planning catalog; no authored `CASE-*` files. Future cases must meet the [course standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [case master](../../../Templates/CASE_STUDY_CONTENT_MASTER_TEMPLATE.md).
+**Status:** planning catalog; no authored `CASE-*` files. Future cases must meet the [course standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [case master](../../../../Templates/CASE_STUDY_CONTENT_MASTER_TEMPLATE.md).
 
 ## 1. Collection metadata
 

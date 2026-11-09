@@ -2,7 +2,7 @@
 
 ## 1. Collection metadata
 
-**Domain:** resource-bounded embedded AI. **Purpose:** cases will test a bounded decision owner, baseline, data/firmware contract, validation plan and recovery boundary rather than assert a deployment. **Evidence policy:** named source titles do not prove a company architecture or measurement. **Collection state:** planned; no authored module case exists. **Source syllabus:** [edge-arm-firmware](../../../00_SOURCE_COVERAGE_EDGE_INDUSTRY.md#edge-arm-firmware); [directory inventory](../../../../Templates/directory.txt:1094-1110).
+**Domain:** resource-bounded embedded AI. **Purpose:** cases will test a bounded decision owner, baseline, data/firmware contract, validation plan and recovery boundary rather than assert a deployment. **Evidence policy:** named source titles do not prove a company architecture or measurement. **Collection state:** planned; no authored module case exists. **Source syllabus:** [edge-arm-firmware](../../../00_SOURCE_COVERAGE_EDGE_INDUSTRY.md#edge-arm-firmware); [directory inventory, lines 1094–1110](../../../../Templates/directory.txt).
 
 ## 2. Case catalog
 

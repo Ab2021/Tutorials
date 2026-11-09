@@ -290,7 +290,7 @@ The same design transfers to payment review, moderation, document quality assura
 **Takeaway:** changing the intervention, label process, or capacity changes the problem even when the model family is the same.
 
 ## 14. Connections & Cross-References
-Related methods: [Fraud evaluation, calibration and capacity](../../../02_data_science_method_playbooks/02_fraud_modelling_playbook/Cheat_Sheets/01_Fraud_Evaluation_Calibration_and_Capacity.md) provides reusable rank-metric and capacity reasoning. The local payment-card case contrasts synchronous authorization with asynchronous investigation. The planned [Insurance claims fraud](../../../../10_insurance_actuarial_and_claims/01_pricing_underwriting_and_reserving/Cheat_Sheets/05_Claims_Reserving_Methods.md) link is adjacent claims context, not fraud-method evidence.
+Related methods: [Fraud evaluation, calibration and capacity](../../../02_data_science_method_playbooks/02_fraud_modelling_playbook/Cheat_Sheets/01_Fraud_Evaluation_Calibration_and_Capacity.md) provides reusable rank-metric and capacity reasoning. The local payment-card case contrasts synchronous authorization with asynchronous investigation. The [claims reserving methods draft](../../../10_insurance_actuarial_and_claims/01_pricing_underwriting_and_reserving/Cheat_Sheets/05_Claims_Reserving_Methods.md) provides adjacent claims context, not fraud-method evidence.
 
 Open questions: which outcomes are permitted and auditable; whether randomized audit review is feasible; how much of a recovery is attributable to referral; and which jurisdiction-specific safeguards apply. None is resolved by this teaching case.
 

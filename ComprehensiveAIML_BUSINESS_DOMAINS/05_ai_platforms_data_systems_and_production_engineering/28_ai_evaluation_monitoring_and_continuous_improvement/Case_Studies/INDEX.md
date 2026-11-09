@@ -1,6 +1,6 @@
 # Module 28 Case Studies — AI Evaluation, Monitoring and Continuous Improvement
 
-**Status:** planning catalog; no authored `CASE-*` files. Future cases must follow the [course standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [case master](../../../Templates/CASE_STUDY_CONTENT_MASTER_TEMPLATE.md).
+**Status:** planning catalog; no authored `CASE-*` files. Future cases must follow the [course standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [case master](../../../../Templates/CASE_STUDY_CONTENT_MASTER_TEMPLATE.md).
 
 ## 1. Collection metadata
 

@@ -8,11 +8,11 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | dimensional and normalized models | [Data model grain and join safety](Cheat_Sheets/02_Data_Model_Grain_and_Join_Safety.md); draft, unreviewed |
+| 1 | dimensional and normalized models | [Data model notation](Cheat_Sheets/03_Data_Model_Notation.md) and [grain/join safety](Cheat_Sheets/02_Data_Model_Grain_and_Join_Safety.md); drafts, unreviewed |
 | 2 | transactional and analytical databases | planned |
 | 3 | lakehouse patterns | planned |
 | 4 | metadata lineage and catalogues | planned |
-| 5 | data contracts | [Expanded data-contract lesson](Cheat_Sheets/01_Data_Contract_Checklist.md); draft, unreviewed |
+| 5 | data contracts | [Data-contract lesson](Cheat_Sheets/01_Data_Contract_Checklist.md); draft, unreviewed |
 
 ## What competence looks like
 
@@ -26,6 +26,8 @@ After this module, a learner can turn a real problem into an appropriate technic
 ## Authored course-topic drafts
 
 - [Data Contract Checklist](Cheat_Sheets/01_Data_Contract_Checklist.md) — ownership, grain, quality and change controls; visible source inventory only.
+- [Data Model Notation](Cheat_Sheets/03_Data_Model_Notation.md) — entity identity, cardinality, optionality and temporal intervals; illustrative derivation and trace only.
+- [Data Model Grain and Join Safety](Cheat_Sheets/02_Data_Model_Grain_and_Join_Safety.md) — distinct coverage/multiplicity diagnostics and constructed executable SQLite oracles; no production run is claimed.
 
 ## Dependency notes
 

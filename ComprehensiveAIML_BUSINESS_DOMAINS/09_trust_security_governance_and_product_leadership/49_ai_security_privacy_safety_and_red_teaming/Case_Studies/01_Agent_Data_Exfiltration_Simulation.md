@@ -158,7 +158,7 @@ The reusable mechanism is not “add human review.” It is bind every consequen
 
 ## 14. Connections & Cross-References
 
-Related theory: [Threat Model and Execution Trust](../Cheat_Sheets/01_AI_Threat_Model_and_Execution_Trust.md) and [Prompt Injection and Red-Team Evaluation](../Cheat_Sheets/02_Prompt_Injection_and_Red_Team_Evaluation.md). The existing [enterprise approval-gate case](../../../../06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/Case_Studies/01_enterprise_agent_approval_gate.md) is a hypothetical, unreviewed reference, not evidence for this case.
+Related theory: [Threat Model and Execution Trust](../Cheat_Sheets/01_AI_Threat_Model_and_Execution_Trust.md) and [Prompt Injection and Red-Team Evaluation](../Cheat_Sheets/02_Prompt_Injection_and_Red_Team_Evaluation.md). The existing [enterprise approval-gate case](../../../06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/Case_Studies/01_enterprise_agent_approval_gate.md) is a hypothetical, unreviewed reference, not evidence for this case.
 
 1. **What proves the model cannot export?** Nothing; the executor must deny unauthorized effects. *Reasoning:* models propose. *Follow-up:* inspect alternate endpoints. *Alternative:* remove export capability. *Red flag:* system prompt. *Score:* 0–2 for proposal/boundary/trace.
 2. **Compute the cap.** 240 KiB. *Reasoning:* q*c*b. *Follow-up:* c=5 gives 400 KiB. *Alternative:* bytes only. *Red flag:* count calls only. *Score:* arithmetic and interpretation.

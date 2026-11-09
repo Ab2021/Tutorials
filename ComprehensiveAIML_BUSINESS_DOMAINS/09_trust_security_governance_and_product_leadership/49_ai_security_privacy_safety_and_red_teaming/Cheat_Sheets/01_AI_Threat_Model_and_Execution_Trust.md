@@ -16,6 +16,8 @@ owner_role: "AI security architect"
 source_index: "INDEX.md"
 ---
 
+## 1. File Header
+
 # AI Threat Model and Execution Trust
 
 > **Purpose:** Turn one AI workflow into an asset-to-action threat model that distinguishes model text from authorized effect.
@@ -554,6 +556,439 @@ Retention cost: effect journals should record the minimum necessary request iden
 
 **Takeaway:** Strong answers distinguish evidence, proposal, authorization, and committed effect under a changed constraint.
 
+### Q11. An approval is valid for 60 records, but a worker has already committed 55. May it commit a 10-record retry?
+**Answer:** No. The current budget check fails even if the payload digest, principal, and expiry still match.
+**Reasoning:** TM-04 requires both the authorization snapshot and `Q_remaining`; TM-05 makes the remaining allowance a conserved state, not a UI hint.
+**Follow-up:** Ask whether the retry has the original operation ID. If it does, return its prior receipt; if it does not, treat it as a new request and evaluate it independently.
+**Acceptable alternative:** Reserve capacity atomically before execution and release a reservation only on a proven non-commit.
+**Red flag:** “The approval was for 60, so another 10 is close enough.”
+**Scoring:** 0 permits overdraw; 1 denies it; 2 explains atomicity and idempotency.
+
+### Q12. A reviewer approves a canonical payload, then the recipient directory changes display names. What must be rechecked?
+**Answer:** Re-resolve the recipient identifier and recheck its current authorization/revocation status at commit; do not silently replace the approved identifier with a newly matched display name.
+**Reasoning:** Approval binding preserves the reviewed payload, while execution-time validity protects against changed eligibility. These are different facts.
+**Follow-up:** Decide whether a changed recipient attribute is a hard denial or requires a new preview under policy.
+**Acceptable alternative:** Bind a durable directory object ID and fail closed if it no longer resolves.
+**Red flag:** Re-run fuzzy name matching at execution and send to its new best match.
+**Scoring:** 0 relies only on the old preview; 1 performs a current check; 2 preserves the snapshot and prevents substitution.
+
+### Q13. A denial receipt appears, but a downstream partner says it received the export. What is the first investigation branch?
+**Answer:** Treat the executor receipt and partner assertion as conflicting evidence. Freeze the relevant capability, locate the idempotency/effect-journal record by correlation ID, and determine whether another endpoint or an out-of-band route committed the effect.
+**Reasoning:** A denial record proves only what that path recorded. It cannot prove global non-delivery when alternate execution surfaces exist.
+**Follow-up:** Compare commit timestamps, destination delivery identifiers, queue acknowledgements, and policy decision IDs while preserving the minimum necessary evidence.
+**Acceptable alternative:** Disable all equivalent exporters pending scope assessment when the potential impact justifies it.
+**Red flag:** Delete the denial receipt or assume the partner is mistaken.
+**Scoring:** 0 treats one log as complete proof; 1 scopes the investigation; 2 identifies alternate-path and evidence-integrity risks.
+
+### Q14. Why is a capability with tenant scope but no purpose scope incomplete?
+**Answer:** It can prevent an action in the wrong tenant while still permitting an inappropriate action within the correct tenant, such as exporting a sensitive report for an unrelated purpose.
+**Reasoning:** Tenant is an ownership boundary; purpose is a contextual authorization constraint. Neither replaces the other.
+**Follow-up:** Define who asserts purpose, which purposes are enumerated, and which server-side policy consumes it.
+**Acceptable alternative:** A narrowly named operation can encode part of the purpose if its parameters and policy make the scope unambiguous.
+**Red flag:** “Same tenant means any use is allowed.”
+**Scoring:** 0 conflates tenancy with authorization; 1 names purpose; 2 relates purpose to policy and audit.
+
+### Q15. A red-team prompt causes the model to emit forbidden shell text, but the executor denies it. Is the test a pass?
+**Answer:** It is a narrow pass for the observed effect oracle and a finding about model susceptibility. It is not evidence that the entire system is secure or that the denial path is available under all races, endpoints, and identities.
+**Reasoning:** The model proposal and committed effect have different security meanings. A robust evaluation records both without collapsing them.
+**Follow-up:** Test alternate endpoints, malformed inputs, retry paths, and denial observability; evaluate whether repeated proposals can exhaust review or logging capacity.
+**Acceptable alternative:** Classify the result as “contained unsafe proposal” with the precise suite and harness version.
+**Red flag:** Report “injection solved.”
+**Scoring:** 0 calls it universal safety; 1 distinguishes proposal and effect; 2 identifies coverage limits.
+
+### 11.1 Runnable synthetic threat and trace oracle
+
+**Status:** NOT EXECUTED. This is a runnable, dependency-free Python 3 oracle specification for constructed teaching inputs. It checks arithmetic and deterministic transitions only; it does not test a real identity provider, digest implementation, sandbox, model, network, policy engine, or compliance posture. The expected outputs below are derived from the declared inputs and have not been executed in this document.
+
+```python
+# File: illustrative_execution_trust_oracle.py
+# Evidence: ILLUSTRATIVE / NOT EXECUTED
+from dataclasses import dataclass
+from hashlib import sha256
+
+def digest(payload: str) -> str:
+    return sha256(payload.encode("utf-8")).hexdigest()
+
+@dataclass(frozen=True)
+class Approval:
+    tenant: str
+    purpose: str
+    payload_digest: str
+    policy_version: str
+    remaining_records: int
+    expiry_minute: int
+
+def decide(payload, tenant, purpose, policy_version, now_minute, requested_records,
+           approval, operation_id, journal):
+    if operation_id in journal:
+        return journal[operation_id]
+    if tenant != approval.tenant or purpose != approval.purpose:
+        return "DENY_SCOPE"
+    if policy_version != approval.policy_version:
+        return "DENY_POLICY_VERSION"
+    if now_minute >= approval.expiry_minute:
+        return "DENY_EXPIRED"
+    if digest(payload) != approval.payload_digest:
+        return "DENY_APPROVAL_PAYLOAD_MISMATCH"
+    if requested_records < 0 or requested_records > approval.remaining_records:
+        return "DENY_BUDGET"
+    receipt = f"COMMIT:{operation_id}:{requested_records}"
+    journal[operation_id] = receipt
+    return receipt
+
+payload_a = '{"destination":"tenant-a-archive","records":[1,2,3]}'
+approval = Approval("tenant-a", "research-export", digest(payload_a), "P7", 60, 30)
+journal = {}
+
+assert 20 * 3 * 4096 == 245760
+assert decide(payload_a, "tenant-a", "research-export", "P7", 10, 55,
+              approval, "op-17", journal) == "COMMIT:op-17:55"
+assert decide(payload_a, "tenant-a", "research-export", "P7", 10, 55,
+              approval, "op-17", journal) == "COMMIT:op-17:55"
+assert decide(payload_a, "tenant-a", "research-export", "P7", 10, 10,
+              approval, "op-18", journal) == "DENY_BUDGET"
+payload_b = '{"destination":"external.invalid","records":[1,2,3]}'
+assert decide(payload_b, "tenant-a", "research-export", "P7", 10, 3,
+              approval, "op-19", journal) == "DENY_APPROVAL_PAYLOAD_MISMATCH"
+assert decide(payload_a, "tenant-b", "research-export", "P7", 10, 3,
+              approval, "op-20", journal) == "DENY_SCOPE"
+assert decide(payload_a, "tenant-a", "research-export", "P8", 10, 3,
+              approval, "op-21", journal) == "DENY_POLICY_VERSION"
+assert decide(payload_a, "tenant-a", "research-export", "P7", 30, 3,
+              approval, "op-22", journal) == "DENY_EXPIRED"
+print("illustrative oracle assertions passed")
+```
+
+The oracle has one deliberately narrow design choice: a duplicate operation returns its original journal receipt before it reevaluates the supplied arguments. This models an operation identifier as the identity of a prior attempted effect. A production protocol must authenticate who is allowed to query that receipt and bind the idempotency key to a canonical request; otherwise an attacker could probe operation existence.
+
+#### Oracle input ledger and expected outcomes
+
+| Test ID | Constructed input | Expected deterministic result | Security claim it can support | What it cannot establish |
+|---|---|---|---|---|
+| ORC-01 | `q=20,c=3,b=4096` | `245760` payload bytes | arithmetic for TM-02 | actual payload limit or storage use |
+| ORC-02 | `op-17`, matching tenant/purpose/digest, `55<=60` | `COMMIT:op-17:55` | stated trace reaches one commit branch | delivery, data correctness, or authorization in a real service |
+| ORC-03 | repeat `op-17` | same receipt | intended idempotent branch in this toy oracle | distributed exactly-once behavior |
+| ORC-04 | new `op-18`, request 10 after 55 | `DENY_BUDGET` | bounded ledger arithmetic | atomic cross-worker reservation |
+| ORC-05 | payload destination differs | `DENY_APPROVAL_PAYLOAD_MISMATCH` | digest mismatch transition | collision resistance or preview semantics |
+| ORC-06 | `tenant-b` | `DENY_SCOPE` | tenant equality predicate | identity issuer correctness |
+| ORC-07 | policy `P8` | `DENY_POLICY_VERSION` | snapshot-version comparison | policy adequacy |
+| ORC-08 | minute `30`, expiry `30` | `DENY_EXPIRED` | chosen strict-expiry boundary | clock synchronization behavior |
+
+Run protocol, if a practitioner elects to execute it: save exactly the code block as UTF-8, use a declared Python 3 interpreter, record interpreter version and file digest, run `python illustrative_execution_trust_oracle.py`, and preserve only the exit status and constructed test identifiers. Do not paste real destinations, credentials, tenant identifiers, or payloads into this teaching harness.
+
+#### Trace oracle: input-to-output contract
+
+| Field | Contract |
+|---|---|
+| Input identity | authenticated tenant and purpose supplied by middleware, not the model |
+| Input proposal | canonical payload string whose digest was previewed |
+| State | immutable approval plus durable operation-to-receipt journal |
+| Transition | reject duplicate as prior receipt; otherwise enforce scope, policy, expiry, digest, then budget before commit |
+| Output | one of a bounded denial code or a receipt identifier |
+| Invariant | a new commit occurs only when every predicate is true and the requested amount is no greater than remaining budget |
+| Recovery | ambiguous transport result queries journal by authorized operation identity; it never blindly retries a new operation |
+
+**Takeaway:** An executable toy oracle is useful because it makes a claimed invariant falsifiable; it does not turn the constructed workflow into evidence about a deployed system.
+
+### 11.2 Design-review drill: reconstruct a threatened execution surface
+
+Use this drill before proposing a control. The answers are intentionally concrete enough for a reviewer to reject.
+
+1. **Name the effect.** “Export records” is insufficient. State `send 0–20 classified record bodies to a resolved destination using one tenant-scoped operation`.
+2. **Name the commit owner.** It is an executor service, not the model, UI, queue, or reviewer.
+3. **Locate authority sources.** Session identity, policy decision, approval record, quota ledger, and executor credential are separate sources.
+4. **Enumerate alternate routes.** Batch export, single-record export, retry worker, administrative endpoint, callback, and direct downstream API are each candidates until excluded.
+5. **Define the denial receipt.** Include operation ID, authenticated principal pseudonym or reference, tenant, policy decision ID, reason class, timestamp, and payload digest; exclude raw sensitive payload by default.
+6. **Choose recovery semantics.** A client timeout is “unknown outcome,” not “safe to repeat.” Require journal lookup or an idempotent replay.
+7. **Set a human boundary.** Specify which non-derivable risk requires approval, exactly what preview the reviewer sees, timeout behavior, and escalation owner.
+8. **Write negative tests.** Mutated recipient, revoked session, exhausted quota, replay, stale policy, malformed canonicalization, and alternate endpoint all require separate tests.
+
+Worked micro-trace, ILLUSTRATIVE and NOT EXECUTED:
+
+```text
+T0 session S-4 authenticates tenant=A, purpose=research-export.
+T1 model proposes {records:[11,12], destination:tenant-a-archive}.
+T2 executor resolves record IDs under tenant A and canonicalizes payload P.
+T3 policy says approval required; preview shows 2 records, destination, purpose, P7, expiry.
+T4 reviewer approves digest H(P), remaining budget=3 records.
+T5 worker receives operation O-9; current revocation check passes.
+T6 executor atomically consumes 2 records of budget and commits one outbound request.
+T7 journal stores receipt R-9 with H(P), O-9, policy P7 and result class.
+T8 duplicate delivery of O-9 returns R-9; it cannot consume remaining budget again.
+```
+
+At T6, a database transaction, conditional write, or a comparable single-writer protocol is needed. A read-modify-write sequence without exclusion is not equivalent: two workers can each observe three remaining records, each commit two, and leave four records committed against a three-record approval. The threat is a state race, even if every individual request appears authorized in isolation.
+
+### 11.3 Threat-model questions that force a decision
+
+| Reviewer question | Good evidence | Decision consequence if absent |
+|---|---|---|
+| Which interface actually commits the effect? | endpoint inventory and trace correlation | retain read-only design |
+| Which fields are authoritative and where were they asserted? | middleware contract and logs with provenance | do not accept model-derived identity |
+| Can the same action reach a downstream service another way? | route inventory plus negative tests | scope blast radius to all routes |
+| What turns an unknown timeout into a known outcome? | durable journal and lookup semantics | do not issue blind retry |
+| Which quantity is bounded, and at which transition? | atomic ledger design and oracle | do not cite a UI limit |
+| What can a reviewer understand and change? | preview artifact and rejection/edit flow | approval is not a meaningful control |
+| What does revocation invalidate immediately? | policy and execution contract | expire or reapprove queued work |
+| What evidence survives an incident without retaining payload bodies? | receipt schema and retention design | add minimum viable forensic trail |
+
+**Takeaway:** A review should fail a vague “secure agent” statement until it names the committed effect, authoritative fields, state owner, and denial/recovery evidence.
+### 8.1 Failure investigation playbooks
+
+The following playbooks deepen the earlier failure entries. They are diagnostic procedures, not claims that the failures occurred in a particular system. Every scenario is HYPOTHETICAL / ILLUSTRATIVE and NOT EXECUTED.
+
+#### F-07 Canonicalization changes the approved meaning
+
+**Trigger/environment:** The preview service serializes a recipient list in display order, while the executor serializes it in normalized identifier order. Both compute a digest, but the policy reviewer was shown display labels.
+
+**Symptom:** Benign requests are denied after approval, or an implementation “fixes” the mismatch by hashing only selected fields.
+
+**Competing causes:** Different Unicode normalization; omitted default field; changed list ordering; server resolution replacing a requested object; a genuine attempted payload change.
+
+**Discriminating diagnostic:** Persist the exact canonical-byte representation version and field schema with the approval. Reconstruct it from the same durable input. The expected signal for a format mismatch is differing bytes with semantically identical typed fields; the expected signal for a semantic change is one different authoritative typed field.
+
+**Root-cause evidence:** A digest mismatch alone proves no root cause. Compare parser version, canonicalization version, field-presence rules, and resolved IDs without exposing content unnecessarily.
+
+**Immediate mitigation:** Deny commit and ask for a fresh preview. Never fall back to a partial digest match.
+
+**Correction:** Define one canonical typed representation owned by a versioned library; make preview and executor consume that library or versioned output.
+
+**Prevention:** Add fixtures for reordered keys, null versus absent values, Unicode, repeated fields, and destination aliases. Include canonicalization version in approval records.
+
+**Verification:** For every fixture, preview and executor produce identical bytes and digest; intentionally changed authoritative fields produce denial. This test remains a proposed test until executed in the actual components.
+
+**Mitigation risk and escalation:** A strict change can deny pending work after a library upgrade. Expire affected approvals and route high-priority requests to an authorized manual procedure; do not silently reinterpret them.
+
+#### F-08 Revocation is recorded but queued work still commits
+
+**Trigger/environment:** A capability is revoked after approval while a worker already holds a queued message.
+
+**Symptom:** A receipt shows a commit timestamp after a revocation timestamp.
+
+**Competing causes:** Clock skew; revocation propagation delay; executor checks a cache with excessive time-to-live; an alternate credential was used; the record was revoked after rather than before the true commit.
+
+**Discriminating diagnostic:** Compare monotonic sequencing where available, authoritative revocation version, executor decision time, downstream commit acknowledgement, and clock source. Do not order distributed events solely by a user-facing wall clock.
+
+**Root-cause evidence:** Establish whether the executor queried current validity at T5/T6, which revocation version it observed, and which credential/route committed the action.
+
+**Immediate mitigation:** Disable the relevant effect route, invalidate remaining queued operations, and preserve receipt/journal metadata according to incident procedure.
+
+**Correction:** Make current revocation a mandatory execution predicate for high-consequence operations; bound cache freshness and explicitly test stale-cache behavior.
+
+**Prevention:** Include a revocation-race test in the release suite and define maximum acceptable propagation delay as a scenario constraint, not a presumed property.
+
+**Verification:** In a controlled synthetic environment, revoke between approval and commit and assert denial. A passing synthetic result does not establish propagation behavior in production.
+
+**Mitigation risk and escalation:** Aggressive global invalidation can halt legitimate work. Escalate to the service owner and risk owner to choose scoped versus global disablement.
+
+#### F-09 A receipt is complete-looking but cannot support reconciliation
+
+**Trigger/environment:** The executor logs “success” with a request timestamp but no operation ID, payload digest, policy decision, or downstream acknowledgement reference.
+
+**Symptom:** Operations cannot determine whether a timeout produced zero, one, or multiple effects.
+
+**Competing causes:** Log sampling; independent downstream success without a local commit; journal retention expired; a retry created a new request identity.
+
+**Discriminating diagnostic:** Attempt a one-to-one join from client operation to approval, policy decision, executor decision, quota update, and downstream delivery result. The expected healthy property is exactly one bounded lineage per committed operation.
+
+**Root-cause evidence:** Missing correlation is an observability gap, not evidence of no effect.
+
+**Immediate mitigation:** Stop blind retries; query downstream using an authorized business identifier if one exists; mark outcome unknown until reconciliation.
+
+**Correction:** Define a receipt schema before launch. Store minimal linkage fields and outcomes with access controls; keep raw payload out unless separately justified.
+
+**Prevention:** Require chaos/timeout drills to produce reconcilable receipts before enabling an effect.
+
+**Verification:** Inject a synthetic post-commit response loss. Operators must determine the single committed state without duplicate execution. This is a proposed exercise, not an executed result.
+
+**Mitigation risk and escalation:** Longer retention increases privacy exposure. Set retention by documented need and involve privacy/security owners where policy requires.
+
+#### F-10 Human approval becomes an attacker-controlled denial-of-service queue
+
+**Trigger/environment:** Every ambiguous request is escalated, and untrusted inputs can create many plausible-looking approval cards.
+
+**Symptom:** Queue age rises, urgent requests wait behind low-value requests, reviewers begin rubber-stamping or bypassing the queue.
+
+**Competing causes:** Legitimate seasonal demand; malicious flooding; preview rendering regression raising service time; staffing outage; one tenant dominating shared capacity.
+
+**Discriminating diagnostic:** Partition arrivals by tenant, effect class, source, and verdict; compare service-time distributions before and after preview changes. The signal of a flood is a shift concentrated in a controllable entry class, not merely a high total count.
+
+**Root-cause evidence:** Capture bounded request metadata and denial reason classes. Avoid retaining malicious content bodies simply because they are diagnostically interesting.
+
+**Immediate mitigation:** Apply admission limits, prioritize high-consequence queues, and preserve the manual baseline for urgent legitimate work.
+
+**Correction:** Separate low-risk deterministic workflows from high-impact approvals; use quotas per authenticated principal/tenant and make reviewer capacity explicit.
+
+**Prevention:** Capacity-test with adversarial arrival patterns and train reviewers on rejection/escalation rather than speed alone.
+
+**Verification:** A proposed load harness should show protected-class requests retain their service objective while excess requests receive deterministic admission outcomes. It must not use production identities or data.
+
+**Mitigation risk and escalation:** Rate limits can suppress legitimate incident response. Define an authenticated emergency path with dual control and post-event review.
+
+#### F-11 Policy evaluates the correct request but the wrong data snapshot
+
+**Trigger/environment:** The model supplies record IDs, and the executor re-resolves them after records have changed classification or membership.
+
+**Symptom:** The receipt is internally consistent, yet it does not explain which version of the data was exported.
+
+**Competing causes:** Expected live-data semantics; stale cache; identifier reuse; unauthorized record substitution; policy design omitted snapshot choice.
+
+**Discriminating diagnostic:** Record record-version identifiers or a deterministic snapshot reference in the preview and receipt. Compare the authorization-time set to execution-time resolution.
+
+**Root-cause evidence:** A changed record set can be a valid business change or a security-impacting substitution; classification and authorization policy determine which.
+
+**Immediate mitigation:** Deny if a declared immutable set changed; otherwise re-preview the changed set under an explicit live-data policy.
+
+**Correction:** State per operation whether data identity and classification are snapshotted, revalidated, or both.
+
+**Prevention:** Include deletion, reclassification, and identifier-reuse cases in the threat model.
+
+**Verification:** In a constructed trace, change one record classification between approval and execution and assert the declared policy branch. No generic answer is correct without that policy.
+
+**Mitigation risk and escalation:** Excessive snapshotting can retain data longer than necessary. Limit references and expiry; consult data governance owners for actual retention decisions.
+
+### 9.1 Costed control choices with explicit boundaries
+
+The following is a constructed planning comparison, not a price quote or staffing recommendation. It prevents a common error: claiming a control is “cheap” after omitting reviewer, latency, storage, recovery, and false-denial costs.
+
+| Option | Direct mechanism | Illustrative recurring inputs | Benefit measured here | Missing cost / disqualifier |
+|---|---|---|---|---|
+| Read-only assistant | no executor | model/infrastructure only | removes external-effect path | may not meet workflow objective |
+| Typed executor + policy | deterministic scope check | predicate lookup, journal write, engineering maintenance | can deny unsupported effect | cannot decide ambiguous business purpose alone |
+| Approval-bound executor | typed executor plus reviewer | reviewer minutes, queue, preview design, escalation | adds human decision for bounded action | unsafe if review is not comprehensible or capacity is absent |
+| General service credential | low apparent integration cost | hidden blast-radius/recovery cost | rapid prototype | disqualified for unbounded tenant/effect authority |
+
+Illustrative reviewer labor calculation:
+
+```text
+FORMULA [TM-07]: H = (n * s) / 3600
+WHERE: H reviewer-hours per hour of arrivals [reviewer-hour/hour];
+       n requests/hour; s seconds/request.
+CONSTRAINT: each request receives one review; no breaks, rework, batching,
+            context-switching, or simultaneous review are included.
+NUMERICAL EXAMPLE: ILLUSTRATIVE n=40 requests/hour, s=45 seconds/request;
+                   H=(40*45)/3600=0.5 reviewer-hour/hour.
+INTERPRETATION: nominally half of one continuously available reviewer is consumed;
+                staffing must include nonproductive time and demand variation.
+```
+
+Derivation: each request takes `s` seconds; `n` requests consume `n*s` reviewer-seconds; dividing by 3,600 seconds/hour converts to reviewer-hours per hour. The units cancel correctly: `(requests/hour * seconds/request) / (seconds/hour) = reviewer-hours/hour`.
+
+Sensitivity: at 80 requests/hour and 60 seconds/request, `H=4800/3600=1.333...` reviewer-hours/hour. One nominal reviewer cannot keep up even before breaks. At 20 requests/hour and 30 seconds/request, `H=0.1667` reviewer-hours/hour. This calculation does not predict queue percentile latency because arrivals and service time variability are omitted.
+
+**Takeaway:** Compare controls on the consequence they bound and the workload they create; a nominally inexpensive approval gate can be operationally infeasible.
+
+### 10.1 Results reference: claims to use carefully
+
+| Result or principle | Precise use in this sheet | Preconditions | Invalid inference |
+|---|---|---|---|
+| Least privilege | limit each executor credential and operation to the smallest stated need | inventory of effects and credentials is materially complete | small scopes prove no abuse |
+| Complete mediation | check policy at the effect boundary, including alternate routes | every relevant commit route uses the same enforcement point | one gateway check covers hidden/direct APIs |
+| Fail closed | deny when an essential authorization fact is unavailable | availability tradeoff and recovery path are specified | every system error should automatically deny without considering safe degradation |
+| Separation of duties | distinguish requester, reviewer, and executor where a policy requires independent judgment | identities and authority are not colluded or reused | two UI clicks by one principal are dual control |
+| Idempotency | map repeated delivery of the same operation to one effect/result lineage | durable operation identity and atomic commit/journal relationship | generic retry is safe |
+
+No result above certifies an architecture. They are design heuristics and properties to test against a particular contract.
+
+### 3.1 Authority provenance mini-ledger
+
+Before implementation, fill a ledger like this for every field that can influence an effect.
+
+| Field | Example value | Authoritative issuer | Model may see? | Model may propose? | Executor must verify | Retention boundary |
+|---|---|---|---|---|---|---|
+| Tenant | `tenant-a` | authenticated session middleware | yes, as context label | no | match capability and request route | receipt reference only |
+| Purpose | `research-export` | policy-controlled workflow | yes | may select only enumerated task | policy allow-list | policy decision ID |
+| Record IDs | `[11,12]` | server-side resolution under tenant | optionally | yes, as candidates | existence, classification, access | digest/version reference |
+| Destination | archive object ID | directory/policy service | display label only | may propose candidate | resolved ID and allow-list | resolved ID/pseudonym |
+| Approval | `A-91` | approval service | no bearer token | no | status, expiry, digest, policy version | durable decision record |
+| Budget | 60 records | quota ledger | remaining count may be shown | no | atomic remaining value | receipt delta |
+| Executor credential | workload identity | identity issuer | no | never | audience and scope | credential metadata, not secret |
+
+The ledger catches a subtle defect: a field can be visible to a model without being authoritative, and a model can propose a field without being permitted to assert it. Treating those verbs as synonyms is a common source of prompt-to-privilege escalation.
+
+**Takeaway:** For each effectful field, record who asserts it, who can propose it, who verifies it, and what evidence remains after the operation.
+### 11.4 Conformance scenarios for a proposed executor
+
+These scenarios are a test-design checklist. They are not test results. A team should replace identifiers and values with isolated synthetic fixtures, execute in its own authorized environment, and record versioned evidence. A “pass” in one scenario does not prove resilience to unenumerated paths.
+
+| Scenario ID | Preconditions | Stimulus | Required oracle | Failure interpretation |
+|---|---|---|---|---|
+| CT-01 | valid session, allowed operation | matching typed request | one commit receipt with all lineage fields | a denial may indicate policy/configuration; an uncorrelated success is observability failure |
+| CT-02 | valid session, forbidden destination | model proposes destination in untrusted content | denial before downstream effect | text refusal alone is insufficient |
+| CT-03 | two tenant sessions | identical proposed record ID | each resolution uses own tenant scope | common result set indicates possible cross-tenant leakage |
+| CT-04 | approved payload | mutate one authoritative field | digest/payload denial and no commit | acceptance is an approval-binding failure |
+| CT-05 | approval near expiry | execute at and after expiry boundary | declared strict boundary behavior | ambiguous clock semantics require design clarification |
+| CT-06 | sufficient budget | deliver same operation twice | one effect lineage and stable receipt | two commits indicate idempotency/atomicity defect |
+| CT-07 | budget nearly exhausted | concurrent distinct operations | total committed amount never exceeds allowance | negative balance or excess receipt is a race |
+| CT-08 | queued approved operation | revoke capability before commit | no commit after current check | commit needs route/cache investigation |
+| CT-09 | sandboxed executor | attempt denied egress to canary | denied connection and bounded audit event | success means containment boundary is absent or misconfigured |
+| CT-10 | downstream timeout after possible commit | client retries by protocol | journal resolves outcome without second effect | blind retry is recovery failure |
+| CT-11 | policy change | execute prior approval | explicit snapshot/reapproval rule observed | silent use of changed semantics is policy-integrity ambiguity |
+| CT-12 | reviewer threshold | adversarial burst of low-value requests | admission/priority behavior remains explicit | unbounded backlog is an availability control failure |
+
+#### Reading an oracle failure without overclaiming
+
+When CT-04 accepts a mutated payload, first determine whether the test truly reached the committing executor. A browser/UI test that observes a “success” toast does not establish a downstream commit. Gather the test operation ID, approval ID, canonical bytes/digest version, executor decision, quota update, and destination response reference. Then classify the failure:
+
+- **Test-harness defect:** the fixture did not mutate an authoritative field, used an expired approval, or invoked a mock route. Fix the harness and document the prior invalid result.
+- **Preview/executor disagreement:** two canonicalization implementations disagree. Treat this as a high-priority integrity defect; do not loosen comparison.
+- **Alternate-path bypass:** the test called an endpoint not covered by the broker. Expand the interface inventory and constrain or retire the bypass.
+- **Authorization defect:** the executor accepted a digest mismatch or used model-controlled attributes. Disable the effect surface or bound it to manual operation pending repair.
+- **Observability defect:** the effect may have occurred but receipts cannot establish it. Contain and reconcile rather than claiming a pass or failure of the external action.
+
+This classification avoids two opposite errors. One is blaming the model when deterministic enforcement failed. The other is declaring a control successful when the test observed only a simulated or pre-commit path.
+
+#### Minimal evidence packet for one scenario
+
+| Packet item | Why it exists | Avoid including |
+|---|---|---|
+| scenario ID and source revision | connects conclusion to exact test design | vague “security test passed” statement |
+| synthetic fixture manifest | makes inputs and tenant/destination classes reproducible | real customer data or credentials |
+| policy and canonicalization versions | explains which rules produced the decision | copied secrets or broad configuration dumps |
+| correlation/operation/approval references | reconstructs one path | raw payload unless separately approved |
+| expected and observed decision class | permits a bounded pass/fail judgment | unstated assumptions |
+| downstream observation method | distinguishes executor result from external effect | claims that a mock is a production delivery |
+| limitation and recheck trigger | stops inappropriate generalization | boilerplate “may vary” without a trigger |
+
+### 8.2 Edge-boundary decision table
+
+| Edge condition | Unsafe shortcut | Bounded decision | Why |
+|---|---|---|---|
+| Recipient name is ambiguous | choose the first directory match | request an identifier/clarification or retain manual routing | display text is not identity |
+| Policy service unavailable | use model confidence | fail closed for high-consequence effects; offer read-only or queued workflow only if explicitly designed | confidence does not replace policy |
+| Approval expired during outage | extend it implicitly | require new approval or use a predeclared emergency procedure | expiry is part of the reviewed scope |
+| Journal unavailable after downstream commit | retry with a new ID | hold as unknown and reconcile downstream | retry can multiply effect |
+| Data classification changes | keep old approval silently | recheck/re-preview according to declared snapshot rule | policy must state time semantics |
+| Review backlog grows | waive approval globally | admission control, capacity adjustment, or narrowed deterministic operation | bypass changes risk, not just latency |
+| Sandbox needs an external dependency | permit all egress | allow one authenticated destination with data/purpose limits | isolation and network policy are separate |
+
+**Takeaway:** Edge cases are where a stated trust boundary either has a deterministic behavior or quietly disappears.
+### 7.1 Selection sequence for an effect-bearing feature
+
+Use this sequence to make the baseline explicit rather than adding controls after a model is already connected to broad credentials.
+
+1. **Can the user objective be met without an external effect?** If yes, select a read-only answer or a draft. This removes the execution surface rather than trying to harden it.
+2. **Can the effect be expressed as one typed, narrow operation?** If no, split the workflow. A general shell or generic HTTP client usually hides policy-relevant distinctions.
+3. **What authenticated facts are necessary?** Specify principal, tenant, purpose, operation, data class, destination, quantity, and time. If a fact cannot be authenticated, do not use it to grant privilege.
+4. **What is the strongest credible non-human policy?** Enforce allow-lists, scope, quotas, revocation, and idempotency at the executor before considering approval.
+5. **What uncertainty remains that a reviewer can genuinely decide?** Add approval only when it receives an exact, bounded preview and has timeout, edit, reject, and escalation behavior.
+6. **How will an unknown outcome recover?** Define journal lookup, reconciliation ownership, and the point at which operators freeze further effects.
+7. **Which negative path would reverse confidence?** Add one oracle for each boundary: scope, payload, budget, revocation, alternate route, and downstream ambiguity.
+
+Worked selection: an assistant that drafts an export message selects step 1: no external send and no export capability. An assistant that must send a report selects step 2: `submit_export_for_approval`, not `http_request`. It derives recipient from an authenticated directory lookup, applies a record cap, and creates an approval preview. This is a proposed design pattern; it is not a statement about any existing assistant.
+
+#### Selection anti-patterns and their replacements
+
+| Anti-pattern | Why it fails | Replace with |
+|---|---|---|
+| “The model was instructed not to do that.” | instruction is not an enforcement decision | typed executor and independent policy |
+| “The payload passed JSON schema.” | shape does not establish entitlement | server-side resolution and authorization |
+| “The reviewer saw the chat.” | chat can change after review | canonical preview plus digest/version binding |
+| “The service account is internal.” | network placement does not define allowed effect | workload identity, audience, scope, and budget |
+| “Retry until it works.” | unknown outcome can become duplicate effect | idempotency and reconciliation |
+| “Sandboxed means safe.” | allowed egress/credentials can still carry harm | remove secrets, restrict egress, authorize destination |
+
+**Takeaway:** Start by removing unnecessary effects; for necessary effects, make every authority-bearing transition explicit and testable.
 ## 12. Quick Reference Card
 
 | Field | Reference |

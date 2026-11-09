@@ -1,7 +1,7 @@
 # Module 23 Case Studies — GPU Architecture, Accelerators and AI Hardware
 
 **Collection status:** planning catalog; no `CASE-*` artifact is authored.  
-**Contract:** [course standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [case master](../../../Templates/CASE_STUDY_CONTENT_MASTER_TEMPLATE.md). A future case needs all 15 sections, a checked calculation, 12–18 answered interview questions, and a final Section 15 card.
+**Contract:** [course standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [case master](../../../../Templates/CASE_STUDY_CONTENT_MASTER_TEMPLATE.md). A future case needs all 15 sections, a checked calculation, 12–18 answered interview questions, and a final Section 15 card.
 
 ## 1. Collection metadata
 

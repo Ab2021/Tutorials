@@ -456,102 +456,107 @@ CUDA architecture and synchronization details are version-specific; consult the 
 All interview scenarios are constructed; none are attributed to an employer.
 Scoring for each: 0 incorrect; 1 partial; 2 correct with assumptions; 3 correct with a defensible tradeoff or verification plan.
 
-### Level 1 — Definition / Recall
+### Q01 / Level 1 / execution hierarchy
+**Prompt and given facts:** Distinguish an SM from a GPC and state why the distinction matters to block placement.
+**Clarifications:** Use the installed CUDA documentation for SKU-specific details.
+**Answer:** An SM hosts resident blocks and warp execution; a GPC is a larger organizational grouping. A block's register and shared-memory admission is constrained at the SM scope, so a GPC must not be treated as one fungible register pool.
+**Alternative answers:** A topology diagram is useful if it preserves this placement boundary.
+**Follow-up:** What device evidence is needed? Query the installed GPU and retain the documentation version.
+**Trap/red flag:** Dividing a GPC-wide-looking number by blocks silently changes resource scope.
+**Scoring:** 0 conflates scopes; 1 defines one term; 2 distinguishes both; 3 explains placement impact.
+**Answer source:** Sections 2–3 and [S1].
 
-**Q1. What is an SM, and is it the same as a GPC?**
-Answer: An SM is a streaming multiprocessor that hosts resident thread blocks and executes warp instructions; a GPC is a broader grouping of processing resources.
-A block's per-SM resource requirements do not become a per-GPC register pool.
-Trap: treating all SM resources inside a GPC as fungible per-block capacity.
-Source: Section 3 and [S1].
+### Q02 / Level 1 / scheduler states
+**Prompt and given facts:** Distinguish active, eligible and issued warps.
+**Clarifications:** Metric definitions are profiler-version specific.
+**Answer:** Active means resident; eligible means its next instruction can issue; issued means the scheduler selected it. A memory-stalled active warp is not necessarily eligible.
+**Alternative answers:** Different profiler naming is acceptable if the states and counter scope are identified.
+**Follow-up:** Can high occupancy prove issue efficiency? No.
+**Trap/red flag:** Equating active occupancy with useful work per cycle.
+**Scoring:** 0 conflates states; 1 two states; 2 all three; 3 gives a stall counterexample.
+**Answer source:** Sections 2–3.
 
-**Q2. Distinguish active, eligible and issued warps.**
-Answer: Active means resident; eligible means ready to issue under scheduler constraints; issued means an instruction was selected for dispatch.
-A memory-stalled active warp may not be eligible.
-Trap: asserting that high active occupancy proves high issue efficiency.
-Source: Sections 2–3.
+### Q03 / Level 2 / resource bound
+**Prompt and given facts:** For R=65,536 registers, r=64 registers/thread and T=256 threads/block, derive the register-only bound.
+**Clarifications:** This is illustrative exact allocation; ignore rounding and other limits.
+**Answer:** Each block uses `rT=16,384` registers. From `n*rT<=R`, `n<=floor(65,536/16,384)=4`. This is not a complete occupancy result.
+**Alternative answers:** A real occupancy API result supersedes this simplified calculation for a compiled launch.
+**Follow-up:** If shared memory permits only two blocks, what binds? The combined minimum is two.
+**Trap/red flag:** Rounding the quotient upward or calling four achieved throughput.
+**Scoring:** 0 wrong multiplication; 1 quotient only; 2 derivation and bound; 3 states omitted constraints.
+**Answer source:** E1–E2 and Section 5.
 
-**Q3. What distinguishes HBM, L2, shared memory and registers?**
-Answer: HBM is device memory, L2 is a cache, shared memory is explicit on-chip block-oriented storage, and registers serve thread-local values.
-Scope, ownership, allocation and access behavior differ.
-Trap: assuming every shared-memory access reaches HBM.
-Source: [S1,S2].
+### Q04 / Level 2 / partial warp trace
+**Prompt and given facts:** A 70-thread block uses 32-thread warps. How many warp slots are allocated?
+**Clarifications:** Treat a partial warp as one scheduling slot.
+**Answer:** `ceil(70/32)=3` slots: two full warps and one six-thread partial warp. The populated fraction is `70/96≈72.92%`, not a performance percentage.
+**Alternative answers:** Reporting only the three slots is sufficient if no utilization interpretation is requested.
+**Follow-up:** What changes with 20 such blocks under an assumed 64-slot limit? 60 slots, or 93.75% modeled occupancy.
+**Trap/red flag:** Dividing 70 by 32 and discarding the remainder.
+**Scoring:** 0 two slots; 1 three slots; 2 explains partial warp; 3 applies the stated occupancy assumption.
+**Answer source:** Numerical laboratory Case A.
 
-### Level 2 — Derivation / Apply
+### Q05 / Level 2 / latency accounting
+**Prompt and given facts:** A request has 3 ms queueing, 2 ms transfer and 5 ms compute with no overlap. Find latency; then halve compute.
+**Clarifications:** The path is explicitly serial.
+**Answer:** `3+2+5=10 ms`; with 2.5 ms compute, `7.5 ms`. The end-to-end speedup is `10/7.5≈1.33`, not two.
+**Alternative answers:** With overlap, use the actual critical path instead of summing all stages.
+**Follow-up:** Why might lower compute not reduce queueing? Load-dependent admission and service behavior can change it.
+**Trap/red flag:** Adding stages known to overlap.
+**Scoring:** 0 wrong sum; 1 10 ms; 2 both results; 3 states the overlap boundary.
+**Answer source:** Interview drill Q40.
 
-**Q4. Derive the register-only resident-block bound.**
-Answer: If n identical blocks each use rT registers and the pool contains R, then nrT ≤ R; hence n ≤ floor(R/(rT)).
-The derivation assumes exact allocation and no other constraint; actual allocation granularity must be considered.
-Trap: rounding the quotient upward or treating the register-only answer as full occupancy.
-Source: E1.
+### Q06 / Level 3 / occupancy regression
+**Prompt and given facts:** A variant raises modeled occupancy but slows a correct kernel. What hypotheses and test discriminate them?
+**Clarifications:** Preserve input, output contract and workload while changing one mechanism.
+**Answer:** Lower registers can introduce spills or extra instructions; smaller tiles can reduce reuse; the original limit may not have been occupancy. Compare compiler reports, local-memory traffic, instruction mix, eligible warps and repeated unprofiled timing.
+**Alternative answers:** Retaining the baseline is defensible when no mechanism improves the decision metric.
+**Follow-up:** What if spills appear? Quantify their traffic at the relevant boundary and reassess the resource trade.
+**Trap/red flag:** Selecting a variant solely because an occupancy percentage rose.
+**Scoring:** 0 assumes speedup; 1 names a cause; 2 gives competing causes; 3 defines discriminating evidence.
+**Answer source:** Failure modes F02–F03.
 
-**Q5. Compute the source-plan example.**
-Answer: 256 × 64 = 16,384 registers per block; 65,536 / 16,384 = 4 register-limited blocks.
-Shared memory permits 96 / 48 = 2 blocks; the combined simplified bound is min(4,2) = 2.
-Check: three blocks require 144 KiB, exceeding the illustrative 96 KiB.
-Trap: labeling these hypothetical capacities as actual H100 specifications.
-Source: Section 5.
+### Q07 / Level 3 / asynchronous stale tile
+**Prompt and given facts:** A consumer sometimes reads a stale asynchronous tile. State the recovery invariant.
+**Clarifications:** Exact APIs are version-specific and must be checked.
+**Answer:** The consumer may read only after the producer's documented completion/visibility event for that buffer phase; a buffer may be reused only after its prior consumer finishes. Test a tiny sentinel tensor against a reference under delayed producers.
+**Alternative answers:** A correct documented event or barrier protocol is acceptable.
+**Follow-up:** Why does issuing a transfer fail as proof? Issue precedes completion.
+**Trap/red flag:** Adding delay rather than establishing ownership and happens-before.
+**Scoring:** 0 sleeps; 1 says synchronize; 2 states both ownership boundaries; 3 supplies a deterministic oracle.
+**Answer source:** Section 3 and F04.
 
-**Q6. What happens if the illustrative block uses 96 KiB shared memory?**
-Answer: Under the unchanged 96 KiB assumed SM limit and no overhead, the shared bound becomes floor(96/96) = 1 block.
-This is a resource bound, not a claim that one block achieves better overlap or throughput.
-Trap: ignoring per-block feasibility and actual allocation rounding.
-Source: E3 and Section 9.
+### Q08 / Level 3 / topology diagnosis
+**Prompt and given facts:** An alleged NVLink bottleneck appears in a multi-GPU run. What must be measured first?
+**Clarifications:** Product aggregate rates are not pairwise application measurements.
+**Answer:** Record actual topology, peer access, direction, payload, synchronization and concurrent traffic; compare isolated transfer and the real collective while checking compute imbalance and host staging.
+**Alternative answers:** A topology-aware collective trace is defensible if it includes the same workload.
+**Follow-up:** What result weakens the NVLink hypothesis? Similar application time with low relevant link activity and a slow compute rank.
+**Trap/red flag:** Summing advertised bidirectional fabric rates as one-way achieved bandwidth.
+**Scoring:** 0 cites marketing bandwidth; 1 requests a benchmark; 2 scopes topology; 3 gives falsifying signal.
+**Answer source:** Sections 3 and 7; [S3].
 
-**Q7. What does a 50% theoretical occupancy mean?**
-Answer: Under the particular launch and hardware configuration, modeled resident warps are half the modeled maximum resident warps.
-It does not mean half of instructions issue, half of time is useful, or half of peak throughput is achieved.
-Trap: using it as a speedup prediction without checking actual issue and stalls.
-Source: Section 3.
+### Q09 / Level 3 / precision acceptance
+**Prompt and given facts:** A Tensor Core-oriented change is faster in a microbenchmark. What permits release?
+**Clarifications:** The output contract, dtype and tolerance must be declared first.
+**Answer:** Verify supported instruction/layout/dtype, compare representative and edge outputs to a suitable reference under the declared tolerance, then measure representative unprofiled behavior. Performance cannot waive parity or race safety.
+**Alternative answers:** Bitwise equality is appropriate only when the contract requires it.
+**Follow-up:** If it fails tolerance? Reject it or change the accumulation/precision policy.
+**Trap/red flag:** Treating successful execution as acceptable model accuracy.
+**Scoring:** 0 ships from speed; 1 asks for test; 2 includes parity and workload; 3 specifies tolerance and rollback.
+**Answer source:** Sections 3, 7 and F05.
 
-### Level 3 — Judgement / Design / Debug
+### Q10 / Level 3 / evidence boundary
+**Prompt and given facts:** A team wants to claim that its H100 is “faster” after reading a vendor guide.
+**Clarifications:** The guide is historical documented context, not a local benchmark.
+**Answer:** Separate a sourced architectural capability from a measured application outcome. A performance claim needs exact SKU/configuration, workload, software, method, repetitions, result and uncertainty; otherwise state the measurement plan.
+**Alternative answers:** A bounded sourced comparison is valid when it repeats the source's precise scope.
+**Follow-up:** What changes on a partition? Re-query resources and do not scale full-device figures linearly.
+**Trap/red flag:** Calling an up-to or per-cycle vendor figure observed application throughput.
+**Scoring:** 0 makes claim; 1 names SKU; 2 names workload and method; 3 separates evidence types and partition boundary.
+**Answer source:** Sections 1, 10 and evidence audit.
 
-**Q8. A change raises occupancy but slows the kernel. Explain.**
-Answer: Lower register limits can cause spills or more instructions; smaller tiles can reduce reuse; extra resident warps may not resolve the actual bottleneck.
-Compare compiler resource reports, local-memory traffic, instruction counts and repeated unprofiled elapsed time.
-Trap: reverting solely because occupancy rose; identify the mechanism and preserve correctness.
-Source: F02–F03.
-
-**Q9. How do you diagnose a stale TMA tile?**
-Answer: Check tensor-map dimensions and addressing, producer completion, barrier initialization and phase, consumer wait, and buffer reuse ordering.
-Use a tiny deterministic tensor and compare every element to a CPU or trusted GPU reference.
-Trap: assuming asynchronous transfer initiation means data are already visible to all consumers.
-Source: [S2] and F04.
-
-**Q10. Why can two H100 installations have different results?**
-Answer: SKU, HBM configuration, host and link topology, clocks, cooling, partitioning, software, precision and workload shape can differ.
-Capture the exact environment before comparing, and use repeated same-workload tests.
-Trap: using a marketing peak as a measured application result.
-Source: [S3].
-
-**Q11. How would you select between direct loads and staged tensor transfer?**
-Answer: Start with a correct direct-load baseline; verify supported tensor map, alignment and synchronization; benchmark representative tile shapes and reuse.
-Prefer the candidate only if the production metric improves without breaking correctness or resource budgets.
-Trap: assuming a newer mechanism automatically wins on small or irregular transfers.
-Source: Section 7.
-
-**Q12. An HBM counter falls but latency rises. What next?**
-Answer: Inspect L2 traffic, extra instructions, synchronization, occupancy and profiler perturbation; a reduction in one counter is not a complete causal explanation.
-Repeat an unprofiled run and compare the same input distribution and software configuration.
-Trap: declaring victory from bandwidth alone.
-Source: Sections 7–8.
-
-**Q13. How would you check whether NVLink is the limiting factor?**
-Answer: Record topology and peer access, measure relevant directional transfers in isolation and during the real collective, and compare link activity with application timing.
-Also examine synchronization, compute imbalance and host staging before attributing the bottleneck to the fabric.
-Trap: summing advertised bidirectional rates as though they were achieved one-way application bandwidth.
-Source: [S3] and F06.
-
-**Q14. What evidence is required to claim a Tensor Core optimization is safe?**
-Answer: Show supported instruction and datatype, matching input/output layout, numerical error across representative and edge-case inputs, race-free execution, and repeated performance under the deployment configuration.
-A higher precision fallback may be appropriate where the error budget is exceeded.
-Trap: equating successful execution with acceptable model accuracy.
-Source: [S1,S2] and F05.
-
-**Q15. How do you handle an ambiguous production regression?**
-Answer: Preserve release and hardware metadata, isolate workload changes from platform changes, establish a baseline, then vary one plausible cause at a time.
-Mitigate service impact with a safe rollback where appropriate, and confirm both correctness and the service metric after the intervention.
-Trap: changing register caps, clocks and batch size together and attributing the result to one of them.
-Source: F10–F11.
+**Takeaway:** Hardware judgement is defensible only when arithmetic scope, synchronization invariants, output contract and measured evidence remain separate.
 
 ### Architecture and resource clinic: versioned vendor evidence
 

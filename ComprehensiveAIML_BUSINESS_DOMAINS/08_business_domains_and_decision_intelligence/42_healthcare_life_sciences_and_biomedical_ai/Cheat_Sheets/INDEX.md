@@ -8,8 +8,8 @@ This collection teaches bounded, evidence-aware healthcare AI decisions: clinica
 
 | Level | File | Outcome | Prerequisites | Status |
 |---|---|---|---|---|
-| 1 | [01 Clinical Decision Support: Evidence and Handoff](01_Clinical_Decision_Support_Evidence_and_Handoff.md) | define time-safe, non-binding decision support and calculate sensitivity | confusion-matrix arithmetic | draft; below course 1,000-line publication requirement |
-| 1 | [02 Biomedical Signal Pipeline and Validation](02_Biomedical_Signal_Pipeline_and_Validation.md) | specify acquisition, preprocessing, segmentation and validity | 01 and sampling basics | draft; below course 1,000-line publication requirement |
+| 1 | [01 Clinical Decision Support: Evidence and Handoff](01_Clinical_Decision_Support_Evidence_and_Handoff.md) | define time-safe, non-binding decision support; calculate sensitivity; trace abstention/recovery oracles | confusion-matrix arithmetic | draft; 12-section manuscript exceeds the course 1,000-line threshold; source-body and local-policy evidence remain OPEN |
+| 1 | [02 Biomedical Signal Pipeline and Validation](02_Biomedical_Signal_Pipeline_and_Validation.md) | specify acquisition, preprocessing, segmentation and validity | 01 and sampling basics | draft; 753-line 12-section expansion; 13 arithmetic checks and routing/split paper oracles passed; below 1,000-line course threshold; acquisition/clinical evidence and independent review OPEN |
 | 2 | [03 Human Factors: Alert Design and Recovery](03_Human_Factors_Alert_Design_and_Recovery.md) | select review, alert and recovery controls | 01 workflow contract | draft; below course 1,000-line publication requirement |
 | 2 | imaging and triage | define a triage evaluation and handoff | diagnostic-study design | planned |
 | 3 | drug discovery and validation | separate scientific prediction from experimental validation | statistics and domain review | planned |

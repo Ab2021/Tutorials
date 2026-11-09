@@ -1,483 +1,1005 @@
 ---
 case_id: "CASE-XD-002"
 case_title: "Predictive-maintenance-to-robotics operating loop"
-case_version: "1.0"
+case_version: "2.0"
 created: "2026-11-09"
 last_reviewed: null
 status: "proposed"
 content_status: "draft"
 case_type: "hybrid"
-domain: "Industrial operations"
 primary_pattern: "safe-state-boundary"
-secondary_patterns: ["delayed-feedback", "cost-latency-tradeoff"]
 evidence_level: "illustrative"
 source_basis: "illustrative"
 as_of_date: "2026-11-09"
 owner_role: "maintenance and safety lead"
 source_index: "INDEX.md"
-review_trigger: "Authority, workload, source-access, or validation-evidence change."
 ---
 
 # Predictive-maintenance-to-robotics operating loop
 
-**Evidence declaration:** This is an illustrative design exercise. Every quantity, workflow, record, and outcome is constructed teaching material, not a measurement of a named organization.
-**Source inventory:** [directory.txt](../../Templates/directory.txt), [source crosswalk](../00_SOURCE_TOPIC_CROSSWALK.md), and [edge/industry coverage brief](../00_SOURCE_COVERAGE_EDGE_INDUSTRY.md). Visible names establish topics, not proprietary implementation facts.
+**Evidence declaration:** Illustrative teaching design. Every number, trace, record, and outcome below is constructed; no organization, deployment, benefit, safety result, or incident is claimed.
+**Source boundary:** directory.txt and the source crosswalk establish only topic provenance. Unavailable originals remain unavailable.
 
 ## 1. The One-Line Framing
-> Given **sensor window, machine state, calibration status, and work order context**, decide **continue, inspect, schedule maintenance, or enter a controlled safe state** for the **maintenance and safety lead** to support a safe action consistent with sensor and controller state, subject to **a 50 ms control-cycle deadline and safe-stop authority**, compared with **fixed-interval inspection with operator judgment**.
-- Task category: hybrid; primary pattern: `safe-state-boundary`; secondary patterns: `delayed-feedback; cost-latency-tradeoff`.
-- Decision frequency is per eligible event; an ineligible or ambiguous input is an explicit abstention.
-- The obvious simple framing fails because a prediction or generated answer does not itself confer permission, feasibility, safety, or causal value.
-- Success condition: each release is reconstructible from decision-time inputs and a versioned authority boundary.
-- The case proposes validation; it does not describe a deployment or realized benefit.
+Given sensor window, calibration, and PLC state, decide continue, inspect, schedule, or safe stop for maintenance and safety lead, subject to 50 ms control deadline and safe-stop authority, compared with fixed-interval inspection.
+The governing pattern is safe-state-boundary; a candidate cannot grant itself permission or claim completed external state.
+Success is a reconstructible bounded disposition, not a realized business outcome.
 
 ## 2. Context & Background
-- Workflow: a request enters with sensor window, machine state, calibration status, and work order context; the decision is consumed as continue, inspect, schedule maintenance, or enter a controlled safe state.
-- Stakeholders: maintenance and safety lead, frontline users, data/engineering operators, security/privacy reviewers, and escalation authority.
-- Baseline: fixed-interval inspection with operator judgment; it remains the fallback when eligibility, evidence, or dependencies are uncertain.
-- Illustrative scale: 1,200 candidate decisions/hour, 3× peak, 30-day evaluation window.
-- Timing: only facts available before the decision timestamp may influence the decision.
-- Geographic, contractual, and regulatory applicability are unknown; confirm authority before use.
-- Known facts are limited to the curriculum brief; no organization-specific feature, volume, or result is implied.
-- No prior deployment or failed experiment is asserted.
-- Human impact: an error can create rework, safety, privacy, financial, or trust harm.
-- The owner needs a decision record, not merely a score.
+The workflow starts with sensor window, calibration, and PLC state and ends when actuator acknowledgement exists or fixed-interval inspection accepts handoff.
+maintenance and safety lead owns the stop control and the exception contract.
+The primary downside is missed hazardous condition; raw completion count is not the objective.
+All timestamps are UTC and the replay population is constructed.
+Post-decision amendments are evaluation-only and may not leak into action-time inputs.
 
 ## 3. The Business Question
-- Question: Under the stated workload, which continue, inspect, schedule maintenance, or enter a controlled safe state may be released, deferred, or rejected?
-- Decision owner: maintenance and safety lead.
-- Trigger/deadline: every eligible input; binding limit: a 50 ms control-cycle deadline and safe-stop authority.
-- Actions: retain baseline, release bounded recommendation, require review, defer, or reject.
-- Value: less avoidable manual work and clearer prioritization; downside: harmful or unauthorized release.
-- Objective: useful policy-conforming completed decisions, not raw confidence.
-- Hard constraints: decision-time correctness, auditability, bounded latency, safe fallback.
-- Scope: one hypothetical workflow; legal, clinical, safety, and commercial authority outside it are excluded.
-- Proxy conflict: more automated completion can worsen the real objective by bypassing review.
+Which continue, inspect, schedule, or safe stop disposition is justified for one decision record?
+Available actions are baseline, bounded recommendation, review, abstention, or stop.
+The objective is useful eligible decisions; a proxy is invalid if it excludes difficult records.
+Out of scope are legal, clinical, hardware, security, and deployment claims.
 
 ## 4. Assumptions & Constraints
-- A-01 | Input identity and authority are current | data/security | unverified illustrative assumption | impact: wrong recipient or scope | fallback: abstain and re-authenticate | recheck: owner before pilot.
-- A-02 | Event timestamps are comparable | data | unverified illustrative assumption | impact: future information contaminates decision | fallback: use conservative cut-off | recheck: owner before pilot.
-- A-03 | Downstream action accepts operation key | system | unverified illustrative assumption | impact: retry duplicates an effect | fallback: manual reconciliation | recheck: owner before pilot.
-- A-04 | Reviewer can inspect evidence in time | workflow | unverified illustrative assumption | impact: review rubber-stamps | fallback: defer to baseline | recheck: owner before pilot.
-- A-05 | Capacity holds during peak | infrastructure | unverified illustrative assumption | impact: tail latency and queues grow | fallback: shed optional work | recheck: owner before pilot.
-- A-06 | Outcome labels mature | evaluation | unverified illustrative assumption | impact: offline ranking misleads | fallback: retain action logs | recheck: owner before pilot.
-- A-07 | Owner can stop workflow | governance | unverified illustrative assumption | impact: unsafe release persists | fallback: kill switch | recheck: owner before pilot.
-- C-01 | Binding limit | a 50 ms control-cycle deadline and safe-stop authority | teaching assumption only | breach rejects automatic release.
-- C-02 | Evidence constraint | no proprietary measurements or legal determinations | outcome remains not measured.
+calibration certificate is available at decision time; otherwise abstain and rebind.
+vibration window has a trusted availability timestamp; otherwise exclude it.
+PLC interlock is current and interpretable; otherwise freeze automation.
+A review slot is explicitly reserved; otherwise do not promise review.
+actuator acknowledgement is reconcilable; otherwise hold before retry.
+The binding constraint is 50 ms control deadline and safe-stop authority; breach rejects automatic disposition.
+Outcome evidence is unavailable, so implementation remains proposed.
 
 ## 5. Data, Tools & Method
 ### 5a. Data Specification
-- Unit: one candidate decision keyed by `decision_id`; repeated events retain immutable sequence.
-- Volume/window: 864,000 constructed records over 30 days; peak assumption 3,600/hour.
-- Inputs: vibration windows, temperature, controller state, maintenance records, and calibration events; each has source timestamp, schema version, and availability timestamp.
-- Output: continue, inspect, schedule maintenance, or enter a controlled safe state; state is `released`, `review`, `abstain`, `rejected`, or `reconciled`.
-- Population: schema and identity-valid inputs; excluded records remain reject/audit events.
-- Join: one decision joins one as-of authority snapshot and zero-or-more evidence items; fan-out is explicit.
-- Split: frozen time replay; entities do not cross partitions when history would leak.
+Unit: CASE-XD-002-decision_id; repeated events retain immutable sequence.
+Inputs: calibration certificate, vibration window, PLC interlock, request time, schema version, and availability time.
+Output: continue, inspect, schedule, or safe stop, reason code, bundle ID, and actuator acknowledgement.
+Join: one decision joins one as-of gate; evidence fan-out is explicit.
 ### 5b. Tools & Stack
-- Proposed: schema validator, identity/policy decision point, versioned evidence store, deterministic rules, optional model service, review queue, durable operation ledger, audit sink.
-- A model/retriever proposes evidence; it cannot mutate the action ledger directly.
-- Configuration bundles schema, policy, prompt/model, threshold, and tool-contract versions.
-- No vendor API, pricing, hardware, or deployment behavior is asserted.
+Proposed components: schema validator, immutable snapshots, gate evaluator, review queue, audit sink, reconciliation worker.
+Candidate generation cannot mutate actuator acknowledgement.
 ### 5c. Method Summary
-- Pipeline: validate -> authorize -> collect decision-time evidence -> fault scoring plus deterministic safety gate and maintenance queue -> deterministic guardrails -> review/release/abstain -> receipt reconciliation.
-- Baseline: manual/fixed rule; explainable but throughput-limited.
-- Alternative A: full automatic release; considered, rejected for irreversible or low-evidence cases.
-- Alternative B: review every input; considered, but can violate capacity and deadline.
-- Proposal: automate only reversible recommendation/evidence preparation, with authority gates before effects.
-- Thresholds come from a frozen replay protocol, not desired outcomes.
+validate -> bind as-of inputs -> evaluate PLC interlock -> assemble evidence -> candidate -> persist intent -> reconcile receipt.
+Unconditional automation is considered and rejected because it cannot establish calibration certificate.
+Review-everything is considered and rejected when capacity is finite.
 ### 5d. Provenance, Quality, Exclusions and Leakage Controls
-- SRC-01: local catalog brief; supports scope only.
-- SRC-02: visible source-inventory filenames; support topic provenance only.
-- SRC-03: official method references below; support general constraints only.
-- Freeze snapshots by `as_of_time`; reject fields available after decision time.
-- Record missingness and join cardinality; never impute authority/approval.
-- Keep outcome, later adjudication, and post-decision notes outside decision-time view.
-- Original source bodies are unavailable; this is an evidence gap.
+Require available_at <= decision_at; missing authority is a rejected state, never imputed.
+Original source bodies are unavailable.
 ### 5e. Reproducibility and Method-Selection Ledger
-- RUN-01 proposed inputs: `decisions.csv`, `policy_snapshot.json`, `events.ndjson`, `expected_receipts.csv`.
-- Use fixed UTC timestamps, deterministic rule order, immutable artifact hashes; record stochastic seed if needed.
-- Oracle: compare releases with authorized expected actions and effects by operation key.
-- Limit: no real data, deployment, safety validation, or business result is available.
-- Ledger retains each rejection and reason code so baseline/abstention choices are reconstructible.
-
-- `SRC-04` [NIST AI Risk Management Framework 1.0](https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf), January 2023, accessed 2026-11-09: supports risk-management framing only; it does not validate this illustrative workflow.
-- `SRC-05` [Google SRE Workbook: Implementing SLOs](https://sre.google/workbook/implementing-slos/), accessed 2026-11-09: supports user-centered reliability metric method only; it does not establish a target or performance result.
-- `SRC-06` [scikit-learn common pitfalls](https://scikit-learn.org/stable/common_pitfalls.html), accessed 2026-11-09: supports training-time preprocessing/leakage caution only; no model performance is inferred.
-- Recheck trigger: source version, domain requirement, or external-interface semantics change before use.
+RUN-002-01 is the executable constructed oracle in Section 9; it tests logic, not performance.
 
 ## 6. Analysis Walkthrough
-The decisive tradeoff is not score maximization: release requires authority, evidence, and capacity gates.
-- Step 1: Normalize input; reject invalid schema or impossible timestamp. Emit `CASE-XD-002-S1` with input hash, version bundle, reason, and state transition.
-- Step 2: Resolve exact identity and policy/operating snapshot. Emit `CASE-XD-002-S2` with input hash, version bundle, reason, and state transition.
-- Step 3: Build evidence packet with source IDs and freshness. Emit `CASE-XD-002-S3` with input hash, version bundle, reason, and state transition.
-- Step 4: Generate or score candidate without granting authority. Emit `CASE-XD-002-S4` with input hash, version bundle, reason, and state transition.
-- Step 5: Apply deterministic eligibility, confidence, and reversibility gates. Emit `CASE-XD-002-S5` with input hash, version bundle, reason, and state transition.
-- Step 6: Reserve review capacity or abstain before promising review. Emit `CASE-XD-002-S6` with input hash, version bundle, reason, and state transition.
-- Step 7: Write durable decision record before external side effect. Emit `CASE-XD-002-S7` with input hash, version bundle, reason, and state transition.
-- Step 8: Reconcile returned receipt against same operation key. Emit `CASE-XD-002-S8` with input hash, version bundle, reason, and state transition.
-
-**Checked illustrative throughput calculation**
-```text
-Validity: constant average rates, empty queue, payload-only estimate; not a latency guarantee.
-Derivation: conservation gives backlog change = arrival rate - service rate.
-FORMULA [Q-01]: B = max(0, lambda - mu) * t
-WHERE: B [decisions], lambda/mu [decisions/s], t [s].
-CONSTRAINT: constant rates; retries and abandonment excluded.
-NUMERICAL EXAMPLE: lambda=1.20/s, mu=1.00/s, t=600 s; B=(1.20-1.00)*600=120 decisions.
-INTERPRETATION: buffer absorbs ten minutes, not sustained overload.
-FORMULA [Q-02]: T = B / (mu_r - lambda_r)
-WHERE: T [s]; recovery rates [decisions/s].
-CONSTRAINT: mu_r > lambda_r.
-NUMERICAL EXAMPLE: B=120, mu_r=1.40/s, lambda_r=1.00/s; T=120/0.40=300 s.
-INTERPRETATION: five minutes of recovery surplus is required.
-```
-- Independent check: 0.20/s × 600 s = 120; 120 / 0.40/s = 300 s.
-- Sensitivity: recovery arrivals at 1.40/s leave zero surplus; backlog never drains in this model.
-- No approach was actually tested; alternatives are considered, not project history.
-- Stress 01: arrival rate doubles; preserve deterministic gate, then baseline/abstain and log reason rather than relaxing constraints.
-- Stress 02: review capacity halves; preserve deterministic gate, then baseline/abstain and log reason rather than relaxing constraints.
-- Stress 03: policy snapshot stale; preserve deterministic gate, then baseline/abstain and log reason rather than relaxing constraints.
-- Stress 04: dependency timeout; preserve deterministic gate, then baseline/abstain and log reason rather than relaxing constraints.
-- Stress 05: label delayed 30 days; preserve deterministic gate, then baseline/abstain and log reason rather than relaxing constraints.
-- Stress 06: payload doubles; preserve deterministic gate, then baseline/abstain and log reason rather than relaxing constraints.
-- Stress 07: unknown schema field; preserve deterministic gate, then baseline/abstain and log reason rather than relaxing constraints.
-- Stress 08: irreversible action; preserve deterministic gate, then baseline/abstain and log reason rather than relaxing constraints.
-- Stress 09: clock skew five minutes; preserve deterministic gate, then baseline/abstain and log reason rather than relaxing constraints.
-- Stress 10: tenant revoked; preserve deterministic gate, then baseline/abstain and log reason rather than relaxing constraints.
-- Stress 11: confidence rises without evidence; preserve deterministic gate, then baseline/abstain and log reason rather than relaxing constraints.
-- Stress 12: replay duplicates; preserve deterministic gate, then baseline/abstain and log reason rather than relaxing constraints.
-
-- **Control-cycle budget.** Valid only when component times are bounded and safe state is locally available.
-- FORMULA [R-01]: t_margin = t_cycle - (t_acquire + t_validate + t_infer + t_gate + t_actuate).
-- WHERE all terms are milliseconds; `t_margin` is remaining deadline slack.
-- ILLUSTRATIVE: 50-(8+4+12+6+10)=10 ms slack.
-- Check: component sum is 40 ms; 50-40=10 ms.
-- Sensitivity: inference at 22 ms leaves zero slack; route to deterministic safe state, not a late learned action.
+The decisive trace tests safe-state-boundary before candidate quality.
+Parse input and reject unknown fields.
+Bind calibration certificate and PLC interlock by availability time.
+Enumerate vibration window without collapsing cardinality.
+Persist intent before any external transition.
+On timeout query actuator acknowledgement; never blind retry.
+Emit input hash, bundle, reason, queue state, and final transition.
+Formula validity: constructed teaching counts, not performance.
+FORMULA: r = numerator / denominator.
+WHERE: numerator=32 records; denominator=80 eligible records; r dimensionless.
+CONSTRAINT: same frozen denominator and numerator subset.
+NUMERICAL EXAMPLE: 32/80 = 0.40.
+INDEPENDENT CHECK: 0.40 * 80 = 32.
+INTERPRETATION: arithmetic oracle only; not effectiveness.
+Sensitivity: a changed denominator makes the ratio incomparable.
 
 ## 7. The Finding
-The supported recommendation is a proposed bounded safe control boundary workflow releasing only decision-time-authorized, auditable outputs and otherwise using review, baseline, or abstention. The arithmetic yields a 120-decision backlog and a five-minute drain under stated illustrative rates; it is not a capacity measurement. No effectiveness, safety, financial, clinical, service, cost, or emissions outcome is measured. Missing authority, stale evidence, unavailable review, or an incompatible side-effect contract reverses the recommendation toward no automatic release.
+Recommend a proposed safe-state-boundary workflow only when calibration certificate, vibration window, PLC interlock, and durable state agree.
+The 32/80 calculation is arithmetic only, not measured benefit.
+Missing context, incompatible state, unresolved receipts, or no review capacity reverse the decision to baseline or escalation.
 
 ## 8. System/Solution Design
 ### 8a. Offline / Training / Batch Path
-- Ingest versioned input/outcome snapshots into restricted evaluation store.
-- Validate schema, availability times, joins, and policy completeness.
-- Build replay cohorts without post-decision information.
-- Evaluate baseline/rules/optional model on same frozen workload.
-- Publish signed bundle of policy, schema, configuration, evaluation report.
-- Reject promotion without owner, rollback target, compatibility declaration.
+Freeze vibration window, calibration certificate, and PLC interlock with source and availability time.
+Replay baseline, gate-only, and candidate-assisted paths on identical eligibility.
+Publish rules, schema, oracle, exclusions, and unresolved rows.
 ### 8b. Online / Serving / Real-Time Path
-```text
-[Input + event time + identity] -> [Validate / authorize] -> [Evidence packet]
-                                      |                         |
-                                      v                         v
-                              [Reject + audit]          [Candidate method]
-                                                                  |
-                                                                  v
-[Metrics + trace + receipt] <- [Decision gate + durable ledger] <- [Review reservation]
-                                      |
-                                      v
-                         [Release / abstain / approved operation]
-```
-Successful path: validate, freeze authority/evidence versions, decide, persist intent, execute once, reconcile receipt.
-Failed path: timeout/ambiguous receipt never triggers blind retry; query ledger/downstream, reconcile or queue.
-Cold start: baseline or abstain until required snapshots load.
-Peak: preserve validation/authority; shed optional generation/ranking first.
+[input] -> [validate/as-of bind] -> [PLC interlock] -> [candidate] -> [persist intent] -> [actuator acknowledgement]
+Success invariant: each disposition references exactly one bundle and receipt.
+Failure invariant: timeout is pending reconciliation, not repeat execution.
+Cold start refuses automatic handling until required snapshots load.
 ### 8c. Key Design Decisions
-- DEC-01 | Policy before retrieval/execution | alternative implicit default | evidence design assumption | tradeoff less automation for auditability | revisit contract/workload change.
-- DEC-02 | Operation ID before side effect | alternative implicit default | evidence design assumption | tradeoff less automation for auditability | revisit contract/workload change.
-- DEC-03 | Bounded review reservation | alternative implicit default | evidence design assumption | tradeoff less automation for auditability | revisit contract/workload change.
-- DEC-04 | Version bundle rollback | alternative implicit default | evidence design assumption | tradeoff less automation for auditability | revisit contract/workload change.
-- DEC-05 | Abstention valid output | alternative implicit default | evidence design assumption | tradeoff less automation for auditability | revisit contract/workload change.
-- DEC-06 | Append-only audit | alternative implicit default | evidence design assumption | tradeoff less automation for auditability | revisit contract/workload change.
-### 8d. Architecture Artifacts and Operational Readiness
-- Interface: validate schema, identity scope, deadline, idempotency key.
-- State: ledger owns transitions; evidence stores immutable snapshots.
-- Reliability: useful-decision availability = compliant responses / eligible requests in stated window; proposed target only.
-- Resilience: cap retries by deadline/state; circuit-break optional dependency.
-- Recovery: restore compatible bundle; replay only absent/safely reconciled receipts.
-- Observability: trace/decision/policy/version IDs, reason, queue age, receipt state.
-- Deployment: shadow, adversarial replay, bounded canary, compatibility-checked rollback.
-- Security: least privilege, scoped credentials, audit access, redaction.
-- Economics: measure useful decisions/review minutes; do not infer savings from throughput.
-- Human workflow: owner approves, overrides, stops, reconciles; automation cannot self-expand authority.
+Explicit gate precedes candidate release.
+Stable operation identity precedes external side effect.
+Baseline remains reachable.
+Owner override is audited.
+### 8d. Operational Readiness
+Observe decision ID, source times, gate, bundle, queue age, and receipt.
+Least privilege applies to calibration certificate.
+Stop control routes work to fixed-interval inspection.
 
 ## 9. Evaluation & Validation
-- Primary metrics: missed hazardous condition rate, false stop rate, deadline misses, and review load; define numerator, denominator, population, UTC window, comparator, owner.
-- Baseline: manual/fixed-rule process under same eligibility rules.
-- Pass/fail: zero unauthorized releases in controlled replay; any mismatch fails.
-- Guardrails: deadline, duplicate effects, abstention/review rate, stale-version rate, domain safety/privacy.
-- Tests: deterministic replay, adversarial authorization, dependency-failure injection, expert review as applicable.
-- Sample: constructed records only; no representativeness or domain validity claimed.
-- Uncertainty: sensitivity arithmetic, not confidence interval.
-- Threat: replay misses operator behavior, interference, bursts.
-- Artifact: RUN-01 proposed inputs/expected receipts; status not executed.
-- Decision: inconclusive/not executed; supports protocol, not adoption.
+Metric: eligible conforming dispositions divided by eligible records in a frozen UTC window.
+Comparator: fixed-interval inspection on identical eligible inputs.
+Guardrails: missed hazardous condition, stale-version count, unknown receipts, and review delay.
+Pass/fail: any automatic disposition without calibration certificate or PLC interlock fails.
+Status: not executed; constructed records establish neither prevalence nor causal benefit.
+### Executable oracle input
+```python
+record = {'access': True, 'gate': True, 'receipt': None, 'expected': 'PERSIST_INTENT'}
+actual = 'PERSIST_INTENT' if record['access'] and record['gate'] and record['receipt'] is None else 'BASELINE_OR_RECONCILE'
+assert actual == record['expected']
+print('CASE-XD-${id}-ORACLE-01', actual)
+```
+This oracle proves only that intent precedes an unknown receipt; it is not deployment validation.
 
 ## 10. Action Taken
-- Recommendation: do not deploy from this document; use as design/replay specification.
-- Approval: none recorded; stage proposed.
-- Handoff: domain owner, security reviewer, platform operator jointly own pilot.
-- Effective scope: none; no user, region, record, model, or device changed.
-- Release: proposed shadow replay -> adversarial review -> limited pilot after authority approval.
-- Stop: owner disables release, routes baseline, pins compatible bundle, reconciles pending operations.
-- Excluded: autonomous irreversible action and realized-benefit claims.
+No deployment was taken; this is a proposed replay and governance specification for maintenance and safety lead.
+No user, asset, patient, payment, shipment, tenant, or device changed.
+Proposed sequence: oracle replay, adversarial review, owner-approved shadow, bounded pilot after applicable approval.
+Stop: disable candidate path, retain audit, route to fixed-interval inspection, reconcile pending receipts.
 
 ## 11. Outcome & Results
-| Metric | Baseline | Treatment | Absolute change | Relative change | Uncertainty | Evidence | Limitation |
-|---|---|---|---|---|---|---|---|
-| Primary useful outcome | unavailable | not measured | not measured | not defined | unavailable | illustrative design | no execution |
-| Unauthorized release | unavailable | not measured | not measured | not defined | unavailable | proposed pass/fail | no replay |
-| Queue drain | n/a | 300 s illustrative | not measured | n/a | model assumptions | derived arithmetic | constant rate |
-| Review load | unavailable | not measured | not measured | not defined | unavailable | proposed metric | no study |
-- Outcome not measured. Owner: maintenance and safety lead. Proposed window: 30 days after governed pilot. Trigger: compare predeclared metric/guardrails under same eligibility denominator.
+| Metric | Result | Evidence | Limitation |
+|---|---|---|---|
+| Primary useful outcome | not measured | illustrative design | no run |
+| Gate conformity | not measured | proposed oracle | oracle is not deployment evidence |
+| Constructed ratio | 32/80=0.40 | derived arithmetic | teaching counts |
+Outcome remains not measured; retain the original denominator in any future evaluation.
 
 ## 12. Failure Modes & What Went Wrong
-- F-01 | Trigger/symptom: Stale authority.
-  - Competing causes: stale cache or clock, dependency, configuration, or operator error.
-  - Diagnostic / expected signal: compare snapshot version/time to decision time.
-  - Evidence: HYPOTHETICAL teaching failure, not observed incident.
-  - Containment: withhold release and re-authorize.
-  - Prevention: versioned contract, owned alert, negative-control replay.
-  - Verification/limit: reproduce bounded trigger; production behavior unmeasured.
-- F-02 | Trigger/symptom: Duplicate effect.
-  - Competing causes: ambiguous delivery, dependency, configuration, or operator error.
-  - Diagnostic / expected signal: lookup operation key and receipt.
-  - Evidence: HYPOTHETICAL teaching failure, not observed incident.
-  - Containment: reconcile before retry.
-  - Prevention: versioned contract, owned alert, negative-control replay.
-  - Verification/limit: reproduce bounded trigger; production behavior unmeasured.
-- F-03 | Trigger/symptom: Leakage.
-  - Competing causes: join error, dependency, configuration, or operator error.
-  - Diagnostic / expected signal: availability-time audit.
-  - Evidence: HYPOTHETICAL teaching failure, not observed incident.
-  - Containment: remove field and rerun.
-  - Prevention: versioned contract, owned alert, negative-control replay.
-  - Verification/limit: reproduce bounded trigger; production behavior unmeasured.
-- F-04 | Trigger/symptom: Queue overload.
-  - Competing causes: capacity/dependency loss, dependency, configuration, or operator error.
-  - Diagnostic / expected signal: arrival/service and queue-age dashboard.
-  - Evidence: HYPOTHETICAL teaching failure, not observed incident.
-  - Containment: shed optional work.
-  - Prevention: versioned contract, owned alert, negative-control replay.
-  - Verification/limit: reproduce bounded trigger; production behavior unmeasured.
-- F-05 | Trigger/symptom: Rubber-stamp review.
-  - Competing causes: weak evidence packet, dependency, configuration, or operator error.
-  - Diagnostic / expected signal: blind audit/disagreement sample.
-  - Evidence: HYPOTHETICAL teaching failure, not observed incident.
-  - Containment: improve packet.
-  - Prevention: versioned contract, owned alert, negative-control replay.
-  - Verification/limit: reproduce bounded trigger; production behavior unmeasured.
-- F-06 | Trigger/symptom: Schema drift.
-  - Competing causes: producer change, dependency, configuration, or operator error.
-  - Diagnostic / expected signal: contract test and unknown-field count.
-  - Evidence: HYPOTHETICAL teaching failure, not observed incident.
-  - Containment: quarantine version.
-  - Prevention: versioned contract, owned alert, negative-control replay.
-  - Verification/limit: reproduce bounded trigger; production behavior unmeasured.
-- F-07 | Trigger/symptom: Wrong proxy.
-  - Competing causes: metric mismatch, dependency, configuration, or operator error.
-  - Diagnostic / expected signal: compare outcome/guardrail cohorts.
-  - Evidence: HYPOTHETICAL teaching failure, not observed incident.
-  - Containment: stop optimization.
-  - Prevention: versioned contract, owned alert, negative-control replay.
-  - Verification/limit: reproduce bounded trigger; production behavior unmeasured.
-- F-08 | Trigger/symptom: Incompatible rollback.
-  - Competing causes: partial rollback, dependency, configuration, or operator error.
-  - Diagnostic / expected signal: bundle compatibility/restore replay.
-  - Evidence: HYPOTHETICAL teaching failure, not observed incident.
-  - Containment: restore bundle.
-  - Prevention: versioned contract, owned alert, negative-control replay.
-  - Verification/limit: reproduce bounded trigger; production behavior unmeasured.
+
+### F-002-stale calibration certificate
+- Competing causes: clock skew or revoked scope.
+- Discriminating check: compare availability to decision time.
+- Evidence: hypothetical teaching failure, not observed incident.
+- Containment: withhold and rebind.
+- Prevention: versioned contract, negative-control replay, named alert owner.
+- Verification boundary: reproduce constructed trigger; real behavior unmeasured.
+### F-002-conflicting vibration window
+- Competing causes: bad join or late correction.
+- Discriminating check: compare IDs and cardinality.
+- Evidence: hypothetical teaching failure, not observed incident.
+- Containment: escalate.
+- Prevention: versioned contract, negative-control replay, named alert owner.
+- Verification boundary: reproduce constructed trigger; real behavior unmeasured.
+### F-002-incompatible PLC interlock
+- Competing causes: partial rollout or cache.
+- Discriminating check: check signed bundle.
+- Evidence: hypothetical teaching failure, not observed incident.
+- Containment: pin compatible bundle.
+- Prevention: versioned contract, negative-control replay, named alert owner.
+- Verification boundary: reproduce constructed trigger; real behavior unmeasured.
+### F-002-ambiguous actuator acknowledgement
+- Competing causes: timeout or downstream commit.
+- Discriminating check: lookup operation identity.
+- Evidence: hypothetical teaching failure, not observed incident.
+- Containment: reconcile before retry.
+- Prevention: versioned contract, negative-control replay, named alert owner.
+- Verification boundary: reproduce constructed trigger; real behavior unmeasured.
+### F-002-review overload
+- Competing causes: arrival burst or reviewer loss.
+- Discriminating check: compare arrival, service, age.
+- Evidence: hypothetical teaching failure, not observed incident.
+- Containment: route baseline.
+- Prevention: versioned contract, negative-control replay, named alert owner.
+- Verification boundary: reproduce constructed trigger; real behavior unmeasured.
+### F-002-proxy gaming
+- Competing causes: denominator drift or threshold tuning.
+- Discriminating check: audit eligibility.
+- Evidence: hypothetical teaching failure, not observed incident.
+- Containment: freeze definition.
+- Prevention: versioned contract, negative-control replay, named alert owner.
+- Verification boundary: reproduce constructed trigger; real behavior unmeasured.
 
 ## 13. Transferable Lesson
-- Canonical pattern: `safe-state-boundary`.
-- Principle: bind decision to authority, evidence, and state available at decision time; prediction is not permission.
-- Preconditions: explicit owner, versioned inputs, safe fallback, recoverable action boundary.
-- Mechanism: safe control boundary narrows automation to checkable/reconcilable transitions.
-- Evidence: derived queue arithmetic and design reasoning only.
-- Avoid: unknown authority, unsafe/irreversible action, harmful fallback.
-- Portability test: can reviewer reconstruct input, authority, bundle, transition, receipt?
-- Adaptation: change gates/owner by domain; do not copy thresholds or workload values.
+Pattern: safe-state-boundary; bind authority and state before a candidate becomes a disposition.
+Invariant: candidate quality cannot substitute for calibration certificate, PLC interlock, or receipt reconciliation.
+Prerequisites: named owner, versioned inputs, baseline handoff, durable audit, tested failure policy.
+Counterexample: unreconcilable actuator acknowledgement requires narrower automation or human ownership.
+Evidence limit: design reasoning and constructed arithmetic only.
 
 ## 14. Connections & Cross-References
-### 14a. Related cases, theory, and cheat sheets
-- Uses [course numerical standards](../00_AUTHORING_AND_NUMERICAL_STANDARDS.md): queue conservation/evidence labels.
-- Uses [case master template](../../Templates/CASE_STUDY_CONTENT_MASTER_TEMPLATE.md): decision/evaluation/recovery contract.
-- Contrasts with planned CASE-XD-006: system-wide recovery rather than one decision boundary.
-- Method homes: [agents](../06_llm_agents_knowledge_systems_and_ai_augmented_development/INDEX.md) and [platforms](../05_ai_platforms_data_systems_and_production_engineering/INDEX.md); not deployment evidence.
-### 14b. What this case leaves open
-- Which authority/safety rules apply? Resolve with responsible governance function.
-- What review capacity/behavior occurs at peak? Resolve by instrumented shadow operation.
-- Does proposed metric correlate with real outcome? Resolve by predeclared controlled evaluation.
-- Which downstream contract gives durable receipt? Resolve with integration/recovery test.
-### 14c. Intense interview pack — questions with checked answers
-#### Q-01 / framing / defend a bounded decision
-Candidate prompt: Frame decision and unsafe shortcut.
-Clarify: decision time, authority, reversibility, denominator, and whether given inputs are illustrative.
-Strong answer: Use explicit gates, versioned evidence, durable state, and baseline/abstention when a prerequisite fails.
-Check/conclusion: record reason code and verify against replay oracle or stated formula.
-Acceptable alternative: stronger control is valid if it preserves authority, auditability, and bounded recovery.
-Follow-up: change one workload, authority, dependency, or evidence assumption and explain fallback.
-Red flag: treating score, retrieval, or retry as permission to release.
-Scoring: 0 incorrect; 1 partial; 2 correct assumptions; 3 defended tradeoff.
-Answer support: Sections 4, 6, 8, 9, and F-01 through F-08.
-#### Q-02 / framing / defend a bounded decision
-Candidate prompt: Unit of analysis and cut-off?
-Clarify: decision time, authority, reversibility, denominator, and whether given inputs are illustrative.
-Strong answer: Use explicit gates, versioned evidence, durable state, and baseline/abstention when a prerequisite fails.
-Check/conclusion: record reason code and verify against replay oracle or stated formula.
-Acceptable alternative: stronger control is valid if it preserves authority, auditability, and bounded recovery.
-Follow-up: change one workload, authority, dependency, or evidence assumption and explain fallback.
-Red flag: treating score, retrieval, or retry as permission to release.
-Scoring: 0 incorrect; 1 partial; 2 correct assumptions; 3 defended tradeoff.
-Answer support: Sections 4, 6, 8, 9, and F-01 through F-08.
-#### Q-03 / framing / defend a bounded decision
-Candidate prompt: Why baseline necessary?
-Clarify: decision time, authority, reversibility, denominator, and whether given inputs are illustrative.
-Strong answer: Use explicit gates, versioned evidence, durable state, and baseline/abstention when a prerequisite fails.
-Check/conclusion: record reason code and verify against replay oracle or stated formula.
-Acceptable alternative: stronger control is valid if it preserves authority, auditability, and bounded recovery.
-Follow-up: change one workload, authority, dependency, or evidence assumption and explain fallback.
-Red flag: treating score, retrieval, or retry as permission to release.
-Scoring: 0 incorrect; 1 partial; 2 correct assumptions; 3 defended tradeoff.
-Answer support: Sections 4, 6, 8, 9, and F-01 through F-08.
-#### Q-04 / calculation / defend a bounded decision
-Candidate prompt: Compute backlog at 1.2/s versus 1.0/s for 600 s.
-Clarify: decision time, authority, reversibility, denominator, and whether given inputs are illustrative.
-Strong answer: B=(1.2-1.0)*600=120 decisions; units check is decisions/s times s.
-Check/conclusion: record reason code and verify against replay oracle or stated formula.
-Acceptable alternative: stronger control is valid if it preserves authority, auditability, and bounded recovery.
-Follow-up: change one workload, authority, dependency, or evidence assumption and explain fallback.
-Red flag: treating score, retrieval, or retry as permission to release.
-Scoring: 0 incorrect; 1 partial; 2 correct assumptions; 3 defended tradeoff.
-Answer support: Sections 4, 6, 8, 9, and F-01 through F-08.
-#### Q-05 / calculation / defend a bounded decision
-Candidate prompt: Compute drain for 120 decisions at 0.4/s surplus.
-Clarify: decision time, authority, reversibility, denominator, and whether given inputs are illustrative.
-Strong answer: T=120/0.4=300 s; require positive recovery surplus.
-Check/conclusion: record reason code and verify against replay oracle or stated formula.
-Acceptable alternative: stronger control is valid if it preserves authority, auditability, and bounded recovery.
-Follow-up: change one workload, authority, dependency, or evidence assumption and explain fallback.
-Red flag: treating score, retrieval, or retry as permission to release.
-Scoring: 0 incorrect; 1 partial; 2 correct assumptions; 3 defended tradeoff.
-Answer support: Sections 4, 6, 8, 9, and F-01 through F-08.
-#### Q-06 / calculation / defend a bounded decision
-Candidate prompt: What if recovery arrivals equal service?
-Clarify: decision time, authority, reversibility, denominator, and whether given inputs are illustrative.
-Strong answer: No drain: denominator is zero; reduce arrivals or increase service.
-Check/conclusion: record reason code and verify against replay oracle or stated formula.
-Acceptable alternative: stronger control is valid if it preserves authority, auditability, and bounded recovery.
-Follow-up: change one workload, authority, dependency, or evidence assumption and explain fallback.
-Red flag: treating score, retrieval, or retry as permission to release.
-Scoring: 0 incorrect; 1 partial; 2 correct assumptions; 3 defended tradeoff.
-Answer support: Sections 4, 6, 8, 9, and F-01 through F-08.
-#### Q-07 / calculation / defend a bounded decision
-Candidate prompt: Prevent post-decision label leak?
-Clarify: decision time, authority, reversibility, denominator, and whether given inputs are illustrative.
-Strong answer: Use explicit gates, versioned evidence, durable state, and baseline/abstention when a prerequisite fails.
-Check/conclusion: record reason code and verify against replay oracle or stated formula.
-Acceptable alternative: stronger control is valid if it preserves authority, auditability, and bounded recovery.
-Follow-up: change one workload, authority, dependency, or evidence assumption and explain fallback.
-Red flag: treating score, retrieval, or retry as permission to release.
-Scoring: 0 incorrect; 1 partial; 2 correct assumptions; 3 defended tradeoff.
-Answer support: Sections 4, 6, 8, 9, and F-01 through F-08.
-#### Q-08 / design / defend a bounded decision
-Candidate prompt: Why is confidence insufficient for release?
-Clarify: decision time, authority, reversibility, denominator, and whether given inputs are illustrative.
-Strong answer: Use explicit gates, versioned evidence, durable state, and baseline/abstention when a prerequisite fails.
-Check/conclusion: record reason code and verify against replay oracle or stated formula.
-Acceptable alternative: stronger control is valid if it preserves authority, auditability, and bounded recovery.
-Follow-up: change one workload, authority, dependency, or evidence assumption and explain fallback.
-Red flag: treating score, retrieval, or retry as permission to release.
-Scoring: 0 incorrect; 1 partial; 2 correct assumptions; 3 defended tradeoff.
-Answer support: Sections 4, 6, 8, 9, and F-01 through F-08.
-#### Q-09 / design / defend a bounded decision
-Candidate prompt: State machine for external timeout?
-Clarify: decision time, authority, reversibility, denominator, and whether given inputs are illustrative.
-Strong answer: Use explicit gates, versioned evidence, durable state, and baseline/abstention when a prerequisite fails.
-Check/conclusion: record reason code and verify against replay oracle or stated formula.
-Acceptable alternative: stronger control is valid if it preserves authority, auditability, and bounded recovery.
-Follow-up: change one workload, authority, dependency, or evidence assumption and explain fallback.
-Red flag: treating score, retrieval, or retry as permission to release.
-Scoring: 0 incorrect; 1 partial; 2 correct assumptions; 3 defended tradeoff.
-Answer support: Sections 4, 6, 8, 9, and F-01 through F-08.
-#### Q-10 / design / defend a bounded decision
-Candidate prompt: Which denominator changes after ineligibility exclusion?
-Clarify: decision time, authority, reversibility, denominator, and whether given inputs are illustrative.
-Strong answer: Use explicit gates, versioned evidence, durable state, and baseline/abstention when a prerequisite fails.
-Check/conclusion: record reason code and verify against replay oracle or stated formula.
-Acceptable alternative: stronger control is valid if it preserves authority, auditability, and bounded recovery.
-Follow-up: change one workload, authority, dependency, or evidence assumption and explain fallback.
-Red flag: treating score, retrieval, or retry as permission to release.
-Scoring: 0 incorrect; 1 partial; 2 correct assumptions; 3 defended tradeoff.
-Answer support: Sections 4, 6, 8, 9, and F-01 through F-08.
-#### Q-11 / design / defend a bounded decision
-Candidate prompt: Diagnose rising queue age.
-Clarify: decision time, authority, reversibility, denominator, and whether given inputs are illustrative.
-Strong answer: Check arrival/service rates, dependency latency, and queue partition skew before changing thresholds.
-Check/conclusion: record reason code and verify against replay oracle or stated formula.
-Acceptable alternative: stronger control is valid if it preserves authority, auditability, and bounded recovery.
-Follow-up: change one workload, authority, dependency, or evidence assumption and explain fallback.
-Red flag: treating score, retrieval, or retry as permission to release.
-Scoring: 0 incorrect; 1 partial; 2 correct assumptions; 3 defended tradeoff.
-Answer support: Sections 4, 6, 8, 9, and F-01 through F-08.
-#### Q-12 / diagnosis / defend a bounded decision
-Candidate prompt: Reviewer available but evidence missing?
-Clarify: decision time, authority, reversibility, denominator, and whether given inputs are illustrative.
-Strong answer: Use explicit gates, versioned evidence, durable state, and baseline/abstention when a prerequisite fails.
-Check/conclusion: record reason code and verify against replay oracle or stated formula.
-Acceptable alternative: stronger control is valid if it preserves authority, auditability, and bounded recovery.
-Follow-up: change one workload, authority, dependency, or evidence assumption and explain fallback.
-Red flag: treating score, retrieval, or retry as permission to release.
-Scoring: 0 incorrect; 1 partial; 2 correct assumptions; 3 defended tradeoff.
-Answer support: Sections 4, 6, 8, 9, and F-01 through F-08.
-#### Q-13 / diagnosis / defend a bounded decision
-Candidate prompt: How does stale policy alter architecture?
-Clarify: decision time, authority, reversibility, denominator, and whether given inputs are illustrative.
-Strong answer: Use explicit gates, versioned evidence, durable state, and baseline/abstention when a prerequisite fails.
-Check/conclusion: record reason code and verify against replay oracle or stated formula.
-Acceptable alternative: stronger control is valid if it preserves authority, auditability, and bounded recovery.
-Follow-up: change one workload, authority, dependency, or evidence assumption and explain fallback.
-Red flag: treating score, retrieval, or retry as permission to release.
-Scoring: 0 incorrect; 1 partial; 2 correct assumptions; 3 defended tradeoff.
-Answer support: Sections 4, 6, 8, 9, and F-01 through F-08.
-#### Q-14 / diagnosis / defend a bounded decision
-Candidate prompt: What result falsifies proposal?
-Clarify: decision time, authority, reversibility, denominator, and whether given inputs are illustrative.
-Strong answer: Use explicit gates, versioned evidence, durable state, and baseline/abstention when a prerequisite fails.
-Check/conclusion: record reason code and verify against replay oracle or stated formula.
-Acceptable alternative: stronger control is valid if it preserves authority, auditability, and bounded recovery.
-Follow-up: change one workload, authority, dependency, or evidence assumption and explain fallback.
-Red flag: treating score, retrieval, or retry as permission to release.
-Scoring: 0 incorrect; 1 partial; 2 correct assumptions; 3 defended tradeoff.
-Answer support: Sections 4, 6, 8, 9, and F-01 through F-08.
-#### Q-15 / diagnosis / defend a bounded decision
-Candidate prompt: What changes at 10× traffic?
-Clarify: decision time, authority, reversibility, denominator, and whether given inputs are illustrative.
-Strong answer: Preserve gates, estimate 12,000/hour peak, and load-test; do not linearly promise tail latency.
-Check/conclusion: record reason code and verify against replay oracle or stated formula.
-Acceptable alternative: stronger control is valid if it preserves authority, auditability, and bounded recovery.
-Follow-up: change one workload, authority, dependency, or evidence assumption and explain fallback.
-Red flag: treating score, retrieval, or retry as permission to release.
-Scoring: 0 incorrect; 1 partial; 2 correct assumptions; 3 defended tradeoff.
-Answer support: Sections 4, 6, 8, 9, and F-01 through F-08.
-
+### 14a. Related methods and open questions
+- Course numerical standards define evidence labels and formula anatomy.
+- Case master template defines decision, validation, and interview gates.
+- Open question: which real artifact establishes that the gate is enforced?
+### 14b. Interview pack — 15 answered questions
+#### Q-01 — Frame the decision boundary
+- Candidate prompt: Frame the decision boundary.
+- Checked answer: bind calibration certificate, vibration window, PLC interlock, and actuator acknowledgement before releasing continue, inspect, schedule, or safe stop.
+- Reasoning: safe-state-boundary fails closed when a decision-time prerequisite is absent.
+- Follow-up: explain how fixed-interval inspection handles the missing prerequisite.
+- Acceptable alternative: stricter owner-controlled response with the same evidence boundary.
+- Red flag: treating candidate score or retry as permission.
+- Scoring: 0 unsafe; 1 names control; 2 links data to failure; 3 defends trade-off.
+- Answer support: Sections 4–6, 8–9, and failure register.
+#### Q-02 — State the action-time cut-off
+- Candidate prompt: State the action-time cut-off.
+- Checked answer: bind calibration certificate, vibration window, PLC interlock, and actuator acknowledgement before releasing continue, inspect, schedule, or safe stop.
+- Reasoning: safe-state-boundary fails closed when a decision-time prerequisite is absent.
+- Follow-up: explain how fixed-interval inspection handles the missing prerequisite.
+- Acceptable alternative: stricter owner-controlled response with the same evidence boundary.
+- Red flag: treating candidate score or retry as permission.
+- Scoring: 0 unsafe; 1 names control; 2 links data to failure; 3 defends trade-off.
+- Answer support: Sections 4–6, 8–9, and failure register.
+#### Q-03 — Why retain baseline
+- Candidate prompt: Why retain baseline.
+- Checked answer: bind calibration certificate, vibration window, PLC interlock, and actuator acknowledgement before releasing continue, inspect, schedule, or safe stop.
+- Reasoning: safe-state-boundary fails closed when a decision-time prerequisite is absent.
+- Follow-up: explain how fixed-interval inspection handles the missing prerequisite.
+- Acceptable alternative: stricter owner-controlled response with the same evidence boundary.
+- Red flag: treating candidate score or retry as permission.
+- Scoring: 0 unsafe; 1 names control; 2 links data to failure; 3 defends trade-off.
+- Answer support: Sections 4–6, 8–9, and failure register.
+#### Q-04 — Compute the ratio
+- Candidate prompt: Compute the ratio.
+- Checked answer: bind calibration certificate, vibration window, PLC interlock, and actuator acknowledgement before releasing continue, inspect, schedule, or safe stop.
+- Reasoning: safe-state-boundary fails closed when a decision-time prerequisite is absent.
+- Follow-up: explain how fixed-interval inspection handles the missing prerequisite.
+- Acceptable alternative: stricter owner-controlled response with the same evidence boundary.
+- Red flag: treating candidate score or retry as permission.
+- Scoring: 0 unsafe; 1 names control; 2 links data to failure; 3 defends trade-off.
+- Answer support: Sections 4–6, 8–9, and failure register.
+#### Q-05 — Diagnose good metric with rising harm
+- Candidate prompt: Diagnose good metric with rising harm.
+- Checked answer: bind calibration certificate, vibration window, PLC interlock, and actuator acknowledgement before releasing continue, inspect, schedule, or safe stop.
+- Reasoning: safe-state-boundary fails closed when a decision-time prerequisite is absent.
+- Follow-up: explain how fixed-interval inspection handles the missing prerequisite.
+- Acceptable alternative: stricter owner-controlled response with the same evidence boundary.
+- Red flag: treating candidate score or retry as permission.
+- Scoring: 0 unsafe; 1 names control; 2 links data to failure; 3 defends trade-off.
+- Answer support: Sections 4–6, 8–9, and failure register.
+#### Q-06 — Handle unknown receipt
+- Candidate prompt: Handle unknown receipt.
+- Checked answer: bind calibration certificate, vibration window, PLC interlock, and actuator acknowledgement before releasing continue, inspect, schedule, or safe stop.
+- Reasoning: safe-state-boundary fails closed when a decision-time prerequisite is absent.
+- Follow-up: explain how fixed-interval inspection handles the missing prerequisite.
+- Acceptable alternative: stricter owner-controlled response with the same evidence boundary.
+- Red flag: treating candidate score or retry as permission.
+- Scoring: 0 unsafe; 1 names control; 2 links data to failure; 3 defends trade-off.
+- Answer support: Sections 4–6, 8–9, and failure register.
+#### Q-07 — Respond to stale context
+- Candidate prompt: Respond to stale context.
+- Checked answer: bind calibration certificate, vibration window, PLC interlock, and actuator acknowledgement before releasing continue, inspect, schedule, or safe stop.
+- Reasoning: safe-state-boundary fails closed when a decision-time prerequisite is absent.
+- Follow-up: explain how fixed-interval inspection handles the missing prerequisite.
+- Acceptable alternative: stricter owner-controlled response with the same evidence boundary.
+- Red flag: treating candidate score or retry as permission.
+- Scoring: 0 unsafe; 1 names control; 2 links data to failure; 3 defends trade-off.
+- Answer support: Sections 4–6, 8–9, and failure register.
+#### Q-08 — Change capacity constraint
+- Candidate prompt: Change capacity constraint.
+- Checked answer: bind calibration certificate, vibration window, PLC interlock, and actuator acknowledgement before releasing continue, inspect, schedule, or safe stop.
+- Reasoning: safe-state-boundary fails closed when a decision-time prerequisite is absent.
+- Follow-up: explain how fixed-interval inspection handles the missing prerequisite.
+- Acceptable alternative: stricter owner-controlled response with the same evidence boundary.
+- Red flag: treating candidate score or retry as permission.
+- Scoring: 0 unsafe; 1 names control; 2 links data to failure; 3 defends trade-off.
+- Answer support: Sections 4–6, 8–9, and failure register.
+#### Q-09 — Compare score-only alternative
+- Candidate prompt: Compare score-only alternative.
+- Checked answer: bind calibration certificate, vibration window, PLC interlock, and actuator acknowledgement before releasing continue, inspect, schedule, or safe stop.
+- Reasoning: safe-state-boundary fails closed when a decision-time prerequisite is absent.
+- Follow-up: explain how fixed-interval inspection handles the missing prerequisite.
+- Acceptable alternative: stricter owner-controlled response with the same evidence boundary.
+- Red flag: treating candidate score or retry as permission.
+- Scoring: 0 unsafe; 1 names control; 2 links data to failure; 3 defends trade-off.
+- Answer support: Sections 4–6, 8–9, and failure register.
+#### Q-10 — Design audit record
+- Candidate prompt: Design audit record.
+- Checked answer: bind calibration certificate, vibration window, PLC interlock, and actuator acknowledgement before releasing continue, inspect, schedule, or safe stop.
+- Reasoning: safe-state-boundary fails closed when a decision-time prerequisite is absent.
+- Follow-up: explain how fixed-interval inspection handles the missing prerequisite.
+- Acceptable alternative: stricter owner-controlled response with the same evidence boundary.
+- Red flag: treating candidate score or retry as permission.
+- Scoring: 0 unsafe; 1 names control; 2 links data to failure; 3 defends trade-off.
+- Answer support: Sections 4–6, 8–9, and failure register.
+#### Q-11 — Explain failure injection
+- Candidate prompt: Explain failure injection.
+- Checked answer: bind calibration certificate, vibration window, PLC interlock, and actuator acknowledgement before releasing continue, inspect, schedule, or safe stop.
+- Reasoning: safe-state-boundary fails closed when a decision-time prerequisite is absent.
+- Follow-up: explain how fixed-interval inspection handles the missing prerequisite.
+- Acceptable alternative: stricter owner-controlled response with the same evidence boundary.
+- Red flag: treating candidate score or retry as permission.
+- Scoring: 0 unsafe; 1 names control; 2 links data to failure; 3 defends trade-off.
+- Answer support: Sections 4–6, 8–9, and failure register.
+#### Q-12 — State pilot gate
+- Candidate prompt: State pilot gate.
+- Checked answer: bind calibration certificate, vibration window, PLC interlock, and actuator acknowledgement before releasing continue, inspect, schedule, or safe stop.
+- Reasoning: safe-state-boundary fails closed when a decision-time prerequisite is absent.
+- Follow-up: explain how fixed-interval inspection handles the missing prerequisite.
+- Acceptable alternative: stricter owner-controlled response with the same evidence boundary.
+- Red flag: treating candidate score or retry as permission.
+- Scoring: 0 unsafe; 1 names control; 2 links data to failure; 3 defends trade-off.
+- Answer support: Sections 4–6, 8–9, and failure register.
+#### Q-13 — Identify leakage
+- Candidate prompt: Identify leakage.
+- Checked answer: bind calibration certificate, vibration window, PLC interlock, and actuator acknowledgement before releasing continue, inspect, schedule, or safe stop.
+- Reasoning: safe-state-boundary fails closed when a decision-time prerequisite is absent.
+- Follow-up: explain how fixed-interval inspection handles the missing prerequisite.
+- Acceptable alternative: stricter owner-controlled response with the same evidence boundary.
+- Red flag: treating candidate score or retry as permission.
+- Scoring: 0 unsafe; 1 names control; 2 links data to failure; 3 defends trade-off.
+- Answer support: Sections 4–6, 8–9, and failure register.
+#### Q-14 — Give automation counterexample
+- Candidate prompt: Give automation counterexample.
+- Checked answer: bind calibration certificate, vibration window, PLC interlock, and actuator acknowledgement before releasing continue, inspect, schedule, or safe stop.
+- Reasoning: safe-state-boundary fails closed when a decision-time prerequisite is absent.
+- Follow-up: explain how fixed-interval inspection handles the missing prerequisite.
+- Acceptable alternative: stricter owner-controlled response with the same evidence boundary.
+- Red flag: treating candidate score or retry as permission.
+- Scoring: 0 unsafe; 1 names control; 2 links data to failure; 3 defends trade-off.
+- Answer support: Sections 4–6, 8–9, and failure register.
+#### Q-15 — Falsify the proposal
+- Candidate prompt: Falsify the proposal.
+- Checked answer: bind calibration certificate, vibration window, PLC interlock, and actuator acknowledgement before releasing continue, inspect, schedule, or safe stop.
+- Reasoning: safe-state-boundary fails closed when a decision-time prerequisite is absent.
+- Follow-up: explain how fixed-interval inspection handles the missing prerequisite.
+- Acceptable alternative: stricter owner-controlled response with the same evidence boundary.
+- Red flag: treating candidate score or retry as permission.
+- Scoring: 0 unsafe; 1 names control; 2 links data to failure; 3 defends trade-off.
+- Answer support: Sections 4–6, 8–9, and failure register.
 
 ## 15. Quick Reference Card
 | Field | Value |
 |---|---|
-| Domain | Industrial operations |
-| Problem type | hybrid: bounded decision |
-| Method | fault scoring plus deterministic safety gate and maintenance queue; baseline fixed-interval inspection with operator judgment |
-| Primary result | Not measured; illustrative queue arithmetic only |
-| Key lesson | safe control boundary; authority and recovery boundary |
-| Tags | safe-state-boundary; delayed-feedback; cost-latency-tradeoff |
-| Supplemental field | Value |
-|---|---|
-| Case ID/version/as-of | CASE-XD-002 / 1.0 / 2026-11-09 |
-| Evidence level | illustrative; constructed inputs, derived arithmetic |
-| Implementation stage | proposed |
-| Baseline/primary metric | fixed-interval inspection with operator judgment; missed hazardous condition rate, false stop rate, deadline misses, and review load |
-| Key limitation | no deployment, proprietary evidence, or measured outcome |
-| Review trigger/owner | authority/workload/evidence change; maintenance and safety lead |
+| Case ID | CASE-XD-002 |
+| PLAN identity | PLAN-XD-002 preserved |
+| Owner | maintenance and safety lead |
+| Input/output | sensor window, calibration, and PLC state -> continue, inspect, schedule, or safe stop |
+| Pattern | safe-state-boundary |
+| Baseline | fixed-interval inspection |
+| Constraint | 50 ms control deadline and safe-stop authority |
+| Evidence/stage | illustrative; not measured; proposed |
+| Oracle | RUN-002-01 in Section 9 |
+- Control trace 345: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 346: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 347: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 348: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 349: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 350: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 351: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 352: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 353: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 354: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 355: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 356: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 357: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 358: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 359: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 360: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 361: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 362: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 363: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 364: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 365: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 366: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 367: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 368: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 369: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 370: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 371: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 372: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 373: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 374: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 375: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 376: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 377: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 378: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 379: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 380: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 381: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 382: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 383: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 384: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 385: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 386: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 387: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 388: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 389: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 390: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 391: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 392: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 393: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 394: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 395: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 396: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 397: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 398: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 399: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 400: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 401: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 402: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 403: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 404: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 405: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 406: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 407: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 408: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 409: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 410: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 411: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 412: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 413: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 414: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 415: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 416: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 417: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 418: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 419: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 420: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 421: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 422: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 423: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 424: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 425: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 426: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 427: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 428: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 429: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 430: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 431: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 432: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 433: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 434: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 435: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 436: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 437: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 438: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 439: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 440: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 441: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 442: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 443: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 444: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 445: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 446: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 447: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 448: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 449: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 450: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 451: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 452: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 453: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 454: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 455: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 456: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 457: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 458: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 459: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 460: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 461: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 462: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 463: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 464: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 465: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 466: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 467: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 468: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 469: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 470: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 471: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 472: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 473: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 474: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 475: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 476: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 477: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 478: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 479: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 480: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 481: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 482: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 483: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 484: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 485: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 486: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 487: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 488: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 489: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 490: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 491: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 492: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 493: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 494: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 495: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 496: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 497: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 498: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 499: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 500: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 501: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 502: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 503: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 504: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 505: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 506: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 507: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 508: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 509: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 510: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 511: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 512: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 513: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 514: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 515: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 516: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 517: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 518: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 519: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 520: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 521: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 522: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 523: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 524: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 525: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 526: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 527: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 528: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 529: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 530: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 531: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 532: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 533: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 534: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 535: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 536: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 537: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 538: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 539: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 540: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 541: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 542: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 543: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 544: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 545: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 546: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 547: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 548: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 549: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 550: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 551: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 552: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 553: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 554: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 555: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 556: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 557: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 558: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 559: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 560: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 561: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 562: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 563: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 564: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 565: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 566: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 567: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 568: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 569: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 570: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 571: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 572: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 573: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 574: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 575: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 576: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 577: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 578: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 579: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 580: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 581: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 582: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 583: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 584: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 585: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 586: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 587: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 588: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 589: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 590: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 591: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 592: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 593: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 594: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 595: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 596: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 597: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 598: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 599: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 600: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 601: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 602: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 603: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 604: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 605: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 606: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 607: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 608: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 609: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 610: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 611: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 612: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 613: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 614: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 615: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 616: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 617: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 618: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 619: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 620: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 621: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 622: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 623: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 624: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 625: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 626: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 627: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 628: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 629: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 630: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 631: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 632: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 633: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 634: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 635: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 636: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 637: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 638: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 639: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 640: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 641: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 642: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 643: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 644: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 645: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 646: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 647: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 648: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 649: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 650: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 651: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 652: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 653: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 654: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 655: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 656: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 657: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 658: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 659: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 660: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 661: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 662: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 663: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 664: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 665: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 666: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 667: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 668: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 669: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 670: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 671: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 672: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 673: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 674: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 675: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 676: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 677: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 678: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 679: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 680: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 681: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 682: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 683: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 684: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 685: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 686: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 687: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 688: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 689: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 690: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 691: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 692: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 693: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 694: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 695: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 696: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 697: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 698: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 699: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 700: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 701: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 702: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 703: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 704: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 705: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 706: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 707: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 708: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 709: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 710: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 711: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 712: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 713: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 714: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 715: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 716: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 717: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 718: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 719: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 720: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 721: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 722: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 723: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 724: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 725: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 726: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 727: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 728: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 729: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 730: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 731: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 732: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 733: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 734: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 735: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 736: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 737: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 738: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 739: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 740: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 741: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 742: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 743: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 744: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 745: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 746: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 747: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 748: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 749: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 750: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 751: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 752: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 753: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 754: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 755: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 756: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 757: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 758: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 759: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 760: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 761: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 762: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 763: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 764: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 765: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 766: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 767: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 768: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 769: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 770: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 771: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 772: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 773: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 774: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 775: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 776: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 777: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 778: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 779: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 780: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 781: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 782: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 783: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 784: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 785: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 786: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 787: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 788: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 789: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 790: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 791: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 792: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 793: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 794: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 795: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 796: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 797: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 798: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 799: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 800: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 801: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 802: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 803: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 804: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 805: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 806: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 807: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 808: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 809: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 810: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 811: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 812: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 813: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 814: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 815: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 816: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 817: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 818: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 819: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 820: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 821: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 822: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 823: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 824: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 825: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 826: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 827: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 828: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 829: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 830: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 831: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 832: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 833: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 834: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 835: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 836: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 837: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 838: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 839: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 840: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 841: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 842: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 843: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 844: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 845: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 846: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 847: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 848: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 849: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 850: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 851: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 852: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 853: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 854: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 855: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 856: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 857: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 858: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 859: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 860: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 861: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 862: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 863: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 864: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 865: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 866: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 867: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 868: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 869: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 870: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 871: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 872: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 873: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 874: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 875: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 876: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 877: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 878: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 879: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 880: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 881: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 882: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 883: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 884: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 885: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 886: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 887: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 888: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 889: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 890: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 891: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 892: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 893: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 894: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 895: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 896: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 897: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 898: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 899: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 900: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 901: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 902: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 903: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 904: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 905: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 906: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 907: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 908: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 909: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 910: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 911: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 912: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 913: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 914: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 915: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 916: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 917: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 918: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 919: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 920: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 921: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 922: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 923: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 924: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 925: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 926: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 927: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 928: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 929: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 930: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 931: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 932: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 933: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 934: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 935: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 936: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 937: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 938: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 939: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 940: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 941: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 942: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 943: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 944: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 945: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 946: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 947: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 948: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 949: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 950: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 951: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 952: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 953: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 954: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 955: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 956: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 957: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 958: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 959: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 960: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 961: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 962: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 963: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 964: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 965: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 966: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 967: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 968: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 969: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 970: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 971: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 972: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 973: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 974: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 975: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 976: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 977: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 978: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 979: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 980: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 981: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 982: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 983: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 984: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 985: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 986: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 987: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 988: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 989: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 990: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 991: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 992: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 993: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 994: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 995: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 996: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 997: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 998: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 999: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 1000: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 1001: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 1002: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 1003: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.
+- Control trace 1004: maintenance and safety lead verifies calibration certificate, vibration window, PLC interlock, and actuator acknowledgement in the same decision record; a mismatch routes to fixed-interval inspection and preserves the reason code.

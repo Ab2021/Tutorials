@@ -26,7 +26,7 @@ source_index: "INDEX.md"
 > **Evidence:** DERIVED proof and recurrence; VERIFIED hand trace; ILLUSTRATIVE jobs; OPEN original interview-source body.
 > **Retrieval cue:** If a high-value long job conflicts with many short jobs, start at Section 4.4.
 
-**Source boundary.** `directory.txt` is an inventory, not access to the original source. The focused plan [REF-IR025](../../../../00_REFERENCE_INFORMED_CASE_PLAN.md#ref-ir025-choose-scheduling-algorithms-from-objective-and-constraints) requires half-open intervals, deterministic ties, the exchange argument, and the weighted-DP boundary. Values here are illustrative.
+**Source boundary.** `directory.txt` is an inventory, not access to the original source. The focused plan [REF-IR025](../../../00_REFERENCE_INFORMED_CASE_PLAN.md#ref-ir025-choose-scheduling-algorithms-from-objective-and-constraints) requires half-open intervals, deterministic ties, the exchange argument, and the weighted-DP boundary. Values here are illustrative.
 
 ## 2. Concept Map / Mental Model
 

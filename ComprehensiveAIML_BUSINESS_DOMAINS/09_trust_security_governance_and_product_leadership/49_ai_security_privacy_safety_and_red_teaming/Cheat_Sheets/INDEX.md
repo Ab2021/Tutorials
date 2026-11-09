@@ -1,7 +1,7 @@
 # Module 49 Cheat Sheets — AI Security, Privacy, Safety and Red Teaming
 
 > **Collection status:** draft collection. Individual files below are authoring drafts, not reviewed security guidance or evidence of a deployment.
-> **Authoring contract:** [course standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [cheat-sheet master](../../../Templates/CHEAT_SHEET_CONTENT_MASTER_TEMPLATE.md). Each authored sheet must eventually meet the full 12-section and 1,000-substantive-line gate; no listed planning row is completed merely by appearing here.
+> **Authoring contract:** [course standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [cheat-sheet master](../../../../Templates/CHEAT_SHEET_CONTENT_MASTER_TEMPLATE.md). Each authored sheet must eventually meet the full 12-section and 1,000-substantive-line gate; no listed planning row is completed merely by appearing here.
 
 ## 1. Overview
 
@@ -36,7 +36,7 @@ Visible source titles `execution_surfaces`, `identity_and_trust`, `approval_gate
 
 **Practitioner:** 01 → 02 → supply-chain integrity (planned) → incident response (planned). Objective: design a release-ready control/evidence path. Do not skip the planned files when a real deployment depends on them.
 
-**Advanced:** 01 → 02 → all planned files → final Common Issues (planned). Objective: challenge threat assumptions, evaluator fidelity, and recovery evidence. Optional extension: [approval-gate case](../../../../06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/Case_Studies/01_enterprise_agent_approval_gate.md), which is hypothetical and unreviewed.
+**Advanced:** 01 → 02 → all planned files → final Common Issues (planned). Objective: challenge threat assumptions, evaluator fidelity, and recovery evidence. Optional extension: [approval-gate case](../../../06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/Case_Studies/01_enterprise_agent_approval_gate.md), which is hypothetical and unreviewed.
 
 ## 5. Prerequisite skills
 
@@ -80,7 +80,7 @@ It does not certify compliance, establish applicable law, replace a system-speci
 |---|---|---|---|---|---|
 | SRC-49-01 | NIST, *AI RMF 1.0*, https://doi.org/10.6028/NIST.AI.100-1 | risk-management vocabulary | January 2023 | 2026-11-09 | framework, not system evidence; recheck revised edition |
 | SRC-49-02 | OWASP Prompt Injection Prevention Cheat Sheet, https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html | layered prompt-injection controls | live page | 2026-11-09 | not a deployment result; recheck on policy/tool change |
-| SRC-49-03 | [directory inventory](../../../Templates/directory.txt#L86) | visible source-name provenance | inventory snapshot | 2026-11-09 | source bodies/code unavailable |
+| SRC-49-03 | [directory inventory, line 86 onward](../../../../Templates/directory.txt) | visible source-name provenance | inventory snapshot | 2026-11-09 | source bodies/code unavailable |
 | SRC-49-04 | [agent trust brief](../../../00_SOURCE_COVERAGE_AGENTS.md#agent-trust-approvals) | syllabus additions and boundaries | planned brief | 2026-11-09 | not a source lesson |
 | SRC-49-05 | [safety brief](../../../00_SOURCE_COVERAGE_CUDA_TRAINING.md#ft-safety) | four safety-topic commitments | planned brief | 2026-11-09 | not empirical safety evidence |
 

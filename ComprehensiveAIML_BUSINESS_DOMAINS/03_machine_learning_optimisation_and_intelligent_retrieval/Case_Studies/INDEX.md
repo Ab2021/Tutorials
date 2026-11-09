@@ -2,7 +2,7 @@
 
 ## 1. Collection Metadata
 
-**Scope:** cross-module decision cases for predictive, prescriptive, retrieval, graph, and privacy methods. **Editorial status:** planned catalog; no part-level individual case exists. **Evidence rule:** source names establish scope, not an implementation or measured result. **Contract:** [course standards](../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [case master](../../Templates/CASE_STUDY_CONTENT_MASTER_TEMPLATE.md). A module case remains owned by its module collection.
+**Scope:** cross-module decision cases for predictive, prescriptive, retrieval, graph, and privacy methods. **Editorial status:** planned catalog; no part-level individual case exists. **Evidence rule:** source names establish scope, not an implementation or measured result. **Contract:** [course standards](../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [case master](../../../Templates/CASE_STUDY_CONTENT_MASTER_TEMPLATE.md). A module case remains owned by its module collection.
 
 ## 2. Case Catalog
 

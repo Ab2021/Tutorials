@@ -96,7 +96,7 @@ Hidden folders and clipped filenames remain `unresolved-source`; visible prefixe
 
 **Teaching home:** [06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md](06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/INDEX.md). **Status:** partial draft; source-group completion and independent verification remain open.
 
-**Authored work in progress:** [Agent boundaries and request ownership](06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/Cheat_Sheets/01_agent_boundaries_and_request_ownership.md) introduces explicit state/effect ownership and retry boundaries. The returned manuscript was below the required substantive depth and is being expanded; it does not complete the six visible source-title commitments, the ten-layer treatment, the bounded case or publication checks. Original source bodies remain unavailable.
+**Authored work in progress:** [Agent boundaries and request ownership](06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/Cheat_Sheets/01_agent_boundaries_and_request_ownership.md) introduces explicit state/effect ownership and retry boundaries. The manuscript has not passed substantive-depth review; expansion and boilerplate removal remain open after the provider interruption. It does not complete the six visible source-title commitments, the ten-layer treatment, the bounded case or publication checks. Original source bodies remain unavailable.
 
 **Testable outcome.** Assign ownership for each state/control/execution boundary and predict failures when layers collapse.
 

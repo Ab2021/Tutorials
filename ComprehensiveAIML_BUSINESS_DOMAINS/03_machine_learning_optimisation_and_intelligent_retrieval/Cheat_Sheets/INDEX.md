@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-This is the cross-module navigation layer for reusable prediction, discovery, optimisation, retrieval, graph, and privacy decision methods. Module collections contain the teaching artifacts; this index does not turn a planned title into a completed sheet. Readiness means a learner can locate the appropriate module method, state its input/output contract, calculate or trace its key mechanism, and identify the failure that requires a different method. [Course standards](../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the [master sheet template](../../Templates/CHEAT_SHEET_CONTENT_MASTER_TEMPLATE.md) apply.
+This is the cross-module navigation layer for reusable prediction, discovery, optimisation, retrieval, graph, and privacy decision methods. Module collections contain the teaching artifacts; this index does not turn a planned title into a completed sheet. Readiness means a learner can locate the appropriate module method, state its input/output contract, calculate or trace its key mechanism, and identify the failure that requires a different method. [Course standards](../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the [master sheet template](../../../Templates/CHEAT_SHEET_CONTENT_MASTER_TEMPLATE.md) apply.
 
 ## 2. Topic Ladder
 
@@ -64,7 +64,7 @@ No part-level Common Issues file exists. Each module's final troubleshooting art
 
 ## 10. Empirical Sources, Versions and Collection Maintenance
 
-The visible [directory inventory](../../Templates/directory.txt) and [source crosswalk](../00_SOURCE_TOPIC_CROSSWALK.md) establish scope only. The graph-source brief assigns four direct technical titles to M15; IR025 belongs M13; IR018/020/021/024/029/032 extend M14; IR029/036 extend M15. New factual claims require primary references recorded in the individual artifact. Recheck navigation when module status, source assignment, or a prerequisite changes.
+The visible [directory inventory](../../../Templates/directory.txt) and [source crosswalk](../../00_SOURCE_TOPIC_CROSSWALK.md) establish scope only. The graph-source brief assigns four direct technical titles to M15; IR025 belongs M13; IR018/020/021/024/029/032 extend M14; IR029/036 extend M15. New factual claims require primary references recorded in the individual artifact. Recheck navigation when module status, source assignment, or a prerequisite changes.
 
 ## 11. Collection Acceptance Checklist
 

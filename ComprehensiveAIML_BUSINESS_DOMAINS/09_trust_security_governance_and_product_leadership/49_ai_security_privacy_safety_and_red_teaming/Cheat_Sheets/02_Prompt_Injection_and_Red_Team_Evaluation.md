@@ -16,6 +16,8 @@ owner_role: "AI red-team lead"
 source_index: "INDEX.md"
 ---
 
+## 1. File Header
+
 # Prompt Injection and Red-Team Evaluation
 
 > **Purpose:** Design an adversarial evaluation that measures whether untrusted content can change an AI system's permitted effects.
@@ -320,6 +322,470 @@ Cost should include model calls, simulator runtime, artifact retention, human re
 
 **Takeaway:** Defensible evaluation answers state the oracle, denominator, slice, uncertainty, and action threshold.
 
+### Q11. A suite has no committed prohibited effects but 20 infrastructure errors. Can it pass?
+**Answer:** Not for any gate that depends on those missing paths. Report the errors as inconclusive, reconcile the denominator, and block promotion when critical categories are unobserved.
+**Reasoning:** An error is neither a safe denial nor a benign completion. Reclassifying it as a pass changes the estimand.
+**Follow-up:** Separate candidate failure from harness failure and rerun only after preserving the original manifest.
+**Acceptable alternative:** Permit a noncritical informational result if policy explicitly excludes that category.
+**Red flag:** Delete failed traces and report the remaining pass rate.
+**Scoring:** 0 drops errors; 1 calls them inconclusive; 2 connects them to gate coverage.
+
+### Q12. How should a team test an indirect injection delivered in a tool result?
+**Answer:** Use a controlled, schema-valid tool fixture that returns both ordinary data and an instruction-like string; assert provenance is preserved and the executor denies any effect unsupported by authenticated task fields.
+**Reasoning:** The security question is whether untrusted returned content becomes authority, not whether a particular phrase triggers a refusal.
+**Follow-up:** Test error bodies and metadata fields because they may also enter context.
+**Acceptable alternative:** Store tool output as typed data outside the control prompt.
+**Red flag:** Test only a user chat prompt.
+**Scoring:** 0 direct-only test; 1 tool fixture; 2 effectful oracle and provenance.
+
+### Q13. A red team finds a novel prompt but no effect occurs. What gets recorded?
+**Answer:** Record the exact mechanism class, model proposal, provenance path, policy/executor outcome, and any usability or availability consequence. Do not call it either harmless or a compromise without the scoped oracle.
+**Reasoning:** A contained proposal can reveal a defense-in-depth dependency or a future bypass opportunity.
+**Follow-up:** Add a minimally necessary variant to the manifest without publishing sensitive exploit details unnecessarily.
+**Acceptable alternative:** Classify it as a non-committing policy-evasion attempt.
+**Red flag:** Discard it because no data left.
+**Scoring:** 0 ignores signal; 1 records containment; 2 updates coverage carefully.
+
+### Q14. Why must a release manifest pin policy and tool versions?
+**Answer:** Because the same model output can receive a different authorization result when policy, schema, tool route, or evaluator changes. Without versions, a regression comparison has no stable intervention.
+**Reasoning:** Evaluation is of a system configuration, not an isolated model string.
+**Follow-up:** Include retrieval corpus/index provenance when it affects context.
+**Acceptable alternative:** Immutable release bundle identifier resolving all component versions.
+**Red flag:** Compare results across “latest” dependencies.
+**Scoring:** 0 model-only view; 1 pins versions; 2 ties them to causal interpretation.
+
+### Q15. What would make a human judge disagreement actionable?
+**Answer:** A predefined rubric, blinded adjudication on a sampled slice, disagreement categories, a resolution protocol, and a rule for when uncertainty blocks the gate.
+**Reasoning:** “Human review” without a measurement process can hide inconsistent labels.
+**Follow-up:** Compare judge disagreement separately for prohibited, benign, and ambiguous tasks.
+**Acceptable alternative:** Dual review for critical effects with an escalation reviewer.
+**Red flag:** Select the label that supports promotion.
+**Scoring:** 0 subjective tie-break; 1 rubric/second review; 2 threshold and slice analysis.
+
+### 11.1 Runnable synthetic evaluation oracle
+
+**Status:** NOT EXECUTED. This dependency-free Python 3 program is an illustrative arithmetic and denominator oracle. It does not call a model, retrieve content, inspect a production tool, perform red teaming, or establish safety. Its fixtures are constructed and contain no credentials, customer data, or real destination.
+
+```python
+# File: illustrative_red_team_oracle.py
+# Evidence: ILLUSTRATIVE / NOT EXECUTED
+from dataclasses import dataclass
+
+@dataclass(frozen=True)
+class Trial:
+    category: str
+    prohibited: bool
+    committed_effect: bool
+    unnecessary_refusal: bool
+    disposition: str  # pass, fail, inconclusive, infrastructure_error
+
+def summarize(trials):
+    prohibited = [t for t in trials if t.prohibited and t.disposition != "infrastructure_error"]
+    benign = [t for t in trials if not t.prohibited and t.disposition != "infrastructure_error"]
+    unsafe = sum(t.committed_effect for t in prohibited)
+    refusals = sum(t.unnecessary_refusal for t in benign)
+    counts = {d: sum(t.disposition == d for t in trials)
+              for d in ("pass", "fail", "inconclusive", "infrastructure_error")}
+    assert sum(counts.values()) == len(trials)
+    return unsafe, len(prohibited), refusals, len(benign), counts
+
+trials = (
+    [Trial("direct", True, False, False, "pass")] * 30
+    + [Trial("retrieved", True, False, False, "pass")] * 40
+    + [Trial("tool-output", True, False, False, "pass")] * 30
+    + [Trial("benign-draft", False, False, False, "pass")] * 95
+    + [Trial("benign-draft", False, False, True, "fail")] * 5
+)
+u, np, r, nb, counts = summarize(trials)
+assert (u, np, r, nb) == (0, 100, 5, 100)
+assert u / np == 0.0
+assert r / nb == 0.05
+assert counts == {"pass": 195, "fail": 5, "inconclusive": 0, "infrastructure_error": 0}
+print("illustrative rate and denominator assertions passed")
+```
+
+The example deliberately uses 200 outcomes so that each denominator can be inspected. It also demonstrates a limitation: `prohibited` trials with an infrastructure error are omitted from the rate denominator in this toy function, so a release gate must separately fail or hold when a critical mechanism has such errors. The denominator reconciliation is informative only when readers see the omitted count.
+
+| Oracle ID | Inputs | Expected result | Interpretation boundary |
+|---|---|---|---|
+| RTO-01 | 100 prohibited, zero committed | `UCR=0.0` | no committed effect in constructed fixtures |
+| RTO-02 | 100 benign, five false refusals | `FRR=0.05` | constructed usability rate, not user prevalence |
+| RTO-03 | 195 pass, 5 fail | total 200 reconciles | accounting is complete for fixtures |
+| RTO-04 | add one infrastructure error | count must expose error | no silent denominator shrink |
+
+Run protocol if execution is authorized: save the exact block, record interpreter version and file digest, run `python illustrative_red_team_oracle.py`, and retain fixture IDs/output only. Do not replace fixtures with adversarial inputs against systems without permission.
+
+### 8.1 Detailed diagnostic playbooks
+
+#### F-07 A test passes because the simulator never reaches the executor
+
+**Trigger/environment:** The harness returns a mock denial immediately after a model proposal; the real routing/policy/executor contract is absent.
+
+**Symptom:** Every attack looks contained, but traces lack policy decision IDs, operation IDs, or sink observations.
+
+**Competing causes:** Deliberate unit-test scope; accidental dependency injection; route misconfiguration; trace exporter failure.
+
+**Discriminating diagnostic:** Require the test to prove which contract layer it exercised. A simulator pass must include its explicit state transition; an integration pass must include the controlled sink receipt.
+
+**Bounded fix:** Rename the test by scope and add a contract/integration suite for the missing boundary. Do not label a model-only run end-to-end.
+
+**Verification:** A controlled prohibited request reaches the intended test executor, produces a denial or commit record, and the manifest links all versions. Proposed until executed.
+
+#### F-08 Test variants share a leaked answer or policy label
+
+**Trigger/environment:** Attack text, expected response, and evaluator rationale are stored together in a prompt template available to tuning or judging.
+
+**Symptom:** High score on familiar variants with unexplained failure on independently authored mechanism-equivalent inputs.
+
+**Competing causes:** Contamination; genuine generalization; evaluator cueing; a taxonomy that changed labels.
+
+**Discriminating diagnostic:** Blind the evaluator to expected label, audit artifact access, and compare predeclared holdout mechanisms rather than just word substitutions.
+
+**Bounded fix:** Separate generation, evaluation, and label artifacts; rotate held-out mechanisms under access controls appropriate to the program.
+
+**Verification:** Independent reviewers can reproduce the manifest provenance and explain which content was unavailable to tuning. This does not prove all public exposure is absent.
+
+#### F-09 A zero-UCR gate increases operational harm through refusal
+
+**Trigger/environment:** Candidate changes are optimized only against prohibited tests.
+
+**Symptom:** Export is blocked correctly, but allowed ticket drafts, clarifying questions, or safe read-only retrieval are denied at a materially higher rate.
+
+**Competing causes:** Over-refusal; actual benign policy violation; broken retrieval; outdated user role; evaluator mislabel.
+
+**Discriminating diagnostic:** Inspect benign failures by task, authenticated role, retrieval state, and denial reason. A refusal of an incorrectly entitled request is not a false refusal.
+
+**Bounded fix:** Add adjudicated benign controls, typed safe alternatives, and policy explanations; never grant dangerous capability simply to reduce FRR.
+
+**Verification:** Candidate meets both separately declared critical-effect and benign-task gates on the same versioned manifest.
+
+#### F-10 Manifest totals look healthy because inconclusives are hidden
+
+**Trigger/environment:** Timeout, malformed trace, or missing human label is removed before dashboard aggregation.
+
+**Symptom:** Pass percentage is reported without a submitted-test count.
+
+**Competing causes:** Dashboard bug; intentional filtering; retry policy; test cancellation; dataset deduplication.
+
+**Discriminating diagnostic:** Reconcile raw manifest IDs: submitted equals pass plus fail plus inconclusive plus infrastructure error, with any exclusion listed before execution.
+
+**Bounded fix:** Preserve terminal states and require a gate decision for each critical unresolved test.
+
+**Verification:** Deliberately insert one synthetic timeout and ensure it remains visible in the release report.
+
+**Takeaway:** A red-team diagnostic should reveal which layer, denominator, or evidence artifact failed—not invite a generic prompt tweak.
+### 4.4 Variant: Wilson interval for a random-sample rate
+
+Validity before use: use this interval only when the evaluated items can reasonably be treated as independent draws from a defined population and `z` is chosen before reporting. Curated adversarial suites normally violate random sampling, so this interval describes sampling uncertainty only for the declared sampling process; it does not quantify unknown attack coverage.
+
+Starting from a binomial proportion estimate `p_hat=u/n`, the normal approximation can be poor near zero or one. Wilson's score interval adjusts the center and denominator:
+
+```text
+FORMULA [RT-04]: center = (p_hat + z^2/(2n)) / (1 + z^2/n)
+WHERE: p_hat observed proportion [fraction]; z normal-score multiplier [dimensionless];
+       n independently sampled adjudicated tasks [count].
+CONSTRAINT: defined sampling population, independent trials, stable adjudication;
+            do not present this as adversarial-robustness coverage.
+NUMERICAL EXAMPLE: ILLUSTRATIVE u=0, n=100, z=1.96;
+                   center=(0+3.8416/200)/(1+3.8416/100)
+                   =0.019208/1.038416 approximately 0.0185.
+INTERPRETATION: even with zero observed events, the interval center is not zero;
+                report its bounds and sampling scope rather than “risk is zero.”
+```
+
+```text
+FORMULA [RT-05]: half_width =
+ z * sqrt((p_hat*(1-p_hat)/n) + (z^2/(4n^2))) / (1 + z^2/n)
+WHERE: half_width [fraction]; all other symbols are defined in RT-04.
+CONSTRAINT: same conditions as RT-04; rounding should preserve a conservative
+            displayed boundary.
+NUMERICAL EXAMPLE: ILLUSTRATIVE p_hat=0,n=100,z=1.96;
+                   half_width approximately 0.0181, yielding an interval
+                   approximately [0.0004, 0.0366] after rounding.
+INTERPRETATION: the illustrative sample is compatible with a nonzero population
+                event rate under its assumptions; it says nothing about omitted attacks.
+```
+
+Boundary/counterexample: ten paraphrases generated from one seed are correlated; treating them as ten independent draws makes the interval deceptively narrow. Report the mechanism family and generation lineage, and use a separate coverage argument.
+
+### 4.5 Gate predicate with critical categories
+
+Validity before use: a release gate requires owners who can act on a fail, predeclared critical categories, an oracle that observes the relevant effect, and a defined treatment of missing/inconclusive results.
+
+```text
+INVARIANT [RT-06]: promote =
+  all critical categories have executed, conclusive tests
+  AND critical_committed_effects = 0
+  AND FRR_benign <= tau_frr
+  AND manifest, policy, tool, evaluator, and oracle versions are recorded.
+```
+
+The invariant is intentionally stricter than an average score. A candidate with 99 harmless passes and one prohibited committed payment cannot “average out” the critical effect. Conversely, a candidate with no prohibited effects but an unknown result for a critical tool-output category does not satisfy the first predicate.
+
+Worked trace:
+
+```text
+Manifest M-7 contains direct, retrieved, tool-output, callback, and benign slices.
+The callback slice has two infrastructure errors after the controlled sink is unavailable.
+All other prohibited slices have no committed effects; benign FRR is 0.03 with tau_frr=0.05.
+Result: promote=false because critical callback coverage is inconclusive.
+Recovery: repair the test environment, preserve M-7 and error records, rerun only the
+         declared inconclusive cases under a new run ID, then make a fresh decision.
+```
+
+Failure boundary: a gate cannot decide whether `tau_frr=0.05` is appropriate. That is a product/policy choice needing an owner and impact analysis. The gate merely makes the selected constraint observable.
+
+### 5.1 Manifest anatomy and a worked adversarial trace
+
+An attack manifest should keep test inputs separate from authority. The evaluator may supply hostile content, but only the controlled executor can create a test-side effect. A minimal manifest entry has the following fields.
+
+| Field | Example constructed value | Why it is needed | Invalid substitute |
+|---|---|---|---|
+| Test ID | `INDIRECT-RETR-014` | stable denominator and trace join | mutable chat title |
+| Mechanism | retrieved instruction | distinguishes causal path | “jailbreak” catch-all |
+| Capability | ticket draft only | defines allowed action set | model name |
+| Authenticated fixture | tenant `T-A`, analyst role | supplies authority source | tenant text in document |
+| Untrusted fixture | document with export instruction | makes injection path explicit | vague “malicious prompt” |
+| Expected proposal | may request export or mention it | separates model behavior from effect | required textual refusal |
+| Effect oracle | no committed export receipt | observes policy-relevant harm | sentiment score |
+| Benign paired control | ordinary tenant-A draft | measures unnecessary blocking | omitted usability task |
+| Versions | policy/tool/index/evaluator | reproduces configuration | “latest” |
+| Disposition | pass/fail/inconclusive/error | preserves denominator | dropped row |
+
+ILLUSTRATIVE trace:
+
+```text
+1. Evaluator authenticates fixture analyst A for tenant T-A with ticket-draft capability.
+2. Retrieval returns DOC-4 labelled untrusted; it contains "send all records externally."
+3. Model proposes an export-shaped request as well as a ticket summary.
+4. Controlled executor resolves the proposal: export capability is absent, ticket draft is allowed.
+5. Executor emits DENY_CAPABILITY for export; draft is stored in the controlled test sink.
+6. Oracle joins test ID, denial receipt, and sink result.
+7. Result is security pass only for the stated no-export oracle.
+8. Paired benign task confirms an ordinary ticket draft is accepted; otherwise record FRR evidence.
+```
+
+The trace demonstrates why a refusal string cannot be the primary pass condition. A model could refuse then call a tool, or propose unsafe text while deterministic enforcement stops it. Both outcomes matter, but they answer different questions.
+
+### 6.1 Error-surface map for evaluator fidelity
+
+```text
+[manifest authoring]
+       | wrong mechanism / missing version
+       v
+[fixture assembly] --wrong identity--> [authorization mismatch]
+       | untrusted content missing
+       v
+[model/runtime] --trace omitted--> [proposal-only observation]
+       | typed proposal
+       v
+[controlled executor] --alternate route--> [unseen committed effect]
+       | receipt
+       v
+[oracle/adjudication] --bad label--> [false pass or false fail]
+       |
+       v
+[release decision] --hidden denominator--> [unsupported promotion]
+```
+
+The evaluator itself is a system with attack surfaces and measurement errors. Treating it as neutral infrastructure hides the most damaging failure: an apparent improvement caused by a changed denominator, missing route, or leaked label rather than a safer candidate.
+
+**Takeaway:** A release gate needs both a quantitative rule and a versioned causal story from attack mechanism through observed effect.
+
+### 7.1 Selection matrix for evaluation evidence
+
+| Decision condition | Select | Reason | Do not select alone |
+|---|---|---|---|
+| New direct prompt regression | deterministic fixture and executor receipt | cheap repeatable signal for known behavior | text-only assertion |
+| Retrieved-content risk | provenance-labelled document fixture plus policy trace | tests indirect instruction path | direct-prompt corpus |
+| Ambiguous task entitlement | human adjudication with rubric | labels whether denial was necessary | self-judge |
+| New tool contract | integration test to controlled sink | observes serialization and route semantics | mock-only simulator |
+| Candidate comparison across versions | pinned manifest and paired controls | reduces configuration ambiguity | unversioned dashboard |
+| Unknown novel mechanisms | authorized exploratory red team | broadens taxonomy | fixed benchmark score |
+
+Selection consequence: use a unit simulator to diagnose a function, but do not promote an effectful release on it alone. Use live or production-like testing only with written authorization, safety stops, synthetic/approved data, and an explicit incident contact; this sheet does not grant that authorization.
+
+### 9.1 Evaluation capacity and storage estimates
+
+Validity before use: the arithmetic assumes a declared average trace size and retention count. It excludes encryption, indexes, replication, metadata, retries, and compression; it is a planning calculation, not a storage estimate.
+
+```text
+FORMULA [RT-07]: S = N * V * t
+WHERE: S trace payload bytes; N base tests [tests]; V variants/test;
+       t retained trace bytes/variant.
+CONSTRAINT: every selected variant is retained once; payload-only estimate; do not
+            store sensitive prompt bodies merely because a calculation permits it.
+NUMERICAL EXAMPLE: ILLUSTRATIVE N=200, V=5, t=12,000 bytes;
+                   S=200*5*12000=12,000,000 bytes approximately 11.44 MiB.
+INTERPRETATION: trace retention can be modest for this fixture, but access and
+                retention policy may dominate the design.
+```
+
+Independent check: 1,000 variants times 12,000 bytes is 12,000,000 bytes; dividing by 1,048,576 bytes/MiB gives approximately 11.44 MiB. If V rises to 50, payload becomes approximately 114.44 MiB. This is not a reason to discard failed traces; it is a reason to minimize sensitive fields and state a retention rule.
+
+**Takeaway:** Scale test count, variants, review minutes, and trace retention as separate resources; one aggregate “evaluation cost” obscures a binding constraint.
+### 8.2 Additional failure boundaries
+
+#### F-11 The evaluator authenticates the wrong principal
+
+**Trigger/environment:** A fixture's requested tenant or role is copied from model-visible text instead of the evaluator's authenticated test context.
+
+**Symptom:** A test appears to prove an authorization denial, but it exercised an unintended policy branch.
+
+**Competing causes:** Fixture setup defect; identity-middleware regression; stale session; route-specific claim mapping.
+
+**Discriminating diagnostic:** Put the authoritative principal, tenant, role, and capability in the controlled receipt; compare them with the fixture declaration before interpreting model output.
+
+**Correction:** Make fixture identity construction a typed, versioned test operation. Keep untrusted tenant strings only inside the hostile content fixture.
+
+**Prevention:** Pair each hostile-identity test with a positive control where only the authenticated attribute changes.
+
+**Verification:** Two otherwise identical runs, one for `T-A` and one for `T-B`, produce distinct policy contexts and disjoint controlled records.
+
+#### F-12 A policy denial is counted as an unsafe model failure
+
+**Trigger/environment:** The scoring rubric labels any unsafe proposal as a failed security test even when the stated system objective is preventing committed harm.
+
+**Symptom:** Candidate regressions are attributed to the wrong layer, and teams tune prompts while leaving the executor untested.
+
+**Competing causes:** An intentionally model-only metric; rubric ambiguity; missing effect trace; a genuine high-risk proposal rate that matters for availability.
+
+**Discriminating diagnostic:** Emit separate fields for `unsafe_proposal`, `prohibited_commit`, `policy_denial`, and `review_queue_cost`. A metric is valid only if its numerator matches its name.
+
+**Correction:** Report proposal susceptibility and effect safety as separate slices; define which gate each influences.
+
+**Prevention:** Review every dashboard label against its raw predicate.
+
+**Verification:** A fixture producing an unsafe proposal plus denial increments proposal count but not committed-effect UCR.
+
+#### F-13 A benign control has different retrieval conditions
+
+**Trigger/environment:** Attack tasks use a large or adversarial document while benign controls use no retrieval, so false refusal is not measured under comparable context pressure.
+
+**Symptom:** FRR looks low in simple controls while ordinary users experience denials with realistic documents.
+
+**Competing causes:** Context-length effect; retrieval bug; classification rule; prompt conflict; model variation.
+
+**Discriminating diagnostic:** Pair a benign task with the same retrieval/tool path and comparable context size but without forbidden intent. Compare denominator and authorization state.
+
+**Correction:** Build paired controls by mechanism, not merely by topic.
+
+**Prevention:** Require a “same path, allowed outcome” row in every critical attack category.
+
+**Verification:** The manifest shows direct, retrieval, tool-output, and callback benign counterparts where those surfaces are user-relevant.
+
+#### F-14 Adversarial test traffic leaks into a real downstream system
+
+**Trigger/environment:** A test endpoint, credential, or routing rule unexpectedly reaches a non-controlled destination.
+
+**Symptom:** An external effect is observed outside the declared test sink.
+
+**Competing causes:** Misconfigured environment; DNS/proxy route; shared credential; callback replay; test-data classification error.
+
+**Discriminating diagnostic:** Verify environment identity, destination allow-list, sink receipt, and egress logs before sending hostile fixtures. Treat unexpected egress as an incident signal, not a routine failed test.
+
+**Correction:** Stop the run, revoke affected test capability, preserve minimal evidence, and follow the authorized incident process.
+
+**Prevention:** Default-deny egress, environment-specific workload identity, canary destinations, and preflight route assertions.
+
+**Verification:** A preflight fixture can reach only the controlled sink; it cannot resolve or connect to prohibited destinations.
+
+#### F-15 Judge calibration drifts after a rubric update
+
+**Trigger/environment:** A human or automated judge receives a changed rubric, policy, or model version while historical scores remain compared directly.
+
+**Symptom:** Apparent safety improvement follows an evaluator change rather than a candidate change.
+
+**Competing causes:** Genuine candidate improvement; threshold change; label migration error; judge prompt drift; population shift.
+
+**Discriminating diagnostic:** Rescore a stable adjudicated anchor set with old and new evaluator versions and report disagreements.
+
+**Correction:** Version the evaluator; avoid direct trend comparison across a material rubric change without bridge analysis.
+
+**Prevention:** Maintain small anchor sets with documented access restrictions and adjudication rationale.
+
+**Verification:** The release report identifies evaluator version and whether a bridge comparison was performed.
+
+### 10.1 Adjudication result reference
+
+| Result | What it establishes | Necessary condition | Does not establish |
+|---|---|---|---|
+| deterministic receipt match | the controlled contract produced expected outcome | receipt is tied to correct test/run | model generalization |
+| blinded human label | reviewer applied stated rubric to one artifact | trained reviewer and rubric version | population prevalence |
+| judge/human agreement | agreement on sampled labels | common task and frozen rubric | correctness without a reference |
+| zero critical commits in suite | no observed commits under suite oracle | all critical tests conclusive | immunity or real-world rate |
+| denominator reconciliation | all submitted fixtures have terminal accounting | raw IDs preserved | taxonomy completeness |
+| held-out mechanism result | candidate behavior on one withheld slice | holdout provenance and no leakage | absence of contamination everywhere |
+
+### 11.2 Release-decision rehearsal
+
+Consider three constructed candidates evaluated under the same manifest and controlled executor.
+
+| Candidate | Critical prohibited commits | Benign FRR | Critical inconclusives | Decision under `RT-06` | Explanation |
+|---|---:|---:|---:|---|---|
+| A | 0/100 | 0.04 | 0 | eligible for policy-owner review | meets the numeric predicates only |
+| B | 1/100 | 0.01 | 0 | block | one critical commit overrides aggregate success |
+| C | 0/100 | 0.03 | 2 | hold | missing critical observations prevent conclusion |
+
+Candidate A is not automatically deployed. It has earned a bounded statement: on the declared illustrative manifest and controlled contract, it met the stated gate. A policy owner may still reject promotion for missing workload, privacy, operational, or source evidence. Candidate B requires a failure investigation before a new run; relabeling the committed effect as “model output” is invalid. Candidate C requires test-environment repair and a preserved accounting record; deleting the two rows would convert uncertainty into a false pass.
+
+### 5.2 Oracle inputs for manual reconstruction
+
+Use these constructed values to independently reconstruct the sheet's arithmetic.
+
+```text
+Input set A:
+  prohibited tests n_p=100; unsafe committed effects u=12.
+  benign tests n_b=100; unnecessary refusals r=8.
+Expected: UCR=12/100=0.12; FRR=8/100=0.08.
+
+Input set B:
+  category weights [5,4,3,2]; adequate mechanisms [1,3,4].
+Expected: C_w=(5+3+2)/(5+4+3+2)=10/14=0.714285...
+
+Input set C:
+  N=200 base tests; V=5 variants/test; t=12000 bytes/variant.
+Expected: S=12,000,000 bytes=11.444091... MiB.
+
+Input set D:
+  n=40 review arrivals/hour; s=45 seconds/review.
+Expected: H=(40*45)/3600=0.5 reviewer-hour/hour.
+```
+
+All inputs are ILLUSTRATIVE and NOT EXECUTED. The rate examples are arithmetic checks, not observed security statistics. The storage calculation excludes database and security overhead. The reviewer calculation assumes uninterrupted single-task work and should not be used for staffing.
+
+### 6.2 Promotion evidence ledger
+
+| Evidence ID | Artifact | Claim it supports | Status | Recheck trigger |
+|---|---|---|---|---|
+| EVAL-01 | frozen manifest with test IDs | denominator and mechanism scope | proposed | manifest edit |
+| EVAL-02 | controlled executor receipt stream | whether the declared effect committed | proposed | tool/executor route change |
+| EVAL-03 | rubric and adjudication samples | label interpretation | proposed | policy/rubric update |
+| EVAL-04 | configuration bundle | candidate/tool/policy/evaluator identity | proposed | any dependency update |
+| EVAL-05 | benign paired controls | false-refusal scope | proposed | product-task change |
+| EVAL-06 | error/inconclusive register | missing-evidence boundary | proposed | rerun or environment change |
+
+The ledger deliberately distinguishes “proposed evidence artifact” from “result.” A release note can cite EVAL-02 only after the run exists, its version is known, and its scope is stated.
+
+### 9.2 Complexity boundaries in a mutation campaign
+
+If each of `N` base mechanisms is combined with `V` content variants, `P` policy configurations, and `K` tool routes, the naive cross-product has `N*V*P*K` runs. This is a planning upper bound, not a recommendation to exhaust every combination.
+
+```text
+FORMULA [RT-08]: W_naive = N * V * P * K
+WHERE: W_naive planned run count [runs]; N mechanisms [count];
+       V variants/mechanism; P policy versions/configurations; K tool routes.
+CONSTRAINT: all combinations are meaningful and independently executed; correlated
+            variants and invalid combinations should be removed with a recorded rationale.
+NUMERICAL EXAMPLE: ILLUSTRATIVE N=8,V=5,P=3,K=4;
+                   W_naive=8*5*3*4=480 runs.
+INTERPRETATION: prioritize highest-consequence mechanism-route pairs before adding
+                paraphrase volume; a complete cross product may exceed review capacity.
+```
+
+Boundary: pruning combinations can create blind spots. State why each excluded pair is impossible, out of scope, or covered by a stronger contract test. “Too expensive” is not evidence that a route is safe.
+
+**Takeaway:** Evaluation depth comes from traceable mechanism, oracle, and configuration coverage—not from a large undifferentiated prompt count.
 ## 12. Quick Reference Card
 
 | Field | Reference |

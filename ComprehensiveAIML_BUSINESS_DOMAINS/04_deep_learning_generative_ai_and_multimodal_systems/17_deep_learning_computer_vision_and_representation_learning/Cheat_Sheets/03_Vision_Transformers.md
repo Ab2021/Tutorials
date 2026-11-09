@@ -9,7 +9,7 @@ created: "2026-11-09"
 reviewed: null
 review_trigger: "Tokenisation, resolution, positional encoding, or target-image distribution change."
 notation_style: "plain-text"
-prerequisites: ["02_CNNs_Attention_and_Transfer_Learning.md"]
+prerequisites: ["02_CNNs_Attention_and_Transfer_Learning.md", "01_Vision_Evaluation_and_Error_Taxonomy.md"]
 pattern_tags: ["vision-transformer", "attention"]
 source_status: "OPEN — source bodies unavailable"
 owner_role: "Vision ML reviewer"
@@ -19,7 +19,7 @@ source_index: "INDEX.md"
 # Vision Transformers
 
 > **Purpose:** Turn image resolution and patch size into a token and attention-cost budget, then select global, windowed, or convolutional structure.
-> **Prerequisites:** [CNNs, attention and transfer learning](02_CNNs_Attention_and_Transfer_Learning.md); matrix multiplication.
+> **Prerequisites:** [CNNs, attention and transfer learning](02_CNNs_Attention_and_Transfer_Learning.md); the task/split protocol in [Vision evaluation](01_Vision_Evaluation_and_Error_Taxonomy.md); matrix multiplication.
 > **Key outcome:** Given H, W, patch size and embedding width, calculate token count and attention-score payload; identify an invalid resolution change.
 > **This file does NOT cover:** detector heads, video temporal attention, or foundation-model pretraining recipes.
 > **Level:** 2 Core Methods.

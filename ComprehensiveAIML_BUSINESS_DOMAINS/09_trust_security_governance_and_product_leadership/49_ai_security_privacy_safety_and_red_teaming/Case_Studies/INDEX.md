@@ -1,10 +1,10 @@
 # Module 49 Case Studies — AI Security, Privacy, Safety and Red Teaming
 
-> **Collection status:** draft. Follow the [course standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [case master](../../../Templates/CASE_STUDY_CONTENT_MASTER_TEMPLATE.md). An index row is not a completed case; evidence level, implementation stage, and editorial state are independent.
+> **Collection status:** draft. Follow the [course standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [case master](../../../../Templates/CASE_STUDY_CONTENT_MASTER_TEMPLATE.md). An index row is not a completed case; evidence level, implementation stage, and editorial state are independent.
 
 ## 1. Collection metadata
 
-**Domain:** AI security, privacy, safety, and red teaming. **Purpose:** bounded decisions about tool-enabled AI risk. **Case types:** `llm-agentic`, `incident`, and `analytical` as appropriate. **Evidence policy:** new examples are illustrative or not-measured unless a primary source is cited at claim level. **Source scope:** [directory inventory](../../../Templates/directory.txt:86-94), [trust brief](../../../00_SOURCE_COVERAGE_AGENTS.md#agent-trust-approvals), and [safety brief](../../../00_SOURCE_COVERAGE_CUDA_TRAINING.md#ft-safety); source bodies are unavailable.
+**Domain:** AI security, privacy, safety, and red teaming. **Purpose:** bounded decisions about tool-enabled AI risk. **Case types:** `llm-agentic`, `incident`, and `analytical` as appropriate. **Evidence policy:** new examples are illustrative or not-measured unless a primary source is cited at claim level. **Source scope:** [directory inventory, lines 86–94](../../../../Templates/directory.txt), [trust brief](../../../00_SOURCE_COVERAGE_AGENTS.md#agent-trust-approvals), and [safety brief](../../../00_SOURCE_COVERAGE_CUDA_TRAINING.md#ft-safety); source bodies are unavailable.
 
 ## 2. Case catalog
 

@@ -3,8 +3,8 @@ collection: "healthcare-life-sciences-biomedical-ai"
 file_id: "01"
 topic: "Clinical decision-support evidence and clinician handoff"
 level: 1
-status: "draft — substantive expansion required before publication"
-version: "0.1"
+status: "draft — expanded manuscript; source-body and local-policy evidence remain OPEN"
+version: "1.0"
 created: "2026-11-09"
 reviewed: null
 review_trigger: "Change in intended-use population, decision authority, data source, or governing clinical policy"
@@ -34,7 +34,7 @@ source_index: "INDEX.md"
 
 ## 1. File Header
 
-This is a design and review lesson, not medical advice and not a clinical protocol. The source-coverage brief requires a bounded decision, decision-time data boundary, authorization/review invariant, sensitivity calculation, and clinician escalation. The visible source inventory names clinical decision support but the original body is unavailable; no workflow, performance, or architecture is attributed to it.
+This is a design and review lesson, not medical advice and not a clinical protocol. The source-coverage brief requires a bounded decision, decision-time data boundary, authorization/review invariant, sensitivity calculation, and clinician escalation. The visible [source inventory](../../../../Templates/directory.txt#L248) names `07_Healthcare/07_01_clinical_decision_support.md` but the original body is unavailable; no workflow, performance, or architecture is attributed to it.
 
 The operational question is narrower than “use AI in healthcare”: for one encounter or message, what non-binding information can be displayed to a qualified clinician before that clinician makes the accountable decision? A system that drafts, ranks, or flags can be useful without diagnosing, ordering, or acting.
 
@@ -209,16 +209,85 @@ Primary evidence needed for any real deployment claim: governing intended-use po
 
 ## 11. Interview / Exam Questions
 
-1. **Why is 90/100 sensitivity not a benefit claim?** It only describes detection among adjudicated positives; benefit needs a comparison of interventions, outcomes, harms, and workflow. **Follow-up:** specify the outcome window and comparator.
-2. **What timestamp prevents leakage?** The earliest availability timestamp to the proposed system, compared with `t_d`; the record’s displayed timestamp may be insufficient. **Red flag:** using label completion time.
-3. **Compute sensitivity for TP=90, FN=10.** `90/(90+10)=0.90`. **Check:** denominator is 100 positive units.
-4. **Why can PPV fall while sensitivity is unchanged?** More negative units or false positives can enter the queue; prevalence and specificity affect PPV. **Alternative:** inspect stratified PPV.
-5. **What should an abstention do?** Emit a logged reason and route to a defined human/baseline path; it must not silently appear as a reassuring negative.
-6. **A feature is documented after the encounter but describes an earlier event. Can it be used?** Only if it was actually available to the system by `t_d`; semantic event time alone is not enough.
-7. **What makes a clinician handoff testable?** Owner, channel, acknowledgment, SLA, escalation, and a failure-path trace. **Red flag:** “human in the loop” without responsibility.
-8. **Why is a random split often weak here?** Related encounters and time-dependent documentation can leak across splits; use a justified entity/time design.
-9. **How would a changed constraint of 240 alerts/shift affect a 300-alert policy?** It is infeasible by 60 alerts; revise capacity or policy and re-evaluate error trade-offs.
-10. **What evidence is still OPEN in this lesson?** The original source body, local policy, reference-standard procedure, and any measured clinical outcome; none should be inferred.
+1. **Why is 90/100 sensitivity not a benefit claim?** **Checked answer:** it
+describes detection among 100 adjudicated positive decisions, not whether a
+display changed a patient or workflow outcome. **Reasoning:** benefit requires
+an intervention comparator, an outcome window, harms, and a defined action.
+**Follow-up:** name the baseline and outcome before claiming improvement.
+**Acceptable alternative:** state that it is a screening property only. **Red
+flag:** “90% means 90% better care.” **Scoring:** full credit names denominator
+and the missing intervention evidence.
+
+2. **What timestamp prevents leakage?** **Checked answer:** the earliest
+availability time to the proposing system, compared with `t_d`, plus the
+authorization and freshness tests. **Reasoning:** event time does not prove the
+system could access a fact. **Follow-up:** ask for the ingestion receipt and
+snapshot proof. **Acceptable alternative:** a versioned feature-store cutoff.
+**Red flag:** use label completion time. **Scoring:** full credit distinguishes
+event, availability, and decision clocks.
+
+3. **Compute sensitivity for `TP=90`, `FN=10`.** **Checked answer:**
+`90/(90+10)=0.90=90%`. **Reasoning:** the denominator is target-positive
+decisions, not all alerts. **Follow-up:** what changes if 20 labels are immature?
+The value is unresolved until the target protocol handles them. **Acceptable
+alternative:** show numerator and denominator as counts. **Red flag:** divide by
+300 alerts. **Scoring:** full credit supplies arithmetic and units.
+
+4. **Why can PPV fall while sensitivity is unchanged?** **Checked answer:**
+more false-positive alerts or a lower target prevalence enlarges `TP+FP` while
+the positive-detection ratio can remain fixed. **Reasoning:** PPV’s denominator
+is alerts, not positives. **Follow-up:** request threshold and cohort details.
+**Acceptable alternative:** compare stratified PPV with counts. **Red flag:**
+call PPV and sensitivity interchangeable. **Scoring:** full credit identifies
+their different denominators.
+
+5. **What should an abstention do?** **Checked answer:** emit a visible reason,
+write an audit event, route to a named accountable fallback, track its deadline,
+and close with one terminal disposition. **Reasoning:** a blank or negative
+default hides an unserved decision. **Follow-up:** trace a recipient timeout.
+**Acceptable alternative:** the established manual workflow. **Red flag:** “no
+output means no risk.” **Scoring:** full credit includes ownership and recovery.
+
+6. **A feature is documented after the encounter but describes an earlier
+event. Can it be used?** **Checked answer:** only if it was actually available
+to the proposing system by `t_d` and authorized for the use. **Reasoning:**
+semantic timing cannot substitute for system availability. **Follow-up:** replay
+the source snapshot. **Acceptable alternative:** exclude it and record
+missingness. **Red flag:** rely on authored-note timestamp alone. **Scoring:**
+full credit rejects retrospective reconstruction as deployment input.
+
+7. **What makes a clinician handoff testable?** **Checked answer:** a recipient
+selection rule, acknowledgment definition, SLA, escalation, idempotency key,
+and auditable terminal disposition. **Reasoning:** message transport can succeed
+while no accountable person sees the task. **Follow-up:** simulate a queue
+outage. **Acceptable alternative:** governed baseline route. **Red flag:**
+“human in the loop” with no responsible role. **Scoring:** full credit names a
+failure-path check.
+
+8. **Why is a random split often weak here?** **Checked answer:** repeated
+encounters, related documentation, and time-dependent workflows can make test
+records easier through correlated training records or future data. **Reasoning:**
+the split must represent the intended decision context. **Follow-up:** specify
+entity and temporal boundaries. **Acceptable alternative:** a justified
+time-separated cohort. **Red flag:** shuffle rows after joining encounters.
+**Scoring:** full credit links split choice to leakage risk.
+
+9. **How does a 240-alert shift limit affect a 300-alert policy?** **Checked
+answer:** it has `300-240=60` alerts without stated review capacity. **Reasoning:**
+those alerts cannot all be treated as completed support. **Follow-up:** what
+happens to the 60? Name a governed route, not silent suppression. **Acceptable
+alternative:** increase verified capacity before evaluation. **Red flag:** raise
+threshold without counting additional misses. **Scoring:** full credit gives the
+arithmetic and workflow consequence.
+
+10. **What evidence remains OPEN in this lesson?** **Checked answer:** the
+original source body, local authorization/policy, reference-standard protocol,
+workflow evidence, and any measured outcome. **Reasoning:** this file has
+derived and checked illustrative arithmetic only. **Follow-up:** identify the
+first artifact needed for a real deployment claim. **Acceptable alternative:**
+a governed evaluation protocol and source access. **Red flag:** infer a named
+organization’s architecture from a topic title. **Scoring:** full credit keeps
+source inventory separate from evidence.
 
 **Takeaway:** Strong answers name the denominator, the time boundary, the accountable role, and the verification artifact.
 
@@ -426,13 +495,582 @@ The 90/10 calculation has a binomial-count interpretation but this lesson does n
 
 Changing the definition of positive from “adjudicated event within 24 hours” to “within seven days” changes `TP`, `FN`, prevalence, and operational timing. Reusing a previous threshold comparison after such a target change is invalid. Changing availability from contemporaneous to next-day batch also changes the system from decision support to retrospective review. The metric name may be unchanged while the decision problem is different.
 
-### 11.10 Additional interview defense drills
+### 11.10 Evidence packet anatomy
 
-16. **A manager asks for a single accuracy number. What do you answer?** First identify target prevalence, error asymmetry, decision threshold, alert capacity, and reference standard. Accuracy can be dominated by negatives and conceal unsafe misses. **Follow-up:** give an example: with rare positives, a never-flag system can have high accuracy and zero sensitivity. **Red flag:** supplying accuracy without population. **Scoring:** full credit names a task-appropriate metric and workflow guardrail.
+The following packet is a teaching artifact for an illustrative review. It
+separates an assertion from the evidence needed to decide whether the assertion
+is usable. It is deliberately more demanding than a score report: a reviewer
+must be able to find both the data boundary and the recovery boundary.
 
-17. **Why might a retrospective model appear calibrated and still fail operationally?** Calibration can be assessed on a dataset with different prevalence, documentation process, population, or availability boundary than live use. It also does not establish that a displayed probability produces the intended action. **Follow-up:** what changes after a policy revision? Recalibration/evaluation and policy review may both be required. **Red flag:** assuming probability semantics travel unchanged. **Scoring:** full credit separates statistical calibration, transportability, and workflow utility.
+#### Packet item 1 — intended-use sentence
 
-18. **A reviewer wants to remove abstention because users dislike blanks. What is the safer alternative?** Replace a blank with an explicit “insufficient or unavailable input” state, evidence/reason, and named baseline route—not a guessed reassuring output. **Follow-up:** how is abuse detected? Monitor abstention rate and reasons by input/source/version. **Red flag:** convert abstention to negative. **Scoring:** full credit specifies ownership and monitoring.
+State one user, one decision moment, one eligible population, one output, and
+one authority limit. “Help clinicians” fails because it supplies none of those
+boundaries. “Show a non-binding, evidence-linked review cue to the assigned
+clinician for an eligible encounter at `t_d`” is still incomplete until the
+local workflow defines what “eligible” and “assigned” mean.
+
+**Check:** compare the sentence to every UI action and integration endpoint.
+**Reject when:** any endpoint performs an action not named in the statement.
+**Recovery:** remove the endpoint or revise the intended use under governance.
+
+#### Packet item 2 — decision-key declaration
+
+Specify whether a decision is keyed by encounter, message, study, order review,
+or another bounded event. Record the stable key, creation time, and rule for
+reopened work. A patient identifier alone is not a decision key because one
+person can have several independent decisions with different available facts.
+
+**Check:** count unique keys before and after joins.
+**Reject when:** joins alter decision count without an explicit multiplicity rule.
+**Recovery:** aggregate or split records before scoring, then repeat metrics.
+
+#### Packet item 3 — clock convention
+
+Declare the time zone, clock source, precision, event time, availability time,
+and decision time. Clock agreement is an assumption to test, not a formatting
+choice. A feature with an apparently earlier event time can still arrive after
+the decision because source clocks, replication, and documentation differ.
+
+**Check:** inspect a sample of raw timestamps and ingestion receipts.
+**Reject when:** time zones are implicit or timestamp lineage is unavailable.
+**Recovery:** abstain for unprovable timing and repair source contracts.
+
+#### Packet item 4 — authorization basis
+
+For each field, name the owner, approved purpose, and relevant authorization
+state at time of use. Do not turn a broad data-access role into an inference
+that every downstream use is authorized. Cached, derived, and copied fields
+need the same traceability as their originating data.
+
+**Check:** reconcile feature manifest with authorization/purpose records.
+**Reject when:** field authorization is “assumed from warehouse access.”
+**Recovery:** suppress the field and document the changed feature vector.
+
+#### Packet item 5 — target protocol
+
+State the target event, adjudicator/process, observation window, maturity rule,
+and correction policy. A billing code, later note, or service transfer may be a
+proxy rather than the intended outcome. If a proxy is used, name the mismatch
+and do not call it a clinical truth label.
+
+**Check:** label a small governed sample against the written protocol.
+**Reject when:** target logic is embedded only in an undocumented query.
+**Recovery:** version the protocol and mark prior comparison limits.
+
+#### Packet item 6 — exclusion ledger
+
+Every exclusion should identify a decision key, exclusion reason, stage, and
+whether it received baseline handling. Exclusions are part of the population,
+not cleaning debris. A model can appear stronger simply because hard cases were
+discarded after an unobserved join, source outage, or label delay.
+
+**Check:** totals reconcile: candidate = included + excluded + unresolved.
+**Reject when:** metric denominator cannot be reconciled to candidate decisions.
+**Recovery:** stop comparison and reconstruct the cohort manifest.
+
+#### Packet item 7 — feature availability proof
+
+Record the earliest system-availability rule for each feature, not merely a
+source-table update time. Backfills and corrected values often look historical
+when viewed later. The proof must show what the proposing system could access,
+not what an investigator can retrieve after the encounter.
+
+**Check:** replay a stored point-in-time snapshot using a fixed `t_d`.
+**Reject when:** the implementation reads a current-state table without history.
+**Recovery:** use a versioned snapshot or remove the feature from the lesson.
+
+#### Packet item 8 — transformation contract
+
+Name input units, missingness behavior, categorical mapping, clipping, scaling,
+and transform version. A valid raw measurement can become invalid after unit
+conversion or a stale vocabulary lookup. Transformation should preserve an
+audit trail from displayed evidence to score input.
+
+**Check:** run edge values, missing values, and unit variants through the transform.
+**Reject when:** output cannot distinguish raw absence from a transformed zero.
+**Recovery:** fix the contract and invalidate incompatible scores.
+
+#### Packet item 9 — policy contract
+
+Document the score interpretation, threshold, abstention rule, and route chosen
+for each policy version. A threshold is a workflow rule because it determines
+who is asked to review work. It cannot be justified by sensitivity alone when
+false positives consume finite attention.
+
+**Check:** recompute alert counts from score bands and threshold configuration.
+**Reject when:** production policy cannot be matched to an evaluated policy.
+**Recovery:** route through baseline until configuration is reconciled.
+
+#### Packet item 10 — evidence presentation contract
+
+List what a reviewer sees: input lineage, missing/stale notices, model/policy
+version, uncertainty language, and action limitation. Explain what happens when
+the evidence panel is unavailable. “Explainable” is not a field; the specific
+evidence and its boundary must be inspectable.
+
+**Check:** capture a rendering snapshot for each supported client variant.
+**Reject when:** a score is actionable after provenance-display failure.
+**Recovery:** suppress the recommendation and emit an explicit fallback state.
+
+#### Packet item 11 — human handoff contract
+
+Name the owner, recipient selection rule, acknowledgment definition, deadline,
+escalation, and baseline route. A queue does not by itself establish a handoff.
+The contract must cover staff absence, duplicate delivery, expired work, and
+the situation in which no qualified recipient is available.
+
+**Check:** trace a synthetic abstention and a synthetic flag end to end.
+**Reject when:** there is no terminal owner or only a transport receipt.
+**Recovery:** make the system abstain until a governed path is restored.
+
+#### Packet item 12 — capacity declaration
+
+Specify the period, reviewer roles, minutes per review, interruptions excluded,
+and the maximum safely handled volume. Capacity is a premise with uncertainty,
+not a hard-coded integer copied between sites. It should distinguish an alert
+created from an alert reviewed and an alert resolved.
+
+**Check:** calculate queue excess using documented arrivals and capacity.
+**Reject when:** policy volume exceeds capacity without an overflow procedure.
+**Recovery:** change eligibility or capacity and re-evaluate the error tradeoff.
+
+#### Packet item 13 — comparator trace
+
+Describe the existing process at the same decision moment. The comparator might
+be manual review, a stable rule, no cue, or a different queue allocation. A
+retrospective score has no intervention comparator until the workflow action,
+timing, and outcome collection plan are defined.
+
+**Check:** trace one representative baseline decision from trigger to closure.
+**Reject when:** baseline is described only as “current practice.”
+**Recovery:** obtain the process owner’s bounded workflow specification.
+
+#### Packet item 14 — metric dictionary
+
+For every metric, preserve numerator, denominator, unit, population, window,
+threshold, exclusions, comparator, and evidence label. Sensitivity has positive
+units in its denominator; PPV has alerted units. Neither identifies benefit
+without an intervention and outcome protocol.
+
+**Check:** reconstruct each displayed rate from raw aggregate counts.
+**Reject when:** a metric card lacks a denominator or target version.
+**Recovery:** replace percentage-only reporting with a complete metric record.
+
+#### Packet item 15 — uncertainty statement
+
+State which uncertainty is quantified, which is not, and why. A binomial
+interval may be inappropriate when repeated decisions are clustered or labels
+are disputed. Lack of an interval should lead to a stated analysis limitation,
+not a false implication of exactness.
+
+**Check:** compare statistical method assumptions with the cohort design.
+**Reject when:** independent-unit language is used for correlated repeated events.
+**Recovery:** seek an appropriate analysis plan before drawing comparative claims.
+
+#### Packet item 16 — slice and transportability plan
+
+Define permitted evaluation slices before reading results and record denominators,
+availability, missingness, target consistency, and uncertainty for each. Slice
+analysis is not an invitation to gather attributes without authorization; its
+scope belongs in the governance and data-minimization decision.
+
+**Check:** verify that the slice definition is available at decision time.
+**Reject when:** post hoc slice selection is represented as a preplanned finding.
+**Recovery:** label the result exploratory and preserve the discovery trail.
+
+#### Packet item 17 — safety stop rule
+
+Write the signal, owner, response time, action, and re-entry condition for a
+suspected unsafe state. Examples include unproven availability, failed routing,
+version incompatibility, or queue saturation. A stop rule is usable only if it
+changes system behavior and assigns an accountable response.
+
+**Check:** simulate the signal without relying on patient data.
+**Reject when:** alerting occurs but no one owns the containment action.
+**Recovery:** route to baseline and escalate according to the declared policy.
+
+#### Packet item 18 — rollback and recovery trace
+
+Identify the last compatible policy, how it is selected, what remains logged,
+and how duplicate work is avoided during rollback. Reverting a model does not
+automatically revert UI text, routing, transforms, or data permissions. Each
+component needs a compatibility and recovery statement.
+
+**Check:** perform a paper trace from incompatibility detection to closure.
+**Reject when:** rollback produces a mixed set of component versions.
+**Recovery:** stop serving until a known-compatible bundle is active.
+
+#### Packet item 19 — audit access boundary
+
+Name who may inspect which artifacts and for what purpose. An audit trail can
+be necessary while its raw contents remain restricted. Separate immutable event
+identifiers and aggregate monitoring from unnecessary retention of full inputs.
+
+**Check:** review role permissions against the minimum audit questions.
+**Reject when:** debugging access is broader than the stated review purpose.
+**Recovery:** restrict access and use approved aggregate diagnostic artifacts.
+
+#### Packet item 20 — evidence status declaration
+
+Distinguish DERIVED arithmetic, VERIFIED hand calculation, ILLUSTRATIVE inputs,
+SOURCED external claims, and OPEN gaps. A checked calculation does not convert
+constructed inputs into a measured deployment result. A source title does not
+fill in unavailable logs, local policy, or a reference standard.
+
+**Check:** inspect every conclusion for a matching evidence label and artifact.
+**Reject when:** illustrative capacity or outcome is phrased as observed fact.
+**Recovery:** narrow the conclusion and state the needed evidence explicitly.
+
+### 11.11 Review-board evidence drills
+
+The following ILLUSTRATIVE drills are executable paper-oracle inputs. They do not
+represent patient records, a live clinical workflow, or a validation result.
+For each drill, the reviewer records the input contract, expected disposition,
+actual disposition, operator, policy version, and any exception. A “pass” means
+the stated invariant held in the trace; it does not establish clinical benefit.
+
+#### Drill A — late laboratory interface
+
+- **Input:** `D-01`, `t_d=10:00`, authorized laboratory value event `09:40`,
+  interface availability `10:06`, score request `10:00`.
+- **Question:** May the feature enter the score vector?
+- **Oracle:** no; `t_a=10:06 > t_d`; output is `ABSTAIN(MISSING_AT_DECISION)`.
+- **Why:** a fact can predate the request clinically yet still be absent from
+  the proposing service at request time.
+- **Required log:** source version, event time, availability time, exclusion
+  reason, fallback recipient, and terminal disposition.
+- **Recovery:** use the governed baseline path; do not delay the decision merely
+  to wait for the value unless the intended-use protocol permits waiting.
+- **Failure signal:** a replay contains the value in a 10:00 feature snapshot.
+- **Decision consequence:** reject the extraction or availability contract.
+
+#### Drill B — authorized but semantically stale observation
+
+- **Input:** `D-02`, `t_d=14:00`, observation available `08:00`, maximum
+  freshness declared by policy `2 h`, and no newer measurement.
+- **Question:** Does `t_a <= t_d` alone make the observation admissible?
+- **Oracle:** no; it passes chronology but violates the stated freshness rule.
+- **Why:** availability answers “could the system see it?”; freshness answers
+  “may this intended use rely on it?”
+- **Required log:** freshness calculation `14:00-08:00=6 h`, policy version,
+  abstention reason, route, and acknowledgment.
+- **Recovery:** request a current observation or route to the baseline workflow.
+- **Failure signal:** score emitted with no stale-data banner or route.
+- **Decision consequence:** a temporal check needs a semantic-validity companion.
+
+#### Drill C — missing field versus measured zero
+
+- **Input:** `D-03`, numeric field absent, schema allows `0`, model transform
+  maps missing to zero, and missingness indicator is not recorded.
+- **Question:** Can an auditor determine what evidence the output used?
+- **Oracle:** no; absent and measured-zero states have been conflated.
+- **Why:** the model may treat a collection failure as a physiological value.
+- **Required log:** raw presence flag, transformed value, missingness feature,
+  schema version, and source-system status.
+- **Recovery:** make missingness explicit and retest the transform on both cases.
+- **Failure signal:** identical feature vector for `missing` and a measured zero.
+- **Decision consequence:** abstain if the required evidence cannot be separated.
+
+#### Drill D — duplicate decision key
+
+- **Input:** `D-04`, one encounter key, two ingestion rows, same score request,
+  and a reviewer queue keyed by row identifier instead of decision identifier.
+- **Question:** How many review tasks may be created?
+- **Oracle:** one terminal task for the declared decision grain.
+- **Why:** duplicate inputs can manufacture workload and apparent agreement.
+- **Required log:** canonical decision key, source row IDs, deduplication rule,
+  idempotency key, task ID, and disposition count.
+- **Recovery:** reconcile rows before task creation and suppress duplicate retry.
+- **Failure signal:** two acknowledgments or two contradictory dispositions.
+- **Decision consequence:** metrics must be recomputed on unique decision units.
+
+#### Drill E — delayed routing acknowledgment
+
+- **Input:** `D-05`, valid flag at `11:00`, route accepted at `11:00:02`,
+  no acknowledgment by policy deadline `11:10`.
+- **Question:** Is delivery success equivalent to a completed handoff?
+- **Oracle:** no; expected state is `CLOSED_WITH_GOVERNED_EXCEPTION`.
+- **Why:** transport acceptance does not prove that an accountable user saw work.
+- **Required log:** delivery receipt, recipient identity, deadline, escalation,
+  acknowledgement status, and terminal owner.
+- **Recovery:** escalate once through the approved route while preserving the
+  baseline process; retries must use the same idempotency key.
+- **Failure signal:** dashboard counts “delivered” as “reviewed.”
+- **Decision consequence:** measure presentation and acknowledgment separately.
+
+#### Drill F — clinician rejection with complete evidence
+
+- **Input:** `D-06`, all inputs time-safe, support displayed with provenance,
+  clinician rejects and supplies a permitted reason code.
+- **Question:** Is rejection automatically a model error?
+- **Oracle:** no; it is an observed workflow disposition requiring interpretation.
+- **Why:** a clinician may possess authorized context outside the support inputs.
+- **Required log:** output version, evidence panel version, rejection reason,
+  optional free text, and later adjudication protocol version.
+- **Recovery:** retain the decision and investigate only under approved review.
+- **Failure signal:** product metric treats acceptance rate as correctness.
+- **Decision consequence:** interface adoption and target validity are different.
+
+#### Drill G — clinician acceptance without evidence display
+
+- **Input:** `D-07`, recommendation displayed, provenance panel fails to load,
+  clinician can still accept the proposed action.
+- **Question:** May acceptance proceed under this lesson’s support contract?
+- **Oracle:** no; the support is unsupported and must abstain or route baseline.
+- **Why:** the evidence display is part of the non-binding review mechanism.
+- **Required log:** client version, panel error, output suppression event, route,
+  and recovery time.
+- **Recovery:** disable unsupported acceptance; repair the interface dependency.
+- **Failure signal:** accepted decision has no retrievable evidence provenance.
+- **Decision consequence:** availability of explanation is a system dependency.
+
+#### Drill H — version mismatch across services
+
+- **Input:** `D-08`, scoring service policy `P-4`, UI label map `P-3`, and
+  audit writer reports only an unversioned human-readable label.
+- **Question:** Can the displayed meaning be reconstructed?
+- **Oracle:** no; request is a governed exception until compatible versions align.
+- **Why:** the same score can lead to different review language or routing.
+- **Required log:** model, threshold, feature, UI, route, and schema versions.
+- **Recovery:** enforce compatibility checks before serving and preserve rollback.
+- **Failure signal:** audit replay cannot regenerate the displayed output.
+- **Decision consequence:** version identity is not optional metadata.
+
+#### Drill I — target maturation not complete
+
+- **Input:** `D-09`, decision date 1 July, target requires 30-day maturation,
+  evaluation run date 15 July.
+- **Question:** May a no-event record be counted as a negative?
+- **Oracle:** no; its label is unresolved under the stated target protocol.
+- **Why:** early censoring converts future positives into apparent true negatives.
+- **Required log:** target definition, maturity cutoff, unresolved count, and
+  exclusion or survival-analysis handling.
+- **Recovery:** defer outcome metric or use a predeclared censoring method.
+- **Failure signal:** denominator silently includes immature outcomes.
+- **Decision consequence:** report the eligible prediction count separately.
+
+#### Drill J — policy threshold changed after test inspection
+
+- **Input:** `D-10`, threshold candidates evaluated on a final holdout, then
+  the chosen threshold is the one with the largest observed sensitivity.
+- **Question:** Is the reported holdout sensitivity an unbiased final estimate?
+- **Oracle:** no; selection has reused the test evidence.
+- **Why:** the final sample became part of tuning.
+- **Required log:** candidate thresholds, selection date, validation split,
+  holdout lock status, and subsequent untouched evaluation plan.
+- **Recovery:** use a governed validation procedure and reserve new evidence.
+- **Failure signal:** no pre-test threshold or selection ledger exists.
+- **Decision consequence:** treat the reported value as exploratory, not final.
+
+#### Drill K — change in decision frequency
+
+- **Input:** `D-11`, model evaluated once per encounter, proposed interface
+  refreshes and scores every new observation during the encounter.
+- **Question:** Does encounter-level evaluation transfer unchanged?
+- **Oracle:** no; the unit and alert opportunity count have changed.
+- **Why:** repeated scoring creates different workload, correlation, and exposure.
+- **Required log:** trigger type, decision key, maximum alerts per encounter,
+  suppression rule, and review workload.
+- **Recovery:** define a new unit and evaluate the revised policy.
+- **Failure signal:** one encounter produces multiple alerts without a limit.
+- **Decision consequence:** recalculate denominators and capacity.
+
+#### Drill L — location-specific source outage
+
+- **Input:** `D-12`, one site loses an upstream feed, other sites remain normal,
+  and the global aggregate missingness rate changes little.
+- **Question:** Is a global monitor sufficient?
+- **Oracle:** no; expected monitor slices by source/site and decision eligibility.
+- **Why:** an aggregate can conceal a complete local failure.
+- **Required log:** source health, site tag, missingness, abstention, route, and
+  eligible-decision count by permitted slice.
+- **Recovery:** abstain for the affected source and preserve baseline routing.
+- **Failure signal:** site has near-zero flags and near-zero logged abstentions.
+- **Decision consequence:** monitor the data-generating path, not scores alone.
+
+#### Drill M — alert queue saturation
+
+- **Input:** `D-13`, 300 routed alerts, capacity 240 per shift, no priority
+  protocol, and 60 tasks still open at shift end.
+- **Question:** May the system claim the 300 alerts were delivered support?
+- **Oracle:** no; 60 have no completed review disposition under this capacity.
+- **Why:** queue arrival is not clinician action.
+- **Required log:** arrival time, queue position, service time, reassignment,
+  expiry, and final route for every task.
+- **Recovery:** reduce governed eligibility, add validated capacity, or route
+  excess cases through the established baseline.
+- **Failure signal:** backlog rises while acknowledgment rate is reported alone.
+- **Decision consequence:** workload is a safety and evaluation variable.
+
+#### Drill N — score scorecard without prevalence
+
+- **Input:** `D-14`, report says “PPV 30%,” but omits TP, FP, eligible count,
+  location, window, and target definition.
+- **Question:** Can a reviewer compare it with another period?
+- **Oracle:** no; the ratio lacks the population and operational context.
+- **Why:** PPV moves with prevalence and threshold as well as model behavior.
+- **Required log:** numerator, denominator, cohort, threshold, target, window,
+  confidence method, and exclusions.
+- **Recovery:** republish a denominator-complete metric card.
+- **Failure signal:** reporting layer allows percentages without raw counts.
+- **Decision consequence:** a dashboard must preserve the measurement contract.
+
+#### Drill O — source authorization revoked
+
+- **Input:** `D-15`, a field was authorized when a policy was trained, then its
+  permission is revoked before the next score request.
+- **Question:** May the service use the cached value?
+- **Oracle:** no unless the governing authorization explicitly permits that use.
+- **Why:** cache residence does not preserve a right to use a datum.
+- **Required log:** authorization decision, policy version, cache timestamp,
+  deletion or masking action, and fallback disposition.
+- **Recovery:** suppress field use, invalidate dependent artifacts as required,
+  and execute the approved baseline route.
+- **Failure signal:** feature trace contains a source after revocation timestamp.
+- **Decision consequence:** authorization must be checked at the relevant use.
+
+#### Drill P — post-decision correction arrives
+
+- **Input:** `D-16`, a source value available at `09:00` is corrected at `17:00`;
+  score was generated at `09:05`.
+- **Question:** Should the old audit record be silently overwritten?
+- **Oracle:** no; preserve what was known and link a correction event.
+- **Why:** auditability requires reconstructing the original decision context.
+- **Required log:** original value/version, correction version, timestamps,
+  whether correction triggers review, and outcome linkage.
+- **Recovery:** apply the approved correction workflow; do not rewrite history.
+- **Failure signal:** replay uses corrected value while claiming original output.
+- **Decision consequence:** data lineage needs versioned rather than mutable facts.
+
+#### Drill Q — unstable reference standard
+
+- **Input:** `D-17`, two qualified reviewers disagree on target status and a
+  third reconciliation process is not yet defined.
+- **Question:** Is sensitivity calculable as a definitive measure?
+- **Oracle:** arithmetic is calculable but the estimand is not fully specified.
+- **Why:** `TP` and `FN` depend on unresolved label adjudication.
+- **Required log:** reviewer labels, disagreement status, reconciliation protocol,
+  blinding conditions, and target version.
+- **Recovery:** mark outcome unresolved pending governed adjudication.
+- **Failure signal:** one reviewer’s labels become “truth” without declaration.
+- **Decision consequence:** metric precision cannot repair target ambiguity.
+
+#### Drill R — apparent subgroup performance gap
+
+- **Input:** `D-18`, one permitted slice has 3/5 flagged positives; another has
+  90/100; the report ranks the first slice as worse.
+- **Question:** Is the rank stable evidence?
+- **Oracle:** no; small denominator and label process must be investigated.
+- **Why:** point estimates conceal uncertainty and access/measurement differences.
+- **Required log:** counts, target process, missingness, availability, time window,
+  and uncertainty method suitable for the design.
+- **Recovery:** avoid expanding scope based on an unstable comparison.
+- **Failure signal:** slice table shows percentages but hides counts.
+- **Decision consequence:** use a predeclared evaluation protocol and expertise.
+
+#### Drill S — external model response timeout
+
+- **Input:** `D-19`, support service calls a remote estimator, timeout at 2 s,
+  and interface default renders “no concern.”
+- **Question:** Is default-negative a valid failure behavior?
+- **Oracle:** no; timeout is an abstention with a visible baseline route.
+- **Why:** absence of a response is not evidence of absence of the target.
+- **Required log:** request ID, timeout, retry policy, user-visible state, route,
+  and terminal disposition.
+- **Recovery:** surface unavailability and preserve accountable manual workflow.
+- **Failure signal:** timeout count rises while negative rate rises in tandem.
+- **Decision consequence:** technical failure states require clinical workflow paths.
+
+#### Drill T — model score reused for a new action
+
+- **Input:** `D-20`, a support score designed to prioritize review is proposed
+  as a trigger for an autonomous downstream action.
+- **Question:** Does the original evaluation authorize that reuse?
+- **Oracle:** no; intended use, authority, comparator, and failures have changed.
+- **Why:** the same numeric output can be harmless in one workflow and unsafe in
+  another because the action and recovery boundary differ.
+- **Required log:** original intended-use statement, proposed action contract,
+  governance decision, and separate validation requirement.
+- **Recovery:** block integration until a distinct authorization and evaluation.
+- **Failure signal:** action endpoint accepts a score without clinician confirmation.
+- **Decision consequence:** model portability is not decision-authority portability.
+
+#### Drill U — display localization changes meaning
+
+- **Input:** `D-21`, an interface translation changes “review required” into
+  language interpreted as “confirmed condition.”
+- **Question:** Is this merely a presentation defect?
+- **Oracle:** no; it changes the decision interface and intended-use interpretation.
+- **Why:** wording can alter authority, urgency, and user response.
+- **Required log:** locale, copy version, rendering snapshot, user role, and
+  complaint or correction route.
+- **Recovery:** withdraw incorrect copy, restore baseline wording, and test role
+  comprehension under approved human-factors review.
+- **Failure signal:** output label differs from policy semantics by locale.
+- **Decision consequence:** UI content belongs in the reproducibility manifest.
+
+#### Drill V — audit retention conflict
+
+- **Input:** `D-22`, operations asks to retain raw inputs indefinitely for model
+  debugging; approved retention policy allows only a shorter period.
+- **Question:** Does debugging value override retention?
+- **Oracle:** no; retain only authorized minimum artifacts or use approved controls.
+- **Why:** more logging can expand exposure without improving a bounded audit.
+- **Required log:** retention rule, fields retained, purpose, access role,
+  deletion schedule, and aggregate diagnostic alternative.
+- **Recovery:** minimize logs and escalate policy conflict to the owner.
+- **Failure signal:** debug storage contains unnecessary raw sensitive content.
+- **Decision consequence:** observability has its own data-governance boundary.
+
+#### Drill W — score drift versus workflow drift
+
+- **Input:** `D-23`, score distribution is unchanged, but acknowledgment time
+  doubles after a staffing change.
+- **Question:** Is model monitoring alone sufficient?
+- **Oracle:** no; the intervention path degraded despite stable scores.
+- **Why:** support value depends on review and timely action, not just output.
+- **Required log:** queue age, acknowledgment latency, disposition, staffing context,
+  policy version, and baseline-route use.
+- **Recovery:** restore workflow capacity or change governed routing; do not retune
+  the model before isolating the operational cause.
+- **Failure signal:** stable AUROC dashboard alongside growing queue age.
+- **Decision consequence:** monitor end-to-end decision states.
+
+#### Drill X — algorithmic confidence misread as certainty
+
+- **Input:** `D-24`, a UI shows `0.82` with no definition, calibration context,
+  or uncertainty statement.
+- **Question:** What does the number authorize?
+- **Oracle:** nothing by itself; the display is insufficiently specified.
+- **Why:** a score may be rank, probability estimate, or arbitrary model output.
+- **Required log:** score semantics, population/version, display copy, threshold,
+  evidence panel, and intended reviewer action.
+- **Recovery:** label or suppress the value according to governed intended use.
+- **Failure signal:** users report treating the number as a diagnosis.
+- **Decision consequence:** numerical displays need an action and evidence contract.
+
+### 11.12 Minimum acceptance record for an illustrative walkthrough
+
+Before a teaching trace is called internally consistent, record these distinct
+checks rather than claiming a clinical or production result:
+
+1. **Arithmetic check:** `90+10=100`, `90/100=0.90`, `90+210=300`, and
+   `300-240=60`; units are encounters or alerts, never percentages.
+2. **Time check:** every included feature has an availability proof at or before
+   its individual decision time; event-time plausibility is not a substitute.
+3. **Authority check:** the output cannot create an order, diagnosis, or other
+   binding action within the illustrative interface contract.
+4. **Route check:** each abstention has a reason, recipient, deadline, escalation,
+   and one final disposition.
+5. **Cohort check:** target status is mature, decision keys are unique, and
+   inclusion/exclusion counts precede metric reporting.
+6. **Version check:** input schema, transform, policy, display, and route versions
+   can reconstruct what a reviewer saw.
+7. **Capacity check:** arrivals, review minutes, queue age, and expired tasks are
+   assessed against the declared workflow rather than assumed away.
+8. **Evidence check:** all teaching values are marked ILLUSTRATIVE and no named
+   provider, payer, product, or regulator is implied to use the design.
 
 ## 12. Quick Reference Card
 

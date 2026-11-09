@@ -28,7 +28,7 @@ All individual artifacts require substantive authoring under the course standard
 
 ### Evidence and source boundaries
 
-- [Source inventory](../../Templates/directory.txt), ranges 480–546, 713–735 and 810–837, supplies forecasting/pricing context, not accessible source bodies or measured delivery results.
+- [Source inventory](../../../Templates/directory.txt), ranges 480–546, 713–735 and 810–837, supplies forecasting/pricing context, not accessible source bodies or measured delivery results.
 - [Data-science focused plan](../../00_SOURCE_COVERAGE_DATA_SCIENCE.md) assigns the named forecasting/pricing source cases to other teaching homes; this family applies the methods without claiming ownership of those separately assigned cases.
 - [Reference-informed plan](../../00_REFERENCE_INFORMED_CASE_PLAN.md#ref-ir027-maintain-exact-inventory-range-totals-under-point-updates) adds IR027; its IR019 and IR023 sections add the routing commitments.
 - Local interview examples are references only. A source's scenario numbers, suggested SLOs, or performance claims are not deployment evidence.

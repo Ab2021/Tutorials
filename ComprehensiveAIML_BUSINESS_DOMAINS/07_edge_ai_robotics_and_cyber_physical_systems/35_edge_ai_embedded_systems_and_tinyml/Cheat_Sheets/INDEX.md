@@ -30,7 +30,7 @@ This collection teaches resource-bounded acquisition, inference, scheduling, pow
 
 **Practitioner:** 01, sensor sampling guide, MCU model budget, TinyML deployment checklist, then the final Common Issues file when authored. Objective: review a target integration without treating illustrative estimates as measurements.
 
-**Advanced:** follow the practitioner route, read the [module cases](../Case_Studies/INDEX.md) when authored, then the Part 07 [cross-boundary issues](../../../Cheat_Sheets/99_35_Common_Issues.md). Optional forward path: Module 36 runtimes/quantisation.
+**Advanced:** follow the practitioner route, read the [module cases](../Case_Studies/INDEX.md) when authored, then the Part 07 [cross-boundary issues](../../Cheat_Sheets/99_35_Common_Issues.md). Optional forward path: Module 36 runtimes/quantisation.
 
 ## 5. Prerequisite skills
 
@@ -63,7 +63,7 @@ It hands off clinical signal interpretation to module/domain-specific material; 
 
 ## 9. Common Issues locator
 
-A distinct Module 35 Common Issues artifact is **not authored**. The part-level [35 cross-boundary issues](../../../Cheat_Sheets/99_35_Common_Issues.md) is supplemental and does not satisfy this local collection requirement. Required local issue areas: DMA ownership, priority inversion, UART framing, stack/arena collision, stale decision, tensor metadata, DSP state, and wake transients.
+A distinct Module 35 Common Issues artifact is **not authored**. The part-level [35 cross-boundary issues](../../Cheat_Sheets/99_35_Common_Issues.md) is supplemental and does not satisfy this local collection requirement. Required local issue areas: DMA ownership, priority inversion, UART framing, stack/arena collision, stale decision, tensor metadata, DSP state, and wake transients.
 
 ## 10. Empirical sources, versions and collection maintenance
 

@@ -69,3 +69,49 @@ Source reconciliation executed for this pass:
 | Inventory uncertainty | All 74 unresolved entries retained; hidden contents remain unavailable |
 
 This pass's source checks do not establish completed lessons, substantive depth, technical correctness, or publication review. Final content, navigation and numerical checks must follow authoring and integration.
+
+### Provider interruption and checkpoint acceptance
+
+The requested Terra workers subsequently returned `usage_limit_reached` errors as well. Observed failures include Foundations, Machine Learning, Edge/Robotics, Business Domains, Trust/Leadership, Domain Specialisations and the root cheat-sheet worker. This is a provider-capacity interruption, not evidence of an automatic task timeout. No substitute model is authorized by the requested model selection.
+
+No returned manuscript has passed the complete substantive-depth acceptance gate in this pass. Physical line counts alone were rejected: returned firmware material contained repeated laboratory prose, the analytics draft repeated generic diagnostic text, and the six root cases repeated generic validation probes. The problem-formulation sheet repeats generic review evidence and decision-consequence prompts and has extra numbered-H2 subsections; the CNN manuscript repeats diagnostic explanations, mitigation risks and interview fields dozens of times. Both are explicitly marked incomplete in their files/indexes despite exceeding 1,000 physical lines. The fraud taxonomy's repeated boilerplate was removed, leaving 732 lines after integration; its appended taxonomy was moved under Section 11 and its source inventory linked. These are authoring defects, not completed topic coverage. Corrected or shortened drafts must remain visibly incomplete until their individual requirements are met.
+
+Integration corrections also restored the charter's File Header, linked source inventories in the charter/clinical/interview manuscripts, removed an unresolved CNN arithmetic placeholder, and linked the GPU roofline to its visible CUDA inventory. The roofline, charter, clinical, interview, fraud, loss and CNN illustrative calculations were independently exercised as documented below. Arithmetic agreement does not approve repeated manuscript padding or validate an operational result.
+
+A second expansion mapped all remaining Part 11 families to sixteen exclusive medium-effort Codex workers and Part 01 modules 02–05 to another worker; all seventeen returned `usage_limit_reached` immediately without reported edits. Five later continuation retries (orientation, machine learning, edge/robotics, production platforms and analytics) failed with the same error. Retained partial files and precise unfinished scope are the resume state; workers cannot be honestly reported as running or completed while the provider rejects them.
+
+Checks actually executed by integration:
+
+| Exercise | Observed result | Limit |
+|---|---|---|
+| Firmware arithmetic FW-01–05 | 792 bytes/s; 11,520 bytes/s UART payload; 6.875% utilization; 100 ms window; 30 ms base versus 88 ms stressed response; 0.0012408 J and 12.408 mW | Arithmetic only; no board execution, timing guarantee or safety validation |
+| SQLite join counterexample | Three input facts and three joined rows; coverage 2/3, matched-fact multiplicity 3/2; naive joined total 140 versus input total 200 | Executed in-memory SQL fixture; not a warehouse deployment |
+| Root-case fluid-queue arithmetic | 120 pending decisions; 300-second drain with positive 0.4 decision/s recovery surplus | Constructed constant-rate example; not replay or capacity evidence |
+| Root-case scenario arithmetic | Agent 12 attempts; robotics 10 ms slack; review 12 hours; fraud precision 40%; supply 100 units; incident error fraction 1% | Arithmetic only; not domain efficacy, feasibility certification or measured outcomes |
+| Boundary-source claims | NIST least-privilege glossary and OWASP LLM01:2025 guidance read directly | General definitions and mitigation guidance only; no architecture certification |
+| GPU roofline | 71 named arithmetic checks passed; CPU GEMM returned `[[58,64],[139,154]]`; eight-key aggregation retained four occurrences per key; binary64 reassociation produced `(1e16+1)-1e16=0` versus `(1e16-1e16)+1=1` | Constructed formulas and CPU references; no CUDA kernel, profiler, device timing or benchmark |
+| AI use-case charter | 20 checks passed: `$2,040` base value, `192` versus `180` reviews/day, `15.875%` break-even rate, `-$534.60` warranty net and all stated sensitivity results | Constructed economics; no realized benefit, cost estimate validation or deployment authorization |
+| Clinical handoff | Four metric/capacity checks and a time/trace fixture passed: sensitivity 90%, PPV 30%, coverage 90%, 20 review-hours; only vital/missing fields admitted at 09:00; two route attempts retained one task and terminal disposition | Toy paper/state oracle; no clinical efficacy, confidence interval, real patient data or policy compliance |
+| Interview framework | 12 arithmetic checks passed including `$3.60` EV, 12,000-request backlog, 400-second drain, 75%/81.82% denominators and 60/85-ms latency traces; retry returned one committed `D91/REVIEW` | In-memory ledger/reference behavior; crash-before-outbox raised as an intentional unresolved recovery scenario, not a production atomicity demonstration |
+| Fraud taxonomy | Precision 30%, recall 60%, 140 false positives and 3.333 reviews/true positive; availability filter admitted device/excluded closure; 104-day maturity check | Constructed counts/time; no fraud prevalence, prevention, loss saving or legal conclusion |
+| Problem formulation and CNN | 15 arithmetic checks passed including `tau=0.20`, queue expectation 1.68, baseline/proposed utility 322/576.8, required 1.725 staff-days, 118,013,952 MACs and 1,605,632 activation bytes | Arithmetic only; repeated appended manuscript material remains rejected and unapproved |
+
+Resume from the earliest incomplete item in each local index, preserving all original catalog and source-crosswalk commitments. An interrupted or undersized draft is not a completed module; source bodies marked unavailable remain unavailable.
+
+### Integration navigation check after interruption
+
+The previous integrated check covered 597 Markdown files and 3,559 local Markdown link occurrences. It initially found 25 missing file targets, including incorrect template-directory depth, tool-only line selectors embedded in Markdown URLs, and cross-module paths. Those references were corrected. A later 2026-11-09 dependency-free check covered **600 Markdown files and 3,380 local link occurrences**, resolving `path#fragment` links before URL parsing: **0 missing file targets and 0 missing Markdown anchors**. This validates local navigation only, not lesson completeness or external-source accuracy.
+
+The previous requested-model run stopped with provider-capacity errors. At the user's renewed request specifying Codex, thirteen fresh workers were launched with `openai-codex/gpt-5.6-terra:medium`: Module 01 orientation, Parts 02–10, Part 11's first fraud-domain module, and the two shared root collections. Launch acceptance does not establish restored capacity or completed content; later Part 01 and Part 11 modules remain in the continuation queue. Coverage ledgers and local indexes are resumption checkpoints, not evidence that the eleven parts or their submodules are finished. Substantive expansion, removal of rejected repeated material, independent content review, and remaining cases/Common Issues artifacts are still required.
+
+### Original-catalog scope retained during renewed authoring
+
+Explicit planned commitments were restored alongside newer drafts rather than silently replaced:
+
+- Module 06: data model notation and warehouse query patterns, in addition to data contracts and grain/join safety.
+- Module 11: classification metrics and model selection, in addition to feature engineering, predictor families, calibration and validation.
+- Module 17: vision model selection, augmentation library and detection metrics, in addition to architecture, self-supervision and evaluation drafts.
+
+These restored catalog rows are not authored lessons. Module 11's prerequisite handoffs were also corrected to Module 05 mathematical foundations and Module 06 data modelling/governance.
+
+The existing Part 11 baseline ledger records all **15 families, 58 nested domain modules, 219 descendant indexes and 388 assigned source entries**. The first fraud-domain worker is only the initial checkpoint in that larger scope; it does not replace the remaining fourteen families or any other domain module.

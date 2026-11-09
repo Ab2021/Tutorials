@@ -9,11 +9,13 @@ This collection teaches the reusable controls behind durable analytical data pro
 | Level | File | Outcome | Prerequisites | Key skill | Status |
 |---|---|---|---|---|---|
 | Foundation | [01 Data contracts](01_Data_Contract_Checklist.md) | Specify grain, quality, delivery, and change controls; compute coverage | SQL keys and aggregation | `V/E`, freshness watermark | Draft; expanded 2026-11-09; not independently reviewed |
-| Core | [02 data model grain and join safety](02_Data_Model_Grain_and_Join_Safety.md) | Select model and query grain; detect fan-out | 01 | functional dependencies, join cardinality | Draft; not independently reviewed |
-| Core | 03 lakehouse tables, snapshots, and governance | Select table/version/lineage controls | 01–02 | snapshot and mutation invariants | Planned |
-| Advanced | 04 metadata, lineage, and catalogue review | Trace a metric to source and owner | 01 | lineage/reconciliation | Planned |
-| Advanced | 05 authorized retrieval, search indexing, and bounded hierarchies | Defend deletion, ACL, and traversal controls | 01–04 | bounded work and snapshot reads | Planned; reference-informed |
-| Final | 06 Common Issues | Diagnose at least 25 distinct controls | 01–05 | discriminating checks | Planned; no artifact exists |
+| Foundation | [02 data model notation](03_Data_Model_Notation.md) | Read and draw entity, key, cardinality, optionality and temporal-grain contracts | SQL keys and aggregation | functional dependencies and relationship notation | Draft; not independently reviewed |
+| Core | [03 data model grain and join safety](02_Data_Model_Grain_and_Join_Safety.md) | Select model and query grain; detect loss and fan-out separately | 01–02 | coverage, multiplicity, allocation conservation | Draft; executable SQLite oracle added; not independently reviewed |
+| Core | Warehouse query patterns — original planned scope | Select safe aggregations, window functions, deduplication and as-of queries at a declared grain | data model notation; 01–03 | query semantics, reconciliation and cost boundaries | Planned; no complete focused artifact exists |
+| Core | 04 lakehouse tables, snapshots, and governance | Select table/version/lineage controls | 01–03 | snapshot and mutation invariants | Planned |
+| Advanced | 05 metadata, lineage, and catalogue review | Trace a metric to source and owner | 01 | lineage/reconciliation | Planned |
+| Advanced | 06 authorized retrieval, search indexing, and bounded hierarchies | Defend deletion, ACL, and traversal controls | 01–05 | bounded work and snapshot reads | Planned; reference-informed |
+| Final | 07 Common Issues | Diagnose at least 25 distinct controls | 01–06 | discriminating checks | Planned; no artifact exists |
 
 ## 3. Quick topic lookup
 
@@ -23,12 +25,15 @@ This collection teaches the reusable controls behind durable analytical data pro
 | “Are we complete?” | [01 §4–5](01_Data_Contract_Checklist.md#4-core-formulas-with-full-derivation) | independent expected count exists | `R/R` is not completeness |
 | “Can this field change safely?” | [01 §7–8](01_Data_Contract_Checklist.md#7-comparison--selection-table) | producer release | parser compatibility can hide semantic drift |
 | “Why did a metric jump?” | [01 §8](01_Data_Contract_Checklist.md#8-failure-modes--edge-cases) | after release | do not attribute change before checking grain/join/unit |
+| “Which relationship notation is enforceable?” | [02 §3–5](03_Data_Model_Notation.md#3-foundational-definitions) | translating a business noun into a model | cardinality without time semantics is incomplete |
+| “Did a join lose facts and duplicate others?” | [03 §8–9](02_Data_Model_Grain_and_Join_Safety.md#8-failure-modes--edge-cases) | validating an aggregate at one cutoff | output row count cannot establish both controls |
+
 
 ## 4. Reading paths — three options
 
-- **Beginner:** 01, then the planned 02; practice writing a key, grain, expected-count, and freshness statement.
-- **Practitioner:** 01 → 02 → 03 → 04; add reconciliation, lineage, and release authority to one live dataset design.
-- **Advanced:** all files in ladder order, then Common Issues. Optional forward extension: Module 09 for CDC/event-time controls.
+- **Beginner:** [01](01_Data_Contract_Checklist.md) → [02](03_Data_Model_Notation.md) → [03](02_Data_Model_Grain_and_Join_Safety.md); practice a key, grain, cardinality, expected-count, and freshness statement.
+- **Practitioner:** beginner path → warehouse query patterns → lakehouse tables → metadata review; add reconciliation, lineage, and release authority to one dataset design.
+- **Advanced:** all authored files in ladder order, then Common Issues when available. Optional forward extension: Module 09 for CDC/event-time controls.
 
 ## 5. Prerequisite skills
 
@@ -64,7 +69,8 @@ It does not certify legal compliance, prescribe a warehouse vendor, prove propri
 | File | Evidence / sources | Status | Review trigger | Open limitation |
 |---|---|---|---|---|
 | 01 | DERIVED formulas; VERIFIED illustrative arithmetic; Apache Avro, OpenLineage, and scikit-learn documentation linked in §10 | Draft | change in definitions, source/version, or contract mechanism | no source body, real run, or measured dataset is claimed |
-| 02–06 | no artifact | Planned | authoring | no claims or outcomes available |
+| 02 | DERIVED join invariants and illustrative examples; executed in-memory SQLite counterexample recorded in the shared audit | Draft; substantive-depth and repetition review remains open | grain, relationship, cutoff or SQL-engine semantics change | equal row counts can conceal lost facts plus fan-out; no warehouse deployment is claimed |
+| Original data model notation and warehouse query patterns; 03–06 | no complete focused artifact | Planned | authoring | later additions do not discharge the original catalog commitments |
 
 `directory.txt` was consulted as an inventory. It contains visible vector-database entries but no accessible, authoritative data-contract source body; filenames are not treated as factual evidence.
 

@@ -18,6 +18,8 @@ This course contains a planned syllabus and a growing set of draft teaching file
 
 **Substantive-length review outstanding:** Several drafts contain repeated diagnostic boilerplate. Physical line counts do not establish the requested 1,000 substantive lines; do not treat those files as meeting that requirement until repetition is replaced and reviewed.
 
+**Continuation state:** Requested GPT-5.6 Terra medium workers encountered provider `usage_limit_reached` errors. New drafts and remaining obligations are recorded in the relevant local indexes and coverage ledgers; the list below is not an exhaustive completion manifest. No part is certified complete by this continuation. See the [interruption and acceptance record](00_AUDIT_COVERAGE_MATRIX.md#provider-interruption-and-checkpoint-acceptance) for executed checks and unmet gates.
+
 - [Agent sessions, state ownership, isolation and run lifecycle](06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/Cheat_Sheets/04_agent_sessions_state_isolation_and_lifecycle.md) — draft cheat sheet; repeated material and substantive length require revision.
 - [Fraud evaluation, calibration and capacity](11_data_science_domain_specialisations/02_data_science_method_playbooks/02_fraud_modelling_playbook/Cheat_Sheets/01_Fraud_Evaluation_Calibration_and_Capacity.md) — draft cheat sheet; repeated material requires substantive-length review.
 - [Hot-partition consumer-lag incident](10_architecture_practice_and_portfolio_capstones/55_incident_response_failure_modes_and_technical_leadership/Case_Studies/01_hot_partition_consumer_lag_incident.md) — illustrative draft case; no observed outage or measured outcome claimed.
