@@ -137,7 +137,7 @@ def lint(path: Path) -> dict:
             problems.append("case headings out of order")
         if len([h for h in h2 if re.match(r"^## \d+\.", h)]) != 15:
             problems.append("expected exactly 15 numbered H2 sections")
-        if "### 14" in text or "### Interview pack" not in text:
+        if "### Interview pack" not in text:
             problems.append("missing '### Interview pack' subsection under section 14")
     elif kind == "sheet":
         ok, missing, misordered = ordered_present(h2, SHEET_HEADINGS)

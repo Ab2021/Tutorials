@@ -1257,7 +1257,7 @@ Those results are `DERIVED` from `ILLUSTRATIVE` inputs. The transfer is the chai
 
 ## 14. Connections & Cross-References
 
-### 14.1 Related material and source boundaries
+### Related material and source boundaries
 
 | Connection | Why it is relevant | Status and boundary |
 |---|---|---|
@@ -1270,7 +1270,7 @@ Those results are `DERIVED` from `ILLUSTRATIVE` inputs. The transfer is the chai
 
 `SRC-05` names standard Erlang C and zero-event results, but the source body was not reviewed as part of this illustrative case. Its precise bibliographic version, publication date, and access date remain `OPEN`. The formulas are used here as explicitly conditional teaching mechanisms, not as evidence of operating performance.
 
-### 14.2 Interview pack
+### Interview pack
 
 #### Q1. Why is B rejected before B' is ranked?
 

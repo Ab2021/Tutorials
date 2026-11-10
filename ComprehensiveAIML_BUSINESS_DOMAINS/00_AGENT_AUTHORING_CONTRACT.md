@@ -180,3 +180,28 @@ Rules: one row per completed artifact; status ∈ `authored | revised | blocked 
 - NEVER delete an existing catalog commitment without recording the reason in the index backlog.
 - NEVER rename existing published files (incoming links break); add new numbered files.
 - NEVER leave `TODO`, `<placeholder>`, `TBD`, or "content omitted" markers in a delivered file.
+
+## 9. Write-then-verify discipline (added after observed partial drafts)
+
+Observations from the first authoring wave: agents that patched files incrementally left truncated
+manuscripts (748 lines with sections 10–15 missing) and scratch directories (`.tmp_b0007/`) behind.
+
+Therefore:
+
+- Build the entire manuscript in memory, then emit it with **one** `write` call. Never grow a file by
+  successive `edit` calls across turns; an interrupted run then cannot leave a half file.
+- Do not create scratch files or directories in the repository. Use conversation state, not disk.
+- Before reporting, re-run the lint on every file you touched and quote the real output.
+- An honest `failed` with the exact unmet requirement is a valid outcome and the task is re-queued.
+  A false `PASS` claim is a contract violation.
+
+## 10. Protected paths
+
+These exist for the authoring pipeline and MUST NOT be deleted, moved, or written by a worker:
+
+- `.authoring_state/` — the resumable queue, batch plan, and claim registry.
+- `Tools/` — lint, queue builder, dispatcher, verifier.
+
+The repository also contains `.tmp_parts/` from an older pass. Do not delete it and do not use it.
+Never `rm -rf`, `git clean`, or bulk-delete anything: an ownership partition does not make an
+unowned directory safe to remove.

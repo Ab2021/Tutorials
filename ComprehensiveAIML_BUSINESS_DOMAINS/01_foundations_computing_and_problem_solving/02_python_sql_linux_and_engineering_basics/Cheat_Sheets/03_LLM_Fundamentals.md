@@ -1009,13 +1009,13 @@ Budgeting is arithmetic plus a policy, and the picture makes the policy explicit
 
 ```text
 |<---------------------------- T_max = 128,000 tokens ------------------------->|
-|                                                                              |
+| legend:  A=system  B=retrieved  C=history  D=user  E=reserved-out  R=retry     |
 | [ system prompt ][ retrieved docs    ][ history ][ user ][ reserved output ] |
 |      1,200            22,000            8,000     900        2,000            |
 |<------------ prompt = 32,100 ----------->|<------ 2,000 ----->|              |
-|                                                                              |
+| A is fixed per request; B is the only region tuned by retrieval k; C by window |
 | unused headroom: 128,000 - 34,100 = 93,900 tokens                            |
-|                                                                              |
+| fit test: 32,100 + 2,400n + 2,000 <= 128,000  =>  n <= floor(93,900/2,400) = 39|
 | Each retry appends the failed answer (2,000) + a repair instruction (400)     |
 |   = 2,400 tokens. After n retries the request needs 32,100 + 2,400n prompt    |
 |   + 2,000 reserved. The window permits n = floor(93,900/2,400) = 39 retries.  |

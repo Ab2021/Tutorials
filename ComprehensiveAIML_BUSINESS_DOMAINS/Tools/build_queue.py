@@ -16,7 +16,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-TMP = ROOT / ".tmp_parts"
+TMP = ROOT / ".authoring_state"
 BRIEFS = ROOT / "Tools" / "assignments" / "tasks"
 
 sys.path.insert(0, str(ROOT / "Tools"))

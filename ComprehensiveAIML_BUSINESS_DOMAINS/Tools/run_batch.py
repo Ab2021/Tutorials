@@ -16,7 +16,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-TMP = ROOT / ".tmp_parts"
+TMP = ROOT / ".authoring_state"
 sys.path.insert(0, str(ROOT / "Tools"))
 from manuscript_lint import lint  # noqa: E402
 
@@ -100,6 +100,10 @@ def prompt_for(batch: dict) -> str:
         "- Every manuscript you write must pass `python Tools/manuscript_lint.py <that file>` with exit 0.",
         "  Run the lint yourself after each file; fix and re-run until it passes. Do not report a file as",
         "  done while its lint fails.",
+        "- A partial draft fails lint. If you are running low on room, it is far better to finish a",
+        "  COMPLETE lint-passing manuscript for one brief than to leave two half-written files. Write each",
+        "  file in ONE `write` call (build the full text, then write it) rather than patching incrementally,",
+        "  so an interrupted run cannot leave a truncated file.",
         "- NO padding. Physical length without distinct content is rejected: no repeated sentences, no",
         "  numbered filler, no copied interview answer trios. See contract section 0.",
         "- Derive and recompute every number you print. Label constructed values ILLUSTRATIVE.",
@@ -108,6 +112,11 @@ def prompt_for(batch: dict) -> str:
         "## Progress accounting",
         "Append one row per finished artifact to `<unit>/AUTHORING_PROGRESS.md` (create if missing):",
         "| Timestamp (UTC) | Artifact | Status | Lint | Note |",
+        "",
+        "## Before you report",
+        "Re-run the lint on every file you touched and quote its actual output. If any file still fails,",
+        "say so explicitly in your final message and state exactly which requirement is unmet — an honest",
+        "`failed` is acceptable and will be re-queued; a false `PASS` claim is not.",
         "",
         "## Final message",
         "Report: each file written, its lint line (`PASS ...`), and anything you could not finish with the",

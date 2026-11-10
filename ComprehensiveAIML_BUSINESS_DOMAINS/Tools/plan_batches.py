@@ -18,7 +18,7 @@ from collections import Counter, OrderedDict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-TMP = ROOT / ".tmp_parts"
+TMP = ROOT / ".authoring_state"
 
 MAX_MS_PER_BATCH = 2
 

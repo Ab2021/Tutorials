@@ -17,8 +17,15 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "Tools"))
 from manuscript_lint import lint  # noqa: E402
 
-LINK = re.compile(r"(?<!!)\[[^\]]*\]\(([^)\s]+)\)")
+LINK = re.compile(r"(?<!!)\[[^\]\n]+\]\(([^)\s]+)\)")
 SKIP_PREFIX = ("http://", "https://", "mailto:", "#")
+
+
+def _is_link_target(target: str) -> bool:
+    """A real Markdown link target, not a prose parenthetical such as `(0.05)`."""
+    if not target or target.startswith(SKIP_PREFIX):
+        return False
+    return "/" in target or target.endswith((".md", ".txt", ".json", ".png", ".svg", ".csv"))
 
 
 def md_files(scope: Path | None) -> list[Path]:
@@ -26,7 +33,7 @@ def md_files(scope: Path | None) -> list[Path]:
     return [
         p
         for p in sorted(base.rglob("*.md"))
-        if ".tmp_parts" not in p.parts and "Tools" not in p.parts
+        if ".authoring_state" not in p.parts and ".tmp_parts" not in p.parts and "Tools" not in p.parts
     ]
 
 
@@ -38,7 +45,7 @@ def check_links(files: list[Path]) -> list[tuple[str, str, str]]:
         text = re.sub(r"```.*?```", "", text, flags=re.S)
         for raw in LINK.findall(text):
             target = raw.split("#", 1)[0]
-            if not target or target.startswith(SKIP_PREFIX):
+            if not _is_link_target(target):
                 continue
             if target.startswith("/"):
                 resolved = ROOT / target.lstrip("/")
