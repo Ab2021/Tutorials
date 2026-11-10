@@ -1,74 +1,73 @@
 # Search and AdTech Playbook — Cheat Sheets
 
-## 1. One-paragraph overview
+## 1. Overview
 
-This collection supports engineers and analysts deciding how to retrieve and rank search candidates and reason about advertising eligibility. Readers should know basic logarithms, sets, and sorting. Readiness means reproducing a score and tracing a failure without confusing retrieval with ranking or auction clearing. The collection is incomplete; the only authored sheet below is a draft, not a reviewed publication.
+This collection carries 1 reference card(s) and 0 troubleshooting artifact(s) for `Search and AdTech Playbook`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
 ## 2. Topic ladder
 
-| Level | File / topic | Testable outcome | Prerequisite | Status |
-|---|---|---|---|---|
-| Foundations | Search fundamentals — planned | Explain postings and query eligibility | Sets and sorting | Planned |
-| Core | [02 BM25 and classical retrieval](02_BM25_and_Classical_Retrieval.md) | Compute BM25 and diagnose retrieval failures | Basic logarithms, sets, sorting | Draft; not independently reviewed |
-| Advanced | Search debugging flow — planned | Isolate retrieval from ranking failures | Retrieval fundamentals | Planned |
-| Advanced | Ads auction guide — planned | Distinguish eligibility and clearing | Auction fundamentals | Planned |
-| Advanced | Relevance judgment rubric — planned | Define and audit relevance labels | Search evaluation | Planned |
-| Final | Common Issues — planned | Diagnose at least 25 distinct issues | Relevant completed sheets | Not authored |
-
-## 3. Quick topic lookup
-
-| Question | Location | Warning |
+| Level | Cards | Purpose |
 |---|---|---|
-| How are TF-IDF and BM25 defined? | [Sheet 02, Section 4](02_BM25_and_Classical_Retrieval.md#4-core-formulas-with-full-derivation) | Definitions and implementations vary |
-| How are postings and scores calculated? | [Sheet 02, Section 5](02_BM25_and_Classical_Retrieval.md#5-worked-numerical-example) | Example is synthetic, not measured |
-| Why is a document missing? | [Sheet 02, Section 8](02_BM25_and_Classical_Retrieval.md#8-failure-modes--edge-cases) | Token mismatch, filtering, and freshness can look alike |
-| How do candidate recall and latency trade off? | [Sheet 02, Section 9](02_BM25_and_Classical_Retrieval.md#9-complexity--cost-analysis) | Bounds are not latency benchmarks |
 
-## 4. Reading paths — three options
+## 3. Quick lookup
 
-- Beginner: review the prerequisites below, then read Sections 1–6 of sheet 02; the dedicated foundations sheet is planned.
-- Practitioner: read sheet 02 in order, then use its failures and reference card; debugging and judgment sheets are planned extensions.
-- Advanced: read all of sheet 02, reproduce its example, and design a controlled comparison; auction and hybrid retrieval handoffs remain planned.
+| If you need to… | Read |
+|---|---|
+| work on bm25 and classical retrieval | [BM25 and Classical Retrieval](./02_BM25_and_Classical_Retrieval.md) |
+
+## 4. Reading paths
+
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
 
 ## 5. Prerequisite skills
 
-Know set union/intersection, logarithms, ratios, sorting, and basic precision/recall. The [Stanford IR book](https://nlp.stanford.edu/IR-book/) provides a public introduction to indexes and evaluation. Familiarity with field analyzers, source-to-index updates, and access-control predicates supports the production sections.
+| Skill | Why it is needed | Where it is available |
+|---|---|---|
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
 
-## 6. What this collection does NOT cover
+## 6. Exclusions and handoffs
 
-The current draft does not implement learning to rank, neural retrieval, auction clearing, bidding, or a complete relevance-labeling program. These are planned handoffs, not available completed references. It does not assert any actual company's results or measured production benchmark.
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
 
 ## 7. Master symbol glossary
 
-| Symbol | Meaning and units | Type/domain | First appearance |
-|---|---|---|---|
-| N | Documents in scoring population, count | Positive integer | [Sheet 02 §3](02_BM25_and_Classical_Retrieval.md#3-foundational-definitions) |
-| df(t) | Documents containing term t, count | Integer 0 through N | [Sheet 02 §3](02_BM25_and_Classical_Retrieval.md#3-foundational-definitions) |
-| f(t,d) | Analyzed term occurrences in field d, count | Nonnegative integer | [Sheet 02 §3](02_BM25_and_Classical_Retrieval.md#3-foundational-definitions) |
-| L, A | Document field length and average length, tokens | Nonnegative scalar; A positive in BM25 | [Sheet 02 §3](02_BM25_and_Classical_Retrieval.md#3-foundational-definitions) |
-| k1, b | BM25 saturation and length parameters, dimensionless | k1 positive; b in [0,1] | [Sheet 02 §4](02_BM25_and_Classical_Retrieval.md#4-core-formulas-with-full-derivation) |
-| K | Top-result count in complexity discussion; also length-adjusted BM25 factor in Section 4 | Context-dependent scalar | [Sheet 02 §4](02_BM25_and_Classical_Retrieval.md#4-core-formulas-with-full-derivation) |
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
+|---|---|---|---|---|---|
+| — | no card defines a symbol yet | — | — | — | — |
 
-## 8. Quick Reference Card directory
+## 8. Card directory
 
-| Card | Core rule | Use condition | Avoid condition |
-|---|---|---|---|
-| [Sheet 02 card](02_BM25_and_Classical_Retrieval.md#12-quick-reference-card) | Sum positive-IDF weighted saturated term responses | Consistent analysis and valid corpus statistics | Access controls cannot be enforced |
+| # | Card | Level | Evidence | Status |
+|---|---|---|---|---|
+| 1 | [BM25 and Classical Retrieval](./02_BM25_and_Classical_Retrieval.md) | 2 | DERIVED | authored |
 
 ## 9. Common Issues locator
 
-The final Common Issues artifact is planned, with zero completed issues and no stable issue anchors. Sheet 02 Section 8 contains ten hypothetical diagnostic scenarios; these are not a substitute for the required collection artifact.
+- Not yet authored. The collection is incomplete until this artifact exists with at least 25 distinct issues.
 
-## 10. Empirical sources, versions and collection maintenance
+## 10. Sources, versions, maintenance
 
-Sheet 02 cites Lucene 9.12.1 for its documented BM25 IDF and defaults, Robertson and Zaragoza (2009) for model-family background, Unicode UAX #15 for normalization, and official scikit-learn and Elasticsearch documentation for implementation terminology. Rolling documentation must be checked against the deployed version. Synthetic ranking and capacity examples are illustrative, not measured. Sheet 02 is a draft and has not been independently reviewed. Revisit it when analyzers, corpus statistics, scoring implementation, or security policies change. No benchmark has been measured.
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
 
-## 11. Collection acceptance checklist
+## 11. Acceptance checklist
 
-- [x] Current draft identifies scope, sources, and evidence limitations.
-- [x] Current draft includes 12 numbered sections, worked arithmetic, failure diagnostics, interview answers, and final card.
-- [x] Sheet 02 has at least 1,000 substantive nonblank, nonheading lines.
-- [ ] All planned sheets exist and have been independently reviewed.
-- [ ] Final Common Issues artifact contains at least 25 complete distinct issues.
-- [ ] All collection links, primary-source claims, formulas, and implementation versions are independently reviewed.
-- [ ] Collection is ready for publication.
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.

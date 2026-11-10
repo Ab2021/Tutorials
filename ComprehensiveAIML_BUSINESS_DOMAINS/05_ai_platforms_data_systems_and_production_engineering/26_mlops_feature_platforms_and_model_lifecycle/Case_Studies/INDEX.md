@@ -1,50 +1,56 @@
-# Module 26 Case Studies — MLOps, Feature Platforms and Model Lifecycle
-
-**Status:** planning catalog; no authored `CASE-*` files. Future cases must meet the [course standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [case master](../../../../Templates/CASE_STUDY_CONTENT_MASTER_TEMPLATE.md).
+# Module 26 â€” MLOps, Feature Platforms and Model Lifecycle — Case Studies
 
 ## 1. Collection metadata
 
 | Field | Value |
 |---|---|
-| Domain | reproducible ML release, feature, deployment, and lifecycle operations |
-| Evidence boundary | proposed designs and illustrative calculations only until primary release artifacts are available |
-| Review trigger | release manifest, feature contract, policy, model, tool, index, or deployment semantics change |
+| Collection owner | Curriculum maintainer |
+| Canonical case-ID format | CASE-XX-NN |
+| Evidence policy | Illustrative teaching inputs are not company results; unsourced claims stay OPEN. |
+| Editorial state | Draft; independent publication review is not claimed. |
+| Acceptance rule | A case row is `authored` only when `Tools/manuscript_lint.py` exits 0 for it. |
+| Review trigger | A source body, decision policy, metric definition, or workload assumption changes. |
 
 ## 2. Case catalog
 
-| Case ID | Linked title | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result/limitation |
+| Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-26-01 | Deploy a credit model safely | MLOps | predictive-ml | promote, hold, or roll back | atomic-release-bundle | rollout-regression | not-measured | proposed | — | needs domain controls and real release evidence |
-| PLAN-26-02 | Feature freshness incident response | MLOps/data | incident | contain and restore fresh features | materialized-view | correctness-contract | not-measured | proposed | — | needs lineage and replay evidence |
-| PLAN-2026-IR005 | Release and recover an agent as a compatible bundle | MLOps | hybrid | promote/recover compatible versions | atomic-release-bundle | rollout-regression; human-in-the-loop | not-measured | proposed | 2026-11-06 (planning) | prompt-only rollback is insufficient |
+| PLAN-26-01 | Deploy a credit model safely | Module 26 â€” MLOps, Feature Platforms and Model Lifecycle | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-26-02 | Feature freshness incident response | Module 26 â€” MLOps, Feature Platforms and Model Lifecycle | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-2026-IR005 | Release and recover an agent as a compatible bundle | Module 26 â€” MLOps, Feature Platforms and Model Lifecycle | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
 
 ## 3. Canonical reusable patterns
 
-- **Atomic release bundle:** version the model, features, code, configuration, prompt, tools, index, and policy that jointly determine behavior.
-- **Rollout regression:** compare staged traffic to a declared baseline while preserving a safe halt and recovery path.
-- **Materialized view:** manage feature freshness, point-in-time meaning, ownership, and replay separately from model code.
+| Pattern | Diagnostic signature | Use when | Boundary |
+|---|---|---|---|
+| evaluation-mismatch | Offline score does not represent the decision | Ranking, forecast, threshold, agent products | The metric captures decision and guardrails |
+| data-leakage | Information unavailable at decision time inflates a score | Unexpectedly strong offline result | The feature is genuinely available before the cutoff |
+| distribution-shift | Live population differs from training | New market, season, channel, or policy version | The change is sampling noise only |
+| human-in-the-loop | Review capacity or override changes the trade-off | High-impact, uncertain, or regulated work | Review is infeasible or demonstrably ineffective |
+| model-monitoring | Live signals diverge from the evaluation | Deployed model with usable feedback | No meaningful feedback signal exists |
 
 ## 4. Similarity / contrast map
 
-| Case | Shared method | Critical distinction |
-|---|---|---|
-| release and feature incident | provenance, ownership, rollback | restoring a model cannot repair an invalid feature snapshot |
-| credit release and IR005 | compatible bundles and approval | domain decision governance needs its own verified requirements |
+This collection holds 0 authored case(s) and 3 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
 
-## 5. Questions and future-case backlog
+## 5. Questions / future-case backlog
 
-1. Which artifacts must share a compatibility gate?
-2. What shadow execution is side-effect free, and what cannot it validate?
-3. How do rollback and data/feature replay avoid reintroducing a bad state?
-4. Which release metric is a guardrail rather than a promotion objective?
+Planned commitments, retained without silent deletion:
+
+- `PLAN-26-01` — Deploy a credit model safely. Not authored; no file exists, so no link is offered.
+- `PLAN-26-02` — Feature freshness incident response. Not authored; no file exists, so no link is offered.
+- `PLAN-2026-IR005` — Release and recover an agent as a compatible bundle. Not authored; no file exists, so no link is offered.
 
 ## 6. Review / retirement log
 
-| Date | Item | Decision | Reason |
+| Date | Artifact | Event | Evidence / stage change |
 |---|---|---|---|
-| 2026-11-09 | catalog | retained as planned | no executed promotion or recovery drill |
+| 2026-11-10 | collection | index regenerated; no authored case yet | not-measured / proposed |
 
 ## 7. Pre-publish checks
 
-- [ ] Create a linked 15-section `CASE-*` file with bundle manifest, compatibility test, rollback drill, and failure path.
-- [ ] Separate proposed validation from results; reconcile source, evidence, stage, and editorial status.
+- [x] Every catalog row links a file that exists, or is marked planned without a link.
+- [x] Evidence, implementation stage, and editorial status are separate columns.
+- [x] Planned commitments are retained with no silent deletion.
+- [ ] Independent source review of every authored case.
+- [ ] Publication review of every authored case.

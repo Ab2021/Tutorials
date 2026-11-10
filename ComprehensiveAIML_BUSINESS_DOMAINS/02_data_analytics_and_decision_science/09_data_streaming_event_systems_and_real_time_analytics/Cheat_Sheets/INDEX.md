@@ -1,78 +1,77 @@
-# Data Streaming, Event Systems and Real-Time Analytics — Cheat Sheets
-
-**Status:** Unreviewed drafts and planned topics, not a completed collection. Follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and linked cheat-sheet master. The original source case files are unavailable; their titles do not establish their contents or an observed incident.
+# Module 09 â€” Data Streaming, Event Systems and Real-Time Analytics — Cheat Sheets
 
 ## 1. Overview
 
-For engineers designing and operating durable event pipelines, this collection connects partition ownership and replay to source-database handoff, downstream materialization, and event-time session state. Readiness means explaining the applicable ordering, state, time, correction and failure contracts, and testing them against actual product versions and workloads.
+This collection carries 3 reference card(s) and 0 troubleshooting artifact(s) for `Module 09 â€” Data Streaming, Event Systems and Real-Time Analytics`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
 ## 2. Topic ladder
 
-| Level | Reference | Outcome and prerequisite | Status |
-|---|---|---|---|
-| Practitioner | [Kafka consumer partitions and lag](01_Kafka_Consumer_Partitions_and_Lag.md) | Explain assignment, partition offsets, lag and skew; requires basic logs and queues | Draft; unreviewed |
-| Advanced | [CDC ordering, snapshot handoff and materialization](02_CDC_Ordering_Snapshot_and_Materialization.md) | Explain no-gap handoff and replay-safe per-key state; requires the Kafka sheet and database transactions | Draft; unreviewed |
-| Advanced | [Flink event-time session windows and stateful processing](03_Flink_Event_Time_Session_Windows_and_Stateful_Processing.md) | Trace watermark-driven sessions, late merges, state recovery and corrections; requires Kafka, CDC, timestamp arithmetic and keyed state | Draft; unreviewed |
-| Planned | Event schema checklist | Contract evolution and compatibility | Not written |
-| Planned | Streaming semantics | Delivery, ordering and effect boundaries | Not written |
-| Planned | Broader windowing patterns | Window families and wider event-time patterns beyond the focused Flink session sheet | Not written |
-| Planned | Common Issues | Distinct diagnostic cases across this collection | Not written |
-
-## 3. Quick topic lookup
-
-| Question | Reference | Condition and warning |
+| Level | Cards | Purpose |
 |---|---|---|
-| Why is one consumer partition falling behind? | [Kafka failure modes](01_Kafka_Consumer_Partitions_and_Lag.md#8-failure-modes--edge-cases) | Compare per-partition rates; aggregate capacity can conceal skew. |
-| Can a late snapshot overwrite a newer row? | [CDC failure modes](02_CDC_Ordering_Snapshot_and_Materialization.md#8-failure-modes--edge-cases) | Only compare versions when the source protocol defines the comparator. |
-| How long will replay take? | [CDC worked example](02_CDC_Ordering_Snapshot_and_Materialization.md#5-worked-numerical-example) | Backlog divided by surplus assumes stable rates and positive service surplus. |
-| How can a late event merge published sessions? | [Flink worked trace](03_Flink_Event_Time_Session_Windows_and_Stateful_Processing.md#5-worked-numerical-example) | Trace uses an explicitly generic strict-overlap contract; deployed equality and cleanup behavior require version-specific checks. |
-| Why did a session stop firing or leave an obsolete row? | [Flink failure modes](03_Flink_Event_Time_Session_Windows_and_Stateful_Processing.md#8-failure-modes--edge-cases) | Compare per-input watermarks and correction effects; a checkpoint alone does not fix either. |
+
+## 3. Quick lookup
+
+| If you need to… | Read |
+|---|---|
+| work on kafka consumer partitions and lag | [Kafka Consumer Partitions and Lag](./01_Kafka_Consumer_Partitions_and_Lag.md) |
+| work on cdc ordering, snapshot handoff, and duplicate-safe materialization | [CDC Ordering, Snapshot Handoff, and Duplicate-Safe Materialization](./02_CDC_Ordering_Snapshot_and_Materialization.md) |
+| work on flink event-time session windows and stateful processing | [Flink Event-Time Session Windows and Stateful Processing](./03_Flink_Event_Time_Session_Windows_and_Stateful_Processing.md) |
 
 ## 4. Reading paths
 
-- **Beginner:** Learn database transactions and message queues first, then read the Kafka sheet's definitions and worked example; foundational schema and broader window sheets remain planned.
-- **Practitioner:** Read the complete Kafka sheet, the CDC handoff and troubleshooting sections, then the Flink session trace and failure modes; apply contracts to the deployed connector and sink.
-- **Advanced:** Read all three sheets in full, trace crash boundaries and a late session merge, and design reconciliation and recovery tests. No cross-key atomicity or automatic sink retraction follows from checkpointing alone.
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
 
 ## 5. Prerequisite skills
 
-Understand relational transaction commit and snapshot isolation, broker partitions and offsets, rate-by-time arithmetic, idempotency, and the deployed system's log-retention behavior. Database and connector guarantees must be checked in the version-specific documentation before implementation.
+| Skill | Why it is needed | Where it is available |
+|---|---|---|
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
 
-## 6. What this collection does not cover
+## 6. Exclusions and handoffs
 
-The current drafts do not provide complete event-sourcing, general windowing-pattern coverage, Flink connector-configuration, or cross-database transaction recipes. The focused session sheet is not a complete windowing survey. Planned titles are not completed lessons. A diagnostic example is not an observed production case.
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
 
 ## 7. Master symbol glossary
 
-| Symbol | Meaning and units | Scope / warning | Reference |
-|---|---|---|---|
-| W | Source snapshot boundary, source-specific coordinate | Valid only with the source's comparison and inclusion rules | [CDC definitions](02_CDC_Ordering_Snapshot_and_Materialization.md#3-foundational-definitions) |
-| Offset | Record position within one Kafka partition | Not comparable to a database log coordinate | [Kafka sheet](01_Kafka_Consumer_Partitions_and_Lag.md) |
-| Backlog | Outstanding events at a stated time | Count alone is not event age or proof of loss | [CDC example](02_CDC_Ordering_Snapshot_and_Materialization.md#5-worked-numerical-example) |
-| `t`, `w` | Event timestamp and event-time watermark, integer milliseconds | Watermark is progress, not proof of completeness; `w` differs from CDC snapshot boundary `W` | [Flink definitions](03_Flink_Event_Time_Session_Windows_and_Stateful_Processing.md#3-foundational-definitions) |
-| `g`, `L` | Session inactivity gap and allowed lateness, milliseconds | Equality, trigger and cleanup behavior are contract-specific | [Flink definitions](03_Flink_Event_Time_Session_Windows_and_Stateful_Processing.md#3-foundational-definitions) |
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
+|---|---|---|---|---|---|
+| — | no card defines a symbol yet | — | — | — | — |
 
-## 8. Quick Reference Card directory
+## 8. Card directory
 
-| Card | Core rule | Use and critical condition |
-|---|---|---|
-| [Kafka](01_Kafka_Consumer_Partitions_and_Lag.md#12-quick-reference-card) | Track partition-level progress and durable effects. | Offset commits must match the processing contract. |
-| [CDC](02_CDC_Ordering_Snapshot_and_Materialization.md#12-quick-reference-card) | Cover the handoff without gaps and prevent stale replay. | Ordering, identity and boundary semantics must be documented. |
-| [Flink sessions](03_Flink_Event_Time_Session_Windows_and_Stateful_Processing.md#12-quick-reference-card) | Late bridges can merge sessions and invalidate earlier output identities. | Strict overlap is the generic trace's rule; verify deployed equality, cleanup and sink corrections. |
+| # | Card | Level | Evidence | Status |
+|---|---|---|---|---|
+| 1 | [Kafka Consumer Partitions and Lag](./01_Kafka_Consumer_Partitions_and_Lag.md) | 3 | DERIVED | authored |
+| 2 | [CDC Ordering, Snapshot Handoff, and Duplicate-Safe Materialization](./02_CDC_Ordering_Snapshot_and_Materialization.md) | 3 | DERIVED | authored |
+| 3 | [Flink Event-Time Session Windows and Stateful Processing](./03_Flink_Event_Time_Session_Windows_and_Stateful_Processing.md) | 3 | DERIVED | authored |
 
 ## 9. Common Issues locator
 
-A standalone Common Issues artifact is **planned, not written**; no collection-wide issue count is claimed. For current diagnostics use the [Kafka failure modes](01_Kafka_Consumer_Partitions_and_Lag.md#8-failure-modes--edge-cases), [CDC failure modes](02_CDC_Ordering_Snapshot_and_Materialization.md#8-failure-modes--edge-cases), and [Flink session failures](03_Flink_Event_Time_Session_Windows_and_Stateful_Processing.md#8-failure-modes--edge-cases). Each entry needs a discriminating diagnostic, mitigation and verification before promotion into a consolidated issue catalog.
+- Not yet authored. The collection is incomplete until this artifact exists with at least 25 distinct issues.
 
-## 10. Sources, versions and maintenance
+## 10. Sources, versions, maintenance
 
-All three files are illustrative, unreviewed drafts. The source inventory's Debezium CDC and IoT session-window cases were unavailable. Recheck the actual source database, [Debezium connector](https://debezium.io/documentation/), [Kafka](https://kafka.apache.org/documentation/), [Flink 1.20 window documentation](https://nightlies.apache.org/flink/flink-docs-release-1.20/docs/dev/datastream/operators/windows/), sink version and retention settings whenever implementation or assumptions change; use documentation matching the deployed release. The [CDC](../../../00_SOURCE_COVERAGE_EDGE_INDUSTRY.md#kafka) and [Flink](../../../00_SOURCE_COVERAGE_EDGE_INDUSTRY.md#flink) source coverage briefs are topic maps, not empirical evidence. The session trace uses an explicit generic contract and has not been run on Flink.
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
 
-**Additional planned brief:** [PLAN-2026-IR035](../../../00_REFERENCE_INFORMED_CASE_PLAN.md) covers score buckets, Fenwick summaries, deterministic ties, deduplicated and late events, shard moves and closing watermarks. Compare reference sorted snapshots and exact final-rank replay; a sum of stale counters is not an exact settlement snapshot. The [interview example](../../../../INTERVIEW_CASES/DSA/Sys_Des_DSA/Leaderboards/score_bucket_rank_consistency.md) is a reference only, not a finished sheet or verified deployment.
+## 11. Acceptance checklist
 
-## 11. Collection acceptance checklist
-
-- [ ] All planned source topics and a distinct Common Issues artifact are authored and reviewed.
-- [ ] Each sheet retains all 12 sections, checked calculations or state traces, diagnostic failures, answered interview questions and its final card.
-- [ ] Every source-specific assertion is supported or explicitly marked open; product versions and review triggers are recorded.
-- [ ] Links, learning paths, glossary, issue locations and status are reconciled against the completed files.
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.

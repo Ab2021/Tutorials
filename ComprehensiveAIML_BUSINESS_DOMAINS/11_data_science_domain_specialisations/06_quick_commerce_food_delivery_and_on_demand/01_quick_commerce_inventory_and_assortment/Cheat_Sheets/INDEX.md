@@ -1,61 +1,73 @@
 # Quick Commerce Inventory and Assortment — Cheat Sheets
 
-**Collection state:** planned; no linked individual sheets are authored. Contract: [course standards](../../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [sheet master](../../../../../Templates/CHEAT_SHEET_CONTENT_MASTER_TEMPLATE.md). See the family [coverage ledger](../../COVERAGE_LEDGER.md) for source uncertainty.
-
 ## 1. Overview
-This collection will teach an operator or analyst to convert store-level stock, demand, expiry, and substitution signals into bounded availability decisions. It covers reusable methods, not proprietary systems or measured company performance. Readiness means the learner can state the decision-time data contract, calculate the stated illustrative quantity, reject invalid assumptions, and select a fallback.
+
+This collection carries 1 reference card(s) and 0 troubleshooting artifact(s) for `Quick Commerce Inventory and Assortment`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
 ## 2. Topic ladder
-| Level | File / topic | Testable outcome | Prerequisites | Status |
-|---|---|---|---|---|
-| Foundation | 01 Availability KPI tree | Decompose promise failure into inventory, pick, substitute, and delivery components | ratios and event timestamps | planned |
-| Core | 02 Substitution policy | Select a policy with customer consent, margin, and availability constraints | 01 | planned |
-| Core | 03 Perishables forecast guide | Calculate lead-time demand and expiry-risk decision inputs | 01 | planned |
-| Advanced | 04 Exact inventory range totals | Trace Fenwick point update/range query and select snapshot contract | integer arithmetic; 01 | planned; IR027 |
-| Final | 05 Common Issues | Diagnose at least 25 distinct inventory/assortment failures | 01–04 | planned |
 
-## 3. Quick topic lookup
-| Question | File | Section | Use condition | Failure warning |
-|---|---|---|---|---|
-| Why did a promise fail? | 01 | 4–8 | completed order history exists | do not equate availability with delivery completion |
-| Can this item be substituted? | 02 | 7 | consent and candidate data are known | ranking cannot override allergy or exclusion rules |
-| How much perishable stock is defensible? | 03 | 4–7 | lead time and remaining shelf life are known | censored stockouts bias demand |
-| How do I total bins after a correction? | 04 | 4–9 | fixed bin order, point delta | cell atomicity is not snapshot isolation |
+| Level | Cards | Purpose |
+|---|---|---|
 
-## 4. Reading paths — three options
-- **Beginner:** 01 → 02 → 03; learns KPI definitions, consented substitution, and expiry-aware forecasting.
-- **Practitioner:** 01 → 02 → 03 → 04 → 05; assumes ratio arithmetic and versioned-event basics.
-- **Advanced:** 04 → 01 → 03 → 02 → 05; assumes data-structure and concurrent-read foundations; use 04 only as an inventory-total component, not a distributed inventory system.
+## 3. Quick lookup
+
+| If you need to… | Read |
+|---|---|
+| work on quick-commerce availability kpi tree | [Quick-Commerce Availability KPI Tree](./01_Quick_Commerce_Availability_KPI_Tree.md) |
+
+## 4. Reading paths
+
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
 
 ## 5. Prerequisite skills
-Ratios, weighted averages, dimensional checks, inclusive intervals, integer overflow, event time versus processing time, and point-in-time data joins. The Fenwick item requires one-based indexing and bitwise `i & -i`; it will define both locally.
+
+| Skill | Why it is needed | Where it is available |
+|---|---|---|
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
 
 ## 6. Exclusions and handoffs
-Routing and ETA go to Dispatch; offer economics go to Growth/Pricing; warehouse layout and actual safety policy require operational owners. This collection will not claim Zepto, Swiggy Instamart, or Blinkit implementation details without primary evidence.
+
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
 
 ## 7. Master symbol glossary
-| Symbol / term | Meaning | Units / type | Valid range | First planned use |
-|---|---|---|---|---|
-| `A` | availability rate | dimensionless ratio | [0,1] | 01 |
-| `D_L` | demand over lead time | units | nonnegative count | 03 |
-| `i` | one-based bin index | integer | 1..n | 04 |
-| `delta` | point inventory adjustment | signed integer units | policy bounded | 04 |
-| `V` | snapshot version | monotonic integer | versioned state | 04 |
 
-## 8. Quick Reference Card directory
-No card anchors exist until files are authored. Planned cards: 01 KPI decomposition; 02 substitution eligibility; 03 expiry-aware order decision; 04 Fenwick update/query and snapshot precondition; 05 issue triage.
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
+|---|---|---|---|---|---|
+| — | no card defines a symbol yet | — | — | — | — |
+
+## 8. Card directory
+
+| # | Card | Level | Evidence | Status |
+|---|---|---|---|---|
+| 1 | [Quick-Commerce Availability KPI Tree](./01_Quick_Commerce_Availability_KPI_Tree.md) | 1 | DERIVED | draft (lint open) |
 
 ## 9. Common Issues locator
-Planned final artifact: `05_25_Common_Issues.md`, with at least 25 complete issues covering stock accuracy, censored demand, expiry, substitutions, vendor fill, promise logic, overflow, replay, and snapshot visibility. No issue IDs or anchors exist yet.
 
-## 10. Sources, versions and maintenance
-| Source ID | Source / date | Supported scope | Limitation / trigger |
-|---|---|---|---|
-| REF-IR027 | [Fenwick inventory totals reference](../../../../../INTERVIEW_CASES/DSA/index_basics/Range_Queries/fenwick_inventory_totals.md), reviewed 2026-11-09 | lowbit, inclusive range, point delta, snapshot caveat | illustrative workload; recheck if data contract changes |
-| OPEN-INV-01 | public company material not obtained | company workflow/outcome | do not make company-specific claims |
+- Not yet authored. The collection is incomplete until this artifact exists with at least 25 distinct issues.
 
-## 11. Collection acceptance checklist
-- [ ] Every planned file exists with 12 ordered sections, metadata, checked examples, four distinct failures, 10–15 answered questions, and final card.
-- [ ] IR027 has an array-oracle, boundary, overflow, replay, and visibility check.
-- [ ] Final issue artifact has >=25 complete distinct issues.
-- [ ] Links, prerequisites, glossary, evidence labels, and card anchors are verified.
+## 10. Sources, versions, maintenance
+
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
+
+## 11. Acceptance checklist
+
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.

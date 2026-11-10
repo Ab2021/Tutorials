@@ -1,44 +1,61 @@
-# Module 54 Case Studies — ML and AI System Design Interviews
+# Module 54 â€” ML and AI System Design Interviews — Case Studies
 
 ## 1. Collection metadata
-Audience: senior system-design candidates and reviewers. Owner: interview curriculum maintainers. Index state: draft. Reference narratives are prompts, not organization evidence. Evidence, implementation stage, and editorial status are tracked separately.
+
+| Field | Value |
+|---|---|
+| Collection owner | Curriculum maintainer |
+| Canonical case-ID format | CASE-MLSD-001 |
+| Evidence policy | Illustrative teaching inputs are not company results; unsourced claims stay OPEN. |
+| Editorial state | Draft; independent publication review is not claimed. |
+| Acceptance rule | A case row is `authored` only when `Tools/manuscript_lint.py` exits 0 for it. |
+| Review trigger | A source body, decision policy, metric definition, or workload assumption changes. |
 
 ## 2. Case catalog
-| Case ID | Case title | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Limitation |
+
+| Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-54-001 | Design content moderation | platform ML | predictive-ml | select decision/data/evaluation design | decision contract | human review | not-measured | proposed | not reviewed | planned; no file |
-| PLAN-54-002 | Design enterprise RAG assistant | enterprise knowledge | llm-agentic | select grounded retrieval/service contract | decision contract | retrieval evaluation | not-measured | proposed | not reviewed | planned; no file |
-| PLAN-2026-IR020 | Distributed service correctness | search/routing | hybrid | preserve guarantees under sharding/outage | correctness-contract | admission; materialized-view | not-measured | proposed | not reviewed | planned; reference-only |
-| PLAN-2026-IR026 | Data-structure operation mix | serving/DSA | hybrid | select structure with resource bounds | correctness-contract | bounded-work | not-measured | proposed | not reviewed | planned; reference-only |
-| PLAN-2026-IR034 | Stateful serving consistency | cache/typeahead | hybrid | define refresh/failure guarantees | correctness-contract | snapshot-consistency | not-measured | proposed | not reviewed | planned; reference-only |
+| CASE-MLSD-001 | [Choosing an enforcement contract for a multilingual moderation classifier](./01_content_moderation_enforcement_contract.md) | Module 54 â€” ML and AI System Design Interviews | predictive-ml | decision record in the linked case | decision contract | calibrated, threshold, selection, bounded, human, review, ca | illustrative | proposed | null | draft (lint open) |
+| PLAN-54-001 | Design content moderation | Module 54 â€” ML and AI System Design Interviews | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-54-002 | Design enterprise RAG assistant | Module 54 â€” ML and AI System Design Interviews | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-2026-IR020 | Distributed service correctness | Module 54 â€” ML and AI System Design Interviews | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-2026-IR026 | Data-structure operation mix | Module 54 â€” ML and AI System Design Interviews | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-2026-IR034 | Stateful serving consistency | Module 54 â€” ML and AI System Design Interviews | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
 
 ## 3. Canonical reusable patterns
-| Pattern | Mechanism | Boundary |
-|---|---|---|
-| decision contract | define owner/input/action/objective/guardrail | no metric substitutes for decision |
-| correctness contract | state invariant and recovery boundary | local correctness need not survive partial failure |
-| bounded-work | set admission/work/output limits and response | rejected work needs explicit behavior |
+
+| Pattern | Diagnostic signature | Use when | Boundary |
+|---|---|---|---|
+| evaluation-mismatch | Offline score does not represent the decision | Ranking, forecast, threshold, agent products | The metric captures decision and guardrails |
+| data-leakage | Information unavailable at decision time inflates a score | Unexpectedly strong offline result | The feature is genuinely available before the cutoff |
+| distribution-shift | Live population differs from training | New market, season, channel, or policy version | The change is sampling noise only |
+| human-in-the-loop | Review capacity or override changes the trade-off | High-impact, uncertain, or regulated work | Review is infeasible or demonstrably ineffective |
+| model-monitoring | Live signals diverge from the evaluation | Deployed model with usable feedback | No meaningful feedback signal exists |
 
 ## 4. Similarity / contrast map
-| Pattern | Supporting planned case | Contrast | Lesson |
+
+This collection holds 1 authored case(s) and 5 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
+
+## 5. Questions / future-case backlog
+
+Planned commitments, retained without silent deletion:
+
+- `PLAN-54-001` — Design content moderation. Not authored; no file exists, so no link is offered.
+- `PLAN-54-002` — Design enterprise RAG assistant. Not authored; no file exists, so no link is offered.
+- `PLAN-2026-IR020` — Distributed service correctness. Not authored; no file exists, so no link is offered.
+- `PLAN-2026-IR026` — Data-structure operation mix. Not authored; no file exists, so no link is offered.
+- `PLAN-2026-IR034` — Stateful serving consistency. Not authored; no file exists, so no link is offered.
+
+## 6. Review / retirement log
+
+| Date | Artifact | Event | Evidence / stage change |
 |---|---|---|---|
-| human review | moderation | RAG citation review | reviewers need capacity and an oracle |
-| consistency | IR020/034 | IR026 local operation selection | distributed semantics change the proof |
-
-## 5. Questions and future-case backlog
-| Question | Needed evidence | Proposed case | Owner | Trigger |
-|---|---|---|---|---|
-| Which false decision is most costly? | stakeholder cost model | moderation | product owner | requirements review |
-| What constitutes grounded output? | corpus/query/citation oracle | enterprise RAG | knowledge owner | corpus change |
-| What fails under shard loss? | failure replay/reference comparison | IR020 | platform lead | architecture change |
-
-## 6. Review and retirement log
-| Case ID | Date | Change | Evidence | Action |
-|---|---|---|---|---|
-| all | 2026-11-09 | catalog normalized to seven sections | planned reference inventory | no case promoted |
+| 2026-11-10 | [Choosing an enforcement contract for a multilingual moderation classifier](./01_content_moderation_enforcement_contract.md) | index regenerated from disk | illustrative / proposed unchanged |
 
 ## 7. Pre-publish checks
-- [ ] Every case has all 15 sections, a checked numerical/trace task, >=12 answered interview questions, and final card.
-- [ ] Catalog links, case IDs, evidence labels, stages, and editorial states reflect actual files.
-- [ ] Primary sources support every factual organization/model/vendor claim.
-- [ ] Planned reference examples remain clearly non-empirical until independently authored.
+
+- [x] Every catalog row links a file that exists, or is marked planned without a link.
+- [x] Evidence, implementation stage, and editorial status are separate columns.
+- [x] Planned commitments are retained with no silent deletion.
+- [ ] Independent source review of every authored case.
+- [ ] Publication review of every authored case.

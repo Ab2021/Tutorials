@@ -1,59 +1,57 @@
-# Module 37 Case Studies — Sensor Fusion, IoT and Real-Time Perception
+# Module 37 â€” Sensor Fusion, IoT and Real-Time Perception — Case Studies
 
 ## 1. Collection metadata
 
-**Domain:** timestamped multi-sensor perception and telemetry. **Purpose:** teach a bounded operational decision about observations whose time, frame, uncertainty or delivery quality may be wrong. **Evidence policy:** these are illustrative proposed cases; no workplace, worker, warehouse, device, safety function or outcome is asserted. **Source basis:** the visible edge-signals register is planning provenance only; its source bodies were not supplied. **Prerequisites:** sampled signals, timestamp semantics, coordinate frames, basic probability and the Module 37 sheet collection. **Collection state:** catalog expanded; no authored individual case exists.
+| Field | Value |
+|---|---|
+| Collection owner | Curriculum maintainer |
+| Canonical case-ID format | CASE-M37-02 |
+| Evidence policy | Illustrative teaching inputs are not company results; unsourced claims stay OPEN. |
+| Editorial state | Draft; independent publication review is not claimed. |
+| Acceptance rule | A case row is `authored` only when `Tools/manuscript_lint.py` exits 0 for it. |
+| Review trigger | A source body, decision policy, metric definition, or workload assumption changes. |
 
 ## 2. Case catalog
 
-| Case ID | Linked title if authored | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result/limitation | Editorial status |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-M37-01 | Warehouse asset tracking | indoor asset tracking | streaming-systems | choose alignment, association, freshness and degraded-mode contract | freshness gate | association uncertainty; telemetry lineage | illustrative | proposed | null | no site trace, accuracy result or operations outcome measured | planned |
-| PLAN-M37-02 | Multisensor worker-safety system | industrial perception | hybrid | choose signal-quality gate, escalation boundary and safe handoff | safety-aware fusion | human review; controlled degradation | illustrative | proposed | null | no safety claim, worker data or incident outcome measured | planned |
+| Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
+|---|---|---|---|---|---|---|---|---|---|---|
+| CASE-M37-02 | [Multisensor worker-safety system in a mixed-traffic palletizing cell](./Multisensor_worker_safety_system.md) | Module 37 â€” Sensor Fusion, IoT and Real-Time Perception | hybrid | decision record in the linked case | safety-aware-fusion | human-review, controlled-degradation | illustrative | draft | null | draft (lint open) |
+| CASE-37-001 | [Door-Attributed Pallet Exit Verification in a Distribution Warehouse](./Warehouse_asset_tracking.md) | Module 37 â€” Sensor Fusion, IoT and Real-Time Perception | streaming-systems | decision record in the linked case | freshness gate | association, uncertainty, telemetry, lineage | illustrative | draft | null | draft (lint open) |
+| PLAN-M37-01 | Warehouse asset tracking | Module 37 â€” Sensor Fusion, IoT and Real-Time Perception | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-M37-02 | Multisensor worker-safety system | Module 37 â€” Sensor Fusion, IoT and Real-Time Perception | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
 
 ## 3. Canonical reusable patterns
 
-| Pattern | Mechanism | Use when | Non-inference |
+| Pattern | Diagnostic signature | Use when | Boundary |
 |---|---|---|---|
-| capture-time contract | preserve clock domain, capture/receive/process time, uncertainty and sequence | asynchronous sensors feed one decision | receipt order is not physical order |
-| frame-and-unit gate | reject data without compatible frame direction, units and calibration revision | geometry or derived velocity is used | a valid transform name does not prove current mounting |
-| freshness gate | bound capture-to-use age and select a declared degraded action | queued/networked observations exist | a dropped observation alone does not specify the safe action |
-| quality-aware fusion | propagate quality/uncertainty and reject invalid observations before estimator update | measurements have distinct failure modes | fused output confidence is not independent evidence |
-| telemetry lineage | carry schema/version/source/quality metadata to diagnosis | a remote operator or audit needs reconstruction | telemetry availability is not real-time authority |
+| evaluation-mismatch | Offline score does not represent the decision | Ranking, forecast, threshold, agent products | The metric captures decision and guardrails |
+| data-leakage | Information unavailable at decision time inflates a score | Unexpectedly strong offline result | The feature is genuinely available before the cutoff |
+| distribution-shift | Live population differs from training | New market, season, channel, or policy version | The change is sampling noise only |
+| human-in-the-loop | Review capacity or override changes the trade-off | High-impact, uncertain, or regulated work | Review is infeasible or demonstrably ineffective |
+| model-monitoring | Live signals diverge from the evaluation | Deployed model with usable feedback | No meaningful feedback signal exists |
 
 ## 4. Similarity / contrast map
 
-| Dimension | Warehouse asset tracking | Multisensor worker-safety system | Consequence |
-|---|---|---|---|
-| Unit | asset observation/track update | bounded zone-event candidate | association and action costs differ |
-| Baseline | manual scan or simple beacon position | fixed threshold/manual process | baseline must be measured or explicitly illustrative |
-| Binding uncertainty | time/frame/association | quality, occlusion and escalation timing | validation oracle differs |
-| Allowed recovery | mark unknown, request scan, suppress stale track | hazard-specific controlled escalation/handoff | never prescribe generic power removal |
-| Evidence needed | synchronized trace and ground-truth protocol | hazard analysis, sensor-quality trace and authority policy | neither follows from model accuracy alone |
+This collection holds 2 authored case(s) and 2 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
 
 ## 5. Questions / future-case backlog
 
-1. Which clock is authoritative and how is cross-clock uncertainty represented?
-2. What location/zone error is acceptable for the particular decision, not merely for a chart?
-3. What observation-time cutoff prevents future information from entering an evaluation?
-4. How are duplicate, out-of-order and late messages distinguished from true motion?
-5. Which physical reference validates each calibration transform and its direction?
-6. Who owns the action when sensor quality crosses the rejection bound?
-7. What safe/degraded behavior is appropriate to the specific hazard and why?
-8. Which independent ground-truth source can evaluate association and freshness?
+Planned commitments, retained without silent deletion:
+
+- `PLAN-M37-01` — Warehouse asset tracking. Not authored; no file exists, so no link is offered.
+- `PLAN-M37-02` — Multisensor worker-safety system. Not authored; no file exists, so no link is offered.
 
 ## 6. Review / retirement log
 
-| Date | Item | Event | Evidence effect | Action |
-|---|---|---|---|---|
-| 2026-11-09 | catalog | Replaced a two-row planning list with the required seven-section case-index structure. | None; both rows remain proposed illustrative plans. | Do not allocate `CASE` IDs until 15-section files exist. |
-| 2026-11-09 | source scope | Reconfirmed edge-signals source names are not source-body access. | No medical/device/workplace claim is supported. | Keep source uncertainty visible in any future case. |
+| Date | Artifact | Event | Evidence / stage change |
+|---|---|---|---|
+| 2026-11-10 | [Multisensor worker-safety system in a mixed-traffic palletizing cell](./Multisensor_worker_safety_system.md) | index regenerated from disk | illustrative / draft unchanged |
+| 2026-11-10 | [Door-Attributed Pallet Exit Verification in a Distribution Warehouse](./Warehouse_asset_tracking.md) | index regenerated from disk | illustrative / draft unchanged |
 
 ## 7. Pre-publish checks
 
-- [ ] Each case has the required metadata and Sections 1–15, including 5a–5e and a final Section 15 card.
-- [ ] Owner, action, input/output unit, deadline, baseline, clock/frame/uncertainty contract and recovery behavior are bounded.
-- [ ] Successful and failed input-to-output/recovery paths have an explicit state and authority owner.
-- [ ] Numerical walkthrough and sensitivity have checked units; no illustrative workload is presented as measured.
-- [ ] Section 12 supplies competing causes, diagnostic signal, bounded correction, mitigation risk, prevention and verification.
-- [ ] Section 14 contains 12–18 answered prompts with follow-up, alternatives, red flags, scoring and support.
+- [x] Every catalog row links a file that exists, or is marked planned without a link.
+- [x] Evidence, implementation stage, and editorial status are separate columns.
+- [x] Planned commitments are retained with no silent deletion.
+- [ ] Independent source review of every authored case.
+- [ ] Publication review of every authored case.

@@ -1,71 +1,73 @@
-# AI Evaluation, Monitoring and Continuous Improvement — Cheat Sheets
-
-**Status:** One unreviewed draft; all other collection topics remain planned. Follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master. The inventoried original source files were unavailable and their contents were not inspected.
+# Module 28 â€” AI Evaluation, Monitoring and Continuous Improvement — Cheat Sheets
 
 ## 1. Overview
 
-This collection supports engineers evaluating deployed predictive and agent systems. The current draft distinguishes observable operational behavior, mature outcome quality, population shift and response. Readiness means defining the eligible population and labels, selecting a meaningful baseline and responding without treating a proxy as proof of impact.
+This collection carries 1 reference card(s) and 0 troubleshooting artifact(s) for `Module 28 â€” AI Evaluation, Monitoring and Continuous Improvement`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
 ## 2. Topic ladder
 
-| Level | Reference | Outcome and prerequisite | Status |
-|---|---|---|---|
-| Practitioner | [Model evaluation and production monitoring](04_Model_Evaluation_and_Production_Monitoring.md) | Diagnose outcomes and data shift under delayed labels; requires confusion matrices and deployed-system basics | Draft; unreviewed |
-| Planned | Evaluation matrix | Define workload, baselines, metrics, slices and release gates | Not written |
-| Planned | Human-rater guide | Specify reviewer selection, calibration and disagreement handling | Not written |
-| Planned | Production metric tree | Connect outcomes, proxies, operational signals and guardrails | Not written |
-| Planned | Common Issues | Collection-wide distinct failure diagnoses | Not written |
-
-## 3. Quick topic lookup
-
-| Question | Reference | Condition and warning |
+| Level | Cards | Purpose |
 |---|---|---|
-| Is model quality really declining? | [Worked example](04_Model_Evaluation_and_Production_Monitoring.md#5-worked-numerical-example) | Mature and representative labels are necessary for population-quality claims. |
-| Does population stability index prove harm? | [Failure modes](04_Model_Evaluation_and_Production_Monitoring.md#8-failure-modes--edge-cases) | Feature shift is a diagnostic signal, not proof of degradation or causation. |
-| When should the team respond? | [Comparison table](04_Model_Evaluation_and_Production_Monitoring.md#7-comparison--selection-table) | Consider impact, coverage, uncertainty, capacity and the available fallback. |
+
+## 3. Quick lookup
+
+| If you need to… | Read |
+|---|---|
+| work on model evaluation and production monitoring | [Model Evaluation and Production Monitoring](./04_Model_Evaluation_and_Production_Monitoring.md) |
 
 ## 4. Reading paths
 
-- **Beginner:** Review classification, cohorts, proportions and event logging first; then read the draft's mental model and definitions. Foundational evaluation-matrix material remains planned.
-- **Practitioner:** Read the complete monitoring draft; reproduce its illustrative confusion-matrix and shift calculations, then define a real label-maturity and response contract.
-- **Advanced:** Examine selection, segment weighting, delayed feedback, agent outcome definitions and intervention effects; design paired or randomized evaluations where feasible. The human-review and full metric-tree references remain planned.
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
 
 ## 5. Prerequisite skills
 
-Understand confusion-matrix counts and denominators, sampling and selection bias, confidence-interval assumptions, event timestamps, features and model versions, and operational escalation ownership. For agent evaluation distinguish task completion from task success.
+| Skill | Why it is needed | Where it is available |
+|---|---|---|
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
 
-## 6. What this collection does not cover
+## 6. Exclusions and handoffs
 
-The existing draft does not establish causal impact, guarantee safety, implement a complete evaluation platform, or supply version-specific monitoring integrations. Human-rater methodology, a comprehensive metric tree and a standalone issue catalog remain planned.
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
 
 ## 7. Master symbol glossary
 
-| Symbol | Meaning | Scope / warning | Reference |
-|---|---|---|---|
-| TP, FP, FN, TN | Confusion-matrix counts for a defined cohort and outcome | Unlabeled cases must not silently enter the denominator | [Worked example](04_Model_Evaluation_and_Production_Monitoring.md#5-worked-numerical-example) |
-| Precision | TP / (TP + FP) | Defined only for positive denominator; depends on prevalence and labels | [Formula section](04_Model_Evaluation_and_Production_Monitoring.md#4-core-formulas-with-full-derivation) |
-| Recall | TP / (TP + FN) | Requires outcome ascertainment for the target population | [Formula section](04_Model_Evaluation_and_Production_Monitoring.md#4-core-formulas-with-full-derivation) |
-| PSI | Population stability index comparing distributions | Bin choices and reference cohort matter; it does not prove outcome impact | [Worked example](04_Model_Evaluation_and_Production_Monitoring.md#5-worked-numerical-example) |
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
+|---|---|---|---|---|---|
+| — | no card defines a symbol yet | — | — | — | — |
 
-## 8. Quick Reference Card directory
+## 8. Card directory
 
-| Card | Core rule | Use and critical condition |
-|---|---|---|
-| [Evaluation and monitoring](04_Model_Evaluation_and_Production_Monitoring.md#12-quick-reference-card) | Precision and recall use different denominators. | Labels, eligibility, maturity and selection must support the intended population inference. |
+| # | Card | Level | Evidence | Status |
+|---|---|---|---|---|
+| 1 | [Model Evaluation and Production Monitoring](./04_Model_Evaluation_and_Production_Monitoring.md) | 3 | DERIVED | draft (lint open) |
 
 ## 9. Common Issues locator
 
-The collection-wide Common Issues artifact is **planned, not written**; no total is claimed. Use the draft's [failure modes and edge cases](04_Model_Evaluation_and_Production_Monitoring.md#8-failure-modes--edge-cases) for symptoms, competing explanations, mitigations and verification.
+- Not yet authored. The collection is incomplete until this artifact exists with at least 25 distinct issues.
 
-## 10. Sources, versions and maintenance
+## 10. Sources, versions, maintenance
 
-The draft uses illustrative and derived examples; no deployment outcome is measured. Revisit its metric, label, source and response contracts when the model, cohort, operating policy, deployment version or label-maturity process changes. The [source coverage brief](../../../00_SOURCE_COVERAGE_AGENTS.md#agent-observability) is a topic inventory, not source evidence.
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
 
-**Additional planned briefs:** [PLAN-2026-IR001 and PLAN-2026-IR008](../../../00_REFERENCE_INFORMED_CASE_PLAN.md) cover dataset lineage and contamination, versioned evaluation manifests, calibrated judges, over-refusal, sandboxed scoring, paired comparisons and missing-suite failure tests. Their [corpus-contamination](../../../../INTERVIEW_CASES/Agentic_AI_System/AI_engg_challenges/synthetic_corpus_contamination.md) and [release-evaluation](../../../../INTERVIEW_CASES/Agentic_AI_System/LLM_Safety_Evaluation/release_evaluation_platform.md) examples are references only, not verified incidents or completed sheets. A synthetic-text classifier does not establish authorship; a judge score is not a deployment guarantee.
+## 11. Acceptance checklist
 
-## 11. Collection acceptance checklist
-
-- [ ] All planned topics and a distinct Common Issues artifact are authored and reviewed.
-- [ ] Each file preserves all 12 sections, checked calculations or traces, substantive diagnostics, answered interviews and a final card.
-- [ ] Metric population, labels, uncertainty, evidence status and review triggers are explicit.
-- [ ] Local links, glossary, reading paths, issue locations and editorial statuses match completed files.
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.

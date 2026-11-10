@@ -1,18 +1,82 @@
-# Module 08 Cheat Sheets â€” Experimentation, Causal Inference and Decision Science
+# Module 08 â€” Experimentation, Causal Inference and Decision Science — Cheat Sheets
 
-## Authoring standard
+## 1. Overview
 
-Every authored sheet must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. This collection has one unreviewed course-topic draft; remaining sheets and the final Common Issues artifact (at least 25 complete issues) are planned. A card alone is not a completed sheet.
+This collection carries 5 reference card(s) and 0 troubleshooting artifact(s) for `Module 08 â€” Experimentation, Causal Inference and Decision Science`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
-## Planned cheat sheets
+## 2. Topic ladder
 
-| # | Reference | Coverage | Status |
-|---:|---|---|---|
-| 1 | [Experiment design and guardrails](01_Experiment_Design_and_Guardrails.md) | Assignment, estimand, lift, guardrails and analysis failures. | Draft; unreviewed. |
-| 2 | [Causal diagrams and adjustment](02_Causal_Diagrams_and_Adjustment.md) | DAGs, backdoor criterion, standardisation/IPW/AIPW, front-door, IV, collider and over-adjustment failures, E-values. | Draft; unreviewed. |
-| 3 | guardrail metric list | Concise patterns, decision rules, assumptions, and common traps. | planned |
-| 5 | [Decision thresholds and value](05_Decision_Thresholds_and_Value.md) | Optimal threshold derivation, capacity-constrained quotas, three-action bands, uplift thresholds, base-rate shift and value accounting. | Draft; unreviewed. |
+| Level | Cards | Purpose |
+|---|---|---|
+| core | 01 Experiment Design and Guardrails | Build from prerequisites to production judgement |
 
-## Suggested file naming
+## 3. Quick lookup
 
-Use **01_reference-slug.md**, then **02_reference-slug.md**. Keep one concern per file so references remain scannable.
+| If you need to… | Read |
+|---|---|
+| work on 01 experiment design and guardrails | [01 Experiment Design and Guardrails](./01_Experiment_Design_and_Guardrails.md) |
+| work on causal diagrams and adjustment | [Causal Diagrams and Adjustment](./02_Causal_Diagrams_and_Adjustment.md) |
+| work on matching and difference-in-differences | [Matching and Difference-in-Differences](./03_Matching_and_Difference_in_Differences.md) |
+| work on uplift and treatment heterogeneity | [Uplift and Treatment Heterogeneity](./04_Uplift_and_Treatment_Heterogeneity.md) |
+| work on decision thresholds and value | [Decision Thresholds and Value](./05_Decision_Thresholds_and_Value.md) |
+
+## 4. Reading paths
+
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
+
+## 5. Prerequisite skills
+
+| Skill | Why it is needed | Where it is available |
+|---|---|---|
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
+
+## 6. Exclusions and handoffs
+
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
+
+## 7. Master symbol glossary
+
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
+|---|---|---|---|---|---|
+| — | no card defines a symbol yet | — | — | — | — |
+
+## 8. Card directory
+
+| # | Card | Level | Evidence | Status |
+|---|---|---|---|---|
+| 1 | [01 Experiment Design and Guardrails](./01_Experiment_Design_and_Guardrails.md) | core | DERIVED | draft (lint open) |
+| 2 | [Causal Diagrams and Adjustment](./02_Causal_Diagrams_and_Adjustment.md) | 2 | DERIVED | authored |
+| 3 | [Matching and Difference-in-Differences](./03_Matching_and_Difference_in_Differences.md) | 2 | DERIVED | authored |
+| 4 | [Uplift and Treatment Heterogeneity](./04_Uplift_and_Treatment_Heterogeneity.md) | 2 | DERIVED | draft (lint open) |
+| 5 | [Decision Thresholds and Value](./05_Decision_Thresholds_and_Value.md) | 2 | DERIVED | authored |
+
+## 9. Common Issues locator
+
+- Not yet authored. The collection is incomplete until this artifact exists with at least 25 distinct issues.
+
+## 10. Sources, versions, maintenance
+
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
+
+## 11. Acceptance checklist
+
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.

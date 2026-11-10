@@ -82,6 +82,10 @@ def promised_rows(idx: Path) -> list[tuple[str, str, str | None]]:
             continue
         if re.fullmatch(r"\d{4}[\s\-_]\d{2}[\s\-_]\d{2}", title.strip()):
             continue
+        # A cell that lists several topics (semicolons, or a topic inventory) is not a
+        # single case decision: it cannot become one manuscript filename.
+        if title.count(";") >= 1 or len(words) > 12:
+            continue
         seen.add(key)
         rows.append((cells[0], title, target))
     return rows

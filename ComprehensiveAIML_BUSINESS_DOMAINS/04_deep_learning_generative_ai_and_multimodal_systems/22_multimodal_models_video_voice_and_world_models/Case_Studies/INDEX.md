@@ -1,70 +1,54 @@
-# Module 22 Case Studies — Multimodal Models, Video, Voice and World Models
+# Module 22 â€” Multimodal Models, Video, Voice and World Models — Case Studies
 
 ## 1. Collection metadata
-
-This collection holds bounded, decision-centred teaching cases for multimodal systems.
-Each case must preserve the 15-section case structure, separate evidence from implementation
-stage and editorial status, and label illustrative quantities as illustrative. The collection
-contains no completed case manuscript yet; the two original case commitments below remain
-planned. Source names are inventory evidence, not inspected source bodies.
 
 | Field | Value |
 |---|---|
 | Collection owner | Curriculum maintainer |
-| Source index | [module index](../INDEX.md) |
-| Editorial state | Draft collection; not published |
-| Evidence boundary | No organisation, deployment, device benchmark, or measured outcome is asserted |
-| Review trigger | A new case manuscript, primary evidence, or changed modality contract |
+| Canonical case-ID format | CASE-XX-NN |
+| Evidence policy | Illustrative teaching inputs are not company results; unsourced claims stay OPEN. |
+| Editorial state | Draft; independent publication review is not claimed. |
+| Acceptance rule | A case row is `authored` only when `Tools/manuscript_lint.py` exits 0 for it. |
+| Review trigger | A source body, decision policy, metric definition, or workload assumption changes. |
 
 ## 2. Case catalog
 
-| Case ID | Linked title / canonical home | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
+| Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| CASE-22-01 | Multimodal maintenance copilot — `01_multimodal_maintenance_copilot.md` (planned) | Industrial maintenance assistance | hybrid | Whether an evidence-linked multimodal draft may be shown to a technician | `human-in-the-loop` | `evaluation-mismatch`, `authorization-scope` | not-measured | proposed | never | No manuscript, evaluation, deployment, or outcome exists yet |
-| CASE-22-02 | Video safety-event review — `02_video_safety_event_review.md` (planned) | Video review workflow | hybrid | Whether an event candidate should be routed to a human reviewer | `human-in-the-loop` | `distribution-shift`, `evaluation-mismatch` | not-measured | proposed | never | No manuscript, evaluation, deployment, or outcome exists yet |
-| PLAN-2026-IR011 | Document VLM versus OCR for adjuster assistance (planned shared brief) | Document intelligence | hybrid | Which fields can be extracted and which bundles require review? | `human-in-the-loop` | `evaluation-mismatch`, `delayed-selective-labels` | not-measured | proposed | 2026-11-06 | A planning brief, not a completed case |
+| PLAN-2026-IR011 | Document VLM versus OCR for adjuster assistance | Module 22 â€” Multimodal Models, Video, Voice and World Models | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-2026-IR011 | Planning only | Module 22 â€” Multimodal Models, Video, Voice and World Models | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
 
 ## 3. Canonical reusable patterns
 
-| Pattern | Meaning | Boundary |
-|---|---|---|
-| `human-in-the-loop` | The model prepares evidence and a recommendation; an authorised person makes the consequential decision. | Confidence does not grant decision authority. |
-| `evaluation-mismatch` | Offline proxy quality can differ from the complete reviewer workflow outcome. | Measure evidence coverage, correction burden, and abstention as well as model scores. |
-| `authorization-scope` | A modality input or retrieved document may only be exposed to an authorised workflow. | A valid prediction does not make an unauthorised input usable. |
-| `distribution-shift` | Lighting, camera, language, equipment, template, or task changes can invalidate a learned association. | Aggregate performance does not establish every slice is safe to route. |
-| `delayed-selective-labels` | Human-confirmed outcomes arrive late and only for routed items. | Do not treat routed-label accuracy as population accuracy. |
+| Pattern | Diagnostic signature | Use when | Boundary |
+|---|---|---|---|
+| evaluation-mismatch | Offline score does not represent the decision | Ranking, forecast, threshold, agent products | The metric captures decision and guardrails |
+| data-leakage | Information unavailable at decision time inflates a score | Unexpectedly strong offline result | The feature is genuinely available before the cutoff |
+| distribution-shift | Live population differs from training | New market, season, channel, or policy version | The change is sampling noise only |
+| human-in-the-loop | Review capacity or override changes the trade-off | High-impact, uncertain, or regulated work | Review is infeasible or demonstrably ineffective |
+| model-monitoring | Live signals diverge from the evaluation | Deployed model with usable feedback | No meaningful feedback signal exists |
 
-## 4. Similarity and contrast map
+## 4. Similarity / contrast map
 
-| Item | Similarity | Difference that changes validation |
-|---|---|---|
-| CASE-22-01 maintenance copilot | Multimodal evidence is assembled before a human action. | Maintenance requires asset, manual-version, and work-order provenance. |
-| CASE-22-02 video safety-event review | A model surfaces candidates for human review. | Video requires time-window, camera, frame-rate, and event-boundary contracts. |
-| PLAN-2026-IR011 document extraction | It combines visual regions and text with review routing. | A claim-field extraction is not a video event nor a maintenance instruction. |
-| Module 18 claims document extraction | Both need page/region provenance. | The canonical home for the claims case is Module 18; this collection must not duplicate it. |
+This collection holds 0 authored case(s) and 2 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
 
-## 5. Questions and future-case backlog
+## 5. Questions / future-case backlog
 
-1. For CASE-22-01, define the exact evidence a technician needs to reject an incorrect visual or textual suggestion.
-2. For CASE-22-01, test whether stale manuals, missing asset identity, or image quality independently change the routing decision.
-3. For CASE-22-02, specify event-time boundaries, retained frames, review queue capacity, and the cost of missed versus over-routed events.
-4. For CASE-22-02, evaluate camera, lighting, activity, and rare-event slices before proposing a threshold.
-5. For PLAN-2026-IR011, retain its planned shared relationship and do not duplicate it as a Module 22 case without a distinct decision contract.
+Planned commitments, retained without silent deletion:
 
-## 6. Review and retirement log
+- `PLAN-2026-IR011` — Document VLM versus OCR for adjuster assistance. Not authored; no file exists, so no link is offered.
+- `PLAN-2026-IR011` — Planning only. Not authored; no file exists, so no link is offered.
 
-| Item | State | Trigger / required action |
-|---|---|---|
-| CASE-22-01 | Planned | Author the canonical manuscript, independently check its worked example, then add a real link and review record. |
-| CASE-22-02 | Planned | Author the canonical manuscript, independently check its queue/time example, then add a real link and review record. |
-| PLAN-2026-IR011 | Planning only | Keep source and primary-evidence access limits explicit if it becomes a manuscript. |
-| Collection | Draft | Reconcile headings, links, evidence labels, and catalog rows after every manuscript. |
+## 6. Review / retirement log
+
+| Date | Artifact | Event | Evidence / stage change |
+|---|---|---|---|
+| 2026-11-10 | collection | index regenerated; no authored case yet | not-measured / proposed |
 
 ## 7. Pre-publish checks
 
-- [ ] Each authored file has all 15 ordered sections; Section 15 is its final content.
-- [ ] Each case names a bounded owner, decision, baseline, data grain, time contract, and evidence basis.
-- [ ] Each quantitative example and material boundary has been independently recomputed.
-- [ ] Each interview pack contains 12–18 answered questions with reasoning, follow-up, alternatives, red flags, scoring, and answer support.
-- [ ] No illustrative workload, model behaviour, or proposed architecture is presented as measured deployment evidence.
-- [ ] Every catalog link targets a real canonical manuscript; shared cases are linked rather than duplicated.
+- [x] Every catalog row links a file that exists, or is marked planned without a link.
+- [x] Evidence, implementation stage, and editorial status are separate columns.
+- [x] Planned commitments are retained with no silent deletion.
+- [ ] Independent source review of every authored case.
+- [ ] Publication review of every authored case.

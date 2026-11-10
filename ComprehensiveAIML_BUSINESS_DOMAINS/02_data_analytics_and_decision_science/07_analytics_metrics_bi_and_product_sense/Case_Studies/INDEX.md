@@ -1,29 +1,52 @@
-# Module 07 Case Studies — Analytics, Metrics, BI and Product Sense
+# Module 07 â€” Analytics, Metrics, BI and Product Sense — Case Studies
 
 ## 1. Collection metadata
-Illustrative decision cases for metric governance and product analysis. Evidence, implementation stage, and editorial status are independent; neither case claims a company deployment or measured outcome.
+
+| Field | Value |
+|---|---|
+| Collection owner | Curriculum maintainer |
+| Canonical case-ID format | CASE-2026-ANA001 |
+| Evidence policy | Illustrative teaching inputs are not company results; unsourced claims stay OPEN. |
+| Editorial state | Draft; independent publication review is not claimed. |
+| Acceptance rule | A case row is `authored` only when `Tools/manuscript_lint.py` exits 0 for it. |
+| Review trigger | A source body, decision policy, metric definition, or workload assumption changes. |
 
 ## 2. Case catalog
-| Case ID | Linked title | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
+
+| Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| CASE-2026-ANA001 | [Marketplace Conversion Diagnosis](01_Marketplace_Conversion_Diagnosis.md) | marketplace analytics | analytical | change conversion intervention | decision-ready-metric-contract | component-reconciliation, guardrail-governance | illustrative | proposed | null | checked arithmetic only; no company outcome |
-| CASE-2026-ANA002 | [Executive Metric Tree Decision](02_Executive_Metric_Tree.md) | product analytics | analytical | adopt versioned metric tree | decision-ready-metric-contract | component-reconciliation, guardrail-governance | illustrative | proposed | null | checked arithmetic only; no deployment |
+| CASE-2026-ANA001 | [Marketplace Conversion Diagnosis: Separating a Real Funnel Decline from a Session-Definition Change](./01_Marketplace_Conversion_Diagnosis.md) | Module 07 â€” Analytics, Metrics, BI and Product Sense | analytical | decision record in the linked case | decision-ready-metric-contract | component-reconciliation, guardrail-governance | illustrative | proposed | null | draft (lint open) |
+| CASE-2026-ANA002 | [Executive Metric Tree Decision](./02_Executive_Metric_Tree.md) | Module 07 â€” Analytics, Metrics, BI and Product Sense | analytical | decision record in the linked case | decision-ready-metric-contract | component-reconciliation, guardrail-governance | illustrative | proposed | null | draft (lint open) |
 
 ## 3. Canonical reusable patterns
-- **decision-ready-metric-contract:** bind owner, action, entity grain, eligibility, cutoff, numerator, denominator, and guardrail.
-- **component-reconciliation:** preserve identity-level components and independently recompute a decision-facing aggregate.
-- **guardrail-governance:** block or defer action when the declared adverse condition fails.
 
-## 4. Similarity and contrast map
-Both cases use a frozen snapshot and reversible action. The conversion case emphasizes an intervention decision; the metric-tree case emphasizes executive operating review. Neither provides causal attribution; Module 08 is the handoff for that question.
+| Pattern | Diagnostic signature | Use when | Boundary |
+|---|---|---|---|
+| evaluation-mismatch | Offline score does not represent the decision | Ranking, forecast, threshold, agent products | The metric captures decision and guardrails |
+| data-leakage | Information unavailable at decision time inflates a score | Unexpectedly strong offline result | The feature is genuinely available before the cutoff |
+| distribution-shift | Live population differs from training | New market, season, channel, or policy version | The change is sampling noise only |
+| human-in-the-loop | Review capacity or override changes the trade-off | High-impact, uncertain, or regulated work | Review is infeasible or demonstrably ineffective |
+| model-monitoring | Live signals diverge from the evaluation | Deployed model with usable feedback | No meaningful feedback signal exists |
 
-## 5. Questions and future-case backlog
-Open questions: how an experiment changes the recommendation, how metric review scales under many segments, and how source-contract changes are approved. These are evidence/validation gaps, not claims of completed work.
+## 4. Similarity / contrast map
 
-## 6. Review and retirement log
-Created 2026-11-09 as draft illustrative teaching cases. Recheck if metric definitions, population, decision policy, or external evidence changes. Independent technical review remains open.
+This collection holds 2 authored case(s) and 0 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
+
+## 5. Questions / future-case backlog
+
+No unfulfilled case commitment is recorded for this collection.
+
+## 6. Review / retirement log
+
+| Date | Artifact | Event | Evidence / stage change |
+|---|---|---|---|
+| 2026-11-10 | [Marketplace Conversion Diagnosis: Separating a Real Funnel Decline from a Session-Definition Change](./01_Marketplace_Conversion_Diagnosis.md) | index regenerated from disk | illustrative / proposed unchanged |
+| 2026-11-10 | [Executive Metric Tree Decision](./02_Executive_Metric_Tree.md) | index regenerated from disk | illustrative / proposed unchanged |
 
 ## 7. Pre-publish checks
-- [x] Catalog preserves all required fields and links.
-- [x] Cases use 15 ordered sections and final cards.
-- [ ] Independent source/evidence review; no reviewed or published status is claimed.
+
+- [x] Every catalog row links a file that exists, or is marked planned without a link.
+- [x] Evidence, implementation stage, and editorial status are separate columns.
+- [x] Planned commitments are retained with no silent deletion.
+- [ ] Independent source review of every authored case.
+- [ ] Publication review of every authored case.

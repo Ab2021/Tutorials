@@ -1,84 +1,77 @@
-# Module 42 Cheat Sheets — Healthcare, Life Sciences and Biomedical AI
+# Module 42 â€” Healthcare, Life Sciences and Biomedical AI — Cheat Sheets
 
 ## 1. Overview
 
-This collection teaches bounded, evidence-aware healthcare AI decisions: clinical assistance, biomedical data pipelines, human factors, imaging/triage, discovery, and validation. A reader is ready only when they can state the decision-time data boundary, calculate a metric with its denominator, diagnose a failure, and name the accountable human/workflow. Named organizations in source inventory are research contexts, not deployment claims.
+This collection carries 3 reference card(s) and 0 troubleshooting artifact(s) for `Module 42 â€” Healthcare, Life Sciences and Biomedical AI`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
 ## 2. Topic ladder
 
-| Level | File | Outcome | Prerequisites | Status |
-|---|---|---|---|---|
-| 1 | [01 Clinical Decision Support: Evidence and Handoff](01_Clinical_Decision_Support_Evidence_and_Handoff.md) | define time-safe, non-binding decision support; calculate sensitivity; trace abstention/recovery oracles | confusion-matrix arithmetic | draft; 12-section manuscript exceeds the course 1,000-line threshold; source-body and local-policy evidence remain OPEN |
-| 1 | [02 Biomedical Signal Pipeline and Validation](02_Biomedical_Signal_Pipeline_and_Validation.md) | specify acquisition, preprocessing, segmentation, decision-time availability, and validity boundaries | 01 and sampling basics | draft; 1,017-line 12-section manuscript; 13 arithmetic checks and routing/split paper oracles passed; exactly 15 answered questions; acquisition/clinical evidence and independent review OPEN |
-| 2 | [03 Human Factors: Alert Design and Recovery](03_Human_Factors_Alert_Design_and_Recovery.md) | select review, alert and recovery controls | 01 workflow contract | draft; below course 1,000-line publication requirement |
-| 2 | imaging and triage | define a triage evaluation and handoff | diagnostic-study design | planned |
-| 3 | drug discovery and validation | separate scientific prediction from experimental validation | statistics and domain review | planned |
-| 3 | regulation and post-market monitoring | construct evidence and change-control ledger | prior files | planned |
-| final | Common Issues | diagnose 25+ complete healthcare-AI issues | all applicable sheets | planned |
+| Level | Cards | Purpose |
+|---|---|---|
 
-## 3. Quick topic lookup
+## 3. Quick lookup
 
-| Question | File/section | Use condition | Failure warning |
-|---|---|---|---|
-| What data may a support system use? | 01 §3–4 | index-time review | event time is not availability time |
-| How do I calculate sensitivity? | 01 §4–5 | adjudicated positive target | sensitivity is not utility |
-| What should abstention do? | 01 §2, §7–8 | missing/stale/out-of-scope input | silent negative output |
-| How do I size review work? | 01 §4.2, §9 | explicit alert capacity | omit false-positive workload |
+| If you need to… | Read |
+|---|---|
+| work on clinical decision support: evidence, decision-time data, and clinician handoff | [Clinical Decision Support: Evidence, Decision-Time Data, and Clinician Handoff](./01_Clinical_Decision_Support_Evidence_and_Handoff.md) |
+| work on biomedical signal pipeline and validation | [Biomedical Signal Pipeline and Validation](./02_Biomedical_Signal_Pipeline_and_Validation.md) |
+| work on human factors: alert design, review, and recovery | [Human Factors: Alert Design, Review, and Recovery](./03_Human_Factors_Alert_Design_and_Recovery.md) |
 
-| How do I reject a late or wrongly mapped segment? | [02 §11.8–11.9](02_Biomedical_Signal_Pipeline_and_Validation.md#118-decision-time-audit-traces) | audit or failure triage | a clean array is not a time-safe input |
-| How do I size an illustrative signal batch or review queue? | [02 §11.10](02_Biomedical_Signal_Pipeline_and_Validation.md#1110-resource-and-review-capacity-worksheet) | stated packed-input and sequential-review assumptions | payload arithmetic is not a device or staffing claim |
-## 4. Reading paths — three options
+## 4. Reading paths
 
-- **Beginner:** 01, then planned biomedical signal pipeline and human-factors checklist; objective: define a bounded assistive workflow.
-- **Practitioner:** beginner path, then planned imaging/triage, drug discovery/validation, and regulation/monitoring; objective: defend an evaluation and operating boundary.
-- **Advanced:** all files plus the final Common Issues artifact; objective: diagnose time, label, handoff, and monitoring failure under changed constraints.
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
 
 ## 5. Prerequisite skills
 
-Use a confusion matrix; distinguish counts, rates, and conditional probabilities; record event/availability/decision timestamps; map a clinical workflow without assigning clinical authority; and read an approved local policy. This collection does not provide medical training or policy determinations.
+| Skill | Why it is needed | Where it is available |
+|---|---|---|
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
 
-## 6. What this collection does NOT cover
+## 6. Exclusions and handoffs
 
-It does not supply diagnosis or treatment advice, claim device clearance, establish legal/regulatory applicability, or reproduce unavailable source bodies. Robotics, generic ML methods, and signal-processing foundations hand off to their respective course modules. Primary studies and local governance artifacts remain required for real implementation claims.
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
 
 ## 7. Master symbol glossary
 
-| Symbol/term | Meaning | Units/type | Valid range | First use |
-|---|---|---|---|---|
-| `TP` | positive target units flagged | count | non-negative integer | [01 §4](01_Clinical_Decision_Support_Evidence_and_Handoff.md#4-core-formulas-with-full-derivation) |
-| `FN` | positive target units not flagged | count | non-negative integer | 01 §4 |
-| `FP` | negative target units flagged | count | non-negative integer | 01 §4 |
-| `t_d` | decision time | timestamp | stated zone | 01 §2 |
-| `t_a` | feature availability time | timestamp | stated zone | 01 §3 |
-| `N`, `A` | eligible units, abstentions | count | `0<=A<=N` | 01 §4.3 |
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
+|---|---|---|---|---|---|
+| — | no card defines a symbol yet | — | — | — | — |
 
-| `f_s` | nominal sample rate | samples/s | positive; fixed-rate relation only | [02 §4](02_Biomedical_Signal_Pipeline_and_Validation.md#4-core-formulas-with-full-derivation) |
-| `T` | declared segment duration | seconds | positive, half-open interval | 02 §4 |
-| `C` | named channel count | count | non-negative integer with map | 02 §3 |
-| `t_available` | time an authorized feature artifact is available | timestamp | comparable clock/zone | [02 §11.8](02_Biomedical_Signal_Pipeline_and_Validation.md#118-decision-time-audit-traces) |
-## 8. Quick Reference Card directory
+## 8. Card directory
 
-| File | Card | Core rule | Critical assumption | Avoid when |
+| # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
-| [01](01_Clinical_Decision_Support_Evidence_and_Handoff.md#12-quick-reference-card) | clinical support | `t_a <= t_d`; clinician owns action | authorized data and handoff exist | outcome/provenance unavailable |
-| [02](02_Biomedical_Signal_Pipeline_and_Validation.md#12-quick-reference-card) | signal validation | preserve acquisition, identity, units, timing, and split lineage | metadata is complete and route is declared | quality pass is treated as diagnosis |
+| 1 | [Clinical Decision Support: Evidence, Decision-Time Data, and Clinician Handoff](./01_Clinical_Decision_Support_Evidence_and_Handoff.md) | 1 | DERIVED | authored |
+| 2 | [Biomedical Signal Pipeline and Validation](./02_Biomedical_Signal_Pipeline_and_Validation.md) | 1 | DERIVED | draft (lint open) |
+| 3 | [Human Factors: Alert Design, Review, and Recovery](./03_Human_Factors_Alert_Design_and_Recovery.md) | 2 | DERIVED | authored |
 
 ## 9. Common Issues locator
 
-`07_25_Common_Issues.md` is planned, not created. It must contain at least 25 distinct complete issues with category, provenance, competing causes, diagnostic, correction, prevention, and verification. Current authored issue examples are in [01 §8](01_Clinical_Decision_Support_Evidence_and_Handoff.md#8-failure-modes--edge-cases) and are not a completed collection artifact.
+- Not yet authored. The collection is incomplete until this artifact exists with at least 25 distinct issues.
 
-## 10. Sources, versions and maintenance
+## 10. Sources, versions, maintenance
 
-| Source ID | Source/version | Supported scope | Reviewed | Limitation / trigger |
-|---|---|---|---|---|
-| SRC-M42-01 | [directory inventory](../../../../Templates/directory.txt) | visible source labels only | 2026-11-09 | original bodies unavailable; recheck if supplied |
-| SRC-M42-02 | [clinical decision-support brief](../../../00_SOURCE_COVERAGE_AGENTS.md#scenario-07) | curriculum obligations | 2026-11-09 | planned, not empirical evidence |
-| SRC-M42-03 | [payer research brief](../../../00_SOURCE_COVERAGE_EDGE_INDUSTRY.md#deep-payer) | payer scope and evidence boundary | 2026-11-09 | named-company claims need primary sources |
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
 
-## 11. Collection acceptance checklist
+## 11. Acceptance checklist
 
-- [ ] Every planned topic has a substantive 12-section sheet meeting the course 1,000-line requirement.
-- [ ] Every sheet has checked topic-specific arithmetic/trace, four diagnostic failures, and 10–15 answered questions.
-- [ ] The final Common Issues file has at least 25 complete issues and Section 12 last.
-- [ ] Primary sources support every empirical or company claim.
-- [ ] All paths, prerequisites, glossary entries, cards, evidence labels, and statuses are reconciled.
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.

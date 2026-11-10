@@ -1,65 +1,61 @@
-# Module 23 Case Studies — GPU Architecture, Accelerators and AI Hardware
-
-**Collection status:** one authored illustrative case is a proposed intervention and draft document; remaining rows are planned.  
-**Contract:** [course standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [case master](../../../../Templates/CASE_STUDY_CONTENT_MASTER_TEMPLATE.md). Evidence level, implementation stage, and editorial state are separate.
+# Module 23 â€” GPU Architecture, Accelerators and AI Hardware — Case Studies
 
 ## 1. Collection metadata
 
 | Field | Value |
 |---|---|
-| Domain | GPU architecture, accelerators, and AI hardware |
-| Canonical case types | `streaming-systems`, `incident`, or genuinely integrated `hybrid` |
-| Evidence boundary | Illustrative/proposed unless a case cites an accessible primary source; no vendor-workload result is implied |
-| Source limits | Visible source-tree topic names remain OPEN where original lesson bodies are unavailable |
-| Editorial state | CASE-2026-023-001 is draft; planned rows are not authored cases |
-| Review trigger | Device/runtime/model/dtype/context, workload, failure-domain, or measured constraint change |
+| Collection owner | Curriculum maintainer |
+| Canonical case-ID format | CASE-2026-023-001 |
+| Evidence policy | Illustrative teaching inputs are not company results; unsourced claims stay OPEN. |
+| Editorial state | Draft; independent publication review is not claimed. |
+| Acceptance rule | A case row is `authored` only when `Tools/manuscript_lint.py` exits 0 for it. |
+| Review trigger | A source body, decision policy, metric definition, or workload assumption changes. |
 
 ## 2. Case catalog
 
-| Case ID | Linked title | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result/limitation |
+| Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| CASE-2026-023-001 | [Size an inference cluster under an interactive latency and memory budget](01_Size_an_Inference_Cluster.md) | hardware/interactive serving | hybrid | select a validation configuration and bounded admission; defer unsupported production sizing | resource-admission | cost-latency-tradeoff; correctness-contract | illustrative inputs; derived arithmetic | proposed | — | 1,091-line draft; rank-local memory, TP=2 device cost and conditional token-conservation bounds checked; no measured production-capacity claim |
-| PLAN-23-02 | Profile memory-bound training | hardware | incident | choose the bottleneck-removal change | resource-accounting | correctness-contract | not-measured | proposed | — | planned; needs profiler and numerical-parity evidence |
-| PLAN-2026-IR007 | Balance interactive inference latency and admitted throughput | hardware/serving | hybrid | scheduling and KV-memory policy | resource-admission | cost-latency-tradeoff; authorization-scope | not-measured | proposed | 2026-11-06 (planning) | planned reference addition; geometry and speedups unmeasured |
+| CASE-2026-023-001 | [Size an inference cluster under an interactive latency and memory budget](./01_Size_an_Inference_Cluster.md) | Module 23 â€” GPU Architecture, Accelerators and AI Hardware | hybrid | decision record in the linked case | resource-admission | cost-latency-tradeoff, correctness-contract | illustrative | proposed | null | authored |
+| CASE-2026-023-002 | [Profile a memory-bound training step before buying more accelerators](./02_Profile_Memory_Bound_Training.md) | Module 23 â€” GPU Architecture, Accelerators and AI Hardware | incident | decision record in the linked case | resource-accounting | correctness-contract, cost-latency-tradeoff | illustrative | proposed | null | authored |
+| PLAN-23-02 | Profile memory-bound training | Module 23 â€” GPU Architecture, Accelerators and AI Hardware | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-2026-IR007 | Balance interactive inference latency and admitted throughput | Module 23 â€” GPU Architecture, Accelerators and AI Hardware | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-23-02 | profiling and parity validation with distributed-training cases | Module 23 â€” GPU Architecture, Accelerators and AI Hardware | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-2026-IR007 | batching and KV accounting with Module 25 | Module 23 â€” GPU Architecture, Accelerators and AI Hardware | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
 
 ## 3. Canonical reusable patterns
 
-- **Resource admission:** accept work only when a defined memory, compute, and deadline budget remains; test rejection and recovery, not just average throughput.
-- **Resource accounting:** account for a named boundary—weights, runtime reserve, KV cache, rank, replica, host link, or network—with units and ownership.
-- **Cost–latency tradeoff:** compare successful-request cost, tail latency, and capacity headroom under the same offered workload and outcome denominator.
-- **Correctness contract:** require lease, retry, terminal-release, and numerical/target-equivalence checks before adopting a performance change.
+| Pattern | Diagnostic signature | Use when | Boundary |
+|---|---|---|---|
+| evaluation-mismatch | Offline score does not represent the decision | Ranking, forecast, threshold, agent products | The metric captures decision and guardrails |
+| data-leakage | Information unavailable at decision time inflates a score | Unexpectedly strong offline result | The feature is genuinely available before the cutoff |
+| distribution-shift | Live population differs from training | New market, season, channel, or policy version | The change is sampling noise only |
+| human-in-the-loop | Review capacity or override changes the trade-off | High-impact, uncertain, or regulated work | Review is infeasible or demonstrably ineffective |
+| model-monitoring | Live signals diverge from the evaluation | Deployed model with usable feedback | No meaningful feedback signal exists |
 
 ## 4. Similarity / contrast map
 
-| Case | Shares | Contrasts with | Transfer boundary |
-|---|---|---|---|
-| CASE-2026-023-001 | admission, KV accounting, cancellation, and capacity reasoning | illustrative target-runtime values rather than a measured benchmark | memory fit is not an interactive latency result |
-| PLAN-23-02 | profiling and parity validation with distributed-training cases | training has long-lived state rather than interactive deadlines | optimize only the measured limiting boundary |
-| PLAN-2026-IR007 | batching and KV accounting with Module 25 | authorization scope and lease fencing are serving concerns | speculative decoding or paged KV needs its own evidence |
+This collection holds 2 authored case(s) and 4 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
 
-## 5. Questions and future-case backlog
+## 5. Questions / future-case backlog
 
-1. What device, dtype, shapes, and traffic boundary make a roofline calculation relevant?
-2. Which trace captures peak concurrency, arrivals, cancellation, retry chains, and KV residency?
-3. What numerical invariant detects an invalid fused or reduced-precision kernel?
-4. How is a failed request recovered without double-counting or cross-tenant cache exposure?
-5. Which primary vendor or operator source supports a non-illustrative architecture claim?
-6. Under what measured prefill/decode mix does a class-aware queue improve the stated SLO?
+Planned commitments, retained without silent deletion:
+
+- `PLAN-23-02` — Profile memory-bound training. Not authored; no file exists, so no link is offered.
+- `PLAN-2026-IR007` — Balance interactive inference latency and admitted throughput. Not authored; no file exists, so no link is offered.
+- `PLAN-23-02` — profiling and parity validation with distributed-training cases. Not authored; no file exists, so no link is offered.
+- `PLAN-2026-IR007` — batching and KV accounting with Module 25. Not authored; no file exists, so no link is offered.
 
 ## 6. Review / retirement log
 
-| Date | Item | Decision | Reason |
+| Date | Artifact | Event | Evidence / stage change |
 |---|---|---|---|
-| 2026-11-09 | Collection catalog | retained planned rows | no primary workload evidence or authored case then |
-| 2026-11-10 | CASE-2026-023-001 | catalog reconciled as authored draft / proposed intervention | constructed arithmetic and state contract are complete; runtime evidence remains OPEN |
-| current integration pass | CASE-2026-023-001 | removed repeated drill fields; corrected per-rank versus per-replica accounting, group reservation, device-hour cost and FIFO wait versus drain | executed the written rational calculator, limiting-rank/placement counterexamples, 154-replica conditional bound, post-loss deficit and capped/uncapped fluid traces; hardware/distributed-runtime evidence remains OPEN |
+| 2026-11-10 | [Size an inference cluster under an interactive latency and memory budget](./01_Size_an_Inference_Cluster.md) | index regenerated from disk | illustrative / proposed unchanged |
+| 2026-11-10 | [Profile a memory-bound training step before buying more accelerators](./02_Profile_Memory_Bound_Training.md) | index regenerated from disk | illustrative / proposed unchanged |
 
 ## 7. Pre-publish checks
 
-- [x] Stable CASE ID, linked manuscript, 15 sections, and final card are present for CASE-2026-023-001.
-- [x] Catalog has 11 columns and keeps evidence, stage, and editorial status distinct in its limitation field and metadata.
-- [x] Limited screen: 1,091 physical lines, 15 ordered numbered sections, no long-prose group repeated four or more times; substantive independent publication review remains required.
-- [x] Written calculator and queue examples executed: per-rank slots 38/21/19, conditional replica bounds 154/205, and capped/uncapped backlog, rejection, wait and drain checked.
-- [ ] Verify target-runtime source version, workload trace, device/rank memory inventory, and closed-loop measurements before review/publication.
-- [ ] Verify all links and rerun the arithmetic, failure/recovery trace, and N-1 capacity boundary when the configuration changes.
-- [x] Retain proposed cases and source/reference additions without treating them as completed.
+- [x] Every catalog row links a file that exists, or is marked planned without a link.
+- [x] Evidence, implementation stage, and editorial status are separate columns.
+- [x] Planned commitments are retained with no silent deletion.
+- [ ] Independent source review of every authored case.
+- [ ] Publication review of every authored case.

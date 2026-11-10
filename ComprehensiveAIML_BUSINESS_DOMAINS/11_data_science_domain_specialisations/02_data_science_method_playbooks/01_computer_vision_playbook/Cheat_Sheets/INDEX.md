@@ -1,54 +1,74 @@
 # Computer Vision Playbook — Cheat Sheets
 
 ## 1. Overview
-For vision practitioners comfortable with coordinates and basic rates, this collection supports task selection, metric interpretation and data-quality diagnosis. Object detection is the only authored sheet and is unreviewed; readiness requires independent review and task-specific evaluation, not just a card.
+
+This collection carries 1 reference card(s) and 0 troubleshooting artifact(s) for `Computer Vision Playbook`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
 ## 2. Topic ladder
-| Level | Topic and outcome | Prerequisite / skill | Status |
-|---|---|---|---|
-| Foundation | CV task-to-model selector: choose classification, detection or segmentation for a stated output; explain a counterexample. | Images, labels and model outputs. | Planned |
-| Core | Detection and segmentation metrics: select and calculate a task-appropriate metric; distinguish box and mask overlap. | Set overlap and rates. | Planned |
-| Core | Vision data quality guide: identify label, acquisition and split problems in a sample pipeline. | Dataset and annotation basics. | Planned |
-| Core/production | [04 Object detection](04_Object_Detection.md): compute box overlap and matching, interpret AP and diagnose deployment failures. | Coordinates, ratios and ranking. | Draft; not reviewed |
 
-## 3. Quick topic lookup
-| Question | Exact section | Use and warning |
+| Level | Cards | Purpose |
 |---|---|---|
-| How are boxes compared? | [Formulas](04_Object_Detection.md#section-4--core-formulas-with-full-derivation) | Use the same coordinate frame and positive union; IoU alone does not determine matching. |
-| Why are boxes shifted? | [Failure modes](04_Object_Detection.md#section-8--failure-modes--edge-cases) | Check resize and padding transforms before changing the model. |
-| Which segmentation metric? | Topic ladder above | The separate metric guide is planned; object detection is not mask evaluation. |
+| core | Object Detection: Geometry, Matching, Evaluation and Operations | Build from prerequisites to production judgement |
+
+## 3. Quick lookup
+
+| If you need to… | Read |
+|---|---|
+| work on object detection: geometry, matching, evaluation and operations | [Object Detection: Geometry, Matching, Evaluation and Operations](./04_Object_Detection.md) |
 
 ## 4. Reading paths
-- **Beginner:** Review image coordinates and ratios; read [definitions](04_Object_Detection.md#section-3--foundational-definitions) and [worked example](04_Object_Detection.md#section-5--worked-numerical-example). Task selection remains planned.
-- **Practitioner:** Read the detection draft from definitions through [selection](04_Object_Detection.md#section-7--comparison--selection-table) and failures, checking matching and annotation policy.
-- **Advanced:** Read the full detection draft, including operations and the card; use the data-quality and segmentation guides when authored.
+
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
 
 ## 5. Prerequisite skills
-Interpret image coordinate frames, rectangle area, set intersection, precision/recall and ranked predictions; the draft's [definitions](04_Object_Detection.md#section-3--foundational-definitions) provide local reference. Understand annotation policy and data splits before comparing models.
 
-## 6. What this collection does NOT cover
-The task selector, detection/segmentation metric guide and vision data-quality guide are planned. The detection draft does not establish segmentation performance, clinical safety or real-world detector reliability; use a task-specific evaluation and governance process.
+| Skill | Why it is needed | Where it is available |
+|---|---|---|
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
+
+## 6. Exclusions and handoffs
+
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
 
 ## 7. Master symbol glossary
-| Symbol | Meaning; unit / type / domain | First use |
-|---|---|---|
-| W, H | Image width and height; positive scalar pixel counts. | [Definitions](04_Object_Detection.md#section-3--foundational-definitions) |
-| IoU | Intersection over union; dimensionless scalar in [0,1] for positive union. | [Definitions](04_Object_Detection.md#section-3--foundational-definitions) |
-| TP, FP, FN | Matched, unmatched predicted and unmatched reference counts under the declared matching policy; nonnegative integers. | [Definitions](04_Object_Detection.md#section-3--foundational-definitions) |
 
-## 8. Quick Reference Card directory
-| Card | Rule / use | Condition and avoid |
-|---|---|---|
-| [Detection card](04_Object_Detection.md#section-12--quick-reference-card) | Compute IoU and apply the stated matching and ranking policy. | Shared coordinate frame and annotation rules are essential; AP is not a deployment guarantee. |
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
+|---|---|---|---|---|---|
+| — | no card defines a symbol yet | — | — | — | — |
+
+## 8. Card directory
+
+| # | Card | Level | Evidence | Status |
+|---|---|---|---|---|
+| 1 | [Object Detection: Geometry, Matching, Evaluation and Operations](./04_Object_Detection.md) | core | DERIVED | draft (lint open) |
 
 ## 9. Common Issues locator
-The final Common Issues artifact is not authored; its count is unknown. Use [detection failures](04_Object_Detection.md#section-8--failure-modes--edge-cases): for shifted boxes inspect inverse scaling and padding; for axis swaps inspect coordinates on nonsquare images. These are hypothetical diagnostics, not incident counts.
 
-## 10. Empirical sources, versions and collection maintenance
-The original source directories were unavailable and not inspected. Detection examples are illustrative, not measured production performance; the draft and its source claims require independent review. Consult [authoring standards](../../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the [master template](../../../../../Templates/CHEAT_SHEET_CONTENT_MASTER_TEMPLATE.md). Recheck metric implementation, annotation policy and dataset versions when changed; no review date is asserted. Each sheet requires 12 sections, checked examples, failure diagnostics, answered interview questions and a final card. Cards must specify decision, reader, inputs, assumptions, tradeoffs, failure signals and governance; review tool-, market- and regulation-sensitive cards quarterly.
+- Not yet authored. The collection is incomplete until this artifact exists with at least 25 distinct issues.
 
-## 11. Collection acceptance checklist
-- [ ] Author the three planned guides and a final Common Issues artifact with at least 25 substantive issues.
-- [ ] Independently review the detection draft, its 12 sections, calculations, sources and diagnostic claims.
-- [ ] Verify links, anchors, glossary and reading paths as files are added.
-- [ ] Record versions and evidence without presenting illustrative results as observed performance.
+## 10. Sources, versions, maintenance
+
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
+
+## 11. Acceptance checklist
+
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.

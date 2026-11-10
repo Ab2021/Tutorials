@@ -1,33 +1,73 @@
-# Planning, Forecasting, Inventory and Sourcing - Cheat Sheets
+# Planning, Forecasting, Inventory and Sourcing — Cheat Sheets
 
-> **Mandatory authoring contract:** Every authored sheet must follow the [course authoring and numerical standards](../../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. This is a planned catalog, not completed sheets; expand to all 11 collection-index sections and a final Common Issues artifact (at least 25 complete issues) before publication. A card alone is not a completed sheet.
+## 1. Overview
 
-## Purpose
+This collection carries 1 reference card(s) and 0 troubleshooting artifact(s) for `Planning, Forecasting, Inventory and Sourcing`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
-These planned reference cards support repeatable decisions in Planning, Forecasting, Inventory and Sourcing. They complement case studies; they do not replace the assumptions, evidence, and evaluation required in a full case.
+## 2. Topic ladder
 
-## Planned references
+| Level | Cards | Purpose |
+|---|---|---|
 
-| # | Reference | Coverage | Status |
-|---:|---|---|---|
-| 1 | Planning KPI tree | Decision rules, inputs, metrics, trade-offs, and failure signals. | planned |
-| 2 | Inventory policy selector | Decision rules, inputs, metrics, trade-offs, and failure signals. | planned |
-| 3 | S&OP scenario template | Decision rules, inputs, metrics, trade-offs, and failure signals. | planned |
+## 3. Quick lookup
 
-## Required card fields
+| If you need to… | Read |
+|---|---|
+| work on exact inventory range totals with a fenwick tree | [Exact Inventory Range Totals with a Fenwick Tree](./01_fenwick_inventory_range_totals.md) |
 
-Every card must state: intended decision and reader; preconditions and inputs; default recommendation; metrics/formulas or architecture pattern; trade-offs; failure signals; security/privacy/governance constraints; and links to deeper material. Review tool-, market-, and regulation-sensitive cards quarterly.
+## 4. Reading paths
 
-<!-- BEGIN INTERVIEW REFERENCE PLAN -->
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
 
-## Reference-informed additions to develop
+## 5. Prerequisite skills
 
-These are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../../00_REFERENCE_INFORMED_CASE_PLAN.md).
+| Skill | Why it is needed | Where it is available |
+|---|---|---|
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
 
-| Related brief | Proposed cheat-sheet scope | Checks / counterexamples to include | Reference only | Status |
+## 6. Exclusions and handoffs
+
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
+
+## 7. Master symbol glossary
+
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
+|---|---|---|---|---|---|
+| — | no card defines a symbol yet | — | — | — | — |
+
+## 8. Card directory
+
+| # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
-| PLAN-2026-IR027 | Fenwick tree lowbit traversal; inclusive ranges; point deltas; wide arithmetic; atomic visibility | Randomized update/query comparisons with a simple array, boundary/overflow checks and update-visibility tests. Boundary: Fixed ordering and one logical writer are reference assumptions; a Fenwick tree alone does not provide distributed stock correctness. | [REF-IR027](../../../../../INTERVIEW_CASES/DSA/index_basics/Range_Queries/fenwick_inventory_totals.md) | planned; not written |
+| 1 | [Exact Inventory Range Totals with a Fenwick Tree](./01_fenwick_inventory_range_totals.md) | 2 | DERIVED | draft (lint open) |
 
-Each future cheat sheet needs its own explanation, preconditions, formulas or algorithms where relevant, failure signals and checked examples. Do not copy the interview narrative or its scenario figures into a reference sheet.
+## 9. Common Issues locator
 
-<!-- END INTERVIEW REFERENCE PLAN -->
+- Not yet authored. The collection is incomplete until this artifact exists with at least 25 distinct issues.
+
+## 10. Sources, versions, maintenance
+
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
+
+## 11. Acceptance checklist
+
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.

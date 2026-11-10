@@ -1,19 +1,79 @@
-# Marketplace Seller, Trust and Economics - Cheat Sheets
+# Marketplace Seller, Trust and Economics — Cheat Sheets
 
-> **Mandatory authoring contract:** Every authored sheet must follow the [course authoring and numerical standards](../../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. This is a planned catalog, not completed sheets; expand to all 11 collection-index sections and a final Common Issues artifact (at least 25 complete issues) before publication. A card alone is not a completed sheet.
+## 1. Overview
 
-## Purpose
+This collection carries 3 reference card(s) and 1 troubleshooting artifact(s) for `Marketplace Seller, Trust and Economics`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
-These planned reference cards support repeatable decisions in Marketplace Seller, Trust and Economics. They complement case studies; they do not replace the assumptions, evidence, and evaluation required in a full case.
+## 2. Topic ladder
 
-## Planned references
+| Level | Cards | Purpose |
+|---|---|---|
 
-| # | Reference | Coverage | Status |
-|---:|---|---|---|
-| 1 | Marketplace health metrics | Decision rules, inputs, metrics, trade-offs, and failure signals. | planned |
-| 2 | Seller-quality rubric | Decision rules, inputs, metrics, trade-offs, and failure signals. | planned |
-| 3 | Trust and safety controls | Decision rules, inputs, metrics, trade-offs, and failure signals. | planned |
+## 3. Quick lookup
 
-## Required card fields
+| If you need to… | Read |
+|---|---|
+| work on marketplace health and liquidity | [Marketplace health and liquidity](./01_Marketplace_Health_and_Liquidity.md) |
+| work on seller quality, trust and disputes | [Seller quality, trust and disputes](./02_Seller_Quality_Trust_and_Disputes.md) |
+| work on trust, pricing and cross-border controls | [Trust, pricing and cross-border controls](./03_Trust_Safety_Pricing_and_Cross_Border.md) |
+| diagnose a failure that keeps recurring | [02 marketplace seller trust and economics — 25 Common Issues](./04_25_Common_Issues.md) |
 
-Every card must state: intended decision and reader; preconditions and inputs; default recommendation; metrics/formulas or architecture pattern; trade-offs; failure signals; security/privacy/governance constraints; and links to deeper material. Review tool-, market-, and regulation-sensitive cards quarterly.
+## 4. Reading paths
+
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
+
+## 5. Prerequisite skills
+
+| Skill | Why it is needed | Where it is available |
+|---|---|---|
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
+
+## 6. Exclusions and handoffs
+
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
+
+## 7. Master symbol glossary
+
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
+|---|---|---|---|---|---|
+| — | no card defines a symbol yet | — | — | — | — |
+
+## 8. Card directory
+
+| # | Card | Level | Evidence | Status |
+|---|---|---|---|---|
+| 1 | [Marketplace health and liquidity](./01_Marketplace_Health_and_Liquidity.md) | 2 | DERIVED | draft (lint open) |
+| 2 | [Seller quality, trust and disputes](./02_Seller_Quality_Trust_and_Disputes.md) | 2 | DERIVED | draft (lint open) |
+| 3 | [Trust, pricing and cross-border controls](./03_Trust_Safety_Pricing_and_Cross_Border.md) | 2 | DERIVED | draft (lint open) |
+| 4 | [02 marketplace seller trust and economics — 25 Common Issues](./04_25_Common_Issues.md) | 3 | DERIVED | draft (lint open) |
+
+## 9. Common Issues locator
+
+- [02 marketplace seller trust and economics — 25 Common Issues](./04_25_Common_Issues.md) — the unit's final troubleshooting artifact; entries use stable `CI-` ids.
+
+## 10. Sources, versions, maintenance
+
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
+
+## 11. Acceptance checklist
+
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [x] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.

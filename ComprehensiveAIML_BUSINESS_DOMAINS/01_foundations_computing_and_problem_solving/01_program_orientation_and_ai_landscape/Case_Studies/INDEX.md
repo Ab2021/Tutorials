@@ -1,39 +1,52 @@
-# Module 01 Case Studies — Program Orientation and AI Landscape
+# Program Orientation and AI Landscape — Case Studies
 
 ## 1. Collection metadata
 
-Illustrative decision cases for applying orientation concepts. Case evidence, implementation stage, and editorial status are separate. Source inventory: [`directory.txt`](../../../../Templates/directory.txt); original bodies are unavailable.
+| Field | Value |
+|---|---|
+| Collection owner | Curriculum maintainer |
+| Canonical case-ID format | CASE-01-001 |
+| Evidence policy | Illustrative teaching inputs are not company results; unsourced claims stay OPEN. |
+| Editorial state | Draft; independent publication review is not claimed. |
+| Acceptance rule | A case row is `authored` only when `Tools/manuscript_lint.py` exits 0 for it. |
+| Review trigger | A source body, decision policy, metric definition, or workload assumption changes. |
 
 ## 2. Case catalog
 
-| Case ID | Linked title | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result/limitation | Editorial status |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| CASE-01-001 | [Select an AI use-case portfolio](01_Select_AI_Use_Case_Portfolio.md) | AI portfolio | analytical | pilot selection | evidence-to-operation decision | human-in-the-loop | illustrative inputs; derived arithmetic | proposed | null | 1,480 lines; 15 sections; 12 answered interviews; constructed queue and integer-scope calculations checked; operational evidence unavailable | authored draft; publication review open |
-| CASE-01-002 | [Evaluate a vendor claim](02_Evaluate_AI_Vendor_Claim.md) | AI procurement | analytical | accept/pilot/reject under a frozen workload and version | vendor evidence review | uncertainty; reviewer-capacity; total-cost ledger | illustrative inputs; derived arithmetic | proposed | not independently reviewed | 1,045-line incomplete semantic repair: copied gate-template prose remains; numerical smoke verified agreement 216/270, reviewer demand 36 hours, cost $4,860 and 20-document surge backlog | draft; source/publication/semantic-content review open |
+| Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
+|---|---|---|---|---|---|---|---|---|---|---|
+| CASE-01-001 | [Selecting an AI use-case portfolio under a reviewer-time cap and an authority gate](./01_Select_AI_Use_Case_Portfolio.md) | Program Orientation and AI Landscape | analytical | decision record in the linked case | evidence-to-operation decision | human-in-the-loop, capacity-gated, sequencing | illustrative | proposed | null | authored |
+| CASE-01-002 | [Evaluate an AI Vendor Claim](./02_Evaluate_AI_Vendor_Claim.md) | Program Orientation and AI Landscape | analytical | decision record in the linked case | evidence-to-operation | claim-ledger, capacity-gated, pilot, total-cost, comparison | illustrative | proposed | null | authored |
 
 ## 3. Canonical reusable patterns
 
-Use hard gates for data boundary, authority, reversibility, and operating capacity before comparing estimated value. Label arithmetic as illustrative until a test artifact exists.
+| Pattern | Diagnostic signature | Use when | Boundary |
+|---|---|---|---|
+| evaluation-mismatch | Offline score does not represent the decision | Ranking, forecast, threshold, agent products | The metric captures decision and guardrails |
+| data-leakage | Information unavailable at decision time inflates a score | Unexpectedly strong offline result | The feature is genuinely available before the cutoff |
+| distribution-shift | Live population differs from training | New market, season, channel, or policy version | The change is sampling noise only |
+| human-in-the-loop | Review capacity or override changes the trade-off | High-impact, uncertain, or regulated work | Review is infeasible or demonstrably ineffective |
+| model-monitoring | Live signals diverge from the evaluation | Deployed model with usable feedback | No meaningful feedback signal exists |
 
 ## 4. Similarity / contrast map
 
-CASE-01-001 chooses between internal opportunities; CASE-01-002 assesses one external claim. Both require a baseline and acceptance protocol, but only the latter needs candidate-version and contract evidence. CASE-01-002's generated gate-template block remains an explicit semantic repair backlog item.
+This collection holds 2 authored case(s) and 0 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
 
 ## 5. Questions / future-case backlog
 
-Replace CASE-01-002's repeated numbered gate-template fields with distinct procurement evidence and decision analysis while preserving its checked arithmetic. Add a source-grounded case only when a primary source permits precise attribution. Do not infer hidden container content.
+No unfulfilled case commitment is recorded for this collection.
 
 ## 6. Review / retirement log
 
-| Pass/date | Item | Editorial event | Evidence/stage change |
+| Date | Artifact | Event | Evidence / stage change |
 |---|---|---|---|
-| 2026-11-09 | CASE-01-001 | draft authored | illustrative / proposed |
-| current authoring pass | CASE-01-001 | Completed Sections 12–15; corrected staffed-window queue units, burst/day distinction, audit denominators/budget, integer scope and audit-inclusive alternatives | illustrative/proposed unchanged; seven queue rows and 481,401 A/B scope combinations checked; no operational validation |
+| 2026-11-10 | [Selecting an AI use-case portfolio under a reviewer-time cap and an authority gate](./01_Select_AI_Use_Case_Portfolio.md) | index regenerated from disk | illustrative / proposed unchanged |
+| 2026-11-10 | [Evaluate an AI Vendor Claim](./02_Evaluate_AI_Vendor_Claim.md) | index regenerated from disk | illustrative / proposed unchanged |
 
 ## 7. Pre-publish checks
 
-- [x] Catalog preserves both original case threads.
-- [x] CASE-01-001 has 15 ordered sections, 12 answered interview questions and Section 15 last.
-- [x] The authored case has 1,480 physical lines, with no repeated long prose detected; substantive publication review remains open.
-- [ ] CASE-01-002 semantic gate-template rewrite, independent publication review, and source verification.
-- [x] CASE-01-002 arithmetic independently executed: agreement/baseline denominators, 833-item review-cap boundary, total-cost and fluid-queue examples. Arithmetic verification does not accept its generated gate filler.
+- [x] Every catalog row links a file that exists, or is marked planned without a link.
+- [x] Evidence, implementation stage, and editorial status are separate columns.
+- [x] Planned commitments are retained with no silent deletion.
+- [ ] Independent source review of every authored case.
+- [ ] Publication review of every authored case.

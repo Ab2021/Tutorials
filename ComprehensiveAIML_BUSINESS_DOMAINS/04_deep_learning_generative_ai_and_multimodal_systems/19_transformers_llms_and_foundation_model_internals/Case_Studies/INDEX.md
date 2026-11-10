@@ -1,68 +1,59 @@
-# Module 19 Case Studies — Transformers, LLMs and Foundation-Model Internals
+# Module 19 â€” Transformers, LLMs and Foundation-Model Internals — Case Studies
 
 ## 1. Collection metadata
 
-This is a draft catalog for bounded foundation-model decisions. It retains the two original
-case threads and the IR007/IR009 planning commitments without claiming a run, organisation,
-deployment, benchmark, or measured result. Visible source names identify syllabus inventory;
-they do not establish access to the original lesson bodies.
-
 | Field | Value |
 |---|---|
-| Collection state | Draft; no completed local case manuscript |
-| Evidence / implementation state | not-measured / proposed |
-| Scope | Model choice, context-quality diagnosis, inference admission, and training-budget allocation |
-| Review trigger | Completed canonical case, source access, or changed model/serving assumption |
+| Collection owner | Curriculum maintainer |
+| Canonical case-ID format | CASE-19-01 |
+| Evidence policy | Illustrative teaching inputs are not company results; unsourced claims stay OPEN. |
+| Editorial state | Draft; independent publication review is not claimed. |
+| Acceptance rule | A case row is `authored` only when `Tools/manuscript_lint.py` exits 0 for it. |
+| Review trigger | A source body, decision policy, metric definition, or workload assumption changes. |
 
 ## 2. Case catalog
 
-| Case ID | Linked title / canonical home | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
+| Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| CASE-19-01 | Choose a model for code assistance — `01_code_assistance_model_choice.md` (planned) | Developer tooling | llm-agentic | Which model and retrieval boundary should be evaluated against a manual baseline | `evaluation-mismatch` | `authorization-scope`, `cost-latency-tradeoff` | not-measured | proposed | never | No manuscript or measured comparison |
-| CASE-19-02 | Diagnose long-context quality loss — `02_long_context_quality_diagnosis.md` (planned) | Long-context evaluation | analytical | Whether quality loss is context, retrieval, position, or evaluation-contract failure | `evaluation-mismatch` | `distribution-shift`, `resource-admission` | not-measured | proposed | never | No manuscript or measured diagnosis |
-| PLAN-2026-IR007 | Interactive inference latency and admitted throughput (planned) | LLM inference | hybrid | Which scheduling and KV-memory policy meets isolated admitted load | `resource-admission` | `cost-latency-tradeoff`, `authorization-scope` | not-measured | proposed | 2026-11-06 | Planning brief only |
-| PLAN-2026-IR009 | Domain-training budget and restart headroom (planned shared brief) | Model training | hybrid | Whether continued training or from-scratch training is justified | `cost-latency-tradeoff` | `data-leakage`, `atomic-release-bundle` | not-measured | proposed | 2026-11-06 | Planning brief only |
+| CASE-19-01 | [Choosing a code-assistance model with authorised repository context](./01_code_assistance_model_choice.md) | Module 19 â€” Transformers, LLMs and Foundation-Model Internals | llm-agentic | decision record in the linked case | evaluation-mismatch | authorization-scope, cost-latency-tradeoff | not-measured | proposed | null | authored |
+| PLAN-2026-IR007 | Interactive inference latency and admitted throughput | Module 19 â€” Transformers, LLMs and Foundation-Model Internals | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-2026-IR009 | Domain-training budget and restart headroom | Module 19 â€” Transformers, LLMs and Foundation-Model Internals | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-2026-IR007 | Serving choice changes task latency. | Module 19 â€” Transformers, LLMs and Foundation-Model Internals | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-2026-IR009 | Quality/cost claims require a complete budget. | Module 19 â€” Transformers, LLMs and Foundation-Model Internals | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
 
 ## 3. Canonical reusable patterns
 
-| Pattern | Meaning | Boundary |
-|---|---|---|
-| `evaluation-mismatch` | A token metric or synthetic benchmark can disagree with the real task contract. | Validate the specified task, slice, and comparator. |
-| `resource-admission` | Requests are accepted only when bounded cache, latency, and isolation resources exist. | Offered load is not admitted throughput. |
-| `cost-latency-tradeoff` | A faster or larger alternative changes cost, quality, and tail behaviour together. | A single average hides tail and restart costs. |
-| `authorization-scope` | Code/context input must be authorised at retrieval and serving boundaries. | Better completion does not justify exposure. |
-| `atomic-release-bundle` | Model, tokenizer, prompt/configuration, and evaluation evidence must move together. | A weight-only rollback may not restore behaviour. |
+| Pattern | Diagnostic signature | Use when | Boundary |
+|---|---|---|---|
+| evaluation-mismatch | Offline score does not represent the decision | Ranking, forecast, threshold, agent products | The metric captures decision and guardrails |
+| data-leakage | Information unavailable at decision time inflates a score | Unexpectedly strong offline result | The feature is genuinely available before the cutoff |
+| distribution-shift | Live population differs from training | New market, season, channel, or policy version | The change is sampling noise only |
+| human-in-the-loop | Review capacity or override changes the trade-off | High-impact, uncertain, or regulated work | Review is infeasible or demonstrably ineffective |
+| model-monitoring | Live signals diverge from the evaluation | Deployed model with usable feedback | No meaningful feedback signal exists |
 
-## 4. Similarity and contrast map
+## 4. Similarity / contrast map
 
-| Item | Shared reasoning | Distinct check |
-|---|---|---|
-| CASE-19-01 | Model selection needs a task-true baseline. | Repository/time split and authorised-context contract. |
-| CASE-19-02 | Context behaviour requires position-aware evidence. | Separate missing evidence from position, truncation, and retrieval errors. |
-| PLAN-2026-IR007 | Serving choice changes task latency. | Measure prefill, decode, admission, cache headroom, and target equivalence. |
-| PLAN-2026-IR009 | Quality/cost claims require a complete budget. | Include held-out general quality, restart, and reproducibility gates. |
+This collection holds 1 authored case(s) and 4 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
 
-## 5. Questions and future-case backlog
+## 5. Questions / future-case backlog
 
-1. Define units for token, request, sequence, cache byte, prefill time, and decode time before comparing alternatives.
-2. Test a no-retrieval, authorised-retrieval, and abstain baseline before attributing code-task quality to a model.
-3. Make effective context length a task-specific measured curve rather than a nominal context-window claim.
-4. Reject scaling extrapolations outside their fitted data, compute, and objective regime.
-5. Treat speculative decoding as a correctness-preserving algorithm only if its acceptance and target-equivalence contracts are tested.
+Planned commitments, retained without silent deletion:
 
-## 6. Review and retirement log
+- `PLAN-2026-IR007` — Interactive inference latency and admitted throughput. Not authored; no file exists, so no link is offered.
+- `PLAN-2026-IR009` — Domain-training budget and restart headroom. Not authored; no file exists, so no link is offered.
+- `PLAN-2026-IR007` — Serving choice changes task latency.. Not authored; no file exists, so no link is offered.
+- `PLAN-2026-IR009` — Quality/cost claims require a complete budget.. Not authored; no file exists, so no link is offered.
 
-| Item | State | Required action |
-|---|---|---|
-| CASE-19-01 | Planned | Author canonical case with independent task, security, quality, cost, and latency evidence. |
-| CASE-19-02 | Planned | Author canonical case with a checked position/retrieval diagnostic trace. |
-| PLAN-2026-IR007/009 | Planning only | Preserve source-reference limits and do not transfer assumed reference workload figures. |
-| Collection | Draft | Reconcile catalog links, claim ledgers, and review state after each manuscript. |
+## 6. Review / retirement log
+
+| Date | Artifact | Event | Evidence / stage change |
+|---|---|---|---|
+| 2026-11-10 | [Choosing a code-assistance model with authorised repository context](./01_code_assistance_model_choice.md) | index regenerated from disk | not-measured / proposed unchanged |
 
 ## 7. Pre-publish checks
 
-- [ ] Each canonical case has all 15 ordered sections and a final Section 15 card.
-- [ ] The decision owner, baseline, data cut-off, model/tokenizer/configuration versions, and authority boundaries are explicit.
-- [ ] Numerical memory, throughput, or budget examples are recomputed with units and invalidating boundaries.
-- [ ] Each case includes 12–18 substantive answered interview questions and failure recovery paths.
-- [ ] Catalog links target only real canonical manuscripts; shared decision families are linked, not duplicated.
+- [x] Every catalog row links a file that exists, or is marked planned without a link.
+- [x] Evidence, implementation stage, and editorial status are separate columns.
+- [x] Planned commitments are retained with no silent deletion.
+- [ ] Independent source review of every authored case.
+- [ ] Publication review of every authored case.

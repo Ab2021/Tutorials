@@ -1,63 +1,84 @@
-# Module 07 Cheat Sheets — Analytics, Metrics, BI and Product Sense
+# Module 07 â€” Analytics, Metrics, BI and Product Sense — Cheat Sheets
 
 ## 1. Overview
-This collection teaches analysts to turn an operational question into an auditable measure and a reversible decision. Readiness means defining grain, numerator, denominator, cutoff, owner, guardrail, and verification—not merely producing a chart. All worked values are illustrative unless explicitly marked otherwise.
+
+This collection carries 5 reference card(s) and 1 troubleshooting artifact(s) for `Module 07 â€” Analytics, Metrics, BI and Product Sense`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
 ## 2. Topic ladder
-| Level | File | Testable outcome | Prerequisites | Status |
-|---|---|---|---|---|
-| Foundation | [01 Metric Trees](01_Metric_Trees_and_North_Stars.md) | Define an outcome, drivers, and guardrail | SQL aggregation | Draft |
-| Foundation | [02 Funnel, Cohort, Retention](02_Funnel_Cohort_and_Retention_Analysis.md) | Reconcile ordered conversion and retention denominators | 01 | Draft |
-| Core | [03 Dashboard Design](03_Dashboard_Design_and_Operational_Alerts.md) | Select action-ready views and alerts | 01–02 | Draft |
-| Core | [04 Segmentation](04_Segmentation_and_Decision_Use.md) | Select stable, decision-relevant segments | 01–03 | Draft |
-| Advanced | [05 Decision Memos](05_Stakeholder_Narratives_and_Decision_Memos.md) | Defend an action with uncertainty and alternatives | 01–04 | Draft |
-| Final | [06 25 Common Issues](06_25_Common_Issues.md) | Diagnose metric-contract failures | 01–05 | Draft |
 
-## 3. Quick topic lookup
-| Question | File / section | Use condition | Warning |
-|---|---|---|---|
-| What should the north-star exclude? | [01 §3](01_Metric_Trees_and_North_Stars.md#3-foundational-definitions) | Before setting an objective | A proxy is not the outcome. |
-| Why did retention move? | [02 §8](02_Funnel_Cohort_and_Retention_Analysis.md#8-failure-modes--edge-cases) | Cohort result changes | Check cohort entry and cutoff. |
-| Is an alert actionable? | [03 §7](03_Dashboard_Design_and_Operational_Alerts.md#7-comparison--selection-table) | Designing monitoring | Threshold is not diagnosis. |
-| Can we act on this segment? | [04 §8](04_Segmentation_and_Decision_Use.md#8-failure-modes--edge-cases) | Slice differs | Small slices are unstable. |
-| How should a decision be narrated? | [05 §11](05_Stakeholder_Narratives_and_Decision_Memos.md#11-interview--exam-questions) | Owner needs a memo | Preserve uncertainty. |
+| Level | Cards | Purpose |
+|---|---|---|
+| foundation | Dashboard Design and Operational Alerts | Build from prerequisites to production judgement |
 
-## 4. Reading paths — three options
-- **Beginner:** 01 → 02 → 03; define one metric and reconcile its components.
-- **Practitioner:** 01 → 02 → 03 → 04 → 05; attach a decision owner and guardrail.
-- **Advanced:** all files through 06; run the issue diagnostics on a frozen metric snapshot.
+## 3. Quick lookup
+
+| If you need to… | Read |
+|---|---|
+| work on metric trees and north-star measures | [Metric Trees and North-Star Measures](./01_Metric_Trees_and_North_Stars.md) |
+| work on funnel, cohort, and retention analysis | [Funnel, Cohort, and Retention Analysis](./02_Funnel_Cohort_and_Retention_Analysis.md) |
+| work on dashboard design and operational alerts | [Dashboard Design and Operational Alerts](./03_Dashboard_Design_and_Operational_Alerts.md) |
+| work on segmentation and decision use | [Segmentation and Decision Use](./04_Segmentation_and_Decision_Use.md) |
+| work on stakeholder narratives and decision memos | [Stakeholder Narratives and Decision Memos](./05_Stakeholder_Narratives_and_Decision_Memos.md) |
+| diagnose a failure that keeps recurring | [Analytics Common Issues: Diagnosing Metric-Contract Failures](./06_25_Common_Issues.md) |
+
+## 4. Reading paths
+
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
 
 ## 5. Prerequisite skills
-SQL grouping and joins, ratio arithmetic, UTC cutoffs, and the distinction between an entity and an event. Experiment attribution is handed off to Module 08.
 
-## 6. What this collection does NOT cover
-It does not prove causal effects, prescribe a BI vendor, establish company performance, or replace privacy/security review. Causal estimands belong in Module 08; source contracts belong in Module 06.
+| Skill | Why it is needed | Where it is available |
+|---|---|---|
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
+
+## 6. Exclusions and handoffs
+
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
 
 ## 7. Master symbol glossary
-| Symbol / term | Meaning | Units/type | Domain | First use |
-|---|---|---|---|---|
-| `N` | qualifying count | entities/events | nonnegative integer | 01 §4 |
-| `D` | eligible denominator | entities/events | positive integer for rates | 01 §4 |
-| `M` | declared metric | dimensionless or stated unit | fixed population/window | 01 §4 |
-| `r_h` | retention at horizon `h` | proportion | fixed cohort | 02 §4 |
-| `EV` | expected value | value-units/decision | stated probability/cost model | 05 §4 |
 
-## 8. Quick Reference Card directory
-| Card | Core rule | Use condition | Avoid condition |
-|---|---|---|---|
-| [01 §12](01_Metric_Trees_and_North_Stars.md#12-quick-reference-card) | Declare denominator and guardrail | metric design | unknown eligibility |
-| [02 §12](02_Funnel_Cohort_and_Retention_Analysis.md#12-quick-reference-card) | Fix cohort entry/cutoff | retention analysis | mixed cohorts |
-| [03 §12](03_Dashboard_Design_and_Operational_Alerts.md#12-quick-reference-card) | Alert requires owner/action | operations view | no response policy |
-| [06 §12](06_25_Common_Issues.md#12-quick-reference-card) | Reconcile components | anomaly response | snapshot is mutable |
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
+|---|---|---|---|---|---|
+| — | no card defines a symbol yet | — | — | — | — |
+
+## 8. Card directory
+
+| # | Card | Level | Evidence | Status |
+|---|---|---|---|---|
+| 1 | [Metric Trees and North-Star Measures](./01_Metric_Trees_and_North_Stars.md) | 1 | DERIVED | draft (lint open) |
+| 2 | [Funnel, Cohort, and Retention Analysis](./02_Funnel_Cohort_and_Retention_Analysis.md) | 1 | DERIVED | authored |
+| 3 | [Dashboard Design and Operational Alerts](./03_Dashboard_Design_and_Operational_Alerts.md) | foundation | DERIVED | draft (lint open) |
+| 4 | [Segmentation and Decision Use](./04_Segmentation_and_Decision_Use.md) | 2 | DERIVED | authored |
+| 5 | [Stakeholder Narratives and Decision Memos](./05_Stakeholder_Narratives_and_Decision_Memos.md) | 3 | DERIVED | authored |
+| 6 | [Analytics Common Issues: Diagnosing Metric-Contract Failures](./06_25_Common_Issues.md) | 3 | DERIVED | draft (lint open) |
 
 ## 9. Common Issues locator
-[06_25_Common_Issues.md](06_25_Common_Issues.md) contains 25 complete HYPOTHETICAL issues, `ISSUE-001`–`ISSUE-025`, across all four required categories. It is the final collection artifact.
 
-## 10. Empirical sources, versions and collection maintenance
-All examples are DERIVED/ILLUSTRATIVE and arithmetic is marked VERIFIED within the files; no company benchmark or operational outcome is claimed. Recheck on metric-definition, source, owner, cutoff, or decision-policy change. Editorial status remains draft and independent review is open.
+- [Analytics Common Issues: Diagnosing Metric-Contract Failures](./06_25_Common_Issues.md) — the unit's final troubleshooting artifact; entries use stable `CI-` ids.
 
-## 11. Collection acceptance checklist
-- [x] Six indexed artifacts exist in prerequisite order and retain 12 sections.
-- [x] Final troubleshooting artifact has 25 complete issue entries.
-- [x] Cards, glossary, lookup, reading paths, sources, and exclusions are linked.
-- [ ] Independent technical/source review completed; no reviewed/published status is claimed.
+## 10. Sources, versions, maintenance
+
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
+
+## 11. Acceptance checklist
+
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [x] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.

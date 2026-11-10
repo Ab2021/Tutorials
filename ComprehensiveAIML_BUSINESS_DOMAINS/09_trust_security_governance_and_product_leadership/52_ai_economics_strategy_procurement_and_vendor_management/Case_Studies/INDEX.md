@@ -1,36 +1,52 @@
-# Module 52 Case Studies â€” AI Economics, Strategy, Procurement and Vendor Management
+# Module 52 â€” AI Economics, Strategy, Procurement and Vendor Management — Case Studies
 
-## Authoring standard
+## 1. Collection metadata
 
-Every authored case must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master: all 15 sections, bounded decision and baseline, traceable evidence, checked numerical walkthrough/sizing where applicable, failure diagnostics, 12–18 answered interview questions, and Section 15 last. This is a planned catalog, not completed cases; expand to all seven collection-index sections before publication. Evidence, implementation stage and editorial status remain separate.
+| Field | Value |
+|---|---|
+| Collection owner | Curriculum maintainer |
+| Canonical case-ID format | CASE-XX-NN |
+| Evidence policy | Illustrative teaching inputs are not company results; unsourced claims stay OPEN. |
+| Editorial state | Draft; independent publication review is not claimed. |
+| Acceptance rule | A case row is `authored` only when `Tools/manuscript_lint.py` exits 0 for it. |
+| Review trigger | A source body, decision policy, metric definition, or workload assumption changes. |
 
-## Planned cases
+## 2. Case catalog
 
-| # | Case | Required outcome | Status |
-|---:|---|---|---|
-| 1 | GenAI platform business case | Design the decision, architecture, metrics, risks, and validation plan. | planned |
-| 2 | vendor benchmark and procurement review | Design the decision, architecture, metrics, risks, and validation plan. | planned |
-
-## Suggested file naming
-
-Use **01_case-slug.md**, then **02_case-slug.md**. Add **00_framework.md** only for shared constraints that every case needs.
-
-<!-- BEGIN INTERVIEW REFERENCE PLAN -->
-
-## Reference-informed additions to develop
-
-These are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../00_REFERENCE_INFORMED_CASE_PLAN.md).
-
-| Planning ID | Proposed case brief | Editorial relationship | Type | Decision / business question | Primary pattern | Secondary patterns | Evidence | Stage | Planning reviewed | Result |
+| Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-2026-IR002 | Select model routes within hard customer constraints | Supporting curriculum; shared brief | llm-agentic | Which eligible provider and fallback path satisfy residency, capability, deadline and spend requirements? | `eligibility-before-ranking` | `cost-latency-tradeoff` | not-measured | proposed | 2026-11-06 |  |
+| PLAN-2026-IR002 | Select model routes within hard customer constraints | Module 52 â€” AI Economics, Strategy, Procurement and Vendor Management | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
 
-### Reference and transfer notes
+## 3. Canonical reusable patterns
 
-| Planning ID | Example reference only | Scope boundary |
-|---|---|---|
-| PLAN-2026-IR002 | [REF-IR002](../../../../INTERVIEW_CASES/Agentic_AI_System/AI_frontier_sys/constrained_provider_routing.md) | Revalidate provider capabilities and economics when authoring; source tables are not current service guarantees |
+| Pattern | Diagnostic signature | Use when | Boundary |
+|---|---|---|---|
+| evaluation-mismatch | Offline score does not represent the decision | Ranking, forecast, threshold, agent products | The metric captures decision and guardrails |
+| data-leakage | Information unavailable at decision time inflates a score | Unexpectedly strong offline result | The feature is genuinely available before the cutoff |
+| distribution-shift | Live population differs from training | New market, season, channel, or policy version | The change is sampling noise only |
+| human-in-the-loop | Review capacity or override changes the trade-off | High-impact, uncertain, or regulated work | Review is infeasible or demonstrably ineffective |
+| model-monitoring | Live signals diverge from the evaluation | Deployed model with usable feedback | No meaningful feedback signal exists |
 
-Case metadata, pattern definitions, supporting/contrasting references, structured backlog, review log and authoring checks for these additions are maintained in the linked central planning catalog. Existing planned rows elsewhere in this index retain their original status. A brief may be split or merged before canonical case IDs are assigned.
+## 4. Similarity / contrast map
 
-<!-- END INTERVIEW REFERENCE PLAN -->
+This collection holds 0 authored case(s) and 1 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
+
+## 5. Questions / future-case backlog
+
+Planned commitments, retained without silent deletion:
+
+- `PLAN-2026-IR002` — Select model routes within hard customer constraints. Not authored; no file exists, so no link is offered.
+
+## 6. Review / retirement log
+
+| Date | Artifact | Event | Evidence / stage change |
+|---|---|---|---|
+| 2026-11-10 | collection | index regenerated; no authored case yet | not-measured / proposed |
+
+## 7. Pre-publish checks
+
+- [x] Every catalog row links a file that exists, or is marked planned without a link.
+- [x] Evidence, implementation stage, and editorial status are separate columns.
+- [x] Planned commitments are retained with no silent deletion.
+- [ ] Independent source review of every authored case.
+- [ ] Publication review of every authored case.

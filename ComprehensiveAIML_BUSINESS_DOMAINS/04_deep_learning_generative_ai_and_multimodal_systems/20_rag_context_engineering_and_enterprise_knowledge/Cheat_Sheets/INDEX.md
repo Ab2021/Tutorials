@@ -1,33 +1,75 @@
-# Module 20 Cheat Sheets â€” RAG, Context Engineering and Enterprise Knowledge
+# Module 20 â€” RAG, Context Engineering and Enterprise Knowledge — Cheat Sheets
 
-## Authoring standard
+## 1. Overview
 
-Every authored sheet must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. This collection has one unreviewed course-topic draft; remaining sheets and the final Common Issues artifact (at least 25 complete issues) are planned. A card alone is not a completed sheet.
+This collection carries 2 reference card(s) and 0 troubleshooting artifact(s) for `Module 20 â€” RAG, Context Engineering and Enterprise Knowledge`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
-## Planned cheat sheets
+## 2. Topic ladder
 
-| # | Reference | Coverage | Status |
-|---:|---|---|---|
-| 1 | [Permission-aware retrieval](01_Permission_Aware_Retrieval.md) | Eligibility, provenance, access evaluation and failure containment. | Draft; unreviewed. |
-| 2 | chunking guide | Concise patterns, decision rules, assumptions, and common traps. | planned |
-| 3 | retrieval metric card | Concise patterns, decision rules, assumptions, and common traps. | planned |
+| Level | Cards | Purpose |
+|---|---|---|
 
-## Suggested file naming
+## 3. Quick lookup
 
-Use **01_reference-slug.md**, then **02_reference-slug.md**. Keep one concern per file so references remain scannable.
+| If you need to… | Read |
+|---|---|
+| work on permission-aware retrieval | [Permission-Aware Retrieval](./01_Permission_Aware_Retrieval.md) |
+| work on rag ingestion, chunking and grounded answers | [RAG Ingestion, Chunking and Grounded Answers](./02_RAG_Ingestion_Chunking_and_Grounded_Answers.md) |
 
-<!-- BEGIN INTERVIEW REFERENCE PLAN -->
+## 4. Reading paths
 
-## Reference-informed additions to develop
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
 
-These are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../00_REFERENCE_INFORMED_CASE_PLAN.md).
+## 5. Prerequisite skills
 
-| Related brief | Proposed cheat-sheet scope | Checks / counterexamples to include | Reference only | Status |
+| Skill | Why it is needed | Where it is available |
+|---|---|---|
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
+
+## 6. Exclusions and handoffs
+
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
+
+## 7. Master symbol glossary
+
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
+|---|---|---|---|---|---|
+| — | no card defines a symbol yet | — | — | — | — |
+
+## 8. Card directory
+
+| # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
-| PLAN-2026-IR003 | Authorized retrieval; effective policy versions; claim-level citations; embedding migrations | Unsupported-claim rate, eligible-span recall, abstention quality and policy-version errors against expert labels. Boundary: Citations and entailment checks require validation; never transfer the example refund window into a new business. | [REF-IR003](../../../../INTERVIEW_CASES/Agentic_AI_System/Applied_AI_engineering/grounded_policy_rag.md) | planned; not written |
-| PLAN-2026-IR012 | Structure-aware chunking; actual tokenizer limits; HNSW and exact filtered baselines; CDC; deletion propagation | All-required-span success, filtered recall, duplicate context, ACL violations, freshness lag and per-tenant latency. Boundary: Reranking cannot recover a missing candidate; the source embedding limit and tenant count are not platform requirements. | [REF-IR012](../../../../INTERVIEW_CASES/Agentic_AI_System/RAG_Infra_Research/Chunking_And_Vector_Index.md) | planned; not written |
-| PLAN-2026-IR013 | Effective intervals; recorded-time history; jurisdiction rules; hybrid retrieval; reranking and claim verification | Boundary-date and amendment replays, eligible recall, wrong-version citations and expert-reviewed abstentions. Boundary: This is an architecture exercise, not current legal guidance; eligibility depends on maintained authoritative metadata. | [REF-IR013](../../../../INTERVIEW_CASES/Agentic_AI_System/RAG_Infra_Research/Regulatory_RAG_And_Reranking.md) | planned; not written |
+| 1 | [Permission-Aware Retrieval](./01_Permission_Aware_Retrieval.md) | 2 | DERIVED | draft (lint open) |
+| 2 | [RAG Ingestion, Chunking and Grounded Answers](./02_RAG_Ingestion_Chunking_and_Grounded_Answers.md) | 1 | DERIVED | draft (lint open) |
 
-Each future cheat sheet needs its own explanation, preconditions, formulas or algorithms where relevant, failure signals and checked examples. Do not copy the interview narrative or its scenario figures into a reference sheet.
+## 9. Common Issues locator
 
-<!-- END INTERVIEW REFERENCE PLAN -->
+- Not yet authored. The collection is incomplete until this artifact exists with at least 25 distinct issues.
+
+## 10. Sources, versions, maintenance
+
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
+
+## 11. Acceptance checklist
+
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.

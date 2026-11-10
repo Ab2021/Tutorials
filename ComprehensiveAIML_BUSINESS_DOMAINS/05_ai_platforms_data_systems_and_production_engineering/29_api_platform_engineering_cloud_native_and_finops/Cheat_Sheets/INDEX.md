@@ -1,81 +1,73 @@
-# Module 29 Cheat Sheets — API Platform Engineering, Cloud-Native Systems and FinOps
-
-**Status:** planned collection; no individual sheet exists. Use the [course standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [cheat-sheet master](../../../../Templates/CHEAT_SHEET_CONTENT_MASTER_TEMPLATE.md). A completed sheet has 12 sections, >=1,000 substantive lines, checked arithmetic/trace, four diagnostics, answered interview pack, and final card.
+# Module 29 â€” API Platform Engineering, Cloud-Native Systems and FinOps — Cheat Sheets
 
 ## 1. Overview
 
-This collection teaches platform engineers to make API, orchestration, tenancy, platform-product, and spend decisions with explicit contracts and bounded failure behavior. Readiness means stating ownership and units, choosing a disqualifiable alternative, and proving the relevant invariant or capacity calculation.
+This collection carries 0 reference card(s) and 1 troubleshooting artifact(s) for `Module 29 â€” API Platform Engineering, Cloud-Native Systems and FinOps`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
 ## 2. Topic ladder
 
-| Level | File / planned topic | Testable outcome | Prerequisite | Status |
-|---|---|---|---|---|
-| Foundations | API design and contracts | define a compatible request, response, error, and idempotency contract | HTTP, schemas | planned |
-| Core | Kubernetes and serverless AI workloads | select a deployment/control boundary | containers, scheduling | planned |
-| Core | Multi-tenancy and platform product | isolate data, state, quota, and ownership | identity, authorization | planned |
-| Advanced | FinOps and cost allocation | reconcile successful-work cost and budget | units, accounting | planned |
-| Advanced | Global admission / token leases (PLAN-2026-IR022) | trace atomic debit, expiry, and recovery | concurrency | planned |
-| Final | [25 Common Issues](06_25_Common_Issues.md) | diagnose 25 distinct bounded platform failures | all above | draft; HYPOTHETICAL teaching traces, source review open |
-
-## 3. Quick topic lookup
-
-| Question | Destination | Use condition / failure warning |
+| Level | Cards | Purpose |
 |---|---|---|
-| Can a retry create a duplicate side effect? | API contract sheet, Section 4 | A request ID without an ownership and retention rule is insufficient. |
-| Which workload fits serverless versus long-lived serving? | workload patterns, Section 7 | Cold start, state, accelerator placement, and tail deadline can disqualify serverless. |
-| How do tenants avoid cross-charge and cross-data access? | tenancy sheet, Section 8 | Namespace isolation is not automatically data-plane authorization. |
-| Why did a budget permit too much traffic? | token lease sheet, Section 4 | Periodic usage reporting is not globally atomic admission. |
 
-## 4. Reading paths — three options
+## 3. Quick lookup
 
-- **Beginner:** API design and contracts → Kubernetes/serverless patterns → tenancy concepts; assumes HTTP and container basics.
-- **Practitioner:** API design → workload patterns → tenancy/platform product → FinOps allocation; practice a failed retry and budget reconciliation.
-- **Advanced:** all files → token leases → Common Issues; add fault injection and compatibility/recovery traces.
+| If you need to… | Read |
+|---|---|
+| diagnose a failure that keeps recurring | [25 Common Issues — API Platforms, Cloud-Native Systems and FinOps](./06_25_Common_Issues.md) |
+
+## 4. Reading paths
+
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
 
 ## 5. Prerequisite skills
 
-Readers need HTTP status/error semantics, schema evolution, identity/authorization vocabulary, container scheduling concepts, rates versus counts, basic concurrency, and currency/unit arithmetic. Provider-specific API or pricing behavior must be checked from current primary documentation before implementation.
+| Skill | Why it is needed | Where it is available |
+|---|---|---|
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
 
-## 6. What this collection does NOT cover
+## 6. Exclusions and handoffs
 
-It does not certify a provider's current price/capability, replace organization-specific security review, define every orchestration framework, or establish that a quota system is legally/commercially sufficient. Model inference algorithms belong in Module 25; release bundles belong in Module 26.
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
 
 ## 7. Master symbol glossary
 
-| Symbol / term | Meaning | Units / type | Domain / warning | First planned use |
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
+|---|---|---|---|---|---|
+| — | no card defines a symbol yet | — | — | — | — |
+
+## 8. Card directory
+
+| # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
-| `r` | request arrival rate | requests/s | interval average, not a burst guarantee | workload patterns |
-| `b` | budget tokens | integer credits | must name global versus local scope | token leases |
-| `c_s` | successful-work cost | currency/success | exclude/reveal failed work explicitly | FinOps |
-| idempotency key | client operation identity | opaque string | not an authorization credential | API contracts |
-| lease | temporary budget claim | token count + expiry | clock/failure policy required | token leases |
-
-## 8. Quick Reference Card directory
-
-| Planned card | Core rule | Use condition | Avoid when |
-|---|---|---|---|
-| API contract | retry only with an idempotency and response-replay contract | side effects are externally visible | identity/retention is unknown |
-| Workload placement | choose a control boundary from state, deadline, and placement constraints | workload is measured | only average utilization is known |
-| Tenancy | authorize every data/state boundary independently | tenant identity is propagated | namespace is used as the sole control |
-| FinOps | allocate cost to completed useful work | meter is reconciled | price is stale or failed work hidden |
-| Token leases | debit/refill under one global invariant or bounded failure policy | coordination semantics are explicit | periodic reports substitute for admission |
+| 1 | [25 Common Issues — API Platforms, Cloud-Native Systems and FinOps](./06_25_Common_Issues.md) | 3 | DERIVED | draft (lint open) |
 
 ## 9. Common Issues locator
 
-[`06_25_Common_Issues.md`](06_25_Common_Issues.md) is the final numbered artifact and contains 25 distinct complete HYPOTHETICAL teaching issues: `API-ID-01`–`OPS-SECRET-25`. Its checked illustrative global-admission trace demonstrates that three independent 40-credit replica buckets admit 120 credits against a 100-credit global budget. The artifact is authored as a draft; its issue count and structure do not establish source review or a production incident.
+- [25 Common Issues — API Platforms, Cloud-Native Systems and FinOps](./06_25_Common_Issues.md) — the unit's final troubleshooting artifact; entries use stable `CI-` ids.
 
-## 10. Sources, versions and collection maintenance
+## 10. Sources, versions, maintenance
 
-| Source ID | Primary source / role | Version/date | Limitation / trigger |
-|---|---|---|---|
-| SRC-M29-01 | [RFC 9110 HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110) — request/response semantics | 2022 | does not specify an application's idempotency design |
-| SRC-M29-02 | [Kubernetes documentation](https://kubernetes.io/docs/) — workload concepts | version must be pinned when authoring | behavior/configuration differs by release/provider |
-| PLAN-2026-IR002 | reference-informed routing brief | 2026-11-06 planning | revalidate provider capability/economics |
-| PLAN-2026-IR022 | reference-informed token lease brief | 2026-11-06 planning | source is not proof of a deployed global limiter |
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
 
-## 11. Collection acceptance checklist
+## 11. Acceptance checklist
 
-- [ ] Every planned topic has a real 12-section, >=1,000-line sheet with checked topic-specific calculation or trace.
-- [ ] Sheet paths, prerequisites, glossary, cards, and reading paths link to real artifacts.
-- [ ] Common Issues has 25 distinct complete entries and is final in the numbered sequence.
-- [ ] Current provider/API/cost claims are primary-sourced, dated, and scoped; planned evidence remains planned.
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [x] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.

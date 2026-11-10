@@ -1,46 +1,63 @@
-# Module 14 Case Studies â€” Recommendation, Search, Ads and Ranking
+# Module 14 â€” Recommendation, Search, Ads and Ranking — Case Studies
 
-## Authoring standard
+## 1. Collection metadata
 
-Every authored case must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master: all 15 sections, bounded decision and baseline, traceable evidence, checked numerical walkthrough/sizing where applicable, failure diagnostics, 12–18 answered interview questions, and Section 15 last. This is a planned catalog, not completed cases; expand to all seven collection-index sections before publication. Evidence, implementation stage and editorial status remain separate.
+| Field | Value |
+|---|---|
+| Collection owner | Curriculum maintainer |
+| Canonical case-ID format | CASE-M14-01 |
+| Evidence policy | Illustrative teaching inputs are not company results; unsourced claims stay OPEN. |
+| Editorial state | Draft; independent publication review is not claimed. |
+| Acceptance rule | A case row is `authored` only when `Tools/manuscript_lint.py` exits 0 for it. |
+| Review trigger | A source body, decision policy, metric definition, or workload assumption changes. |
 
-## Planned cases
+## 2. Case catalog
 
-| # | Case | Required outcome | Status |
-|---:|---|---|---|
-| 1 | E-commerce recommender | Design the decision, architecture, metrics, risks, and validation plan. | planned |
-| 2 | search ranking quality regression | Design the decision, architecture, metrics, risks, and validation plan. | planned |
-
-## Suggested file naming
-
-Use **01_case-slug.md**, then **02_case-slug.md**. Add **00_framework.md** only for shared constraints that every case needs.
-
-<!-- BEGIN INTERVIEW REFERENCE PLAN -->
-
-## Reference-informed additions to develop
-
-These are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../00_REFERENCE_INFORMED_CASE_PLAN.md).
-
-| Planning ID | Proposed case brief | Editorial relationship | Type | Decision / business question | Primary pattern | Secondary patterns | Evidence | Stage | Planning reviewed | Result |
+| Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-2026-IR018 | Specify correctness contracts before choosing production algorithms | Supporting curriculum; shared brief | hybrid | Which guarantees are needed for road routing, distributed admission and phrase retrieval? | `correctness-contract` | `snapshot-consistency`, `bounded-work` | not-measured | proposed | 2026-11-06 |  |
-| PLAN-2026-IR020 | Translate local algorithm guarantees into distributed service contracts | Supporting curriculum; shared brief | hybrid | Which correctness and failure guarantees survive sharding, delayed updates and partial outages? | `correctness-contract` | `resource-admission`, `materialized-view` | not-measured | proposed | 2026-11-06 |  |
-| PLAN-2026-IR021 | Evolve an authorized near-real-time search index safely | Proposed home | hybrid | How should search remain correct across indexing, deletion, ranking and shard failures? | `materialized-view` | `authorization-scope`, `snapshot-consistency` | not-measured | proposed | 2026-11-06 |  |
-| PLAN-2026-IR024 | Bound phrase-search memory while preserving exact matches | Proposed home | hybrid | How can common-term phrase queries be evaluated without materializing huge posting lists? | `bounded-work` | `correctness-contract`, `snapshot-consistency` | not-measured | proposed | 2026-11-06 |  |
-| PLAN-2026-IR029 | Return useful graph candidates under explicit traversal budgets | Supporting curriculum; shared brief | incident | How should a recommendation API respond when graph expansion reaches a node, edge, memory or time limit? | `bounded-work` | `correctness-contract`, `incident-postmortem` | not-measured | proposed | 2026-11-06 |  |
-| PLAN-2026-IR032 | Balance autocomplete freshness, memory and abuse controls | Proposed home | hybrid | Which terms enter a bounded suggestion index, and how can safe new trends appear promptly? | `materialized-view` | `bounded-work`, `rollout-regression` | not-measured | proposed | 2026-11-06 |  |
+| CASE-M14-01 | [E-commerce recommender: retrieval upgrade versus full re-architecture](./01_e_commerce_recommender.md) | Module 14 â€” Recommendation, Search, Ads and Ranking | predictive-ml | decision record in the linked case | retrieval-ranking | experimentation, metric-alignment | illustrative | draft | null | draft (lint open) |
+| PLAN-2026-IR018 | Specify correctness contracts before choosing production algorithms | Module 14 â€” Recommendation, Search, Ads and Ranking | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-2026-IR020 | Translate local algorithm guarantees into distributed service contracts | Module 14 â€” Recommendation, Search, Ads and Ranking | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-2026-IR021 | Evolve an authorized near-real-time search index safely | Module 14 â€” Recommendation, Search, Ads and Ranking | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-2026-IR024 | Bound phrase-search memory while preserving exact matches | Module 14 â€” Recommendation, Search, Ads and Ranking | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-2026-IR029 | Return useful graph candidates under explicit traversal budgets | Module 14 â€” Recommendation, Search, Ads and Ranking | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-2026-IR032 | Balance autocomplete freshness, memory and abuse controls | Module 14 â€” Recommendation, Search, Ads and Ranking | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
 
-### Reference and transfer notes
+## 3. Canonical reusable patterns
 
-| Planning ID | Example reference only | Scope boundary |
-|---|---|---|
-| PLAN-2026-IR018 | [REF-IR018](../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/CASE_STUDIES_01.md) | Seven overlapping teaching units; source measurements are not independently verified and should not be added together |
-| PLAN-2026-IR020 | [REF-IR020](../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/CASE_STUDIES_03.md) | Three units continue earlier routing, admission and search topics; this is not a new independent evidence dataset |
-| PLAN-2026-IR021 | [REF-IR021](../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/CASE_STUDIES_04.md) | Exact global top-k needs a valid distributed protocol; figures in the source are scenario claims, not search-cluster benchmarks |
-| PLAN-2026-IR024 | [REF-IR024](../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/Search/phrase_search_postings.md) | Rarity affects work, not semantic order; deleted documents and analyzer versions must share a consistent snapshot |
-| PLAN-2026-IR029 | [REF-IR029](../../../../INTERVIEW_CASES/DSA/Production_DSA_Incidents/Graph_Traversal/bounded_bfs_incident.md) | Depth and output-size limits alone do not bound expansion; source product degrees and outage figures are illustrative claims |
-| PLAN-2026-IR032 | [REF-IR032](../../../../INTERVIEW_CASES/DSA/Sys_Des_DSA/Autocomplete/frequency_admission_and_freshness.md) | Sketches cannot enumerate terms; approximate frequencies and novelty thresholds must be evaluated rather than copied |
+| Pattern | Diagnostic signature | Use when | Boundary |
+|---|---|---|---|
+| evaluation-mismatch | Offline score does not represent the decision | Ranking, forecast, threshold, agent products | The metric captures decision and guardrails |
+| data-leakage | Information unavailable at decision time inflates a score | Unexpectedly strong offline result | The feature is genuinely available before the cutoff |
+| distribution-shift | Live population differs from training | New market, season, channel, or policy version | The change is sampling noise only |
+| human-in-the-loop | Review capacity or override changes the trade-off | High-impact, uncertain, or regulated work | Review is infeasible or demonstrably ineffective |
+| model-monitoring | Live signals diverge from the evaluation | Deployed model with usable feedback | No meaningful feedback signal exists |
 
-Case metadata, pattern definitions, supporting/contrasting references, structured backlog, review log and authoring checks for these additions are maintained in the linked central planning catalog. Existing planned rows elsewhere in this index retain their original status. A brief may be split or merged before canonical case IDs are assigned.
+## 4. Similarity / contrast map
 
-<!-- END INTERVIEW REFERENCE PLAN -->
+This collection holds 1 authored case(s) and 6 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
+
+## 5. Questions / future-case backlog
+
+Planned commitments, retained without silent deletion:
+
+- `PLAN-2026-IR018` — Specify correctness contracts before choosing production algorithms. Not authored; no file exists, so no link is offered.
+- `PLAN-2026-IR020` — Translate local algorithm guarantees into distributed service contracts. Not authored; no file exists, so no link is offered.
+- `PLAN-2026-IR021` — Evolve an authorized near-real-time search index safely. Not authored; no file exists, so no link is offered.
+- `PLAN-2026-IR024` — Bound phrase-search memory while preserving exact matches. Not authored; no file exists, so no link is offered.
+- `PLAN-2026-IR029` — Return useful graph candidates under explicit traversal budgets. Not authored; no file exists, so no link is offered.
+- `PLAN-2026-IR032` — Balance autocomplete freshness, memory and abuse controls. Not authored; no file exists, so no link is offered.
+
+## 6. Review / retirement log
+
+| Date | Artifact | Event | Evidence / stage change |
+|---|---|---|---|
+| 2026-11-10 | [E-commerce recommender: retrieval upgrade versus full re-architecture](./01_e_commerce_recommender.md) | index regenerated from disk | illustrative / draft unchanged |
+
+## 7. Pre-publish checks
+
+- [x] Every catalog row links a file that exists, or is marked planned without a link.
+- [x] Evidence, implementation stage, and editorial status are separate columns.
+- [x] Planned commitments are retained with no silent deletion.
+- [ ] Independent source review of every authored case.
+- [ ] Publication review of every authored case.

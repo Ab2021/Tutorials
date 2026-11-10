@@ -1,58 +1,57 @@
-# Module 35 Case Studies — Edge AI, Embedded Systems and TinyML
+# Module 35 â€” Edge AI, Embedded Systems and TinyML — Case Studies
 
 ## 1. Collection metadata
 
-**Domain:** resource-bounded embedded AI. **Purpose:** cases test a bounded decision owner, baseline, data/firmware contract, validation plan and recovery boundary rather than assert a deployment. **Evidence policy:** named source titles do not prove a company architecture or measurement. **Collection state:** one authored illustrative draft and one remaining planned case. **Source syllabus:** [edge-arm-firmware](../../../00_SOURCE_COVERAGE_EDGE_INDUSTRY.md#edge-arm-firmware); [directory inventory, lines 1094–1110](../../../../Templates/directory.txt). Source bodies and target evidence remain OPEN.
+| Field | Value |
+|---|---|
+| Collection owner | Curriculum maintainer |
+| Canonical case-ID format | CASE-M35-01 |
+| Evidence policy | Illustrative teaching inputs are not company results; unsourced claims stay OPEN. |
+| Editorial state | Draft; independent publication review is not claimed. |
+| Acceptance rule | A case row is `authored` only when `Tools/manuscript_lint.py` exits 0 for it. |
+| Review trigger | A source body, decision policy, metric definition, or workload assumption changes. |
 
 ## 2. Case catalog
 
-| Case ID | Linked title if authored | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result/limitation | Editorial status |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| CASE-M35-01 | [Wearable activity classifier](01_wearable_activity_classifier.md) | embedded TinyML | predictive-ml | choose a local classifier/acquisition/display boundary | bounded acquisition | freshness gate; degraded local behavior | illustrative / not-measured | proposed | null | resource arithmetic and validation plan only; no target result, clinical meaning, or deployment | draft |
-| PLAN-M35-01 | Wearable activity classifier — original planning row retained | embedded TinyML | predictive-ml | choose local model/acquisition/alert boundary | bounded edge inference | data-quality gate; safe degradation | illustrative proposed | superseded by CASE-M35-01 brief | null | target performance and clinical meaning not measured | retained planning provenance |
-| PLAN-M35-02 | Industrial vibration monitor | industrial edge monitoring | streaming-systems | choose sampling, feature and transmission budget | bounded acquisition | anomaly review; loss accounting | illustrative proposed | proposed | null | machinery data, threshold and field outcome unavailable | planned |
+| Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
+|---|---|---|---|---|---|---|---|---|---|---|
+| CASE-M35-01 | [Wearable activity classifier: choose a local classification and alert boundary](./01_wearable_activity_classifier.md) | Module 35 â€” Edge AI, Embedded Systems and TinyML | predictive-ml | decision record in the linked case | bounded acquisition | freshness, gate, degraded, local, behavior | illustrative | proposed | null | draft (lint open) |
+| CASE-M35-02 | [Battery-powered industrial vibration monitor: choose the sampling, feature and transmission budget](./02_industrial_vibration_monitor.md) | Module 35 â€” Edge AI, Embedded Systems and TinyML | streaming-systems | decision record in the linked case | bounded acquisition | anomaly, review, loss, accounting | illustrative | proposed | null | draft (lint open) |
+| PLAN-M35-01 | Wearable activity classifier — original planning row retained | Module 35 â€” Edge AI, Embedded Systems and TinyML | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-M35-02 | Industrial vibration monitor | Module 35 â€” Edge AI, Embedded Systems and TinyML | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
 
 ## 3. Canonical reusable patterns
 
-| Pattern | Mechanism | Use when | Do not infer |
+| Pattern | Diagnostic signature | Use when | Boundary |
 |---|---|---|---|
-| bounded acquisition | publish immutable DMA blocks with sequence/time | continuous sensor input | that DMA proves consumer timeliness |
-| freshness gate | reject output whose input age violates decision contract | delayed queues or remote handoff | the correct hazard response |
-| target evidence ledger | retain exact part/config/input/trace | claiming feasibility | that illustrative arithmetic is a benchmark |
-| degraded local behavior | contain a violated deadline or quality gate | physical consequence exists | that power removal is universally safe |
+| evaluation-mismatch | Offline score does not represent the decision | Ranking, forecast, threshold, agent products | The metric captures decision and guardrails |
+| data-leakage | Information unavailable at decision time inflates a score | Unexpectedly strong offline result | The feature is genuinely available before the cutoff |
+| distribution-shift | Live population differs from training | New market, season, channel, or policy version | The change is sampling noise only |
+| human-in-the-loop | Review capacity or override changes the trade-off | High-impact, uncertain, or regulated work | Review is infeasible or demonstrably ineffective |
+| model-monitoring | Live signals diverge from the evaluation | Deployed model with usable feedback | No meaningful feedback signal exists |
 
 ## 4. Similarity / contrast map
 
-| Dimension | Wearable activity classifier | Industrial vibration monitor | Why the distinction matters |
-|---|---|---|---|
-| Unit | timestamped participant/session window | asset/sensor-window | labels, action and sampling differ |
-| Main decision | local classifier/display-abstention boundary | feature/reporting threshold and route | neither is a clinical or maintenance conclusion |
-| Baseline | upload/manual review or magnitude threshold | periodic inspection/simple threshold | baseline must be measured or declared illustrative |
-| Critical failure | split leakage, stale/misaligned window, overflow | aliasing, loss or false anomaly | validation oracles differ |
-| Shared contract | sample, buffer, time, model and transport identity | same | reusable firmware reasoning only |
+This collection holds 2 authored case(s) and 2 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
 
 ## 5. Questions / future-case backlog
 
-1. Which exact target device, battery discharge trace, sensor range, and participant population would bound the wearable decision beyond its illustrative model?
-2. Can the proposed prompted/adjudicated label protocol and participant-held-out split be executed without consent, session, or transition exclusions changing the denominator?
-3. What vibration waveform, mounting condition and maintenance label defines an anomaly?
-4. Which missed/false alerts are operationally tolerable, and who may override them?
-5. What local safe/degraded behavior is hazard-appropriate after a deadline miss?
-6. Can a host retry duplicate a command or only duplicate telemetry?
-7. Which hardware-in-the-loop input and reset traces are needed before any result claim?
+Planned commitments, retained without silent deletion:
+
+- `PLAN-M35-01` — Wearable activity classifier — original planning row retained. Not authored; no file exists, so no link is offered.
+- `PLAN-M35-02` — Industrial vibration monitor. Not authored; no file exists, so no link is offered.
 
 ## 6. Review / retirement log
 
-| Date | Item | Event | Evidence effect | Action |
-|---|---|---|---|---|
-| 2026-11-09 | catalog | collection expanded from short planning list | none; cases remain un-authored | preserve plans and require case-master sections before promotion |
-| 2026-11-10 | CASE-M35-01 | authored illustrative wearable case from PLAN-M35-01 | no measured model, device, or clinical result; source bodies remain OPEN | retain original plan and require target/participant evidence before any promotion |
+| Date | Artifact | Event | Evidence / stage change |
+|---|---|---|---|
+| 2026-11-10 | [Wearable activity classifier: choose a local classification and alert boundary](./01_wearable_activity_classifier.md) | index regenerated from disk | illustrative / proposed unchanged |
+| 2026-11-10 | [Battery-powered industrial vibration monitor: choose the sampling, feature and transmission budget](./02_industrial_vibration_monitor.md) | index regenerated from disk | illustrative / proposed unchanged |
 
 ## 7. Pre-publish checks
 
-- [x] Assign stable `CASE` IDs only when a real case file exists (`CASE-M35-01` is an illustrative draft; `PLAN-M35-02` remains planned).
-- [x] CASE-M35-01 preserves 15 case sections, 5a–5e, 12 answered interview questions and Section 15 last.
-- [ ] Obtain primary evidence or label every scenario and numerical result illustrative/not-measured.
-- [x] Recompute CASE-M35-01 workload, memory, latency, freshness, overflow, and energy arithmetic with units and meaningful failed-state boundaries; target measurements remain required.
-- [ ] Test successful and failed request/recovery paths on stated target inputs.
-- [x] Link the supporting Module 35 sheet and update catalog evidence/stage/editorial status independently; preserve PLAN-M35-02 and source limitations.
+- [x] Every catalog row links a file that exists, or is marked planned without a link.
+- [x] Evidence, implementation stage, and editorial status are separate columns.
+- [x] Planned commitments are retained with no silent deletion.
+- [ ] Independent source review of every authored case.
+- [ ] Publication review of every authored case.

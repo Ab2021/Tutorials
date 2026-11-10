@@ -1,44 +1,50 @@
-# Practical ML Design and Interviews — Cross-Domain Case Studies
+# Practical ML Design and Interviews — Case Studies
 
 ## 1. Collection metadata
+
 | Field | Value |
 |---|---|
-| Owner | Curriculum maintainer |
-| Canonical ID format | `CASE-03-X-NNN` |
-| Index state | reserved, no local case authored |
-| Scope | decisions that require two or more child domains |
-| Evidence rule | evidence level, implementation stage, and editorial state are separate |
+| Collection owner | Curriculum maintainer |
+| Canonical case-ID format | CASE-XX-NN |
+| Evidence policy | Illustrative teaching inputs are not company results; unsourced claims stay OPEN. |
+| Editorial state | Draft; independent publication review is not claimed. |
+| Acceptance rule | A case row is `authored` only when `Tools/manuscript_lint.py` exits 0 for it. |
+| Review trigger | A source body, decision policy, metric definition, or workload assumption changes. |
 
 ## 2. Case catalog
-| Case ID | Case title / relative link | Domain | Case type | Decision / business question | Primary pattern | Secondary pattern(s) | Evidence | Stage | Last reviewed | Key result or limitation |
+
+| Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| None | No cross-domain case registered | — | — | — | — | — | — | — | — | No artifact exists |
+| — | No case committed yet | — | — | — | — | — | — | — | — | — |
 
 ## 3. Canonical reusable patterns
+
 | Pattern | Diagnostic signature | Use when | Boundary |
 |---|---|---|---|
-| decision-contract-mismatch | product action, ML output, and evaluation population disagree | an interface crosses child domains | same contract is verified end-to-end |
-| evidence-to-recovery-gap | a release decision lacks a safe containment path | operational rollout | independent fallback is not viable |
-| proxy-outcome-confusion | a local metric is mistaken for business or safety outcome | metrics cross workflows | outcome and action are aligned |
+| evaluation-mismatch | Offline score does not represent the decision | Ranking, forecast, threshold, agent products | The metric captures decision and guardrails |
+| data-leakage | Information unavailable at decision time inflates a score | Unexpectedly strong offline result | The feature is genuinely available before the cutoff |
+| distribution-shift | Live population differs from training | New market, season, channel, or policy version | The change is sampling noise only |
+| human-in-the-loop | Review capacity or override changes the trade-off | High-impact, uncertain, or regulated work | Review is infeasible or demonstrably ineffective |
+| model-monitoring | Live signals diverge from the evaluation | Deployed model with usable feedback | No meaningful feedback signal exists |
 
-## 4. Similarity and contrast map
-| Child artifact | Shared connection | Contrast preserved |
-|---|---|---|
-| [Feature-store sheet](../01_ml_system_design_production/Cheat_Sheets/03_Feature_Store_Design.md) | decision-time input validity | feature parity is not product value |
-| [Drift case](../01_ml_system_design_production/Case_Studies/01_model_monitoring_drift_incident.md) | containment under uncertainty | feature shift is not causal harm |
-| product/evaluation indexes | planned decision and evidence methods | no authored cases in those directories |
+## 4. Similarity / contrast map
 
-## 5. Questions and future-case backlog
-A future cross-domain case needs a single consequential decision that cannot be taught adequately in one child collection; it must name the owner, input/output grain, baseline, constraint, evidence basis, and each domain handoff. It must meet the full 15-section case contract, including successful and failed recovery paths and a 12–18-question interview pack.
+This collection holds 0 authored case(s) and 0 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
 
-## 6. Review and retirement log
-| Scope | Editorial state | Last substantive review | Trigger |
+## 5. Questions / future-case backlog
+
+No unfulfilled case commitment is recorded for this collection.
+
+## 6. Review / retirement log
+
+| Date | Artifact | Event | Evidence / stage change |
 |---|---|---|---|
-| Reserved collection | planned | none | bounded cross-domain decision becomes available |
-| Index navigation | drafted | 2026-11-09 | child ownership or source plan changes |
+| 2026-11-10 | collection | index regenerated; no authored case yet | not-measured / proposed |
 
 ## 7. Pre-publish checks
-- [x] Seven-section index and original catalog fields are present.
-- [ ] A bounded 15-section cross-domain case exists.
-- [ ] Evidence/stage/editorial records and claim ledger exist.
-- [ ] Sources and independent review are complete.
+
+- [x] Every catalog row links a file that exists, or is marked planned without a link.
+- [x] Evidence, implementation stage, and editorial status are separate columns.
+- [x] Planned commitments are retained with no silent deletion.
+- [ ] Independent source review of every authored case.
+- [ ] Publication review of every authored case.

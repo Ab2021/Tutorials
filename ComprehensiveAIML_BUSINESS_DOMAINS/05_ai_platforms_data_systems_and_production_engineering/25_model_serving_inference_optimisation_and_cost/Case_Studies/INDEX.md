@@ -1,55 +1,62 @@
-# Module 25 Case Studies — Model Serving, Inference Optimisation and Cost
-
-**Status:** planned catalog; no authored `CASE-*` files. Use the [course standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [case master](../../../../Templates/CASE_STUDY_CONTENT_MASTER_TEMPLATE.md).
+# Module 25 â€” Model Serving, Inference Optimisation and Cost — Case Studies
 
 ## 1. Collection metadata
 
 | Field | Value |
 |---|---|
-| Domain | online and batch model serving |
-| Evidence boundary | proposed illustrative designs; provider capability, price, and performance require dated primary evidence |
-| Review trigger | model/provider, routing policy, workload, SLO, tenant boundary, or cost change |
+| Collection owner | Curriculum maintainer |
+| Canonical case-ID format | CASE-XX-NN |
+| Evidence policy | Illustrative teaching inputs are not company results; unsourced claims stay OPEN. |
+| Editorial state | Draft; independent publication review is not claimed. |
+| Acceptance rule | A case row is `authored` only when `Tools/manuscript_lint.py` exits 0 for it. |
+| Review trigger | A source body, decision policy, metric definition, or workload assumption changes. |
 
 ## 2. Case catalog
 
-| Case ID | Linked title | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result/limitation |
+| Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-25-01 | Multi-model inference gateway | serving | llm-agentic | select eligible route | eligibility-before-ranking | cost-latency-tradeoff | not-measured | proposed | — | needs fault replay and current provider evidence |
-| PLAN-25-02 | Reduce p99 LLM latency | serving | hybrid | select intervention | resource-admission | correctness-contract | not-measured | proposed | — | needs workload-slice measurements |
-| PLAN-2026-IR002 | Select model routes within hard customer constraints | serving | llm-agentic | choose eligible provider/fallback | eligibility-before-ranking | cost-latency-tradeoff | not-measured | proposed | 2026-11-06 (planning) | source tables are not current guarantees |
-| PLAN-2026-IR004 | Customize tenant assistants without crossing isolation boundaries | serving | llm-agentic | adapter lifecycle and rollback | authorization-scope | atomic-release-bundle; rollout-regression | not-measured | proposed | 2026-11-06 (planning) | adapters do not establish isolation |
-| PLAN-2026-IR007 | Balance interactive inference latency and admitted throughput | serving | hybrid | scheduling/KV policy | resource-admission | cost-latency-tradeoff; authorization-scope | not-measured | proposed | 2026-11-06 (planning) | speculative decoding can be slower |
-| PLAN-2026-IR014 | Separate extraction correctness from routing economics | serving | llm-agentic | accept contracts/routes | evaluation-mismatch | idempotent-side-effects; cost-latency-tradeoff | not-measured | proposed | 2026-11-06 (planning) | valid JSON is not business success |
+| PLAN-25-01 | Multi-model inference gateway | Module 25 â€” Model Serving, Inference Optimisation and Cost | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-25-02 | Reduce p99 LLM latency | Module 25 â€” Model Serving, Inference Optimisation and Cost | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-2026-IR002 | Select model routes within hard customer constraints | Module 25 â€” Model Serving, Inference Optimisation and Cost | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-2026-IR004 | Customize tenant assistants without crossing isolation boundaries | Module 25 â€” Model Serving, Inference Optimisation and Cost | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-2026-IR007 | Balance interactive inference latency and admitted throughput | Module 25 â€” Model Serving, Inference Optimisation and Cost | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-2026-IR014 | Separate extraction correctness from routing economics | Module 25 â€” Model Serving, Inference Optimisation and Cost | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
 
 ## 3. Canonical reusable patterns
 
-- **Eligibility before ranking:** reject routes that violate residency, capability, authorization, or deadline before optimizing score or price.
-- **Resource admission:** reserve bounded KV, queue, and compute capacity before accepting work.
-- **Authorization scope:** bind cache, adapter, prompt, and tool state to the tenant and policy boundary.
+| Pattern | Diagnostic signature | Use when | Boundary |
+|---|---|---|---|
+| evaluation-mismatch | Offline score does not represent the decision | Ranking, forecast, threshold, agent products | The metric captures decision and guardrails |
+| data-leakage | Information unavailable at decision time inflates a score | Unexpectedly strong offline result | The feature is genuinely available before the cutoff |
+| distribution-shift | Live population differs from training | New market, season, channel, or policy version | The change is sampling noise only |
+| human-in-the-loop | Review capacity or override changes the trade-off | High-impact, uncertain, or regulated work | Review is infeasible or demonstrably ineffective |
+| model-monitoring | Live signals diverge from the evaluation | Deployed model with usable feedback | No meaningful feedback signal exists |
 
 ## 4. Similarity / contrast map
 
-| Cluster | Shared reasoning | Critical distinction |
-|---|---|---|
-| routing and gateway | eligibility and fallback correctness | health is not authorization or capability evidence |
-| latency and batching | queue/KV/capacity accounting | lower mean latency can worsen tail isolation |
-| extraction and adapters | versioning and rollback | syntax validity is not domain correctness |
+This collection holds 0 authored case(s) and 6 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
 
-## 5. Questions and future-case backlog
+## 5. Questions / future-case backlog
 
-1. Which constraint makes a route ineligible before ranking?
-2. How are retry budgets, cancellation, and idempotency carried across a fallback?
-3. What target-equivalence test rejects a speedup that changes output policy?
-4. Which tenant-negative tests prove cache and adapter isolation?
+Planned commitments, retained without silent deletion:
+
+- `PLAN-25-01` — Multi-model inference gateway. Not authored; no file exists, so no link is offered.
+- `PLAN-25-02` — Reduce p99 LLM latency. Not authored; no file exists, so no link is offered.
+- `PLAN-2026-IR002` — Select model routes within hard customer constraints. Not authored; no file exists, so no link is offered.
+- `PLAN-2026-IR004` — Customize tenant assistants without crossing isolation boundaries. Not authored; no file exists, so no link is offered.
+- `PLAN-2026-IR007` — Balance interactive inference latency and admitted throughput. Not authored; no file exists, so no link is offered.
+- `PLAN-2026-IR014` — Separate extraction correctness from routing economics. Not authored; no file exists, so no link is offered.
 
 ## 6. Review / retirement log
 
-| Date | Item | Decision | Reason |
+| Date | Artifact | Event | Evidence / stage change |
 |---|---|---|---|
-| 2026-11-09 | catalog | retained as planned | no executed workload, provider verification, or authored case |
+| 2026-11-10 | collection | index regenerated; no authored case yet | not-measured / proposed |
 
 ## 7. Pre-publish checks
 
-- [ ] Assign `CASE-*` only to a linked 15-section case.
-- [ ] Check offered/accepted load, TTFT, inter-token latency, successful-task cost, and isolation failures on the same workload.
-- [ ] Preserve planned rows and reconcile source, evidence, stage, and review status.
+- [x] Every catalog row links a file that exists, or is marked planned without a link.
+- [x] Evidence, implementation stage, and editorial status are separate columns.
+- [x] Planned commitments are retained with no silent deletion.
+- [ ] Independent source review of every authored case.
+- [ ] Publication review of every authored case.

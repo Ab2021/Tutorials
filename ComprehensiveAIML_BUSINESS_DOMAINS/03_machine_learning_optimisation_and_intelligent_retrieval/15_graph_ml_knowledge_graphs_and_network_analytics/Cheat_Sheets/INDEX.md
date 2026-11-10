@@ -1,71 +1,89 @@
-# Graph ML, Knowledge Graphs and Network Analytics — Cheat Sheets
-
-**Status:** The graph-fraud sheet is an unreviewed draft; other titles remain planned. Apply the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and linked cheat-sheet master. Inventoried original graph-fraud files were unavailable, so their contents were not verified.
+# Module 15 â€” Graph ML, Knowledge Graphs and Network Analytics — Cheat Sheets
 
 ## 1. Overview
 
-For analysts and engineers considering graph features for fraud and financial-crime investigation, this collection addresses time-correct data, investigation capacity, evaluation and operational safeguards. Readiness means explaining why a feature was available at decision time, measuring against a non-graph baseline, and distinguishing a connected pattern from evidence of wrongdoing.
+This collection carries 8 reference card(s) and 0 troubleshooting artifact(s) for `Module 15 â€” Graph ML, Knowledge Graphs and Network Analytics`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
 ## 2. Topic ladder
 
-| Level | Reference | Outcome and prerequisite | Status |
-|---|---|---|---|
-| Practitioner | [Graph ML for fraud and AML ring detection](01_graph_fraud_detection.md) | Build and evaluate time-correct typed graphs; requires basic graph concepts and fraud evaluation | Draft; unreviewed |
-| Planned | Graph data-model patterns | Define typed nodes, edges, time and provenance | Not written |
-| Planned | GNN decision guide | Compare neighbor aggregation with non-graph baselines | Not written |
-| Planned | Cypher query primer | Query graph data with explicit cost and semantics | Not written |
-| Planned | Common Issues | Collection-wide distinct graph diagnostics | Not written |
-
-## 3. Quick topic lookup
-
-| Question | Reference | Condition and warning |
+| Level | Cards | Purpose |
 |---|---|---|
-| Can graph signals predict fraud? | [Graph fraud sheet](01_graph_fraud_detection.md) | Compare against point-in-time baselines; shared links do not prove fraud. |
-| Where can leakage enter? | [Failure modes](01_graph_fraud_detection.md#8-failure-modes--edge-cases) | Restrict nodes, edges, features and labels to information available at the decision cutoff. |
-| What should investigators prioritize? | [Worked example](01_graph_fraud_detection.md#5-worked-numerical-example) | Capacity, selected labels and delayed outcomes change what reported precision means. |
+| core | Graph ML for Fraud and AML Ring Detection, Graph data-model patterns, GNN decision guide | Build from prerequisites to production judgement |
+| advanced | Graph evaluation, Common issues: graph ML | Build from prerequisites to production judgement |
+
+## 3. Quick lookup
+
+| If you need to… | Read |
+|---|---|
+| work on graph ml for fraud and aml ring detection | [Graph ML for Fraud and AML Ring Detection](./01_graph_fraud_detection.md) |
+| work on graph data-model patterns | [Graph data-model patterns](./02_graph_data_model_patterns.md) |
+| work on centrality and communities | [Centrality and communities](./03_centrality_and_communities.md) |
+| work on gnn decision guide | [GNN decision guide](./04_gnn_decision_guide.md) |
+| work on knowledge graphs and ontologies | [Knowledge graphs and ontologies](./05_knowledge_graphs_and_ontologies.md) |
+| work on graph evaluation | [Graph evaluation](./06_graph_evaluation.md) |
+| work on bounded traversal and entity resolution | [Bounded traversal and entity resolution](./07_bounded_traversal_and_entity_resolution.md) |
+| work on common issues: graph ml | [Common issues: graph ML](./09_25_common_issues.md) |
 
 ## 4. Reading paths
 
-- **Beginner:** Review nodes, typed edges, transaction timestamps, classification and fraud-label maturity, then read the draft's definitions. Foundational data-model and query sheets remain planned.
-- **Practitioner:** Read the complete graph-fraud draft, reproduce the worked example and compare graph features with a time-correct non-graph baseline.
-- **Advanced:** Test high-degree nodes, graph sampling, temporal leakage, selected investigations, delayed outcomes and candidate utility. Planned GNN and bounded-traversal references will extend this path.
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
 
 ## 5. Prerequisite skills
 
-Understand directed and undirected graphs, entity identifiers, timestamps, classification metrics, investigation queues, transaction histories and data lineage. Consider access controls and privacy for sensitive relationships and outcomes.
+| Skill | Why it is needed | Where it is available |
+|---|---|---|
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
 
-## 6. What this collection does not cover
+## 6. Exclusions and handoffs
 
-The current draft is not evidence of an actual fraud ring or deployment, a complete anti-money-laundering program, a Cypher tutorial, or a guarantee that a graph model beats a simpler model. The separate inventoried production case remains planned in its case-library home.
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
 
 ## 7. Master symbol glossary
 
-| Symbol or term | Meaning | Scope / warning | Reference |
-|---|---|---|---|
-| Node | Typed entity in a graph | Entity-resolution errors can merge distinct entities | [Definitions](01_graph_fraud_detection.md#3-foundational-definitions) |
-| Edge | Typed relationship, with provenance and time when applicable | A shared relationship alone does not prove fraud | [Definitions](01_graph_fraud_detection.md#3-foundational-definitions) |
-| Decision cutoff | Time by which an input must have been available | Later events or labels can leak into historical features | [Graph fraud sheet](01_graph_fraud_detection.md) |
-| Precision at capacity | Proportion of verified positives among selected cases at a stated review limit | Selected or immature labels limit inference | [Worked example](01_graph_fraud_detection.md#5-worked-numerical-example) |
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
+|---|---|---|---|---|---|
+| — | no card defines a symbol yet | — | — | — | — |
 
-## 8. Quick Reference Card directory
+## 8. Card directory
 
-| Card | Core rule | Use and critical condition |
-|---|---|---|
-| [Graph fraud](01_graph_fraud_detection.md#12-quick-reference-card) | Restrict graph inputs to the information available at decision time. | Compare against appropriate baselines, and do not equate graph connectivity with guilt. |
+| # | Card | Level | Evidence | Status |
+|---|---|---|---|---|
+| 1 | [Graph ML for Fraud and AML Ring Detection](./01_graph_fraud_detection.md) | core | DERIVED | authored |
+| 2 | [Graph data-model patterns](./02_graph_data_model_patterns.md) | core | DERIVED | draft (lint open) |
+| 3 | [Centrality and communities](./03_centrality_and_communities.md) | 2 | DERIVED | draft (lint open) |
+| 4 | [GNN decision guide](./04_gnn_decision_guide.md) | core | DERIVED | draft (lint open) |
+| 5 | [Knowledge graphs and ontologies](./05_knowledge_graphs_and_ontologies.md) | 2 | DERIVED | draft (lint open) |
+| 6 | [Graph evaluation](./06_graph_evaluation.md) | advanced | DERIVED | draft (lint open) |
+| 7 | [Bounded traversal and entity resolution](./07_bounded_traversal_and_entity_resolution.md) | 2 | DERIVED | draft (lint open) |
+| 8 | [Common issues: graph ML](./09_25_common_issues.md) | advanced | DERIVED | draft (lint open) |
 
 ## 9. Common Issues locator
 
-A standalone Common Issues artifact is **planned, not written**; no collection-wide issue count is claimed. Consult the draft's [failure modes](01_graph_fraud_detection.md#8-failure-modes--edge-cases) for leakage, identity and evaluation diagnostics.
+- Not yet authored. The collection is incomplete until this artifact exists with at least 25 distinct issues.
 
-## 10. Sources, versions and maintenance
+## 10. Sources, versions, maintenance
 
-`Graph_ML_2025/04_Fraud_Detection.md` and `DS_Domain/Case_Studies_Production_ML_Systems/Graph_ML/01_GNN_Fraud_AML_Ring_Detection.md` were visible in the source inventory but not available for reading. The draft is not a verified summary of their contents. Review it when entity-resolution policy, graph schema, label process, source availability or decision use changes.
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
 
-**Planned reference-informed briefs:** [PLAN-2026-IR029 and PLAN-2026-IR036](../../../00_REFERENCE_INFORMED_CASE_PLAN.md) cover bounded graph traversal and conservative claim-actor entity resolution. Assess high-degree and cyclic graph replays, temporal baselines, precision at capacity, label maturity and sampled audits. The [bounded-BFS](../../../../INTERVIEW_CASES/DSA/Production_DSA_Incidents/Graph_Traversal/bounded_bfs_incident.md) and [claim-ring](../../../../INTERVIEW_CASES/Graph_Rings/Fraud_Ring_Detection/Claims_Fraud_Ring_Case.md) documents are reference examples, not verified incidents; limits on output and depth alone do not bound expansion.
+## 11. Acceptance checklist
 
-## 11. Collection acceptance checklist
-
-- [ ] Planned graph topics and a distinct Common Issues artifact are authored and reviewed.
-- [ ] Each sheet retains all 12 sections, checked calculations or traces, failure diagnostics, answered interviews and a final reference card.
-- [ ] Entity provenance, point-in-time availability, label selection, privacy and source limitations are explicit.
-- [ ] Links, glossary, paths, issue locations and editorial states match the actual files.
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.

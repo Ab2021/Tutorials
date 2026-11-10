@@ -1,77 +1,73 @@
-# Pharma, Healthcare and Life Sciences — Cross-Domain Cheat Sheets
+# Pharma, Healthcare and Life Sciences — Cheat Sheets
 
 ## 1. Overview
 
-This collection teaches reusable evidence-to-action controls that apply across commercial, clinical/RWE/safety, and manufacturing/quality workflows. It assumes basic ratios and timestamp reasoning. Readiness means a learner can define a decision grain, prevent future-information use, size a review queue, and distinguish recommendation from authorized action. Source filenames assigned elsewhere establish scope only; unavailable source bodies remain OPEN.
+This collection carries 1 reference card(s) and 0 troubleshooting artifact(s) for `Pharma, Healthcare and Life Sciences`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
 ## 2. Topic ladder
 
-| Level | File | Outcome | Prerequisites | Key skill | Editorial status |
-|---|---|---|---|---|---|
-| 1 | [01 Evidence-to-Action Controls](./01_Evidence_to_Action_Controls.md) | Audit a recommendation’s time, evidence, capacity, and authority boundary. | Ratios; event timestamps | `r=a/n`, `B=max(0,lambda-mu)t` | draft; below course 1,000-line publication gate |
-| Final | Common Issues | Cross-domain diagnostic issues. | Completed focused sheets | competing-cause diagnosis | not authored |
+| Level | Cards | Purpose |
+|---|---|---|
 
-## 3. Quick topic lookup
+## 3. Quick lookup
 
-| Question | File / section | Use condition | Failure warning |
-|---|---|---|---|
-| Can this output act now? | 01 §4 | Output could affect a workflow | A score does not grant authority. |
-| Is the queue sustainable? | 01 §5, §9 | Human review is required | Precision does not measure backlog. |
-| Did a feature leak future state? | 01 §3, §10 | Evaluating a historical decision | Later updates are not prediction-time inputs. |
+| If you need to… | Read |
+|---|---|
+| work on evidence-to-action controls across pharma, healthcare and life sciences | [Evidence-to-Action Controls Across Pharma, Healthcare and Life Sciences](./01_Evidence_to_Action_Controls.md) |
 
-## 4. Reading paths — three options
+## 4. Reading paths
 
-- **Beginner:** 01 §§1–5; identify a unit, denominator, and timestamp.
-- **Practitioner:** 01 §§1–10; design a recommendation-to-review path and capacity check.
-- **Advanced:** 01 §§1–11, then the domain-specific collections; add authority, recovery, and evidence-ledger review.
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
 
 ## 5. Prerequisite skills
 
-| Skill | Required capability | Reference / boundary |
+| Skill | Why it is needed | Where it is available |
 |---|---|---|
-| Ratio arithmetic | Preserve numerator, denominator, and units | 01 §4–5 |
-| Event-time reasoning | Establish input availability at decision time | 01 §3, §10 |
-| Experimental reasoning | Separate observed association from causal effect | 01 §4 |
-| Workflow control | Name an owner and authorized state transition | 01 §2, §10 |
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
 
-## 6. What this collection does NOT cover
+## 6. Exclusions and handoffs
 
-It does not provide clinical diagnosis, legal or regulatory interpretation, disease-specific treatment guidance, or organization-specific deployment claims. Clinical evidence details hand off to `../02_clinical_rwe_safety_and_document_intelligence/`; commercial intervention design to `../01_commercial_kda_and_omnichannel/`; batch and quality operations to `../03_manufacturing_quality_and_supply_chain/`.
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
 
 ## 7. Master symbol glossary
 
-| Symbol / term | Meaning | Units / type | Domain | First appearance |
-|---|---|---|---|---|
-| `a` | evidence-complete actionable records | count | nonnegative integer | [01 §4](./01_Evidence_to_Action_Controls.md#41-eac-01) |
-| `n` | eligible records | count | positive integer for rate | [01 §4](./01_Evidence_to_Action_Controls.md#41-eac-01) |
-| `r` | actionable rate | dimensionless fraction | `[0,1]` | [01 §4](./01_Evidence_to_Action_Controls.md#41-eac-01) |
-| `B` | queued reviews | reviews | nonnegative | [01 §4](./01_Evidence_to_Action_Controls.md#42-eac-02) |
-| `lambda`, `mu` | arrival and completion rates | reviews/hour | nonnegative | [01 §4](./01_Evidence_to_Action_Controls.md#42-eac-02) |
-| `t_d` | decision-time cutoff | timestamp | each keyed event | [01 §3](./01_Evidence_to_Action_Controls.md#3-foundational-definitions) |
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
+|---|---|---|---|---|---|
+| — | no card defines a symbol yet | — | — | — | — |
 
-## 8. Quick Reference Card directory
+## 8. Card directory
 
-| File / card | Core rule | Use condition | Critical assumption | Avoid when |
+| # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
-| [01 §12](./01_Evidence_to_Action_Controls.md#12-quick-reference-card) | no future input; no unauthorized transition | evidence-backed workflow | named owner and timestamp | source, time, or authority unknown |
+| 1 | [Evidence-to-Action Controls Across Pharma, Healthcare and Life Sciences](./01_Evidence_to_Action_Controls.md) | 1 | DERIVED | draft (lint open) |
 
 ## 9. Common Issues locator
 
-No final Common Issues artifact has been authored. The draft sheet contains 25 HYPOTHETICAL diagnostic entries in §8, but they are not a substitute for the required final 12-section troubleshooting artifact.
+- Not yet authored. The collection is incomplete until this artifact exists with at least 25 distinct issues.
 
-## 10. Sources, versions and maintenance
+## 10. Sources, versions, maintenance
 
-| File | Evidence / source basis | Status | Open evidence | Review trigger |
-|---|---|---|---|---|
-| 01 | DERIVED and ILLUSTRATIVE; source bodies OPEN | draft | primary workflow evidence and independent editorial review | authority policy, source access, or workflow changes |
-
-The visible source assignments are in `../../../00_SOURCE_COVERAGE_EDGE_INDUSTRY.md` under pharma commercial, clinical, and operations. They identify planned outcomes, not accessible source bodies or measured results.
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
 
 ## 11. Acceptance checklist
 
-- [ ] All focused sheets meet the 12-section and 1,000-substantive-line gate.
-- [ ] A final Common Issues artifact has at least 25 distinct complete issues.
-- [x] The current draft retains the 12 ordered sheet sections and checked illustrative arithmetic.
-- [x] Draft evidence labels distinguish DERIVED, ILLUSTRATIVE, and OPEN claims.
-- [ ] Independent technical and source review is recorded.
-- [x] Current local navigation points only to existing artifacts.
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.

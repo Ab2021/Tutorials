@@ -1,31 +1,52 @@
-# 04 System Design Distributed Systems And Cloud Case Studies
+# Module 04 â€” System Design, Distributed Systems and Cloud — Case Studies
 
 ## 1. Collection metadata
-Illustrative teaching cases for bounded decisions. Evidence, implementation stage, and editorial state are separate; every listed artifact remains draft and no case claims a deployment.
+
+| Field | Value |
+|---|---|
+| Collection owner | Curriculum maintainer |
+| Canonical case-ID format | CASE-04-001 |
+| Evidence policy | Illustrative teaching inputs are not company results; unsourced claims stay OPEN. |
+| Editorial state | Draft; independent publication review is not claimed. |
+| Acceptance rule | A case row is `authored` only when `Tools/manuscript_lint.py` exits 0 for it. |
+| Review trigger | A source body, decision policy, metric definition, or workload assumption changes. |
 
 ## 2. Case catalog
-| Case ID | Title | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
+
+| Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| CASE-001 | [01 Design Notification Platform ](01_Design_Notification_Platform.md) | foundations | analytical | bounded illustrative decision | correctness-contract | — | illustrative | proposed | 2026-11-10 | Draft; source verification and publication review OPEN |
-| CASE-002 | [02 Design Feature Serving API ](02_Design_Feature_Serving_API.md) | foundations | analytical | bounded illustrative decision | correctness-contract | — | illustrative | proposed | 2026-11-10 | Draft; source verification and publication review OPEN |
+| CASE-04-001 | [Design a Notification Platform](./01_Design_Notification_Platform.md) | Module 04 â€” System Design, Distributed Systems and Cloud | analytical | decision record in the linked case | idempotent-delivery | correctness-contract, admission-control | illustrative | proposed | null | authored |
+| CASE-04-002 | [Design a Feature-Serving API](./02_Design_Feature_Serving_API.md) | Module 04 â€” System Design, Distributed Systems and Cloud | analytical | decision record in the linked case | point-in-time-serving | correctness-contract, tail-latency-budget | illustrative | proposed | null | authored |
 
 ## 3. Canonical reusable patterns
-- **Correctness contract:** define the input cutoff, output, owner, and oracle before optimizing.
-- **Bounded work:** cap admission and retain a safe deferral path when capacity is uncertain.
-- **Idempotent decision ledger:** one final action per stable decision key.
+
+| Pattern | Diagnostic signature | Use when | Boundary |
+|---|---|---|---|
+| evaluation-mismatch | Offline score does not represent the decision | Ranking, forecast, threshold, agent products | The metric captures decision and guardrails |
+| data-leakage | Information unavailable at decision time inflates a score | Unexpectedly strong offline result | The feature is genuinely available before the cutoff |
+| distribution-shift | Live population differs from training | New market, season, channel, or policy version | The change is sampling noise only |
+| human-in-the-loop | Review capacity or override changes the trade-off | High-impact, uncertain, or regulated work | Review is infeasible or demonstrably ineffective |
+| model-monitoring | Live signals diverge from the evaluation | Deployed model with usable feedback | No meaningful feedback signal exists |
 
 ## 4. Similarity / contrast map
-All cases use illustrative queue arithmetic and a human approval boundary. Their decision units differ; no workload or outcome transfers between them without new evidence.
 
-## 5. Questions and future-case backlog
-Source-derived reference commitments and unavailable source bodies remain OPEN. Future cases need primary evidence or explicitly illustrative scope, not reconstructed results.
+This collection holds 2 authored case(s) and 0 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
+
+## 5. Questions / future-case backlog
+
+No unfulfilled case commitment is recorded for this collection.
 
 ## 6. Review / retirement log
-| Date | Change | Editorial state | Limitation |
+
+| Date | Artifact | Event | Evidence / stage change |
 |---|---|---|---|
-| 2026-11-10 | Canonical cases cataloged | draft | publication review, source verification, and operational validation OPEN |
+| 2026-11-10 | [Design a Notification Platform](./01_Design_Notification_Platform.md) | index regenerated from disk | illustrative / proposed unchanged |
+| 2026-11-10 | [Design a Feature-Serving API](./02_Design_Feature_Serving_API.md) | index regenerated from disk | illustrative / proposed unchanged |
 
 ## 7. Pre-publish checks
-- [x] Each listed link resolves to a canonical manuscript.
-- [x] Evidence and stage are not reported as measured deployment.
-- [ ] Independently review source claims, detailed arithmetic, links, and editorial completeness before publication.
+
+- [x] Every catalog row links a file that exists, or is marked planned without a link.
+- [x] Evidence, implementation stage, and editorial status are separate columns.
+- [x] Planned commitments are retained with no silent deletion.
+- [ ] Independent source review of every authored case.
+- [ ] Publication review of every authored case.

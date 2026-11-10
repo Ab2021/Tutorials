@@ -1,57 +1,79 @@
-# Part 03 Case Studies — Machine Learning, Optimisation and Intelligent Retrieval
+# Part 03 — Machine Learning, Optimisation and Intelligent Retrieval — Case Studies
 
-## 1. Collection Metadata
+## 1. Collection metadata
 
-**Scope:** cross-module decision cases for predictive, prescriptive, retrieval, graph, and privacy methods. **Editorial status:** planned catalog; no part-level individual case exists. **Evidence rule:** source names establish scope, not an implementation or measured result. **Contract:** [course standards](../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [case master](../../../Templates/CASE_STUDY_CONTENT_MASTER_TEMPLATE.md). A module case remains owned by its module collection.
+| Field | Value |
+|---|---|
+| Collection owner | Curriculum maintainer |
+| Canonical case-ID format | CASE-03-16-001 |
+| Evidence policy | Illustrative teaching inputs are not company results; unsourced claims stay OPEN. |
+| Editorial state | Draft; independent publication review is not claimed. |
+| Acceptance rule | A case row is `authored` only when `Tools/manuscript_lint.py` exits 0 for it. |
+| Review trigger | A source body, decision policy, metric definition, or workload assumption changes. |
 
-## 2. Case Catalog
+## 2. Case catalog
 
-| Case ID | Linked title if authored | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
+| Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| CASE-M11-01 (original PLAN-M11-01) | [Credit-risk model design](../11_supervised_ml_and_feature_engineering/Case_Studies/01_credit_risk_model_design.md) | lending | predictive-ml | action threshold under cost/capacity | calibrated classification | validation | illustrative; derived arithmetic | proposed | null | module 11 canonical authored draft; publication/source review open; no observed policy benefit |
-| PLAN-M11-02 | Churn leakage remediation | retention | predictive-ml | remove unavailable signals | temporal validation | features | not-measured | proposed | null | module 11 planned |
-| PLAN-M12-01 | Payment anomaly detection | payments | predictive-ml | review queue | anomaly triage | calibration | not-measured | proposed | null | module 12 planned |
-| PLAN-M12-02 | Campaign segmentation | marketing | analytical | segment/action choice | cluster validation | human review | not-measured | proposed | null | module 12 planned |
-| PLAN-M13-01 | Last-mile routing | logistics | analytical | feasible route selection | constrained optimization | simulation | not-measured | proposed | null | module 13 planned |
-| PLAN-M13-02 | Workforce scheduling | operations | analytical | staffing policy | robust scheduling | simulation | not-measured | proposed | null | module 13 planned |
-| PLAN-M14-01 | E-commerce recommender | commerce | predictive-ml | eligible ranked candidates | retrieval-ranking | experimentation | not-measured | proposed | null | module 14 planned |
-| PLAN-M14-02 | Search ranking regression | search | incident | diagnose quality change | retrieval-ranking | observability | not-measured | proposed | null | module 14 planned |
-| PLAN-M15-01 | Fraud-ring investigation | fraud | predictive-ml | alert capacity allocation | graph evaluation | entity resolution | not-measured | proposed | null | module 15 planned |
-| PLAN-M15-02 | Enterprise entity-resolution graph | enterprise data | analytical | merge/reject identities | graph construction | reversible decisions | not-measured | proposed | null | module 15 planned |
-| PLAN-M16-01 | Cross-hospital risk model | healthcare | hybrid | privacy-safe collaboration | federated learning | validation | not-measured | proposed | null | module 16 planned |
-| PLAN-M16-02 | Private analytics release review | analytics | analytical | release/no-release | privacy threat model | differential privacy | not-measured | proposed | null | module 16 planned |
+| CASE-03-16-001 | [Cross-hospital risk model: federated training under a fixed privacy budget](./Cross_hospital_risk_model.md) | Part 03 — Machine Learning, Optimisation and Intelligent Retrieval | hybrid | decision record in the linked case | privacy-safe collaboration | federated, learning, validation | illustrative | draft | null | draft (lint open) |
+| CASE-G15-01 | [Fraud-ring investigation under a fixed investigator-hour budget](./Fraud_ring_investigation.md) | Part 03 — Machine Learning, Optimisation and Intelligent Retrieval | predictive-ml | decision record in the linked case | graph-evaluation | entity-resolution, capacity-constrained-triage | illustrative | draft | null | draft (lint open) |
+| CASE-03-16-002 | [Private analytics release review: whether to publish a workforce equity and attrition benchmark](./Private_analytics_release_review.md) | Part 03 — Machine Learning, Optimisation and Intelligent Retrieval | analytical | decision record in the linked case | privacy threat model | differential, privacy, release, governance | illustrative | draft | null | draft (lint open) |
+| CASE-M14-02 | [Diagnosing a part-number search ranking regression before rolling back](./Search_ranking_regression.md) | Part 03 — Machine Learning, Optimisation and Intelligent Retrieval | incident | decision record in the linked case | retrieval-ranking quality incident | observability, stratified, offline, evaluation | illustrative | draft | null | draft (lint open) |
+| PLAN-M11-02 | Churn leakage remediation | Part 03 — Machine Learning, Optimisation and Intelligent Retrieval | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-M12-01 | Payment anomaly detection | Part 03 — Machine Learning, Optimisation and Intelligent Retrieval | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-M12-02 | Campaign segmentation | Part 03 — Machine Learning, Optimisation and Intelligent Retrieval | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-M13-01 | Last-mile routing | Part 03 — Machine Learning, Optimisation and Intelligent Retrieval | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-M13-02 | Workforce scheduling | Part 03 — Machine Learning, Optimisation and Intelligent Retrieval | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-M14-01 | E-commerce recommender | Part 03 — Machine Learning, Optimisation and Intelligent Retrieval | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-M14-02 | Search ranking regression | Part 03 — Machine Learning, Optimisation and Intelligent Retrieval | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-M15-01 | Fraud-ring investigation | Part 03 — Machine Learning, Optimisation and Intelligent Retrieval | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-M15-02 | Enterprise entity-resolution graph | Part 03 — Machine Learning, Optimisation and Intelligent Retrieval | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-M16-01 | Cross-hospital risk model | Part 03 — Machine Learning, Optimisation and Intelligent Retrieval | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-M16-02 | Private analytics release review | Part 03 — Machine Learning, Optimisation and Intelligent Retrieval | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
 
-## 3. Canonical Reusable Patterns
+## 3. Canonical reusable patterns
 
-- Prediction cases need a decision-time feature contract, mature labels, baseline, and threshold/capacity consequence.
-- Optimization cases need variables, objective, feasibility, solver/heuristic boundary, and an infeasibility or sensitivity path.
-- Retrieval/ranking cases need eligibility, candidate/rank separation, exposure boundary, and online-validation plan.
-- Graph cases need snapshot time, entity-resolution policy, traversal/feature budget, and non-graph comparator.
-- Privacy cases need threat model, protected asset, mechanism, residual risk, and release decision.
-
-## 4. Similarity / Contrast Map
-
-| Contrast | Shared concern | Critical difference |
-|---|---|---|
-| M11 credit risk vs M12 anomaly | review capacity | labels versus weak/absent labels |
-| M13 routing vs M14 recommender | constrained selection | route feasibility versus user exposure/utility |
-| M14 retrieval vs M15 graph candidates | candidate generation | index contract versus graph snapshot/budget |
-| M15 entity resolution vs M16 federation | sensitive linkage | identity merge policy versus distributed training privacy |
-
-## 5. Questions / Future-Case Backlog
-
-No part-level case is authored. A future case must combine at least two module methods without duplicating a module decision; declare source basis, owner, baseline, numerical oracle, outcome evidence, and 12–18 answered interview questions. Candidate themes: privacy-aware graph fraud triage; capacity-constrained recommender exploration; routing under forecast uncertainty.
-
-## 6. Review / Retirement Log
-
-| Date | Artifact | Action | Reason |
+| Pattern | Diagnostic signature | Use when | Boundary |
 |---|---|---|---|
-| 2026-11-09 | catalog | navigation expanded | preserves twelve original candidate threads without claiming cases |
+| evaluation-mismatch | Offline score does not represent the decision | Ranking, forecast, threshold, agent products | The metric captures decision and guardrails |
+| data-leakage | Information unavailable at decision time inflates a score | Unexpectedly strong offline result | The feature is genuinely available before the cutoff |
+| distribution-shift | Live population differs from training | New market, season, channel, or policy version | The change is sampling noise only |
+| human-in-the-loop | Review capacity or override changes the trade-off | High-impact, uncertain, or regulated work | Review is infeasible or demonstrably ineffective |
+| model-monitoring | Live signals diverge from the evaluation | Deployed model with usable feedback | No meaningful feedback signal exists |
 
-## 7. Pre-Publish Checks
+## 4. Similarity / contrast map
 
-- [x] Original twelve candidate threads preserved and linked to numeric module homes.
-- [x] Evidence, stage, and editorial state are distinct.
-- [ ] Every `PLAN` has a 15-section `CASE` artifact with a final card.
-- [ ] Every authored case has primary sources or a plainly illustrative basis.
-- [ ] Each numerical walkthrough, link, and interview pack has independent review.
+This collection holds 4 authored case(s) and 11 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
+
+## 5. Questions / future-case backlog
+
+Planned commitments, retained without silent deletion:
+
+- `PLAN-M11-02` — Churn leakage remediation. Not authored; no file exists, so no link is offered.
+- `PLAN-M12-01` — Payment anomaly detection. Not authored; no file exists, so no link is offered.
+- `PLAN-M12-02` — Campaign segmentation. Not authored; no file exists, so no link is offered.
+- `PLAN-M13-01` — Last-mile routing. Not authored; no file exists, so no link is offered.
+- `PLAN-M13-02` — Workforce scheduling. Not authored; no file exists, so no link is offered.
+- `PLAN-M14-01` — E-commerce recommender. Not authored; no file exists, so no link is offered.
+- `PLAN-M14-02` — Search ranking regression. Not authored; no file exists, so no link is offered.
+- `PLAN-M15-01` — Fraud-ring investigation. Not authored; no file exists, so no link is offered.
+- `PLAN-M15-02` — Enterprise entity-resolution graph. Not authored; no file exists, so no link is offered.
+- `PLAN-M16-01` — Cross-hospital risk model. Not authored; no file exists, so no link is offered.
+- `PLAN-M16-02` — Private analytics release review. Not authored; no file exists, so no link is offered.
+
+## 6. Review / retirement log
+
+| Date | Artifact | Event | Evidence / stage change |
+|---|---|---|---|
+| 2026-11-10 | [Cross-hospital risk model: federated training under a fixed privacy budget](./Cross_hospital_risk_model.md) | index regenerated from disk | illustrative / draft unchanged |
+| 2026-11-10 | [Fraud-ring investigation under a fixed investigator-hour budget](./Fraud_ring_investigation.md) | index regenerated from disk | illustrative / draft unchanged |
+| 2026-11-10 | [Private analytics release review: whether to publish a workforce equity and attrition benchmark](./Private_analytics_release_review.md) | index regenerated from disk | illustrative / draft unchanged |
+| 2026-11-10 | [Diagnosing a part-number search ranking regression before rolling back](./Search_ranking_regression.md) | index regenerated from disk | illustrative / draft unchanged |
+
+## 7. Pre-publish checks
+
+- [x] Every catalog row links a file that exists, or is marked planned without a link.
+- [x] Evidence, implementation stage, and editorial status are separate columns.
+- [x] Planned commitments are retained with no silent deletion.
+- [ ] Independent source review of every authored case.
+- [ ] Publication review of every authored case.

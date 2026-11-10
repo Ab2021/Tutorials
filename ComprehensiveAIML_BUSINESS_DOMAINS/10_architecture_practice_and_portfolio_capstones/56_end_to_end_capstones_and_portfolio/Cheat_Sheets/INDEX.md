@@ -1,74 +1,73 @@
-# Module 56 Cheat Sheets — End-to-End Capstones and Portfolio
+# Module 56 â€” End-to-End Capstones and Portfolio — Cheat Sheets
 
 ## 1. Overview
 
-This collection teaches how to scope, evidence, evaluate, and present an end-to-end capstone without overstating a prototype. It assumes prior data, ML, systems, and governance skills. Readiness means a learner can trace one input through a bounded architecture, calculate a declared budget, identify an oracle, state a limitation, and defend a release gate. Visible source titles are inventory only; their bodies and hardware evidence are unavailable.
+This collection carries 1 reference card(s) and 0 troubleshooting artifact(s) for `Module 56 â€” End-to-End Capstones and Portfolio`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
 ## 2. Topic ladder
 
-| Level | File | Outcome | Prerequisites | Status |
-|---|---|---|---|---|
-| Core | [01 Capstone Evidence Rubric](01_Capstone_Evidence_Rubric.md) | Bound claims, calculate frame/queue feasibility, and define evidence gates | module index; measurement boundaries | draft |
-| Core | Portfolio checklist | Create artifact/claim/reproduction checklist | 01 | planned |
-| Advanced | Architecture review agenda | Run a decision and failure-path review | 01 | planned |
-| Final | Common Issues | Diagnose capstone evidence and integration failures | all sheets | planned; no file |
+| Level | Cards | Purpose |
+|---|---|---|
 
-## 3. Quick topic lookup
+## 3. Quick lookup
 
-| Question | File | Section | Use condition | Failure warning |
-|---|---|---|---|---|
-| Can I call this end-to-end? | [01](01_Capstone_Evidence_Rubric.md) | 1–2 | a demo claim needs scope | a diagram is not an execution trace |
-| Does the timing budget close? | [01](01_Capstone_Evidence_Rubric.md) | 4–5 | batch/rate inputs known | component means are not p99 |
-| How do I diagnose stale display? | [01](01_Capstone_Evidence_Rubric.md) | 8 | timestamps exist | UI age alone does not identify cause |
+| If you need to… | Read |
+|---|---|
+| work on capstone evidence rubric and release gate | [Capstone Evidence Rubric and Release Gate](./01_Capstone_Evidence_Rubric.md) |
 
-## 4. Reading paths — three options
+## 4. Reading paths
 
-**Beginner:** module index → 01 Sections 1–5 → Section 12; learn claim tiers and one checked calculation.
-
-**Practitioner:** 01 in order → record an input/output trace → prepare the planned portfolio checklist; do not call an unexecuted plan a result.
-
-**Advanced:** 01 → planned architecture agenda → HIL/trace validation → planned Common Issues; add only version-pinned, primary evidence for device/framework claims.
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
 
 ## 5. Prerequisite skills
 
-Readers need dimensional arithmetic, timestamp semantics, basic queues, schema validation, version control, and the ability to define an evaluation denominator. Relevant methods are in the course authoring standard and Module 56 index. Hardware-specific wiring, framework APIs, clinical rules, and model benchmarks require their own primary references.
+| Skill | Why it is needed | Where it is available |
+|---|---|---|
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
 
-## 6. What this collection does NOT cover
+## 6. Exclusions and handoffs
 
-It does not certify medical devices, diagnose patients, provide a complete STM32/Pi5 build, or establish performance of a specific framework/model. Separate work must cover clinical validation, threat modeling, device electrical safety, licensing, and any deployment approval.
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
 
 ## 7. Master symbol glossary
 
-| Symbol/term | Meaning | Units/type | Valid range | First use |
-|---|---|---|---|---|
-| `n` | samples per frame | samples/frame | positive integer | [01 §4](01_Capstone_Evidence_Rubric.md#4-core-formulas-with-full-derivation) |
-| `f_s` | sampling rate | samples/s | positive | [01 §4](01_Capstone_Evidence_Rubric.md#4-core-formulas-with-full-derivation) |
-| `T_frame` | source interval per frame | s or ms | nonnegative | [01 §4](01_Capstone_Evidence_Rubric.md#4-core-formulas-with-full-derivation) |
-| `lambda`, `mu` | arrival/service rate | frames/s | nonnegative | [01 §4](01_Capstone_Evidence_Rubric.md#4-core-formulas-with-full-derivation) |
-| `B` | queued frames | frames | nonnegative | [01 §4](01_Capstone_Evidence_Rubric.md#4-core-formulas-with-full-derivation) |
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
+|---|---|---|---|---|---|
+| — | no card defines a symbol yet | — | — | — | — |
 
-## 8. Quick Reference Card directory
+## 8. Card directory
 
-| File/card | Core rule | Use condition | Critical assumption | Avoid condition |
+| # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
-| [01 §12](01_Capstone_Evidence_Rubric.md#12-quick-reference-card) | claim tier must match linked evidence | any portfolio assertion | scope is explicit | borrowed or absent evidence |
+| 1 | [Capstone Evidence Rubric and Release Gate](./01_Capstone_Evidence_Rubric.md) | 2 | DERIVED | draft (lint open) |
 
 ## 9. Common Issues locator
 
-No Common Issues file exists yet. The final artifact must retain all 12 cheat-sheet headings and contain at least 25 distinct complete issues with ID, category, provenance, competing causes, diagnostic, mitigation risk, correction, prevention, and verification. The six diagnostics in 01 are not a substitute.
+- Not yet authored. The collection is incomplete until this artifact exists with at least 25 distinct issues.
 
-## 10. Sources, versions and maintenance
+## 10. Sources, versions, maintenance
 
-| Source ID | Source | Supported scope | Status / limitation | Recheck trigger |
-|---|---|---|---|---|
-| SRC-56-01 | [`directory.txt` lines 1147–1164](../../../../Templates/directory.txt) | visible Module08 names | inventory only; no bodies | source export changes |
-| SRC-56-02 | [edge-capstone brief](../../../00_SOURCE_COVERAGE_EDGE_INDUSTRY.md#edge-capstone) | syllabus requirements | planned, not empirical evidence | source/body becomes available |
-| SRC-56-03 | [edge-source brief](../../../00_SOURCE_COVERAGE_EDGE_INDUSTRY.md#edge-source) | clipped-source boundary | unresolved-source remains unresolved | exact paths are recovered |
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
 
-## 11. Collection acceptance checklist
+## 11. Acceptance checklist
 
-- [x] One real sheet has a 12-section sequence, source boundary, formula/invariant, calculation, diagnostics, and answered interview questions.
-- [ ] Every indexed topic has its own substantive artifact.
-- [ ] Each individual artifact meets the course 1,000-substantive-line gate.
-- [ ] Portfolio checklist, architecture agenda, and final Common Issues artifact exist.
-- [ ] Primary sources, versions, runnable traces, HIL evidence, and links have been independently reviewed.
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.

@@ -1,53 +1,64 @@
 # Evaluation, Reliability and Incidents — Case Studies
 
 ## 1. Collection metadata
+
 | Field | Value |
 |---|---|
-| Owner | Curriculum maintainer |
-| Canonical ID format | `CASE-03-03-NNN` |
-| Index state | planned catalog; no local case authored |
-| Evidence policy | source access and evaluation execution are recorded independently |
-| Review trigger | evaluand, version manifest, incident evidence, recovery contract, or source access changes |
+| Collection owner | Curriculum maintainer |
+| Canonical case-ID format | CASE-XX-NN |
+| Evidence policy | Illustrative teaching inputs are not company results; unsourced claims stay OPEN. |
+| Editorial state | Draft; independent publication review is not claimed. |
+| Acceptance rule | A case row is `authored` only when `Tools/manuscript_lint.py` exits 0 for it. |
+| Review trigger | A source body, decision policy, metric definition, or workload assumption changes. |
 
 ## 2. Case catalog
-| Case ID | Case title / relative link | Domain | Case type | Decision / business question | Primary pattern | Secondary pattern(s) | Evidence | Stage | Last reviewed | Key result or limitation |
+
+| Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-03-03-01 | RAG regression | evaluation/reliability | llm-agentic | Block, promote, or investigate a candidate release? | evaluation-mismatch | rollout-regression | not-measured | proposed | not reviewed | quality/safety suites unspecified |
-| PLAN-03-03-02 | Forecast drift | evaluation/reliability | predictive-ml | Contain or continue after population change? | model-monitoring | label-delay | not-measured | proposed | not reviewed | outcome maturity absent |
-| PLAN-03-03-03 | Streaming lag | evaluation/reliability | streaming-systems | Recover correctness under lag and replay? | incident-postmortem | cost-latency-tradeoff | not-measured | proposed | not reviewed | workload and oracle absent |
-| PLAN-03-03-04 | Edge-model rollback | evaluation/reliability | hybrid | Revert safely under device/version constraints? | rollout-regression | distribution-shift | not-measured | proposed | not reviewed | device evidence absent |
-| PLAN-03-03-05 | Agent action incident | evaluation/reliability | llm-agentic | Contain an unsafe action path and recover state? | incident-postmortem | human-in-the-loop | not-measured | proposed | not reviewed | no incident evidence |
-| PLAN-2026-IR008 | Release-evaluation gate | evaluation/reliability | llm-agentic | Is evidence sufficient to promote a candidate? | evaluation-mismatch | data-leakage, rollout-regression | not-measured | proposed | not reviewed | reference-only brief |
-| PLAN-2026-IR030 | Algorithm-invariant incident replay | evaluation/reliability | incident | Which invariant failed and what replay prevents recurrence? | incident-postmortem | correctness-contract, bounded-work | not-measured | proposed | not reviewed | reference-only brief |
+| PLAN-03-03-01 | RAG regression | Evaluation, Reliability and Incidents | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-03-03-02 | Forecast drift | Evaluation, Reliability and Incidents | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-03-03-03 | Streaming lag | Evaluation, Reliability and Incidents | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-03-03-04 | Edge-model rollback | Evaluation, Reliability and Incidents | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-03-03-05 | Agent action incident | Evaluation, Reliability and Incidents | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-2026-IR008 | Release-evaluation gate | Evaluation, Reliability and Incidents | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-2026-IR030 | Algorithm-invariant incident replay | Evaluation, Reliability and Incidents | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
 
 ## 3. Canonical reusable patterns
-| Pattern | Signature | Use when | Boundary |
-|---|---|---|---|
-| evaluation-mismatch | offline evidence omits a decision-critical failure | release selection | evaluand fully matches live decision |
-| model-monitoring | operational signals shift before outcomes mature | deployed predictive system | no meaningful feedback signal |
-| rollout-regression | guardrail worsens under staged exposure | reversible deployment | no comparable control or baseline |
-| incident-postmortem | impact requires causal reconstruction | evidence/replay exists | narrative-only event |
-| data-leakage | unavailable information inflates test result | suspiciously strong evaluation | temporal availability is verified |
 
-## 4. Similarity and contrast map
-| Cluster | Shared need | Critical distinction | Supporting method |
+| Pattern | Diagnostic signature | Use when | Boundary |
 |---|---|---|---|
-| RAG release / agent action | evidence before automation | answer quality differs from action authorization | manifests, sandboxing, approval |
-| forecast drift / edge rollback | safe degradation | label delay differs from device compatibility | cohort maturity, version inventory |
-| streaming lag / invariant replay | recovery correctness | queue progress differs from algorithm termination | replay oracle and state contract |
+| evaluation-mismatch | Offline score does not represent the decision | Ranking, forecast, threshold, agent products | The metric captures decision and guardrails |
+| data-leakage | Information unavailable at decision time inflates a score | Unexpectedly strong offline result | The feature is genuinely available before the cutoff |
+| distribution-shift | Live population differs from training | New market, season, channel, or policy version | The change is sampling noise only |
+| human-in-the-loop | Review capacity or override changes the trade-off | High-impact, uncertain, or regulated work | Review is infeasible or demonstrably ineffective |
+| model-monitoring | Live signals diverge from the evaluation | Deployed model with usable feedback | No meaningful feedback signal exists |
 
-## 5. Questions and future-case backlog
-Each case must become a bounded, source-honest decision exercise with 15 ordered sections, 5a–5e, input-to-output architecture, success and failed recovery paths, checked arithmetic or trace, sensitivity, claim ledger, and 12–18 answered interview prompts. Reference briefs IR008 and IR030 cannot donate unverified figures or observed-outcome claims.
+## 4. Similarity / contrast map
 
-## 6. Review and retirement log
-| Scope | Editorial state | Last substantive review | Trigger |
+This collection holds 0 authored case(s) and 7 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
+
+## 5. Questions / future-case backlog
+
+Planned commitments, retained without silent deletion:
+
+- `PLAN-03-03-01` — RAG regression. Not authored; no file exists, so no link is offered.
+- `PLAN-03-03-02` — Forecast drift. Not authored; no file exists, so no link is offered.
+- `PLAN-03-03-03` — Streaming lag. Not authored; no file exists, so no link is offered.
+- `PLAN-03-03-04` — Edge-model rollback. Not authored; no file exists, so no link is offered.
+- `PLAN-03-03-05` — Agent action incident. Not authored; no file exists, so no link is offered.
+- `PLAN-2026-IR008` — Release-evaluation gate. Not authored; no file exists, so no link is offered.
+- `PLAN-2026-IR030` — Algorithm-invariant incident replay. Not authored; no file exists, so no link is offered.
+
+## 6. Review / retirement log
+
+| Date | Artifact | Event | Evidence / stage change |
 |---|---|---|---|
-| All planned cases | planned | none | primary evidence, bounded decision, and evaluation/replay artifact available |
-| Index navigation | drafted | 2026-11-09 | planned catalog or source brief changes |
+| 2026-11-10 | collection | index regenerated; no authored case yet | not-measured / proposed |
 
 ## 7. Pre-publish checks
-- [x] Seven required collection-index sections and catalog fields are present.
-- [ ] Each authored case meets the 15-section >=1000-line contract.
-- [ ] Evidence, stage, editorial status, and result limitation are distinct.
-- [ ] Cases contain actual calculation/trace checks and failure/recovery analysis.
-- [ ] Independent evidence and source review are complete.
+
+- [x] Every catalog row links a file that exists, or is marked planned without a link.
+- [x] Evidence, implementation stage, and editorial status are separate columns.
+- [x] Planned commitments are retained with no silent deletion.
+- [ ] Independent source review of every authored case.
+- [ ] Publication review of every authored case.

@@ -1,54 +1,74 @@
 # Marketing Analytics Playbook — Cheat Sheets
 
 ## 1. Overview
-For marketing analysts and experiment owners comfortable with rates and business metrics, this collection supports measurement choices and incremental-effect decisions. The causal inference sheet is an unreviewed draft; readiness requires independent review and evidence specific to the campaign and population.
+
+This collection carries 1 reference card(s) and 0 troubleshooting artifact(s) for `Marketing Analytics Playbook`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
 ## 2. Topic ladder
-| Level | Topic and outcome | Prerequisite / skill | Status |
-|---|---|---|---|
-| Foundation | Channel measurement map: connect a channel decision to an outcome and distinguish attribution from incrementality. | Campaign and conversion concepts. | Planned |
-| Core | MMM assumptions: identify a defensible marketing mix model design and test a confounding counterexample. | Regression and time-series basics. | Planned |
-| Core | Lifecycle metric definitions: define cohort, denominator and horizon; diagnose inconsistent retention. | Customer and event grain. | Planned |
-| Core/production | [21 Causal inference and A/B experimentation](21_Causal_Inference_Marketing.md): define an estimand, compute lift and diagnose assignment failures. | Randomization, rates and uncertainty. | Draft; not independently reviewed |
 
-## 3. Quick topic lookup
-| Question | Exact section | Use and warning |
+| Level | Cards | Purpose |
 |---|---|---|
-| How is incremental lift calculated? | [Formulas](21_Causal_Inference_Marketing.md#section-4--core-formulas-with-full-derivation) | Fix population, assignment and horizon; relative lift is undefined at zero control rate. |
-| Why are assignment counts unexpected? | [Failure modes](21_Causal_Inference_Marketing.md#section-8--failure-modes--edge-cases) | Compare immutable assignment counts to the configured allocation before interpreting outcomes. |
-| Which channel or lifecycle definition? | Topic ladder above | The map and lifecycle guide are planned, not authored. |
+| core | Causal Inference and A/B Experimentation for Marketing | Build from prerequisites to production judgement |
+
+## 3. Quick lookup
+
+| If you need to… | Read |
+|---|---|
+| work on causal inference and a/b experimentation for marketing | [Causal Inference and A/B Experimentation for Marketing](./21_Causal_Inference_Marketing.md) |
 
 ## 4. Reading paths
-- **Beginner:** Learn rates, control groups and assignment; read [definitions](21_Causal_Inference_Marketing.md#section-3--foundational-definitions) and [worked example](21_Causal_Inference_Marketing.md#section-5--worked-numerical-example). The channel map remains planned.
-- **Practitioner:** Read the causal draft through [selection](21_Causal_Inference_Marketing.md#section-7--comparison--selection-table) and failures; define the unit, estimand, comparator and horizon before interpreting lift.
-- **Advanced:** Read the complete draft, including observational limits and economics; MMM and lifecycle metrics are planned extensions, not available prerequisites.
+
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
 
 ## 5. Prerequisite skills
-Calculate proportions and differences, interpret uncertainty and random assignment, and recognize confounding, interference and cohort grain. The draft's [definitions](21_Causal_Inference_Marketing.md#section-3--foundational-definitions) introduce estimands and counterfactuals; consult its source references before applying an estimator.
 
-## 6. What this collection does NOT cover
-Channel measurement, MMM assumptions and lifecycle metric guides remain planned. Attribution, predictive accuracy and observational association alone do not establish incremental causal impact. This draft does not replace legal, privacy or business approval for a campaign.
+| Skill | Why it is needed | Where it is available |
+|---|---|---|
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
+
+## 6. Exclusions and handoffs
+
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
 
 ## 7. Master symbol glossary
-| Symbol | Meaning; unit / type / domain | First use |
-|---|---|---|
-| Y_i(1), Y_i(0) | Unit i's potential outcomes under treatment and control; outcome units, scalar for the specified horizon. | [Definitions](21_Causal_Inference_Marketing.md#section-3--foundational-definitions) |
-| ATE | Average treatment effect in the declared population; outcome units per unit; a causal estimand, not automatically an observed difference. | [Definitions](21_Causal_Inference_Marketing.md#section-3--foundational-definitions) |
-| Absolute lift | Treatment minus control conversion rate; dimensionless difference, often reported in percentage points. | [Definitions](21_Causal_Inference_Marketing.md#section-3--foundational-definitions) |
 
-## 8. Quick Reference Card directory
-| Card | Rule / use | Condition and avoid |
-|---|---|---|
-| [Causal inference card](21_Causal_Inference_Marketing.md#section-12--quick-reference-card) | Compare assigned groups for a defined estimand and outcome horizon. | Assignment and measurement assumptions matter; do not treat attributed sales as causal lift. |
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
+|---|---|---|---|---|---|
+| — | no card defines a symbol yet | — | — | — | — |
+
+## 8. Card directory
+
+| # | Card | Level | Evidence | Status |
+|---|---|---|---|---|
+| 1 | [Causal Inference and A/B Experimentation for Marketing](./21_Causal_Inference_Marketing.md) | core | DERIVED | draft (lint open) |
 
 ## 9. Common Issues locator
-The final Common Issues artifact is not authored; its count is unknown. Use [causal inference failures](21_Causal_Inference_Marketing.md#section-8--failure-modes--edge-cases): for allocation mismatch compare immutable assignments with the planned ratio; for duplicate assignment trace identity and first eligibility. These are hypothetical diagnostics, not observed incident counts.
 
-## 10. Empirical sources, versions and collection maintenance
-The original source directories were unavailable and not inspected. The causal draft's scenarios and arithmetic are illustrative, not measured campaign performance; source and independent review remain open. Consult [authoring standards](../../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the [master template](../../../../../Templates/CHEAT_SHEET_CONTENT_MASTER_TEMPLATE.md). Recheck randomization, measurement, privacy rules and sources when they change; no review date is asserted. Each sheet requires 12 sections, checked examples, failure diagnostics, answered interview questions and a final card. Cards must state the decision, reader, inputs, assumptions, tradeoffs, failure signals and governance; review tool-, market- and regulation-sensitive cards quarterly.
+- Not yet authored. The collection is incomplete until this artifact exists with at least 25 distinct issues.
 
-## 11. Collection acceptance checklist
-- [ ] Author the three planned guides and a final Common Issues artifact with at least 25 substantive issues.
-- [ ] Independently review the causal draft, its 12 sections, arithmetic, assumptions and sources.
-- [ ] Verify links, anchors, glossary and reading paths as files are added.
-- [ ] Record actual review dates and distinguish illustrative campaign inputs from measured results.
+## 10. Sources, versions, maintenance
+
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
+
+## 11. Acceptance checklist
+
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.

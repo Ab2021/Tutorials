@@ -1,73 +1,73 @@
-# AI Platforms, Data Systems and Production Engineering — Cheat Sheets
-
-**Status:** The authored checkpoint sheet is a draft and unreviewed; remaining reference families are planned. Apply the [course authoring and numerical standards](../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master. A title or reference card is not a completed teaching file.
+# Part 05 — AI Platforms, Data Systems and Production Engineering — Cheat Sheets
 
 ## 1. Overview
 
-This collection serves platform and ML infrastructure engineers choosing durable, measurable production systems. Its current draft addresses training recovery; other platform areas remain planned. Readiness means identifying correctness and resource assumptions, tracing failures, and testing a full recovery against the deployed stack.
+This collection carries 1 reference card(s) and 0 troubleshooting artifact(s) for `Part 05 — AI Platforms, Data Systems and Production Engineering`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
 ## 2. Topic ladder
 
-| Level | Reference | Outcome and prerequisite | Status |
-|---|---|---|---|
-| Advanced | [Distributed training checkpoint and recovery](01_Distributed_Training_Checkpoint_and_Recovery.md) | Design and restore a consistent committed generation; requires training, optimizer and distributed-rank fundamentals | Draft; unreviewed |
-| Planned | GPU architecture and accelerators | GPU performance model, precision guide, hardware sizing | Not written here |
-| Planned | Distributed training and data pipelines | Parallelism selection and throughput checklist | Not written here |
-| Planned | Model serving and inference optimization | Inference optimization, service-level objectives, capacity formulas | Not written here |
-| Planned | MLOps and lifecycle | Reference architecture, release checklist, model-card template | Not written here |
-| Planned | Data quality and reliability | Data observability, ML SLOs, incident template | Not written here |
-| Planned | AI evaluation and monitoring | Evaluation matrix, human-rater guide, metric tree | Not written here |
-| Planned | API platforms and FinOps | API review, Kubernetes AI workloads, cost metrics | Not written here |
-| Planned | Common Issues | Cross-topic, independently diagnosable issue locator | Not written |
-
-## 3. Quick topic lookup
-
-| Question | Reference | Condition and warning |
+| Level | Cards | Purpose |
 |---|---|---|
-| Is a set of shards restartable? | [Checkpoint mechanisms](01_Distributed_Training_Checkpoint_and_Recovery.md#4-core-formulas-with-full-derivation) | Require a consistent, durable and validated published generation, not a directory listing. |
-| How do I estimate checkpoint time? | [Worked example](01_Distributed_Training_Checkpoint_and_Recovery.md#5-worked-numerical-example) | Payload divided by effective throughput excludes fixed and contention costs. |
-| Why did recovery diverge? | [Failure modes](01_Distributed_Training_Checkpoint_and_Recovery.md#8-failure-modes--edge-cases) | Inspect state, counters, cursor, RNG and framework/version compatibility. |
+
+## 3. Quick lookup
+
+| If you need to… | Read |
+|---|---|
+| work on 1. file header | [1. File Header](./01_Distributed_Training_Checkpoint_and_Recovery.md) |
 
 ## 4. Reading paths
 
-- **Beginner:** Learn optimizer steps, gradient accumulation, distributed ranks and durable storage first; the foundational platform sheets remain planned. Then read the checkpoint mental model and definitions.
-- **Practitioner:** Read the complete checkpoint sheet and design a restore drill for the actual storage and training stack.
-- **Advanced:** Trace multi-rank publication and fencing, elastic resharding, input progress and partial failure; calculate recovery and capacity under measured conditions. The planned platform references will extend this path.
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
 
 ## 5. Prerequisite skills
 
-Understand optimizer state, stochastic training and random-number-generator state, data-loader progress, distributed synchronization, throughput units, and the actual storage system's durability and publication semantics. A successful write is not automatically an atomic committed generation.
+| Skill | Why it is needed | Where it is available |
+|---|---|---|
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
 
-## 6. What this collection does not cover
+## 6. Exclusions and handoffs
 
-The checkpoint draft is not a framework-independent implementation recipe, benchmark, incident report or guarantee of identical numerical trajectory after an elastic restart. Other listed platform areas and the final Common Issues file remain planned in this collection; consult relevant module indexes for separate drafts.
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
 
 ## 7. Master symbol glossary
 
-| Symbol | Meaning and units | Scope / warning | Reference |
-|---|---|---|---|
-| C | Non-overlapped checkpoint pause, seconds | Assumed constant in the interval approximation | [Checkpoint formula](01_Distributed_Training_Checkpoint_and_Recovery.md#4-core-formulas-with-full-derivation) |
-| λ | Failure rate, inverse seconds | Stationary Poisson approximation is not a correlated-outage model | [Checkpoint formula](01_Distributed_Training_Checkpoint_and_Recovery.md#4-core-formulas-with-full-derivation) |
-| S, B | Unique checkpoint payload in GiB; effective aggregate bandwidth in GiB/s | Actual throughput and overhead require measurement | [Worked example](01_Distributed_Training_Checkpoint_and_Recovery.md#5-worked-numerical-example) |
-| RPO / RTO | Recovery point / recovery time objectives | An objective is not proof of an achieved worst-case guarantee | [Definitions](01_Distributed_Training_Checkpoint_and_Recovery.md#3-foundational-definitions) |
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
+|---|---|---|---|---|---|
+| — | no card defines a symbol yet | — | — | — | — |
 
-## 8. Quick Reference Card directory
+## 8. Card directory
 
-| Card | Core rule | Use and critical condition |
-|---|---|---|
-| [Checkpoint and recovery](01_Distributed_Training_Checkpoint_and_Recovery.md#12-quick-reference-card) | Transfer time is unique bytes divided by effective throughput. | Publish only a complete consistent generation under actual backend durability and fencing semantics. |
+| # | Card | Level | Evidence | Status |
+|---|---|---|---|---|
+| 1 | [1. File Header](./01_Distributed_Training_Checkpoint_and_Recovery.md) | 3 | DERIVED | draft (lint open) |
 
 ## 9. Common Issues locator
 
-A standalone Common Issues artifact is **planned, not written**; no completed collection-wide issue count is claimed. The draft's [failure modes and edge cases](01_Distributed_Training_Checkpoint_and_Recovery.md#8-failure-modes--edge-cases) give symptoms, discriminators, bounded response and verification for checkpoint recovery.
+- Not yet authored. The collection is incomplete until this artifact exists with at least 25 distinct issues.
 
-## 10. Sources, versions and maintenance
+## 10. Sources, versions, maintenance
 
-The checkpoint draft is illustrative and unreviewed. The original inventoried fault-tolerance and checkpoint lessons are unavailable in this workspace; their contents were not verified. Check the installed release's [PyTorch distributed checkpoint documentation](https://docs.pytorch.org/docs/stable/distributed.checkpoint.html) and storage provider semantics before implementation; review on framework, topology, storage or source availability changes. The [distributed-training module](../24_distributed_training_data_pipelines_and_ml_compute/INDEX.md) retains broader planned work.
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
 
-## 11. Collection acceptance checklist
+## 11. Acceptance checklist
 
-- [ ] All planned platform topics and a distinct Common Issues artifact are authored and reviewed.
-- [ ] Each authored file retains all 12 sections, checked calculations or state traces, diagnostic failures, answered interview questions and its final card.
-- [ ] Empirical claims are attributed; product versions, open evidence gaps and review triggers are documented.
-- [ ] Links, learning paths, glossary, issue locations and statuses are reconciled against completed files.
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.

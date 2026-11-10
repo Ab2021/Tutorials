@@ -1,51 +1,58 @@
-# Module 29 Case Studies — API Platform Engineering, Cloud-Native Systems and FinOps
-
-**Status:** planning catalog; no authored `CASE-*` files. Future cases must follow the [course standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [case master](../../../../Templates/CASE_STUDY_CONTENT_MASTER_TEMPLATE.md).
+# Module 29 â€” API Platform Engineering, Cloud-Native Systems and FinOps — Case Studies
 
 ## 1. Collection metadata
 
 | Field | Value |
 |---|---|
-| Domain | API contracts, cloud-native operations, tenancy, platform product, and FinOps |
-| Evidence boundary | illustrative/proposed; prices, capabilities, and tenancy claims require dated primary evidence |
-| Review trigger | API version, tenancy policy, control plane, capacity, chargeback rule, or provider contract change |
+| Collection owner | Curriculum maintainer |
+| Canonical case-ID format | CASE-XX-NN |
+| Evidence policy | Illustrative teaching inputs are not company results; unsourced claims stay OPEN. |
+| Editorial state | Draft; independent publication review is not claimed. |
+| Acceptance rule | A case row is `authored` only when `Tools/manuscript_lint.py` exits 0 for it. |
+| Review trigger | A source body, decision policy, metric definition, or workload assumption changes. |
 
 ## 2. Case catalog
 
-| Case ID | Linked title | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result/limitation |
+| Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-29-01 | Internal AI platform design | platform | hybrid | select boundaries and product contract | authorization-scope | resource-admission | not-measured | proposed | — | needs customer/workload discovery |
-| PLAN-29-02 | Cloud-cost anomaly response | FinOps | incident | contain spend safely | cost-latency-tradeoff | resource-admission | not-measured | proposed | — | needs billing/reconciliation evidence |
-| PLAN-2026-IR002 | Select model routes within hard customer constraints | platform | llm-agentic | choose eligible fallback | eligibility-before-ranking | cost-latency-tradeoff | not-measured | proposed | 2026-11-06 (planning) | provider facts need revalidation |
-| PLAN-2026-IR022 | Bound global API admission with token leases | platform | hybrid | keep within global budget | resource-admission | correctness-contract; bounded-work | not-measured | proposed | 2026-11-06 (planning) | token bucket differs from exact rolling window |
+| PLAN-29-01 | Internal AI platform design | Module 29 â€” API Platform Engineering, Cloud-Native Systems and FinOps | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-29-02 | Cloud-cost anomaly response | Module 29 â€” API Platform Engineering, Cloud-Native Systems and FinOps | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-2026-IR002 | Select model routes within hard customer constraints | Module 29 â€” API Platform Engineering, Cloud-Native Systems and FinOps | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-2026-IR022 | Bound global API admission with token leases | Module 29 â€” API Platform Engineering, Cloud-Native Systems and FinOps | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
 
 ## 3. Canonical reusable patterns
 
-- **Authorization scope:** bind identity, tenant, capabilities, data, cache, and billing ownership at the API boundary.
-- **Resource admission:** debit a globally bounded budget atomically or use a clearly bounded lease/failure policy.
-- **Cost–latency tradeoff:** allocate spend using successful work, tail risk, and service objectives rather than request count alone.
+| Pattern | Diagnostic signature | Use when | Boundary |
+|---|---|---|---|
+| evaluation-mismatch | Offline score does not represent the decision | Ranking, forecast, threshold, agent products | The metric captures decision and guardrails |
+| data-leakage | Information unavailable at decision time inflates a score | Unexpectedly strong offline result | The feature is genuinely available before the cutoff |
+| distribution-shift | Live population differs from training | New market, season, channel, or policy version | The change is sampling noise only |
+| human-in-the-loop | Review capacity or override changes the trade-off | High-impact, uncertain, or regulated work | Review is infeasible or demonstrably ineffective |
+| model-monitoring | Live signals diverge from the evaluation | Deployed model with usable feedback | No meaningful feedback signal exists |
 
 ## 4. Similarity / contrast map
 
-| Cluster | Shared reasoning | Critical distinction |
-|---|---|---|
-| platform and routing | eligibility, policy, and observable contracts | provider health is not tenancy authorization |
-| FinOps and rate limiting | bounded admission and accounting | periodic reporting is not coordinated allocation |
+This collection holds 0 authored case(s) and 4 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
 
-## 5. Questions and future-case backlog
+## 5. Questions / future-case backlog
 
-1. What API contract remains compatible across model and policy upgrades?
-2. How are tenant isolation and charge ownership tested under retries?
-3. Which lease failure mode may over-admit or over-reject work?
-4. What cost metric excludes failed or abandoned work, and why?
+Planned commitments, retained without silent deletion:
+
+- `PLAN-29-01` — Internal AI platform design. Not authored; no file exists, so no link is offered.
+- `PLAN-29-02` — Cloud-cost anomaly response. Not authored; no file exists, so no link is offered.
+- `PLAN-2026-IR002` — Select model routes within hard customer constraints. Not authored; no file exists, so no link is offered.
+- `PLAN-2026-IR022` — Bound global API admission with token leases. Not authored; no file exists, so no link is offered.
 
 ## 6. Review / retirement log
 
-| Date | Item | Decision | Reason |
+| Date | Artifact | Event | Evidence / stage change |
 |---|---|---|---|
-| 2026-11-09 | catalog | retained as planned | no authored case, billing data, or primary provider evidence |
+| 2026-11-10 | collection | index regenerated; no authored case yet | not-measured / proposed |
 
 ## 7. Pre-publish checks
 
-- [ ] Link a 15-section `CASE-*` with tenancy, admission, recovery, capacity, and cost arithmetic.
-- [ ] Reconcile catalog evidence/stage/status; verify dated provider and pricing claims before publication.
+- [x] Every catalog row links a file that exists, or is marked planned without a link.
+- [x] Evidence, implementation stage, and editorial status are separate columns.
+- [x] Planned commitments are retained with no silent deletion.
+- [ ] Independent source review of every authored case.
+- [ ] Publication review of every authored case.

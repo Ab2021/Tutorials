@@ -1,51 +1,55 @@
-# Module 11 Case Studies — Supervised Machine Learning and Feature Engineering
+# Module 11 â€” Supervised Machine Learning and Feature Engineering — Case Studies
 
 ## 1. Collection metadata
 
-Decision cases connecting supervised estimation, feature availability, calibration, business cost and operational constraints. Follow the [course standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [case master](../../../../Templates/CASE_STUDY_CONTENT_MASTER_TEMPLATE.md). Evidence, implementation stage and editorial status are separate. Original source bodies and product-specific evidence remain unavailable; authored examples are explicitly illustrative.
+| Field | Value |
+|---|---|
+| Collection owner | Curriculum maintainer |
+| Canonical case-ID format | CASE-M11-01 |
+| Evidence policy | Illustrative teaching inputs are not company results; unsourced claims stay OPEN. |
+| Editorial state | Draft; independent publication review is not claimed. |
+| Acceptance rule | A case row is `authored` only when `Tools/manuscript_lint.py` exits 0 for it. |
+| Review trigger | A source body, decision policy, metric definition, or workload assumption changes. |
 
 ## 2. Case catalog
 
-| Case ID | Canonical title | Domain/type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result/limitation | Editorial status |
+| Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| CASE-M11-01 | [Credit-risk model design](01_credit_risk_model_design.md) | lending / predictive-ml | approve, review or decline under cost and capacity | point-in-time risk scoring | calibration; bounded review | illustrative inputs; derived arithmetic | proposed | null | 1,419 lines; synthetic costs 10,650 versus 13,750; real declined-applicant outcomes and policy value not identified | authored draft; publication/source review open |
-| PLAN-M11-02 | Churn model with leakage remediation | retention / predictive-ml | remove unavailable signals before choosing an intervention | temporal validation | feature availability; treatment distinction | not measured | proposed | null | not authored | planned |
+| CASE-M11-01 | [Credit-risk model design: point-in-time loss-aware underwriting](./01_credit_risk_model_design.md) | Module 11 â€” Supervised Machine Learning and Feature Engineering | predictive-ml | decision record in the linked case | Point-in-time risk scoring with policy optimization | alibration, before, actioning, apacity-constrained, human, r | illustrative | proposed | null | authored |
+| CASE-M11-02 | [Churn leakage remediation: withdrawing a retention model that could not be scored on the day it decided](./02_churn_model_with_leakage_remediation.md) | Module 11 â€” Supervised Machine Learning and Feature Engineering | predictive-ml | decision record in the linked case | temporal-validation | leakage-control, decision-threshold-under-capacity | illustrative | draft | null | draft (lint open) |
+| PLAN-M11-02 | Churn model with leakage remediation | Module 11 â€” Supervised Machine Learning and Feature Engineering | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
 
 ## 3. Canonical reusable patterns
 
-| Pattern | Mechanism | Use condition | Failure warning |
+| Pattern | Diagnostic signature | Use when | Boundary |
 |---|---|---|---|
-| Point-in-time feature contract | Require evidence availability no later than the decision snapshot. | Historical replay and serving inputs. | A timestamped table does not establish what was known. |
-| Probability-to-action policy | Compare calibrated risk with explicit cost, hard rules and approved actions. | Probabilities are valid for the decision population. | Ranking performance alone does not identify an economic threshold. |
-| Capacity-bounded review | Admit work atomically against declared slots; use an owned overflow route. | Review can add useful information. | A wide uncertainty band can exceed actual staffing. |
-| Selected-label boundary | Separate observable originated-loan outcomes from declined-applicant counterfactuals. | Evaluating lending policies. | A mature holdout does not resolve selection by itself. |
+| evaluation-mismatch | Offline score does not represent the decision | Ranking, forecast, threshold, agent products | The metric captures decision and guardrails |
+| data-leakage | Information unavailable at decision time inflates a score | Unexpectedly strong offline result | The feature is genuinely available before the cutoff |
+| distribution-shift | Live population differs from training | New market, season, channel, or policy version | The change is sampling noise only |
+| human-in-the-loop | Review capacity or override changes the trade-off | High-impact, uncertain, or regulated work | Review is infeasible or demonstrably ineffective |
+| model-monitoring | Live signals diverge from the evaluation | Deployed model with usable feedback | No meaningful feedback signal exists |
 
 ## 4. Similarity / contrast map
 
-| Dimension | Credit risk | Churn leakage remediation |
-|---|---|---|
-| Decision unit | application at underwriting | customer at a defined intervention opportunity |
-| Outcome clock | repayment horizon from defined origination | retention horizon from a frozen observation cutoff |
-| Core leakage | later verification or repayment evidence | post-contact or post-churn fields |
-| Additional identification limit | declined-loan outcomes are counterfactual | churn prediction does not identify treatment benefit |
-| Shared requirement | frozen feature/label availability, baseline and independent temporal evaluation | same, with domain-specific actions and costs |
+This collection holds 2 authored case(s) and 1 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
 
 ## 5. Questions / future-case backlog
 
-Retain and author the original churn-with-leakage-remediation case as a complete bounded decision, not another credit-risk copy. Specify customer/action timing, intervention eligibility, unavailable-field counterexamples, an untouched temporal holdout, treatment-effect limits and a checked business-cost example. Product economics, jurisdiction, lawful data use and applicable fairness requirements need authorized evidence; the credit case does not establish them.
+Planned commitments, retained without silent deletion:
+
+- `PLAN-M11-02` — Churn model with leakage remediation. Not authored; no file exists, so no link is offered.
 
 ## 6. Review / retirement log
 
-| Pass | Item | Event | Evidence/stage effect |
+| Date | Artifact | Event | Evidence / stage change |
 |---|---|---|---|
-| current authoring pass | CASE-M11-01 | Canonical module manuscript authored; corrected the walkthrough's inconsistent cost summary and made synthetic declined-applicant labels explicit. | Remains illustrative/proposed. |
-| current integration pass | CASE-M11-01 | Executed the 100-score fixture: 45 approvals, 40 reviews, 15 declines; band counts 40/55/24; verified delayed-feature, equality and threshold boundaries plus 3,100 synthetic cost difference. | Arithmetic/state verification only; no trained-model, live-policy or compliance claim. |
+| 2026-11-10 | [Credit-risk model design: point-in-time loss-aware underwriting](./01_credit_risk_model_design.md) | index regenerated from disk | illustrative / proposed unchanged |
+| 2026-11-10 | [Churn leakage remediation: withdrawing a retention model that could not be scored on the day it decided](./02_churn_model_with_leakage_remediation.md) | index regenerated from disk | illustrative / draft unchanged |
 
 ## 7. Pre-publish checks
 
-- [x] Both original case commitments retained; one canonical credit manuscript, not a duplicated part-level case.
-- [x] Credit case has 15 ordered sections, 15 answered interview questions and the final Section 15 card.
-- [x] Numerical/state smoke executed against the written fixture; no repeated long prose detected.
-- [ ] Author the original churn case and its complete interview pack.
-- [ ] Obtain appropriate source, product, data, policy and applicability evidence.
-- [ ] Complete independent substantive publication review; authored length and smoke checks do not establish operational suitability.
+- [x] Every catalog row links a file that exists, or is marked planned without a link.
+- [x] Evidence, implementation stage, and editorial status are separate columns.
+- [x] Planned commitments are retained with no silent deletion.
+- [ ] Independent source review of every authored case.
+- [ ] Publication review of every authored case.

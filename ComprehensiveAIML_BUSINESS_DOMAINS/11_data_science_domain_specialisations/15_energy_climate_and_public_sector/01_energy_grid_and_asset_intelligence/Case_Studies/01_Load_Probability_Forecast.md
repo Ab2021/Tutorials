@@ -718,9 +718,9 @@ The lesson is not "use quantile regression". It is that **the probability level 
 | Relationship | Actual target | Mechanism shared or changed | Boundary learned |
 |---|---|---|---|
 | `contrasts-with` | [Energy load forecasting, time-series family](../../../01_production_ml_case_library/10_time_series_forecasting/Case_Studies/03_Energy_Load_Forecasting.md) | Both forecast hourly load; that case centres hourly point/quantile accuracy and peak pitfalls; this case centres the reserve decision, loss ratio, and hierarchical coherence | Accuracy evaluation does not determine procurement policy |
-| `uses-method` | [Energy forecast metrics](../Cheat_Sheets/01_Energy_Forecast_Metrics.md) | Pinball, coverage, PINAW, peak functionals | Metric validity requires the same population and revision |
-| `uses-method` | [Grid data governance](../Cheat_Sheets/03_Grid_Data_Governance.md) | Point-in-time provenance, cut-off enforcement | Governance is a precondition for a falsifiable record |
-| `extends` | [Asset AI safety gate](../Cheat_Sheets/02_Asset_AI_Safety_Gate.md) | Human authority over automated recommendation | Forecast advice is not an operational command |
+| `uses-method` | Energy forecast metrics (planned card; not yet authored) | Pinball, coverage, PINAW, peak functionals | Metric validity requires the same population and revision |
+| `uses-method` | Grid data governance (planned card; not yet authored) | Point-in-time provenance, cut-off enforcement | Governance is a precondition for a falsifiable record |
+| `extends` | Asset AI safety gate (planned card; not yet authored) | Human authority over automated recommendation | Forecast advice is not an operational command |
 | `uses-method` | [Course authoring and numerical standards](../../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) | Formula anatomy and evidence labels | Teaching arithmetic is not a benchmark |
 
 ### 14b. What this case leaves open

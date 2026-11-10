@@ -1,48 +1,56 @@
-# SaaS, Telecom and B2B — Cross-Domain Case Studies
+# SaaS, Telecom and B2B — Case Studies
 
 ## 1. Collection metadata
+
 | Field | Value |
 |---|---|
-| Scope | Decisions that genuinely compare or integrate two or more family domains |
-| Canonical ID | `CASE-14-XD-NNN` |
-| Editorial state | No local case is authored; this is a truthful navigation catalog |
-| Evidence policy | Separate illustrative, published, simulated, observed, estimated, and not-measured claims |
-| Review trigger | Change to a cross-domain decision contract, evidence source, or shared identity/policy boundary |
+| Collection owner | Curriculum maintainer |
+| Canonical case-ID format | CASE-XX-NN |
+| Evidence policy | Illustrative teaching inputs are not company results; unsourced claims stay OPEN. |
+| Editorial state | Draft; independent publication review is not claimed. |
+| Acceptance rule | A case row is `authored` only when `Tools/manuscript_lint.py` exits 0 for it. |
+| Review trigger | A source body, decision policy, metric definition, or workload assumption changes. |
 
 ## 2. Case catalog
-| Case ID | Case title / relative link | Domain | Case type | Decision / business question | Primary pattern | Secondary pattern(s) | Evidence | Stage | Last reviewed | Key result or limitation |
+
+| Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-14-XD-001 | Unified account-health intervention | SaaS + telecom customer operations | predictive-ml | Should a common risk signal route a customer to product or service remediation? | evaluation-mismatch | label-delay; human-in-the-loop | not-measured | proposed | not reviewed | Planned only; shared identity and causal outcome must be established. |
-| PLAN-14-XD-002 | Authorized support-answer handoff | Enterprise knowledge + SaaS support | llm-agentic | When should a cited answer resolve a ticket versus hand off to a human? | authorization-scope | evaluation-mismatch; human-in-the-loop | not-measured | proposed | not reviewed | Planned only; no support outcome is claimed. |
-| PLAN-14-XD-003 | Incident communication across service channels | Telecom operations + B2B customer success | streaming-systems | Which affected accounts receive which verified outage update under freshness constraints? | bounded-work | snapshot-consistency; rollout-regression | not-measured | proposed | not reviewed | Planned only; no operator workflow or delivery rate is asserted. |
+| PLAN-14-XD-001 | Unified account-health intervention | SaaS, Telecom and B2B | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-14-XD-002 | Authorized support-answer handoff | SaaS, Telecom and B2B | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-14-XD-003 | Incident communication across service channels | SaaS, Telecom and B2B | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
 
 ## 3. Canonical reusable patterns
-| Pattern | Meaning | Use when | Disqualifier |
+
+| Pattern | Diagnostic signature | Use when | Boundary |
 |---|---|---|---|
-| authorization-scope | Output is conditioned on request-time principal, resource, and policy | Knowledge or CRM data crosses roles/tenants | Static metadata is treated as a current decision |
-| evaluation-mismatch | Offline score omits the actual decision or guardrail | Predictive, ranking, or generation output triggers action | Metric has no action-level definition |
-| label-delay | Outcome maturity trails the intervention | Churn, support resolution, or restoration outcome is delayed | Immediate proxy is accepted as truth |
-| human-in-the-loop | Qualified review is part of the control | Ambiguous, high-impact, or low-confidence work | Review capacity/quality is not measured |
-| snapshot-consistency | A multi-record decision must use a stated coherent view | Incident status, eligibility, or entitlement can change mid-request | Read time and version are unspecified |
+| evaluation-mismatch | Offline score does not represent the decision | Ranking, forecast, threshold, agent products | The metric captures decision and guardrails |
+| data-leakage | Information unavailable at decision time inflates a score | Unexpectedly strong offline result | The feature is genuinely available before the cutoff |
+| distribution-shift | Live population differs from training | New market, season, channel, or policy version | The change is sampling noise only |
+| human-in-the-loop | Review capacity or override changes the trade-off | High-impact, uncertain, or regulated work | Review is infeasible or demonstrably ineffective |
+| model-monitoring | Live signals diverge from the evaluation | Deployed model with usable feedback | No meaningful feedback signal exists |
 
-## 4. Similarity and contrast map
-| Planned case | Shares | Differs from | Required comparison |
+## 4. Similarity / contrast map
+
+This collection holds 0 authored case(s) and 3 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
+
+## 5. Questions / future-case backlog
+
+Planned commitments, retained without silent deletion:
+
+- `PLAN-14-XD-001` — Unified account-health intervention. Not authored; no file exists, so no link is offered.
+- `PLAN-14-XD-002` — Authorized support-answer handoff. Not authored; no file exists, so no link is offered.
+- `PLAN-14-XD-003` — Incident communication across service channels. Not authored; no file exists, so no link is offered.
+
+## 6. Review / retirement log
+
+| Date | Artifact | Event | Evidence / stage change |
 |---|---|---|---|
-| XD-001 | Delayed outcomes and intervention capacity | Product use versus service degradation causes | Compare no action, domain-specific action, and shared triage under identical outcome window |
-| XD-002 | Evidence, access control, review | Answer quality is not ticket resolution | Separate supported-answer rate from resolved-without-reopen rate |
-| XD-003 | Event freshness and customer communications | Delivery success is not service restoration | Evaluate status correctness, entitlement scope, and recovery update separately |
-
-## 5. Questions and future-case backlog
-A future author must identify a single owner, input/output grain, baseline, bounded action, evidence source, and validation protocol. Questions not yet resolved: whether identities can be joined lawfully and correctly; which actions are reversible; what event-time policy governs cross-system truth; and how customer impact is measured without proxy-only conclusions.
-
-## 6. Review and retirement log
-| Date | Scope | Evidence observed | Decision | Recheck trigger |
-|---|---|---|---|---|
-| 2026-11-09 | Cross-domain catalog | No local source ledger, implementation, or outcome artifact exists. | Keep all entries as `PLAN`; do not present them as cases. | A full 15-section case with a source/evidence ledger and checked example. |
+| 2026-11-10 | collection | index regenerated; no authored case yet | not-measured / proposed |
 
 ## 7. Pre-publish checks
-- [ ] Replace a `PLAN` ID only after creating and linking a 15-section case with Section 15 last.
-- [ ] Record owner, action, unit, baseline, time window, and evidence label at claim level.
-- [ ] Show successful and failed/recovery paths for systems cases.
-- [ ] Include 12–18 answered interview prompts, numerical checks, and sensitivity where quantitative.
-- [ ] Verify that any cross-domain join, permission, and event-time claim is supported or explicitly illustrative.
+
+- [x] Every catalog row links a file that exists, or is marked planned without a link.
+- [x] Evidence, implementation stage, and editorial status are separate columns.
+- [x] Planned commitments are retained with no silent deletion.
+- [ ] Independent source review of every authored case.
+- [ ] Publication review of every authored case.

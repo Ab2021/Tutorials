@@ -1,69 +1,73 @@
 # NLP and LLM Playbook — Cheat Sheets
 
-**Status:** The RAG sheet is a draft and unreviewed; other references remain planned. Follow the [course authoring and numerical standards](../../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and linked cheat-sheet master. A card does not replace the assumptions, evidence and evaluation in a full case.
-
 ## 1. Overview
 
-This collection helps practitioners design and evaluate NLP and language-model systems. The current draft focuses on retrieval-augmented generation (RAG), evidence selection, authorization and diagnostics. Readiness means calculating a retrieval metric and context budget, distinguishing retrieval failure from generation failure, and respecting access boundaries before retrieval results reach a model or user.
+This collection carries 1 reference card(s) and 0 troubleshooting artifact(s) for `NLP and LLM Playbook`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
 ## 2. Topic ladder
 
-| Level | Reference | Outcome and prerequisite | Status |
-|---|---|---|---|
-| Practitioner | [RAG retrieval, chunking and evidence](13_RAG_Retrieval_Augmented_Generation.md) | Reason about authorized retrieval, context selection and grounded evaluation; requires tokenization, vectors, ranking metrics and access control | Draft; unreviewed |
-| Planned | Prompt and schema guide | State output constraints and validation boundaries | Not written |
-| Planned | LLM production incident checklist | Diagnose and contain failures across the model and retrieval pipeline | Not written |
-| Planned | Common Issues | Distinct collection-wide diagnostics | Not written |
-
-## 3. Quick topic lookup
-
-| Question | Reference | Condition and warning |
+| Level | Cards | Purpose |
 |---|---|---|
-| Did retrieval find relevant evidence? | [Worked example](13_RAG_Retrieval_Augmented_Generation.md#5-worked-numerical-example) | Define eligible relevant items, rank cutoff and denominator; missing labels can bias the result. |
-| How much evidence fits in context? | [Core formulas](13_RAG_Retrieval_Augmented_Generation.md#4-core-formulas-with-full-derivation) | Reserve instruction, query and output space; token counts depend on the actual tokenizer. |
-| Why does a response lack support? | [Failure modes](13_RAG_Retrieval_Augmented_Generation.md#8-failure-modes--edge-cases) | Check authorization, indexing, retrieval, evidence selection and generation separately. |
+
+## 3. Quick lookup
+
+| If you need to… | Read |
+|---|---|
+| work on retrieval-augmented generation: evidence before answers | [Retrieval-augmented generation: evidence before answers](./13_RAG_Retrieval_Augmented_Generation.md) |
 
 ## 4. Reading paths
 
-- **Beginner:** Review tokenization, vectors, nearest-neighbor retrieval and document access control, then read the draft's definitions. Prompt and schema fundamentals remain planned.
-- **Practitioner:** Read the complete RAG draft; reproduce the retrieval and token-budget arithmetic, then define evaluation and authorization for a concrete corpus.
-- **Advanced:** Test index freshness, permission changes, duplicate and conflicting sources, ranking tradeoffs, unsupported answers and end-to-end cost. The incident reference remains planned.
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
 
 ## 5. Prerequisite skills
 
-Understand tokenization, embedding similarity and ranking, precision and recall at a specified cutoff, document/version identity, access control, and basic query/response service contracts. Interpret quality metrics only for their defined query and relevance population.
+| Skill | Why it is needed | Where it is available |
+|---|---|---|
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
 
-## 6. What this collection does not cover
+## 6. Exclusions and handoffs
 
-The RAG draft does not establish factual correctness, source authorization or production quality for an unspecified deployment. It is not a complete NLP or LLM curriculum, vendor implementation guide, prompt/schema handbook or finished Common Issues reference.
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
 
 ## 7. Master symbol glossary
 
-| Symbol | Meaning and units | Scope / warning | Reference |
-|---|---|---|---|
-| R, H, n | Eligible relevant items, retrieved relevant items, and items returned; counts | Define eligibility and the evaluation cutoff; guard zero denominators | [Core formulas](13_RAG_Retrieval_Augmented_Generation.md#4-core-formulas-with-full-derivation) |
-| L, C, O | Document length, chunk length and overlap; tokens | Tokenizer and chunking rules must match the implementation | [Core formulas](13_RAG_Retrieval_Augmented_Generation.md#4-core-formulas-with-full-derivation) |
-| W, B | Total context window and evidence budget; tokens | Reserve other prompt and output components | [Core formulas](13_RAG_Retrieval_Augmented_Generation.md#4-core-formulas-with-full-derivation) |
-| K | Rank-fusion constant | Distinct from top-k retrieval cutoff | [Core formulas](13_RAG_Retrieval_Augmented_Generation.md#4-core-formulas-with-full-derivation) |
-| D, V, b | Chunk count, vector dimension and bytes per component | Vector payload excludes index and metadata overhead | [Core formulas](13_RAG_Retrieval_Augmented_Generation.md#4-core-formulas-with-full-derivation) |
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
+|---|---|---|---|---|---|
+| — | no card defines a symbol yet | — | — | — | — |
 
-## 8. Quick Reference Card directory
+## 8. Card directory
 
-| Card | Core rule | Use and critical condition |
-|---|---|---|
-| [RAG retrieval and evidence](13_RAG_Retrieval_Augmented_Generation.md#12-quick-reference-card) | Measure retrieval and grounded response quality against an eligible evidence set. | Authorization, relevance labels and the evaluation population must be defined. |
+| # | Card | Level | Evidence | Status |
+|---|---|---|---|---|
+| 1 | [Retrieval-augmented generation: evidence before answers](./13_RAG_Retrieval_Augmented_Generation.md) | 2 | DERIVED | authored |
 
 ## 9. Common Issues locator
 
-A standalone Common Issues artifact is **planned, not written**; no collection-wide issue count is claimed. Consult the draft's [failure modes](13_RAG_Retrieval_Augmented_Generation.md#8-failure-modes--edge-cases) for retrieval, evidence and access-boundary diagnostics.
+- Not yet authored. The collection is incomplete until this artifact exists with at least 25 distinct issues.
 
-## 10. Sources, versions and maintenance
+## 10. Sources, versions, maintenance
 
-The visible inventory names `DS_Domain/NLP_LLM_Cheat_Sheets/13_RAG_Retrieval_Augmented_Generation.md`, but the original file was unavailable; its contents are not verified. The [draft source registry](13_RAG_Retrieval_Augmented_Generation.md) identifies references whose inspection remains open. Review on changes to the corpus, access policy, tokenizer, model, index, retrieval pipeline or evaluation population.
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
 
-## 11. Collection acceptance checklist
+## 11. Acceptance checklist
 
-- [ ] Planned references and a distinct Common Issues artifact are authored and reviewed.
-- [ ] Each sheet retains all 12 sections, checked calculations or traces, failure diagnostics, answered interviews and a final card.
-- [ ] Authorization, evidence provenance, source limitations and evaluation population are explicit.
-- [ ] Links, glossary, reading paths, issue locations and editorial statuses match actual files.
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.

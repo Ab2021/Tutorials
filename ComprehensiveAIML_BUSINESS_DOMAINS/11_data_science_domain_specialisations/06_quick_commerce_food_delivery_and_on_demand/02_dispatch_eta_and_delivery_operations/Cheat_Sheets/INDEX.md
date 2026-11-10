@@ -1,63 +1,74 @@
 # Dispatch, ETA and Delivery Operations — Cheat Sheets
 
-**Collection state:** planned; no individual sheet is authored. Contract: [course standards](../../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [sheet master](../../../../../Templates/CHEAT_SHEET_CONTENT_MASTER_TEMPLATE.md). Source boundaries are in the family [coverage ledger](../../COVERAGE_LEDGER.md).
-
 ## 1. Overview
-This collection will teach real-time delivery decisions: define order state, select dispatch/batching objectives, evaluate ETA, protect riders/customers, and preserve routing correctness under closure changes. It teaches methods through illustrative data, not company deployments. Readiness requires a decision-time state contract, a checked route/ETA calculation, and a safe fallback.
+
+This collection carries 0 reference card(s) and 0 troubleshooting artifact(s) for `Dispatch, ETA and Delivery Operations`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
 ## 2. Topic ladder
-| Level | File / topic | Outcome | Prerequisites | Status |
-|---|---|---|---|---|
-| Foundation | 01 ETA evaluation | Define calibration, error, and decision guardrails | timestamps, quantiles | planned |
-| Core | 02 Dispatch objective guide | Compare allocation/batching objectives and constraints | 01 | planned |
-| Core | 03 Rider and customer guardrails | Select guardrails and escalation actions | 01–02 | planned |
-| Advanced | 04 Snapshot routing and ETA separation | Keep legal shortest path and ETA evaluation separate | directed graphs | planned; IR019 |
-| Advanced | 05 Closure-aware fallback | Expand shortcut validity and use base Dijkstra when exactness is required | 04 | planned; IR023 |
-| Final | 06 Common Issues | Triage >=25 delivery failures | 01–05 | planned |
 
-## 3. Quick topic lookup
-| Question | File | Section | Use condition | Failure warning |
-|---|---|---|---|---|
-| Is ETA calibrated enough to promise? | 01 | 4–9 | prediction and realized arrival share a cutoff | mean error can hide late-tail harm |
-| Which order/rider pair should dispatch? | 02 | 4–8 | capacity and objective are explicit | local travel minimization can worsen fairness |
-| Can a route use a stale shortcut? | 05 | 4–8 | closure version is pinned | filtering a shortcut alone does not prove optimality |
-| Is route quality the same as ETA quality? | 04 | 3–7 | route and forecast are separately scored | a legal route may have a poor ETA |
+| Level | Cards | Purpose |
+|---|---|---|
+| — | none yet | no card authored in this collection |
 
-## 4. Reading paths — three options
-- **Beginner:** 01 → 02 → 03; assumes basic arithmetic and time semantics.
-- **Practitioner:** 01 → 02 → 03 → 04 → 05 → 06; assumes graph basics and operations metrics.
-- **Advanced:** 05 → 04 → 01 → 02 → 03 → 06; assumes nonnegative directed shortest paths; forward references are not prerequisites.
+## 3. Quick lookup
+
+| If you need to… | Read |
+|---|---|
+| — | nothing authored yet |
+
+## 4. Reading paths
+
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
 
 ## 5. Prerequisite skills
-Event timestamps, time-zone handling, percentiles, constrained optimization vocabulary, directed weighted graphs, immutable version snapshots, Dijkstra's settled-distance invariant, and data-leakage controls.
+
+| Skill | Why it is needed | Where it is available |
+|---|---|---|
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
 
 ## 6. Exclusions and handoffs
-This collection does not establish road-law compliance, rider employment policy, company route-stack behavior, or time-dependent/turn-state routing guarantees. Inventory availability handoff goes to Inventory; incentive and price decisions go to Growth/Pricing.
+
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
 
 ## 7. Master symbol glossary
-| Symbol / term | Meaning | Units / type | Domain | First planned use |
-|---|---|---|---|---|
-| `y` | realized arrival time | minutes | completed eligible order | 01 |
-| `yhat` | ETA prediction | minutes | decision-time prediction | 01 |
-| `G=(V,E)` | directed road graph | graph | nonnegative weights for Dijkstra | 04 |
-| `c(e)` | edge travel cost | time units | open edge | 04 |
-| `S_v` | immutable closure snapshot | versioned set | one request | 05 |
 
-## 8. Quick Reference Card directory
-No authored cards or anchors exist. Planned cards cover ETA evaluation, dispatch objective, guardrail response, snapshot route contract, closure fallback, and issue triage.
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
+|---|---|---|---|---|---|
+| — | no card defines a symbol yet | — | — | — | — |
+
+## 8. Card directory
+
+| # | Card | Level | Evidence | Status |
+|---|---|---|---|---|
+| — | none | — | — | — |
 
 ## 9. Common Issues locator
-Planned `06_25_Common_Issues.md`: at least 25 complete issues on state transitions, late events, stale supply, batching, map matching, closures, ETA calibration, weather shifts, safety/fraud signals, observability, and recovery. No issues are currently authored.
 
-## 10. Sources, versions and maintenance
-| Source ID | Source / reviewed | Supports | Limitation / trigger |
-|---|---|---|---|
-| REF-IR019 | planning brief, reviewed 2026-11-09 | required routing/ETA distinction | source body unavailable; not a result claim |
-| REF-IR023 | [closure-aware shortest paths](../../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/Routing/closure_aware_shortest_paths.md), reviewed 2026-11-09 | stale-shortcut boundary, Dijkstra fallback | illustrative requirements; recheck graph contract changes |
+- Not yet authored. The collection is incomplete until this artifact exists with at least 25 distinct issues.
 
-## 11. Collection acceptance checklist
-- [ ] Every file has 12 ordered sections, metadata, checked examples, >=4 diagnostics, 10–15 answered questions, and card last.
-- [ ] IR019 routes are checked against a base-graph oracle and ETA separately.
-- [ ] IR023 covers nested shortcuts, closures, directed edges, and unreachable pairs.
-- [ ] `06_25_Common_Issues.md` has >=25 complete non-duplicate issues.
-- [ ] Links, prerequisite order, glossary and evidence labels are verified.
+## 10. Sources, versions, maintenance
+
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
+
+## 11. Acceptance checklist
+
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.

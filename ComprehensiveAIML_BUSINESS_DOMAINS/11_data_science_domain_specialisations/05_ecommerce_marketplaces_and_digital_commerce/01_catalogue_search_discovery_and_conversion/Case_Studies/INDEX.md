@@ -1,87 +1,85 @@
-# Catalogue, Search, Discovery and Conversion - Case Study Collection
-
-> **Mandatory authoring contract:** Every authored case must follow the [course authoring and numerical standards](../../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master: all 15 sections, bounded decision and baseline, traceable evidence, checked numerical walkthrough/sizing where applicable, failure diagnostics, 12–18 answered interview questions, and Section 15 last. This is a planned catalog, not completed cases; expand to all seven collection-index sections before publication. Evidence, implementation stage and editorial status remain separate.
+# Catalogue, Search, Discovery and Conversion — Case Studies
 
 ## 1. Collection metadata
 
 | Field | Value |
 |---|---|
 | Collection owner | Curriculum maintainer |
-| Last reviewed | 2026-11-06 |
-| Review cadence | Quarterly and on material market/regulatory change |
-| Index version | 2.0-planned |
-| Canonical case-ID format | CASE-05-01-NNN |
-| Canonical tags | Use the controlled vocabulary below; add synonyms only after review |
-| Source of truth | This directory |
+| Canonical case-ID format | CASE-05-01-001 |
+| Evidence policy | Illustrative teaching inputs are not company results; unsourced claims stay OPEN. |
+| Editorial state | Draft; independent publication review is not claimed. |
+| Acceptance rule | A case row is `authored` only when `Tools/manuscript_lint.py` exits 0 for it. |
+| Review trigger | A source body, decision policy, metric definition, or workload assumption changes. |
 
 ## 2. Case catalog
 
-| Case ID | Case title / relative link | Domain | Case type | Decision / business question | Primary pattern | Secondary pattern(s) | Evidence | Stage | Last reviewed | Key result or limitation |
+| Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-05-01-01 | Search relevance recovery | Catalogue, Search, Discovery and Conversion | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
-| PLAN-05-01-02 | Catalogue enrichment | Catalogue, Search, Discovery and Conversion | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
-| PLAN-05-01-03 | Recommendation cold start | Catalogue, Search, Discovery and Conversion | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
-| PLAN-05-01-04 | Checkout funnel diagnosis | Catalogue, Search, Discovery and Conversion | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
-| PLAN-05-01-05 | Review abuse detection | Catalogue, Search, Discovery and Conversion | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
+| CASE-05-01-001 | [Search relevance recovery after an offline-NDCG rollout](./01_Search_Relevance_Recovery.md) | Catalogue, Search, Discovery and Conversion | hybrid | decision record in the linked case | evaluation-mismatch | rollout-regression, human-in-the-loop | illustrative | proposed | null | authored |
+| CASE-05-01-002 | [Catalogue enrichment](./02_Catalogue_Enrichment.md) | Catalogue, Search, Discovery and Conversion | data-quality | decision record in the linked case | evaluation-mismatch | human-in-the-loop, rollout-regression | illustrative | proposed | null | draft (lint open) |
+| CASE-05-01-003 | [Recommendation cold start](./03_Recommendation_Cold_Start.md) | Catalogue, Search, Discovery and Conversion | recommendation | decision record in the linked case | evaluation-mismatch | human-in-the-loop, rollout-regression | illustrative | proposed | null | draft (lint open) |
+| CASE-05-01-004 | [Checkout funnel diagnosis](./04_Checkout_Funnel_Diagnosis.md) | Catalogue, Search, Discovery and Conversion | analytical | decision record in the linked case | evaluation-mismatch | human-in-the-loop, rollout-regression | illustrative | proposed | null | draft (lint open) |
+| CASE-05-01-005 | [Review abuse detection](./05_Review_Abuse_Detection.md) | Catalogue, Search, Discovery and Conversion | predictive-ml | decision record in the linked case | evaluation-mismatch | human-in-the-loop, rollout-regression | illustrative | proposed | null | draft (lint open) |
+| CASE-05-01-006 | [Authorized near-real-time index evolution](./06_Authorized_Near_Real_Time_Index.md) | Catalogue, Search, Discovery and Conversion | streaming-systems | decision record in the linked case | evaluation-mismatch | human-in-the-loop, rollout-regression | illustrative | proposed | null | authored |
+| CASE-05-01-007 | [Bounded phrase-search memory](./07_Bounded_Phrase_Search.md) | Catalogue, Search, Discovery and Conversion | incident | decision record in the linked case | evaluation-mismatch | human-in-the-loop, rollout-regression | illustrative | proposed | null | draft (lint open) |
+| CASE-05-01-008 | [Bounded graph recommendation traversal](./08_Bounded_Graph_Recommendations.md) | Catalogue, Search, Discovery and Conversion | incident | decision record in the linked case | evaluation-mismatch | human-in-the-loop, rollout-regression | illustrative | proposed | null | draft (lint open) |
+| CASE-05-01-009 | [Autocomplete freshness and abuse controls](./09_Autocomplete_Freshness_Controls.md) | Catalogue, Search, Discovery and Conversion | streaming-systems | decision record in the linked case | evaluation-mismatch | human-in-the-loop, rollout-regression | illustrative | proposed | null | draft (lint open) |
+| PLAN-05-01-01 | Search relevance recovery | Catalogue, Search, Discovery and Conversion | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-05-01-02 | Catalogue enrichment | Catalogue, Search, Discovery and Conversion | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-05-01-03 | Recommendation cold start | Catalogue, Search, Discovery and Conversion | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-05-01-04 | Checkout funnel diagnosis | Catalogue, Search, Discovery and Conversion | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-05-01-05 | Review abuse detection | Catalogue, Search, Discovery and Conversion | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-2026-IR021 | Evolve an authorized near-real-time search index safely | Catalogue, Search, Discovery and Conversion | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-2026-IR024 | Bound phrase-search memory while preserving exact matches | Catalogue, Search, Discovery and Conversion | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-2026-IR029 | Return useful graph candidates under explicit traversal budgets | Catalogue, Search, Discovery and Conversion | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-2026-IR032 | Balance autocomplete freshness, memory and abuse controls | Catalogue, Search, Discovery and Conversion | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
 
 ## 3. Canonical reusable patterns
 
-| Tag | Diagnostic signature | Use when | Boundary |
+| Pattern | Diagnostic signature | Use when | Boundary |
 |---|---|---|---|
-| data-leakage | Information unavailable at decision time inflates performance | Unexpectedly strong predictive result | Feature is truly available before the cutoff |
-| label-delay | Outcome truth arrives late or changes | Fraud, claims, retention, downstream operational labels | Immediate, stable labels |
-| distribution-shift | Operating population differs from training/evaluation | New market, season, channel, or rollout | Change is sampling noise only |
-| evaluation-mismatch | Offline metric does not represent the business decision | Ranking, forecast, LLM, agent, or multi-objective products | Metric captures decision and guardrails |
-| cost-latency-tradeoff | Quality, cost, and response time conflict | Online, real-time, or edge operation | Cost/latency are non-binding |
-| human-in-the-loop | Qualified review changes risk/quality trade-off | High-impact, uncertain, or regulated work | Review is infeasible or ineffective |
-| rollout-regression | Release degrades a live guardrail despite tests | Canary, A/B, feature-flag, or migration work | No rollout comparison exists |
-| model-monitoring | Production signals reveal drift or degradation | Deployed model/system with feedback | No meaningful feedback signal |
-| causal-confounding | Observational relationship is not intervention effect | Attribution, uplift, promotion, policy decisions | Valid randomization addresses concern |
-| incident-postmortem | Operational impact requires causal reconstruction | Actual incident or replay exercise | No failure event/replay exists |
+| evaluation-mismatch | Offline score does not represent the decision | Ranking, forecast, threshold, agent products | The metric captures decision and guardrails |
+| data-leakage | Information unavailable at decision time inflates a score | Unexpectedly strong offline result | The feature is genuinely available before the cutoff |
+| distribution-shift | Live population differs from training | New market, season, channel, or policy version | The change is sampling noise only |
+| human-in-the-loop | Review capacity or override changes the trade-off | High-impact, uncertain, or regulated work | Review is infeasible or demonstrably ineffective |
+| model-monitoring | Live signals diverge from the evaluation | Deployed model with usable feedback | No meaningful feedback signal exists |
 
-## 4. Planned cross-case map
+## 4. Similarity / contrast map
 
-| Pattern | Supporting planned cases | Theory/method links | Boundary to test |
+This collection holds 9 authored case(s) and 9 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
+
+## 5. Questions / future-case backlog
+
+Planned commitments, retained without silent deletion:
+
+- `PLAN-05-01-01` — Search relevance recovery. Not authored; no file exists, so no link is offered.
+- `PLAN-05-01-02` — Catalogue enrichment. Not authored; no file exists, so no link is offered.
+- `PLAN-05-01-03` — Recommendation cold start. Not authored; no file exists, so no link is offered.
+- `PLAN-05-01-04` — Checkout funnel diagnosis. Not authored; no file exists, so no link is offered.
+- `PLAN-05-01-05` — Review abuse detection. Not authored; no file exists, so no link is offered.
+- `PLAN-2026-IR021` — Evolve an authorized near-real-time search index safely. Not authored; no file exists, so no link is offered.
+- `PLAN-2026-IR024` — Bound phrase-search memory while preserving exact matches. Not authored; no file exists, so no link is offered.
+- `PLAN-2026-IR029` — Return useful graph candidates under explicit traversal budgets. Not authored; no file exists, so no link is offered.
+- `PLAN-2026-IR032` — Balance autocomplete freshness, memory and abuse controls. Not authored; no file exists, so no link is offered.
+
+## 6. Review / retirement log
+
+| Date | Artifact | Event | Evidence / stage change |
 |---|---|---|---|
-| evaluation-mismatch | All planned cases | Relevant method and evaluation modules | Whether proxy metric changes decision quality |
-| distribution-shift | Market, season, policy, or user changes | Forecasting, MLOps, and domain indexes | Population and operational conditions |
-| human-in-the-loop | High-impact operational cases | Governance, UX, and domain workflows | Review capacity and override quality |
+| 2026-11-10 | [Search relevance recovery after an offline-NDCG rollout](./01_Search_Relevance_Recovery.md) | index regenerated from disk | illustrative / proposed unchanged |
+| 2026-11-10 | [Catalogue enrichment](./02_Catalogue_Enrichment.md) | index regenerated from disk | illustrative / proposed unchanged |
+| 2026-11-10 | [Recommendation cold start](./03_Recommendation_Cold_Start.md) | index regenerated from disk | illustrative / proposed unchanged |
+| 2026-11-10 | [Checkout funnel diagnosis](./04_Checkout_Funnel_Diagnosis.md) | index regenerated from disk | illustrative / proposed unchanged |
+| 2026-11-10 | [Review abuse detection](./05_Review_Abuse_Detection.md) | index regenerated from disk | illustrative / proposed unchanged |
+| 2026-11-10 | [Authorized near-real-time index evolution](./06_Authorized_Near_Real_Time_Index.md) | index regenerated from disk | illustrative / proposed unchanged |
+| 2026-11-10 | [Bounded phrase-search memory](./07_Bounded_Phrase_Search.md) | index regenerated from disk | illustrative / proposed unchanged |
+| 2026-11-10 | [Bounded graph recommendation traversal](./08_Bounded_Graph_Recommendations.md) | index regenerated from disk | illustrative / proposed unchanged |
+| 2026-11-10 | [Autocomplete freshness and abuse controls](./09_Autocomplete_Freshness_Controls.md) | index regenerated from disk | illustrative / proposed unchanged |
 
-## 5. Backlog and review
+## 7. Pre-publish checks
 
-Before drafting any listed case, replace the PLAN ID with a CASE ID, add a relative file link, choose one primary pattern and no more than two secondary patterns, state evidence/stage independently, and set a concrete review trigger. The full 15-section integrated case-study outline is mandatory for each drafted case.
-
-## 6. Pre-publish checks
-
-- [ ] Case ID is unique and linked.
-- [ ] Evidence maturity is distinct from implementation stage.
-- [ ] Decision, metric, action, and outcome refer to the same population.
-- [ ] Assumptions, constraints, failure modes, and a quick-reference card are present.
-- [ ] Company-specific claims have primary/public evidence or are labelled illustrative.
-- [ ] Local links resolve and the review trigger is actionable.
-
-<!-- BEGIN INTERVIEW REFERENCE PLAN -->
-
-## Reference-informed additions to develop
-
-These are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../../00_REFERENCE_INFORMED_CASE_PLAN.md).
-
-| Planning ID | Proposed case brief | Editorial relationship | Type | Decision / business question | Primary pattern | Secondary patterns | Evidence | Stage | Planning reviewed | Result |
-|---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-2026-IR021 | Evolve an authorized near-real-time search index safely | Supporting curriculum; shared brief | hybrid | How should search remain correct across indexing, deletion, ranking and shard failures? | `materialized-view` | `authorization-scope`, `snapshot-consistency` | not-measured | proposed | 2026-11-06 |  |
-| PLAN-2026-IR024 | Bound phrase-search memory while preserving exact matches | Supporting curriculum; shared brief | hybrid | How can common-term phrase queries be evaluated without materializing huge posting lists? | `bounded-work` | `correctness-contract`, `snapshot-consistency` | not-measured | proposed | 2026-11-06 |  |
-| PLAN-2026-IR029 | Return useful graph candidates under explicit traversal budgets | Supporting curriculum; shared brief | incident | How should a recommendation API respond when graph expansion reaches a node, edge, memory or time limit? | `bounded-work` | `correctness-contract`, `incident-postmortem` | not-measured | proposed | 2026-11-06 |  |
-| PLAN-2026-IR032 | Balance autocomplete freshness, memory and abuse controls | Supporting curriculum; shared brief | hybrid | Which terms enter a bounded suggestion index, and how can safe new trends appear promptly? | `materialized-view` | `bounded-work`, `rollout-regression` | not-measured | proposed | 2026-11-06 |  |
-
-### Reference and transfer notes
-
-| Planning ID | Example reference only | Scope boundary |
-|---|---|---|
-| PLAN-2026-IR021 | [REF-IR021](../../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/CASE_STUDIES_04.md) | Exact global top-k needs a valid distributed protocol; figures in the source are scenario claims, not search-cluster benchmarks |
-| PLAN-2026-IR024 | [REF-IR024](../../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/Search/phrase_search_postings.md) | Rarity affects work, not semantic order; deleted documents and analyzer versions must share a consistent snapshot |
-| PLAN-2026-IR029 | [REF-IR029](../../../../../INTERVIEW_CASES/DSA/Production_DSA_Incidents/Graph_Traversal/bounded_bfs_incident.md) | Depth and output-size limits alone do not bound expansion; source product degrees and outage figures are illustrative claims |
-| PLAN-2026-IR032 | [REF-IR032](../../../../../INTERVIEW_CASES/DSA/Sys_Des_DSA/Autocomplete/frequency_admission_and_freshness.md) | Sketches cannot enumerate terms; approximate frequencies and novelty thresholds must be evaluated rather than copied |
-
-Case metadata, pattern definitions, supporting/contrasting references, structured backlog, review log and authoring checks for these additions are maintained in the linked central planning catalog. Existing planned rows elsewhere in this index retain their original status. A brief may be split or merged before canonical case IDs are assigned.
-
-<!-- END INTERVIEW REFERENCE PLAN -->
+- [x] Every catalog row links a file that exists, or is marked planned without a link.
+- [x] Evidence, implementation stage, and editorial status are separate columns.
+- [x] Planned commitments are retained with no silent deletion.
+- [ ] Independent source review of every authored case.
+- [ ] Publication review of every authored case.

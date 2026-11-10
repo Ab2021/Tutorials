@@ -1,33 +1,98 @@
-# Payments, AML and Financial Crime - Cheat Sheets
+# Payments, AML and Financial Crime — Cheat Sheets
 
-> **Mandatory authoring contract:** Every authored sheet must follow the [course authoring and numerical standards](../../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. This is a planned catalog, not completed sheets; expand to all 11 collection-index sections and a final Common Issues artifact (at least 25 complete issues) before publication. A card alone is not a completed sheet.
+## 1. Overview
 
-## Purpose
+This collection carries 12 reference card(s) and 1 troubleshooting artifact(s) for `Payments, AML and Financial Crime`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
-These planned reference cards support repeatable decisions in Payments, AML and Financial Crime. They complement case studies; they do not replace the assumptions, evidence, and evaluation required in a full case.
+## 2. Topic ladder
 
-## Planned references
+| Level | Cards | Purpose |
+|---|---|---|
+| troubleshooting | 25 Common Issues | Diagnose and prevent recurring failures |
 
-| # | Reference | Coverage | Status |
-|---:|---|---|---|
-| 1 | Financial-crime model controls | Decision rules, inputs, metrics, trade-offs, and failure signals. | planned |
-| 2 | Alert quality metrics | Decision rules, inputs, metrics, trade-offs, and failure signals. | planned |
-| 3 | Investigation evidence pack | Decision rules, inputs, metrics, trade-offs, and failure signals. | planned |
+## 3. Quick lookup
 
-## Required card fields
+| If you need to… | Read |
+|---|---|
+| work on payment flow decisioning | [Payment flow decisioning](./01_Payment_Flow_Decisioning.md) |
+| work on fraud detection and capacity-aware thresholds | [Fraud detection and capacity-aware thresholds](./02_Fraud_Detection_and_Thresholds.md) |
+| work on aml transaction monitoring | [AML transaction monitoring](./03_AML_Transaction_Monitoring.md) |
+| work on sanctions screening with name-match uncertainty | [Sanctions screening with name-match uncertainty](./04_Sanctions_Screening.md) |
+| work on conservative entity resolution | [Conservative entity resolution](./05_Entity_Resolution.md) |
+| work on typed fraud graphs and motif signals | [Typed fraud graphs and motif signals](./06_Typed_Fraud_Graphs.md) |
+| work on streaming fraud controls and recovery | [Streaming fraud controls and recovery](./07_Streaming_Fraud_Controls.md) |
+| work on case-management prioritization | [Case-management prioritization](./08_Case_Management.md) |
+| work on investigator evidence ux | [Investigator evidence UX](./09_Investigator_UX.md) |
+| work on financial-crime model-risk controls | [Financial-crime model-risk controls](./10_Model_Risk_Controls.md) |
+| work on privacy-preserving investigation access | [Privacy-preserving investigation access](./11_Privacy_and_Access.md) |
+| work on auditability and evidence reconstruction | [Auditability and evidence reconstruction](./12_Auditability_and_Evidence.md) |
+| diagnose a failure that keeps recurring | [25 Common Issues](./13_25_Common_Issues.md) |
 
-Every card must state: intended decision and reader; preconditions and inputs; default recommendation; metrics/formulas or architecture pattern; trade-offs; failure signals; security/privacy/governance constraints; and links to deeper material. Review tool-, market-, and regulation-sensitive cards quarterly.
+## 4. Reading paths
 
-<!-- BEGIN INTERVIEW REFERENCE PLAN -->
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
 
-## Reference-informed additions to develop
+## 5. Prerequisite skills
 
-These are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../../00_REFERENCE_INFORMED_CASE_PLAN.md).
+| Skill | Why it is needed | Where it is available |
+|---|---|---|
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
 
-| Related brief | Proposed cheat-sheet scope | Checks / counterexamples to include | Reference only | Status |
+## 6. Exclusions and handoffs
+
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
+
+## 7. Master symbol glossary
+
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
+|---|---|---|---|---|---|
+| — | no card defines a symbol yet | — | — | — | — |
+
+## 8. Card directory
+
+| # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
-| PLAN-2026-IR036 | Conservative entity resolution; typed claim-actor graphs; motifs and supernodes; point-in-time features; reversible merges | Temporal baseline comparison, precision at capacity, mature outcomes, sampled low-risk audits and appeal/false-positive slices. Boundary: Connectivity and shared providers are not proof of fraud; source reference notes are unavailable and labels are delayed/selected. | [REF-IR036](../../../../../INTERVIEW_CASES/Graph_Rings/Fraud_Ring_Detection/Claims_Fraud_Ring_Case.md) | planned; not written |
+| 1 | [Payment flow decisioning](./01_Payment_Flow_Decisioning.md) | 2 | DERIVED | draft (lint open) |
+| 2 | [Fraud detection and capacity-aware thresholds](./02_Fraud_Detection_and_Thresholds.md) | 2 | DERIVED | draft (lint open) |
+| 3 | [AML transaction monitoring](./03_AML_Transaction_Monitoring.md) | 2 | DERIVED | draft (lint open) |
+| 4 | [Sanctions screening with name-match uncertainty](./04_Sanctions_Screening.md) | 2 | DERIVED | draft (lint open) |
+| 5 | [Conservative entity resolution](./05_Entity_Resolution.md) | 2 | DERIVED | draft (lint open) |
+| 6 | [Typed fraud graphs and motif signals](./06_Typed_Fraud_Graphs.md) | 2 | DERIVED | draft (lint open) |
+| 7 | [Streaming fraud controls and recovery](./07_Streaming_Fraud_Controls.md) | 2 | DERIVED | draft (lint open) |
+| 8 | [Case-management prioritization](./08_Case_Management.md) | 2 | DERIVED | draft (lint open) |
+| 9 | [Investigator evidence UX](./09_Investigator_UX.md) | 2 | DERIVED | draft (lint open) |
+| 10 | [Financial-crime model-risk controls](./10_Model_Risk_Controls.md) | 2 | DERIVED | draft (lint open) |
+| 11 | [Privacy-preserving investigation access](./11_Privacy_and_Access.md) | 2 | DERIVED | draft (lint open) |
+| 12 | [Auditability and evidence reconstruction](./12_Auditability_and_Evidence.md) | 2 | DERIVED | draft (lint open) |
+| 13 | [25 Common Issues](./13_25_Common_Issues.md) | troubleshooting | DERIVED | draft (lint open) |
 
-Each future cheat sheet needs its own explanation, preconditions, formulas or algorithms where relevant, failure signals and checked examples. Do not copy the interview narrative or its scenario figures into a reference sheet.
+## 9. Common Issues locator
 
-<!-- END INTERVIEW REFERENCE PLAN -->
+- [25 Common Issues](./13_25_Common_Issues.md) — the unit's final troubleshooting artifact; entries use stable `CI-` ids.
+
+## 10. Sources, versions, maintenance
+
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
+
+## 11. Acceptance checklist
+
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [x] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.

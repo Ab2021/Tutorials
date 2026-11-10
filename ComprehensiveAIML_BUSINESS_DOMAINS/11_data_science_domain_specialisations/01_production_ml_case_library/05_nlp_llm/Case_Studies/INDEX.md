@@ -1,74 +1,59 @@
-# NLP, LLM and Document Intelligence - Case Study Collection
-
-> **Authoring contract:** Follow the [course authoring and numerical standards](../../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md). Case evidence, implementation stage and editorial status are separate. The linked RAG case is an unreviewed draft; remaining entries are plans, not completed cases.
+# NLP, LLM and Document Intelligence — Case Studies
 
 ## 1. Collection metadata
 
 | Field | Value |
 |---|---|
 | Collection owner | Curriculum maintainer |
-| Last reviewed | 2026-11-06 (planning catalog only; the new draft is not substantively reviewed) |
-| Review cadence | Quarterly and on material market, security, source or policy change |
-| Index version | 2.1-draft |
-| Canonical case-ID format | CASE-01-05-NNN |
-| Canonical tags | Use the controlled vocabulary below; add synonyms only after review |
-| Source of truth | This directory |
+| Canonical case-ID format | CASE-01-05-001 |
+| Evidence policy | Illustrative teaching inputs are not company results; unsourced claims stay OPEN. |
+| Editorial state | Draft; independent publication review is not claimed. |
+| Acceptance rule | A case row is `authored` only when `Tools/manuscript_lint.py` exits 0 for it. |
+| Review trigger | A source body, decision policy, metric definition, or workload assumption changes. |
 
 ## 2. Case catalog
 
-| Case ID | Case title / relative link | Domain | Case type | Decision / business question | Primary pattern | Secondary pattern(s) | Evidence | Stage | Last reviewed | Key result or limitation |
+| Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| CASE-01-05-001 | [Authorized policy answers with an enterprise knowledge assistant](01_Enterprise_RAG_Knowledge_Assistant.md) | Enterprise policy knowledge | llm-agentic | Whether cited, authorized assistance merits a controlled pilot against manual portal search | authorization-aware-retrieval | evaluation-mismatch; human-in-the-loop | illustrative | proposed | not reviewed | No implementation or outcome measured; editorial status: draft. Replaces PLAN-01-05-01. |
-| PLAN-01-05-02 | LLM content moderation at scale | NLP, LLM and Document Intelligence | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
-| PLAN-01-05-03 | E-commerce semantic search | NLP, LLM and Document Intelligence | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
-| PLAN-01-05-04 | Document entity-extraction pipeline | NLP, LLM and Document Intelligence | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
-| PLAN-01-05-05 | Support-ticket summarisation | NLP, LLM and Document Intelligence | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
+| CASE-01-05-001 | [Authorized policy answers with an enterprise knowledge assistant](./01_Enterprise_RAG_Knowledge_Assistant.md) | NLP, LLM and Document Intelligence | llm-agentic | decision record in the linked case | authorization-aware-retrieval | evaluation-mismatch, human-in-the-loop | illustrative | proposed | null | draft (lint open) |
+| PLAN-01-05-02 | LLM content moderation at scale | NLP, LLM and Document Intelligence | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-01-05-03 | E-commerce semantic search | NLP, LLM and Document Intelligence | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-01-05-04 | Document entity-extraction pipeline | NLP, LLM and Document Intelligence | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-01-05-05 | Support-ticket summarisation | NLP, LLM and Document Intelligence | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
 
 ## 3. Canonical reusable patterns
 
-| Tag | Diagnostic signature | Use when | Boundary |
+| Pattern | Diagnostic signature | Use when | Boundary |
 |---|---|---|---|
-| authorization-aware-retrieval | Relevant-looking passages may be inaccessible, expired, or insufficient | User-specific knowledge retrieval with authoritative permissions and versioned sources | Not a substitute for request-time access checks, source authority, or evidence entailment; see CASE-01-05-001 |
-| data-leakage | Information unavailable at decision time inflates performance | Unexpectedly strong predictive result | Feature is truly available before the cutoff |
-| label-delay | Outcome truth arrives late or changes | Fraud, claims, retention, downstream operational labels | Immediate, stable labels |
-| distribution-shift | Operating population differs from training/evaluation | New market, season, channel, or rollout | Change is sampling noise only |
-| evaluation-mismatch | Offline metric does not represent the business decision | Ranking, forecast, LLM, agent, or multi-objective products | Metric captures decision and guardrails |
-| cost-latency-tradeoff | Quality, cost, and response time conflict | Online, real-time, or edge operation | Cost/latency are non-binding |
-| human-in-the-loop | Qualified review changes risk/quality trade-off | High-impact, uncertain, or regulated work | Review is infeasible or ineffective |
-| rollout-regression | Release degrades a live guardrail despite tests | Canary, A/B, feature-flag, or migration work | No rollout comparison exists |
-| model-monitoring | Production signals reveal drift or degradation | Deployed model/system with feedback | No meaningful feedback signal |
-| causal-confounding | Observational relationship is not intervention effect | Attribution, uplift, promotion, policy decisions | Valid randomization addresses concern |
-| incident-postmortem | Operational impact requires causal reconstruction | Actual incident or replay exercise | No failure event/replay exists |
+| evaluation-mismatch | Offline score does not represent the decision | Ranking, forecast, threshold, agent products | The metric captures decision and guardrails |
+| data-leakage | Information unavailable at decision time inflates a score | Unexpectedly strong offline result | The feature is genuinely available before the cutoff |
+| distribution-shift | Live population differs from training | New market, season, channel, or policy version | The change is sampling noise only |
+| human-in-the-loop | Review capacity or override changes the trade-off | High-impact, uncertain, or regulated work | Review is infeasible or demonstrably ineffective |
+| model-monitoring | Live signals diverge from the evaluation | Deployed model with usable feedback | No meaningful feedback signal exists |
 
-## 4. Cross-case similarity and contrast map
+## 4. Similarity / contrast map
 
-| Pattern | Supporting case(s) | Contrasting case(s) | Theory/methodology link | Boundary learned |
-|---|---|---|---|---|
-| authorization-aware-retrieval | CASE-01-05-001 (illustrative draft) | PLAN-01-05-03 semantic search (planned) | [NLP/LLM topic home](../INDEX.md) | Employee-specific access checks are not necessarily the same as public catalog search. |
-| evaluation-mismatch | CASE-01-05-001 (illustrative draft) | PLAN-01-05-02 moderation (planned) | [Source coverage brief](../../../../00_SOURCE_COVERAGE_DATA_SCIENCE.md#ds-cases-05) | Retrieval coverage, moderation accuracy and employee task outcomes answer different questions. |
-| human-in-the-loop | CASE-01-05-001 (proposed escalation) | PLAN-01-05-04 extraction (planned) | [Course standards](../../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) | Policy-owner interpretation differs from review of extracted fields. |
+This collection holds 1 authored case(s) and 4 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
 
-## 5. Questions and future-case backlog
+## 5. Questions / future-case backlog
 
-| Open question | Originating case | Needed evidence | Proposed next case or experiment | Priority | Owner role | Trigger / review date |
-|---|---|---|---|---|---|---|
-| Does hybrid retrieval improve supported answers over manual search? | CASE-01-05-001 | Frozen role-aware labels and paired comparison | Offline evaluation and approved task study | High | Evaluation lead | Before pilot approval |
-| Can current authorization be enforced during revocation? | CASE-01-05-001 | Entitlement semantics and adversarial revocation fixtures | Security assessment | High | Security owner | Before production data access |
-| Which patterns distinguish moderation from policy answering? | PLAN-01-05-02 | Moderation scope, data and error costs | Bounded moderation case | Medium | Curriculum maintainer | When authored |
+Planned commitments, retained without silent deletion:
 
-## 6. Review and retirement log
+- `PLAN-01-05-02` — LLM content moderation at scale. Not authored; no file exists, so no link is offered.
+- `PLAN-01-05-03` — E-commerce semantic search. Not authored; no file exists, so no link is offered.
+- `PLAN-01-05-04` — Document entity-extraction pipeline. Not authored; no file exists, so no link is offered.
+- `PLAN-01-05-05` — Support-ticket summarisation. Not authored; no file exists, so no link is offered.
 
-| Case ID | Date | What changed | Evidence or market trigger | Action | Owner role |
-|---|---|---|---|---|---|
-| CASE-01-05-001 | 2026-11-07 | Draft authored from the PLAN-01-05-01 topic; no substantive review claimed | Source crosswalk and authoring contract | Await independent editorial and technical review | Curriculum maintainer |
+## 6. Review / retirement log
+
+| Date | Artifact | Event | Evidence / stage change |
+|---|---|---|---|
+| 2026-11-10 | [Authorized policy answers with an enterprise knowledge assistant](./01_Enterprise_RAG_Knowledge_Assistant.md) | index regenerated from disk | illustrative / proposed unchanged |
 
 ## 7. Pre-publish checks
 
-Publication remains pending; the following checks have not been independently completed.
-
-- [ ] Case ID is unique and linked.
-- [ ] Evidence maturity is distinct from implementation stage.
-- [ ] Decision, metric, action, and outcome refer to the same population.
-- [ ] Assumptions, constraints, failure modes, and a quick-reference card are present.
-- [ ] Company-specific claims have primary/public evidence or are labelled illustrative.
-- [ ] Local links resolve and the review trigger is actionable.
+- [x] Every catalog row links a file that exists, or is marked planned without a link.
+- [x] Evidence, implementation stage, and editorial status are separate columns.
+- [x] Planned commitments are retained with no silent deletion.
+- [ ] Independent source review of every authored case.
+- [ ] Publication review of every authored case.

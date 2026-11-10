@@ -1,17 +1,74 @@
-# Part 08 Cheat Sheets â€” Business Domains and Decision Intelligence
+# Part 08 â€” Business Domains and Decision Intelligence — Cheat Sheets
 
-> **Mandatory authoring contract:** Every authored sheet must follow the [course authoring and numerical standards](../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. This is a planned catalog, not completed sheets; expand to all 11 collection-index sections and a final Common Issues artifact (at least 25 complete issues) before publication. A card alone is not a completed sheet.
+## 1. Overview
 
-## Purpose
+This collection carries 0 reference card(s) and 0 troubleshooting artifact(s) for `Part 08 â€” Business Domains and Decision Intelligence`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
-This collection will hold concise, versioned references for the modules in this part. A cheat sheet must link to a deeper module or external canonical source, state its assumptions, and favour decision rules over uncontextualised snippets.
+## 2. Topic ladder
 
-## Planned reference families
+| Level | Cards | Purpose |
+|---|---|---|
+| — | none yet | no card authored in this collection |
 
-- Healthcare, Life Sciences and Biomedical AI: clinical AI evidence rubric; biomedical signal pipeline; human-factors checklist
-- Financial Services, Fraud, Risk and Fintech: fraud feature library; model risk controls; financial metric map
-- Retail, E-Commerce, Media and Personalisation: commerce metric tree; recsys launch checklist; pricing experiment guide
-- Manufacturing, Industrial IoT and Quality AI: industrial AI architecture; maintenance model metrics; OT data checklist
-- Supply Chain, Logistics and Autonomous Operations: supply-chain KPI tree; routing formulation; warehouse robotics readiness
-- Cybersecurity, Security Operations and AI Defense: threat-model template; detection rule guide; AI red-team checklist
-- Energy, Climate, Public Sector and Scientific AI: geospatial ML checklist; public-sector AI assessment; scientific reproducibility guide
+## 3. Quick lookup
+
+| If you need to… | Read |
+|---|---|
+| — | nothing authored yet |
+
+## 4. Reading paths
+
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
+
+## 5. Prerequisite skills
+
+| Skill | Why it is needed | Where it is available |
+|---|---|---|
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
+
+## 6. Exclusions and handoffs
+
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
+
+## 7. Master symbol glossary
+
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
+|---|---|---|---|---|---|
+| — | no card defines a symbol yet | — | — | — | — |
+
+## 8. Card directory
+
+| # | Card | Level | Evidence | Status |
+|---|---|---|---|---|
+| — | none | — | — | — |
+
+## 9. Common Issues locator
+
+- Not yet authored. The collection is incomplete until this artifact exists with at least 25 distinct issues.
+
+## 10. Sources, versions, maintenance
+
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
+
+## 11. Acceptance checklist
+
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.

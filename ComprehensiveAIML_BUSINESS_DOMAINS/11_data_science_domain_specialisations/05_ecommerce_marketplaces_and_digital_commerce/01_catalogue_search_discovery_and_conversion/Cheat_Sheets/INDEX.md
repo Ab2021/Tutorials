@@ -1,36 +1,79 @@
-# Catalogue, Search, Discovery and Conversion - Cheat Sheets
+# Catalogue, Search, Discovery and Conversion — Cheat Sheets
 
-> **Mandatory authoring contract:** Every authored sheet must follow the [course authoring and numerical standards](../../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. This is a planned catalog, not completed sheets; expand to all 11 collection-index sections and a final Common Issues artifact (at least 25 complete issues) before publication. A card alone is not a completed sheet.
+## 1. Overview
 
-## Purpose
+This collection carries 3 reference card(s) and 1 troubleshooting artifact(s) for `Catalogue, Search, Discovery and Conversion`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
-These planned reference cards support repeatable decisions in Catalogue, Search, Discovery and Conversion. They complement case studies; they do not replace the assumptions, evidence, and evaluation required in a full case.
+## 2. Topic ladder
 
-## Planned references
+| Level | Cards | Purpose |
+|---|---|---|
 
-| # | Reference | Coverage | Status |
-|---:|---|---|---|
-| 1 | E-commerce search scorecard | Decision rules, inputs, metrics, trade-offs, and failure signals. | planned |
-| 2 | Catalogue quality rules | Decision rules, inputs, metrics, trade-offs, and failure signals. | planned |
-| 3 | Conversion funnel guide | Decision rules, inputs, metrics, trade-offs, and failure signals. | planned |
+## 3. Quick lookup
 
-## Required card fields
+| If you need to… | Read |
+|---|---|
+| work on e-commerce search scorecard | [E-commerce search scorecard](./01_Ecommerce_Search_Scorecard.md) |
+| work on catalogue quality and discovery controls | [Catalogue quality and discovery controls](./02_Catalogue_Quality_and_Discovery_Controls.md) |
+| work on conversion, checkout, fraud and experimentation | [Conversion, checkout, fraud and experimentation](./03_Conversion_Checkout_Fraud_and_Experimentation.md) |
+| diagnose a failure that keeps recurring | [01 catalogue search discovery and conversion — 25 Common Issues](./04_25_Common_Issues.md) |
 
-Every card must state: intended decision and reader; preconditions and inputs; default recommendation; metrics/formulas or architecture pattern; trade-offs; failure signals; security/privacy/governance constraints; and links to deeper material. Review tool-, market-, and regulation-sensitive cards quarterly.
+## 4. Reading paths
 
-<!-- BEGIN INTERVIEW REFERENCE PLAN -->
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
 
-## Reference-informed additions to develop
+## 5. Prerequisite skills
 
-These are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../../00_REFERENCE_INFORMED_CASE_PLAN.md).
+| Skill | Why it is needed | Where it is available |
+|---|---|---|
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
 
-| Related brief | Proposed cheat-sheet scope | Checks / counterexamples to include | Reference only | Status |
+## 6. Exclusions and handoffs
+
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
+
+## 7. Master symbol glossary
+
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
+|---|---|---|---|---|---|
+| — | no card defines a symbol yet | — | — | — | — |
+
+## 8. Card directory
+
+| # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
-| PLAN-2026-IR021 | WAL and immutable segments; positional phrase queries; field-weighted BM25; exact top-k; ACLs and tombstones | Brute-force Boolean/phrase and global top-k oracles, delete visibility, retrieval quality, index lag and merge capacity. Boundary: Exact global top-k needs a valid distributed protocol; figures in the source are scenario claims, not search-cluster benchmarks. | [REF-IR021](../../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/CASE_STUDIES_04.md) | planned; not written |
-| PLAN-2026-IR024 | Rarest-term anchor; lazy postings; skips; relative positions; repeated terms; matching analyzers | Brute-force token-position oracle, peak memory and tail latency over frequent and repeated-term phrases. Boundary: Rarity affects work, not semantic order; deleted documents and analyzer versions must share a consistent snapshot. | [REF-IR024](../../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/Search/phrase_search_postings.md) | planned; not written |
-| PLAN-2026-IR029 | Enqueue-time deduplication; paged adjacency; independent work budgets; deterministic traversal; explicit partial results | High-degree and cyclic graph replays, peak memory, examined edges, output completeness and candidate utility. Boundary: Depth and output-size limits alone do not bound expansion; source product degrees and outage figures are illustrative claims. | [REF-IR029](../../../../../INTERVIEW_CASES/DSA/Production_DSA_Incidents/Graph_Traversal/bounded_bfs_incident.md) | planned; not written |
-| PLAN-2026-IR032 | Trie admission; time-window sketches; bounded candidate stores; immutable snapshots; real-time overlays; CDN versioning | Memory including two generations, suggestion relevance, freshness lag, abusive-query tests and per-locale tail latency. Boundary: Sketches cannot enumerate terms; approximate frequencies and novelty thresholds must be evaluated rather than copied. | [REF-IR032](../../../../../INTERVIEW_CASES/DSA/Sys_Des_DSA/Autocomplete/frequency_admission_and_freshness.md) | planned; not written |
+| 1 | [E-commerce search scorecard](./01_Ecommerce_Search_Scorecard.md) | 2 | DERIVED | draft (lint open) |
+| 2 | [Catalogue quality and discovery controls](./02_Catalogue_Quality_and_Discovery_Controls.md) | 2 | DERIVED | draft (lint open) |
+| 3 | [Conversion, checkout, fraud and experimentation](./03_Conversion_Checkout_Fraud_and_Experimentation.md) | 2 | DERIVED | draft (lint open) |
+| 4 | [01 catalogue search discovery and conversion — 25 Common Issues](./04_25_Common_Issues.md) | 3 | DERIVED | draft (lint open) |
 
-Each future cheat sheet needs its own explanation, preconditions, formulas or algorithms where relevant, failure signals and checked examples. Do not copy the interview narrative or its scenario figures into a reference sheet.
+## 9. Common Issues locator
 
-<!-- END INTERVIEW REFERENCE PLAN -->
+- [01 catalogue search discovery and conversion — 25 Common Issues](./04_25_Common_Issues.md) — the unit's final troubleshooting artifact; entries use stable `CI-` ids.
+
+## 10. Sources, versions, maintenance
+
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
+
+## 11. Acceptance checklist
+
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [x] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.

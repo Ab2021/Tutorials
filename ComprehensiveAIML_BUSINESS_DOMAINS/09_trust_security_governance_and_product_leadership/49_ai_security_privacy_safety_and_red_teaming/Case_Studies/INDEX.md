@@ -1,53 +1,54 @@
-# Module 49 Case Studies — AI Security, Privacy, Safety and Red Teaming
-
-> **Collection status:** draft. Follow the [course standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [case master](../../../../Templates/CASE_STUDY_CONTENT_MASTER_TEMPLATE.md). An index row is not a completed case; evidence level, implementation stage, and editorial state are independent.
+# Module 49 â€” AI Security, Privacy, Safety and Red Teaming — Case Studies
 
 ## 1. Collection metadata
 
-**Domain:** AI security, privacy, safety, and red teaming. **Purpose:** bounded decisions about tool-enabled AI risk. **Case types:** `llm-agentic`, `incident`, and `analytical` as appropriate. **Evidence policy:** new examples are illustrative or not-measured unless a primary source is cited at claim level. **Source scope:** [directory inventory, lines 86–94](../../../../Templates/directory.txt), [trust brief](../../../00_SOURCE_COVERAGE_AGENTS.md#agent-trust-approvals), and [safety brief](../../../00_SOURCE_COVERAGE_CUDA_TRAINING.md#ft-safety); source bodies are **OPEN / unavailable for review**, so no catalog row claims source-derived implementation evidence.
+| Field | Value |
+|---|---|
+| Collection owner | Curriculum maintainer |
+| Canonical case-ID format | CASE-49-001 |
+| Evidence policy | Illustrative teaching inputs are not company results; unsourced claims stay OPEN. |
+| Editorial state | Draft; independent publication review is not claimed. |
+| Acceptance rule | A case row is `authored` only when `Tools/manuscript_lint.py` exits 0 for it. |
+| Review trigger | A source body, decision policy, metric definition, or workload assumption changes. |
 
 ## 2. Case catalog
 
-| Case ID | Linked title | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result/limitation | Editorial status |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| CASE-49-001 | [Approval-bound export for a retrieval assistant](01_Agent_Data_Exfiltration_Simulation.md) | data export | llm-agentic | permit bounded export or retain manual baseline | authorization-scope | approval-payload-binding; evaluation-mismatch | illustrative | proposed | null | canonical draft; synthetic local simulator only; no execution/outcome measured | draft |
-| CASE-49-002 | Secure RAG design review | retrieval | llm-agentic | select retrieval/authorization boundary | authorization-scope | data-leakage | not-measured | proposed | null | planned | planned |
-| CASE-49-003 | Tenant adapter isolation | model customization | llm-agentic | train/select/rollback tenant adapter | authorization-scope | atomic-release-bundle; rollout-regression | not-measured | proposed | null | PLAN-2026-IR004 reference only | planned |
-| CASE-49-004 | Release evaluation gate | safety evaluation | llm-agentic | promote candidate after required suites | evaluation-mismatch | data-leakage; rollout-regression | not-measured | proposed | null | PLAN-2026-IR008 reference only | planned |
+| Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
+|---|---|---|---|---|---|---|---|---|---|---|
+| CASE-49-001 | [Approval-bound export for a retrieval assistant](./01_Agent_Data_Exfiltration_Simulation.md) | Module 49 â€” AI Security, Privacy, Safety and Red Teaming | llm-agentic | decision record in the linked case | authorization-scope | approval-payload-binding, evaluation-mismatch | illustrative | proposed | null | draft (lint open) |
+| CASE-49-002 | [Secure RAG design review: deciding where the authorization boundary belongs](./Secure_RAG_design_review.md) | Module 49 â€” AI Security, Privacy, Safety and Red Teaming | llm-agentic | decision record in the linked case | authorization-scope | data-leakage, evaluation-mismatch | not-measured | proposed | null | draft (lint open) |
+| CASE-49-003 | [Tenant adapter isolation in a shared multi-adapter serving pool](./Tenant_adapter_isolation.md) | Module 49 â€” AI Security, Privacy, Safety and Red Teaming | llm-agentic | decision record in the linked case | authorization-scope | atomic-release-bundle, rollout-regression | illustrative | proposed | null | draft (lint open) |
 
 ## 3. Canonical reusable patterns
 
-| Pattern | Mechanism | Use when | Do not infer |
+| Pattern | Diagnostic signature | Use when | Boundary |
 |---|---|---|---|
-| authorization-scope | executor checks authenticated principal, tenant, purpose, quota, expiry | an AI proposal can cause effect | prompt text grants authority |
-| approval-payload-binding | reviewer sees and approves exact canonical payload | human decision is required | digest establishes semantic correctness |
-| evaluation-mismatch | oracle measures committed effect and benign task behavior | release score may hide harm | passing suite proves safety |
-| data-leakage | enforce time/tenant/purpose boundary through lineage | retrieval/adapters/evaluation may mix scope | filter name proves isolation |
-| atomic-release-bundle | promote compatible policy/model/tool/index state together | components interact | an alias rollback is sufficient |
+| evaluation-mismatch | Offline score does not represent the decision | Ranking, forecast, threshold, agent products | The metric captures decision and guardrails |
+| data-leakage | Information unavailable at decision time inflates a score | Unexpectedly strong offline result | The feature is genuinely available before the cutoff |
+| distribution-shift | Live population differs from training | New market, season, channel, or policy version | The change is sampling noise only |
+| human-in-the-loop | Review capacity or override changes the trade-off | High-impact, uncertain, or regulated work | Review is infeasible or demonstrably ineffective |
+| model-monitoring | Live signals diverge from the evaluation | Deployed model with usable feedback | No meaningful feedback signal exists |
 
 ## 4. Similarity / contrast map
 
-CASE-49-001 and CASE-49-002 share tool/retrieval trust boundaries; the first focuses on an export effect, the second on secure information access. CASE-49-003 focuses on adapter/session isolation rather than tool execution. CASE-49-004 focuses on evidence for promotion rather than runtime authorization. All require an explicit baseline and a denial/recovery trace; none may claim a company outcome from the planning references.
+This collection holds 3 authored case(s) and 0 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
 
 ## 5. Questions / future-case backlog
 
-- What secure-RAG access policy handles document revocation during a live session?
-- Which tenant adapter artifact tuple must be pinned at inference and rollback?
-- What evaluation manifest constitutes a critical safety gate, and which failures are inconclusive?
-- How should an incident case distinguish model text harm from committed external harm?
-- Which visible safety source topic requires a separate case rather than a supporting sheet?
+No unfulfilled case commitment is recorded for this collection.
 
 ## 6. Review / retirement log
 
-| Date | Item | Review event | Outcome | Trigger for recheck |
-|---|---|---|---|---|
-| 2026-11-09 | CASE-49-001 | authored illustrative draft | not reviewed; no result measured | any executor/identity/policy change |
-| 2026-11-09 | CASE-49-002–004 | catalog reconciliation | planned only | authoring begins |
+| Date | Artifact | Event | Evidence / stage change |
+|---|---|---|---|
+| 2026-11-10 | [Approval-bound export for a retrieval assistant](./01_Agent_Data_Exfiltration_Simulation.md) | index regenerated from disk | illustrative / proposed unchanged |
+| 2026-11-10 | [Secure RAG design review: deciding where the authorization boundary belongs](./Secure_RAG_design_review.md) | index regenerated from disk | not-measured / proposed unchanged |
+| 2026-11-10 | [Tenant adapter isolation in a shared multi-adapter serving pool](./Tenant_adapter_isolation.md) | index regenerated from disk | illustrative / proposed unchanged |
 
 ## 7. Pre-publish checks
 
-- [x] Original two case rows retained; reference-informed cases crosswalked.
-- [x] One bounded illustrative case links its supporting sheets and declares evidence boundary.
-- [ ] Every catalog case has 15 full sections, 12–18 fully developed interview answers, checked arithmetic/traces, and at least 1,000 substantive lines.
-- [ ] All case claims have primary evidence or remain expressly illustrative/not-measured.
-- [ ] Local navigation and artifacts have been independently reviewed; no case is published.
+- [x] Every catalog row links a file that exists, or is marked planned without a link.
+- [x] Evidence, implementation stage, and editorial status are separate columns.
+- [x] Planned commitments are retained with no silent deletion.
+- [ ] Independent source review of every authored case.
+- [ ] Publication review of every authored case.

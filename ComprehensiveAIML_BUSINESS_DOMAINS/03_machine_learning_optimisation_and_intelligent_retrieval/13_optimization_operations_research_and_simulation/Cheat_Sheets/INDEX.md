@@ -1,91 +1,87 @@
-# Module 13 Cheat Sheets — Optimisation, Operations Research and Simulation
+# Module 13 â€” Optimisation, Operations Research and Simulation — Cheat Sheets
 
 ## 1. Overview
 
-This collection teaches how to state a constrained operational decision before selecting an exact solver, constructive rule, heuristic, or simulation. It serves analysts who must show what is feasible, which objective is being optimized, and how a result changes when a capacity, interval, or stochastic assumption changes. Readiness means the learner can formulate variables, units and constraints; calculate or trace the claimed method; reject an invalid formulation; and return an explicit infeasibility or uncertainty boundary. Individual teaching artifacts are governed by the [course standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [cheat-sheet template](../../../../Templates/CHEAT_SHEET_CONTENT_MASTER_TEMPLATE.md).
+This collection carries 7 reference card(s) and 0 troubleshooting artifact(s) for `Module 13 â€” Optimisation, Operations Research and Simulation`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
-## 2. Topic Ladder
+## 2. Topic ladder
 
-| Level | File | Testable outcome | Prerequisites | Status |
-|---|---|---|---|---|
-| 1 | `01_optimisation_formulation.md` | express a decision as variables, objective and constraints; interpret a dual/bound | algebra; inequalities | registered |
-| 1 | `02_solver_selection.md` | select an exact, heuristic, or simulation approach from required guarantees | formulation | registered |
-| 1 | `03_simulation_experiment_plan.md` | specify events, warm-up, replications and uncertainty | probability; queues | registered |
-| 2 | `04_network_and_scheduling_models.md` | trace conservation, cuts and precedence feasibility | formulation; graphs | registered |
-| 2 | `05_integer_programming.md` | formulate binaries and interpret relaxation/branch certificates | formulation | registered |
-| 2 | `06_metaheuristics.md` | compare neighborhood search and multi-start evidence without calling it optimal | formulation; probability | registered |
-| 2 | [07 Interval greedy and weighted scheduling](07_interval_greedy_and_weighted_scheduling.md) | select cardinality greedy or weighted DP under declared interval semantics | sorting; induction; DP | draft; unreviewed |
-| Final | `08_25_Common_Issues.md` | diagnose 25 distinct formulation, numerical, scale and concept failures | all prior files | registered |
-
-## 3. Quick Topic Lookup
-
-| Question | File / section | Use condition | Failure warning |
-|---|---|---|---|
-| What is a valid optimization model? | `01`, §3–§5 | decision variables and units are known | a verbal objective is not a constraint |
-| Must a result be proven optimal? | `02`, §7 | guarantee requirements are explicit | a good heuristic trace is not a certificate |
-| Is queue performance stable? | `03`, §4–§5 | event and warm-up rules are fixed | one run cannot quantify stochastic uncertainty |
-| Are touching appointments compatible? | [07, §3–§5](07_interval_greedy_and_weighted_scheduling.md#3-foundational-definitions) | endpoint convention is contractual | a buffer changes predecessor links |
-| Why did a schedule change across runs? | [07, §3.5](07_interval_greedy_and_weighted_scheduling.md#35-determinism-ties-and-the-audit-record) | ties exist | unspecified sort/reconstruction breaks reproducibility |
-
-## 4. Reading Paths — Three Options
-
-- **Beginner:** formulation → solver selection → simulation plan. Objective: formulate a bounded decision and state evidence needed to choose a method.
-- **Practitioner:** Beginner path → network/scheduling → integer programming → interval scheduling. Objective: diagnose feasibility and select a defendable solver/algorithm.
-- **Advanced:** all files in ladder order → metaheuristics → Common Issues → module cases. Objective: defend certificates, stochastic assumptions and changed-constraint behavior.
-
-## 5. Prerequisite Skills
-
-| Skill | Why needed | Handoff |
+| Level | Cards | Purpose |
 |---|---|---|
-| Algebra, inequalities and units | constraints and dual interpretation | Module 05 mathematical foundations |
-| Graph traversal and sorting | flow/scheduling construction | Part 01 algorithms |
-| Probability and confidence intervals | simulation uncertainty | Module 05 statistics |
-| Event time and business calendars | interval and queue contracts | Module 06 data modelling |
+| foundation | Optimisation formulation and duality | Build from prerequisites to production judgement |
+| advanced | Network and Scheduling Models | Build from prerequisites to production judgement |
 
-## 6. What This Collection Does NOT Cover
+## 3. Quick lookup
 
-This collection does not claim that an illustrative model is an executed dispatch, labor, routing, or solver deployment. It does not replace safety analysis, legal labor constraints, contract-specific calendars, nonlinear global optimization, or a measured workload benchmark. Such facts require their own evidence and decision owner.
+| If you need to… | Read |
+|---|---|
+| work on optimisation formulation and duality | [Optimisation formulation and duality](./01_optimisation_formulation.md) |
+| work on solver selection | [Solver selection](./02_solver_selection.md) |
+| work on simulation experiment plan | [Simulation experiment plan](./03_simulation_experiment_plan.md) |
+| work on network and scheduling models | [Network and Scheduling Models](./04_network_and_scheduling_models.md) |
+| work on integer programming | [Integer programming](./05_integer_programming.md) |
+| work on metaheuristics | [Metaheuristics](./06_metaheuristics.md) |
+| work on interval greedy and weighted scheduling | [Interval Greedy and Weighted Scheduling](./07_interval_greedy_and_weighted_scheduling.md) |
 
-## 7. Master Symbol Glossary
+## 4. Reading paths
 
-| Symbol/term | Meaning | Units/type | Valid range | First use |
-|---|---|---|---|---|
-| `x` | decision-variable vector | scalar/vector | stated domain | `01` |
-| `c` | objective coefficient vector | value per variable unit | finite stated values | `01` |
-| `A x <= b` | linear resource constraints | compatible matrix/vector | dimensions agree | `01` |
-| `z` | objective value | value units | objective-specific | `01` |
-| `[s_i,f_i)` | job occupancy interval | timestamps | `s_i < f_i` | [07 §3](07_interval_greedy_and_weighted_scheduling.md#3-foundational-definitions) |
-| `w_i` | additive job value | value units | explicitly stated | [07 §3](07_interval_greedy_and_weighted_scheduling.md#3-foundational-definitions) |
-| `p(i)` | latest compatible predecessor index | integer | `0 <= p(i) < i` | [07 §4](07_interval_greedy_and_weighted_scheduling.md#4-core-formulas-with-full-derivation) |
-| `OPT(i)` | best value through finish-sorted job `i` | value units | nondecreasing if values nonnegative | [07 §4](07_interval_greedy_and_weighted_scheduling.md#4-core-formulas-with-full-derivation) |
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
 
-## 8. Quick Reference Card Directory
+## 5. Prerequisite skills
 
-| File | Card | Core rule | Critical assumption | Avoid when |
-|---|---|---|---|---|
-| `07` | Section 12 card not yet authored in the interrupted draft | earliest finish maximizes cardinality; recurrence maximizes additive value | one resource and declared compatibility | treating the existing derivation as a completed final card |
-| `01`–`06` | planned | no card available | artifact not authored | treating a title as a reference card |
-
-## 9. Common Issues Locator
-
-`08_25_Common_Issues.md` is registered but not authored. It must contain 25 distinct, complete issues across `VIOLATED_ASSUMPTION`, `NUMERICAL_EDGE`, `SCALE_FAILURE`, and `CONCEPT_CONFUSION`, with diagnostics, mitigations, risks and verification. The five localized failure rows in [07 §8](07_interval_greedy_and_weighted_scheduling.md#8-failure-modes--edge-cases) are not the final collection artifact.
-
-## 10. Empirical Sources, Versions and Collection Maintenance
-
-| Artifact | Source/evidence state | Review trigger |
+| Skill | Why it is needed | Where it is available |
 |---|---|---|
-| [07](07_interval_greedy_and_weighted_scheduling.md) | DERIVED recurrence/exchange reasoning; ILLUSTRATIVE jobs; locally documented hand trace; original source body OPEN | endpoint semantics, value objective, buffer rule, or tie policy changes |
-| `01`–`06`, `08` | registered destinations; no authored evidence | artifact is authored or primary sources are obtained |
-| IR025 | [REF-IR025 plan](../../../00_REFERENCE_INFORMED_CASE_PLAN.md#ref-ir025-choose-scheduling-algorithms-from-objective-and-constraints) is scope only | source access or plan changes |
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
 
-No artifact is independently reviewed or published on the basis of this index.
+## 6. Exclusions and handoffs
 
-## 11. Collection Acceptance Checklist
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
 
-- [x] Original three reference families and five module outcomes have stable destinations.
-- [x] IR025 mechanisms are mapped to the existing interval-scheduling draft without claiming source access.
-- [x] Draft card and localized failure anchors are navigable for file 07.
-- [ ] Files 01–06 each have a substantive 12-section teaching artifact.
-- [ ] File 07 reaches the course substantive-depth gate and passes independent technical review.
-- [ ] File 08 contains 25 complete, distinct diagnostics and a final Section 12 card.
-- [ ] Collection arithmetic, links, sources and editorial states have independent review.
+## 7. Master symbol glossary
+
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
+|---|---|---|---|---|---|
+| — | no card defines a symbol yet | — | — | — | — |
+
+## 8. Card directory
+
+| # | Card | Level | Evidence | Status |
+|---|---|---|---|---|
+| 1 | [Optimisation formulation and duality](./01_optimisation_formulation.md) | foundation | DERIVED | draft (lint open) |
+| 2 | [Solver selection](./02_solver_selection.md) | 2 | DERIVED | draft (lint open) |
+| 3 | [Simulation experiment plan](./03_simulation_experiment_plan.md) | 2 | DERIVED | draft (lint open) |
+| 4 | [Network and Scheduling Models](./04_network_and_scheduling_models.md) | advanced | DERIVED | draft (lint open) |
+| 5 | [Integer programming](./05_integer_programming.md) | 2 | DERIVED | draft (lint open) |
+| 6 | [Metaheuristics](./06_metaheuristics.md) | 2 | DERIVED | draft (lint open) |
+| 7 | [Interval Greedy and Weighted Scheduling](./07_interval_greedy_and_weighted_scheduling.md) | 2 | DERIVED | draft (lint open) |
+
+## 9. Common Issues locator
+
+- Not yet authored. The collection is incomplete until this artifact exists with at least 25 distinct issues.
+
+## 10. Sources, versions, maintenance
+
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
+
+## 11. Acceptance checklist
+
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.

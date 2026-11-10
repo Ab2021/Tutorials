@@ -1,76 +1,74 @@
-# Part 03 Cheat Sheets — Machine Learning, Optimisation and Intelligent Retrieval
+# Part 03 — Machine Learning, Optimisation and Intelligent Retrieval — Cheat Sheets
 
 ## 1. Overview
 
-This is the cross-module navigation layer for reusable prediction, discovery, optimisation, retrieval, graph, and privacy decision methods. Module collections contain the teaching artifacts; this index does not turn a planned title into a completed sheet. Readiness means a learner can locate the appropriate module method, state its input/output contract, calculate or trace its key mechanism, and identify the failure that requires a different method. [Course standards](../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the [master sheet template](../../../Templates/CHEAT_SHEET_CONTENT_MASTER_TEMPLATE.md) apply.
+This collection carries 0 reference card(s) and 0 troubleshooting artifact(s) for `Part 03 — Machine Learning, Optimisation and Intelligent Retrieval`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
-## 2. Topic Ladder
+## 2. Topic ladder
 
-| Level | Module collection | Focus | Status |
-|---|---|---|---|
-| Foundation | [11 Supervised ML](../11_supervised_ml_and_feature_engineering/Cheat_Sheets/INDEX.md) | contracts, features, loss, calibration, validation | one draft; remainder planned |
-| Foundation | [12 Unsupervised ML](../12_unsupervised_ml_anomaly_detection_and_segmentation/Cheat_Sheets/INDEX.md) | clustering, anomaly, change, review | one draft; remainder planned |
-| Core | [13 Optimisation](../13_optimization_operations_research_and_simulation/Cheat_Sheets/INDEX.md) | formulation, solvers, scheduling, simulation | planned |
-| Core | [14 Ranking/Search](../14_recommendation_search_ads_and_ranking/Cheat_Sheets/INDEX.md) | candidates, ranking, retrieval, experiments | planned |
-| Advanced | [15 Graph ML](../15_graph_ml_knowledge_graphs_and_network_analytics/Cheat_Sheets/INDEX.md) | graph modelling, GNNs, knowledge graphs | one short draft; remainder planned |
-| Advanced | [16 Privacy ML](../16_privacy_preserving_ml_and_federated_learning/Cheat_Sheets/INDEX.md) | threat models, DP, federation, secure aggregation | planned |
+| Level | Cards | Purpose |
+|---|---|---|
+| — | none yet | no card authored in this collection |
 
-## 3. Quick Topic Lookup
+## 3. Quick lookup
 
-| Question | Home | Exact use condition | Failure warning |
-|---|---|---|---|
-| “Is a feature available at decision time?” | [M11 validation](../11_supervised_ml_and_feature_engineering/Cheat_Sheets/01_Model_Validation_and_Error_Analysis.md) | prediction time and lineage known | source date is not availability |
-| “Which anomaly method fits review capacity?” | [M12](../12_unsupervised_ml_anomaly_detection_and_segmentation/Cheat_Sheets/INDEX.md) | labels may be incomplete | anomaly score is not proof of fraud |
-| “Can this plan meet constraints?” | [M13](../13_optimization_operations_research_and_simulation/Cheat_Sheets/INDEX.md) | variables/objective/constraints explicit | infeasibility needs a certificate/explanation |
-| “Did ranking change user value?” | [M14](../14_recommendation_search_ads_and_ranking/Cheat_Sheets/INDEX.md) | exposure and randomization defined | offline relevance is not online causality |
-| “Can graph evidence transfer?” | [M15](../15_graph_ml_knowledge_graphs_and_network_analytics/Cheat_Sheets/INDEX.md) | graph snapshot/time boundary explicit | future edges leak |
-| “What privacy guarantee applies?” | [M16](../16_privacy_preserving_ml_and_federated_learning/Cheat_Sheets/INDEX.md) | threat and release mechanism specified | encryption alone is not DP |
+| If you need to… | Read |
+|---|---|
+| — | nothing authored yet |
 
-## 4. Reading Paths — Three Options
+## 4. Reading paths
 
-- **Beginner:** M11 validation → M12 anomaly triage → M13 formulation. Goal: define a decision and evaluate evidence.
-- **Practitioner:** Beginner path → M14 ranking → M15 graph evaluation → M16 threat modelling. Goal: select and challenge an operational approach.
-- **Advanced:** all six module collections in numerical order, then their case collections. Goal: compose methods without confusing evidence, optimization, and privacy boundaries.
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
 
-## 5. Prerequisite Skills
+## 5. Prerequisite skills
 
-Probability and rates; linear algebra and basic algorithms; SQL-like point-in-time joins; event-time semantics; and decision costs/capacity. Module prerequisites are linked in each module INDEX. These are handoffs, not evidence that every prior lesson is complete.
+| Skill | Why it is needed | Where it is available |
+|---|---|---|
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
 
-## 6. What This Collection Does NOT Cover
+## 6. Exclusions and handoffs
 
-This index does not provide legal advice, certify fairness or security, replace causal evaluation, or claim a system has been deployed. Hardware-specific training, agents, and domain-specialisation cases have separate course homes.
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
 
-## 7. Master Symbol Glossary
+## 7. Master symbol glossary
 
-| Symbol | Meaning | Units/type | Domain | Home |
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
+|---|---|---|---|---|---|
+| — | no card defines a symbol yet | — | — | — | — |
+
+## 8. Card directory
+
+| # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
-| `Y` | outcome/label | binary or numeric | stated horizon | M11 |
-| `tau` | action threshold | score units | policy-specific | M11 |
-| `x` | decision features | vector | point-in-time available | M11 |
-| `C` | capacity | actions per interval | non-negative | M11/M12/M15 |
-| `G=(V,E)` | graph snapshot | nodes/edges | time-bounded | M15 |
-| `epsilon` | DP privacy parameter | dimensionless | mechanism-specific | M16 planned |
+| — | none | — | — | — |
 
-## 8. Quick Reference Card Directory
+## 9. Common Issues locator
 
-| Card | File | Rule | Critical assumption | Avoid when |
-|---|---|---|---|---|
-| Validation card | [M11 §12](../11_supervised_ml_and_feature_engineering/Cheat_Sheets/01_Model_Validation_and_Error_Analysis.md#12-quick-reference-card) | evaluate the future decision procedure | timestamps and labels are known | final holdout influenced selection |
-| Other cards | module indexes above | planned | no card exists yet | treating catalog titles as cards |
+- Not yet authored. The collection is incomplete until this artifact exists with at least 25 distinct issues.
 
-## 9. Common Issues Locator
+## 10. Sources, versions, maintenance
 
-No part-level Common Issues file exists. Each module's final troubleshooting artifact is planned and must contain at least 25 complete issues under the master template. Existing draft failure tables are not substitutes.
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
 
-## 10. Empirical Sources, Versions and Collection Maintenance
+## 11. Acceptance checklist
 
-The visible [directory inventory](../../../Templates/directory.txt) and [source crosswalk](../../00_SOURCE_TOPIC_CROSSWALK.md) establish scope only. The graph-source brief assigns four direct technical titles to M15; IR025 belongs M13; IR018/020/021/024/029/032 extend M14; IR029/036 extend M15. New factual claims require primary references recorded in the individual artifact. Recheck navigation when module status, source assignment, or a prerequisite changes.
-
-## 11. Collection Acceptance Checklist
-
-- [x] Six module collection homes and original 18 reference families are navigable.
-- [x] Direct source/addition ownership is stated without inventing source access.
-- [ ] Every referenced family has a substantive individual sheet.
-- [ ] Part-level final troubleshooting file exists with 25 complete issues.
-- [ ] Every individual sheet meets the full 12-section, 1,000-substantive-line gate.
-- [ ] Independent navigation, numerical and editorial review is recorded.
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.

@@ -1039,7 +1039,7 @@ begin with model architecture and arrive at the decision contract last usually r
 | Connection | Why it matters here |
 |---|---|
 | [Fraud Triage and Review Controls](../Cheat_Sheets/01_Fraud_Triage_and_Review_Controls.md) | Queue capacity, review contracts and reconciliation mechanics used in §6.4 and §8.3. |
-| [Underwriting Model Governance Review](02_underwriting_model_governance_review.md) | Same calibration and model-risk questions with a slower decision cadence and different adverse-action constraints. |
+| Underwriting model governance review (planned in `INDEX.md`; not yet authored) | Same calibration and model-risk questions with a slower decision cadence and different adverse-action constraints. |
 | Module 09 (trust, security, governance) | Authority boundary and audit-evidence patterns behind C-03. |
 | Module 15/16 (statistics and evaluation) | Calibration, label maturity and the standard-error reasoning in §9.3. |
 

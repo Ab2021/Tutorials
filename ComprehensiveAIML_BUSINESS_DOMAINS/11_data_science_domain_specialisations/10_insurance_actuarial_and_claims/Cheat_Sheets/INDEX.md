@@ -1,62 +1,73 @@
-# Insurance, Actuarial and Claims — Cross-Domain Cheat Sheets
+# Insurance, Actuarial and Claims — Cheat Sheets
 
 ## 1. Overview
-This collection is for reusable controls spanning pricing, claims, and model operations. It teaches an analyst to specify a model's intended use, preserve a release decision, and distinguish a monitored signal from proof of correctness. It assumes the domain sheets' insurance vocabulary and does not provide actuarial, legal, or regulatory advice. Readiness means a reader can reconstruct an approval, change, monitoring, and recovery decision from retained evidence.
+
+This collection carries 1 reference card(s) and 0 troubleshooting artifact(s) for `Insurance, Actuarial and Claims`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
 ## 2. Topic ladder
-| Level | File | Testable outcome | Prerequisites | Status |
-|---|---|---|---|---|
-| Core | [01 Insurance Model Risk and Change Control](01_Insurance_Model_Risk_and_Change_Control.md) | Classify a proposed change and specify evidence, owner, monitor, and rollback boundary. | Basic model lifecycle and decision logging. | Draft; below 1,000 lines, with independent substantive review open. |
-| Advanced | Model-risk governance and explainability | Reconcile intended use, explanation audience, validation, and approval scope. | 01 and domain method sheet. | Planned; source topic `11_Model_Risk_Governance_Explainability`. |
-| Advanced | Compatible MLOps release and recovery | Verify compatible model, schema, policy, and routing versions. | 01; versioning and incident basics. | Planned; source topic `12_MLOps_Insurance_Production`. |
-| Final | Common Insurance Analytics Issues | Diagnose 50 distinct actuarial, claims, and model-operation failures. | All completed sheets. | Planned; source title requires 50 complete issues. |
 
-## 3. Quick topic lookup
-| Question | File / section | Use condition | Failure warning |
-|---|---|---|---|
-| What must a model inventory record? | [01 §3](01_Insurance_Model_Risk_and_Change_Control.md#3-foundational-definitions) | Establishing intended use. | Inventory presence does not validate a model. |
-| Is a change material? | [01 §3](01_Insurance_Model_Risk_and_Change_Control.md#3-foundational-definitions) | Data, feature, threshold, policy, vendor, or deployment change. | Do not classify by code diff alone. |
-| What should be monitored with delayed labels? | [01 §4.2](01_Insurance_Model_Risk_and_Change_Control.md#42-general-delayed-outcome-performance) | Outcome quality is not immediately known. | Stable aggregate metrics can conceal slice harm. |
+| Level | Cards | Purpose |
+|---|---|---|
+
+## 3. Quick lookup
+
+| If you need to… | Read |
+|---|---|
+| work on insurance model risk and change control | [Insurance Model Risk and Change Control](./01_Insurance_Model_Risk_and_Change_Control.md) |
 
 ## 4. Reading paths
-- **Beginner:** 01, then the pricing and reserving sheets in `../01_pricing_underwriting_and_reserving/Cheat_Sheets/`.
-- **Practitioner:** 01; pricing; reserving; apply the change record to one proposed claims workflow.
-- **Advanced:** complete the practitioner path, then the planned governance, release/recovery, and 50-issue artifacts when authored.
+
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
 
 ## 5. Prerequisite skills
-Readers need versioned-artifact concepts, elementary probability and ratios, a distinction between decision-time and later data, and the ability to name a business owner. The child pricing and reserving collection provides concrete exposure and development examples.
+
+| Skill | Why it is needed | Where it is available |
+|---|---|---|
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
 
 ## 6. Exclusions and handoffs
-This collection does not determine a jurisdiction's requirements, approve a rate, select a reserve, or certify fairness. Pricing belongs in `../01_pricing_underwriting_and_reserving/`; claims workflow belongs in `../02_claims_fraud_customer_and_operations/`; climate scenario methods belong in `../03_insurance_mlops_model_risk_and_climate/`. Applicable legal, actuarial, privacy, and model-risk owners remain required handoffs.
+
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
 
 ## 7. Master symbol glossary
-| Symbol / term | Meaning | Units / type | Domain / warning | First use |
-|---|---|---|---|---|
-| Intended use | Decision, population, owner, and permitted action | Structured record | Must be narrower than a model name | [01 §3](01_Insurance_Model_Risk_and_Change_Control.md#3-foundational-definitions) |
-| Material change | Change capable of altering decision risk or control evidence | Classification | Not synonymous with a large code diff | [01 §3](01_Insurance_Model_Risk_and_Change_Control.md#3-foundational-definitions) |
-| Mature outcome | Outcome whose definition and observation window are complete | Event/status | Not an immediate proxy label | [01 §3](01_Insurance_Model_Risk_and_Change_Control.md#3-foundational-definitions) |
-| Override | Authorized departure from a model or policy output | Decision event | Requires reason and authority | [01 §3](01_Insurance_Model_Risk_and_Change_Control.md#3-foundational-definitions) |
 
-## 8. Quick Reference Card directory
-| Card | Rule | Use condition | Critical assumption | Avoid when |
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
+|---|---|---|---|---|---|
+| — | no card defines a symbol yet | — | — | — | — |
+
+## 8. Card directory
+
+| # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
-| [Model risk and change control card](01_Insurance_Model_Risk_and_Change_Control.md#12-quick-reference-card) | Retain use, owner, data, version, evidence, approval, and recovery record together. | Any decision-support model change. | The record corresponds to the actual deployed bundle. | Treating a checklist as independent validation. |
+| 1 | [Insurance Model Risk and Change Control](./01_Insurance_Model_Risk_and_Change_Control.md) | 2 | DERIVED | draft (lint open) |
 
 ## 9. Common Issues locator
-No Common Issues artifact exists yet. The source inventory names `13_50_Common_Insurance_Analytics_Issues.md`; its contents were unavailable, but its visible 50-issue scope remains a required planned target. Local failure rows in 01 do not meet the 50-issue, 12-section artifact requirement.
 
-## 10. Sources, versions and maintenance
-| Artifact / source ID | Evidence and limitation | Editorial state | Review trigger |
-|---|---|---|---|
-| 01 | Visible source inventory plus generic derived control reasoning; no insurer implementation evaluated. | Draft; 12 sections exist, while the 1,000-line and substantive-review gates remain open. | Model-risk policy, workflow, source, or evidence change. |
-| `Insurance_Cheat_Sheets/11_Model_Risk_Governance_Explainability.md` | Visible filename only; body unavailable. | Planned. | Source body becomes available. |
-| `Insurance_Cheat_Sheets/12_MLOps_Insurance_Production.md` | Visible filename only; body unavailable. | Planned. | Source body becomes available. |
-| `Insurance_Cheat_Sheets/13_50_Common_Insurance_Analytics_Issues.md` | Visible filename only; title commits 50 issues. | Planned. | Source body or collection scope changes. |
+- Not yet authored. The collection is incomplete until this artifact exists with at least 25 distinct issues.
 
-## 11. Collection acceptance checklist
-- [x] One canonical index with prerequisite paths and source limits.
-- [x] Visible source-topic commitments retained as planned work.
-- [x] Card directory and issue locator distinguish actual from planned artifacts.
-- [ ] Every indexed topic is an authored 12-section, 1,000-line sheet.
-- [ ] A 50-issue final troubleshooting artifact exists.
-- [ ] Independent numerical, source, navigation, and editorial review completed.
+## 10. Sources, versions, maintenance
+
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
+
+## 11. Acceptance checklist
+
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.

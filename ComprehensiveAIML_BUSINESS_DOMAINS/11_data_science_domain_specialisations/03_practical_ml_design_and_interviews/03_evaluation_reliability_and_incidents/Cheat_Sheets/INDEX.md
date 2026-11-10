@@ -1,60 +1,74 @@
 # Evaluation, Reliability and Incidents — Cheat Sheets
 
 ## 1. Overview
-This collection covers evidence design and operational reliability across predictive models, assistants, streaming, edge systems, and incidents. No local individual sheet is authored. The index preserves original evaluation/reliability topics and the two reference-informed briefs without treating reference narratives or their figures as evidence.
+
+This collection carries 0 reference card(s) and 0 troubleshooting artifact(s) for `Evaluation, Reliability and Incidents`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
 ## 2. Topic ladder
-| Level | Topic | Testable outcome | Prerequisites | Status |
-|---|---|---|---|---|
-| 1 | Evaluation design; offline/online gaps; human evaluation | define a versioned evaluand, population, comparator, and acceptance rule | metrics and sampling basics | Planned |
-| 2 | Drift; SLOs; tracing; red teaming | select observable signals and a bounded response | level 1; system boundaries | Planned |
-| 3 | Canaries; incident command; postmortems; continuous improvement | contain, replay, and learn without fabricating causality | levels 1–2 | Planned |
-| Source extension IR008 | manifests, contamination, judges, over-refusal, sandbox scoring | decide whether a release has sufficient evidence | evaluation design | Planned |
-| Source extension IR030 | hash flooding, BFS memory, regex backtracking, recursive depth, ORM N+1, overflow, ties, floating termination | identify the violated invariant and replay it safely | algorithm contracts | Planned |
-| Final | Common Issues | diagnose cross-cutting evaluation and recovery failures | all rows | Not authored |
 
-## 3. Quick topic lookup
-| Question | Intended topic | Use condition | Failure warning |
-|---|---|---|---|
-| Does a candidate pass? | Evaluation matrix / IR008 | suites, versions, and critical failures are frozen | a judge score is not deployment safety |
-| Is a metric regression real? | Offline/online gaps | cohorts and eligibility match | different populations invalidate direct comparison |
-| How much unreliability is tolerable? | SLO/error budget | user journey and window are explicit | availability alone can conceal bad outputs |
-| What failed during an incident? | IR030/postmortem | invariant and replay oracle exist | a plausible story is not root-cause evidence |
+| Level | Cards | Purpose |
+|---|---|---|
+| — | none yet | no card authored in this collection |
+
+## 3. Quick lookup
+
+| If you need to… | Read |
+|---|---|
+| — | nothing authored yet |
 
 ## 4. Reading paths
-- **Beginner:** evaluation design → offline/online gaps → human evaluation. Objective: separate measurement definition from score calculation.
-- **Practitioner:** beginner path → drift → SLOs → tracing → canaries → incident command.
-- **Advanced:** all topics plus IR008 and IR030, using adversarial bounded traces and explicit recovery contracts.
+
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
 
 ## 5. Prerequisite skills
-Ratios and uncertainty; cohort manifests; time windows; logs/traces; version control; fault isolation; basic algorithmic time/space reasoning; and the difference between monitoring evidence and a causal outcome claim.
 
-## 6. What this collection does NOT cover
-It does not certify a particular framework, judge model, SLO target, production incident, or safety claim. Detailed product value and ML-system implementation are handoffs to the sibling collections. Underlying interview-reference source bodies remain reference-only where specified.
+| Skill | Why it is needed | Where it is available |
+|---|---|---|
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
+
+## 6. Exclusions and handoffs
+
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
 
 ## 7. Master symbol glossary
-| Symbol / term | Meaning | Units / type | Valid domain | First intended topic |
-|---|---|---|---|---|
-| evaluand | exact system, version, population, task, and window being judged | structured manifest | immutable per comparison | Evaluation design |
-| `n` | eligible evaluated units | count | nonnegative | Evaluation matrix |
-| `f` | critical failures | count | subset of `n`, rubric-defined | Evaluation matrix |
-| SLI | measurable service-level indicator | ratio/time/count | tied to a user journey | SLOs |
-| error budget | allowed bad-event amount over window | count/proportion | declared window and objective | SLOs |
-| invariant | condition that must hold through operation | boolean contract | operation-specific | Incident postmortem |
 
-## 8. Quick Reference Card directory
-No authored cards exist. This directory will contain only links to completed 12-section sheets.
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
+|---|---|---|---|---|---|
+| — | no card defines a symbol yet | — | — | — | — |
+
+## 8. Card directory
+
+| # | Card | Level | Evidence | Status |
+|---|---|---|---|---|
+| — | none | — | — | — |
 
 ## 9. Common Issues locator
-No final Common Issues artifact exists. A completed artifact must contain at least 25 distinct complete issues and cannot count the reference-informed incident units as locally authored or observed incidents.
 
-## 10. Empirical sources, versions and maintenance
-`SRC-IR008` and `SRC-IR030` are [reference-informed planned briefs](../../../../00_REFERENCE_INFORMED_CASE_PLAN.md), not evidence of local execution. The local source mapping is [ds-practical-sources](../../../../00_SOURCE_COVERAGE_DATA_SCIENCE.md#ds-practical-sources). Revisit when evaluation manifests, task taxonomy, judge calibration, load profile, algorithm implementation, replay oracle, or source access changes.
+- Not yet authored. The collection is incomplete until this artifact exists with at least 25 distinct issues.
 
-## 11. Collection acceptance checklist
-- [x] Original topics and both source briefs are visible in the ladder.
-- [x] No uncreated sheet/card is misrepresented as linked content.
-- [ ] Individual 12-section sheets with checked examples and interview packs exist.
-- [ ] IR008 and IR030 commitments have focused coverage.
-- [ ] Final Common Issues has >=25 complete entries.
-- [ ] Independent correctness, source, and navigation review is complete.
+## 10. Sources, versions, maintenance
+
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
+
+## 11. Acceptance checklist
+
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.

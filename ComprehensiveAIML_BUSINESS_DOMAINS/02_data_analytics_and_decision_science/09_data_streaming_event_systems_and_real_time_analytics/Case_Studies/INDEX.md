@@ -1,73 +1,55 @@
-# Module 09 Case Studies â€” Data Streaming, Event Systems and Real-Time Analytics
+# Module 09 â€” Data Streaming, Event Systems and Real-Time Analytics — Case Studies
 
 ## 1. Collection metadata
 
-This collection covers streaming decisions, recovery, and real-time analytics. Its teaching home is the mapped streaming module; case evidence, implementation stage, and editorial status are independent.
+| Field | Value |
+|---|---|
+| Collection owner | Curriculum maintainer |
+| Canonical case-ID format | CASE-2026-STR001 |
+| Evidence policy | Illustrative teaching inputs are not company results; unsourced claims stay OPEN. |
+| Editorial state | Draft; independent publication review is not claimed. |
+| Acceptance rule | A case row is `authored` only when `Tools/manuscript_lint.py` exits 0 for it. |
+| Review trigger | A source body, decision policy, metric definition, or workload assumption changes. |
 
-## 2. Authored case catalog
+## 2. Case catalog
 
-| Case ID | Title | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| CASE-2026-STR001 | [PayPal observability migration](01_paypal_observability_dataflow.md) | Observability | streaming-systems | Choose streaming execution and ingestion | `recoverable-stream-processing` | `partition-aware-scaling`, `migration-reconciliation` | published | production reported | Not reviewed | Vendor coauthored narrative; qualitative outcomes not independently measured; calculations illustrative. |
-| CASE-2026-STR002 | [Flink CEP streaming fraud detection](02_Flink_CEP_Streaming_Fraud_Detection.md) | Payment fraud | streaming-systems | Evaluate event-time sequence review alerts against an amount-only baseline | `recoverable-stream-processing` | `partition-aware-scaling`, `versioned-rule-consistency` | not-measured | proposed | Not reviewed | Illustrative design and arithmetic; original inventory source contents unavailable; no outcome or deployment measured. |
-
-Editorial status: CASE-2026-STR001 and CASE-2026-STR002 are **draft, unreviewed**, not publication-ready cases.
+| Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
+|---|---|---|---|---|---|---|---|---|---|---|
+| CASE-2026-STR001 | [PayPal observability: choosing a recoverable streaming path for telemetry](./01_paypal_observability_dataflow.md) | Module 09 â€” Data Streaming, Event Systems and Real-Time Analytics | streaming-systems | decision record in the linked case | recoverable-stream-processing | partition-aware-scaling, migration-reconciliation | published | draft | null | authored |
+| CASE-2026-STR002 | [Flink Event-Time Fraud Sequences with Versioned Broadcast Rules](./02_Flink_CEP_Streaming_Fraud_Detection.md) | Module 09 â€” Data Streaming, Event Systems and Real-Time Analytics | streaming-systems | decision record in the linked case | recoverable-stream-processing | partition-aware-scaling, versioned-rule-consistency | not-measured | proposed | null | draft (lint open) |
+| PLAN-2026-IR035 | Separate live rank approximation from exact competition settlement | Module 09 â€” Data Streaming, Event Systems and Real-Time Analytics | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
 
 ## 3. Canonical reusable patterns
 
-- `recoverable-stream-processing`: align source replay, processing state, and sink effects to a defined recovery contract.
-- `partition-aware-scaling`: diagnose and size by partition and key, not only global averages.
-- `migration-reconciliation`: compare equivalent source and sink identities across controlled cutover boundaries.
-- `versioned-rule-consistency`: select immutable effective-time rules using a control-plane completeness contract, including across recovery and in-flight matches.
+| Pattern | Diagnostic signature | Use when | Boundary |
+|---|---|---|---|
+| evaluation-mismatch | Offline score does not represent the decision | Ranking, forecast, threshold, agent products | The metric captures decision and guardrails |
+| data-leakage | Information unavailable at decision time inflates a score | Unexpectedly strong offline result | The feature is genuinely available before the cutoff |
+| distribution-shift | Live population differs from training | New market, season, channel, or policy version | The change is sampling noise only |
+| human-in-the-loop | Review capacity or override changes the trade-off | High-impact, uncertain, or regulated work | Review is infeasible or demonstrably ineffective |
+| model-monitoring | Live signals diverge from the evaluation | Deployed model with usable feedback | No meaningful feedback signal exists |
 
-## 4. Similarity and contrast map
+## 4. Similarity / contrast map
 
-The PayPal case connects partition-aware scaling and recovery to a real-source migration; its hypothetical diagnostics are not incident reconstructions. The Flink fraud case is an illustrative decision and adds versioned rules, event-time matching, and case-effect idempotency; it is not an account of a real issuer. The consumer-lag incident remains unwritten.
+This collection holds 2 authored case(s) and 1 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
 
-## 5. Questions and future-case backlog
+## 5. Questions / future-case backlog
 
-The PayPal article does not disclose comparable before/after cost or availability measurements, exact cutover boundaries, or recovery drill artifacts. The fraud case requires source contracts, independent replay, rule-frontier and idempotency drills, review-capacity measurements, and mature labels before any deployment decision. The consumer-lag case and reference-informed brief below remain in the backlog.
+Planned commitments, retained without silent deletion:
 
-## 6. Review and retirement log
+- `PLAN-2026-IR035` — Separate live rank approximation from exact competition settlement. Not authored; no file exists, so no link is offered.
 
-CASE-2026-STR001: draft created 2026-11-07; substantive review not yet performed. Revisit on new primary evidence or material changes to service semantics.
-CASE-2026-STR002: draft created 2026-11-07; substantive review not yet performed. Revisit on changes to Flink semantics, rule publication, event-time policy, or external case effects.
+## 6. Review / retirement log
+
+| Date | Artifact | Event | Evidence / stage change |
+|---|---|---|---|
+| 2026-11-10 | [PayPal observability: choosing a recoverable streaming path for telemetry](./01_paypal_observability_dataflow.md) | index regenerated from disk | published / draft unchanged |
+| 2026-11-10 | [Flink Event-Time Fraud Sequences with Versioned Broadcast Rules](./02_Flink_CEP_Streaming_Fraud_Detection.md) | index regenerated from disk | not-measured / proposed unchanged |
 
 ## 7. Pre-publish checks
 
-Before publication, independently review the source ledger, arithmetic, recovery and delivery-semantics boundaries, interview answers, and all links; retain the draft status until the review is completed.
-
-### Authoring standard
-
-Every authored case must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master: all 15 sections, bounded decision and baseline, traceable evidence, checked numerical walkthrough/sizing where applicable, failure diagnostics, 12–18 answered interview questions, and Section 15 last. Evidence, implementation stage and editorial status remain separate.
-
-### Planned cases
-
-| # | Case | Required outcome | Status |
-|---:|---|---|---|
-| 1 | Build fraud-alert streaming design | Design the decision, architecture, metrics, risks, and validation plan. | Drafted as CASE-2026-STR002; proposed, unreviewed |
-| 2 | debug consumer lag incident | Design the decision, architecture, metrics, risks, and validation plan. | planned |
-
-### Suggested file naming
-
-Use **01_case-slug.md**, then **02_case-slug.md**. Add **00_framework.md** only for shared constraints that every case needs.
-
-<!-- BEGIN INTERVIEW REFERENCE PLAN -->
-
-### Reference-informed additions to develop
-
-These are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../00_REFERENCE_INFORMED_CASE_PLAN.md).
-
-| Planning ID | Proposed case brief | Editorial relationship | Type | Decision / business question | Primary pattern | Secondary patterns | Evidence | Stage | Planning reviewed | Result |
-|---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-2026-IR035 | Separate live rank approximation from exact competition settlement | Supporting curriculum; shared brief | hybrid | How should score events support fast display ranks and a reproducible final prize result? | `snapshot-consistency` | `idempotent-side-effects`, `correctness-contract` | not-measured | proposed | 2026-11-06 |  |
-
-#### Reference and transfer notes
-
-| Planning ID | Example reference only | Scope boundary |
-|---|---|---|
-| PLAN-2026-IR035 | [REF-IR035](../../../../INTERVIEW_CASES/DSA/Sys_Des_DSA/Leaderboards/score_bucket_rank_consistency.md) | A sum of stale counters is not an exact settlement snapshot; tie semantics and late-event policy must be specified |
-
-Case metadata, pattern definitions, supporting/contrasting references, structured backlog, review log and authoring checks for these additions are maintained in the linked central planning catalog. Existing planned rows elsewhere in this index retain their original status. A brief may be split or merged before canonical case IDs are assigned.
-
-<!-- END INTERVIEW REFERENCE PLAN -->
+- [x] Every catalog row links a file that exists, or is marked planned without a link.
+- [x] Evidence, implementation stage, and editorial status are separate columns.
+- [x] Planned commitments are retained with no silent deletion.
+- [ ] Independent source review of every authored case.
+- [ ] Publication review of every authored case.

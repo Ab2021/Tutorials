@@ -1,94 +1,63 @@
-# Fraud Modelling - Case Study Collection
-
-> **Mandatory authoring contract:** Every case follows the [course authoring and numerical standards](../../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md). Drafts are not reviewed or published; evidence, implementation stage and editorial status are separate.
+# Fraud Modelling — Case Studies
 
 ## 1. Collection metadata
 
 | Field | Value |
 |---|---|
 | Collection owner | Curriculum maintainer |
-| Last reviewed | 2026-11-06 |
-| Review cadence | Quarterly and on material market/regulatory change |
-| Index version | 2.0-planned |
-| Canonical case-ID format | CASE-01-01-NNN |
-| Canonical tags | Use the controlled vocabulary below; add synonyms only after review |
-| Source of truth | This directory |
+| Canonical case-ID format | CASE-01-01-001 |
+| Evidence policy | Illustrative teaching inputs are not company results; unsourced claims stay OPEN. |
+| Editorial state | Draft; independent publication review is not claimed. |
+| Acceptance rule | A case row is `authored` only when `Tools/manuscript_lint.py` exits 0 for it. |
+| Review trigger | A source body, decision policy, metric definition, or workload assumption changes. |
 
 ## 2. Case catalog
 
-| Case ID | Case title / relative link | Domain | Case type | Decision / business question | Primary pattern | Secondary pattern(s) | Evidence | Stage | Last reviewed | Key result or limitation |
+| Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| CASE-01-01-001 | [Real-time payment-card fraud detection](01_real_time_payment_card_fraud_detection.md) (draft; crosswalk PLAN-01-01-01) | Fraud Modelling | predictive-ml | Select approve, challenge or decline under friction and latency constraints | evaluation-mismatch | label-delay, cost-latency-tradeoff | illustrative; not-measured | proposed | not reviewed | Constructed action-cost, friction, and fallback arithmetic only; action effectiveness and production impact unknown |
-| CASE-01-01-002 | [Insurance claims investigation triage](02_insurance_claims_fraud_detection.md) (draft; crosswalk PLAN-01-01-02) | Fraud Modelling | predictive-ml | Rank eligible intake claims for SIU referral under capacity and claimant-service constraints | evaluation-mismatch | label-delay, human-in-the-loop | illustrative; not-measured | proposed | not reviewed | Illustrative capacity and value arithmetic only; no insurer, model, or outcome measured |
-| CASE-01-01-003 | [Account takeover challenge policy](03_account_takeover_application_fraud.md) (draft; crosswalk PLAN-01-01-03) | Fraud Modelling | predictive-ml | Choose allow, challenge, or recovery route under identity-signal and support constraints | evaluation-mismatch | label-delay, cost-latency-tradeoff | illustrative; not-measured | proposed | not reviewed | Illustrative queue and support-load arithmetic only; no account system or outcome measured |
-| PLAN-01-01-04 | AML transaction monitoring | Fraud Modelling | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
-| PLAN-01-01-05 | Marketplace fraud-ring graph detection | Fraud Modelling | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
+| CASE-01-01-001 | [Real-time payment-card fraud detection under a friction budget](./01_real_time_payment_card_fraud_detection.md) | Fraud Modelling | predictive-ml | decision record in the linked case | evaluation-mismatch | label-delay, cost-latency-tradeoff | not-measured | proposed | null | draft (lint open) |
+| CASE-01-01-002 | [Claims investigation triage under delayed adjudication](./02_insurance_claims_fraud_detection.md) | Fraud Modelling | predictive-ml | decision record in the linked case | evaluation-mismatch | label-delay, human-in-the-loop | not-measured | proposed | null | authored |
+| CASE-01-01-003 | [Account takeover challenge policy with incomplete identity signals](./03_account_takeover_application_fraud.md) | Fraud Modelling | predictive-ml | decision record in the linked case | evaluation-mismatch | label-delay, cost-latency-tradeoff | not-measured | proposed | null | draft (lint open) |
+| CASE-01-01-004 | [AML alert prioritization at fixed investigator capacity](./04_aml_transaction_monitoring_system.md) | Fraud Modelling | predictive-ml | decision record in the linked case | evaluation-mismatch | label-delay, human-in-the-loop | not-measured | proposed | null | draft (lint open) |
+| PLAN-01-01-04 | AML transaction monitoring | Fraud Modelling | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-01-01-05 | Marketplace fraud-ring graph detection | Fraud Modelling | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-2026-IR036 | Evaluate incremental investigator value from graph fraud signals | Fraud Modelling | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
 
 ## 3. Canonical reusable patterns
 
-| Tag | Diagnostic signature | Use when | Boundary |
+| Pattern | Diagnostic signature | Use when | Boundary |
 |---|---|---|---|
-| data-leakage | Information unavailable at decision time inflates performance | Unexpectedly strong predictive result | Feature is truly available before the cutoff |
-| label-delay | Outcome truth arrives late or changes | Fraud, claims, retention, downstream operational labels | Immediate, stable labels |
-| distribution-shift | Operating population differs from training/evaluation | New market, season, channel, or rollout | Change is sampling noise only |
-| evaluation-mismatch | Offline metric does not represent the business decision | Ranking, forecast, LLM, agent, or multi-objective products | Metric captures decision and guardrails |
-| cost-latency-tradeoff | Quality, cost, and response time conflict | Online, real-time, or edge operation | Cost/latency are non-binding |
-| human-in-the-loop | Qualified review changes risk/quality trade-off | High-impact, uncertain, or regulated work | Review is infeasible or ineffective |
-| rollout-regression | Release degrades a live guardrail despite tests | Canary, A/B, feature-flag, or migration work | No rollout comparison exists |
-| model-monitoring | Production signals reveal drift or degradation | Deployed model/system with feedback | No meaningful feedback signal |
-| causal-confounding | Observational relationship is not intervention effect | Attribution, uplift, promotion, policy decisions | Valid randomization addresses concern |
-| incident-postmortem | Operational impact requires causal reconstruction | Actual incident or replay exercise | No failure event/replay exists |
+| evaluation-mismatch | Offline score does not represent the decision | Ranking, forecast, threshold, agent products | The metric captures decision and guardrails |
+| data-leakage | Information unavailable at decision time inflates a score | Unexpectedly strong offline result | The feature is genuinely available before the cutoff |
+| distribution-shift | Live population differs from training | New market, season, channel, or policy version | The change is sampling noise only |
+| human-in-the-loop | Review capacity or override changes the trade-off | High-impact, uncertain, or regulated work | Review is infeasible or demonstrably ineffective |
+| model-monitoring | Live signals diverge from the evaluation | Deployed model with usable feedback | No meaningful feedback signal exists |
 
-## 4. Similarity and contrast map
+## 4. Similarity / contrast map
 
-| Pattern | Supporting case | Contrasting case | Theory/method link | Boundary learned |
-|---|---|---|---|---|
-| evaluation-mismatch | CASE-01-01-001 | Planned insurance claims case | [Fraud evaluation](../../../02_data_science_method_playbooks/02_fraud_modelling_playbook/Cheat_Sheets/01_Fraud_Evaluation_Calibration_and_Capacity.md) | Synchronous card decisions differ from asynchronous claims investigation. |
-| label-delay | CASE-01-01-001 | Planned account takeover case | Point-in-time labels and selective observation | Authentication outcomes need not reveal subsequent fraud. |
-| cost-latency-tradeoff | CASE-01-01-001 | Planned AML monitoring case | Decision deadlines and fallback | Synchronous authorization cannot wait for manual investigation. |
+This collection holds 4 authored case(s) and 3 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
 
-## 5. Questions and future-case backlog
+## 5. Questions / future-case backlog
 
-| Open question | Originating case | Needed evidence | Proposed next case or experiment | Priority | Owner role | Trigger |
-|---|---|---|---|---|---|---|
-| Does the challenge policy reduce total fraud and friction? | CASE-01-01-001 | Mature randomized outcomes and appeals | Controlled issuer trial | High | Fraud product owner | Before rollout |
-| Are features timely and replayable under outage? | CASE-01-01-001 | Timestamped production traces and recovery exercises | Load and failure experiment | High | Platform owner | Before launch |
-| Are selected labels biasing calibration? | CASE-01-01-001 | Independent audits and maturity curves | Label-audit study | High | Model risk owner | Before threshold approval |
-| Is fraud displaced to subsequent attempts? | CASE-01-01-001 | Linked account-level follow-up | Longer-window randomized analysis | Medium | Risk analytics owner | Before scaling |
+Planned commitments, retained without silent deletion:
 
-## 6. Review and retirement log
+- `PLAN-01-01-04` — AML transaction monitoring. Not authored; no file exists, so no link is offered.
+- `PLAN-01-01-05` — Marketplace fraud-ring graph detection. Not authored; no file exists, so no link is offered.
+- `PLAN-2026-IR036` — Evaluate incremental investigator value from graph fraud signals. Not authored; no file exists, so no link is offered.
 
-| Case ID | Date | What changed | Evidence or market trigger | Action | Owner role |
-|---|---|---|---|---|---|
-| CASE-01-01-001 | 2026-11-07 | Draft registered; no substantive review | Illustrative source brief | Review before publication or implementation | Curriculum maintainer |
+## 6. Review / retirement log
+
+| Date | Artifact | Event | Evidence / stage change |
+|---|---|---|---|
+| 2026-11-10 | [Real-time payment-card fraud detection under a friction budget](./01_real_time_payment_card_fraud_detection.md) | index regenerated from disk | not-measured / proposed unchanged |
+| 2026-11-10 | [Claims investigation triage under delayed adjudication](./02_insurance_claims_fraud_detection.md) | index regenerated from disk | not-measured / proposed unchanged |
+| 2026-11-10 | [Account takeover challenge policy with incomplete identity signals](./03_account_takeover_application_fraud.md) | index regenerated from disk | not-measured / proposed unchanged |
+| 2026-11-10 | [AML alert prioritization at fixed investigator capacity](./04_aml_transaction_monitoring_system.md) | index regenerated from disk | not-measured / proposed unchanged |
 
 ## 7. Pre-publish checks
 
-- [ ] The draft receives substantive technical and numerical review.
-- [ ] Open questions, source limits, and proposed gates remain explicit.
-- [ ] Case ID is unique and linked.
-- [ ] Evidence maturity is distinct from implementation stage.
-- [ ] Decision, metric, action, and outcome refer to the same population.
-- [ ] Assumptions, constraints, failure modes, and a quick-reference card are present.
-- [ ] Company-specific claims have primary/public evidence or are labelled illustrative.
-- [ ] Local links resolve and the review trigger is actionable.
-
-<!-- BEGIN INTERVIEW REFERENCE PLAN -->
-
-### Reference-informed additions to develop
-
-These are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../../00_REFERENCE_INFORMED_CASE_PLAN.md).
-
-| Planning ID | Proposed case brief | Editorial relationship | Type | Decision / business question | Primary pattern | Secondary patterns | Evidence | Stage | Planning reviewed | Result |
-|---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-2026-IR036 | Evaluate incremental investigator value from graph fraud signals | Supporting curriculum; shared brief | predictive-ml | Which graph-enriched alerts add confirmed value at a fixed investigation capacity beyond claim-level scoring? | `delayed-selective-labels` | `human-in-the-loop`, `data-leakage` | not-measured | proposed | 2026-11-06 |  |
-
-#### Reference and transfer notes
-
-| Planning ID | Example reference only | Scope boundary |
-|---|---|---|
-| PLAN-2026-IR036 | [REF-IR036](../../../../../INTERVIEW_CASES/Graph_Rings/Fraud_Ring_Detection/Claims_Fraud_Ring_Case.md) | Connectivity and shared providers are not proof of fraud; source reference notes are unavailable and labels are delayed/selected |
-
-Case metadata, pattern definitions, supporting/contrasting references, structured backlog, review log and authoring checks for these additions are maintained in the linked central planning catalog. Existing planned rows elsewhere in this index retain their original status. A brief may be split or merged before canonical case IDs are assigned.
-
-<!-- END INTERVIEW REFERENCE PLAN -->
+- [x] Every catalog row links a file that exists, or is marked planned without a link.
+- [x] Evidence, implementation stage, and editorial status are separate columns.
+- [x] Planned commitments are retained with no silent deletion.
+- [ ] Independent source review of every authored case.
+- [ ] Publication review of every authored case.

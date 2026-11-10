@@ -945,7 +945,7 @@ capability. The diagnostic order in section 12 exists because the default explan
   next-token objective produces plausible-but-unverified code and why the test contract is external.
 - Context length: [`../11.1_Why_Context_Length_Matters.md`](../11.1_Why_Context_Length_Matters.md) for
   the nominal-versus-usable distinction that 6.1 quantifies.
-- Sibling case [`02_Choose_A_Model_For_Code_Assistance_01_Code_Assistance_Model_Choi.md`](./02_Choose_A_Model_For_Code_Assistance_01_Code_Assistance_Model_Choi.md)
+- Sibling case: model selection within this unit is a planned commitment; see `INDEX.md` section 5 rather than this draft.
   takes the same decision family from the pilot-selection side, with candidate ranking and benchmark
   transfer as its subject.
 - Handoffs: fine-tuning and adapters belong to module 21; serving admission and KV policy belong to the

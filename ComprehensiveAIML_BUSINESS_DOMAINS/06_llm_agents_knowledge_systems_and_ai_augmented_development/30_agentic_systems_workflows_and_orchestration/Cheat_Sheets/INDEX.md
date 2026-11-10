@@ -1,73 +1,77 @@
-# Module 30 Cheat Sheets — Agentic Systems, Workflows and Orchestration
+# Module 30 â€” Agentic Systems, Workflows and Orchestration — Cheat Sheets
 
 ## 1. Overview
-For engineers familiar with transactions and distributed failures, this collection supports decisions about request ownership, agent state, isolation, recovery and side effects. The boundary sheet is an unreviewed draft; production readiness requires independent review and workload-specific evidence.
+
+This collection carries 3 reference card(s) and 0 troubleshooting artifact(s) for `Module 30 â€” Agentic Systems, Workflows and Orchestration`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
 ## 2. Topic ladder
-| Level | Topic and outcome | Prerequisite / skill | Status |
-|---|---|---|---|
-| Foundation | [01 Agent boundaries and request ownership](01_agent_boundaries_and_request_ownership.md): assign decision, state, retry and effect ownership to a bounded request path. | Basic model/tool interactions and HTTP identity. | Draft; not reviewed |
-| Core | Workflow selection: select an orchestration style and explain tradeoffs. | Agent-pattern concepts. | Planned |
-| Core | Handoff protocol: define ownership and validate a handoff under failure. | Workflow and identity basics. | Planned |
-| Production | [04 Sessions, state and lifecycle](04_agent_sessions_state_isolation_and_lifecycle.md): trace ownership and isolation. | Authentication, transactions and access control. | Draft; not reviewed |
-| Production | [05 Durable workflows](05_durable_workflows_and_idempotent_execution.md): analyze crash windows and bounded backlog. | Sheet 04, queues and rate arithmetic. | Draft; not reviewed; source contents unavailable |
 
-## 3. Quick topic lookup
-| Question | Exact section | Use and warning |
+| Level | Cards | Purpose |
 |---|---|---|
-| Where does a model proposal become an authorized action? | [Boundaries](01_agent_boundaries_and_request_ownership.md#4-core-formulas-with-full-derivation) | Require adapter-side canonical arguments and policy; schema validity is insufficient. |
-| Who owns session state? | [Definitions](04_agent_sessions_state_isolation_and_lifecycle.md#3-foundational-definitions) | Separate context from authoritative state. |
-| Can a timed-out write be retried? | [Failures](05_durable_workflows_and_idempotent_execution.md#8-failure-modes--edge-cases) | Inspect provider status and key contract; timeout is not failure proof. |
+
+## 3. Quick lookup
+
+| If you need to… | Read |
+|---|---|
+| work on agent boundaries and request ownership | [Agent Boundaries and Request Ownership](./01_agent_boundaries_and_request_ownership.md) |
+| work on agent sessions, state ownership, isolation and run lifecycle | [Agent Sessions, State Ownership, Isolation and Run Lifecycle](./04_agent_sessions_state_isolation_and_lifecycle.md) |
+| work on durable workflows and idempotent execution | [Durable workflows and idempotent execution](./05_durable_workflows_and_idempotent_execution.md) |
 
 ## 4. Reading paths
-- **Beginner:** Read [01](01_agent_boundaries_and_request_ownership.md), then learn authentication and database transactions; read [session definitions](04_agent_sessions_state_isolation_and_lifecycle.md#3-foundational-definitions) and its [mental model](04_agent_sessions_state_isolation_and_lifecycle.md#2-concept-map--mental-model).
-- **Practitioner:** Read sheets [01](01_agent_boundaries_and_request_ownership.md), 04, then [05](05_durable_workflows_and_idempotent_execution.md), tracing ownership, checkpoints and external effects.
-- **Advanced:** Read all three drafts, then use their failures and cards to reason through replay, tenant isolation and reconciliation; the workflow and handoff guides are planned extensions.
+
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
 
 ## 5. Prerequisite skills
-Understand HTTP authentication, tenant authorization, transactions, leases, queue rates and retry ambiguity. Start with the [session header](04_agent_sessions_state_isolation_and_lifecycle.md#1-file-header) and its linked concurrency reference; then apply queue arithmetic in [05](05_durable_workflows_and_idempotent_execution.md#4-core-formulas-with-full-derivation).
 
-## 6. What this collection does NOT cover
-The workflow-selection and handoff-protocol guides remain planned. The boundary draft does not establish any framework or provider contract; neither it nor the two production-focused drafts prove exactly-once external effects. Tool integration details require separate study. Reference-informed briefs below are proposals, not completed sheets.
+| Skill | Why it is needed | Where it is available |
+|---|---|---|
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
+
+## 6. Exclusions and handoffs
+
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
 
 ## 7. Master symbol glossary
-| Symbol / term | Meaning; unit / type / domain | First use |
-|---|---|---|
-| Run / effect key | Versioned attempt / stable intended business operation identifier; opaque strings, tenant-scoped. | [01 definitions](01_agent_boundaries_and_request_ownership.md#3-foundational-definitions) |
-| Session | Tenant-scoped durable interaction container; identifier, not authorization. | [04 definitions](04_agent_sessions_state_isolation_and_lifecycle.md#3-foundational-definitions) |
-| B | Pending backlog; nonnegative scalar jobs. | [05 definitions](05_durable_workflows_and_idempotent_execution.md#3-foundational-definitions) |
-| lambda, mu | Arrival and completion rates; jobs per second, nonnegative scalars under the stated model. | [05 definitions](05_durable_workflows_and_idempotent_execution.md#3-foundational-definitions) |
 
-## 8. Quick Reference Card directory
-| Card | Rule / use | Condition and avoid |
-|---|---|---|
-| [01 card](01_agent_boundaries_and_request_ownership.md#12-quick-reference-card) | Bind model proposals to an authorized adapter and reconcile the same effect key. | A timeout is ambiguity, not failure proof. |
-| [04 card](04_agent_sessions_state_isolation_and_lifecycle.md#12-quick-reference-card) | Trace state ownership and isolation. | An identifier is not proof of authorization. |
-| [05 card](05_durable_workflows_and_idempotent_execution.md#12-quick-reference-card) | Reconcile ambiguous effects before unsafe retry. | Provider semantics and key retention govern effect safety. |
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
+|---|---|---|---|---|---|
+| — | no card defines a symbol yet | — | — | — | — |
+
+## 8. Card directory
+
+| # | Card | Level | Evidence | Status |
+|---|---|---|---|---|
+| 1 | [Agent Boundaries and Request Ownership](./01_agent_boundaries_and_request_ownership.md) | 1 | DERIVED | draft (lint open) |
+| 2 | [Agent Sessions, State Ownership, Isolation and Run Lifecycle](./04_agent_sessions_state_isolation_and_lifecycle.md) | 3 | DERIVED | draft (lint open) |
+| 3 | [Durable workflows and idempotent execution](./05_durable_workflows_and_idempotent_execution.md) | 3 | DERIVED and ILLUSTRATIVE; source contents unavailable | draft (lint open) |
 
 ## 9. Common Issues locator
-The final Common Issues artifact has not been authored; its count is unknown. Use the draft [session failures](04_agent_sessions_state_isolation_and_lifecycle.md#8-failure-modes--edge-cases) for isolation and ownership, and [workflow failures](05_durable_workflows_and_idempotent_execution.md#8-failure-modes--edge-cases) for a lost response: look up the stable operation key before retry. These are hypothetical diagnostics, not incident counts.
 
-## 10. Empirical sources, versions and collection maintenance
-Original source directories were unavailable and not inspected; the crosswalk identifies source titles only. Both sheets are drafts without independent review; their examples are not production measurements. Consult [standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [template](../../../../Templates/CHEAT_SHEET_CONTENT_MASTER_TEMPLATE.md); recheck provider contracts, retention, authorization and source versions on change. No review date is asserted. Each sheet requires all 12 sections and a final card.
+- Not yet authored. The collection is incomplete until this artifact exists with at least 25 distinct issues.
 
-<!-- BEGIN INTERVIEW REFERENCE PLAN -->
+## 10. Sources, versions, maintenance
 
-### Reference-informed additions to develop
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
 
-These are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../00_REFERENCE_INFORMED_CASE_PLAN.md).
+## 11. Acceptance checklist
 
-| Related brief | Proposed cheat-sheet scope | Checks / counterexamples to include | Reference only | Status |
-|---|---|---|---|---|
-| PLAN-2026-IR005 | Immutable release manifests; compatibility gates; side-effect-free shadowing; staged canaries; incident containment | Bundle-compatibility tests, rollback drills, guardrail breaches and unresolved side effects after recovery. Boundary: A prompt-only rollback cannot restore all dependencies; example dwell times and canary percentages are not defaults. | [REF-IR005](../../../../INTERVIEW_CASES/Agentic_AI_System/INDEX/Agent_Release_And_Incident_Operations.md) | planned; not written |
-| PLAN-2026-IR006 | LangGraph checkpoints and interrupts; authenticated resume; approval binding and expiry; idempotent submission | Crash-window replay, duplicate webhooks, changed purchase payloads, checkpoint migration and reconciliation tests. Boundary: External APIs may not support exactly-once effects; approval waiting times and run counts are exercise assumptions. | [REF-IR006](../../../../INTERVIEW_CASES/Agentic_AI_System/Langraph/durable_human_approval_graph.md) | planned; not written |
-
-Each future cheat sheet needs its own explanation, preconditions, formulas or algorithms where relevant, failure signals and checked examples. Do not copy the interview narrative or its scenario figures into a reference sheet.
-
-<!-- END INTERVIEW REFERENCE PLAN -->
-
-## 11. Collection acceptance checklist
-- [ ] Author the three planned guides and final Common Issues artifact with at least 25 substantive issues.
-- [ ] Independently review both drafts, their 12-section structure, calculations, recovery claims and sources.
-- [ ] Verify current provider contracts, evidence, links and anchors before publication.
-- [ ] Record review dates and distinguish illustrative traces from observed incidents.
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.

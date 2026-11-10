@@ -1,99 +1,73 @@
-# Module 44 Cheat Sheets — Retail, E-Commerce, Media and Personalisation
+# Module 44 â€” Retail, E-Commerce, Media and Personalisation — Cheat Sheets
 
 ## 1. Overview
 
-This collection separates traffic, order-state, merchandise and contribution denominators before choosing a commerce intervention. The current manuscript is an illustrative analytical reference, not merchant financial reporting or evidence of a production deployment.
-
-Follow the [course authoring standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [cheat-sheet master](../../../../Templates/CHEAT_SHEET_CONTENT_MASTER_TEMPLATE.md). Editorial status, source availability and measured outcomes are independent.
+This collection carries 1 reference card(s) and 0 troubleshooting artifact(s) for `Module 44 â€” Retail, E-Commerce, Media and Personalisation`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
 ## 2. Topic ladder
 
-| Level | Reference | Testable outcome | Required predecessor | Editorial state |
-|---|---|---|---|---|
-| Foundation | [Commerce metric tree and order reconciliation](01_Commerce_Metric_Tree_and_Order_Reconciliation.md) | Reconcile eligible visits, paid/completed order cohorts, merchandise adjustments and contribution without changing grain. | Ratios, keyed joins and event timestamps. | Draft; 1,540 physical lines observed; independent substantive review open. |
-| Core | Recommendation-system launch checklist | Specify candidate eligibility, exposure, ranking, experiment unit and rollback before release. | Reconciled traffic/order definitions; recommendation and experiment basics. | Original catalog commitment; not authored here. |
-| Core | Pricing experiment guide | Separate incremental contribution from conversion changes under assignment, inventory and interference constraints. | Reconciled contribution bridge; causal experiment basics. | Original catalog commitment; not authored here. |
-| Final | 25 Common Commerce Analytics Issues | Diagnose at least 25 distinct assumption, numerical, scaling and conceptual failures with discriminating checks. | All applicable completed references. | Required final collection artifact; not authored. |
+| Level | Cards | Purpose |
+|---|---|---|
 
-## 3. Quick topic lookup
+## 3. Quick lookup
 
-| Question | Location | Validity condition | Failure warning |
-|---|---|---|---|
-| Which order count belongs in a conversion rate? | [Definitions](01_Commerce_Metric_Tree_and_Order_Reconciliation.md#3-foundational-definitions) | Visit eligibility and paid-state time are fixed. | Paid orders, completed orders and customers are different units. |
-| Why does a revenue-like number not match cash? | [Worked example](01_Commerce_Metric_Tree_and_Order_Reconciliation.md#5-worked-numerical-example) | Cohort, currency, cancellation/refund policy and snapshot agree. | Analytical merchandise amount is not recognized revenue or cash. |
-| How can replay change a business metric? | [Failure diagnostics](01_Commerce_Metric_Tree_and_Order_Reconciliation.md#8-failure-modes--edge-cases) | Stable event identity and order-state transitions are retained. | Duplicate or out-of-order records can change counts and money. |
-| What is the operational cost of reconciliation? | [Complexity and sizing](01_Commerce_Metric_Tree_and_Order_Reconciliation.md#9-complexity--cost-analysis) | Payload and processing boundaries are stated. | A derived sizing example is not a measured engine benchmark. |
+| If you need to… | Read |
+|---|---|
+| work on commerce metric tree and order reconciliation | [Commerce Metric Tree and Order Reconciliation](./01_Commerce_Metric_Tree_and_Order_Reconciliation.md) |
 
 ## 4. Reading paths
 
-- **Beginner:** definitions → worked example → final card. Reproduce the paid/completed distinction before using a rate.
-- **Practitioner:** formulas → worked example → failure diagnostics → sizing. Reconstruct the order and money bridges using one fixed snapshot.
-- **Advanced:** complete the practitioner path, then defend the stated invariants against duplicate events, delayed refunds and eligibility changes. Recommendation launch and pricing experiments remain planned extensions, not available prerequisites.
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
 
 ## 5. Prerequisite skills
 
-| Skill | Required use |
-|---|---|
-| Ratios and units | Distinguish orders/visit, currency/order and total currency. |
-| Keys and join multiplicity | Count distinct orders once rather than inflating measures through line-item joins. |
-| Event and observation time | Define cohort entry separately from the completion/refund snapshot. |
-| State transitions | Distinguish payment, cancellation, completion and refund without treating them as interchangeable flags. |
-| Cost boundaries | State which variable costs are included before interpreting contribution. |
+| Skill | Why it is needed | Where it is available |
+|---|---|---|
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
 
 ## 6. Exclusions and handoffs
 
-The sheet does not establish accounting, tax, legal, consent or jurisdiction-specific rules. Finance and policy owners must approve operational definitions. Ranking architecture, causal price-response estimation and full media-rights methods are distinct teaching outcomes; their names in this module do not make them authored.
-
-Use the [module index](../INDEX.md) for the wider original syllabus. Unavailable source bodies remain unavailable; local mathematical examples are not reconstructions of those bodies.
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
 
 ## 7. Master symbol glossary
 
-These definitions follow [the manuscript's notation table](01_Commerce_Metric_Tree_and_Order_Reconciliation.md#31-core-notation). All counts, snapshots and currency components refer to the declared population.
-
-| Symbol | Meaning | Units | Shape/type | Domain and boundary | First use |
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
 |---|---|---|---|---|---|
-| `V` | Eligible visits in window `W` | visits | scalar integer | Nonnegative; one count per eligible visit identifier. | Sheet 01 §3.1 |
-| `N_paid` | Distinct orders reaching paid state in `W` | orders | scalar integer | Nonnegative; paid-at time determines cohort entry. | Sheet 01 §3.1 |
-| `N_done` | Paid-cohort orders completed by the snapshot | orders | scalar integer | `0 <= N_done <= N_paid`; not all calendar-window shipments. | Sheet 01 §3.1 |
-| `CVR_paid` | Paid-order conversion at visit grain | dimensionless | scalar ratio | `N_paid/V` only when `V>0`; not customer conversion. | Sheet 01 §3.1 |
-| `G_item` | Included item amounts before cancellations and refunds | currency | scalar amount | One declared currency and tax treatment; not cash. | Sheet 01 §3.1 |
-| `R_cancel` | Item amount removed through cancellation | currency | scalar amount | Nonnegative; same included orders as `G_item`. | Sheet 01 §3.1 |
-| `R_refund` | Item refunds against included orders | currency | scalar amount | Nonnegative; refund observation window must be stated. | Sheet 01 §3.1 |
-| `M_net` | Analytical net merchandise amount | currency | scalar amount | `G_item-R_cancel-R_refund`; not recognized revenue. | Sheet 01 §3.1 |
-| `AOV_net` | Net merchandise per completed included order | currency/order | scalar ratio | Defined only when `N_done>0`; not payment-time basket size. | Sheet 01 §3.1 |
-| `CM` | Contribution after the listed variable components | currency | scalar amount | Local cost bridge; not operating profit. | Sheet 01 §3.1 |
-| `K_raw` | Raw recommended candidate count | SKUs | scalar integer | Nonnegative; before eligibility filtering, not impressions. | Sheet 01 §3.1 |
-| `K_unavail` | Candidates unavailable at the decision snapshot | SKUs | scalar integer | `0 <= K_unavail <= K_raw`; not lost demand. | Sheet 01 §3.1 |
-| `K_eligible` | Candidates remaining after eligibility filtering | SKUs | scalar integer | `K_raw-K_unavail` only if no other filter applies. | Sheet 01 §3.1 |
-| `tau` | Decision or observation snapshot | timestamp | instant | UTC or fully qualified timezone; not a date alone. | Sheet 01 §3.1 |
-| `epsilon` | Permitted reconciliation residual | currency | scalar tolerance | Nonnegative; rounding policy must justify it. | Sheet 01 §3.1 |
+| — | no card defines a symbol yet | — | — | — | — |
 
-## 8. Quick Reference Card directory
+## 8. Card directory
 
-| Card | Core rule | Use condition | Critical assumption | Avoid |
+| # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
-| [Commerce reconciliation](01_Commerce_Metric_Tree_and_Order_Reconciliation.md#12-quick-reference-card) | Keep opportunities, order states and money bridges distinct until keyed reconciliation. | Population, cohort and snapshot are explicit. | Events have stable identity and consistent units. | Calling analytical merchandise or contribution accounting revenue or profit. |
-
-Recommendation and pricing cards remain unwritten; there are no fabricated card links.
+| 1 | [Commerce Metric Tree and Order Reconciliation](./01_Commerce_Metric_Tree_and_Order_Reconciliation.md) | 1 | DERIVED | authored |
 
 ## 9. Common Issues locator
 
-The final 25-issue collection artifact is not authored. The current sheet's [Section 8 diagnostics](01_Commerce_Metric_Tree_and_Order_Reconciliation.md#8-failure-modes--edge-cases) are local teaching scenarios, not a claim of 25 completed collection issues or observed merchant incidents.
+- Not yet authored. The collection is incomplete until this artifact exists with at least 25 distinct issues.
 
-## 10. Sources, versions and maintenance
+## 10. Sources, versions, maintenance
 
-| Artifact or authority | Supported use | Evidence limit | Recheck trigger |
-|---|---|---|---|
-| [Course authoring standard](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) | Required structure, numerical reasoning, evidence and review gates. | Not external certification. | Standard changes. |
-| [Cheat-sheet master](../../../../Templates/CHEAT_SHEET_CONTENT_MASTER_TEMPLATE.md) | Individual and collection format. | Does not validate manuscript content. | Template revision. |
-| Sheet 01 | Local analytical definitions, illustrative arithmetic and diagnostic mechanisms. | Independent review and merchant-specific evidence remain open. | Cohort, event schema, currency, snapshot or policy changes. |
-| Original collection catalog | Commerce metric tree, recommendation launch and pricing experiment commitments. | A planned title is not an authored method or accessible source body. | Scope or canonical teaching-home changes. |
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
 
-## 11. Collection acceptance checklist
+## 11. Acceptance checklist
 
-- [ ] Independently review all substantive derivations, boundaries and examples in Sheet 01.
-- [x] Navigation smoke after this revision: 783 course Markdown files, 3,564 local links, zero missing paths or anchors; all 15 manuscript glossary links resolve. This is not substantive manuscript acceptance.
-- [ ] Author the retained recommendation launch and pricing experiment references.
-- [ ] Author the final artifact with at least 25 complete, distinct troubleshooting issues.
-- [ ] Verify sources and applicable workflow/accounting definitions before operational claims.
-- [ ] Complete independent editorial review; draft presence and physical length do not establish publication readiness.
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.

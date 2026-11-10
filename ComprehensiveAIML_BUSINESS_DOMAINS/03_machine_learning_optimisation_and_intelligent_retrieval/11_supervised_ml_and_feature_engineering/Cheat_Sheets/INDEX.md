@@ -1,84 +1,84 @@
-# Module 11 Cheat Sheets — Supervised ML and Feature Engineering
+# Module 11 â€” Supervised Machine Learning and Feature Engineering — Cheat Sheets
 
 ## 1. Overview
 
-This collection teaches the decision contracts behind tabular supervised learning: define the prediction before fitting, construct available features, select a loss and threshold under operational constraints, and validate errors under the dependencies deployment must survive. It assumes probability, basic linear algebra, and a binary confusion matrix. A learner is ready to use a method only when they can state its information boundary, calculate its operating metric, name a disqualifying assumption, and propose a bounded diagnostic. The [authoring standard](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and [cheat-sheet master](../../../../Templates/CHEAT_SHEET_CONTENT_MASTER_TEMPLATE.md) govern all individual artifacts.
+This collection carries 5 reference card(s) and 1 troubleshooting artifact(s) for `Module 11 â€” Supervised Machine Learning and Feature Engineering`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
-## 2. Topic Ladder
+## 2. Topic ladder
 
-| Level | File | Outcome | Prerequisites | Status |
-|---|---|---|---|---|
-| 1 | [02 Problem Formulation and Losses](02_Problem_Formulation_and_Losses.md) | turn an action, horizon and error cost into a target/loss contract | probability | draft; unreviewed |
-| 1 | planned `03_Linear_Trees_and_Boosting.md` | compare linear, tree and boosted predictors under feature and deployment constraints | formulation | planned |
-| 1 | planned `04_Feature_Engineering_Patterns.md` | design time-safe transformations and encodings | formulation | planned |
-| 1 | Classification metrics — original planned scope | derive confusion-matrix, rank and probability metrics with prevalence, capacity and maturity boundaries | probability; formulation | planned; validation and calibration drafts do not replace focused metric coverage |
-| 2 | planned `05_Imbalance_and_Calibration.md` | select prevalence-aware metrics and capacity threshold | probability | planned |
-| 2 | Model selection — original planned scope | compare credible baselines and candidates using leakage-safe nested selection, uncertainty and deployment constraints | features; classification metrics; formulation | planned; the linear/tree/boosting comparison remains a separate commitment |
-| 2 | [01 Model Validation and Error Analysis](01_Model_Validation_and_Error_Analysis.md) | reject leaky evaluation and calculate policy metrics | formulation, confusion matrix | draft; unreviewed |
-| 3 | planned `06_25_Common_Issues.md` | diagnose collection-wide failures | all above | planned |
-
-## 3. Quick Topic Lookup
-
-| Question | File / section | Use condition | Failure warning |
-|---|---|---|---|
-| “Can this feature be used?” | [01 §8](01_Model_Validation_and_Error_Analysis.md#8-failure-modes--edge-cases) | prediction time is known | source date is not availability time |
-| “Why did a score collapse?” | [01 §7](01_Model_Validation_and_Error_Analysis.md#7-comparison--selection-table) | split dependency identified | do not switch to an easier split |
-| “Which threshold fits 48 reviews/day?” | [01 §5](01_Model_Validation_and_Error_Analysis.md#5-worked-numerical-example) | labels are mature | precision alone ignores missed positives |
-| “Which loss matches the action?” | [02 §4](02_Problem_Formulation_and_Losses.md#4-core-formulas-with-full-derivation) | action costs are specified | calibrated probabilities and capacity are separate checks |
-
-## 4. Reading Paths — Three Options
-
-- **Beginner:** [formulation](02_Problem_Formulation_and_Losses.md) → planned features → [validation](01_Model_Validation_and_Error_Analysis.md). Objective: describe a time-safe prediction contract.
-- **Practitioner:** formulation → classification metrics → linear/trees/boosting → features → imbalance/calibration → model selection → validation → Common Issues. Objective: choose and challenge a feasible model policy.
-- **Advanced:** all files in ladder order, then case studies. Objective: defend split, preprocessing, threshold and error analysis under a changed constraint.
-
-## 5. Prerequisite Skills
-
-| Skill | Needed for | Available handoff |
+| Level | Cards | Purpose |
 |---|---|---|
-| conditional probability and rates | calibration and precision/recall | module 05 foundations |
-| matrix/vector notation | linear predictors | [Module 05 mathematical foundations](../../../01_foundations_computing_and_problem_solving/05_math_probability_statistics_and_linear_algebra/INDEX.md) |
-| timestamps and joins | point-in-time features | [Module 06 data modelling and governance](../../../02_data_analytics_and_decision_science/06_data_modeling_databases_lakehouse_and_governance/INDEX.md) |
-| business error costs and capacity | threshold policy | module 01 decision framing |
+| core | Linear trees and boosting, Imbalance and Calibration | Build from prerequisites to production judgement |
 
-## 6. What This Collection Does NOT Cover
+## 3. Quick lookup
 
-It does not certify fairness, causal effects, privacy compliance, online experimentation, or production deployment. It hands causal questions to experimentation material, privacy questions to Module 16, and graph-specific fraud signals to Module 15. A file marked planned is not a working lesson.
+| If you need to… | Read |
+|---|---|
+| work on model validation and error analysis | [Model Validation and Error Analysis](./01_Model_Validation_and_Error_Analysis.md) |
+| work on problem formulation and losses | [Problem Formulation and Losses](./02_Problem_Formulation_and_Losses.md) |
+| work on linear trees and boosting | [Linear trees and boosting](./03_Linear_Trees_and_Boosting.md) |
+| work on feature engineering patterns | [Feature engineering patterns](./04_Feature_Engineering_Patterns.md) |
+| work on imbalance and calibration | [Imbalance and Calibration](./05_Imbalance_and_Calibration.md) |
+| diagnose a failure that keeps recurring | [Common issues: supervised ML](./06_25_Common_Issues.md) |
 
-## 7. Master Symbol Glossary
+## 4. Reading paths
 
-| Symbol/term | Meaning | Units/type | Domain | First appearance |
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
+
+## 5. Prerequisite skills
+
+| Skill | Why it is needed | Where it is available |
+|---|---|---|
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
+
+## 6. Exclusions and handoffs
+
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
+
+## 7. Master symbol glossary
+
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
+|---|---|---|---|---|---|
+| — | no card defines a symbol yet | — | — | — | — |
+
+## 8. Card directory
+
+| # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
-| `t0` | committed decision time | timestamp | per decision | [02 §3](02_Problem_Formulation_and_Losses.md#decision-time-t0) |
-| `Y` | mature outcome | binary | `{0,1}` | [02 §3](02_Problem_Formulation_and_Losses.md#target-y) |
-| `s(x)` | model score | dimensionless | model-specific | [02 §3](02_Problem_Formulation_and_Losses.md#score-sx) |
-| `p(x)` | calibrated probability estimate | probability | `[0,1]` | [02 §3](02_Problem_Formulation_and_Losses.md#probability-px) |
-| `tau` | action threshold | score/probability | policy-specific | [02 §4](02_Problem_Formulation_and_Losses.md#pf-02--cost-derived-probability-threshold) |
-| `TP/FP/FN/TN` | post-policy counts | records | non-negative integers | [01 §3](01_Model_Validation_and_Error_Analysis.md#3-foundational-definitions) |
+| 1 | [Model Validation and Error Analysis](./01_Model_Validation_and_Error_Analysis.md) | 2 | DERIVED | authored |
+| 2 | [Problem Formulation and Losses](./02_Problem_Formulation_and_Losses.md) | 1 | DERIVED | draft (lint open) |
+| 3 | [Linear trees and boosting](./03_Linear_Trees_and_Boosting.md) | core | DERIVED | draft (lint open) |
+| 4 | [Feature engineering patterns](./04_Feature_Engineering_Patterns.md) | 2 | DERIVED | draft (lint open) |
+| 5 | [Imbalance and Calibration](./05_Imbalance_and_Calibration.md) | core | DERIVED | draft (lint open) |
+| 6 | [Common issues: supervised ML](./06_25_Common_Issues.md) | 2 | DERIVED | draft (lint open) |
 
-## 8. Quick Reference Card Directory
+## 9. Common Issues locator
 
-| File | Card | Core rule | Critical assumption | Avoid when |
-|---|---|---|---|---|
-| [02](02_Problem_Formulation_and_Losses.md#12-quick-reference-card) | formulation card | specify action, `t0`, label horizon, loss, capacity and baseline before fitting | probability is calibrated only when evidenced | no authorized action or mature outcome exists |
+- [Common issues: supervised ML](./06_25_Common_Issues.md) — the unit's final troubleshooting artifact; entries use stable `CI-` ids.
 
-## 9. Common Issues Locator
+## 10. Sources, versions, maintenance
 
-`06_25_Common_Issues.md` is planned. No issue count is claimed. Until it exists, use the six bounded diagnostics in [01 §8](01_Model_Validation_and_Error_Analysis.md#8-failure-modes--edge-cases), which are not a substitute for the required final collection artifact.
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
 
-## 10. Sources, Versions and Maintenance
+## 11. Acceptance checklist
 
-| File | Source/evidence | Status | Review trigger |
-|---|---|---|---|
-| [01](01_Model_Validation_and_Error_Analysis.md) | scikit-learn pitfalls guide; Gneiting & Raftery; Davis & Goadrich; illustrative arithmetic | draft; unreviewed | prediction contract, labels, or population changes |
-| [02](02_Problem_Formulation_and_Losses.md) | MacKay; Gneiting & Raftery; scikit-learn pitfalls; illustrative arithmetic | draft; unreviewed | action, horizon, loss, capacity, label, or population changes |
-| planned files | visible `directory.txt` inventory only | planned | author obtains primary method references |
-
-## 11. Collection Acceptance Checklist
-
-- [x] [Problem formulation and losses](02_Problem_Formulation_and_Losses.md) has the required ordered sections, a final card, and locally checked illustrative arithmetic; it remains draft and independently unreviewed.
-- [x] The authored sheet links its source inventory and method references.
-- [ ] Every original family and topic outcome has an individual substantive artifact.
-- [ ] All individual artifacts meet the 1,000-substantive-line course gate.
-- [ ] Final Common Issues has 25 complete issues and all 12 headings.
-- [ ] Independent numerical, navigation and editorial review is recorded.
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [x] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.

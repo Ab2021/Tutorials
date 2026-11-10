@@ -1,48 +1,58 @@
-# Insurance, Actuarial and Claims — Cross-Domain Case Studies
+# Insurance, Actuarial and Claims — Case Studies
 
 ## 1. Collection metadata
+
 | Field | Value |
 |---|---|
 | Collection owner | Curriculum maintainer |
-| Last reconciled | 2026-11-09 |
-| Review cadence | Quarterly and whenever source access, model-risk policy, or domain interfaces change |
-| Index version | 2.1-planned |
-| Canonical case ID | `CASE-10-00-NNN` |
-| Scope | Cases that require a pricing/reserving, claims-operations, and model-risk interface |
-| Evidence policy | Illustrative, published, and not-measured claims remain distinct from document state and implementation stage. |
+| Canonical case-ID format | CASE-XX-NN |
+| Evidence policy | Illustrative teaching inputs are not company results; unsourced claims stay OPEN. |
+| Editorial state | Draft; independent publication review is not claimed. |
+| Acceptance rule | A case row is `authored` only when `Tools/manuscript_lint.py` exits 0 for it. |
+| Review trigger | A source body, decision policy, metric definition, or workload assumption changes. |
 
 ## 2. Case catalog
-| Case ID | Case title / relative link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
+
+| Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-10-00-001 | Release a delayed-outcome claim model | Cross-domain insurance operations | hybrid | Whether a versioned claim model can be released with compatible policy, schema, and rollback evidence | rollout-regression | model-monitoring, human-in-the-loop | not-measured | proposed | null | Planned; no case file or measured result. |
-| PLAN-10-00-002 | Reconcile pricing indication with claims emergence | Cross-domain actuarial control | analytical | Whether emerging claims are comparable enough to challenge a pricing assumption | evaluation-mismatch | label-delay, distribution-shift | not-measured | proposed | null | Planned; does not infer insurer experience. |
+| PLAN-10-00-001 | Release a delayed-outcome claim model | Insurance, Actuarial and Claims | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-10-00-002 | Reconcile pricing indication with claims emergence | Insurance, Actuarial and Claims | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-10-00-001 | Model risk and change control, planned MLOps sheets | Insurance, Actuarial and Claims | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
+| PLAN-10-00-002 | Non-life pricing, reserving | Insurance, Actuarial and Claims | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
 
 ## 3. Canonical reusable patterns
-| Pattern | Signature | Use when | Boundary |
+
+| Pattern | Diagnostic signature | Use when | Boundary |
 |---|---|---|---|
-| `evaluation-mismatch` | An offline score or rate is not the operational decision outcome. | A metric is offered as evidence of value. | The outcome, population, time window, and guardrails are already aligned. |
-| `label-delay` | Mature truth arrives after the action. | Claims, fraud, reserve, and customer outcomes evolve. | A stable immediate adjudicated outcome is available. |
-| `rollout-regression` | A compatible-looking release breaks a live guardrail. | Model, schema, threshold, policy, or dependency changes. | No live or replayable control path exists. |
-| `model-monitoring` | Production signals can reveal degradation or control failure. | Feedback, data contracts, or review queues exist. | Signals lack a meaningful decision connection. |
-| `human-in-the-loop` | Qualified review changes the error/capacity trade-off. | Actions are high-impact or evidence is ambiguous. | Review authority or capacity is absent. |
+| evaluation-mismatch | Offline score does not represent the decision | Ranking, forecast, threshold, agent products | The metric captures decision and guardrails |
+| data-leakage | Information unavailable at decision time inflates a score | Unexpectedly strong offline result | The feature is genuinely available before the cutoff |
+| distribution-shift | Live population differs from training | New market, season, channel, or policy version | The change is sampling noise only |
+| human-in-the-loop | Review capacity or override changes the trade-off | High-impact, uncertain, or regulated work | Review is infeasible or demonstrably ineffective |
+| model-monitoring | Live signals diverge from the evaluation | Deployed model with usable feedback | No meaningful feedback signal exists |
 
-## 4. Similarity and contrast map
-| Planned case | Supporting sheets | Contrast / decision boundary |
-|---|---|---|
-| PLAN-10-00-001 | [Model risk and change control](../Cheat_Sheets/01_Insurance_Model_Risk_and_Change_Control.md), planned MLOps sheets | A rollback record differs from proof that delayed model quality is acceptable. |
-| PLAN-10-00-002 | [Non-life pricing](../01_pricing_underwriting_and_reserving/Cheat_Sheets/03_NonLife_Pricing_Ratemaking.md), [reserving](../01_pricing_underwriting_and_reserving/Cheat_Sheets/05_Claims_Reserving_Methods.md) | Emerging paid loss is not automatically an ultimate-loss or pricing-validity measure. |
+## 4. Similarity / contrast map
 
-## 5. Questions and future-case backlog
-Before authoring, assign a CASE ID, choose one primary and at most two secondary patterns, identify owner/action/unit/time/baseline, and write a 15-section case with 5a–5e, a checked quantitative walkthrough, recovery reasoning, and 12–18 answered interview prompts. Open questions: what outcome maturity permits promotion; which policy/schema/model versions must recover atomically; and which pricing-to-claims reconciliation is decision-time valid.
+This collection holds 0 authored case(s) and 4 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
 
-## 6. Review and retirement log
-| Date | Scope | State | Next trigger |
+## 5. Questions / future-case backlog
+
+Planned commitments, retained without silent deletion:
+
+- `PLAN-10-00-001` — Release a delayed-outcome claim model. Not authored; no file exists, so no link is offered.
+- `PLAN-10-00-002` — Reconcile pricing indication with claims emergence. Not authored; no file exists, so no link is offered.
+- `PLAN-10-00-001` — Model risk and change control, planned MLOps sheets. Not authored; no file exists, so no link is offered.
+- `PLAN-10-00-002` — Non-life pricing, reserving. Not authored; no file exists, so no link is offered.
+
+## 6. Review / retirement log
+
+| Date | Artifact | Event | Evidence / stage change |
 |---|---|---|---|
-| 2026-11-09 | Reconciled empty cross-domain collection with child-domain authored and planned material. | Planned; no cross-domain case authored. | A bounded source-backed or clearly illustrative decision is drafted. |
+| 2026-11-10 | collection | index regenerated; no authored case yet | not-measured / proposed |
 
 ## 7. Pre-publish checks
-- [x] Catalog preserves explicit planned state and evidence limits.
-- [x] Child-domain theory links are actual paths.
-- [ ] Each catalog row has a complete 15-section case and Section 15 card.
-- [ ] Each case has primary evidence or explicit illustrative basis, quantitative check, and independent review.
-- [ ] Cross-domain links and case IDs are verified after case authoring.
+
+- [x] Every catalog row links a file that exists, or is marked planned without a link.
+- [x] Evidence, implementation stage, and editorial status are separate columns.
+- [x] Planned commitments are retained with no silent deletion.
+- [ ] Independent source review of every authored case.
+- [ ] Publication review of every authored case.

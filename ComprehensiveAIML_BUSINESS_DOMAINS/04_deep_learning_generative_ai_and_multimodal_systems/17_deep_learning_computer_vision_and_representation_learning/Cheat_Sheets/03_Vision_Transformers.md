@@ -19,7 +19,7 @@ source_index: "INDEX.md"
 # Vision Transformers: Patch Tokens, Position, and Attention Budgets
 
 > **Purpose:** Convert an image size and patch size into a token, score-matrix and parameter budget, then choose global, windowed, hierarchical or hybrid attention on evidence rather than fashion.
-> **Prerequisites:** [CNNs, attention and transfer learning](02_CNNs_Attention_and_Transfer_Learning.md) for convolution geometry and attention basics; the task/split protocol in [Vision evaluation](01_Vision_Error_Taxonomy.md) — if that link 404s, use [Vision evaluation and error taxonomy](01_Vision_Evaluation_and_Error_Taxonomy.md); matrix multiplication.
+> **Prerequisites:** [CNNs, attention and transfer learning](02_CNNs_Attention_and_Transfer_Learning.md) for convolution geometry and attention basics; the task/split protocol in [Vision evaluation and error taxonomy](01_Vision_Evaluation_and_Error_Taxonomy.md); matrix multiplication.
 > **Key outcome:** Given H, W, P, D and h, compute token count, attention-score count, per-layer parameter counts and the memory envelope, and identify which of four plausible causes explains an out-of-memory or accuracy regression.
 > **This file does NOT cover:** detector heads, video temporal attention, generative image models, or foundation-model pretraining recipes.
 > **Level:** 2 — Core methods.

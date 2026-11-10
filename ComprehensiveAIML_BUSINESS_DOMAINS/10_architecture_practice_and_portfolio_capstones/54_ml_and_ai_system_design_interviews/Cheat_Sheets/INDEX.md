@@ -1,62 +1,73 @@
-# Module 54 Cheat Sheets — ML and AI System Design Interviews
+# Module 54 â€” ML and AI System Design Interviews — Cheat Sheets
 
 ## 1. Overview
-This collection teaches requirement discovery, ML/LLM architecture, capacity/cost, and trade-off communication. Its first foundation sheet is an illustrative, trace-checked decision framework; it does not certify interview performance, production architecture, vendor behavior, or benchmark results.
+
+This collection carries 1 reference card(s) and 0 troubleshooting artifact(s) for `Module 54 â€” ML and AI System Design Interviews`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
 ## 2. Topic ladder
-| Level | File/topic | Outcome | Prerequisite | Status |
-|---|---|---|---|---|
-| Foundation | [01 Interview decision framework](01_Interview_Decision_Framework.md) | turn ambiguity into a decision contract; compute scoped action/capacity/exam-score checks; diagnose failure boundaries | prior system/ML basics | draft; illustrative arithmetic and DERIVED traces |
-| Core | architecture whiteboard prompts | draw owned data/control/failure paths | framework | planned |
-| Core | metric selection | define objective, guardrails, denominator | statistics | planned |
-| Advanced | IR020 routing/counters/search | defend distributed correctness contract | DSA/distributed systems | planned |
-| Advanced | IR026 operation-mix structures | select structure under resource/failure bounds | DSA | planned |
-| Advanced | IR034 cache/typeahead/rank/dedupe | state freshness and consistency contract | DSA/serving | planned |
-| Final | Common Issues | diagnose at least 25 complete issues | all sheets | planned; no file |
 
-## 3. Quick topic lookup
-| Question | File | Section | Warning |
-|---|---|---|---|
-| What do I ask first? | [01 Interview framework](01_Interview_Decision_Framework.md#2-concept-map--mental-model) | Sections 2–3 | prompt is ambiguous | tools are not requirements |
-| Which denominator should I use? | [01 Interview framework](01_Interview_Decision_Framework.md#44-practice-exam-scoring-is-a-decision-not-a-vanity-percentage) | Section 4.4 | score/remediation decision | answered-only can hide omissions |
-| Is a cache safe to publish? | planned IR034 sheet | consistency contract | cache/typeahead work | stale rank is not exact rank |
+| Level | Cards | Purpose |
+|---|---|---|
 
-## 4. Reading paths — three options
-**Beginner:** [framework](01_Interview_Decision_Framework.md) → architecture prompts → metrics. **Practitioner:** framework plus capacity/cost and one bounded design case. **Advanced:** all planned DSA reference additions, then failure/recovery drills. Only the framework link is an authored artifact; remaining names are planned.
+## 3. Quick lookup
+
+| If you need to… | Read |
+|---|---|
+| work on interview decision framework | [Interview Decision Framework](./01_Interview_Decision_Framework.md) |
+
+## 4. Reading paths
+
+| Path | Sequence |
+|---|---|
+| Beginner | foundation cards first, then the Quick Reference Card (§12) of each core card |
+| Practitioner | core cards in ladder order, then one case in `../Case_Studies/` that cites them |
+| Advanced | advanced cards, then the Common Issues artifact and its discriminating checks |
 
 ## 5. Prerequisite skills
-Problem decomposition; queues and rates; ML evaluation; basic retrieval; distributed consistency; and complexity analysis. The module index lists course-module prerequisites. No hidden source body is assumed available.
+
+| Skill | Why it is needed | Where it is available |
+|---|---|---|
+| Unit topic map | Defines what this collection is responsible for and what it excludes | `../INDEX.md` |
+| Decision framing | Cards assume a stated decision, population, and cut-off | sibling case collection |
+| Arithmetic discipline | Every card carries checked numbers with units | the cards themselves |
 
 ## 6. Exclusions and handoffs
-This collection does not certify interview performance, production architecture, vendor behavior, or benchmark results. Algorithm-specific proofs and implementation belong in their relevant DSA homes; visible interview examples remain reference-only.
+
+| Excluded here | Handed to |
+|---|---|
+| Decision-context narrative, baselines, and outcomes | `../Case_Studies/` |
+| Organisational policy and legal determination | governance modules, not this collection |
+| Vendor-specific or unverified current API behaviour | treat as OPEN until sourced at authoring time |
 
 ## 7. Master symbol glossary
-| Symbol | Meaning | Units/type | First planned use |
-|---|---|---|---|
-| `lambda` | arrival rate | requests/s | capacity sheet |
-| `mu` | service rate | requests/s | capacity sheet |
-| `B` | backlog | requests | capacity sheet |
-| `p` | probability, never feature count | dimensionless | metrics sheet |
 
-## 8. Quick Reference Card directory
-| File/card | Core rule | Use condition | Critical assumption | Avoid condition |
+| Symbol / term | Meaning | Units | Shape / type | Domain | First use |
+|---|---|---|---|---|---|
+| — | no card defines a symbol yet | — | — | — | — |
+
+## 8. Card directory
+
+| # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
-| [01 card](01_Interview_Decision_Framework.md#12-quick-reference-card) | decision → metric → capacity → recovery → evidence | bounded design answer | stated units and ownership | unsupported performance claim |
+| 1 | [Interview Decision Framework](./01_Interview_Decision_Framework.md) | 1 | DERIVED | authored |
 
 ## 9. Common Issues locator
-No issue file exists. The final file must retain 12 headings and contain >=25 distinct complete issues with required categories, provenance, competing causes, diagnostics, correction, prevention, and verification. The diagnostics in File 01 are teaching dossiers, not the final collection artifact.
 
-## 10. Sources, versions and maintenance
-| Source | Scope | Limitation | Trigger |
-|---|---|---|---|
-| [Module index](../INDEX.md) | five original topics and three plans | planned syllabus only | index/source change |
-| [01 framework](01_Interview_Decision_Framework.md) | DERIVED decision, queue, scoring, latency, and idempotency traces; ILLUSTRATIVE inputs | not a deployment or exam result | metric, policy, or source-plan change |
-| [REF-IR020](../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/CASE_STUDIES_03.md) | reference example | not evidence of implementation | source review |
-| [REF-IR026](../../../../INTERVIEW_CASES/DSA/index_basics/INTERVIEW_CASE_STUDIES.md) | reference example | methods must be separately authored | source review |
-| [REF-IR034](../../../../INTERVIEW_CASES/DSA/Sys_Des_DSA/INTERVIEW_SYSTEM_DESIGN_CASES.md) | reference example | no proprietary results | source review |
+- Not yet authored. The collection is incomplete until this artifact exists with at least 25 distinct issues.
 
-## 11. Collection acceptance checklist
-- [ ] Every original and reference-informed commitment has a substantive artifact.
-- [ ] Every sheet has 12 sections, checked task, diagnostics, interview answers, and final card.
-- [ ] A complete final Common Issues artifact exists.
-- [ ] Primary factual sources and unstable claims are version-pinned and reviewed.
+## 10. Sources, versions, maintenance
+
+| Field | Value |
+|---|---|
+| Evidence vocabulary | DERIVED / VERIFIED / SOURCED / ILLUSTRATIVE / HEURISTIC / OPEN |
+| Version policy | Content is dated by its own frontmatter; unstable API, price, and regulatory facts are rechecked at edit time |
+| Maintenance trigger | A card's validity condition, a source body, or a tool's semantics changes |
+| Review cadence | Quarterly, plus on any material change to a cited source |
+
+## 11. Acceptance checklist
+
+- [x] Every linked card exists on disk.
+- [x] Status column is measured by the lint, not asserted.
+- [x] Planned commitments remain listed without links.
+- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Independent technical review of each card.
