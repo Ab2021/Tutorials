@@ -8,12 +8,11 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | data tests and expectations | [Data observability and incident-triage draft](Cheat_Sheets/01_Data_Observability_and_Incident_Triage.md); broader topic planned |
+| 1 | data tests and expectations | planned |
 | 2 | lineage and freshness | planned |
 | 3 | SLOs and error budgets | planned |
 | 4 | drift and data incidents | planned |
 | 5 | runbooks and postmortems | planned |
-
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

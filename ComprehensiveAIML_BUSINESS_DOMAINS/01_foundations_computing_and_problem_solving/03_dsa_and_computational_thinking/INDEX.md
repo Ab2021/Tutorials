@@ -8,12 +8,11 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | arrays trees graphs and heaps | [DSA patterns and invariants draft](Cheat_Sheets/01_DSA_Patterns_and_Invariants.md); remaining structure scope planned |
+| 1 | arrays trees graphs and heaps | planned |
 | 2 | hashing and sorting | planned |
 | 3 | dynamic programming | planned |
 | 4 | greedy and graph algorithms | planned |
 | 5 | complexity and trade-offs | planned |
-
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

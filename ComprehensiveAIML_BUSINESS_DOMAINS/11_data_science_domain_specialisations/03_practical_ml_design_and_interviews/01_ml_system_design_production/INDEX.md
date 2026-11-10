@@ -8,19 +8,18 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | problem framing | planned |
+| 1 | problem framing | [authored](Cheat_Sheets/01_ML_System_Problem_Framing.md) |
 | 2 | data contracts | planned |
-| 3 | feature platform | planned |
+| 3 | feature platform | [authored](Case_Studies/02_fraud_platform_capacity_decision.md) |
 | 4 | training | planned |
 | 5 | serving | planned |
 | 6 | experiments | planned |
 | 7 | evaluation | planned |
-| 8 | monitoring | planned |
+| 8 | monitoring | [authored](Case_Studies/01_model_monitoring_drift_incident.md) |
 | 9 | security | planned |
 | 10 | rollout | planned |
 | 11 | cost | planned |
 | 12 | incidents | planned |
-
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

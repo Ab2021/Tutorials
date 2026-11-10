@@ -8,12 +8,11 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | graph modelling | planned |
-| 2 | centrality and communities | planned |
+| 1 | graph modelling | [authored](Cheat_Sheets/01_graph_fraud_detection.md) |
+| 2 | centrality and communities | [authored](Cheat_Sheets/03_centrality_and_communities.md) |
 | 3 | graph embeddings and GNNs | planned |
 | 4 | knowledge graph construction | planned |
-| 5 | graph evaluation | planned |
-
+| 5 | graph evaluation | [authored](Cheat_Sheets/06_graph_evaluation.md) |
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

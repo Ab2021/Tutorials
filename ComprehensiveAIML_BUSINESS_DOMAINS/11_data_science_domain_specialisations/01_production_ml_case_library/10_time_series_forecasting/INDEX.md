@@ -9,16 +9,15 @@
 | # | Topic | Status |
 |---:|---|---|
 | 1 | time-series data quality | planned |
-| 2 | baselines | partial: [retail demand](Case_Studies/01_Retail_CPG_Demand_Forecasting_At_Scale.md) and [ride-hailing demand](Case_Studies/02_Ride_Hailing_Demand_Forecasting.md) are illustrative unreviewed drafts |
+| 2 | baselines | planned |
 | 3 | feature engineering | planned |
-| 4 | probabilistic forecasts | partial: [energy load forecasting case](Case_Studies/03_Energy_Load_Forecasting.md); illustrative and unreviewed |
+| 4 | probabilistic forecasts | planned |
 | 5 | hierarchies | planned |
 | 6 | intermittency | planned |
-| 7 | deep forecasting | planned |
+| 7 | deep forecasting | [authored](Case_Studies/01_Retail_CPG_Demand_Forecasting_At_Scale.md) |
 | 8 | anomaly detection | planned |
-| 9 | backtesting | partial: [ride-hailing forecasting case](Case_Studies/02_Ride_Hailing_Demand_Forecasting.md); actual backtest and broader methods remain unmeasured |
+| 9 | backtesting | planned |
 | 10 | forecast operations | planned |
-
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

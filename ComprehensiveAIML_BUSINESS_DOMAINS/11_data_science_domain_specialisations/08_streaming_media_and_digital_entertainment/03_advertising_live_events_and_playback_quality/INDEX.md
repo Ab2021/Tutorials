@@ -11,16 +11,15 @@
 | 1 | ad decisioning | planned |
 | 2 | inventory forecasting | planned |
 | 3 | frequency | planned |
-| 4 | measurement | planned |
-| 5 | live concurrency | planned |
+| 4 | measurement | [authored](Cheat_Sheets/03_CTV_Measurement_and_Brand_Safety.md) |
+| 5 | live concurrency | [authored](Case_Studies/01_Live_Event_Capacity_Forecast.md) |
 | 6 | CDN | planned |
-| 7 | QoE telemetry | planned |
+| 7 | QoE telemetry | [authored](Case_Studies/04_QoE_Anomaly_Detection.md) |
 | 8 | buffering | planned |
-| 9 | anomaly detection | planned |
-| 10 | incident response | planned |
+| 9 | anomaly detection | [authored](Case_Studies/04_QoE_Anomaly_Detection.md) |
+| 10 | incident response | [authored](Case_Studies/05_Brand_Safety_Incident.md) |
 | 11 | privacy | planned |
-| 12 | brand safety | planned |
-
+| 12 | brand safety | [authored](Case_Studies/05_Brand_Safety_Incident.md) |
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

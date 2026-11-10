@@ -9,18 +9,17 @@
 | # | Topic | Status |
 |---:|---|---|
 | 1 | probability | planned |
-| 2 | life contingencies | planned |
-| 3 | ratemaking | partial: [non-life pricing sheet](Cheat_Sheets/03_NonLife_Pricing_Ratemaking.md), draft and unreviewed |
+| 2 | life contingencies | [authored](Cheat_Sheets/03_NonLife_Pricing_Ratemaking.md) |
+| 3 | ratemaking | [authored](Cheat_Sheets/03_NonLife_Pricing_Ratemaking.md) |
 | 4 | GLMs | planned |
 | 5 | underwriting | planned |
-| 6 | reserving | partial: [claims reserving methods](Cheat_Sheets/05_Claims_Reserving_Methods.md), draft and unreviewed; full reserving validation remains planned |
+| 6 | reserving | [authored](Cheat_Sheets/05_Claims_Reserving_Methods.md) |
 | 7 | capital | planned |
 | 8 | reinsurance | planned |
 | 9 | Bayesian credibility | planned |
 | 10 | catastrophe | planned |
 | 11 | explainability | planned |
 | 12 | governance | planned |
-
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

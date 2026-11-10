@@ -12,8 +12,7 @@
 | 2 | episodic and semantic memory | planned |
 | 3 | memory write policies | planned |
 | 4 | personalisation | planned |
-| 5 | privacy and deletion | [Memory lifecycle and retention draft](Cheat_Sheets/01_Memory_Lifecycle_and_Retention.md); broader topic planned |
-
+| 5 | privacy and deletion | planned |
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

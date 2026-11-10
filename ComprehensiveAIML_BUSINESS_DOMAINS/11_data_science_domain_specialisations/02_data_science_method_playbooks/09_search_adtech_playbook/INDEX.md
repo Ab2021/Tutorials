@@ -9,8 +9,8 @@
 | # | Topic | Status |
 |---:|---|---|
 | 1 | search foundations | planned |
-| 2 | IR and BM25 | partial: [BM25 and classical retrieval](Cheat_Sheets/02_BM25_and_Classical_Retrieval.md), unreviewed draft |
-| 3 | neural retrieval | planned |
+| 2 | IR and BM25 | [authored](Cheat_Sheets/02_BM25_and_Classical_Retrieval.md) |
+| 3 | neural retrieval | [authored](Cheat_Sheets/02_BM25_and_Classical_Retrieval.md) |
 | 4 | query understanding | planned |
 | 5 | LTR | planned |
 | 6 | ranking metrics | planned |
@@ -29,7 +29,6 @@
 | 19 | GenAI search | planned |
 | 20 | interviews | planned |
 | 21 | use cases | planned |
-
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

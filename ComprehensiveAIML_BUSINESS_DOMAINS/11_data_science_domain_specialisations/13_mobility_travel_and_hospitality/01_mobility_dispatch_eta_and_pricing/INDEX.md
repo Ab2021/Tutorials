@@ -9,18 +9,17 @@
 | # | Topic | Status |
 |---:|---|---|
 | 1 | marketplace dynamics | planned |
-| 2 | demand | [Ride-hailing demand forecasting draft](../../01_production_ml_case_library/10_time_series_forecasting/Case_Studies/02_Ride_Hailing_Demand_Forecasting.md); broader topic planned |
-| 3 | driver supply | planned |
-| 4 | dispatch | planned |
+| 2 | demand | planned |
+| 3 | driver supply | [authored](Case_Studies/02_Driver_Supply_Forecast.md) |
+| 4 | dispatch | [authored](Case_Studies/04_Dispatch_Failure_Recovery.md) |
 | 5 | routing | planned |
-| 6 | ETA | planned |
-| 7 | pricing | planned |
-| 8 | safety | planned |
+| 6 | ETA | [authored](Case_Studies/01_ETA_Calibration.md) |
+| 7 | pricing | [authored](Cheat_Sheets/03_Dynamic_Pricing_Guardrails.md) |
+| 8 | safety | [authored](Case_Studies/05_Safety_Event_Triage.md) |
 | 9 | fraud | planned |
 | 10 | weather | planned |
 | 11 | experiments | planned |
 | 12 | operations | planned |
-
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

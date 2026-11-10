@@ -13,7 +13,7 @@
 | 3 | embeddings | planned |
 | 4 | transformers | planned |
 | 5 | LLM prompting | planned |
-| 6 | RAG | planned |
+| 6 | RAG | [authored](Cheat_Sheets/13_RAG_Retrieval_Augmented_Generation.md) |
 | 7 | agents | planned |
 | 8 | fine-tuning | planned |
 | 9 | structured output | planned |
@@ -26,7 +26,6 @@
 | 16 | cost | planned |
 | 17 | interviews | planned |
 | 18 | practical cases | planned |
-
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

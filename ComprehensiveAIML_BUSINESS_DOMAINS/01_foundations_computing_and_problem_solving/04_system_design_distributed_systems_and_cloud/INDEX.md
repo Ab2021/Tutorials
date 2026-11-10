@@ -8,12 +8,11 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | requirements and capacity | [System-design flow draft](Cheat_Sheets/01_System_Design_Interview_Flow.md); remaining capacity scope planned |
+| 1 | requirements and capacity | planned |
 | 2 | storage and caching | planned |
 | 3 | queues and eventing | planned |
 | 4 | consistency and idempotency | planned |
 | 5 | resilience and observability | planned |
-
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

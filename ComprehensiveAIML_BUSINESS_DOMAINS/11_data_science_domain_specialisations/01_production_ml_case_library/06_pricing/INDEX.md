@@ -11,14 +11,13 @@
 | 1 | price elasticity | planned |
 | 2 | cost and value | planned |
 | 3 | competitive dynamics | planned |
-| 4 | dynamic pricing | planned |
+| 4 | dynamic pricing | [authored](Case_Studies/01_Dynamic_Pricing_Ecommerce_Retail.md) |
 | 5 | experimentation | planned |
 | 6 | revenue management | planned |
 | 7 | auctions and RTB | planned |
 | 8 | fairness | planned |
 | 9 | regulation | planned |
 | 10 | real-time delivery | planned |
-
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

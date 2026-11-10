@@ -8,12 +8,11 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | dimensional and normalized models | [Data model notation](Cheat_Sheets/03_Data_Model_Notation.md) and [grain/join safety](Cheat_Sheets/02_Data_Model_Grain_and_Join_Safety.md); drafts, unreviewed |
+| 1 | dimensional and normalized models | planned |
 | 2 | transactional and analytical databases | planned |
-| 3 | lakehouse patterns | planned |
+| 3 | lakehouse patterns | [authored](Case_Studies/01_model_an_ecommerce_lakehouse.md) |
 | 4 | metadata lineage and catalogues | planned |
-| 5 | data contracts | [Data-contract lesson](Cheat_Sheets/01_Data_Contract_Checklist.md); draft, unreviewed |
-
+| 5 | data contracts | [authored](Cheat_Sheets/01_Data_Contract_Checklist.md) |
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

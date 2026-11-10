@@ -21,7 +21,7 @@
 | 11 | probabilistic forecasting | planned |
 | 12 | causal impacts | planned |
 | 13 | anomaly detection | planned |
-| 14 | demand | planned |
+| 14 | demand | [authored](Cheat_Sheets/04_Rolling_Origin_Validation_And_Demand_Accuracy.md) |
 | 15 | finance | planned |
 | 16 | energy | planned |
 | 17 | mobility | planned |
@@ -29,7 +29,6 @@
 | 19 | metrics | planned |
 | 20 | interviews | planned |
 | 21 | use cases | planned |
-
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

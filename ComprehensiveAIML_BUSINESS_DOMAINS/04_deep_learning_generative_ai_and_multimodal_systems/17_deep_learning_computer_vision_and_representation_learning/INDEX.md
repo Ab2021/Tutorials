@@ -8,12 +8,11 @@
 
 | # | Topic | Current artifact / boundary |
 |---:|---|---|
-| 1 | CNNs and attention | [Authored draft sheet](Cheat_Sheets/02_CNNs_Attention_and_Transfer_Learning.md): convolution geometry, attention/transfer selection, 34 diagnostic drills, and release evidence; independent technical review remains open. |
-| 2 | vision transformers | [Draft sheet](Cheat_Sheets/03_Vision_Transformers.md); full publication-depth expansion remains open. |
-| 3 | detection and segmentation | [Draft sheet](Cheat_Sheets/04_Detection_and_Segmentation.md); full publication-depth expansion remains open. |
-| 4 | self-supervision | [Draft sheet](Cheat_Sheets/05_Self_Supervision_and_Contrastive_Learning.md); full publication-depth expansion remains open. |
-| 5 | vision evaluation and error taxonomy | [Existing incomplete draft](Cheat_Sheets/01_Vision_Evaluation_and_Error_Taxonomy.md); broader topic and template expansion remain open. |
-
+| 1 | CNNs and attention | [authored](Cheat_Sheets/02_CNNs_Attention_and_Transfer_Learning.md) |
+| 2 | vision transformers | [authored](Cheat_Sheets/03_Vision_Transformers.md) |
+| 3 | detection and segmentation | [authored](Cheat_Sheets/04_Detection_and_Segmentation.md) |
+| 4 | self-supervision | [authored](Cheat_Sheets/05_Self_Supervision_and_Contrastive_Learning.md) |
+| 5 | vision evaluation and error taxonomy | [authored](Cheat_Sheets/01_Vision_Evaluation_and_Error_Taxonomy.md) |
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

@@ -8,8 +8,8 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | demand forecast | planned |
-| 2 | revenue management | planned |
+| 1 | demand forecast | [authored](Case_Studies/01_Hotel_Revenue_Forecast.md) |
+| 2 | revenue management | [authored](Cheat_Sheets/01_Revenue_Management_Controls.md) |
 | 3 | availability | planned |
 | 4 | pricing | planned |
 | 5 | recommendations | planned |
@@ -20,7 +20,6 @@
 | 10 | sustainability | planned |
 | 11 | experiments | planned |
 | 12 | governance | planned |
-
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

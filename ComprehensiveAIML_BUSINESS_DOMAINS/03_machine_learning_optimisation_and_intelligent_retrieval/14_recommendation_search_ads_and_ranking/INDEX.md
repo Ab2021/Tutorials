@@ -8,12 +8,11 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | candidate generation | planned |
+| 1 | candidate generation | [authored](Cheat_Sheets/01_ranking_metrics.md) |
 | 2 | learning to rank | planned |
 | 3 | collaborative and content models | planned |
-| 4 | bandits and exploration | planned |
+| 4 | bandits and exploration | [authored](Cheat_Sheets/03_online_experimentation_checklist.md) |
 | 5 | offline-online evaluation | planned |
-
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

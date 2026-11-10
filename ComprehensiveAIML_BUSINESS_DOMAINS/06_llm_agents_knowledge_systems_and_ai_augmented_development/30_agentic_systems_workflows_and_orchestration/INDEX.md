@@ -8,12 +8,11 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | [agent boundaries](./Cheat_Sheets/01_agent_boundaries_and_request_ownership.md) | draft; not reviewed |
-| 2 | workflow vs agent | planned |
+| 1 | [agent boundaries](./Cheat_Sheets/01_agent_boundaries_and_request_ownership.md) | [authored](Cheat_Sheets/01_agent_boundaries_and_request_ownership.md) |
+| 2 | workflow vs agent | [authored](Case_Studies/01_enterprise_agent_approval_gate.md) |
 | 3 | planning and reflection | planned |
 | 4 | multi-agent orchestration | planned |
-| 5 | durable state and recovery | partial draft coverage in cheat sheets 04–05; not reviewed |
-
+| 5 | durable state and recovery | planned |
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

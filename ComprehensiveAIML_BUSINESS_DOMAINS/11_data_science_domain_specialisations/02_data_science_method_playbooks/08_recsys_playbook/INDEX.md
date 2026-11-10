@@ -8,7 +8,7 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | taxonomy | partial unreviewed draft: [candidate generation and eligibility](Cheat_Sheets/01_Candidate_Generation_Eligibility_and_Ranking.md) |
+| 1 | taxonomy | planned |
 | 2 | collaborative filtering | planned |
 | 3 | content-based | planned |
 | 4 | hybrid | planned |
@@ -16,7 +16,7 @@
 | 6 | sequential models | planned |
 | 7 | knowledge graphs | planned |
 | 8 | bandits | planned |
-| 9 | metrics | partial unreviewed draft: [eligible retrieval recall](Cheat_Sheets/01_Candidate_Generation_Eligibility_and_Ranking.md#5-worked-numerical-example); broader ranking metrics planned |
+| 9 | metrics | planned |
 | 10 | features | planned |
 | 11 | e-commerce | planned |
 | 12 | streaming | planned |
@@ -30,7 +30,6 @@
 | 20 | A/B testing | planned |
 | 21 | interviews | planned |
 | 22 | use cases | planned |
-
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

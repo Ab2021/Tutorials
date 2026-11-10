@@ -11,7 +11,7 @@
 | 1 | demand planning | planned |
 | 2 | S&OP | planned |
 | 3 | hierarchies | planned |
-| 4 | inventory policy | planned |
+| 4 | inventory policy | [authored](Cheat_Sheets/01_fenwick_inventory_range_totals.md) |
 | 5 | multi-echelon | planned |
 | 6 | replenishment | planned |
 | 7 | supplier risk | planned |
@@ -20,7 +20,6 @@
 | 10 | scenario planning | planned |
 | 11 | resilience | planned |
 | 12 | sustainability | planned |
-
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

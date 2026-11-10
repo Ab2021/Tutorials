@@ -8,12 +8,11 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | [clinical workflow design](Cheat_Sheets/01_Clinical_Decision_Support_Evidence_and_Handoff.md) | draft; 12-section manuscript exceeds the 1,000-line course threshold; source-body and local-policy evidence remain OPEN |
-| 2 | [biomedical signals](Cheat_Sheets/02_Biomedical_Signal_Pipeline_and_Validation.md) | draft; 1,017-line 12-section manuscript with exactly 15 answered questions; 13 arithmetic checks and routing/split paper oracles passed; technical ECG/HRV/filter commitments remain in Module 37 and primary/local evidence remains OPEN |
-| 3 | imaging and triage | planned |
+| 1 | [clinical workflow design](Cheat_Sheets/01_Clinical_Decision_Support_Evidence_and_Handoff.md) | [authored](Cheat_Sheets/01_Clinical_Decision_Support_Evidence_and_Handoff.md) |
+| 2 | [biomedical signals](Cheat_Sheets/02_Biomedical_Signal_Pipeline_and_Validation.md) | [authored](Cheat_Sheets/02_Biomedical_Signal_Pipeline_and_Validation.md) |
+| 3 | imaging and triage | [authored](Case_Studies/02_ecg_model_validation_plan.md) |
 | 4 | drug discovery | planned |
-| 5 | validation and regulation | planned |
-
+| 5 | validation and regulation | [authored](Case_Studies/02_ecg_model_validation_plan.md) |
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

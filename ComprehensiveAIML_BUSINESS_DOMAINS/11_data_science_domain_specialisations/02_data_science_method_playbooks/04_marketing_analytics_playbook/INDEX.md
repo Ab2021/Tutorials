@@ -8,7 +8,7 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | marketing fundamentals | planned |
+| 1 | marketing fundamentals | [authored](Cheat_Sheets/21_Causal_Inference_Marketing.md) |
 | 2 | metrics | planned |
 | 3 | customer segmentation | planned |
 | 4 | MMM | planned |
@@ -27,7 +27,6 @@
 | 17 | tools | planned |
 | 18 | interviews | planned |
 | 19 | use cases | planned |
-
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

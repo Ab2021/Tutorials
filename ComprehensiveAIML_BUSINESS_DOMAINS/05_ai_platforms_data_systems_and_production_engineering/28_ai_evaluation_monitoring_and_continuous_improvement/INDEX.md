@@ -10,11 +10,10 @@
 |---:|---|---|
 | 1 | test-set design | planned |
 | 2 | LLM and agent evaluations | planned |
-| 3 | human evaluation | planned |
-| 4 | production monitoring | [model evaluation and monitoring draft](Cheat_Sheets/04_Model_Evaluation_and_Production_Monitoring.md); broader topic planned |
+| 3 | human evaluation | [authored](Cheat_Sheets/04_Model_Evaluation_and_Production_Monitoring.md) |
+| 4 | production monitoring | [authored](Cheat_Sheets/04_Model_Evaluation_and_Production_Monitoring.md) |
 | 5 | feedback and regression gates | planned |
-| 6 | training, language-model, benchmark, judge, failure and profiling diagnostics | Source Module 09 submodules 9.1–9.6 mapped as unreviewed drafts |
-
+| 6 | training, language-model, benchmark, judge, failure and profiling diagnostics | planned |
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

@@ -9,11 +9,10 @@
 | # | Topic | Status |
 |---:|---|---|
 | 1 | event schemas and contracts | planned |
-| 2 | Kafka and stream processing | [Kafka lag draft](Cheat_Sheets/01_Kafka_Consumer_Partitions_and_Lag.md); broader topic planned |
-| 3 | time windows and state | [Flink session-window draft](Cheat_Sheets/03_Flink_Event_Time_Session_Windows_and_Stateful_Processing.md) and [hypothetical CEP fraud case](Case_Studies/02_Flink_CEP_Streaming_Fraud_Detection.md); broader scope planned |
-| 4 | CDC and event sourcing | [CDC handoff draft](Cheat_Sheets/02_CDC_Ordering_Snapshot_and_Materialization.md); event sourcing and broader scope planned |
+| 2 | Kafka and stream processing | planned |
+| 3 | time windows and state | [authored](Cheat_Sheets/03_Flink_Event_Time_Session_Windows_and_Stateful_Processing.md) |
+| 4 | CDC and event sourcing | planned |
 | 5 | exactly-once trade-offs | planned |
-
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

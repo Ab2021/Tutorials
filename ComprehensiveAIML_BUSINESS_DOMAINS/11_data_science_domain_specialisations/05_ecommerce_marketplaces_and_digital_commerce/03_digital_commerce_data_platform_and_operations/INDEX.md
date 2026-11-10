@@ -8,18 +8,17 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | event tracking | planned |
+| 1 | event tracking | [authored](Cheat_Sheets/01_Commerce_Event_Schema_and_Identity.md) |
 | 2 | customer and product 360 | planned |
-| 3 | feature platform | planned |
+| 3 | feature platform | [authored](Cheat_Sheets/04_25_Common_Issues.md) |
 | 4 | experimentation | planned |
 | 5 | real-time inventory | planned |
-| 6 | order orchestration | planned |
-| 7 | analytics reliability | planned |
+| 6 | order orchestration | [authored](Case_Studies/04_Order_Status_Agent.md) |
+| 7 | analytics reliability | [authored](Cheat_Sheets/02_Inventory_Order_and_Analytics_Reliability.md) |
 | 8 | privacy | planned |
-| 9 | FinOps | planned |
-| 10 | observability | planned |
-| 11 | incident response | planned |
-
+| 9 | FinOps | [authored](Cheat_Sheets/03_FinOps_Observability_Incidents.md) |
+| 10 | observability | [authored](Cheat_Sheets/03_FinOps_Observability_Incidents.md) |
+| 11 | incident response | [authored](Case_Studies/01_Inventory_Freshness_Incident.md) |
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

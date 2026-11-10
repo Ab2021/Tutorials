@@ -9,11 +9,10 @@
 | # | Topic | Status |
 |---:|---|---|
 | 1 | tokenisation and embeddings | planned |
-| 2 | attention and transformer blocks | Submodules 1.1–1.4 drafted; focused sheets and independent review remain planned |
-| 3 | pretraining and scaling | Submodules 3.1–3.3 drafted; focused sheets, empirical validation and bounded case remain planned |
-| 4 | context architectures | Source Module 11 submodules 11.1 and 11.3–11.5 mapped as unreviewed drafts; existing RoPE sheet maps 11.2 |
+| 2 | attention and transformer blocks | planned |
+| 3 | pretraining and scaling | planned |
+| 4 | context architectures | [authored](Case_Studies/01_code_assistance_model_choice.md) |
 | 5 | inference behaviour | planned |
-
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

@@ -8,12 +8,11 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | A/B design and power | [Experiment design and guardrails draft](Cheat_Sheets/01_Experiment_Design_and_Guardrails.md); broader topic planned |
-| 2 | causal diagrams | planned |
-| 3 | matching and difference-in-differences | planned |
-| 4 | uplift and treatment heterogeneity | planned |
-| 5 | decision thresholds | planned |
-
+| 1 | A/B design and power | [authored](Cheat_Sheets/01_Experiment_Design_and_Guardrails.md) |
+| 2 | causal diagrams | [authored](Cheat_Sheets/02_Causal_Diagrams_and_Adjustment.md) |
+| 3 | matching and difference-in-differences | [authored](Cheat_Sheets/03_Matching_and_Difference_in_Differences.md) |
+| 4 | uplift and treatment heterogeneity | [authored](Cheat_Sheets/04_Uplift_and_Treatment_Heterogeneity.md) |
+| 5 | decision thresholds | [authored](Cheat_Sheets/05_Decision_Thresholds_and_Value.md) |
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

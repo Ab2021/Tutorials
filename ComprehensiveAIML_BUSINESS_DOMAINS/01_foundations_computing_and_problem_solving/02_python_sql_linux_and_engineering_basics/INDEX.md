@@ -8,12 +8,11 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | Python data workflows | [Python async and concurrency draft](Cheat_Sheets/01_Python_Async_and_Concurrency.md) and [LLM fundamentals](Cheat_Sheets/03_LLM_Fundamentals.md); remaining Python workflow scope planned |
-| 2 | SQL joins and windows | planned |
-| 3 | Linux and networking | planned |
-| 4 | Git testing and packaging | [Docker and containers draft](Cheat_Sheets/04_Docker_and_Containers.md); remaining Git/testing/packaging scope planned |
-| 5 | HTTP APIs and JSON | [REST and WebSockets draft](Cheat_Sheets/02_REST_APIs_and_WebSockets.md); remaining HTTP/JSON scope planned |
-
+| 1 | Python data workflows | [authored](Cheat_Sheets/01_Python_Async_and_Concurrency.md) |
+| 2 | SQL joins and windows | [authored](Cheat_Sheets/05_SQL_Analytics_Patterns.md) |
+| 3 | Linux and networking | [authored](Cheat_Sheets/99_25_Common_Issues.md) |
+| 4 | Git testing and packaging | planned |
+| 5 | HTTP APIs and JSON | planned |
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

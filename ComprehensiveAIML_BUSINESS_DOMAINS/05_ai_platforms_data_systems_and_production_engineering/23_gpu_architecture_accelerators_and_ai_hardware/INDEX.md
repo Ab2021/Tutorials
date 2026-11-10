@@ -8,12 +8,11 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | GPU memory and parallelism | Unreviewed H100/roofline cheat-sheet drafts; Module 06.1–6.4 mapped lessons drafted |
+| 1 | GPU memory and parallelism | planned |
 | 2 | TPU/NPU/accelerator landscape | planned |
 | 3 | interconnects and clusters | planned |
 | 4 | precision and quantisation | planned |
 | 5 | cost-energy-performance | planned |
-
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

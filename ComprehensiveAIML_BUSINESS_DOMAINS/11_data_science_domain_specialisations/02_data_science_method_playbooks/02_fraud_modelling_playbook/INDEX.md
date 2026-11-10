@@ -8,13 +8,13 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | fraud fundamentals | planned |
-| 2 | class imbalance | [Imbalanced learning and thresholds](Cheat_Sheets/03_Imbalanced_Fraud_Learning_and_Thresholds.md) draft; broader scope planned |
-| 3 | cost-sensitive learning | [Imbalanced learning and thresholds](Cheat_Sheets/03_Imbalanced_Fraud_Learning_and_Thresholds.md) draft; broader scope planned |
+| 1 | fraud fundamentals | [authored](Cheat_Sheets/01_Fraud_Evaluation_Calibration_and_Capacity.md) |
+| 2 | class imbalance | planned |
+| 3 | cost-sensitive learning | planned |
 | 4 | feature engineering | planned |
 | 5 | ensembles | planned |
 | 6 | anomaly detection | planned |
-| 7 | graph fraud | planned |
+| 7 | graph fraud | [authored](Cheat_Sheets/01_Fraud_Evaluation_Calibration_and_Capacity.md) |
 | 8 | payments | planned |
 | 9 | claims | planned |
 | 10 | AML | planned |
@@ -24,7 +24,6 @@
 | 14 | model monitoring | planned |
 | 15 | fairness | planned |
 | 16 | production ML | planned |
-
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

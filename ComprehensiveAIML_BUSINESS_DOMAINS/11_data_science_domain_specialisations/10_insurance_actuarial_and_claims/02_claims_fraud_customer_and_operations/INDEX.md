@@ -8,8 +8,8 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | claims journey | planned |
-| 2 | document extraction | planned |
+| 1 | claims journey | [authored](Case_Studies/Medical_Claims_Document_Extraction_MediConCen.md) |
+| 2 | document extraction | [authored](Case_Studies/Medical_Claims_Document_Extraction_MediConCen.md) |
 | 3 | damage vision | planned |
 | 4 | fraud | planned |
 | 5 | triage | planned |
@@ -20,7 +20,6 @@
 | 10 | workforce | planned |
 | 11 | monitoring | planned |
 | 12 | human review | planned |
-
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

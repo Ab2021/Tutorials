@@ -8,12 +8,11 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | sensor characteristics | planned |
-| 2 | time sync and calibration | [Sensor time-sync and calibration draft](Cheat_Sheets/02_Sensor_Time_Sync_and_Calibration.md); broader topic planned |
+| 1 | sensor characteristics | [authored](Cheat_Sheets/02_Sensor_Time_Sync_and_Calibration.md) |
+| 2 | time sync and calibration | [authored](Cheat_Sheets/02_Sensor_Time_Sync_and_Calibration.md) |
 | 3 | Kalman and Bayesian filters | planned |
 | 4 | edge telemetry | planned |
 | 5 | perception latency | planned |
-
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

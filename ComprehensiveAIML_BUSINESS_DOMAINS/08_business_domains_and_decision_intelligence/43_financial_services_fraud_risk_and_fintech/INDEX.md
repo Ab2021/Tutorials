@@ -8,12 +8,11 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | fraud graphs and streaming | [Fraud triage and review-controls draft](Cheat_Sheets/01_Fraud_Triage_and_Review_Controls.md); broader topic planned |
+| 1 | fraud graphs and streaming | planned |
 | 2 | credit and underwriting | planned |
 | 3 | AML and compliance | planned |
 | 4 | model risk | planned |
 | 5 | financial evaluation | planned |
-
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

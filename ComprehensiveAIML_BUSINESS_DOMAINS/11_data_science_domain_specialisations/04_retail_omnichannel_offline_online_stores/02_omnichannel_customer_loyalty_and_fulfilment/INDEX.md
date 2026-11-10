@@ -8,19 +8,18 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | identity resolution | planned |
-| 2 | loyalty | planned |
+| 1 | identity resolution | [authored](Cheat_Sheets/02_Customer_Identity_Controls.md) |
+| 2 | loyalty | [authored](Case_Studies/02_Loyalty_Next_Best_Action.md) |
 | 3 | journey analytics | planned |
 | 4 | inventory visibility | planned |
-| 5 | BOPIS | planned |
+| 5 | BOPIS | [authored](Case_Studies/01_BOPIS_Promise_Accuracy.md) |
 | 6 | ship-from-store | planned |
-| 7 | returns | planned |
+| 7 | returns | [authored](Case_Studies/03_Returns_Risk_Intervention.md) |
 | 8 | service recovery | planned |
 | 9 | personalisation | planned |
 | 10 | privacy | planned |
 | 11 | experimentation | planned |
 | 12 | economics | planned |
-
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

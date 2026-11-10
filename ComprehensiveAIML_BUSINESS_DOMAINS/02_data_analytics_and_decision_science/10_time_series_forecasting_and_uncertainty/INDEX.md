@@ -12,8 +12,7 @@
 | 2 | statistical and ML forecasts | planned |
 | 3 | probabilistic forecasting | planned |
 | 4 | hierarchies and intermittency | planned |
-| 5 | forecast operations | planned |
-
+| 5 | forecast operations | [authored](Case_Studies/01_forecast_spare_parts_demand.md) |
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

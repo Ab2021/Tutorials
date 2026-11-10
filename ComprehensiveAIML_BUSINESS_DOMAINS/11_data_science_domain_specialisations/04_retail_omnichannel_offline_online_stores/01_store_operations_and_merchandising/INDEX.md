@@ -8,19 +8,18 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | store data model | planned |
+| 1 | store data model | [authored](Case_Studies/05_Store_Experiment_Governance.md) |
 | 2 | footfall | planned |
 | 3 | planograms | planned |
-| 4 | shelf availability | planned |
-| 5 | labour | planned |
+| 4 | shelf availability | [authored](Case_Studies/01_Shelf_Availability_Prediction.md) |
+| 5 | labour | [authored](Case_Studies/02_Labour_Scheduling.md) |
 | 6 | replenishment | planned |
-| 7 | shrink | planned |
+| 7 | shrink | [authored](Case_Studies/03_Shrink_Detection.md) |
 | 8 | checkout | planned |
 | 9 | assortment | planned |
 | 10 | computer vision | planned |
-| 11 | store experiments | planned |
-| 12 | field adoption | planned |
-
+| 11 | store experiments | [authored](Case_Studies/05_Store_Experiment_Governance.md) |
+| 12 | field adoption | [authored](Cheat_Sheets/03_Field_Test_Checklist.md) |
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

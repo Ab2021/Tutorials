@@ -8,19 +8,18 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | payment flows | planned |
-| 2 | fraud | planned |
-| 3 | AML | planned |
-| 4 | sanctions | planned |
-| 5 | entity resolution | planned |
-| 6 | graphs | planned |
-| 7 | streaming | planned |
-| 8 | case management | planned |
-| 9 | investigator UX | planned |
-| 10 | model risk | planned |
-| 11 | privacy | planned |
+| 1 | payment flows | [authored](Case_Studies/05_Payment_Outage_Fraud_Controls.md) |
+| 2 | fraud | [authored](Case_Studies/01_Card_Fraud_Streaming_Decision.md) |
+| 3 | AML | [authored](Case_Studies/02_AML_Ring_Detection.md) |
+| 4 | sanctions | [authored](Case_Studies/03_Sanctions_False_Positive_Reduction.md) |
+| 5 | entity resolution | [authored](Cheat_Sheets/05_Entity_Resolution.md) |
+| 6 | graphs | [authored](Cheat_Sheets/06_Typed_Fraud_Graphs.md) |
+| 7 | streaming | [authored](Case_Studies/01_Card_Fraud_Streaming_Decision.md) |
+| 8 | case management | [authored](Cheat_Sheets/08_Case_Management.md) |
+| 9 | investigator UX | [authored](Cheat_Sheets/09_Investigator_UX.md) |
+| 10 | model risk | [authored](Cheat_Sheets/10_Model_Risk_Controls.md) |
+| 11 | privacy | [authored](Cheat_Sheets/11_Privacy_and_Access.md) |
 | 12 | audits | planned |
-
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

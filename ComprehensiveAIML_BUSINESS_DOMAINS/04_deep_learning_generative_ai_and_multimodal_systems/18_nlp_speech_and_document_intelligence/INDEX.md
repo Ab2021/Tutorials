@@ -8,12 +8,11 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | text classification and NER | planned |
-| 2 | ASR and TTS | planned |
+| 1 | text classification and NER | [authored](Cheat_Sheets/01_NLP_Task_Contracts_Classification_NER_Embeddings.md) |
+| 2 | ASR and TTS | [authored](Cheat_Sheets/03_asr-transcription-evaluation.md) |
 | 3 | document parsing and OCR | planned |
-| 4 | embeddings | planned |
-| 5 | language evaluation | planned |
-
+| 4 | embeddings | [authored](Cheat_Sheets/01_NLP_Task_Contracts_Classification_NER_Embeddings.md) |
+| 5 | language evaluation | [authored](Cheat_Sheets/03_asr-transcription-evaluation.md) |
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

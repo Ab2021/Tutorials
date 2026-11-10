@@ -8,12 +8,11 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | curation and quality | Submodules 2.1–2.4 drafted; focused sheets, case and independent review remain planned |
-| 2 | SFT and PEFT | Module 08 submodules 8.1–8.2, 8.4 and 8.5 mapped drafts; 8.2 reuses the unreviewed [LoRA](Cheat_Sheets/01_LoRA_Parameter_Efficient_Finetuning.md) sheet; [QLoRA](Cheat_Sheets/02_QLoRA_Quantized_Base_Adapter_Finetuning.md) is an unreviewed draft; 8.3 remains unresolved |
-| 3 | preference optimisation | Module 07 submodules 7.1–7.6 and 7.8 drafted; 7.7 remains unresolved |
+| 1 | curation and quality | planned |
+| 2 | SFT and PEFT | planned |
+| 3 | preference optimisation | planned |
 | 4 | distillation and model merging | planned |
 | 5 | regression evaluation | planned |
-
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

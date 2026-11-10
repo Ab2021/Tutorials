@@ -9,12 +9,12 @@
 | # | Topic | Status |
 |---:|---|---|
 | 1 | fundamentals | planned |
-| 2 | product metrics | planned |
+| 2 | product metrics | [authored](Cheat_Sheets/08_AB_Testing_Product_Experiments.md) |
 | 3 | event taxonomy | planned |
 | 4 | funnels | planned |
 | 5 | cohorts | planned |
 | 6 | retention | planned |
-| 7 | experiments | planned |
+| 7 | experiments | [authored](Cheat_Sheets/08_AB_Testing_Product_Experiments.md) |
 | 8 | segmentation | planned |
 | 9 | feature adoption | planned |
 | 10 | engagement | planned |
@@ -29,7 +29,6 @@
 | 19 | tools | planned |
 | 20 | interviews | planned |
 | 21 | use cases | planned |
-
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

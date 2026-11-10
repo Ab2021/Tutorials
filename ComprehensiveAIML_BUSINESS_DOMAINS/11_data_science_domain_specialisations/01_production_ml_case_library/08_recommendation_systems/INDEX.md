@@ -10,7 +10,7 @@
 |---:|---|---|
 | 1 | objectives and constraints | planned |
 | 2 | candidate generation | planned |
-| 3 | ranking models | planned |
+| 3 | ranking models | [authored](Case_Studies/01_Netflix_GenRec_Ranking.md) |
 | 4 | sequence and session models | planned |
 | 5 | embeddings | planned |
 | 6 | retrieval | planned |
@@ -18,7 +18,6 @@
 | 8 | diversity and fairness | planned |
 | 9 | online evaluation | planned |
 | 10 | real-time serving | planned |
-
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

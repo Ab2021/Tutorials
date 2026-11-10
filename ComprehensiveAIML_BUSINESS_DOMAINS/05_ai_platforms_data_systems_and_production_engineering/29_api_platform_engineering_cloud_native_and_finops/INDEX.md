@@ -12,8 +12,7 @@
 | 2 | Kubernetes and serverless | planned |
 | 3 | multi-tenancy | planned |
 | 4 | platform product thinking | planned |
-| 5 | FinOps | planned |
-
+| 5 | FinOps | [authored](Cheat_Sheets/06_25_Common_Issues.md) |
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

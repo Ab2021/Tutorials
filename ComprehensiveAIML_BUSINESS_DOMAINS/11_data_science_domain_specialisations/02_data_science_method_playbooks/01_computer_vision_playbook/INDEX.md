@@ -11,7 +11,7 @@
 | 1 | image preprocessing | planned |
 | 2 | classical features | planned |
 | 3 | CNNs | planned |
-| 4 | detection | planned |
+| 4 | detection | [authored](Cheat_Sheets/04_Object_Detection.md) |
 | 5 | segmentation | planned |
 | 6 | transfer learning | planned |
 | 7 | GAN and VAE | planned |
@@ -27,7 +27,6 @@
 | 17 | MLOps | planned |
 | 18 | edge CV | planned |
 | 19 | privacy | planned |
-
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

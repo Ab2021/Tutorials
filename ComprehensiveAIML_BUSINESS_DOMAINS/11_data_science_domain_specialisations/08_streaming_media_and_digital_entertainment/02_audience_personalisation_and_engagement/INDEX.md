@@ -10,17 +10,16 @@
 |---:|---|---|
 | 1 | viewer identity | planned |
 | 2 | candidate generation | planned |
-| 3 | ranking | planned |
+| 3 | ranking | [authored](Case_Studies/01_Homepage_Ranking.md) |
 | 4 | session signals | planned |
 | 5 | search | planned |
 | 6 | notifications | planned |
-| 7 | churn | planned |
+| 7 | churn | [authored](Case_Studies/03_Churn_Prevention.md) |
 | 8 | diversity | planned |
 | 9 | age appropriateness | planned |
 | 10 | experiments | planned |
 | 11 | privacy | planned |
-| 12 | engagement economics | planned |
-
+| 12 | engagement economics | [authored](Cheat_Sheets/02_Engagement_and_Churn_Scorecard.md) |
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

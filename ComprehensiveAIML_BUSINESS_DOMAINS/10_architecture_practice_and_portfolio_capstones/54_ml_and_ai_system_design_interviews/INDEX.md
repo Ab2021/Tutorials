@@ -8,12 +8,11 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | interview framework | planned |
+| 1 | interview framework | [authored](Cheat_Sheets/01_Interview_Decision_Framework.md) |
 | 2 | ML system design | planned |
 | 3 | LLM system design | planned |
 | 4 | capacity and cost | planned |
 | 5 | trade-off communication | planned |
-
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

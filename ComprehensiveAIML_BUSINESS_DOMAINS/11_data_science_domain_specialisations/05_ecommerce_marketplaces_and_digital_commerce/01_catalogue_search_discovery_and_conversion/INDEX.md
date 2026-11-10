@@ -8,19 +8,18 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | catalogue quality | planned |
+| 1 | catalogue quality | [authored](Cheat_Sheets/02_Catalogue_Quality_and_Discovery_Controls.md) |
 | 2 | query understanding | planned |
 | 3 | retrieval | planned |
 | 4 | ranking | planned |
-| 5 | recommendations | planned |
+| 5 | recommendations | [authored](Case_Studies/08_Bounded_Graph_Recommendations.md) |
 | 6 | content | planned |
 | 7 | reviews | planned |
-| 8 | conversion | planned |
-| 9 | checkout | planned |
-| 10 | fraud | planned |
-| 11 | experimentation | planned |
+| 8 | conversion | [authored](Cheat_Sheets/03_Conversion_Checkout_Fraud_and_Experimentation.md) |
+| 9 | checkout | [authored](Case_Studies/04_Checkout_Funnel_Diagnosis.md) |
+| 10 | fraud | [authored](Cheat_Sheets/03_Conversion_Checkout_Fraud_and_Experimentation.md) |
+| 11 | experimentation | [authored](Cheat_Sheets/03_Conversion_Checkout_Fraud_and_Experimentation.md) |
 | 12 | SEO | planned |
-
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

@@ -8,12 +8,11 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | problem formulation | [Problem Formulation and Losses draft](Cheat_Sheets/02_Problem_Formulation_and_Losses.md); other formulation extensions planned |
-| 2 | linear trees and boosting | planned |
-| 3 | feature engineering | planned |
-| 4 | imbalance and calibration | planned |
-| 5 | validation and error analysis | [Model validation and error-analysis draft](Cheat_Sheets/01_Model_Validation_and_Error_Analysis.md); remaining broader topic coverage planned |
-
+| 1 | problem formulation | [authored](Cheat_Sheets/02_Problem_Formulation_and_Losses.md) |
+| 2 | linear trees and boosting | [authored](Cheat_Sheets/03_Linear_Trees_and_Boosting.md) |
+| 3 | feature engineering | [authored](Cheat_Sheets/04_Feature_Engineering_Patterns.md) |
+| 4 | imbalance and calibration | [authored](Cheat_Sheets/05_Imbalance_and_Calibration.md) |
+| 5 | validation and error analysis | [authored](Cheat_Sheets/01_Model_Validation_and_Error_Analysis.md) |
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

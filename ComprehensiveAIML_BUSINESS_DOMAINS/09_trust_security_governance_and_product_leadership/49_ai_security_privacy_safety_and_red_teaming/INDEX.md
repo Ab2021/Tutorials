@@ -8,12 +8,11 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | AI threat modelling | planned |
-| 2 | prompt injection and tool abuse | partial: [enterprise agent approval gate](../../06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration/Case_Studies/01_enterprise_agent_approval_gate.md) is a hypothetical, unreviewed case |
+| 1 | AI threat modelling | [authored](Cheat_Sheets/01_AI_Threat_Model_and_Execution_Trust.md) |
+| 2 | prompt injection and tool abuse | [authored](Cheat_Sheets/02_Prompt_Injection_and_Red_Team_Evaluation.md) |
 | 3 | data/model supply chain | planned |
-| 4 | red teaming | planned |
+| 4 | red teaming | [authored](Cheat_Sheets/02_Prompt_Injection_and_Red_Team_Evaluation.md) |
 | 5 | incident response | planned |
-
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

@@ -12,8 +12,7 @@
 | 2 | feature stores | planned |
 | 3 | CI/CD/CT for ML | planned |
 | 4 | deployment patterns | planned |
-| 5 | rollback and lifecycle controls | [ML release and rollback checklist draft](Cheat_Sheets/01_ML_Release_and_Rollback_Checklist.md); broader topic planned |
-
+| 5 | rollback and lifecycle controls | planned |
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

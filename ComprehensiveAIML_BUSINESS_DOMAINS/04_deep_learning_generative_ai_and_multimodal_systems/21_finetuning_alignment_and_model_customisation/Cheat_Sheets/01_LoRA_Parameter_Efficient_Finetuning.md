@@ -1,1154 +1,1138 @@
 ---
-collection: "finetuning-alignment"
-file_id: "01"
-topic: "LoRA parameter-efficient LLM fine-tuning"
-level: 2
-status: "draft"
-version: "1.0"
-created: "2026-11-07"
-reviewed: null
-review_trigger: "Base architecture, adapter runtime, data policy, or evaluation population changes"
-notation_style: "plain-text"
-prerequisites: ["Matrix multiplication and rank", "Transformer projections", "Gradient descent and supervised loss"]
-pattern_tags: ["PEFT", "LoRA"]
-source_status: "OPEN"
-owner_role: "Model engineering"
-source_index: "INDEX.md"
+title: "LoRA Parameter-Efficient LLM Fine-Tuning"
+topic: "LoRA low-rank adaptation: parameter accounting, memory budgeting, merge and rollout"
+collection: "finetuning-alignment-and-model-customisation"
+level: "core"
+evidence: "DERIVED"
+created: "2026-11-10"
+last_reviewed: null
+content_status: "draft"
 ---
+
 # LoRA Parameter-Efficient LLM Fine-Tuning
+
 ## 1. File Header
-**Purpose:** Calculate adapter parameters, reason about memory, and decide whether an adapter is ready to deploy.
-**Prerequisites:** Matrix shapes and multiplication, transformer projections, gradient descent, token-level loss, and basic evaluation.
-See the [original LoRA paper](https://arxiv.org/abs/2106.09685) for the technique and its assumptions.
-**Outcome:** Given model shapes, target modules, rank and precision, derive trainable counts and a bounded memory estimate; design a paired quality gate and rollback.
-**Exclusions:** Full preference optimization, model merging algorithms, and a complete multitenant platform design are not taught here.
-**Level:** Core methods with production considerations.
-**Version/review:** 1.0 / not reviewed.
-**Evidence:** DERIVED and ILLUSTRATIVE examples; no production results measured.
-**Retrieval cue:** Start at Section 4 for counts, Section 8 for diagnosis, and Section 11 for interview practice.
-**Source boundary:** [directory.txt Module_08_PEFT_Model_Merging](../../../../Templates/directory.txt) lists 8.2 LoRA and related PEFT topics; it is an inventory, not lesson text or benchmark evidence.
-**Teaching home:** [Module 21](../INDEX.md); [source plan, PEFT](../../../00_SOURCE_COVERAGE_CUDA_TRAINING.md#ft-peft).
-**Takeaway:** A small trainable adapter does not by itself guarantee a small training footprint or an acceptable model.
+
+**Purpose:** Given a decoder's projection shapes, a target-module list, a rank and a precision budget, derive the trainable
+parameter count, the resident training state, the merge cost and the serving consequence, then design the quality gate
+that decides whether the resulting adapter may be deployed.
+**Prerequisites:** Matrix shapes and products, the transformer block's four attention projections and three MLP
+projections, the chain rule for a two-layer composition, token-level cross-entropy, and binary byte units where
+1 MiB = 1,048,576 bytes and 1 GiB = 1,073,741,824 bytes.
+**Key outcome:** You can answer three questions with arithmetic rather than intuition: how many scalars will be trained,
+how much device memory the training step will hold at its peak, and what part of the base behaviour the adapter is even
+capable of changing.
+**Exclusions:** Quantized base weights (see the QLoRA card), preference optimization, model merging algebra across
+heterogeneous deltas, context extension, and multi-tenant request routing as a platform design. Those are separate
+artifacts in this unit, and this card only states the interfaces to them.
+**Level:** Core. The algebra is elementary; the judgement is in target selection, evaluation and lifecycle.
+**Version / reviewed:** 1.0 / not independently reviewed. Status is draft, and every numeric result below is either an
+identity you can recheck by hand or a labelled ILLUSTRATIVE construction.
+**Evidence:** DERIVED for every identity and count; ILLUSTRATIVE for the 32-block worked model; OPEN for all runtime,
+latency and quality claims. No production measurement, vendor benchmark or customer outcome is asserted anywhere.
+
+The source inventory for this unit lists a PEFT submodule covering LoRA and related parameter-efficient methods, and an
+implementation submodule that combines LoRA with quantized bases.
+Neither original lesson body was available for inspection, so nothing in this card is attributed to it.
+The technique itself is documented in the primary paper cited in Section 10, and the derivations here are independent.
+
+A reader arriving from a "how many parameters does LoRA train" search should start at Section 4.2 and then read Section 5,
+because the single most common error is counting one matrix pair and forgetting that a 32-block model repeats the
+pattern thirty-two times, over several distinct projection shapes.
+A reader arriving from an out-of-memory incident should start at Section 8 entries F2 through F5, because the adapter is
+rarely the largest resident tensor and the peak usually belongs to activations or to the frozen base.
+
+**Retrieval cue:** Sections 4.1–4.3 hold the counts, 4.4 the algebraic limits, 5 the full arithmetic trace, 7 the method
+selection table, 8 the diagnostic ladder, 9 the cost model, 11 the interview drills.
+
+**Takeaway:** A small trainable tensor does not imply a small training footprint, and it does not imply a strong
+capability to change behaviour; both must be argued separately.
+
 ## 2. Concept Map / Mental Model
+
 ```text
-Task and acceptance criteria
-   -> evaluate prompting / retrieval baseline
-   -> select frozen base + target projection matrices
-   -> attach trainable low-rank factors
-   -> optimize on authorized, split training examples
-   -> compare frozen base and adapter on held-out groups
-   -> check safety, quality, cost and serving compatibility
-   -> gated rollout with versioned rollback
-Failure at any gate -> investigate or use baseline, not automatic deployment
+ acceptance criteria + baseline measurement
+        |
+        v
+ does prompting or retrieval already pass the gate?  -- yes --> stop, ship the cheaper control
+        | no
+        v
+ enumerate candidate target modules with exact shapes
+        |
+        v
+ choose rank r, scale convention, precision, optimizer
+        |
+        v
+ derive P_adapter, resident state, merge cost, serving delta
+        |
+        v
+ train on authorized, group-split data with fixed token budget
+        |
+        v
+ paired evaluation: base vs adapted, identical prompts and decoding, per-slice denominators
+        |
+        v
+ gate: quality, safety, cost, compatibility, rollback -- all pass?
+        | no                                    | yes
+        v                                       v
+ investigate or revert to baseline        versioned artifact + pinned base hash
 ```
-The base supplies the existing representation.
-The adapter modifies selected linear transformations while the base weights remain fixed during adapter training.
-Gradients still propagate through the frozen network to reach trainable factors.
-The method changes parameter updates, not the need for correct data or evaluation.
-**Takeaway:** Treat LoRA as a controlled update to a versioned base, not as a standalone model or isolation boundary.
+
+The frozen weight supplies the representation; the adapter supplies a low-rank additive correction to selected linear
+maps. Everything else in this card follows from that one sentence plus accounting.
+
+Four claims are often conflated and must be kept apart:
+1. **Algebraic claim.** The update BA has rank at most r. This is provable and cheap to check.
+2. **Capacity claim.** A rank-r update family can represent some useful task changes and cannot represent others exactly.
+   This is a statement about the hypothesis class, not about any particular trained adapter.
+3. **Empirical claim.** On this dataset, with this budget, the adapted model scores higher on this metric. This requires
+   an experiment and a denominator.
+4. **Operational claim.** The artifact can be served, versioned, rolled back and audited at acceptable cost. This
+   requires a runtime and a lifecycle, neither of which the algebra provides.
+
+A fifth common confusion treats the adapter as an isolation boundary. It is not. Two tenants' adapters on one base share
+the base weights, the tokenizer, the runtime, and any prompt cache. Isolation is an authorization and routing property.
+
+**When LoRA is the wrong tool, stated before the mechanics:**
+- The missing capability is knowledge that changes weekly. Weights are not a freshness mechanism; retrieval is.
+- The required change is a new modality or a new tokenizer. Adapters do not add input channels or vocabulary entries.
+- The task requires a behaviour the base cannot produce at any sampling temperature, and the corpus is large enough to
+  justify continued pretraining. A low-rank correction to a frozen representation has a ceiling.
+- The base cannot legally be frozen in memory, or the license forbids derivative artifacts. Check before spending.
+- Latency budget is already saturated and the adapter cannot be merged, so every token pays a second kernel launch.
+
+**Mental model that survives contact with production:** a LoRA adapter is a signed, versioned patch to a specific base
+checkpoint, expressed in a constrained function family, trained on a specific data snapshot, validated on a specific
+population, and only meaningful together with all four of those identifiers.
+
+**Takeaway:** Choose adaptation only after the cheaper control has been measured and failed, and record which of the
+four claims your evidence actually supports.
+
 ## 3. Foundational Definitions
-| Term | Meaning and boundary |
+
+| Term | Definition and boundary |
 |---|---|
-| Base weight W | Frozen linear map with d_out rows and d_in columns. |
-| A | Trainable down-projection, r by d_in. |
-| B | Trainable up-projection, d_out by r. |
-| r | Positive integer adapter rank; maximum update rank, not necessarily achieved rank. |
-| alpha | Dimensionless scaling hyperparameter; convention depends on implementation. |
-| Target | A named linear module to which factors are attached. |
-| Trainable count | Unique scalar parameters receiving optimization, including any explicitly unfrozen extras. |
-| Activation | Intermediate tensor retained or recomputed for backpropagation. |
-| Optimizer state | Persistent state maintained for trainable parameters, such as Adam moments. |
-| Merge | Add the scaled update to a compatible base weight in an appropriate representation. |
-| Held-out group | Independent evaluation unit such as a customer or document, not merely a random row. |
-| Adapter artifact | Factors plus configuration and metadata; it requires a compatible base and tokenizer. |
-| QLoRA | Training adapters with a quantized frozen base; memory and numerical behavior depend on implementation. |
-| Rank versus width | Rank limits the update subspace; it is not the model hidden dimension. |
-Symbols are scalar counts unless matrix shapes are stated.
-Parameters have units of scalar elements; memory is bytes, MiB or GiB.
-One MiB is 1,048,576 bytes; one GiB is 1,073,741,824 bytes.
-**Takeaway:** Record shapes and trainability for actual modules, not just the advertised model parameter count.
+| Base weight `W` | A frozen dense linear map with shape `d_out x d_in`; it is never updated during adapter training. |
+| Down factor `A` | Trainable matrix of shape `r x d_in`; it maps an input into the low-rank coordinate space. |
+| Up factor `B` | Trainable matrix of shape `d_out x r`; it maps low-rank coordinates back to output width. |
+| Rank `r` | Positive integer bounding the rank of the update; an upper bound on expressiveness, not a achieved quantity. |
+| Scale `alpha` | Dimensionless hyperparameter entering the update as `alpha/r` in the common convention; other conventions exist. |
+| Target module | A named linear layer that receives a factor pair, e.g. `q_proj` or `down_proj`; identity is per tensor, not per name string. |
+| Trainable count `P` | Number of scalar parameters that receive optimizer updates, including any deliberately unfrozen extras. |
+| Frozen parameter | A parameter that receives no weight gradient; it may still receive input gradients during backpropagation. |
+| Activation | Any forward tensor retained for the backward pass, or recomputed when checkpointing is enabled. |
+| Optimizer state | Persistent per-parameter tensors such as AdamW's first and second moments; usually larger than the adapter. |
+| Merge | Adding the scaled update into a compatible base weight to produce a single dense matrix. |
+| Effective weight | `W + (alpha/r) B A`, the matrix actually applied at inference in the unmerged case. |
+| Adapter artifact | Factors plus configuration plus provenance metadata; unusable without a compatible base and tokenizer. |
+| Group | The independent unit of evaluation, such as a customer, document set, or conversation; not a random row. |
+| Leakage | Any dependence between training and evaluation that a deployed model would not have. |
+| Peak resident memory | Maximum simultaneous device allocation during the step, including allocator slack, not the sum of tensors. |
+
+| Symbol | Meaning | Units | Shape / type | Valid range |
+|---|---|---|---|---|
+| `d_in` | Input width of a target projection | scalars | integer | ≥ 1 |
+| `d_out` | Output width of a target projection | scalars | integer | ≥ 1 |
+| `r` | Adapter rank | dimensionless | integer | 1 ≤ r ≤ min(d_in, d_out) |
+| `alpha` | Scaling hyperparameter | dimensionless | real | > 0 typical |
+| `s` | Effective scale, `alpha/r` by convention | dimensionless | real | > 0 |
+| `P_adapter` | Trainable scalar count | scalars | integer | ≥ 0 |
+| `N_base` | Frozen base parameter count | scalars | integer | ≥ P_adapter |
+| `T` | Supervised target tokens in a step | tokens | integer | ≥ 1 |
+| `b_w` | Bytes per stored weight element | bytes | 1, 2, 4 | per precision mode |
+| `M_peak` | Peak resident device memory | bytes | integer | ≥ sum of live tensors |
+| `F_fwd` | Forward multiply-accumulate count per token | MACs | integer | ≥ 0 |
+
+Two conventions must be stated explicitly before any comparison, because silently mixing them invalidates every
+conclusion drawn from the numbers:
+- **Scaling.** Whether the update is `(alpha/r) B A`, `alpha B A`, or `(alpha/sqrt(r)) B A`. The third appears in the
+  rank-stabilised variant and changes the training dynamics at large r.
+- **Orientation.** Whether stored weights are `[d_out, d_in]` with `y = x W^T` or `[d_in, d_out]` with `y = W x`.
+  A transposed target still produces a square adapter count when `d_in = d_out`, which is exactly why the bug hides in
+  square projections and surfaces only on rectangular ones.
+
+Parameter counts have units of scalar elements. Memory has units of bytes, MiB or GiB; a count multiplied by bytes per
+element is storage only for the tensor named, never for the process.
+
+**Takeaway:** Write the scale convention, the weight orientation and the target list into the run configuration before
+the first training step; retrofitting them to a completed run is not possible.
+
 ## 4. Core Formulas with Full Derivation
-### 4.1 Base: one projection
-Validity: a dense linear map with a rank-r additive update, no biases or other trainable parameters.
-Derivation: A has r*d_in entries and B has d_out*r entries; sum their independent storage counts.
-The forward map adds the frozen map and the scaled composition of the two trainable maps.
+
+### 4.1 Base case
+
+**Anatomy of the effective map.**
+
 ```text
-FORMULA [L1]: W_effective = W + (alpha/r) B A
-WHERE: W [d_out,d_in], B [d_out,r], A [r,d_in]; alpha scalar; r positive.
-CONSTRAINT: Standard alpha/r scaling convention; implementation alternatives exist.
-NUMERICAL EXAMPLE: d_in=d_out=4096, r=8, alpha=16; scale=2.
-INTERPRETATION: The update has compatible shape [4096,4096] and rank at most 8.
+FORMULA [F1]: h = W x + s B A x,        s = alpha / r
+WHERE: W in R^(d_out x d_in) frozen; B in R^(d_out x r); A in R^(r x d_in);
+       x in R^(d_in); s is a positive scalar; r >= 1.
+CONSTRAINT: The two terms must be computed in the same dtype and then summed, and the
+            scale must follow the implementation's documented convention.
+NUMERICAL EXAMPLE: d_in = d_out = 4096, r = 16, alpha = 32 gives s = 2. The update term
+            has shape 4096 x 4096 and rank at most 16.
+INTERPRETATION: The adapter does not replace the projection; it adds a residual path
+            whose output direction set has at most r dimensions.
 ```
-A zero initial B makes the initial update zero; a nonzero A allows B to receive gradients on the first step.
-Initialization details are implementation-dependent and must be recorded.
-The magnitude of the update depends on factors as well as scale; alpha alone does not determine it.
+
+**Trainable count for one pair.**
+
 ```text
-FORMULA [L2]: P_adapter = r*(d_in+d_out)
-WHERE: P_adapter is a count of scalar trainable entries in A and B.
-CONSTRAINT: One independent pair; exclude biases, embeddings, heads, and extra trainable modules.
-NUMERICAL EXAMPLE: 8*(4096+4096)=65,536 entries.
-INTERPRETATION: Compare with 4096*4096=16,777,216 entries for a full matrix.
+FORMULA [F2]: P_pair = r * d_in + d_out * r = r * (d_in + d_out)
+WHERE: A contributes r*d_in entries; B contributes d_out*r entries; no bias, no extra
+       trainable tensor is included.
+CONSTRAINT: One independent pair per tensor. Tied embedding/output weights, if targeted,
+           are one allocation and count once.
+NUMERICAL EXAMPLE: r = 16, d_in = d_out = 4096: P_pair = 16 * 8192 = 131,072.
+INTERPRETATION: 131,072 scalars versus 16,777,216 in the frozen matrix, a ratio of
+           1/128, which is 0.78%.
 ```
-The ratio is 65,536/16,777,216=1/256, or 0.390625%.
-Boundary: if rank is large enough, factor storage can exceed the full matrix storage.
-### 4.2 General: several target modules
-Validity: independently allocated factor pairs, with each targeted matrix counted once.
-Derivation: sum L2 over each target, using that module's actual input and output widths and rank.
+
+**Derivation of the ratio, which is more useful than the count.**
+
 ```text
-FORMULA [L3]: P_total = sum_i r_i*(d_in_i+d_out_i) + P_extra
-WHERE: i indexes distinct target matrices; P_extra counts unique additional trainable scalars.
-CONSTRAINT: Do not double count tied/shared parameters; include biases or heads only if unfrozen.
-NUMERICAL EXAMPLE: 32 layers, two square 4096 projections each, r=8, P_extra=0.
-P_total = 32*2*8*(4096+4096) = 4,194,304 parameters.
-INTERPRETATION: This count is for the named targets, not the entire model.
+FORMULA [F3]: P_pair / (d_in * d_out) = r * (d_in + d_out) / (d_in * d_out)
+                                        = r * (1/d_out + 1/d_in)
+WHERE: all symbols as F2; the ratio is dimensionless.
+CONSTRAINT: Exact for a single dense target with no bias and no shared storage.
+NUMERICAL EXAMPLE: square 4096 at r = 16: 16 * (1/4096 + 1/4096) = 16/2048 = 0.0078125.
+           Rectangular k_proj 4096 -> 1024 at r = 16: 16 * (1/1024 + 1/4096)
+           = 16 * 0.001220703125 = 0.01953125, i.e. 1.95%.
+INTERPRETATION: The relative cost of an adapter is larger on skinny matrices. The k and v
+           projections of a grouped-query model are exactly where the adapter is least
+           economical, which is a reason they are sometimes skipped.
 ```
-The corresponding targeted dense matrices contain 64*16,777,216=1,073,741,824 entries.
-The same 1/256 ratio follows because these shapes and ranks match.
-Grouped-query attention can make key/value output dimensions different; inspect actual tensor shapes.
-### 4.3 Variants: memory and rank choices
-Validity: this is an accounting identity for allocated tensors, not a universal runtime formula.
-Derivation: sum storage of frozen weights, trainable factors, gradients, optimizer state, activations, temporary buffers and runtime overhead.
+
+**Gradients, which explain the initialisation rule.**
+
 ```text
-FORMULA [L4]: M_peak = M_base + M_adapter + M_grad + M_opt + M_activation + M_temp + M_runtime
-WHERE: each M is peak-resident bytes at the same time, adjusted for actual overlap and sharding.
-CONSTRAINT: Components must refer to the same device and instant; allocator reservations can differ from tensor allocations.
-NUMERICAL EXAMPLE: adapter=4,194,304 entries at 2 bytes each -> 8,388,608 bytes = 8 MiB.
-INTERPRETATION: 8 MiB is adapter weights only, not total training or checkpoint memory.
+FORMULA [F4]: dL/dB = s * g (A x)^T
+              dL/dA = s * B^T g x^T
+              dL/dx = W^T g + s * A^T B^T g
+WHERE: g = dL/dh in R^(d_out) is the upstream gradient; L is the scalar loss; ^T is
+       transpose; all products are ordinary matrix-vector products.
+CONSTRAINT: Ignores bias terms, non-linearities between layers, and any dtype casting.
+NUMERICAL EXAMPLE: With B initialised to zero, dL/dB = s * g (Ax)^T is generally
+       non-zero while dL/dA = 0 exactly at the first step.
+INTERPRETATION: Zero-initialising B makes the adapter a no-op at step zero, which keeps
+       the initial loss equal to the base loss, but A receives no gradient until B has
+       moved. The pair's effective learning is offset by one step; this is benign at
+       thousands of steps and material only in very short runs.
 ```
-Quantized base storage requires scales, metadata and potentially higher-precision compute buffers.
-Mixed precision may retain master weights or use optimizer states of different precision.
-Gradient checkpointing trades recomputation for activation memory; measure actual peak and throughput.
-For QLoRA see [Dettmers et al., 2023](https://arxiv.org/abs/2305.14314); do not assume every 4-bit implementation behaves identically.
-### 4.4 Limits and counterexample
-Validity: the rank statement follows from composition of finite matrices over real arithmetic.
-The image of BA is contained in the image of B, whose dimension is at most r.
-Therefore its rank cannot exceed r or either matrix dimension.
-A rank-r update cannot express a target update with rank greater than r exactly.
-For a 2 by 2 identity update, rank one is insufficient: its image is a line, not the entire plane.
-If r=4096 for the square example, the factors contain twice as many entries as the original matrix.
-Changing r while holding alpha fixed also changes alpha/r in this convention.
-A rank experiment should distinguish rank effects from scale and training-budget effects.
-**Takeaway:** Count every targeted matrix and every extra trainable tensor; low rank constrains the update, not the frozen base.
+
+**Validity condition for 4.1.** All four formulas assume a dense linear map, a single independent factor pair, exact
+real arithmetic for the algebraic claims, and a scaling convention of `alpha/r`. If any of those fail, recompute rather
+than reuse.
+
+### 4.2 General case
+
+**Several targets, several blocks.**
+
+```text
+FORMULA [F5]: P_total = sum over i of r_i * (d_in_i + d_out_i)  +  P_extra
+WHERE: i indexes distinct target tensors across all blocks; P_extra counts additional
+       trainable scalars such as biases, layer norms or a targeted lm_head.
+CONSTRAINT: Each tensor counted once; do not multiply by layer count twice; do not count
+       a shared/tied tensor as separate per-block allocations.
+NUMERICAL EXAMPLE: 32 blocks, targets q, k, v, o, gate, up, down; d = 4096, kv = 1024,
+       ffn = 11008, r = 16:
+         q,o : 16 * (4096 + 4096) = 131,072 each
+         k,v : 16 * (4096 + 1024) =  81,920 each
+         gate,up : 16 * (4096 + 11008) = 241,664 each
+         down : 16 * (11008 + 4096) = 241,664
+       per block = 131,072*2 + 81,920*2 + 241,664*3 = 425,984 + 724,992 = 1,150,976
+       P_total = 1,150,976 * 32 = 36,831,232
+INTERPRETATION: About 36.8 million trainable scalars, or 0.635% of a 5.80 billion
+       parameter base. The three MLP targets account for 23,199,744 of the total and
+       the four attention targets for 13,631,488.
+```
+
+**Share of the update budget by module family.** Using the per-block numbers above: MLP targets hold 724,992 and
+attention targets hold 425,984, so 63.0% of the adapter sits in the MLP and 37.0% in attention. Attention is only 23.7%
+of the frozen parameters (41,943,040 of 177,209,344 per block), so a target list chosen "for coverage" spends most of
+its budget where the frozen model has least of its weight. This is not an argument either way; it is a fact to state
+when someone claims a target list is balanced.
+
+**Including the language-model head.**
+
+```text
+FORMULA [F6]: P_head = r_head * (V + d),   d_out = V
+WHERE: V is vocabulary size; the head is targeted only if output-side behaviour must
+       change, which is rare for style or format adaptation.
+NUMERICAL EXAMPLE: V = 32,000, d = 4096, r_head = 16: 16 * 36,096 = 577,536, which
+       raises P_total from 36,831,232 to 37,408,768 (+1.57%).
+INTERPRETATION: The head is cheap in count because it is rank-limited on the output side,
+       but it changes token-level preferences directly, which is a behavioural change
+       most adaptation tasks do not want.
+```
+
+**General derivation step.** F5 is F2 summed over an index set. There is no interaction term, because factor pairs are
+allocated independently and no parameter is shared between targets. The only way F5 goes wrong is an index-set error:
+duplicating a module that already appears under two names, omitting a block, or forgetting a tied tensor.
+
+**Validity condition for 4.2.** Distinct allocations, one pair per tensor, no hidden trainable modules created by the
+framework (some frameworks add trainable scaling vectors or bias terms silently), and a rank constant across targets.
+Mixed ranks are legal; then the sum uses each target's own `r_i`.
+
+### 4.3 Variants
+
+**Variant 1: memory accounting, which is what actually constrains the run.**
+
+```text
+FORMULA [F7]: M_peak = M_base + M_adapter + M_grad + M_opt + M_act + M_temp + M_alloc
+WHERE: each term is bytes resident on the same device at the same instant; M_act is the
+       activation peak, M_temp the workspace for fused kernels and communication
+       buffers, M_alloc the allocator's reservation above live tensors.
+CONSTRAINT: Terms must be measured at the same moment. A sum of separately measured
+       maxima overestimates; a sum of averages underestimates.
+NUMERICAL EXAMPLE: M_adapter at 36,831,232 parameters in bf16 = 73,662,464 bytes
+       = 70.25 MiB. Adding gradient in bf16 and two AdamW moments in fp32 gives
+       2 + 2 + 4 + 4 = 12 bytes per parameter = 441,974,784 bytes = 421.5 MiB.
+       Adding an fp32 master copy raises the factor to 16 bytes = 562.0 MiB.
+INTERPRETATION: Trainable state is 4.9% to 5.1% of the 10.81 GiB frozen base in bf16.
+       The adapter is not the memory problem; the base and the activations are.
+```
+
+**Variant 2: parameter-free scale changes and their cost.**
+
+```text
+FORMULA [F8]: s = alpha / r          (original convention)
+              s = alpha / sqrt(r)    (rank-stabilised convention)
+WHERE: s multiplies B A in the forward pass; both are dimensionless.
+NUMERICAL EXAMPLE: alpha = 32 held fixed. Original: r=8 -> 4.000, r=16 -> 2.000,
+       r=32 -> 1.000. Rank-stabilised: r=8 -> 11.314, r=16 -> 8.000, r=32 -> 5.657.
+INTERPRETATION: Under alpha/r, eight-folding the rank divides the explicit scale by
+       eight, so a "rank sweep" with fixed alpha changes two things at once. Under
+       alpha/sqrt(r) the scale changes by 2.83x across the same sweep, which is why the
+       variant is used when ranks above roughly 64 are compared.
+```
+
+**Variant 3: magnitude decomposition, which adds a row-vector.**
+
+```text
+FORMULA [F9]: W' = m * (W + s B A) / || W + s B A ||_c
+WHERE: m in R^(d_out) is a trainable per-row magnitude; || . ||_c is the column-wise
+       norm, i.e. the norm of each output row; * is row-wise scaling.
+CONSTRAINT: Magnitude vectors are extra trainable scalars counted in P_extra; the
+       decomposition is not available in every runtime.
+NUMERICAL EXAMPLE: over the seven target families above, the added magnitudes are
+       4096 + 1024 + 1024 + 4096 + 4096 + 4096 + 4096 = 22,528 per block, so
+       22,528 * 32 = 720,896 extra scalars, +1.96% on 36,831,232.
+INTERPRETATION: The variant separates "how much" from "which direction", at a cost below
+       two percent of the adapter. Whether that helps is an empirical question about a
+       specific task, not a general improvement.
+```
+
+**Variant 4: scaled-vector methods, for contrast on cost.**
+
+```text
+FORMULA [F10]: P_ia3 = sum over targets of d_target,  e.g. d_kv for keys and values
+WHERE: each target learns one multiplicative vector rather than a matrix pair.
+NUMERICAL EXAMPLE: one d_kv = 1024 vector for keys, one for values, and one d_ffn = 11008
+       vector for the MLP: 1024 + 1024 + 11008 = 13,056 per block, 417,792 total.
+INTERPRETATION: 1.1% of the LoRA count and correspondingly narrower in what it can
+       express: it rescales existing directions and cannot rotate them. Choose it when
+       the expected change is a reweighting, not a new mapping.
+```
+
+**Variant 5: prompt-space methods, where cost moves to the context window.**
+
+```text
+FORMULA [F11]: P_soft = n_soft * d ;  KV_per_request = 2 * L * n_kv * n_soft * b_w
+WHERE: n_soft is the number of soft prompt tokens; n_kv is the per-token key/value width
+       summed over layers; b_w bytes per element.
+NUMERICAL EXAMPLE: n_soft = 100, d = 4096: P_soft = 409,600 trainable scalars. With
+       L = 32, n_kv = 1024, bf16: 2 * 32 * 1024 * 100 * 2 = 13,107,200 bytes
+       = 12.5 MiB of extra cache per concurrent request.
+INTERPRETATION: The parameter count looks excellent and the serving cost is per-request
+       and per-token-of-context. At 64 concurrent requests that is 800 MiB of cache that
+       buys no capability beyond the prompt, and it consumes context the task needed.
+```
+
+**Validity condition for 4.3.** F7 is an accounting identity only when the terms are co-resident. F8–F11 describe
+alternatives under their own conventions; comparing their parameter counts without also comparing their serving cost,
+their expressiveness and their evaluation burden is the most common false comparison in PEFT selection.
+
+### 4.4 Limits and counterexamples
+
+**Limit 1: rank is an upper bound, and the bound is on the update only.**
+
+```text
+FORMULA [F12]: rank(B A) <= min(r, d_in, d_out);  rank(W + s B A) can be min(d_in, d_out)
+WHERE: rank is the algebraic rank over the reals.
+CONSTRAINT: Exact statement about the additive update; says nothing about W.
+NUMERICAL EXAMPLE: W = I_2, B A = diag(1, 0). The effective matrix diag(2, 1) has rank 2
+       with r = 1. Conversely W = I_2, B A = diag(-1, 0) gives diag(0, 1), rank 1.
+INTERPRETATION: A rank-one adapter can make a matrix full rank or make it singular. The
+       phrase "low-rank model" is therefore wrong; the model stays full rank and only the
+       correction is constrained.
+```
+
+**Limit 2: the crossover at which the adapter is larger than the matrix.**
+
+```text
+FORMULA [F13]: r * (d_in + d_out) >= d_in * d_out  =>  r >= d_in*d_out/(d_in+d_out)
+WHERE: the right-hand side is half the harmonic mean of the two widths.
+CONSTRAINT: Applies per target with that target's own widths.
+NUMERICAL EXAMPLE: square 4096 -> 2048; k_proj 4096 x 1024 -> 819.2; down_proj
+       11008 x 4096 -> 2985.22.
+INTERPRETATION: Ranks below a few hundred are economical on every shape. A rank of 1024 on
+       a 4096-to-1024 projection trains more scalars than the matrix contains and is a
+       signal that full fine-tuning or a different method was the right choice.
+```
+
+**Limit 3: rotation invariance means factors are not interpretable.**
+
+```text
+FORMULA [F14]: for any invertible R in R^(r x r):  B A = (B R)(R^-1 A)
+WHERE: both factors are transformed; the product is unchanged.
+CONSTRAINT: Exact for real invertible R; requires the pair to be trained jointly.
+NUMERICAL EXAMPLE: r = 2, R = [[0,1],[1,0]] swaps the two adapter columns of B and the two
+       rows of A; the product and therefore every output is identical.
+INTERPRETATION: Two runs with identical loss can have completely different factor values.
+       Inspecting A or B to explain behaviour is invalid; inspect the product or the
+       outputs. It also means factor averaging across runs is undefined.
+```
+
+**Limit 4: a low-rank approximation can be good in Frobenius norm and catastrophic on a direction.**
+
+```text
+FORMULA [F15]: for target D with SVD D = sum_i sigma_i u_i v_i^T, the best rank-k
+               approximation in Frobenius norm keeps the k largest sigma_i, and
+               ||D - D_k||_F^2 = sum of the discarded sigma_i^2.
+WHERE: sigma_i are singular values in descending order; k >= 1.
+CONSTRAINT: Optimality is with respect to unweighted Frobenius error over all inputs,
+       not with respect to the task loss or the data distribution.
+NUMERICAL EXAMPLE: D = diag(6, 3, 1). ||D||_F^2 = 36 + 9 + 1 = 46. Rank 1 keeps 36, i.e.
+       78.26% of squared energy; residual norm sqrt(10) = 3.162. Rank 2 keeps 45, i.e.
+       97.83%; residual norm 1.
+INTERPRETATION: At rank 2, the input (0,0,1) is mapped to zero while D maps it to (0,0,1):
+       a 97.83% energy retention with 100% error on that input. Aggregate matrix error is
+       not evidence about a slice.
+```
+
+**Limit 5: the objective that training minimises is not the approximation error.**
+
+Nothing in F15 says gradient descent on a language-modelling loss finds the truncated SVD of the "true" update. The
+true update is itself unknown, it depends on the data, and it is not the target of the optimisation. F15 is an offline
+diagnostic for the case where a full fine-tuning delta exists and you want to know what rank would have been needed to
+match it; it is not a prediction of adapter quality.
+
+**Counterexample to "adapter rank equals task complexity".** Two tasks of equal apparent difficulty can need different
+ranks because the base representation already contains one and not the other. A formatting convention often lies in a
+near rank-one direction because it is a token-distribution shift; a new decision rule over domain vocabulary may need a
+much wider subspace. Rank is a property of the pair (task, base), not of the task alone, so a rank chosen from a paper
+about a different base and a different task carries no information.
+
+**Counterexample to "adapter parameters are free at inference".** Unmerged, every generated token executes the extra
+rank-r products. For the worked model at r = 16 the per-token adapter cost is 36,831,232 MACs, i.e. 73.7 MFLOP against
+11.60 GFLOP for the frozen forward path. That is 0.635% more arithmetic, but it arrives as 448 additional matrix
+multiplications (seven targets, 32 blocks, two products per pair), each a thin kernel that cannot reach the arithmetic
+intensity of the frozen products. The realised latency effect depends on batch shape and kernel fusion; the algebra is
+exact, the latency is unmeasured here.
+
+**Validity condition for 4.4.** F12 and F14 hold in exact arithmetic. F13 is an inequality on counts. F15 requires the
+target matrix to be known and the error to be measured in a fixed norm. Any claim that crosses from these statements to
+"so it will work on my task" is an empirical claim that needs its own evidence.
+
+**Takeaway:** The algebra bounds the update, not the model; the count bounds the storage, not the memory; neither bounds
+the task outcome.
+
 ## 5. Worked Numerical Example
-**Evidence:** ILLUSTRATIVE and DERIVED; this is not an observed run.
-Assume a decoder with 32 blocks and independent query and value matrices in each block.
-Each of these 64 matrices is 4096 by 4096, with no tied target parameters.
-Choose r=8, alpha=16 and train no biases, heads or embeddings.
-By L2 each pair has 8*8192=65,536 parameters.
-By L3 64 pairs have 4,194,304 parameters.
-Independent arithmetic: 65,536=2^16 and 64=2^6, so the sum is 2^22=4,194,304.
-The targeted full matrices hold 64*4096^2=2^30=1,073,741,824 values.
-The targeted adapter-to-full ratio is 2^22/2^30=1/256.
-Suppose adapter weights and gradients each occupy 2 bytes per parameter.
-Suppose two Adam moment tensors each occupy 4 bytes per parameter.
-Under only those explicit assumptions, trainable state uses 12 bytes per parameter.
-Weights use 8 MiB; gradients use 8 MiB; the two moments use 32 MiB.
-Their sum is 48 MiB, excluding any master copy, communication, fragmentation or offload buffers.
-An additional FP32 master copy would add 16 MiB to this example.
-A hypothetical 7 billion parameter base at exactly two bytes per value uses 14 billion bytes.
-That is approximately 13.04 GiB, excluding all metadata and other resident tensors.
-Do not infer that this model fits into a 16 GiB accelerator: activation, workspace and allocator peaks remain unknown.
-At r=16 with identical targets, trainable parameters and the assumed trainable state double to 8,388,608 and 96 MiB.
-The base weight storage does not halve when rank is halved.
-For an independent rectangular matrix 4096 input by 1024 output at r=8, L2 gives 40,960 entries.
-A square-only shortcut would overestimate that rectangular adapter at 65,536.
-**Decision:** Measure real peak memory on representative sequences and compare task quality before selecting rank.
-**Takeaway:** The arithmetic is exact under the toy assumptions, whereas actual memory and quality remain unmeasured.
-## 6. Visual / Geometric Intuition
+
+**Evidence:** ILLUSTRATIVE. The architecture below is a constructed 32-block decoder chosen so the arithmetic is
+checkable by hand; it is not a claim about any shipped model. Every number is DERIVED from the stated assumptions.
+
+**Assumptions.**
+- 32 transformer blocks, hidden width `d = 4096`.
+- Grouped-query attention with key/value width `kv = 1024` per block, query and output width 4096.
+- MLP with `gate`, `up` of shape 4096 -> 11008 and `down` of shape 11008 -> 4096.
+- Vocabulary 32,000, output head 4096 -> 32000, untargeted.
+- No biases counted, no tied targets, no other trainable module.
+- Adapter rank `r = 16`, `alpha = 32`, convention `s = alpha/r = 2.0`.
+- Frozen base stored in bf16; factors stored in bf16 with fp32 AdamW moments.
+
+**Step 1: frozen parameter count, for the denominator.**
+
 ```text
-input x [d_in] -> A [r,d_in] -> r coordinates -> B [d_out,r] -> update
-input x [d_in] -> W [d_out,d_in] ---------------------------> base output
-                                      sum scaled update + base output
+per block attention: 2*4096*4096 + 2*4096*1024
+                   = 33,554,432 + 8,388,608 = 41,943,040
+per block MLP:       3*4096*11008 = 135,266,304
+per block total:     41,943,040 + 135,266,304 = 177,209,344
+32 blocks:           177,209,344 * 32 = 5,670,699,008
+head:                4096 * 32,000 = 131,072,000
+N_base:              5,670,699,008 + 131,072,000 = 5,801,771,008
 ```
-The columns of B span at most r output directions for the update.
-A chooses coordinates in that restricted output subspace from the input.
-The full output need not be low rank, because the frozen W may be full rank.
-Two factorizations can represent the same update, so factor values alone are not unique explanations.
-A small update rank is an inductive constraint, not proof that a downstream task is simple.
-Different layers and projections may have different useful update subspaces.
-**Takeaway:** Visualize LoRA as a narrow residual path beside a potentially full-rank base path.
+
+The MLP accounts for 76.33% of the per-block parameters and attention for 23.67%.
+
+**Step 2: adapter count per block, by target.**
+
+```text
+q_proj    r*(4096 + 4096)  = 16 *  8,192 = 131,072
+k_proj    r*(4096 + 1024)  = 16 *  5,120 =  81,920
+v_proj    r*(4096 + 1024)  = 16 *  5,120 =  81,920
+o_proj    r*(4096 + 4096)  = 16 *  8,192 = 131,072
+gate_proj r*(4096 + 11008) = 16 * 15,104 = 241,664
+up_proj   r*(4096 + 11008) = 16 * 15,104 = 241,664
+down_proj r*(11008 + 4096) = 16 * 15,104 = 241,664
+                              per block = 1,150,976
+```
+
+**Step 3: totals.**
+
+```text
+P_total   = 1,150,976 * 32 = 36,831,232
+P / N_base= 36,831,232 / 5,801,771,008 = 0.0063483 -> 0.6348%
+```
+
+**Step 4: storage of each training artifact.**
+
+```text
+adapter weights, bf16 : 36,831,232 * 2 =  73,662,464 B =  70.25 MiB
+adapter gradients, bf16: 36,831,232 * 2 =  73,662,464 B =  70.25 MiB
+AdamW m, v, fp32 each : 36,831,232 * 8 = 294,649,856 B = 281.00 MiB
+total trainable state : 36,831,232 * 12 = 441,974,784 B = 421.50 MiB
+frozen base, bf16     : 5,801,771,008 * 2 = 11,603,542,016 B = 10.807 GiB
+trainable share of base: 421.50 MiB / (10.807 * 1024 MiB) = 3.81%
+```
+
+**Step 5: what a single 8192-token sequence costs on top.**
+
+```text
+KV cache per token: 2 * 32 * 1024 * 2 B = 131,072 B = 128 KiB
+KV cache, 8192 tokens, one sequence: 128 KiB * 8192 = 1,048,576 KiB = 1.000 GiB
+activations, batch 2, bf16, no checkpointing, one tensor per block of shape d:
+  2 * 32 * 4096 * 8192 * 2 B = 4,294,967,296 B = 4.000 GiB
+with full checkpointing the retained subset is about half: 2.000 GiB, plus recompute
+```
+
+**Independent arithmetic re-check.** The per-block total is recomputed from the ratio form F3 applied to each
+target with its own dense count, instead of from the per-target products:
+
+```text
+q: 16,777,216 * (16 * (1/4096 + 1/4096)) = 16,777,216 * 0.00781250 = 131,072.0
+k:  4,194,304 * (16 * (1/1024 + 1/4096)) =  4,194,304 * 0.01953125 =  81,920.0
+v:  4,194,304 * 0.01953125                                        =  81,920.0
+o: 16,777,216 * 0.00781250                                        = 131,072.0
+gate, up, down: 45,088,768 * (16 * (1/4096 + 1/11008))
+   1/4096 = 0.000244140625 ; 1/11008 = 0.0000908430...
+   sum = 0.0003349836... ; * 16 = 0.005359738... ; * 45,088,768 = 241,664.0
+per block = 131,072.0*2 + 81,920.0*2 + 241,664.0*3 = 1,150,976  (matches F5)
+total     = 1,150,976 * 32 = 36,831,232
+```
+
+The re-check agrees to the last scalar. It also exposes the error mode: a family-level ratio applied to a family total
+is invalid, because the ratio depends on each target's own pair of widths. Multiplying the attention family's dense
+count 41,943,040 by a blended ratio of 0.03125 would give 1,310,720 instead of the correct 425,984, an error of 3.1x,
+and the mistake survives every dimensional check because both sides are scalar counts.
+
+**A second, sharper counterexample to the ratio shortcut.** Suppose a target is 11008 wide in and 4096 wide out, and
+someone uses `2/d_out` as an approximation to `(1/d_in + 1/d_out)`, reasoning that the widths are roughly comparable.
+The approximation gives `2/4096 = 0.00048828125` against the true `0.00033498363`, an overestimate of 45.8%; at r = 16
+that is 110,592 phantom parameters on each targeted MLP matrix, or 10,616,832 across the 96 such matrices in this model.
+Approximating a ratio is safe only when `d_in` and `d_out` differ by less than about a factor of two.
+
+**Step 6: merge cost, if the adapter is folded into the base.**
+
+```text
+merging one target costs about 2 * r * d_in * d_out FLOPs (one scaled product plus an add)
+per block: 2 * 16 * 177,209,344 = 5,670,699,008 FLOPs
+all blocks: 5,670,699,008 * 32 = 181,462,368,256 FLOPs = 181.46 GFLOP
+```
+
+181.46 GFLOP once per artifact is negligible against training, and it is not negligible against a request path: this is
+an offline operation and must never run per request.
+
+**Step 7: serving comparison.**
+
+```text
+merged artifact   : one dense matrix per target, no extra kernel, 10.807 GiB in bf16
+unmerged artifact : base 10.807 GiB + adapter 70.25 MiB = 10.876 GiB
+artifact ratio    : 11,603,542,016 / 73,662,464 = 157.5x
+extra arithmetic  : 2 * 36,831,232 = 73,662,464 FLOP per token (adapter path, all layers)
+base arithmetic   : 2 * 5,801,771,008 = 11,603,542,016 FLOP per token (ignoring attention scores)
+share             : 0.635%
+```
+
+**Sensitivity note.** Holding the target list fixed and moving rank:
+
+```text
+r = 4  : P =  9,207,808   (0.1587% of base)   state at 12 B = 105.4 MiB   s = 8.000
+r = 8  : P = 18,415,616   (0.3174%)           state at 12 B = 210.8 MiB   s = 4.000
+r = 16 : P = 36,831,232   (0.6348%)           state at 12 B = 421.5 MiB   s = 2.000
+r = 32 : P = 73,662,464   (1.2697%)           state at 12 B = 843.0 MiB   s = 1.000
+```
+
+Two facts from the table. First, doubling rank doubles the count exactly, because F5 is linear in `r`; there is no
+economy of scale. Second, holding `alpha` fixed while doubling rank halves the effective scale, so a rank sweep with a
+fixed `alpha` is a joint change of capacity and step size. Choose one of two protocols and state it: hold `s` constant
+by scaling `alpha` with `r`, or hold `alpha` constant and accept that scale is part of the treatment.
+
+**A second sensitivity that is easy to miss.** Restricting the target list from seven modules to `q` and `v` only, at
+`r = 8`, gives `(8*8192 + 8*5120) * 32 = (65,536 + 40,960) * 32 = 3,407,872` trainable scalars, 9.3% of the
+seven-target `r = 16` count. Whether that is 9.3% as useful is an evaluation question, and the only honest answer
+without a run is "unknown".
+
+**Decision implied by the example.** At this scale the memory argument does not decide anything: 421.5 MiB of trainable
+state against a 10.807 GiB base means the base and the activations dominate. The decision must therefore be argued on
+quality, on artifact management, and on whether the serving path can afford the unmerged kernel path.
+
+**Takeaway:** Recompute the count per target, never per family; and state whether your rank sweep also changed the scale.
+
+## 6. Visual / Geometric Intuition
+
+```text
+                    output space R^d_out
+                            |
+                 image(W)   |  .......... full-dimensional
+                            |
+   x ---> A ---> z in R^r --+--> B z  lies in a subspace of dimension <= r
+     \                      |
+      \--> W x ------------>+--> plus the frozen contribution
+```
+
+Read the diagram as two parallel paths that are summed. The upper path passes through a bottleneck of width `r`, so
+everything it can contribute lives in the at-most-`r`-dimensional column space of `B`. The lower path is unrestricted.
+The sum is what the layer computes.
+
+**Geometric statements that follow directly.**
+- The adapter's reachable outputs, with `x` fixed, form an affine set of dimension at most `r` inside the output space.
+- The adapter cannot move an output in a direction orthogonal to `span(B)`. If the required correction on your task lies
+  mostly outside that span, more training steps will not help; the direction is unreachable at that rank.
+- `A` decides which input directions are distinguished inside the bottleneck; `B` decides where they are sent. Swapping
+  which factor is initialised to zero changes the first-step behaviour, not the reachable set.
+- The parameterisation is redundant: `r` columns of `B` and `r` rows of `A` can be combined with any invertible
+  `r x r` matrix and the product is unchanged. The reachable set has dimension `r*(d_in+d_out) - r^2`, which is the
+  number of free parameters after quotienting by that symmetry. For `r = 16` and a square 4096 target that is
+  `131,072 - 256 = 130,816` effective degrees of freedom, and for the `k_proj` shape `81,920 - 256 = 81,664`.
+
+**A useful mental picture for target selection.** The frozen base already contains many directions. An adapter on a
+target can only reweight and rotate the directions that reach that target. Adapting `q` and `k` changes where attention
+looks; adapting `v` and `o` changes what information is carried and how it is recombined; adapting the MLP changes the
+per-token feature transform. These are different interventions, and a target list is a hypothesis about which of them
+the task needs.
+
+```text
+   layer i-1 output
+        |
+        +--> q_proj (+LoRA) --> queries ---+
+        +--> k_proj (+LoRA) --> keys -------+--> softmax --> weights
+        +--> v_proj (+LoRA) --> values -----+
+                                            |
+        <-- o_proj (+LoRA) <----------------+
+        |
+        +--> gate/up (+LoRA) --> activation --> down (+LoRA) --> residual add
+```
+
+**Why the composition is not a single low-rank map.** A stack of adapted layers passes through softmax normalisation and
+elementwise non-linearities. Those operations are not linear, so the end-to-end function of a LoRA-adapted model is not
+`W + s B A` at the model level. Only the per-layer weights have that form. Any argument of the shape "the whole model is
+low rank therefore it cannot learn X" is a category error; the correct statement is narrower and applies layerwise.
+
+**An asymmetry worth remembering.** A rank-one update can raise a matrix's rank to full (add `diag(1,0)` to the
+identity and the result has rank two) and can also lower it (add `diag(-1,0)` and the result has rank one). The adapter
+is therefore not a "capacity reduction" of the base in any monotone sense; it is an additive perturbation of bounded
+dimension.
+
+**Takeaway:** Picture a narrow residual channel beside a wide frozen channel; the channel width limits what the adapter
+can add, never what the base already does.
+
 ## 7. Comparison / Selection Table
-| Option | Choose when | Disqualifier or boundary | Fallback |
-|---|---|---|---|
-| Prompt only | Task is controllable using existing knowledge and context | Repeated behavior is unreliable or context is too costly | Test adapter with same evaluation set |
-| Retrieval | Facts change or must be cited | Retrieval quality or authorization fails | Fix retrieval and access controls |
-| LoRA | Reusable behavioral adaptation with limited trainable state | Quality, base compatibility or safety gates fail | Prompt/retrieval or full fine-tune |
-| Full fine-tuning | Data and budget justify unrestricted updates | Memory or governance constraints prohibit it | Adapter or narrower scope |
-| Quantized-base adapter | Base memory is the binding constraint | Quantization or runtime degrades required quality | Higher precision or different hardware |
-| Merged adapter | One stable adapter per deployed artifact and merge is supported | Need rapid tenant switching or quantized merge harms quality | Serve base plus adapter |
-| Unmerged adapter | Many compatible adapters need independent lifecycle | Runtime does not safely pin adapter to request | Isolated model instances |
-Retrieval and fine-tuning can be combined; neither replaces authorization.
-Select on quality, safety, measured end-to-end cost and lifecycle constraints, not trainable parameter count alone.
-**Takeaway:** Choose adaptation only after testing simpler controls and stating disqualifying conditions.
+
+| Option | Choose when | Parameter count for the worked model | Disqualifier | Fallback |
+|---|---|---|---|---|
+| Prompt engineering only | Task is controllable with instructions and the base already has the capability | 0 | Repeated instructions still fail on held-out groups | Adapter with a paired evaluation |
+| Retrieval | Facts change, must be cited, or are tenant-specific | 0 trainable | Source quality or authorization cannot be assured | Fix retrieval; do not encode facts in weights |
+| Full fine-tuning | The needed change is broad, data is plentiful, and optimizer memory is affordable | 5,801,771,008 | 86.45 GiB of fp32 state at 16 B/param exceeds the device budget | Adapter, or sharded full fine-tuning |
+| LoRA on attention only (`q`,`v`) | The expected change is where attention looks, and budget is tight | 3,407,872 at r=8 | MLP-side behaviour is the actual deficit | Extend the target list |
+| LoRA on all seven projections | The deficit is unknown or spans formatting and reasoning | 36,831,232 at r=16 | Rank and budget pushed until counts exceed the matrix | Reduce targets or rank, keep evaluation fixed |
+| QLoRA (quantized base) | Base storage is the binding constraint | Same adapter count, base 4x smaller in weight bytes | Quantization degrades required precision or kernels are unavailable | bf16 base with smaller adapter |
+| Adapter with magnitude vector | Direction and magnitude of the update need separate control | 37,552,128 at r=16 (+1.96%) | Runtime does not support the decomposition | Plain LoRA with tuned scale |
+| Scaled-vector method (IA3-like) | The change is a reweighting of existing directions | 417,792 | Needed change requires rotation, not scaling | Rank-4 LoRA |
+| Soft prompt | No weight artifact is permitted and context is not scarce | 409,600 at 100 tokens, plus 12.5 MiB cache per request | Context window is the scarce resource, or prompt is ignored at long lengths | Adapter |
+| Merged adapter at serving time | One adapter per deployed artifact, stable traffic mix | 0 extra at inference | Per-request adapter switching is required | Unmerged with pinned routing |
+| Unmerged adapter at serving time | Many adapters, one base, independent lifecycles | 0 extra weights per request | Runtime cannot pin an adapter for a whole generation | Separate processes per adapter |
+
+**How to read the table.** The count column is present only to stop the argument from being settled by the count. Two
+options with counts three orders of magnitude apart can be the right choice in different situations, because the count
+is not the objective. The objective is the decision: does the adapted model pass the gate at acceptable cost.
+
+**A selection rule that survives review.** State the failing baseline measurement first, then state the smallest
+intervention that could plausibly move it, then state the measurement that would show it failed. If the third statement
+cannot be written, the first was not a measurement.
+
+**Takeaway:** Select by disqualifier, not by parameter count; every row above is cheap in some dimension and expensive
+in another.
+
 ## 8. Failure Modes & Edge Cases
-All cases below are HYPOTHETICAL diagnostic exercises; no incident is asserted.
-### No improvement
-- Symptom: No improvement.
-- Candidate cause: Incorrect target selection.
-- Competing explanation: Bad data or insufficient optimization.
-- Discriminating check: List trainable names and compare held-out loss.
-- Bounded action: Select intended modules and fix labels.
-- Verification: Verify gradients and paired task score.
-### Out of memory before backward
-- Symptom: Out of memory before backward.
-- Candidate cause: Base or temporary loading peak.
-- Competing explanation: Activation peak during training.
-- Discriminating check: Measure device allocation by phase.
-- Bounded action: Use suitable base precision or placement.
-- Verification: Repeat representative load and training step.
-### Out of memory during backward
-- Symptom: Out of memory during backward.
-- Candidate cause: Long-sequence activations.
-- Competing explanation: Optimizer state or fragmentation.
-- Discriminating check: Profile peak by sequence length and allocation.
-- Bounded action: Reduce microbatch or checkpoint activations.
-- Verification: Measure full-step peak and throughput.
-### Training loss falls but evaluation fails
-- Symptom: Training loss falls but evaluation fails.
-- Candidate cause: Leakage or overfit.
-- Competing explanation: Wrong evaluation formatting.
-- Discriminating check: Inspect group overlap and token templates.
-- Bounded action: Re-split groups and align formatting.
-- Verification: Rerun untouched holdout.
-### Adapter has no effect
-- Symptom: Adapter has no effect.
-- Candidate cause: Wrong base or adapter not loaded.
-- Competing explanation: Evaluation uses stale cache.
-- Discriminating check: Log immutable base and adapter hashes.
-- Bounded action: Pin compatible artifact and invalidate cache.
-- Verification: Compare deterministic logits against base.
-### Initial model differs from base
-- Symptom: Initial model differs from base.
-- Candidate cause: Nonzero adapter initialization.
-- Competing explanation: Dropout or preprocessing mismatch.
-- Discriminating check: Disable dropout and inspect initial update norm.
-- Bounded action: Use documented initialization and matching inputs.
-- Verification: Compare initial logits within precision tolerance.
-### Quality falls after merge
-- Symptom: Quality falls after merge.
-- Candidate cause: Quantization and rounding.
-- Competing explanation: Wrong scale or merge target.
-- Discriminating check: Compare unmerged and merged logits before requantization.
-- Bounded action: Merge in suitable precision with correct metadata.
-- Verification: Evaluate merged artifact on held-out tasks.
-### Wrong tenant behavior
-- Symptom: Wrong tenant behavior.
-- Candidate cause: Adapter routing race.
-- Competing explanation: Incorrect tenant authorization.
-- Discriminating check: Trace request-to-adapter immutable binding.
-- Bounded action: Pin authorized adapter for complete generation.
-- Verification: Run concurrent cross-tenant negative tests.
-### Checkpoint cannot resume
-- Symptom: Checkpoint cannot resume.
-- Candidate cause: Missing optimizer or scheduler state.
-- Competing explanation: Changed data order or base revision.
-- Discriminating check: Inspect checkpoint manifest and state counters.
-- Bounded action: Restore complete compatible training state.
-- Verification: Compare next-step loss and parameters.
-### Toxicity regression
-- Symptom: Toxicity regression.
-- Candidate cause: Training distribution alters safety behavior.
-- Competing explanation: Evaluator or decoding changed.
-- Discriminating check: Run fixed safety slices against both models.
-- Bounded action: Revise data or reject release.
-- Verification: Review blinded outputs and uncertainty.
-### Short examples improve but long ones fail
-- Symptom: Short examples improve but long ones fail.
-- Candidate cause: Sequence truncation.
-- Competing explanation: Position or prompt template mismatch.
-- Discriminating check: Inspect token lengths and actual masks.
-- Bounded action: Correct truncation and evaluate long slices.
-- Verification: Check task metrics by length.
-### Instability at first updates
-- Symptom: Instability at first updates.
-- Candidate cause: Excessive learning rate or scale.
-- Competing explanation: Nonfinite data or precision overflow.
-- Discriminating check: Inspect factor gradients and loss scaling.
-- Bounded action: Adjust configuration after isolating cause.
-- Verification: Run monitored training with finite checks.
-**Takeaway:** Diagnose the competing causes with phase-specific evidence before changing rank or releasing a mitigation.
+
+Each entry is a HYPOTHETICAL diagnostic exercise. No incident is asserted and no measured outcome is implied. The
+structure is: symptom → candidate cause → competing explanation → discriminating check → bounded correction →
+prevention that survives the next run.
+
+### F1. Trainable count is lower than the arithmetic predicts
+
+- Symptom: the framework reports a trainable parameter count that does not match F5 for the intended target list.
+- Candidate cause: a target name matched zero modules, or matched more modules than intended.
+- Competing explanation: the framework adds its own trainable scalars, so the count is slightly higher rather than lower.
+- Discriminating check: print every parameter tensor whose `requires_grad` is true, with name, shape and element count; sum
+  the shapes and compare with the hand calculation per target.
+- Correction: attach factors to explicit module objects obtained by walking named modules, not to substring matches.
+- Prevention: assert the total count in the training entry point and fail fast when it differs from F5.
+- Verification: the printed inventory sums to the asserted value and every target appears exactly once.
+
+### F2. Out of memory before the first backward pass completes
+
+- Symptom: allocation failure during model load or during the first forward pass, before any optimizer step.
+- Candidate cause: the frozen base plus the framework's temporary loading peak, e.g. loading in fp32 and casting.
+- Competing explanation: a long first sequence inflating activations, which would fail slightly later.
+- Discriminating check: measure device allocation after load, after the first forward, and after the backward, separately.
+- Correction: load in the target dtype directly, shard or offload the frozen base, or reduce the sequence length.
+- Prevention: record a load-phase allocation budget as a test, and gate on it before training starts.
+- Verification: the load-phase measurement and the step-phase measurement both sit under the recorded budget.
+
+### F3. Out of memory during backward only
+
+- Symptom: the step succeeds in evaluation mode but fails with gradients enabled, at a specific sequence length.
+- Candidate cause: retained activations scaling with sequence length and microbatch, not with adapter size.
+- Competing explanation: optimizer state allocated lazily at the first step, which would fail after the backward.
+- Discriminating check: sweep sequence length at fixed microbatch and record peak; then sweep microbatch at fixed length.
+- Correction: gradient checkpointing, smaller microbatch with gradient accumulation, or shorter packing units.
+- Prevention: derive the activation budget from the maximum training sequence length and test at that length.
+- Verification: the maximum configured length completes a step, and throughput is recorded for that configuration.
+
+### F4. Loss falls smoothly while the held-out score does not move
+
+- Symptom: training loss decreases by a large factor, and the paired evaluation shows no improvement over the base.
+- Candidate cause: the adapter learned the prompt format or the label distribution of the training set only.
+- Competing explanation: leakage inflating training-set-like evaluation, which would show the opposite pattern.
+- Discriminating check: score the base and the adapter on the same groups with identical prompts and decoding; inspect
+  per-slice deltas rather than the aggregate; check whether the training loss drop is concentrated in the first tokens.
+- Correction: re-balance the data toward target tokens, mask prompt tokens, and re-evaluate on untouched groups.
+- Prevention: define the evaluation before training and require a pre-registered minimum detectable effect.
+- Verification: the per-slice table shows a delta with an interval that excludes zero on the slices that matter.
+
+### F5. Adapter appears to have no effect at inference
+
+- Symptom: outputs from the served model are byte-identical to the base model's outputs.
+- Candidate cause: the runtime loaded the base only; the adapter was silently skipped or scaled to zero.
+- Competing explanation: the adapter was trained on a different base revision, so its effect is small but nonzero.
+- Discriminating check: log the base commit hash, adapter hash and the resolved scale at request time; compare a fixed
+  prompt's logits in both configurations rather than eyeballing text.
+- Correction: pin the adapter to the request for the whole generation, and assert non-zero scale in the request path.
+- Prevention: a startup self-test that asserts a deterministic logit difference from the base on a fixed input.
+- Verification: the self-test fails loudly when the adapter is removed from the configuration.
+
+### F6. Quality drops after merging the adapter
+
+- Symptom: the merged artifact scores lower than the unmerged pair on the same evaluation suite.
+- Candidate cause: the update was added in a lower precision than it was trained in, and rounding was material.
+- Competing explanation: the wrong scale or the wrong target was merged, e.g. a transposed matrix that only shows on
+  rectangular projections.
+- Discriminating check: compare merged and unmerged logits in fp32 on a fixed batch before any requantization; then
+  compare per-target merge residuals.
+- Correction: merge in higher precision, then cast the merged weights once; verify orientation against the runtime.
+- Prevention: a merge unit test on a rectangular target, since square targets hide transposition errors.
+- Verification: merged-versus-unmerged maximum absolute logit difference is under the stated tolerance.
+
+### F7. Adapter works in training but the served model degrades under concurrency
+
+- Symptom: single-request evaluation passes; under load, some responses show behaviour from a different adapter.
+- Candidate cause: the adapter selection is resolved per token or per batch rather than per request.
+- Competing explanation: a prompt or KV cache keyed without the adapter identity, so a cached prefix crosses adapters.
+- Discriminating check: trace one request end to end and record the adapter identity at every step that touches state;
+  replay with two adapters in parallel and check for cross-contamination in the cache keys.
+- Correction: bind the adapter identity to the request and include it in every cache key, including prefix caches.
+- Prevention: a concurrency test with two adapters and deliberately overlapping prompts, run in CI.
+- Verification: the overlapping-prompt test produces each adapter's own behaviour for every request.
+
+### F8. Quality is good but latency regresses beyond the budget
+
+- Symptom: the adapted model passes quality gates and fails the serving latency gate.
+- Candidate cause: the unmerged adapter adds kernel launches that dominate at small batch sizes.
+- Competing explanation: the adapter increased memory pressure, reducing batch size and therefore throughput.
+- Discriminating check: measure time per output token at fixed batch for base, unmerged and merged, with identical
+  prompts; separately record achieved batch size in each configuration.
+- Correction: merge the adapter, or batch requests by adapter identity so the extra kernels are amortised.
+- Prevention: include a served-latency budget in the acceptance criteria before training, not after.
+- Verification: the measured time per token at the production batch shape is within the pre-agreed budget.
+
+### F9. Resumed training diverges from the pre-interruption curve
+
+- Symptom: after a restart, the loss jumps or the run fails on the second step.
+- Candidate cause: the checkpoint contains factors but not optimizer moments, scheduler position or scaler state.
+- Competing explanation: the data loader restarted from the beginning, so the model sees the first examples twice.
+- Discriminating check: inspect the checkpoint manifest for each state tensor, and compare the first post-resume step's
+  loss against the last pre-interruption loss on the same batch.
+- Correction: save and restore the full training state, and record the data position.
+- Prevention: a resume drill executed before the long run, comparing the next step under a stated tolerance.
+- Verification: the resume drill's loss difference is within tolerance and the step counter advances correctly.
+
+### F10. Behaviour degrades on long inputs but not on short ones
+
+- Symptom: slice metrics by input length show the improvement vanishing or reversing beyond a token threshold.
+- Candidate cause: truncation during training removed the region where the target behaviour occurs.
+- Competing explanation: the evaluation prompt template differs from training, so the model sees an unfamiliar format.
+- Discriminating check: histogram training token lengths, count examples truncated, and inspect the decoded training
+  examples near the maximum length; then compare the actual templates as token sequences.
+- Correction: re-budget the sequence length or filter examples that cannot fit; align templates exactly.
+- Prevention: report the truncated fraction per slice as a data-quality metric before training.
+- Verification: the length-bucketed evaluation shows a delta on the longest bucket that meets the pre-agreed effect.
+
+### F11. Training is unstable in the first hundred steps
+
+- Symptom: loss spikes, gradient norm explodes, or non-finite values appear early.
+- Candidate cause: the effective scale is too large for the chosen learning rate, for example after an `alpha` change.
+- Competing explanation: a small number of malformed examples with extreme token distributions.
+- Discriminating check: log per-step gradient norm, the maximum absolute value in each factor, and the batch identity
+  at the spike; rerun with a sorted batch to see whether the spike follows the data or the configuration.
+- Correction: lower the effective scale or the learning rate after isolating which one moved, and filter the outliers.
+- Prevention: a short warm-up run with gradient clipping and finite checks as a gate before the full run.
+- Verification: the first thousand steps show finite values and a decreasing gradient-norm median.
+
+### F12. Aggregate metrics improve while a protected slice regresses
+
+- Symptom: the mean score rises and one subgroup falls below its previous value or below a floor.
+- Candidate cause: the training mixture under-represents the slice, so the adapter trades it away for the majority.
+- Competing explanation: the slice's evaluation items were affected by a data change unrelated to adaptation.
+- Discriminating check: per-slice numerator, denominator and interval for base and adapter; compare against the same
+  items scored before the data change.
+- Correction: reweight or augment the mixture, or exclude the adapter from the routes that serve the slice.
+- Prevention: pre-register protected slices with minimum deltas and a blocking rule, before training.
+- Verification: the slice table shows every protected slice at or above its floor with an interval.
+
+### F13. Refusal or safety behaviour changes after adaptation
+
+- Symptom: the adapted model complies with requests the base refused, or over-refuses benign ones.
+- Candidate cause: the fine-tuning distribution contains examples whose completions conflict with the safety policy.
+- Competing explanation: decoding settings changed between the two evaluations, which alone can move refusal rates.
+- Discriminating check: hold decoding fixed and run a fixed safety probe set through base and adapter with blinded
+  review; then rerun the adapter probe at the base's original decoding settings.
+- Correction: remove conflicting examples, add policy-consistent examples, or reject the release.
+- Prevention: a safety probe suite executed on every candidate adapter as a release gate.
+- Verification: the blinded review shows no material increase in harmful compliance and no material over-refusal.
+
+### F14. The adapter cannot be reproduced from its artifact
+
+- Symptom: a retrained adapter from the stored configuration does not reproduce the deployed behaviour.
+- Candidate cause: the configuration omits the target list, the scale convention, or the base revision.
+- Competing explanation: nondeterministic kernels, which change the numbers but not the behaviour materially.
+- Discriminating check: retrain twice from the artifact's metadata only and compare held-out scores and a fixed-batch
+  logit fingerprint; separately rerun with deterministic kernels to bound the nondeterminism.
+- Correction: complete the artifact metadata and pin the base by hash, not by name.
+- Prevention: treat the artifact as unusable unless a from-scratch reproduction passes the fingerprint check.
+- Verification: the reproduction run matches the recorded fingerprint within the stated tolerance.
+
+**Takeaway:** Every entry above is decided by a measurement that separates two causes; changing a hyperparameter before
+that measurement is a guess wearing a lab coat.
+
 ## 9. Complexity & Cost Analysis
-For one token, a dense base projection costs on the order of d_in*d_out multiply-adds.
-The unmerged adapter adds work on the order of r*(d_in+d_out), excluding scaling and kernel overhead.
-For a batch of N token vectors, both counts scale linearly with N under this dense operation model.
-The 4096 square rank-8 example therefore adds 65,536 versus 16,777,216 multiply-adds per token for that projection.
-This arithmetic ratio does not predict latency: kernel launches, memory traffic, batching and hardware utilization matter.
-A merged weight can avoid a separate adapter path, but requires an extra merged artifact per variant.
-If B and A are merged explicitly, constructing BA costs order d_out*r*d_in operations and produces a dense update.
-Count temporary merge buffers as well as final model storage.
-For unmerged serving, cache capacity must include factors, base models and runtime metadata.
-Eviction policy and adapter loading latency depend on workload and are NOT MEASURED here.
-Training costs include forward, backward through frozen operations, optimizer updates for trainable parameters, data loading and evaluation.
-A frozen matrix does not require a weight gradient but may still require an input gradient.
-Distributed runs can add synchronization, sharding and communication overhead.
-Measure wall-clock time, accelerator-hours and held-out quality together.
-A smaller optimizer state is not evidence of proportionally faster training.
-**Takeaway:** Separate parameter arithmetic from actual kernel, memory, communication and lifecycle costs.
+
+**Per-token arithmetic.** For one token, one target contributes `r*(d_in+d_out)` multiply-accumulate operations for the
+adapter path, against `d_in*d_out` for the frozen path. Summing over the seven targets of the worked model gives
+36,831,232 MACs, or 73.66 MFLOP at two operations per MAC, against 11.60 GFLOP for the frozen forward path. The ratio of
+arithmetic is exactly the ratio of parameter counts, 0.635%, because both are linear in the same shapes.
+
+**Training arithmetic is a different quantity, and this is the most misreported number in PEFT.** A training step costs
+roughly six operations per parameter per token for the full model (two for the forward, four for the backward). LoRA
+does not remove the forward or most of the backward: the frozen weights still need input gradients to reach earlier
+adapters, so `W^T g` is computed at every layer. What LoRA removes is the weight gradient for frozen parameters and the
+optimizer state for them.
+
+```text
+ILLUSTRATIVE: 50,000 examples * 512 tokens * 3 epochs = 76,800,000 target tokens
+full fine-tuning, 6 FLOP per parameter-token:
+   6 * 5,801,771,008 * 76,800,000 = 2.673e18 FLOP
+adapter-only accounting, 6 FLOP per adapter parameter-token:
+   6 * 36,831,232 * 76,800,000    = 1.697e16 FLOP
+ratio of the "training-only" terms: 0.635%
+```
+
+The 0.635% figure is the size of the term LoRA changes; it is not the speed-up. Amdahl's law applies: the forward and
+the input-gradient backward remain, so the wall-clock saving is bounded by the fraction of time those consume. A run
+that spends 85% of its time in frozen forward and backward can improve by at most about 15% even if the adapter terms
+vanish, and in practice much less.
+
+```text
+FORMULA [F16]: speedup <= 1 / (f_frozen + f_adapter),  with f_frozen + f_adapter = 1
+WHERE: f_frozen is the fraction of step time spent in work LoRA does not remove.
+CONSTRAINT: Bound only; communication, launch overhead and memory pressure can make
+            the realised speed-up lower, and can in principle make it negative.
+NUMERICAL EXAMPLE: f_frozen = 0.85 gives 1/0.85 = 1.176, i.e. at most +17.6% throughput.
+INTERPRETATION: Quote this bound before promising a training-cost reduction, and measure
+            the realised value on the target hardware.
+```
+
+**Memory is where the saving is real.** Full fine-tuning at 16 bytes per parameter for weights, master weights, momenta
+and gradients needs 92.83 GB, or 86.45 GiB, for the worked base. Adapter training needs the bf16 base at 10.807 GiB
+plus 562 MiB of trainable state, i.e. about 11.36 GiB, a 7.6x reduction in the parameter-related term. That is the
+honest headline: LoRA buys memory, not arithmetic.
+
+```text
+full FT: 5,801,771,008 * 16 B = 92,828,336,128 B = 86.453 GiB
+LoRA   : 11,603,542,016 B (base bf16) + 589,299,712 B (adapter at 16 B/param) = 12,192,841,728 B
+         = 11.356 GiB
+ratio  : 86.453 / 11.356 = 7.61x
+```
+
+**Storage across adapters is where the lifecycle argument sits.**
+
+```text
+one bf16 adapter artifact        : 70.25 MiB
+250 tenant adapters              : 250 * 70.25 MiB = 17,562.5 MiB = 17.15 GiB
+250 tenant full copies in bf16   : 250 * 10.807 GiB = 2,701.75 GiB
+```
+
+The adapter path stores every tenant in less space than two base copies, which is the entire economic reason
+multi-adapter serving exists. The counterweight is that every tenant adapter must be evaluated, versioned and rolled
+back individually, so the operational cost per tenant is not small even though the storage is.
+
+**Communication and parallelism.** Adapter training still shards the frozen base across devices or replicates it. In data
+parallelism the adapter gradients are all-reduced and are small, but the frozen parameters are usually not reduced at
+all, so the all-reduce volume falls in proportion to the adapter count rather than to the model size. In tensor
+parallelism the factors must be sharded consistently with the target's sharding: an `o_proj` row-sharded across devices
+needs `B` split along its output rows, and `A` replicated. A mismatch produces plausible shapes and wrong results, and
+only a fixed-input comparison against the unsharded merge catches it.
+
+**Merge cost.** 181.46 GFLOP per artifact for the worked model, computed in Section 5. It is a one-off cost per
+artifact version, and it must be repeated whenever the base or the adapter changes. Budget it as an artifact-build step
+with its own timeout, not as a request-path operation.
+
+**Evaluation cost is the term that decides projects.** A paired evaluation that produces per-slice intervals on a
+protected slice needs enough items per slice for the interval to be narrower than the effect you intend to detect. With
+binary per-item outcomes, the standard error of a proportion near 0.8 with n items per arm is about
+`sqrt(0.8*0.2/n)`; at n = 400 that is 0.02, so the half-width of a 95% interval is roughly 0.039. Detecting a 3-point
+improvement therefore needs more than 400 items per arm per slice, and typically several thousand for a stable answer.
+Evaluation compute is frequently larger than the adapter training compute for small adapters, and it is not optional.
+
+**Cost table for the worked example, all ILLUSTRATIVE.**
+
+| Term | Quantity | Note |
+|---|---|---|
+| Trainable parameters | 36,831,232 | F5, seven targets, r = 16 |
+| Adapter weights, bf16 | 70.25 MiB | storage per artifact |
+| Trainable state, 16 B/param | 562.0 MiB | weights, grads, fp32 master, two moments |
+| Frozen base, bf16 | 10.807 GiB | dominant resident term |
+| Merge compute | 181.46 GFLOP | once per artifact |
+| Extra inference FLOPs | 73.66 MFLOP per token | 0.635% of the frozen forward |
+| Extra KV cache | 0 | adapters add no cache |
+| Evaluation items | thousands per slice | decided by the required interval width |
+
+**Takeaway:** LoRA reduces parameter state by roughly 7.6x and inference arithmetic by 0.635%; it barely reduces training
+arithmetic, so any claim of proportional speed-up is wrong.
+
 ## 10. Key Theorems / Results Reference
-**DERIVED:** Rank of a matrix product is no greater than the rank of either factor.
-Applied to L1, rank(BA) is at most min(r,d_in,d_out).
-This is an algebraic upper bound, not a guarantee that training reaches rank r.
-**DERIVED:** Parameter count is linear in r for fixed target shapes by L2 and L3.
-This conclusion does not imply linear changes in runtime, accuracy, or total memory.
-**SOURCED:** The original LoRA paper introduces low-rank adaptation of frozen pretrained weights: [Hu et al., 2021](https://arxiv.org/abs/2106.09685).
-Its reported experiments are workload-specific and are not reproduced or claimed here.
-**SOURCED:** QLoRA describes training adapters through a quantized frozen base: [Dettmers et al., 2023](https://arxiv.org/abs/2305.14314).
-This reference does not establish the memory or quality of a different runtime.
-Source versions: arXiv landing pages; exact implementation versions and current behavior remain OPEN.
-Review trigger: a change to the base checkpoint, adapter implementation or inference runtime.
-The [support-domain adaptation case](../Case_Studies/01_support_domain_adaptation.md) applies adapter sizing to a proposed evaluation and deployment decision; its outcomes are not measured.
-**Takeaway:** Algebraic bounds travel across implementations; benchmark outcomes do not.
+
+**DERIVED — rank of a product.** For conformable real matrices, `rank(B A) <= min(rank B, rank A)`. With `B` of shape
+`d_out x r` and `A` of `r x d_in`, the product has rank at most `r`. This is the algebraic content of the method and it
+is checkable by computing singular values of the product.
+
+**DERIVED — the effective matrix need not be low rank.** `rank(W + s B A)` can be any value up to the full rank of `W`,
+as the two 2x2 examples in Section 4.4 show. Therefore "LoRA produces a low-rank model" is false; the update is
+low-rank and the model is not.
+
+**DERIVED — linearity of the count.** For fixed shapes, `P` is linear in `r`, so halving the rank halves the trainable
+count exactly. Nothing else in the cost model is linear: memory has the same linearity only in the parameter terms,
+merge cost is linear in `r` with a large constant, and quality is not linear in anything.
+
+**DERIVED — redundancy of the factorisation.** The map `(B, A) -> B A` is invariant under `B -> B R`, `A -> R^-1 A` for
+invertible `R`. The identifiable degrees of freedom are `r*(d_in+d_out) - r^2`, and this is why factor values from two
+runs are not comparable and why averaging factors across runs is undefined.
+
+**DERIVED — merge equality in exact arithmetic.** `(W + s B A) x = W x + s B (A x)` holds exactly in real arithmetic,
+which is what licenses merge-at-deploy-time. In floating point the two evaluation orders round differently, so the
+merged artifact must be validated as its own artifact rather than assumed equivalent.
+
+**DERIVED — best low-rank approximation.** For a known target `D`, the Frobenius-optimal rank-`k` approximation is the
+truncated SVD, and the squared error equals the sum of discarded squared singular values. This is a diagnostic for what
+rank a full fine-tuning delta would have needed; it is not a prediction, because the target of training is not the
+delta and the loss is not the Frobenius norm.
+
+**SOURCED — the method itself.** Hu et al., "LoRA: Low-Rank Adaptation of Large Language Models", arXiv:2106.09685,
+introduces adaptation of frozen pretrained weights by a low-rank additive update, with the `alpha/r` scaling and the
+observation that the update can be merged into the base weights for zero added inference latency after merging. The
+paper's experimental settings are specific to the models and tasks it studied; nothing in this card reproduces them.
+
+**SOURCED — quantized bases.** Dettmers et al., "QLoRA: Efficient Finetuning of Quantized LLMs", arXiv:2305.14314,
+describes training adapters through a frozen quantized base with higher-precision compute. The numerical and memory
+behaviour depends on the quantization scheme and the kernels used; see the QLoRA card in this collection.
+
+**SOURCED — rank-stabilised scaling.** Kalajdzievski, "A Rank Stabilization Scaling Factor for Fine-Tuning with LoRA",
+arXiv:2312.03732, proposes `alpha/sqrt(r)` so that increasing rank does not monotonically shrink the effective scale.
+This card uses that as the second convention in F8, without asserting a quality benefit for any particular task.
+
+**SOURCED — magnitude decomposition.** Liu et al., "DoRA: Weight-Decomposed Low-Rank Adaptation", arXiv:2402.09353,
+decomposes the adapted weight into a trainable magnitude and a direction updated by a low-rank term. The extra
+parameters are counted in F9; the reported behaviour is that paper's, not a general result.
+
+**OPEN — everything about realised speed.** Kernel fusion, batch shape, sequence length, allocator behaviour and
+hardware generation determine served latency. No number in this card measures it.
+
+**OPEN — the rank needed for a task.** No theorem predicts it. The only sound procedure is a bounded sweep with a fixed
+evaluation, a fixed token budget and a stated scale convention.
+
+**Review trigger.** A change to the base checkpoint, the target module names, the scaling convention, the runtime's
+merge implementation, or the evaluation population invalidates the numbers and the conclusions of this card.
+
+**Takeaway:** The algebraic results travel across implementations; the empirical ones do not, and the paper citations
+here are pointers, not evidence about your workload.
+
 ## 11. Interview / Exam Questions
-### 1. What is frozen?
-**Answer:** The selected base weights remain fixed, while adapter factors are optimized. Other explicitly unfrozen parameters must be included in the trainable count.
-### 2. What is the shape of the update?
-**Answer:** For W of shape d_out by d_in, A is r by d_in and B is d_out by r. BA has the same shape as W.
-### 3. Count a rank-8 adapter on a 4096 square projection.
-**Answer:** 8*(4096+4096)=65,536 trainable scalar values, excluding bias and any extra trainable tensors.
-### 4. How many parameters for 32 blocks with query and value targeted?
-**Answer:** There are 64 independent projections; 64*65,536=4,194,304. Tying or unequal widths changes the answer.
-### 5. Why is rank eight not a guarantee of an eight-dimensional final model?
-**Answer:** Only the additive update has rank at most eight; adding it to an arbitrary full-rank base can yield a full-rank effective weight.
-### 6. Why can a small adapter still run out of memory?
-**Answer:** Frozen base weights, activations, temporary workspaces, allocator overhead and distributed buffers remain resident; long sequences may dominate peak.
-### 7. How do you distinguish training data leakage from a format bug?
-**Answer:** Inspect group overlap and compare actual tokenized prompts, targets and masks across splits. Correct each identified defect and re-evaluate on untouched groups.
-### 8. When should retrieval be preferred?
-**Answer:** For changing or attributable facts, test authorized retrieval because weights are not a freshness mechanism. Retrieval itself needs evidence, access control and evaluation.
-### 9. What changes when rank doubles?
-**Answer:** For fixed target shapes, factor count doubles. Under alpha/r scaling, holding alpha fixed halves the explicit scale; total memory and quality need not double.
-### 10. How do you validate merging?
-**Answer:** Pin base and adapter versions; compare merged and unmerged logits in suitable precision, then run the same held-out quality and safety suite on the deployed artifact.
-### 11. How would you test tenant isolation?
-**Answer:** Bind authorized adapter identity for the whole request, test concurrent cross-tenant requests and cache keys, and verify outputs and access logs; factors alone are not security boundaries.
-### 12. What does a paired evaluation require?
-**Answer:** Run base and adapted models on the same independent held-out groups with identical prompts and decoding, define metric denominators and uncertainty, and inspect safety and subgroup regressions.
-**Takeaway:** Strong answers distinguish exact algebra, experiment design, and production evidence.
-### Production decision drills
-Each drill is an ILLUSTRATIVE design exercise; proposed checks are not observed results.
-#### Target inventory
-- Decision input: projection names.
-- Failure under consideration: missing or duplicated module.
-- Evidence to collect: unique parameter identities.
-- First controlled action: enumerate shapes before attaching factors.
-#### Rank sweep
-- Decision input: rank and scaling.
-- Failure under consideration: confounded scale change.
-- Evidence to collect: fixed task set and training budget.
-- First controlled action: record both alpha and effective scale.
-#### Learning rate
-- Decision input: optimizer step size.
-- Failure under consideration: unstable or stalled convergence.
-- Evidence to collect: loss and gradient norms by step.
-- First controlled action: compare schedules under equal tokens.
-#### Token masking
-- Decision input: supervised target tokens.
-- Failure under consideration: learning from prompt or padding.
-- Evidence to collect: decoded examples and loss mask.
-- First controlled action: validate boundaries with hand-labeled samples.
-#### Data grouping
-- Decision input: customer and document identities.
-- Failure under consideration: correlated leakage across splits.
-- Evidence to collect: group intersection counts.
-- First controlled action: split before augmentation.
-#### Temporal evaluation
-- Decision input: event and cutoff timestamps.
-- Failure under consideration: future information in training.
-- Evidence to collect: latest training timestamp by group.
-- First controlled action: reserve a later test interval.
-#### Deduplication
-- Decision input: content hashes and near duplicates.
-- Failure under consideration: test contamination.
-- Evidence to collect: cross-split duplicate audit.
-- First controlled action: deduplicate with a documented policy.
-#### Rare slices
-- Decision input: slice membership.
-- Failure under consideration: aggregate hides regression.
-- Evidence to collect: per-slice numerator and denominator.
-- First controlled action: predefine minimum sample and escalation.
-#### Safety regression
-- Decision input: harm categories.
-- Failure under consideration: task optimization degrades refusal.
-- Evidence to collect: paired blinded review.
-- First controlled action: block release on material harm.
-#### Factuality
-- Decision input: source-supported claims.
-- Failure under consideration: confident unsupported answer.
-- Evidence to collect: claim-level evidence review.
-- First controlled action: retain retrieval and citations.
-#### Output schema
-- Decision input: valid structured responses.
-- Failure under consideration: syntactically valid but wrong values.
-- Evidence to collect: parse and semantic validation separately.
-- First controlled action: check downstream contract.
-#### Quantized base
-- Decision input: weight representation.
-- Failure under consideration: accuracy or kernel mismatch.
-- Evidence to collect: matched precision comparisons.
-- First controlled action: record quantization configuration.
-#### Merge precision
-- Decision input: merge dtype.
-- Failure under consideration: rounding makes merged model differ.
-- Evidence to collect: logit comparison before requantization.
-- First controlled action: test exact deployment artifact.
-#### Adapter cache
-- Decision input: base and adapter versions.
-- Failure under consideration: stale adapter reused.
-- Evidence to collect: request trace and cache identity.
-- First controlled action: key on immutable compatible versions.
-#### Tenant routing
-- Decision input: authorization identity.
-- Failure under consideration: wrong adapter applied.
-- Evidence to collect: concurrent negative tests.
-- First controlled action: bind identity to generation session.
-#### Rollback
-- Decision input: previous accepted artifact.
-- Failure under consideration: missing dependent base.
-- Evidence to collect: restore drill and manifest.
-- First controlled action: keep compatible base and tokenizer.
-#### Training resume
-- Decision input: optimizer and RNG state.
-- Failure under consideration: non-equivalent restart.
-- Evidence to collect: compare step counter and sample order.
-- First controlled action: save full training state.
-#### Context length
-- Decision input: tokenized sequence length.
-- Failure under consideration: truncation changes labels.
-- Evidence to collect: length histogram and actual masks.
-- First controlled action: evaluate representative long examples.
-#### Optimizer memory
-- Decision input: moments and master weights.
-- Failure under consideration: state exceeds assumptions.
-- Evidence to collect: dtype inventory at step.
-- First controlled action: sum allocated state per device.
-#### Activation memory
-- Decision input: microbatch and sequence lengths.
-- Failure under consideration: peak occurs in backward.
-- Evidence to collect: phase-level peak allocation.
-- First controlled action: measure after warmup.
-#### Evaluation uncertainty
-- Decision input: independent group count.
-- Failure under consideration: false confidence from correlated rows.
-- Evidence to collect: group bootstrap or appropriate intervals.
-- First controlled action: report interval and sample unit.
-#### Production monitoring
-- Decision input: quality proxy and latency.
-- Failure under consideration: proxy hides harmful failure.
-- Evidence to collect: audited outcome sample.
-- First controlled action: define ownership and alert response.
-#### Distribution shift
-- Decision input: input and task mix.
-- Failure under consideration: offline result does not transfer.
-- Evidence to collect: time and segment comparisons.
-- First controlled action: collect consented representative labels.
-#### Serving throughput
-- Decision input: batch mix and concurrency.
-- Failure under consideration: adapter path launch overhead.
-- Evidence to collect: end-to-end latency distribution.
-- First controlled action: benchmark real adapter mix.
-#### License and privacy
-- Decision input: training data permission.
-- Failure under consideration: unauthorized reuse.
-- Evidence to collect: dataset lineage and retention audit.
-- First controlled action: exclude unapproved records.
-#### Reproducibility
-- Decision input: base code and data revisions.
-- Failure under consideration: artifact cannot be reconstructed.
-- Evidence to collect: immutable manifest completeness.
-- First controlled action: record seeds and environment.
-#### Evaluation budget
-- Decision input: number of candidate adapters.
-- Failure under consideration: overfitting to validation.
-- Evidence to collect: predeclared final untouched test.
-- First controlled action: limit repeated test access.
-#### Preference leakage
-- Decision input: human reviewer identity.
-- Failure under consideration: correlated subjective judgments.
-- Evidence to collect: reviewer and group stratification.
-- First controlled action: use blinded adjudication.
-#### Cross-domain retention
-- Decision input: general capability slices.
-- Failure under consideration: specialization causes forgetting.
-- Evidence to collect: paired general-task comparison.
-- First controlled action: set regression guardrails.
-#### Failure fallback
-- Decision input: service health and model quality.
-- Failure under consideration: bad adapter stays active.
-- Evidence to collect: reversion trigger and exercise.
-- First controlled action: route to accepted baseline.
-### Additional worked decisions
-These examples are ILLUSTRATIVE and use the assumptions explicitly stated.
-#### Unequal projection shapes
-Suppose a block has a 4096-by-4096 query projection.
-Suppose its value projection maps 4096 inputs to 1024 outputs.
-Use rank 8 independently for both projections.
-The query adapter uses 65,536 entries by L2.
-The value adapter uses 8*(4096+1024)=40,960 entries.
-The two adapters together contain 106,496 entries per block.
-Across 32 identical blocks they contain 3,407,872 entries.
-Independent check: 106,496*2^5=3,407,872.
-This excludes trainable biases and any other targets.
-Counting both as square would overstate the count.
-#### Mixed ranks
-Keep the same unequal shapes but choose query rank 4.
-Choose value rank 16.
-Query then requires 4*8192=32,768 entries.
-Value requires 16*5120=81,920 entries.
-Their combined count is 114,688 entries per block.
-Across 32 blocks the count is 3,670,016.
-Independent check: 114,688*2^5=3,670,016.
-Higher value rank costs less per rank unit because its output width is smaller.
-The count alone cannot prove the mixed-rank allocation has better quality.
-Compare candidates using the same data, objective and evaluation.
-#### Additional classifier head
-Suppose the 4,194,304-entry adapter also trains a classifier.
-The classifier maps 4096 features to two outputs.
-With a separate bias, its weight has 8192 entries and its bias has two.
-The added head contains 8194 entries.
-Total trainable parameters become 4,202,498.
-Independent check: 4,194,304+8192+2=4,202,498.
-The head must be saved and restored with the adapter.
-The tokenizer and input formatting remain separate dependencies.
-If the head shares a weight, count the unique storage rather than both names.
-#### Adapter storage for multiple tasks
-Assume ten distinct adapters each have 4,194,304 parameters.
-Assume each stored factor uses exactly two bytes.
-Each adapter then contains 8,388,608 bytes, or 8 MiB.
-Ten adapters require 80 MiB of factor payload.
-This sum excludes metadata, padding and serialized checkpoint overhead.
-It also excludes a base model and any optimizer state.
-If all ten are loaded simultaneously, device cache may need at least that payload.
-If only one is loaded at a time, loading and eviction add latency.
-Neither option establishes a throughput or latency result without measurement.
-The cached artifact identity must include the compatible base revision.
-#### Matched paired task evaluation
-Assume 100 independent held-out requests, each scored correct or incorrect.
-The baseline is correct on 70 requests.
-The adapter is correct on 75 requests.
-The illustrative absolute difference is five percentage points.
-Suppose both are correct on 65 of the same requests.
-Then the adapter alone is correct on 10 requests.
-The baseline alone is correct on five requests.
-The remaining 20 requests are wrong for both.
-The paired outcomes sum to 65+10+5+20=100.
-The net gain is 10-5=5 requests, matching the marginal difference.
-This constructed point estimate does not establish statistical significance.
-If requests share customers, resample customers rather than pretending requests are independent.
-#### Aggregate and subgroup caution
-Suppose 90 common requests and 10 rare requests form the test set.
-The baseline answers 72 common and eight rare requests correctly.
-The adapter answers 81 common and five rare requests correctly.
-Baseline aggregate accuracy is 80/100=80%.
-Adapter aggregate accuracy is 86/100=86%.
-The common slice rises from 72/90=80% to 81/90=90%.
-The rare slice falls from 8/10=80% to 5/10=50%.
-Aggregate improvement therefore coexists with a 30-point rare-slice decline.
-The small rare denominator makes its estimate uncertain.
-Predeclared slice guardrails and expert review determine whether this blocks release.
-The numbers describe a constructed evaluation, not measured performance.
-#### Missing outcome caution
-Suppose 100 evaluation requests are attempted.
-For the baseline, 90 are scored and 10 time out.
-Of the scored baseline requests, 81 are correct.
-Its conditional scored accuracy is 81/90=90%.
-If timeouts count as failures, end-to-end success is 81/100=81%.
-These two metrics answer different questions.
-Report both the score denominator and the attempted-request denominator.
-Apply the same timeout policy to the adapter.
-Inspect whether missing cases cluster by length or task difficulty.
-Do not silently discard failures to make the quality metric look better.
-#### Token-weighted loss interpretation
-Suppose one example has two supervised tokens with mean loss 1.
-A second example has eight supervised tokens with mean loss 3.
-The unweighted mean of example means is (1+3)/2=2.
-The token-weighted mean is (2*1+8*3)/10=2.6.
-Both arithmetic results are correct for their respective estimands.
-The second weights the longer example four times as much.
-Padding and prompt tokens must be excluded if they are masked.
-Report the reduction convention before comparing training runs.
-A lower token loss does not automatically imply better task completion.
-#### Rollout accounting
-Suppose a canary receives 200 eligible requests.
-Suppose 180 complete successfully under the declared success contract.
-The illustrative completion rate is 180/200=90%.
-If 20 requests are excluded after assignment, the denominator changes.
-Exclusions need a reason specified independently of the outcome.
-Compare with the baseline over a similar period and request mix.
-Include latency, quality and safety rather than success alone.
-Keep automatic rollback thresholds separate from this invented example.
-A canary does not prove performance on rare groups absent from its traffic.
-#### Rank and scaling sensitivity
-Use a rank-8 adapter with alpha 16.
-The standard scaling factor is 16/8=2.
-Double rank to 16 while keeping alpha at 16.
-The standard scaling factor becomes 16/16=1.
-Alternatively double alpha to 32 along with rank.
-The resulting standard scaling factor remains 32/16=2.
-Neither adjustment makes the optimization trajectories equivalent.
-Factor initialization and attainable update subspace also change.
-Record the complete configuration and compare repeated runs where feasible.
-#### Memory unit sensitivity
-Suppose a tensor contains 1,073,741,824 scalar entries.
-At two bytes per entry it occupies 2,147,483,648 bytes.
-This is exactly 2 GiB under binary units.
-It is approximately 2.147 GB under decimal units.
-Confusing the two units can conceal a capacity shortfall.
-This computation covers the tensor payload, not allocator reservation.
-If stored in a quantized format, account for scales and packing.
-If sharded, count the local shard and any transient gathered copy.
-#### Grouped uncertainty
-Suppose 1,000 requests come from only ten customers.
-The number of requests is not necessarily the number of independent units.
-Requests from the same customer may share templates and subject matter.
-A request-level confidence interval can therefore be too narrow.
-Use customer-level resampling if the estimand and sample design permit.
-Ten customers may still be too few for a stable interval.
-Report the number of customers as well as the number of requests.
-Recruit more independent groups when the decision requires tighter uncertainty.
-**Takeaway:** The production decision depends on the actual estimand, artifact, and population, not a single aggregate count.
-### Derivation lab: gradients and initialization
-For a single vector, let y = Wx + sBAx, with s = alpha/r.
-Let g = dL/dy and z = Ax; all vectors are columns.
-The loss differential is dL = g^T dy.
-Holding x fixed, the B contribution is s g^T(dB)z.
-Thus dL/dB = s g z^T, an outer product of shape d_out by r.
-The A contribution is s g^T B(dA)x.
-Thus dL/dA = s B^T g x^T, of shape r by d_in.
-The input gradient is W^T g + s A^T B^T g.
-A frozen W has no weight update, but its transpose can still propagate gradients.
-If B starts at zero, dL/dA is zero on the first backward pass.
-If A and g are nonzero, dL/dB need not be zero at that same pass.
-After B changes, a subsequent backward pass can update A as well.
-If both factors start at zero, both factor gradients vanish under this loss path.
-Regularization or another loss path could alter that conclusion.
-Take x=(1,2), A=[1,0], B=(0,0)^T, g=(3,4), s=2.
-Here z=1, so dL/dB=(6,8)^T.
-The initial dL/dA is [0,0] because B is zero.
-With learning rate 0.1 and plain SGD, the new B is (-0.6,-0.8)^T.
-At the same x and g, B^T g=-5 and dL/dA=[-10,-20].
-This second gradient is conditional on holding g fixed, not a claim about a real network.
-Gradient accumulation sums or averages such contributions according to the implementation.
-A zero factor gradient on the first step is therefore not by itself a broken adapter.
-A persistently zero B gradient instead warrants checking inputs, masks and graph connectivity.
-A detached adapter path also blocks learning even if factors are marked trainable.
-Inspect gradients before the optimizer clears them.
-Weight decay may move parameters even when the data gradient is zero.
-The factor gradients are not the same as the gradient of an unconstrained dense update.
-The factorization couples their optimization and changes the accessible update trajectory.
-### Derivation lab: factor symmetries and rank
-For any invertible r by r matrix R, BA = (BR)(R^-1 A).
-Consequently individual factor magnitudes are not uniquely determined by the effective update.
-For a scalar c other than zero, (cB)(A/c)=BA.
-A large norm of B alone therefore does not prove a large functional change.
-For example B=(2,0)^T and A=[3,0] produce [[6,0],[0,0]].
-Replacing B by (20,0)^T and A by [0.3,0] produces the same matrix.
-Their separate squared norms differ, despite equal dense updates.
-Factor-wise weight decay can therefore distinguish equivalent factorizations.
-Rank is at most r, but linearly dependent columns can make it smaller.
-For B=[[1,1],[0,0]] and A=[[1,0],[0,1]], BA has rank one.
-The nominal rank is two although the realized update has only one nonzero singular value.
-A singular-value inspection of BA can diagnose unused capacity.
-For large matrices, use a small-factor method or an approximation rather than materializing BA unnecessarily.
-Do not infer a globally optimal rank from one checkpoint spectrum.
-A small singular value can still matter on an important input direction.
-The update response on an input x depends on Ax, not just on ||BA||.
-If x lies in the null space of A, the adapter contributes zero for that x.
-The null space can contain relevant examples even when training loss decreases.
-For A=[1,0], x=(0,1) is such an input.
-For x=(1,0), the same A passes a nonzero coordinate to B.
-Evaluation should therefore include examples spanning meaningful input conditions.
-A nonlinear stack of adapted layers is not equivalent to a single low-rank end-to-end map.
-Intervening attention and nonlinearities alter how layerwise changes compose.
-Even one full-rank W plus a rank-one update can have full rank.
-With W=I_2 and BA=diag(1,0), the effective matrix diag(2,1) has rank two.
-Conversely, a low-rank update can reduce the rank of W.
-With W=I_2 and BA=diag(-1,0), the effective matrix has rank one.
-Neither example predicts task quality; both only establish algebraic possibilities.
-### Derivation lab: target approximation
-Consider a desired dense update D=diag(6,3,1).
-Its singular values are 6, 3 and 1.
-For an unconstrained rank-k approximation in Frobenius norm, truncated SVD keeps the k largest singular values.
-At k=1, the optimal approximation is diag(6,0,0).
-The squared residual is 3^2+1^2=10.
-The residual Frobenius norm is sqrt(10), approximately 3.162.
-At k=2, the optimal approximation is diag(6,3,0).
-Its squared residual is 1 and its residual norm is 1.
-At k=3 the residual is zero.
-The squared norm of D is 36+9+1=46.
-Rank one captures 36/46, approximately 78.26%, of squared Frobenius energy.
-Rank two captures 45/46, approximately 97.83%.
-This approximation result assumes the target dense update is already known.
-It does not say the low-rank training objective will find the truncated SVD.
-Frobenius error also weights all matrix coordinates equally.
-A task distribution can concentrate on a discarded direction.
-For x=(0,0,1), the rank-two approximation outputs zero while D outputs (0,0,1).
-Thus high retained matrix energy can coexist with complete error on that input.
-A loss-weighted or data-weighted criterion may lead to different priorities.
-If two singular values tie at the cutoff, the best rank-k subspace need not be unique.
-This is an offline diagnostic, not a substitute for held-out behavioral evaluation.
-The full target update might itself be noisy or overfit.
-Comparing spectra requires compatible target shapes and consistent normalization.
-The memory required to compute an exact SVD can exceed that of the adapter.
-#### Allocation exercise: square attention
-Assume one independent 4096 by 4096 dense weight, with no trainable bias.
-The base matrix contains 16,777,216 scalar entries.
-With rank 8, A has 32768 entries and B has 32768 entries.
-The first adapter therefore contains 65,536 trainable entries.
-At rank 16, A and B together contain 131,072 entries.
-The rank increase adds 65,536 trainable entries per target.
-At two bytes per factor entry, the extra factor payload is 131,072 bytes.
-This payload excludes gradients, optimizer state, metadata and the frozen weight.
-At fixed alpha=16, alpha/r changes from 2.00 to 1.00.
-Keeping the original scale instead requires alpha=32 at rank 16.
-The factor count comparison does not establish a quality difference.
-If the target is shared across layers, count one factor pair per actual allocation.
-If every layer owns a separate pair, multiply these counts by the number of layers.
-Check that the stored weight orientation matches the runtime's linear convention.
-The example is derived arithmetic for an assumed shape, not a measured workload.
-#### Allocation exercise: grouped value
-Assume one independent 1024 by 4096 dense weight, with no trainable bias.
-The base matrix contains 4,194,304 scalar entries.
-With rank 8, A has 32768 entries and B has 8192 entries.
-The first adapter therefore contains 40,960 trainable entries.
-At rank 16, A and B together contain 81,920 entries.
-The rank increase adds 40,960 trainable entries per target.
-At two bytes per factor entry, the extra factor payload is 81,920 bytes.
-This payload excludes gradients, optimizer state, metadata and the frozen weight.
-At fixed alpha=16, alpha/r changes from 2.00 to 1.00.
-Keeping the original scale instead requires alpha=32 at rank 16.
-The factor count comparison does not establish a quality difference.
-If the target is shared across layers, count one factor pair per actual allocation.
-If every layer owns a separate pair, multiply these counts by the number of layers.
-Check that the stored weight orientation matches the runtime's linear convention.
-The example is derived arithmetic for an assumed shape, not a measured workload.
-#### Allocation exercise: expansion projection
-Assume one independent 11008 by 4096 dense weight, with no trainable bias.
-The base matrix contains 45,088,768 scalar entries.
-With rank 4, A has 16384 entries and B has 44032 entries.
-The first adapter therefore contains 60,416 trainable entries.
-At rank 8, A and B together contain 120,832 entries.
-The rank increase adds 60,416 trainable entries per target.
-At two bytes per factor entry, the extra factor payload is 120,832 bytes.
-This payload excludes gradients, optimizer state, metadata and the frozen weight.
-At fixed alpha=8, alpha/r changes from 2.00 to 1.00.
-Keeping the original scale instead requires alpha=16 at rank 8.
-The factor count comparison does not establish a quality difference.
-If the target is shared across layers, count one factor pair per actual allocation.
-If every layer owns a separate pair, multiply these counts by the number of layers.
-Check that the stored weight orientation matches the runtime's linear convention.
-The example is derived arithmetic for an assumed shape, not a measured workload.
-#### Allocation exercise: vocabulary-side head
-Assume one independent 32000 by 2048 dense weight, with no trainable bias.
-The base matrix contains 65,536,000 scalar entries.
-With rank 2, A has 4096 entries and B has 64000 entries.
-The first adapter therefore contains 68,096 trainable entries.
-At rank 4, A and B together contain 136,192 entries.
-The rank increase adds 68,096 trainable entries per target.
-At two bytes per factor entry, the extra factor payload is 136,192 bytes.
-This payload excludes gradients, optimizer state, metadata and the frozen weight.
-At fixed alpha=4, alpha/r changes from 2.00 to 1.00.
-Keeping the original scale instead requires alpha=8 at rank 4.
-The factor count comparison does not establish a quality difference.
-If the target is shared across layers, count one factor pair per actual allocation.
-If every layer owns a separate pair, multiply these counts by the number of layers.
-Check that the stored weight orientation matches the runtime's linear convention.
-The example is derived arithmetic for an assumed shape, not a measured workload.
-#### Allocation exercise: bottleneck projection
-Assume one independent 128 by 512 dense weight, with no trainable bias.
-The base matrix contains 65,536 scalar entries.
-With rank 8, A has 4096 entries and B has 1024 entries.
-The first adapter therefore contains 5,120 trainable entries.
-At rank 16, A and B together contain 10,240 entries.
-The rank increase adds 5,120 trainable entries per target.
-At two bytes per factor entry, the extra factor payload is 10,240 bytes.
-This payload excludes gradients, optimizer state, metadata and the frozen weight.
-At fixed alpha=16, alpha/r changes from 2.00 to 1.00.
-Keeping the original scale instead requires alpha=32 at rank 16.
-The factor count comparison does not establish a quality difference.
-If the target is shared across layers, count one factor pair per actual allocation.
-If every layer owns a separate pair, multiply these counts by the number of layers.
-Check that the stored weight orientation matches the runtime's linear convention.
-The example is derived arithmetic for an assumed shape, not a measured workload.
-#### Allocation exercise: audio cross-modal projection
-Assume one independent 3072 by 768 dense weight, with no trainable bias.
-The base matrix contains 2,359,296 scalar entries.
-With rank 8, A has 6144 entries and B has 24576 entries.
-The first adapter therefore contains 30,720 trainable entries.
-At rank 16, A and B together contain 61,440 entries.
-The rank increase adds 30,720 trainable entries per target.
-At two bytes per factor entry, the extra factor payload is 61,440 bytes.
-This payload excludes gradients, optimizer state, metadata and the frozen weight.
-At fixed alpha=16, alpha/r changes from 2.00 to 1.00.
-Keeping the original scale instead requires alpha=32 at rank 16.
-The factor count comparison does not establish a quality difference.
-If the target is shared across layers, count one factor pair per actual allocation.
-If every layer owns a separate pair, multiply these counts by the number of layers.
-Check that the stored weight orientation matches the runtime's linear convention.
-The example is derived arithmetic for an assumed shape, not a measured workload.
-#### Allocation exercise: expert expansion
-Assume one independent 14336 by 4096 dense weight, with no trainable bias.
-The base matrix contains 58,720,256 scalar entries.
-With rank 4, A has 16384 entries and B has 57344 entries.
-The first adapter therefore contains 73,728 trainable entries.
-At rank 8, A and B together contain 147,456 entries.
-The rank increase adds 73,728 trainable entries per target.
-At two bytes per factor entry, the extra factor payload is 147,456 bytes.
-This payload excludes gradients, optimizer state, metadata and the frozen weight.
-At fixed alpha=8, alpha/r changes from 2.00 to 1.00.
-Keeping the original scale instead requires alpha=16 at rank 8.
-The factor count comparison does not establish a quality difference.
-If the target is shared across layers, count one factor pair per actual allocation.
-If every layer owns a separate pair, multiply these counts by the number of layers.
-Check that the stored weight orientation matches the runtime's linear convention.
-The example is derived arithmetic for an assumed shape, not a measured workload.
-### Interview drill: optimizer and batching
-**Question:** Does freezing W make backpropagation through W unnecessary?
-**Answer:** No; earlier adapters require input gradients through later frozen operations.
-For y=Wx, the input gradient is W^T g even when dL/dW is not retained.
-A framework may avoid storing a weight gradient while still computing that input gradient.
-**Question:** Are eight microbatches equivalent to one batch eight times larger?
-**Answer:** Only under compatible loss normalization, optimizer timing and stochastic behavior.
-Accumulate gradients for eight microbatches, then perform one optimizer step for a comparable update.
-Eight optimizer steps instead change both moments and parameters eight times.
-If supervised-token counts vary, average by total supervised tokens for the token-level objective.
-Averaging eight microbatch means equally weights microbatches, not necessarily tokens.
-Dropout and random data order can prevent bitwise equivalence even with matching normalization.
-Activation memory is usually governed by microbatch shape, not merely effective batch size.
-**Question:** Is an adapter checkpoint sufficient for exact training resumption?
-**Answer:** Not necessarily; restore optimizer, scheduler, step, scaler and random states as applicable.
-Also restore data position, sample order and distributed configuration where relevant.
-An adapter-only export may be adequate for inference but omits training-state information.
-Even with state restored, nondeterministic kernels can prevent bitwise reproduction.
-Compare the next training step under a documented reproducibility tolerance.
-**Question:** Does the alpha/r ratio alone determine the update size?
-**Answer:** No; factor values and input direction also matter.
-The same explicit scale applied to different BA matrices gives different residuals.
-The same BA can produce different outputs for different x.
-Record the scale convention, initialization and optimizer with every rank comparison.
-### Interview drill: deployment and safety
-**Question:** Why might merged and unmerged inference differ numerically?
-**Answer:** Arithmetic ordering and precision change rounding, especially after requantization.
-In exact arithmetic, (W+sBA)x = Wx+sB(Ax).
-Floating-point matrix multiplication is not generally associative.
-A quantized base may need dequantization before adding the update.
-Requantizing the resulting dense weight introduces an additional approximation.
-Compare logits first at matched inputs and precision, then test behavior on held-out cases.
-**Question:** Can one adapter be safely loaded onto any checkpoint of the same architecture?
-**Answer:** No; shape compatibility is necessary but not sufficient.
-The learned update depends on the particular frozen base and target naming convention.
-Tokenizer and prompt-template changes can also alter behavior without changing tensor shapes.
-Pin the base revision, adapter configuration and tokenizer as an artifact set.
-**Question:** Does an adapter isolate confidential tenant training examples?
-**Answer:** No; it can encode or reveal information learned during training.
-Access control, data minimization and leakage testing remain necessary.
-Binding an adapter to the wrong request is a routing failure, not a rank failure.
-Do not switch an adapter mid-generation without an explicitly supported cache policy.
-Key-value caches may contain activations produced by the prior model configuration.
-A cache must be scoped to compatible model, adapter, prompt and request identity.
-**Question:** What if aggregate task quality rises while a critical subgroup regresses?
-**Answer:** Apply the prespecified subgroup and safety decision rules rather than averaging the regression away.
-Inspect sample size and uncertainty before interpreting the magnitude.
-A failed guardrail requires investigation or a fallback, not an automatic release.
-All these cases are hypothetical; no production behavior is asserted.
-### Worked lab: shared and fused targets
-Suppose a block computes query, key and value using one fused weight.
-Its input width is 8 and the concatenated output width is 24.
-A single rank-2 fused adapter has 2*(8+24)=64 entries.
-Partition its B matrix vertically into query, key and value row groups.
-All three groups multiply the same A and therefore share an input-side subspace.
-Alternatively attach three independent rank-2 adapters to three separate 8 by 8 weights.
-Each pair has 2*(8+8)=32 entries.
-All three independent pairs contain 96 entries.
-Their three A matrices can learn different input-side subspaces.
-The fused and independent choices therefore differ in both capacity and count.
-A fused rank-2 update has rank at most two across the concatenated output.
-Three independent rank-2 updates can have concatenated rank as high as six, subject to input width.
-A library that adapts only query and value slices may implement a different masking scheme.
-Inspect the actual wrapper and allocated factor shapes rather than guessing from the module name.
-Now suppose an embedding and output projection share one parameter object.
-Two names do not imply two independent base storages.
-If separate adapters are attached at the two uses, however, their factors are distinct.
-If the same factor pair is reused at both uses, count that pair once.
-Reusing one factor pair also couples its gradients from the two paths.
-Shared storage and shared adapter factors are separate design decisions.
-A transpose at the output use can make the factor orientation nontrivial.
-Check both forward paths against a small explicit matrix example.
-Merging into a tied base can unexpectedly change every consumer of that storage.
-A reversible unmerged comparison can expose this coupling before artifact creation.
-Never assume that a fused QKV name guarantees three identical output widths.
-Grouped-query attention commonly has smaller key/value widths than query width.
-For input width 8, query output 8 and key/value outputs 2 each, the fused output is 12.
-A rank-2 fused pair has 2*(8+12)=40 entries.
-Separate rank-2 query and value pairs have 2*(8+8)+2*(8+2)=52 entries.
-The second configuration does not modify key, while the first can modify all fused output rows.
-Counts alone cannot establish that the two target sets are functionally equivalent.
-### Worked lab: finite precision and merging
-Let W=[[1,0],[0,1]], A=[1,2], B=[3,4]^T and s=0.5.
-The outer product BA is [[3,6],[4,8]].
-The scaled update is [[1.5,3],[2,4]].
-The exact merged matrix is [[2.5,3],[2,5]].
-For x=[2,1]^T, the base output is [2,1]^T.
-The adapter coordinate Ax equals 4.
-The scaled adapter output is [6,8]^T.
-Their sum is [8,9]^T.
-The merged matrix applied to x also gives [8,9]^T in exact arithmetic.
-This check covers both factor orientation and scale for this tiny case.
-If scale is incorrectly applied twice, the adapter output becomes [3,4]^T instead.
-If scale is omitted, the adapter output becomes [12,16]^T instead.
-Such errors can be obscured by comparing only generated text.
-Use deterministic tensor-level inputs and compare intermediate values when diagnosing a merge.
-A floating-point tolerance must reflect the chosen dtype and operation ordering.
-Absolute tolerance matters near zero, while relative tolerance matters at larger magnitudes.
-Large logits can yield small probability differences, or small margins can flip an argmax.
-Thus passing a numerical tolerance alone does not replace downstream evaluation.
-Consider a toy quantizer that rounds every value to the nearest integer.
-Rounding the merged matrix above gives [[2,3],[2,5]] under ties-to-even.
-Its output on x is [7,9]^T rather than [8,9]^T.
-This deliberately simple example illustrates quantization error, not a production format.
-Actual quantizers can use block scales, zero points and other rounding rules.
-Merging may require a higher-precision temporary dense matrix.
-That temporary allocation can be much larger than the adapter factors.
-Measure peak memory during merge separately from inference memory.
-Keep an immutable unmerged base and adapter if reversible rollback is required.
-Repeated merging into the same weight can accidentally apply the update twice.
-A merge operation should check whether its input artifact is already merged.
-### Worked lab: loss masks and objective reductions
-Suppose two sequences have supervised target counts 2 and 6.
-Their individual supervised-token losses sum to 4 and 9 respectively.
-Their per-example means are 2 and 1.5.
-The example-weighted mean is (2+1.5)/2=1.75.
-The token-weighted mean is (4+9)/(2+6)=1.625.
-Both are valid objectives, but they weight examples differently.
-For the token-weighted objective, a long response contributes more tokens to the numerator.
-Masking an instruction token removes it from both numerator and denominator.
-Masking a padding token should not change the loss if it was already excluded correctly.
-A shifted causal target must align each logit with the following token label.
-An off-by-one shift can train the wrong prediction even when tensor shapes match.
-Inspect decoded tokens alongside label IDs and the mask at boundary positions.
-For multi-turn dialogue, specify whether prior assistant turns contribute to the loss.
-Separators and end-of-sequence tokens need an explicit supervision policy.
-If truncation removes the entire answer, the sample has zero supervised tokens.
-Exclude or handle zero-token examples explicitly to avoid division by zero.
-For a packed batch, prevent unintended cross-document attention if isolation is required.
-Concatenation alone does not automatically enforce document boundaries.
-The training loss can fall while formatting differs from the serving prompt.
-Run the same tokenizer and chat-template revision in both paths where intended.
-A tokenizer change can invalidate saved token IDs even when text remains the same.
-A fixed random split can still leak if near-duplicate documents cross it.
-Split by the intended generalization unit before deriving packed training samples.
-Audit overlap at document, customer or conversation level as appropriate.
-The evaluation loss denominator must be stated before comparing runs.
-A token-weighted objective need not align with request-level success.
-Include task-specific success criteria and failure analysis in the held-out evaluation.
-### Worked lab: memory by training phase
-Suppose frozen base payload is 12 GiB and adapter payload is 32 MiB.
-Assume adapter gradients consume another 32 MiB.
-Assume Adam's two moments together consume 128 MiB.
-Assume no master copy and no sharding in this deliberately simplified accounting.
-Before activations and workspace, these tensors total 12 GiB plus 192 MiB.
-Since 192 MiB is 0.1875 GiB, the subtotal is 12.1875 GiB.
-Add a hypothetical 2 GiB of live activations at backward peak.
-Add a hypothetical 1 GiB of concurrent temporary workspace.
-The resulting tensor subtotal is 15.1875 GiB.
-This excludes runtime allocations, fragmentation and any other simultaneous buffers.
-A nominal 16 GiB device therefore has only 0.8125 GiB before those exclusions.
-These numbers are a constructed budget, not a model-fit guarantee.
-If activation checkpointing cuts the assumed live activations to 1 GiB, subtotal becomes 14.1875 GiB.
-That calculation does not predict the extra recomputation time.
-If an FP32 master copy of the 32 MiB two-byte factors is used, it adds 64 MiB.
-Optimizer implementations can allocate their state lazily at the first step.
-A run may consequently fit forward and backward but fail on the first optimizer step.
-Measure loading, forward, backward, optimizer step and checkpoint saving separately.
-A peak that combines maxima from different times is a conservative sum, not necessarily an observed peak.
-Conversely, leaving out concurrent temporaries understates the actual peak.
-For sharded training, distinguish persistent shards from transient all-gathered tensors.
-CPU offload moves some storage and traffic to the host rather than eliminating it.
-Long sequences affect activation memory and possibly attention workspace.
-A rank reduction can save adapter state without resolving a dominant activation peak.
-Record allocated and reserved memory separately when the allocator exposes both.
-Checkpoint serialization can create host-side or device-side copies depending on the implementation.
-### Worked lab: paired decisions and uncertainty
-Suppose 40 independent evaluation groups each receive both configurations.
-Both are correct on 24 groups and both are wrong on 6 groups.
-The adapter alone is correct on 7 groups; the base alone is correct on 3.
-The four paired cells sum to 40.
-Baseline accuracy is (24+3)/40=67.5%.
-Adapter accuracy is (24+7)/40=77.5%.
-The paired point difference is (7-3)/40=10 percentage points.
-Discordant pairs determine the observed net change in this binary example.
-Aggregate accuracies alone do not reveal how many examples changed direction.
-The discordant count is 10, which is limited evidence for a precise improvement estimate.
-An exact paired test can use the discordant counts under its stated null assumptions.
-A confidence interval for the difference is more useful than a binary significance label alone.
-If multiple requests share a customer, the customer may be the appropriate resampling unit.
-If groups were sampled nonrandomly, uncertainty from that sampling design must be acknowledged.
-Choose a minimum meaningful improvement before viewing the results.
-Also define unacceptable subgroup or safety regressions before comparing candidates.
-Missing outputs should be counted or separately reported under a prespecified policy.
-Changing a policy after inspecting failures can bias the comparison.
-Use a development set for selecting rank and an untouched holdout for the final decision.
-Repeatedly choosing candidates on the same holdout turns it into a development set.
-A new holdout or appropriate nested evaluation can reduce this selection effect.
-A small aggregate gain may not justify additional operational complexity.
-A quality gain does not establish improved latency or reduced memory.
-Those claims require representative measurements of the deployed configuration.
-### Worked lab: exact rank-one optimization step
-Use a two-dimensional input, a two-dimensional output, rank one and scale s=1.
-Set x=(1,2)^T, target t=(0,1)^T and frozen W=I_2.
-Initialize A=[1,0] and B=(0,0)^T so the adapter initially contributes zero.
-The initial output is y=(1,2)^T and the residual y-t is (1,1)^T.
-For L=0.5*||y-t||^2, the initial loss is 1.
-The output gradient g=y-t equals (1,1)^T.
-The bottleneck activation Ax equals 1.
-Therefore dL/dB=g(Ax)^T=(1,1)^T.
-Because B is zero, dL/dA=(0,0) on this first step.
-With plain SGD at learning rate 0.1, B becomes (-0.1,-0.1)^T.
-The same step leaves A=[1,0] unchanged.
-On the same input after the step, the adapter output is (-0.1,-0.1)^T.
-The new prediction is (0.9,1.9)^T and the residual is (0.9,0.9)^T.
-The new loss is 0.5*(0.9^2+0.9^2)=0.81.
-Recomputing the gradient at that point gives g=(0.9,0.9)^T.
-Now B^T g=-0.18, so dL/dA=(-0.18,-0.36).
-The next A update with the same learning rate would produce [1.018,0.036].
-This second A update assumes ordinary simultaneous SGD using the current gradients.
-The example uses one sample twice only to expose the algebra, not to model generalization.
-With a batch, each example contributes an outer product to the factor gradients.
-Averaging those contributions before a step differs from sequentially updating after each sample.
-If the data loss gradient is zero, an optimizer with decoupled weight decay can still change factors.
-An Adam update differs from this worked SGD trajectory because it uses moment estimates and normalization.
-### Worked lab: unequal per-layer rank allocation
-Consider two independent targets with shapes 1024 by 1024 and 4096 by 1024.
-Their per-rank adapter costs are 2048 and 5120 entries, respectively.
-Allocating rank 8 to each target requires 8*2048+8*5120=57,344 entries.
-At 2 bytes per factor entry, the factor payload is 114,688 bytes.
-An alternative allocation of ranks 16 and 8 requires 16*2048+8*5120=73,728 entries.
-The alternative adds 16,384 entries and 32,768 bytes of factor payload.
-By contrast, increasing only the second target from rank 8 to rank 12 costs 4*5120=20,480 entries.
-The second increase costs more despite adding only half as many rank units.
-A fixed parameter budget therefore constrains ranks differently for differently shaped matrices.
-Suppose the available budget is exactly 57,344 entries.
-Ranks 16 and 4 use 16*2048+4*5120=53,248 entries.
-The unused remainder is 4096 entries, sufficient for two more rank units on the first target.
-Ranks 18 and 4 therefore use the full 57,344-entry budget.
-Both allocations meet the same factor-count budget but constrain different update spaces.
-Holding count constant does not hold activation memory or per-module kernel overhead constant.
-Rank choices should also respect each matrix's minimum dimension and library constraints.
-If rank exceeds a matrix dimension, the factorization cannot increase update rank beyond that dimension.
-Per-layer selection based on the final holdout would contaminate that holdout.
-Use a development set for allocation choices and reserve a separate final evaluation.
-A candidate with lower average loss may still regress on a protected task or subgroup.
-### Worked lab: accumulation with variable supervised tokens
-Take two microbatches containing 2 and 6 supervised tokens.
-Suppose their summed losses are 4 and 9, giving means 2 and 1.5.
-Averaging the two means gives 1.75, which assigns each microbatch half the weight.
-The global token-mean loss is (4+9)/8=1.625.
-To accumulate the global token-mean gradient, weight the two mean-loss gradients by 2/8 and 6/8.
-Equivalently, accumulate summed-loss gradients and divide once by the total of 8 tokens.
-The same principle applies across distributed workers when their token counts differ.
-If the distributed framework averages worker gradients, its reduction factor must be included.
-For two workers, one with 2 tokens and one with 6, averaging their local means gives the wrong token objective.
-Scaling each local mean by twice its fraction of global tokens compensates for a subsequent two-worker average.
-Those multipliers are 0.5 for the first worker and 1.5 for the second.
-The resulting averaged gradient is 0.25*g1+0.75*g2, the desired token weighting.
-This assumes g1 and g2 are gradients of the respective local token means.
-If the runtime sums rather than averages worker gradients, these multipliers are not appropriate.
-Gradient clipping before accumulation need not equal clipping the final accumulated gradient.
-For scalar gradients 3 and 4, clipping each to magnitude 2 and summing gives 4.
-Summing first gives 7, which clips to 2 under the same bound.
-Record clipping placement when comparing supposedly equivalent effective batch sizes.
-Check for an all-masked microbatch before normalizing by its supervised-token count.
-A zero-token microbatch contributes zero summed loss and zero token count under this objective.
-### Worked lab: rank-one update versus full matrix update
-Let the target dense update be D=[[2,0],[0,1]].
-For x=(1,0)^T, D produces (2,0)^T.
-For x=(0,1)^T, D produces (0,1)^T.
-A rank-one update U=diag(2,0) reproduces the first response exactly.
-It produces zero on the second input, leaving residual (0,1)^T.
-A rank-one update V=diag(0,1) instead reproduces the second response exactly.
-It leaves residual (2,0)^T on the first input.
-For squared output error with equal probability on the two inputs, U has expected error 0.5.
-Under the same distribution, V has expected error 2.
-If the first input has probability 0.1 and the second 0.9, U has expected error 0.9.
-Under that skewed distribution, V has expected error 0.4.
-The preferable rank-one direction therefore depends on the input distribution.
-This example compares only two candidate matrices, not every possible rank-one matrix.
-A distribution-weighted optimization may select a different factorization or direction.
-If training underrepresents a rare critical slice, a rank constraint can intensify the trade-off.
-A larger rank can represent D exactly, but that does not establish better held-out quality.
-Changing rank also changes the number of learned parameters and may change optimization behavior.
-Evaluate the slice and the aggregate rather than treating matrix approximation error as task success.
-### Worked lab: interpreting update norms
-Suppose ||W||_F=100 and ||sBA||_F=2 for a selected matrix.
-The ratio of update norm to base norm is 2%, a dimensionless matrix-level summary.
-For input x, the residual is sBAx and obeys ||sBAx||_2 <= ||sBA||_2 ||x||_2.
-The spectral norm ||sBA||_2 is no greater than the Frobenius norm ||sBA||_F.
-Consequently the displayed Frobenius norm yields an upper bound of 2||x||_2.
-A small global norm ratio does not bound the relative output change when Wx is near zero.
-For W=diag(100,0.01), the base output on x=(0,1)^T has norm 0.01.
-Adding U=diag(0,1) changes that output by 1, one hundred times its original norm.
-The Frobenius norm of U is 1 while ||W||_F is approximately 100.
-Thus the global update-to-base norm ratio is approximately 1% in this example.
-This discrepancy is an input-direction effect, not a contradiction of the norm bound.
-Inspect activation-conditioned residuals on representative data when diagnosing large behavioral shifts.
-Relative output ratios require care when the baseline output norm is close to zero.
-A low update norm does not establish that sensitive data cannot be memorized.
-A high update norm does not by itself establish that an adapter is unsafe or defective.
-Track per-target norms as a diagnostic alongside task outcomes and gradient behavior.
-Factor norms separately can change under equivalent rescalings of A and B.
-Compare the effective product or its action on inputs when factorization symmetry matters.
-### Worked lab: adapter lifecycle and compatibility
-Assume a service hosts one frozen base and two separately trained adapters, X and Y.
-A request authorized for X must not inherit Y merely because Y is already cached.
-The request binding should include an immutable adapter version, not only a mutable display name.
-A compatible base revision must be part of the binding and artifact manifest.
-Two adapter files with identical factor shapes may still have been trained on different bases.
-Shape validation catches incompatible dimensions but cannot prove semantic compatibility.
-A model revision that renames target modules can make a previously valid mapping ambiguous.
-Fail closed when the expected target list cannot be resolved exactly.
-If factors are loaded asynchronously, keep the request waiting or reject it until the intended version is ready.
-A partial load must not silently execute with some adapted modules missing.
-For deterministic debugging, compare selected module outputs with adapters disabled and enabled.
-A nonzero output difference establishes activation of the path, not task improvement.
-For an end-to-end regression, check tokenizer, prompt, adapter and base versions together.
-The same generated text does not prove the logits or hidden states are identical.
-When merging for serving, retain an auditable relationship to the original base and factors.
-A merged artifact for X must not be treated as the unmodified base when loading Y.
-Otherwise Y would be applied on top of X unless explicitly designed and evaluated that way.
-For a rollback, restore the full compatible artifact set and invalidate incompatible caches.
-A key-value cache produced with one adapter should not be reused under another by default.
-The model's adapter factors do not replace tenant authorization or input data controls.
-Log artifact identifiers without logging sensitive request contents unless authorized.
-These are design checks for hypothetical systems, not statements about a particular runtime.
-### Worked lab: repeated model selection and reliability
-Suppose four rank candidates are evaluated on the same development set.
-The highest observed score may benefit from favorable sampling noise.
-Choosing that candidate makes its development score an optimistic estimate of final performance.
-An independent holdout estimates the selected candidate without repeating the same selection step.
-If the holdout is used repeatedly to choose new ranks, it becomes part of development.
-Predefine a selection rule combining the primary metric with required safety guardrails.
-Report the number of candidates tried, the selection criterion and any excluded runs.
-A single seed cannot separate a method difference from training randomness.
-Repeated seeds can expose instability, but are not a substitute for independent evaluation groups.
-For paired evaluation, use the same cases and scoring procedure for base and adapter.
-If generation is stochastic, define how seeds or repeated samples enter the comparison.
-Different decoding temperatures can confound the adapter effect.
-A per-request score and a per-token loss are different estimands with different denominators.
-A mean can conceal a high-severity regression on a small but important subset.
-When a subgroup has few cases, report its count and uncertainty rather than claiming precision.
-If no examples cover a required risk, the correct status is unmeasured, not passed.
-A production canary can measure behavior only for traffic it actually receives.
-Routing changes during the canary can alter its case mix and confound the comparison.
-Preserve a baseline and specify rollback triggers before deploying a candidate.
-No constructed numerical result in this sheet is evidence of measured deployment performance.
+
+### Q1. Compute the trainable count for a rank-16 adapter on 32 blocks targeting q and o only, with d = 4096.
+**Answer:** 8,388,608 scalars.
+**Reasoning:** Each target is `16 * (4096 + 4096) = 131,072`. Two targets per block give 262,144; over 32 blocks,
+`262,144 * 32 = 8,388,608`. The tempting wrong answer is 4,194,304, which comes from counting one pair per block because
+q and o share the same shape — a shape coincidence is not a storage coincidence.
+**Trap:** Reporting the per-block figure as the total, or treating `o_proj` as the same tensor as `q_proj` because the
+shapes match.
+**Follow-up:** How does the answer change if the model uses tied q/o weights? It becomes 4,194,304, because one
+allocation serves both.
+
+### Q2. Why does a rank-8 adapter on 64 targets not equal a rank-512 adapter on one target?
+**Answer:** Because rank bounds each update separately; the update is a direct sum over independent targets.
+**Reasoning:** Each pair contributes at most eight dimensions inside its own matrix, and the outputs of different layers
+are composed through non-linearities rather than summed into one matrix. A single rank-512 update to one matrix is a
+different function family with a different parameter count, `512*(d_in+d_out)`, and the two cannot be compared by
+adding ranks.
+**Trap:** Treating total parameter count as interchangeable capacity.
+**Follow-up:** What is the equivalent question you can actually answer with arithmetic? Parameter counts per target and
+the linear-in-`r` relationship within a fixed target list.
+
+### Q3. A teammate says "alpha does not matter, only the ratio". Is that right?
+**Answer:** Only partly, and only under one convention.
+**Reasoning:** Under `s = alpha/r`, `alpha` alone is inert: doubling both `alpha` and `r` keeps `s` and doubles the
+count. Under `alpha B A` or `alpha/sqrt(r)`, `alpha` is directly the scale and does change the update magnitude. The
+statement is a property of the convention, not of LoRA.
+**Trap:** Assuming the ratio form is universal across frameworks; some apply no division by `r` at all.
+**Follow-up:** With `alpha = 32` and `r` going from 8 to 32, what happens to `s` under each of the three conventions?
+`alpha/r`: 4.0 to 1.0. `alpha`: 32 throughout. `alpha/sqrt(r)`: 11.31 to 5.66.
+
+### Q4. Derive why zero-initialising B yields a no-op at step zero but not at step one.
+**Answer:** Because the forward contribution `s B A x` is zero when `B = 0`, while `dL/dB = s g (Ax)^T` is generally
+non-zero.
+**Reasoning:** At the first step the loss and logits equal the base model's, so training starts from the base's
+behaviour. The gradient with respect to `A` is `s B^T g x^T`, which is exactly zero when `B = 0`, so `A` is unchanged
+after the first update while `B` moves. From step two both factors receive non-zero gradients.
+**Trap:** Claiming `A` also gets a gradient at step one, or claiming the no-op property requires both factors to be zero.
+**Follow-up:** What does this imply for a run of 50 steps? The adapter effectively has one fewer update than the step
+count, which is negligible at thousands of steps and material at tens.
+
+### Q5. You must fit a training run in 24 GiB with a 10.8 GiB bf16 base. What dominates, and what do you cut?
+**Answer:** Activations dominate, and the adapter is not the lever.
+**Reasoning:** Adapter state at 36.8M parameters and 16 bytes per parameter is 562 MiB, about 2.3% of the budget. A
+batch-2, 8192-token forward retains roughly 4 GiB of block activations without checkpointing and about 2 GiB with it,
+plus 1 GiB of KV cache per sequence and allocator slack. Cutting rank from 16 to 8 saves 281 MiB; cutting sequence
+length from 8192 to 4096 saves about 1 GiB of activations and 0.5 GiB of cache.
+**Trap:** Halving rank and expecting the out-of-memory error to disappear.
+**Follow-up:** What is the smallest configuration change that buys the most memory? Shortening the training sequence or
+enabling checkpointing, both of which act on the dominant term.
+
+### Q6. Distinguish the three cases where two adapters give different outputs for the same input.
+**Answer:** Different base revision, different scale convention, or an intervening numerical difference such as merge
+precision.
+**Reasoning:** The adapter is meaningless without its base hash. Two adapters trained on different base commits, or the
+same adapter applied with `s` interpreted differently, produce different effective weights. Merge precision adds a third
+case where the mathematics is identical but the arithmetic is not.
+**Trap:** Attributing the difference to training randomness, which cannot change inference for a fixed artifact.
+**Follow-up:** Which check discriminates them in one run? Fix the base hash and the scale, compare logits per target,
+then compare merged versus unmerged in fp32.
+
+### Q7. Compute the crossover rank at which an adapter on `down_proj` (11008 x 4096) exceeds the matrix in parameters.
+**Answer:** 2,985.22, so the smallest integer rank that exceeds it is 2,986.
+**Reasoning:** `r >= d_in*d_out/(d_in+d_out) = 45,088,768/15,104 = 2,985.22`. At `r = 2985` the pair holds
+`2985*15,104 = 45,085,440` scalars, slightly fewer than 45,088,768; at 2,986 it holds 45,100,544.
+**Trap:** Using `min(d_in, d_out)/2` as a universal threshold; that is only correct for square matrices.
+**Follow-up:** Why would anyone choose such a rank? They would not; it is the signal that a dense method is the right
+one for that target.
+
+### Q8. What is the effective number of free parameters of a rank-16 adapter on a 4096-square target, and why does it differ from the count?
+**Answer:** 130,816, which is 131,072 minus 16 squared.
+**Reasoning:** The factorisation has a symmetry group of invertible `16 x 16` matrices, so `r^2 = 256` parameter
+directions leave the product unchanged. The reachable set of updates is therefore parameterised by 130,816 degrees of
+freedom, and gradient descent moves along the quotient.
+**Trap:** Assuming the model has 131,072 independent coordinates that training can set arbitrarily.
+**Follow-up:** What practical consequence does this have? Factor values are not interpretable across runs, and factor
+averaging between two runs is not a meaningful operation.
+
+### Q9. A full fine-tune delta has singular values 6, 3, 1 in one layer. What fraction of squared Frobenius energy does a rank-1 adapter capture, and what is the residual norm?
+**Answer:** 78.26%, with residual norm 3.162.
+**Reasoning:** Squared norm is `36 + 9 + 1 = 46`. Rank-1 keeps `36`, so `36/46 = 0.7826`. The discarded squared mass is
+`9 + 1 = 10`, whose square root is `sqrt(10) = 3.1623`.
+**Trap:** Reporting the ratio of singular values, `6/10 = 0.6`, instead of the ratio of squared energy.
+**Follow-up:** What is the caveat? The rank-2 approximation still outputs zero for the input aligned with the discarded
+third direction, so 97.83% energy retention can coexist with total error on a specific input.
+
+### Q10. Diagnose: training loss falls 40%, held-out exact-match is unchanged, and the training set was split randomly by row.
+**Answer:** Likely leakage or a degenerate split, with prompt-format memorisation as the competing cause.
+**Reasoning:** A random row split places near-duplicate items and the same conversation on both sides, so the drop can
+be memorisation that does not transfer. If instead the groups are clean, the loss drop concentrated in prompt tokens
+indicates the adapter learned formatting rather than the target behaviour.
+**Trap:** Concluding the adapter "did not learn" and raising the rank.
+**Follow-up:** What single change makes the evaluation trustworthy? Re-split by group with a time cut-off, mask prompt
+tokens, and re-evaluate on untouched groups with a pre-registered effect size.
+
+### Q11. Two runs have identical loss but completely different factor values. Is one wrong?
+**Answer:** No; the parameterisation is redundant by construction.
+**Reasoning:** Any invertible `R` with `B -> B R` and `A -> R^-1 A` leaves `B A` and therefore every output unchanged.
+Two runs can converge to different points of the same orbit with identical loss, identical logits and identical
+downstream behaviour.
+**Trap:** Comparing `A` matrices across runs, or comparing per-factor norms, and concluding a training bug.
+**Follow-up:** What is a valid comparison? A fixed-batch logit fingerprint, or the product `B A`, or held-out scores.
+
+### Q12. Estimate whether LoRA gives a large training speed-up for a 5.8B model. Show the bound.
+**Answer:** No; the bound is small because frozen work dominates.
+**Reasoning:** LoRA removes frozen weight gradients and their optimizer state, which is about 0.635% of parameter-token
+work in the worked example. If 85% of step time is frozen forward and input-gradient backward, the Amdahl bound is
+`1/0.85 = 1.176`, i.e. at most +17.6% throughput, and usually less after communication and launch overhead.
+**Trap:** Dividing total parameters by adapter parameters and calling the quotient a speed-up.
+**Follow-up:** Where is the real gain? In memory: 86.45 GiB of full fine-tuning state versus about 11.36 GiB with a
+bf16 base and an adapter, a 7.6x reduction in the parameter-related term.
+
+### Q13. You must support 250 tenant adapters on one base. Compute the storage and name two operational costs that do not shrink.
+**Answer:** 17.15 GiB of adapters against 2,701.75 GiB of full copies, and evaluation plus rollback per tenant.
+**Reasoning:** `250 * 70.25 MiB = 17,562.5 MiB = 17.15 GiB`. A full bf16 copy is 10.807 GiB, so 250 copies is
+2,701.75 GiB. Every tenant still needs its own evaluation, version record, rollback path and access control, and the
+base must be pinned by hash for all of them simultaneously.
+**Trap:** Assuming the storage saving also reduces the validation burden; it increases it, because there are now 250
+artifacts with independent lifecycles.
+**Follow-up:** What failure appears first at this scale? Adapter routing and cache-key errors, because the base is shared
+and the identity of the adapter becomes the only thing separating tenants.
+
+### Q14. When is merging the wrong deployment choice even though it is numerically exact?
+**Answer:** When adapters must be switched per request or per tenant, and when the base must remain bit-identical.
+**Reasoning:** Merging produces one dense artifact per adapter, so 250 tenants become 250 base-sized copies. It also
+overwrites the base weights in that artifact, so any process that must serve the unadapted base needs a second copy, and
+any audit that compares against the base needs a third.
+**Trap:** Treating merge as a pure optimisation without pricing the artifact multiplication.
+**Follow-up:** What is the correct test? Merge only where the traffic mix is stable per artifact, and compare merged and
+unmerged logits in fp32 before shipping either.
+
+### Q15. Which single check would have caught a transposed target in a rectangular projection?
+**Answer:** A merge equivalence test on a target where `d_in != d_out`.
+**Reasoning:** Transposing a square target leaves every count correct, so the parameter arithmetic passes. On a
+`k_proj` of 4096 x 1024 the transposed pair has the wrong shapes and fails immediately, and even if it were reshaped,
+the merged-versus-unmerged logit comparison would differ.
+**Trap:** Relying on a square `q_proj` as the smoke test, which is exactly where the error is invisible.
+**Follow-up:** What tolerance is appropriate? Compare in fp32 with a stated maximum absolute logit difference, since
+exact equality is not achievable across evaluation orders.
+
+**Takeaway:** Every question above is decided by arithmetic or by a discriminating measurement; none is decided by
+preference.
+
 ## 12. Quick Reference Card
-| Item | Value |
-|---|---|
-| Topic | LoRA parameter-efficient fine-tuning and production selection |
-| Core formula | `W_effective = W + (alpha/r)BA`; independent adapter entries are `r*(d_in+d_out)` |
-| Key assumption | The chosen implementation uses this scaling; count actual target shapes and additional trainable tensors |
-| Complexity | One unmerged dense application adds O(r*(d_in+d_out)) arithmetic per input vector; actual runtime is implementation-dependent |
-| Use when | A bounded low-rank update and frozen base satisfy measured quality, deployment and memory constraints |
-| Avoid when | Unmeasured activation peaks or assumed quality are treated as proof that the workload fits or succeeds |
-| Go deeper | [Collection index](INDEX.md); quantized-base details require their own implementation review |
-| Memory | Include simultaneous base, adapter, gradient, optimizer, activations, workspace and allocator overhead |
-| Evidence | Counts are illustrative and derived; no actual training or serving result is measured |
+
+| Item | Value or rule | Where |
+|---|---|---|
+| Adapter count, one target | `r * (d_in + d_out)`, plus any extra trainable tensor | F2 |
+| Relative cost on a target | `r * (1/d_in + 1/d_out)`; larger on skinny matrices | F3 |
+| Worked model, r = 16, seven targets | 36,831,232 scalars = 0.635% of 5.80B | §5 |
+| Trainable state, 16 B/param | 562 MiB; base bf16 is 10.807 GiB | F7 |
+| Scale conventions | `alpha/r` (4→2→1 for r=8,16,32 at alpha=32); `alpha/sqrt(r)` (11.31→8.00→5.66) | F8 |
+| Crossover rank | `d_in*d_out/(d_in+d_out)`: 2048 square, 819.2 kv, 2985.2 mlp | F13 |
+| Merge cost | about `2*r*` frozen parameter count; 181.46 GFLOP here, once per artifact | §5 |
+| Training speed-up bound | `1/f_frozen`; at most +17.6% when 85% is frozen work | F16 |
+| Deployment rule | pin base hash, adapter hash and scale; validate the merged artifact as its own artifact | §8 F5, F6 |
+
+Nothing follows this card; use Section 8 for diagnosis and Section 11 for rehearsal.

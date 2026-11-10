@@ -8,12 +8,11 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | incident command | planned |
+| 1 | incident command | [authored](Case_Studies/01_hot_partition_consumer_lag_incident.md) |
 | 2 | data and model failures | planned |
 | 3 | LLM/agent failures | planned |
 | 4 | resilience drills | planned |
 | 5 | postmortems and prevention | planned |
-
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

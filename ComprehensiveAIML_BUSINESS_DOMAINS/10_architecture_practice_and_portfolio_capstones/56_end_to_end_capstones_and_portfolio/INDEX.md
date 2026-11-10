@@ -8,12 +8,11 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | capstone framing | [Capstone evidence-rubric draft](Cheat_Sheets/01_Capstone_Evidence_Rubric.md); broader topic planned |
+| 1 | capstone framing | [authored](Cheat_Sheets/01_Capstone_Evidence_Rubric.md) |
 | 2 | data and architecture | planned |
 | 3 | implementation and evaluation | planned |
 | 4 | governance and rollout | planned |
 | 5 | portfolio storytelling | planned |
-
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

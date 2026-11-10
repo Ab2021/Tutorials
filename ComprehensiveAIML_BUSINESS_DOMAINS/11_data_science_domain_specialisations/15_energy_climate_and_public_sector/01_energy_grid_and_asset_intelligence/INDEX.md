@@ -8,7 +8,7 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | load forecast | planned |
+| 1 | load forecast | [authored](Case_Studies/01_Load_Probability_Forecast.md) |
 | 2 | renewables | planned |
 | 3 | asset health | planned |
 | 4 | grid operations | planned |
@@ -20,7 +20,6 @@
 | 10 | climate | planned |
 | 11 | cybersecurity | planned |
 | 12 | governance | planned |
-
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

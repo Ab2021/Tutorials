@@ -8,7 +8,7 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | dark-store operations | planned |
+| 1 | dark-store operations | [authored](Case_Studies/01_Substitution_Recommendation.md) |
 | 2 | local assortment | planned |
 | 3 | inventory accuracy | planned |
 | 4 | perishables | planned |
@@ -17,9 +17,8 @@
 | 7 | forecasting | planned |
 | 8 | waste | planned |
 | 9 | vendor fill | planned |
-| 10 | availability promises | planned |
+| 10 | availability promises | [authored](Cheat_Sheets/01_Quick_Commerce_Availability_KPI_Tree.md) |
 | 11 | experiments | planned |
-
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

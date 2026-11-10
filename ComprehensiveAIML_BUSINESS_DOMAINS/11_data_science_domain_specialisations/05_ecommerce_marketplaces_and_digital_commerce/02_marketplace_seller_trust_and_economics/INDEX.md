@@ -8,19 +8,18 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | marketplace flywheel | planned |
-| 2 | seller quality | planned |
+| 1 | marketplace flywheel | [authored](Case_Studies/03_Marketplace_Fee_Experiment.md) |
+| 2 | seller quality | [authored](Cheat_Sheets/02_Seller_Quality_Trust_and_Disputes.md) |
 | 3 | catalogue governance | planned |
 | 4 | fees and incentives | planned |
 | 5 | fraud | planned |
-| 6 | disputes | planned |
+| 6 | disputes | [authored](Cheat_Sheets/02_Seller_Quality_Trust_and_Disputes.md) |
 | 7 | fulfilment | planned |
 | 8 | ads | planned |
-| 9 | liquidity | planned |
-| 10 | pricing | planned |
-| 11 | cross-border | planned |
+| 9 | liquidity | [authored](Cheat_Sheets/01_Marketplace_Health_and_Liquidity.md) |
+| 10 | pricing | [authored](Cheat_Sheets/03_Trust_Safety_Pricing_and_Cross_Border.md) |
+| 11 | cross-border | [authored](Cheat_Sheets/03_Trust_Safety_Pricing_and_Cross_Border.md) |
 | 12 | regulation | planned |
-
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

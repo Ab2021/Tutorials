@@ -8,19 +8,18 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | content metadata | planned |
-| 2 | rights | planned |
+| 1 | content metadata | [authored](Cheat_Sheets/01_Content_Metadata_Schema_and_Lineage.md) |
+| 2 | rights | [authored](Case_Studies/02_Rights_Window_Conflict_Detection.md) |
 | 3 | windowing | planned |
 | 4 | localisation | planned |
-| 5 | catalogue health | planned |
-| 6 | slate planning | planned |
-| 7 | title lifecycle | planned |
-| 8 | artwork | planned |
-| 9 | content operations | planned |
+| 5 | catalogue health | [authored](Cheat_Sheets/03_Catalogue_Health_Metrics_and_Lifecycle.md) |
+| 6 | slate planning | [authored](Case_Studies/05_Slate_Demand_Forecast.md) |
+| 7 | title lifecycle | [authored](Case_Studies/01_Title_Metadata_Enrichment.md) |
+| 8 | artwork | [authored](Case_Studies/04_Artwork_Experiment.md) |
+| 9 | content operations | [authored](Cheat_Sheets/01_Content_Metadata_Schema_and_Lineage.md) |
 | 10 | data governance | planned |
 | 11 | forecasting | planned |
 | 12 | generative assistance | planned |
-
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

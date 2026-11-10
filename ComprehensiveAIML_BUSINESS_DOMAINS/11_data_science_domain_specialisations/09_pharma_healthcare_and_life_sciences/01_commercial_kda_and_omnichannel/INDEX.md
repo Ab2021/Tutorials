@@ -9,10 +9,10 @@
 | # | Topic | Status |
 |---:|---|---|
 | 1 | commercial data | planned |
-| 2 | HCP segmentation | planned |
+| 2 | HCP segmentation | [authored](Case_Studies/01_HCP_Next_Best_Action_Capacity_Constrained.md) |
 | 3 | patient journey | planned |
 | 4 | access | planned |
-| 5 | field deployment | planned |
+| 5 | field deployment | [authored](Case_Studies/01_HCP_Next_Best_Action_Capacity_Constrained.md) |
 | 6 | NBA | planned |
 | 7 | MMM | planned |
 | 8 | attribution | planned |
@@ -20,7 +20,6 @@
 | 10 | launch | planned |
 | 11 | adherence | planned |
 | 12 | governance | planned |
-
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

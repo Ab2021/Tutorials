@@ -10,15 +10,14 @@
 |---:|---|---|
 | 1 | KDA framing | planned |
 | 2 | data ecosystem | planned |
-| 3 | HCP and patient analytics | partial: [illustrative HCP promotional-response case](Case_Studies/01_HCP_Promotional_Response_Driver_Analysis_Launch_Brand.md) is an unreviewed draft; patient analytics planned |
+| 3 | HCP and patient analytics | planned |
 | 4 | access and formulary | planned |
-| 5 | causal drivers | partial: [HCP offer experiment case](Case_Studies/01_HCP_Promotional_Response_Driver_Analysis_Launch_Brand.md); broader driver methods planned |
+| 5 | causal drivers | [authored](Case_Studies/01_HCP_Promotional_Response_Driver_Analysis_Launch_Brand.md) |
 | 6 | launch versus mature brands | planned |
 | 7 | validation and governance | planned |
 | 8 | technology stack | planned |
 | 9 | storytelling | planned |
 | 10 | field adoption | planned |
-
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

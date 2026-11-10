@@ -8,12 +8,11 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | tool schemas and ergonomics | [Tool schema and side-effect-boundaries draft](Cheat_Sheets/02_Tool_Schema_and_Side_Effect_Boundaries.md); broader topic planned |
+| 1 | tool schemas and ergonomics | planned |
 | 2 | MCP and protocol design | planned |
 | 3 | identity and OAuth | planned |
 | 4 | transaction safety | planned |
 | 5 | integration testing | planned |
-
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

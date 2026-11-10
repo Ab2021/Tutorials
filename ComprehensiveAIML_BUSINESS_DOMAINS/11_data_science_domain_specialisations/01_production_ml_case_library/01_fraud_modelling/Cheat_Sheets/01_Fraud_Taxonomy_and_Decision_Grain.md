@@ -4,8 +4,9 @@ file_id: "01"
 topic: "Fraud taxonomy and decision grain"
 level: 1
 status: "draft"
-version: "1.0"
+version: "2.0"
 created: "2026-11-09"
+revised: "2026-11-10"
 reviewed: null
 review_trigger: "Material change to product actions, label sources, entity policy, or source availability"
 notation_style: "plain-text"
@@ -18,984 +19,625 @@ source_index: "INDEX.md"
 
 # Fraud Taxonomy and Decision Grain
 
-> **Purpose:** Classify a suspected-fraud workflow by product, actor, event, action, loss owner, label path, and decision deadline before selecting a model or metric.
-> **Prerequisites:** Basic probability, a timestamped event table, and the ability to distinguish an event from an entity.
-> **Key outcome:** Given an illustrative trace, identify its fraud family, decision grain, permissible actions, observed versus unobserved labels, and the metric that must not be borrowed from another family.
-> **This file does NOT cover:** threshold optimisation, feature implementation, graph-model training, or jurisdiction-specific legal determinations; those are later planned sheets.
+> **Purpose:** Classify a suspected-fraud workflow by product, actor, event, action, loss owner, label path, and decision deadline before anyone selects a model, a threshold, or a metric.
+> **Prerequisites:** Basic probability, a timestamped event table, and the ability to distinguish an event from the entity that produced it.
+> **Key outcome:** Given a described fraud workflow, name its family, its decision grain, its permissible actions, which labels are observed and which are structurally missing, and the metric that must not be borrowed from a neighbouring family.
+> **This file does NOT cover:** threshold optimisation against a loss schedule, feature engineering, graph-model training, or jurisdiction-specific legal determinations.
 > **Level:** 1 Foundations.
-> **Version / reviewed:** 1.0 / not reviewed.
-> **Evidence:** DERIVED definitions and ILLUSTRATIVE traces; no named organization, deployment, prevalence, or outcome is measured.
-> **Retrieval cue:** If a team says “fraud is fraud” or proposes a single label for several workflows, start at Section 2.
+> **Version / reviewed:** 2.0 / not reviewed.
+> **Evidence:** DERIVED identities with ILLUSTRATIVE inputs; no named organization, deployment, prevalence, or realised saving is measured here.
+> **Retrieval cue:** If a team says "fraud is fraud" or proposes one label and one metric for several workflows, start at Section 2.
 
 ## 1. File Header
 
-**Source scope:** [directory.txt](../../../../../Templates/directory.txt#L575) lists `Fraud_Modelling_Cheat_Sheets/01_Fraud_Taxonomy_Industry_Landscape.md`, while lines 481–486 list five production fraud case topics. Their original bodies are unavailable; this sheet teaches the visible distinctions without reconstructing unseen source text.
+**Why this file exists.** Most failed fraud projects are not modelling failures. They are grain failures: the team trained on authorisation events, the business funds a card-level portfolio, the operations queue reviews cases, the regulator counts suspicious-activity reports, and the finance ledger books losses per claim. Five units of analysis, one model output, and every stakeholder computes a different number from the same predictions. This sheet gives a naming discipline that forces the unit, the clock, and the label path into the open before any modelling work starts.
 
-This sheet is a reusable classification discipline, not an assertion that a particular bank, insurer, marketplace, or regulator uses the described process.
-A fraud taxonomy is useful only when it changes the allowed decision, the available evidence, or the harm that an error creates.
-The same person can generate a payment authorization, an account-reset request, an insurance claim, and a marketplace listing.
-Those are not interchangeable model rows because they occur at different times, expose different counterfactual actions, and mature through different evidence paths.
-The unit called “fraud” must therefore be declared before any rate, score, threshold, or model comparison is interpreted.
-The course source tree names five distinct production-case commitments: payment card, insurance claims, account/application, AML monitoring, and marketplace graph detection.
-This foundation preserves those distinctions rather than collapsing them into a generic binary-classification exercise.
-The source bodies behind the planning tree were not available for technical review.
-All examples below are constructed teaching traces and are explicitly ILLUSTRATIVE.
-Takeaway: taxonomy is a decision contract, not a list of crime labels.
+**Scope of the teaching.** The sheet is written for payment authorisation, insurance claim, account-opening and account-takeover, anti-money-laundering alerting, and marketplace-abuse workflows. Those five families are used because they differ on the three axes that matter: how long the decision takes, what the system is permitted to do, and how the truth arrives. A taxonomist only needs those three axes plus the loss owner to place a new workflow correctly.
+
+**What a taxonomy is not.** It is not a list of crime labels. "Phishing", "bust-out", "friendly fraud", and "synthetic identity" are *mechanism* words. They describe how an attacker operates, not what the model scores. Two workflows can share the same mechanism and still require different grains, different actions, and different metrics. Conversely one workflow can contain several mechanisms and still be a single decision unit. The taxonomy below is keyed to decisions, and mechanism vocabulary sits inside the mechanism column rather than at the top.
+
+**Source status.** The course planning tree lists a taxonomy reference and five production fraud case topics. The underlying source bodies were not available for technical review, so every definition here is DERIVED from stated premises rather than quoted, and every numeric input is ILLUSTRATIVE. Numbers are constructed to make an arithmetic relation visible; they are not industry benchmarks and must not be cited as prevalence estimates.
+
+**How to read the arithmetic.** All display formulas appear in fenced `text` blocks using the five-part anatomy: FORMULA, WHERE, CONSTRAINT, NUMERICAL EXAMPLE, INTERPRETATION. Each block closes with a validity condition stating when the relation stops holding. Where a relation is a definition rather than an empirical claim, the block says so explicitly, because a definition cannot be falsified by data and should not be presented as evidence.
+
+**Notation conventions.** Rates are proportions in [0,1] unless a percent sign appears. Currency is US dollars and the symbol `$` always means the same unit within one block; no block mixes currencies. Counts are per stated calendar month. `t_d` is decision time, `t_e` is event time, and `t_m` is label-maturity time. Time is expressed in days from `t_e` unless stated. Subscript `e` marks an event-grain quantity and subscript `E` marks an entity-grain quantity.
+
+**Maintenance.** The triggers are: a change to what an action is allowed to block, a change to the entity-definition policy (for example when a shared device starts linking cards), a change to the label source or its latency, or the appearance of a sourced measurement that contradicts an illustrative number. Any of those invalidates Sections 4, 5, and 7 together, so they must be revised as a set rather than patched individually.
+
+**Reader contract.** If after reading Section 3 you cannot state, in one sentence each, the decision unit, the deadline, the action set, the label source, and the loss owner of the workflow in front of you, the workflow is not ready for a model. That sentence test is the actual deliverable of this sheet; everything else supports it.
 
 ## 2. Concept Map / Mental Model
 
+The mental model is a ladder with three clocks attached. Reading down the ladder changes the denominator; reading across the clocks changes which rows are even visible at training time. Almost every metric dispute in fraud work is a disagreement about which rung and which clock the speaker is using.
+
 ```text
-[Product surface] -> [event or entity grain] -> [decision deadline] -> [allowed action]
-       |                       |                    |                    |
-       v                       v                    v                    v
-[payment / claim / login] [attempt / claim / alert] [milliseconds / days] [allow / challenge / refer]
-       |                       |                    |                    |
-       +-----------------------+--------------------+--------------------+
-                                   |
-                                   v
-                         [loss path and label path]
-                                   |
-                 +-----------------+-----------------+
-                 v                                   v
-        [mature outcome]                       [selected observation]
-                 |                                   |
-                 v                                   v
-         [evaluate policy]                    [audit / qualify claim]
+ rung 5  network / ring        one decision per cluster of linked entities
+ rung 4  entity                one decision per card, account, policy, or merchant
+ rung 3  case / claim          one decision per submitted claim or opened case
+ rung 2  session / attempt     one decision per login or checkout attempt
+ rung 1  event                 one decision per transaction, listing, or alert
+
+ clocks:  t_e  event happened  ->  t_d  decision forced  ->  t_m  truth known
 ```
 
-The first fork is product surface, because a payment authorization changes a live transaction while a claim referral changes a human work queue.
-The second fork is decision grain, because a score on an account may be consumed by many login decisions and must not be treated as a transaction label.
-The third fork is action timing, because an online authorization cannot wait for an investigator whereas AML monitoring is usually asynchronous.
-The fourth fork is loss ownership, because the amount of a payment is not necessarily the net loss, and a claim amount is not a confirmed improper payment.
-The fifth fork is label observability, because a reviewed alert reveals more evidence than an unreviewed low-risk item.
-The final fork is evaluation: outcome rates only mean what their denominator, maturity window, and decision policy allow them to mean.
-Taxonomy follows the operational path from an observed signal to a reversible or irreversible action.
-A model score belongs after these choices, not before them.
-Takeaway: map the workflow before naming the learning task.
+**Ladder rungs are not interchangeable.** Moving up a rung aggregates rows and therefore raises the base rate, because an entity with many chances to be fraudulent is more likely to be fraudulent at least once than any single one of its events. Moving down a rung multiplies friction: a policy that blocks entities charges one unit of customer friction, while the same policy expressed per event charges once per event on that entity. The base-rate effect and the friction effect push in opposite directions, and Section 4.2 turns that trade into an inequality.
+
+**Three clocks, three different censoring patterns.** At `t_d` the system must act with whatever arrived before that instant. At `t_m` the label becomes trustworthy. Between them sits a window in which the outcome exists but is unrecorded, and a training set cut inside that window silently understates the fraud rate. Section 4.3 gives the correction and Section 8 lists the discriminating checks that separate censoring from genuine prevalence decline.
+
+**The one-row-one-decision invariant.** A table is ready to model when every row corresponds to exactly one decision the business is allowed to take, taken at one instant, with one loss owner for the resulting error. Any table that violates one of those three conditions will produce a model whose offline metric cannot be reproduced in production, and no amount of hyperparameter work repairs it.
+
+**Where the adversary sits in the model.** Fraud is one of the few prediction problems where the label distribution is partly produced by the model's own past actions. A blocked attempt never becomes a loss, so it never becomes a chargeback, so the training set learns that blocked-looking traffic is legitimate. The taxonomy must therefore record, for every row, whether the row was *scored and allowed*, *scored and blocked*, or *never scored*. That field is called the selection path in Section 3 and it is the single most commonly omitted column in fraud feature stores.
+
+**Two failure shapes to keep in view.** First, metric transfer: an event-level recall number quoted for an entity-level policy overstates how many customers are actually protected, or understates it, depending on correlation. Second, action transfer: a rule proven on the decline action is not proven on the challenge action, because the challenge changes who completes the transaction and therefore what the outcome means. Both shapes appear repeatedly in Section 8.
+
+**A compact way to remember it.** Grain decides the denominator; the clock decides the numerator; the action decides what the numerator will ever contain. Write those three clauses at the top of every fraud analysis document and most reviewer objections dissolve before they are raised.
 
 ## 3. Foundational Definitions
 
-| Term | Formal meaning | Units / type | Domain | Nonexample |
-|---|---|---|---|---|
-| decision event e | A timestamped request at which an owner can select an action | event record | one action opportunity | a later dispute record |
-| entity u | A customer, account, claimant, merchant, device, seller, beneficiary, or other linked actor | identifier / graph node | may recur across events | the event itself |
-| event time t_e | When the underlying request or activity occurred | UTC timestamp | ordered on event stream | ingestion time |
-| availability time t_a | Earliest time a system could have supplied a value to the decision | UTC timestamp | t_a may exceed t_e | end-of-month correction time |
-| decision time t_d | Time at which the policy emits or commits an action | UTC timestamp | t_d >= t_e | later investigator close date |
-| label time t_y | Time outcome evidence becomes observable | UTC timestamp | often t_y > t_d | a score timestamp |
-| maturity horizon H | Follow-up duration used before calling an outcome sufficiently observed | days | product-specific | a universal 90-day rule |
-| action a | Operational choice made for an eligible decision event | categorical | allowed action set | a model probability |
-| loss L | Monetary, service, safety, compliance, or investigator burden consequence conditional on event and action | currency, minutes, count | action-specific | transaction amount alone |
-| alert | A ranked item offered to an operator or queue | record | may represent event or entity | confirmed fraud |
-| confirmed outcome | Evidence meeting the declared adjudication rule | categorical / versioned | can reverse | investigator suspicion |
-| selective label | Outcome observed at a rate affected by prior decisions or review selection | missingness mechanism | policy-dependent | random missing field |
-| fraud taxonomy | A classification of mechanism and workflow that constrains valid labels, features, actions, and metrics | specification | versioned | a score band |
+Definitions are grouped by the axis they belong to. The boundary column is the load-bearing part: each entry names the neighbouring concept the term is routinely confused with.
 
-A payment fraud event is an authorization attempt where the immediate policy can approve, challenge, or decline.
-A claims fraud case is usually a claim or claim segment where a referral changes investigation order, not immediate coverage eligibility by itself.
-An account takeover event is an authentication, recovery, profile-change, or payment-instrument change where the owner may require step-up or route to recovery.
-An application fraud event is an account opening, credit application, or onboarding submission where verification, delay, decline, or referral may be possible.
-An AML monitoring alert is a monitoring candidate that may be closed, investigated, or escalated under a documented program; an alert is not proof of a crime.
-A marketplace fraud decision may concern a seller, buyer, listing, order, payout, review, or connected component; the graph is evidence organization, not a verdict.
-First-party misuse, third-party compromise, collusion, synthetic identity, document manipulation, mule activity, and policy abuse are mechanisms.
-Mechanisms can overlap, and labels may not resolve the mechanism even after the operational case closes.
-A taxonomy must allow “unknown mechanism” rather than forcing an unsupported sublabel.
-Takeaway: use terms with a time and action boundary.
+### 3a Units and grains
+
+| Term | Meaning | Unit / type | Boundary (it is not) |
+|---|---|---|---|
+| Event | One timestamped occurrence the system can score: authorisation, claim line, login, listing, alert | row | Not a customer |
+| Entity | The durable thing a loss is ultimately booked against: card, account, policy, merchant, device cluster | key | Not a transaction |
+| Case | A human-opened investigation container that may reference several events and entities | work item | Not an outcome |
+| Decision grain | The unit in which an action is taken and an error is charged | declaration | Not the training-table grain by default |
+| Multiplicity `m` | Mean number of fraudulent events per fraudulent entity | events/entity | Not the mean event count per entity |
+| Exposure `n̄` | Mean number of events per entity in the window, fraud or not | events/entity | Not the review count |
+| Ring / cluster | A set of entities linked by shared devices, beneficiaries, or addresses | set | Not a legal finding |
+| Entity resolution | The join policy that decides when two rows belong to one entity | procedure | Not a model feature |
+
+### 3b Time and maturity
+
+| Term | Meaning | Unit / type | Boundary (it is not) |
+|---|---|---|---|
+| Event time `t_e` | When the underlying act happened | timestamp | Not the log-write time |
+| Decision time `t_d` | Deadline by which the action must be committed | timestamp | Not the batch score time |
+| Label maturity `t_m` | When the outcome is final enough to train on | timestamp | Not the customer complaint date |
+| Label lag | `t_m - t_e` | days | Not the investigation duration |
+| Censoring | Outcome exists but is unobserved at the cut-off | condition | Not missing data in the random sense |
+| Coverage | Share of eventual labels visible at a given cut-off | proportion | Not label accuracy |
+| Chargeback window | Contractual period during which a dispute can be raised | days | Not the fraud-detection window |
+
+### 3c Labels and truth
+
+| Term | Meaning | Unit / type | Boundary (it is not) |
+|---|---|---|---|
+| Confirmed fraud | Adjudicated outcome with a retained decision record | boolean + evidence | Not suspicion |
+| Dispute | Cardholder assertion, adjudication pending | boolean | Not confirmed fraud |
+| Chargeback | Completed dispute with funds moved | boolean | A subset of disputes |
+| Label-path sensitivity `κ` | Share of true frauds that ever generate a label | proportion | Not model recall |
+| Weak label | Proxy used when the true label is unavailable | boolean | Not ground truth |
+| Silence-as-legitimate | Treating an unlabelled row as a negative | assumption | Not a measurement |
+| Adjudication drift | Change over time in what counts as confirmed | process | Not concept drift in features |
+| Hard negative | Confirmed legitimate row that resembles fraud | row | Not an unlabelled row |
+
+### 3d Actions and losses
+
+| Term | Meaning | Unit / type | Boundary (it is not) |
+|---|---|---|---|
+| Allow | Commit the event with no added friction | action | Not absence of monitoring |
+| Challenge | Insert a verification step before commit | action | Not a soft decline |
+| Decline | Refuse the event outright | action | Not account closure |
+| Refer | Send to a human queue without blocking | action | Not a decline with a review flag |
+| Abstain | Score refused; route to default policy | action | Not a random action |
+| Friction | Cost charged when a legitimate item is inconvenienced | currency/event | Not the fraud loss avoided |
+| False decline | Legitimate item declined | event | Not a false alert |
+| Loss owner | The budget line that absorbs the error | role | Not the model owner |
+| Loss cap | Contractual limit on what one incident can cost | currency | Not expected loss |
+
+### 3e Population and selection
+
+| Term | Meaning | Unit / type | Boundary (it is not) |
+|---|---|---|---|
+| Prevalence `π` | Share of rows in the scored population that are fraudulent | proportion | Not the share of reviewed rows |
+| Base rate | Prevalence at the grain being discussed | proportion | Not a constant across rungs |
+| Selection path | Whether a row was allowed, blocked, or never scored | categorical | Not a feature |
+| Review sampling | How human-reviewed rows were chosen | procedure | Not random sampling |
+| Alert | A rule or model output that requests human attention | item | Not a case |
+| Duplicate alert | A further alert on an entity with an open case | item | Not a new fraud |
+| Disposition | The recorded outcome of an alert or case | categorical | Not a financial outcome |
+| Typology drift | Change in attacker mechanism over time | process | Not population drift |
 
 ## 4. Core Formulas with Full Derivation
 
-### 4.1 Base: point-in-time eligibility
+### 4.1 Base case: break-even probability at one grain
 
-Validity before use: an event can be scored only with information available no later than its decision time.
-Derivation: define the feature set as all values with availability timestamps no later than the decision timestamp.
-The condition excludes later adjudication, chargeback, case closure, and corrected identity linkage from online replay.
+The first result is the only one every practitioner must be able to derive on a whiteboard, because every threshold argument reduces to it.
 
 ```text
-FORMULA [TAX-01]: X(e, t_d) = {x_j(e) : availability_time(x_j) <= t_d}
-WHERE: X is the admissible feature set [record]; e is a decision event [event];
-       t_d is decision time [UTC timestamp]; x_j is a candidate feature [typed value].
-CONSTRAINT: availability time is evidenced by lineage; event time alone is insufficient;
-            a feature with unknown availability is excluded, not assumed timely.
-NUMERICAL EXAMPLE: ILLUSTRATIVE. t_d=10:00:00.100 UTC; device value available at 10:00:00.030;
-                   prior-case closure available at 10:04:00.000. X includes device value and excludes closure.
-INTERPRETATION: a retrospective table may contain both values, but the production decision may use only the first.
+FORMULA
+  EL_allow(p) = p * a
+  EL_block(p) = (1 - p) * f
+  block  <=>  p * a  >  (1 - p) * f
+  p* = f / (f + a)
+
+WHERE
+  p  calibrated probability that this row is fraudulent          [0,1]
+  a  mean loss if a fraudulent row is allowed                    currency/row
+  f  mean friction if a legitimate row is blocked                currency/row
+  p* break-even probability, same units as p                     [0,1]
+
+CONSTRAINT
+  losses are linear in the outcome; no capacity limit; one loss owner;
+  f does not depend on p; a does not depend on which other rows exist.
+
+NUMERICAL EXAMPLE
+  a = 180.00, f = 6.00  ->  p* = 6.00 / 186.00 = 0.032258
+
+INTERPRETATION
+  Blocking is worth it only above 3.23 percent posterior risk for this
+  loss ratio. The number is a ratio of costs, not a property of the model.
+
+VALIDITY CONDITION
+  Holds only while a and f are constants across rows. Section 4.4 shows the
+  counterexample in which a varies by a factor of ten.
 ```
 
-Boundary/counterexample: using the eventual claim outcome as a payment feature produces perfect-looking leakage while being impossible at authorization.
-Independent state oracle input: `event_id=P17, t_d=10:00:00.100, device_available=10:00:00.030, closure_available=10:04:00.000`.
-Expected state oracle output: `admissible=[device], excluded=[closure]`.
+The derivation is a dominance argument rather than a statistical one: for a single row there is no variance term, so the lower expected cost wins outright. That is why the result is stable and why it is so often misapplied — it is exact under assumptions that real portfolios violate.
 
-### 4.2 General: maturity indicator
+### 4.2 General case: moving between grains
 
-Validity before use: an evaluation snapshot must state a horizon H and a snapshot time t_s.
-Derivation: an outcome is mature only when the elapsed observation time is at least H; otherwise it remains censored.
+Two identities connect event grain and entity grain. The first is a prevalence transform; the second bounds how much recall can improve when the decision unit grows.
 
 ```text
-FORMULA [TAX-02]: M(e; t_s, H) = 1[t_s - t_d(e) >= H]
-WHERE: M is maturity indicator [0 or 1]; t_s is evaluation snapshot [timestamp];
-       H is declared maturity horizon [days]; t_d is decision time [timestamp].
-CONSTRAINT: maturity does not prove a label is correct; H is estimated or governed per workflow.
-NUMERICAL EXAMPLE: ILLUSTRATIVE. t_d=1 Jan 00:00, t_s=15 Apr 00:00, H=90 days; elapsed=104 days; M=1.
-INTERPRETATION: this event may enter a mature-cohort report, subject to its label definition.
+FORMULA
+  pi_E = pi_e * n_bar / m
+
+WHERE
+  pi_e   event-grain fraud prevalence                     [0,1]
+  pi_E   entity-grain fraud prevalence (>=1 fraud event)  [0,1]
+  n_bar  mean events per entity in the window             events/entity
+  m      mean fraudulent events per fraudulent entity     events/entity
+
+CONSTRAINT
+  the window is the same for both counts; m > 0; events are counted once.
+
+NUMERICAL EXAMPLE
+  pi_e = 0.0009, n_bar = 16.0, m = 1.24138
+  pi_E = 0.0009 * 16.0 / 1.24138 = 0.0144 / 1.24138 = 0.011600
+
+INTERPRETATION
+  The entity-grain base rate is 12.9 times the event-grain base rate here.
+  A metric moved between the two grains without this factor is off by an
+  order of magnitude, not by a rounding error.
+
+VALIDITY CONDITION
+  Requires that the counted events belong to entities inside the same window;
+  breaks when entities straddle the boundary or when m is estimated on
+  confirmed-only labels, which understate m.
 ```
 
-Boundary/counterexample: a 14-day payment maturity rule cannot be silently reused for a claim whose investigation and recovery evidence is materially later.
-
-### 4.3 Variants: action-conditioned expected loss
-
-Validity before use: each action has a pre-agreed loss schedule, conditional probabilities are calibrated for the declared population, and action effects are not falsely treated as observational labels.
-Derivation: multiply each possible outcome loss by its conditional probability, then sum over outcomes.
+The second identity is the recall bound. If an entity is flagged when any of its events is flagged, entity recall can never be worse than event recall and is at most the complement of the probability that every event is missed.
 
 ```text
-FORMULA [TAX-03]: EL(a | x) = sum_o P(o | x, a) * L(o, a)
-WHERE: EL is expected loss [currency/event]; a is an allowed action; x is admissible information;
-       o is a possible outcome; P is action-conditional probability; L is action-conditional loss [currency].
-CONSTRAINT: historical P(y|x) from one policy is not automatically P(o|x,a) for another action.
-NUMERICAL EXAMPLE: ILLUSTRATIVE payment decision. For approve: P(fraud|x,approve)=0.04, fraud loss=500 CU,
-                   P(legitimate|x,approve)=0.96, legitimate loss=0 CU; EL(approve)=0.04*500=20 CU.
-                   For challenge: P(fraud passes|x,challenge)=0.01, loss=500 CU; friction cost=3 CU;
-                   EL(challenge)=0.01*500+3=8 CU.
-INTERPRETATION: under these constructed inputs, challenge has lower expected loss, not necessarily lower customer harm.
+FORMULA
+  d_E(rho=0) = 1 - (1 - d_e)^m
+  d_e <= d_E <= 1 - (1 - d_e)^m          for rho >= 0
+
+WHERE
+  d_e    event-grain detection rate for fraudulent events      [0,1]
+  d_E    entity-grain detection rate for fraudulent entities   [0,1]
+  rho    within-entity correlation of detection outcomes       [-1,1]
+
+CONSTRAINT
+  m >= 1; detection of one event does not change the entity's definition;
+  the lower bound holds because a flagged event flags its entity.
+
+NUMERICAL EXAMPLE
+  d_e = 0.60, m = 1.24138
+  ln(0.40) = -0.916291
+  -0.916291 * 1.24138 = -1.137473
+  exp(-1.137473) = 0.320540
+  d_E upper bound = 1 - 0.320540 = 0.679460
+
+INTERPRETATION
+  Independent misses would lift detection from 60.0 to 68.0 percent purely by
+  giving each entity more chances. A measured 65.0 percent therefore implies
+  positive correlation, not a worse model.
+
+VALIDITY CONDITION
+  Fails when events on one entity are near-duplicates: with rho = 1 the bound
+  collapses to d_e and the gain is exactly zero.
 ```
 
-Boundary/counterexample: a claim referral does not “block fraud” at the moment of score; its loss schedule includes review cost, delay harm, and the possibility that investigation does not change payment.
+### 4.3 Variants: alert grain, label-path sensitivity, censoring
 
-### 4.4 Limits and counterexample: taxonomy collapse
+Alert-based workflows add an intermediate rung. Precision computed at the alert rung can differ by two orders of magnitude from precision at the case rung, and both statements can be arithmetically correct.
 
-If all mechanisms are reduced to y in {0,1}, then the decision-relevant state is lost whenever action sets or label paths differ.
-Two events can have the same estimated misconduct probability and still require different actions because one is a 100-millisecond payment authorization and the other is a seven-day investigator queue item.
-A universal threshold is invalid when its denominator mixes transactions, claims, accounts, alerts, and entities.
-A score can be transported only after its prediction target, feature availability, base rate, calibration, action set, loss schedule, and observation process are examined.
-Takeaway: equations become valid only after the taxonomy declares their population and clock.
+```text
+FORMULA
+  precision_alert = confirmed / alerts
+  precision_case  = confirmed / cases
+  alerts_per_case = alerts / cases
+  precision_dedup = confirmed / (alerts * (1 - dup_share))
+
+WHERE
+  confirmed   adjudicated fraudulent units                       count
+  alerts      rule or model outputs sent to a queue              count
+  cases       human-opened investigations that reference alerts  count
+  dup_share   share of alerts on an entity with an open case     [0,1]
+
+CONSTRAINT
+  every confirmed unit traces to at least one alert; dedup applies per entity.
+
+NUMERICAL EXAMPLE
+  60,000 alerts, 1,200 cases, 260 confirmed, dup_share = 0.34
+  precision_alert = 260 / 60,000 = 0.004333
+  precision_case  = 260 / 1,200  = 0.216667
+  alerts_per_case = 60,000 / 1,200 = 50.0
+  precision_dedup = 260 / (60,000 * 0.66) = 260 / 39,600 = 0.006566
+
+INTERPRETATION
+  0.43 percent, 21.7 percent, and 0.66 percent describe one system. The unit
+  must be attached to every precision number or the comparison is meaningless.
+
+VALIDITY CONDITION
+  Holds while cases are opened only from alerts; a case opened from a tip
+  breaks the denominator and must be counted separately.
+```
+
+The label-path correction inflates observed prevalence by the share of true frauds that the dispute process never records.
+
+```text
+FORMULA
+  pi_true = pi_obs / kappa
+
+WHERE
+  pi_obs  share of rows carrying a confirmed-fraud label       [0,1]
+  kappa   share of true frauds that ever produce that label    [0,1]
+  pi_true prevalence among all true frauds                     [0,1]
+
+CONSTRAINT
+  label generation is independent of the features used to predict it; kappa>0.
+
+NUMERICAL EXAMPLE
+  pi_obs = 0.000900, kappa = 0.78
+  pi_true = 0.000900 / 0.78 = 0.0011538
+
+INTERPRETATION
+  The true rate is 28 percent higher than the observed rate. The break-even
+  threshold is unchanged because it depends on costs, but the expected loss of
+  every allowing action rises by 28 percent.
+
+VALIDITY CONDITION
+  Breaks when kappa itself depends on amount: small frauds are systematically
+  less likely to be disputed, which is the common case in card portfolios.
+```
+
+Censoring is the third variant, and it is the one that most often corrupts a training window without any error appearing in the logs.
+
+```text
+FORMULA
+  coverage(t) = P(label_mature by age t)
+  pi_apparent(window w) = pi_true * coverage(w)
+
+WHERE
+  w        age of the newest rows included in the window        days
+  coverage share of eventual labels already visible at age w    [0,1]
+
+CONSTRAINT
+  coverage is measured on historical cohorts, not assumed linear in w.
+
+NUMERICAL EXAMPLE
+  illustrative curve: 0.55 at 30 days, 0.82 at 60, 0.96 at 90, 1.00 at 120
+  window ending 30 days before the cut: pi_apparent = 0.0009 * 0.55 = 0.000495
+
+INTERPRETATION
+  The last month of a training set looks 45 percent cleaner than it is, so any
+  trend fitted across the boundary picks up an artefact, not a change in attack.
+
+VALIDITY CONDITION
+  Requires a stable chargeback window; a mid-window change to the dispute
+  process invalidates every cohort measured across it.
+```
+
+### 4.4 Limits and counterexamples
+
+**Amount heterogeneity breaks the constant-threshold rule.** If `a` varies by row, the correct rule uses each row's own amount: `p > f / (f + a_i)`. A single threshold is equivalent to assuming a common amount, and it systematically under-blocks large-value rows and over-blocks small-value rows. The counterexample below shows the size of the distortion without any change in model quality.
+
+```text
+FORMULA
+  p*(a_i) = f / (f + a_i)
+  distortion = p*(a_small) / p*(a_large)
+
+WHERE
+  a_small = 20.00, a_large = 900.00, f = 6.00
+
+CONSTRAINT
+  both rows share one score and one constant threshold chosen at mean amount.
+
+NUMERICAL EXAMPLE
+  p*(20)  = 6 / 26  = 0.230769
+  p*(900) = 6 / 906 = 0.006623
+  distortion = 0.230769 / 0.006623 = 34.8
+
+INTERPRETATION
+  A constant cut-off at the mean-amount value of 0.032258 allows rows that are
+  4.9 times the break-even risk when the amount is small, and blocks rows that
+  are 4.9 times safer than needed when the amount is large. Both errors are
+  produced by the threshold, not by the model.
+
+VALIDITY CONDITION
+  The formula itself is exact; what fails is the assumption that one threshold
+  can represent a heterogeneous amount distribution.
+```
+
+**The counterexample that matters most.** Suppose an event-grain model has 60 percent recall and an entity-grain model has 62 percent recall. It is tempting to conclude the entity model is better. But if the event model blocks 0.9 percent of events while the entity model blocks 3.0 percent of entities, the entity model has purchased its two extra points with roughly 3.3 times the friction per protected unit. Section 5 works the full comparison and Section 8.4 gives the discriminating check that separates a genuinely better model from a more aggressive policy wearing the same metric.
 
 ## 5. Worked Numerical Example
 
-### 5.1 Illustrative mixed-portfolio trace
+The trace below is a constructed authorisation portfolio. Every count is ILLUSTRATIVE; every ratio, product, and identity check is recomputed in this section and re-checked independently at the end.
 
-Evidence: ILLUSTRATIVE constructed data; arithmetic is VERIFIED by direct substitution; it is not a benchmark or observed deployment.
-The portfolio contains five decision records, deliberately chosen to have different grains and label paths.
+### 5a The portfolio
 
-| ID | Surface | Grain | t_d | action set | observed at snapshot | mature outcome? |
-|---|---|---|---|---|---|---|
-| P-01 | payment card | authorization attempt | 09:00 | approve/challenge/decline | dispute at day 12 | yes under H=30d |
-| C-01 | insurance | claim referral | day 0 | queue/defer/no referral | investigation open | no under H=180d |
-| A-01 | account takeover | password reset | 09:05 | allow/step-up/recovery | successful reset then complaint day 2 | yes under H=14d |
-| M-01 | AML | monitoring alert | day 0 | close/investigate/escalate | investigator disposition only | label not necessarily crime truth |
-| G-01 | marketplace | seller entity | day 0 | monitor/restrict/refer | linked orders and appeal open | no under H=60d |
+| Quantity | Symbol | Value | Derivation |
+|---|---|---|---|
+| Active cards (entities) | `E` | 250,000 | portfolio statement |
+| Authorisation events per month | `N` | 4,000,000 | authorisation log count |
+| Mean events per entity | `n̄` | 16.0 | 4,000,000 / 250,000 |
+| Fraudulent events | `F_e` | 3,600 | adjudicated ledger |
+| Event-grain prevalence | `π_e` | 0.000900 | 3,600 / 4,000,000 |
+| Entities with at least one fraud | `F_E` | 2,900 | entity roll-up |
+| Entity-grain prevalence | `π_E` | 0.011600 | 2,900 / 250,000 |
+| Fraud events per fraudulent entity | `m` | 1.241379 | 3,600 / 2,900 |
+| Mean loss per fraudulent event | `a` | $180.00 | ledger average |
+| Gross monthly fraud loss | `G` | $648,000 | 3,600 × 180 |
+| Mean loss per fraudulent entity | `a_E` | $223.448 | 1.241379 × 180 |
 
-For an illustrative capacity calculation, 10,000 payment attempts include 100 mature confirmed-fraud outcomes.
-A ranker sends 200 payment attempts to a review or challenge queue, of which 60 later mature as confirmed fraud under the declared label.
-Precision at this capacity is 60/200 = 0.30, or 30%.
-Recall relative to all 100 mature fraud outcomes is 60/100 = 0.60, or 60%.
-False positives in the selected 200 are 200 - 60 = 140 attempts, assuming the constructed label treats remaining reviewed records as mature legitimate.
-Reviews per true positive are 200/60 = 3.333... review decisions per confirmed fraud.
-The independent arithmetic checks are 60 + 140 = 200 and 60 + 40 missed mature fraud = 100.
-The denominator for precision is alerts or acted-on attempts, while the denominator for recall is all mature fraud in the eligible population.
-Neither denominator includes the open claim C-01, because it has not reached its declared maturity horizon.
-Neither metric says the queue action caused 60 frauds to be prevented.
-Sensitivity: if only 50 of the selected 200 mature as confirmed fraud while total mature fraud remains 100, precision becomes 25% and recall becomes 50%.
-Decision consequence: a capacity claim is unstable when selected labels are immature or review dispositions are used as ground truth.
+The row that matters is `a_E`. A card that is defrauded once in a month loses 223 dollars on average, because a fraction of defrauded cards are hit repeatedly. Reporting a monthly loss of 180 dollars per compromised card understates the portfolio by 24 percent, and that understatement compounds once the number is annualised.
 
-### 5.2 Executable numeric oracle
+### 5b Grain transform, computed twice
 
 ```text
-INPUT: total_eligible=10000; total_mature_fraud=100; selected=200; selected_mature_fraud=60
-COMPUTE: precision=selected_mature_fraud/selected
-COMPUTE: recall=selected_mature_fraud/total_mature_fraud
-COMPUTE: false_positives=selected-selected_mature_fraud
-COMPUTE: reviews_per_true_positive=selected/selected_mature_fraud
-EXPECTED: precision=0.30; recall=0.60; false_positives=140; reviews_per_true_positive=3.3333333333
+ROUTE 1 (definition of m)
+  pi_E = F_E / E = 2,900 / 250,000 = 0.011600
+
+ROUTE 2 (identity)
+  pi_e * n_bar = 0.000900 * 16.0 = 0.014400
+  0.014400 / 1.241379 = 0.011599
+
+AGREEMENT
+  |0.011600 - 0.011599| = 0.000001  (rounding at the sixth decimal only)
 ```
 
-The oracle fails if a calculation reports 60% as precision by using all fraud as its denominator.
-The oracle fails if it calls all 140 false positives “good customers harmed,” because some actions may be review-only and the realized harm needs a separate action outcome.
-The oracle fails if open or censored records are silently assigned label zero.
-Takeaway: the same count supports different metrics only when their populations are named.
+The two routes agreeing is not a coincidence; the first route is the definition and the second is an algebraic rearrangement. What the check buys is a guarantee that the four quantities `π_e`, `n̄`, `m`, `π_E` were not each estimated from a different window. When the two routes disagree by more than rounding, one of the four inputs is from the wrong population, and Section 8.1 tells you which check isolates it.
+
+### 5c Two policies compared on the same population
+
+**Policy A, event grain.** Block events at a 0.9 percent volume rate; the model catches 60 percent of fraudulent events; friction is 6 dollars per blocked event.
+
+| Line | Arithmetic | Result |
+|---|---|---|
+| Blocked events | 0.009 × 4,000,000 | 36,000 |
+| Fraud events prevented | 0.60 × 3,600 | 2,160 |
+| Precision of blocked set | 2,160 / 36,000 | 0.060000 |
+| Loss avoided | 2,160 × 180 | $388,800 |
+| Friction incurred | 36,000 × 6 | $216,000 |
+| Net benefit | 388,800 − 216,000 | $172,800 |
+
+**Policy B, entity grain.** Block the whole card at a 3.0 percent volume rate; the model catches 65 percent of fraudulent cards; friction is 6 dollars per blocked card.
+
+| Line | Arithmetic | Result |
+|---|---|---|
+| Blocked cards | 0.030 × 250,000 | 7,500 |
+| Fraud cards caught | 0.65 × 2,900 | 1,885 |
+| Precision of blocked set | 1,885 / 7,500 | 0.251333 |
+| Events prevented | 1,885 × 1.241379 | 2,340 |
+| Loss avoided | 2,340 × 180 | $421,200 |
+| Friction incurred | 7,500 × 6 | $45,000 |
+| Net benefit | 421,200 − 45,000 | $376,200 |
+
+Policy B wins by 203,400 dollars a month in this trace, and the reason is arithmetic rather than modelling: the same 6-dollar friction is charged once per card instead of once per blocked event. Entity recall of 65 percent also sits exactly where Section 4.2 predicts, between the lower bound of 60.0 and the independent-miss upper bound of 67.946 percent.
+
+### 5d Sensitivity: when does the ranking flip?
+
+Entity-grain blocking charges friction on 7,500 legitimate cards, and some of those customers leave. Let `q` be the share of blocked legitimate customers who attrite and let lifetime margin per lost customer be $95.00. Then entity net benefit falls by `7,500 × 95 × q`, and the two policies tie when:
+
+```text
+SETUP
+  entity_net(q) = 421,200 - 7,500 * (6 + 95 * q)
+  event_net     = 172,800
+
+SOLVE
+  421,200 - 45,000 - 712,500 * q = 172,800
+  376,200 - 712,500 * q = 172,800
+  712,500 * q = 203,400
+  q = 0.285474
+
+CHECK
+  entity_net(0.285474) = 376,200 - 712,500 * 0.285474
+                       = 376,200 - 203,400 = 172,800   (matches event_net)
+```
+
+The crossover is at a 28.5 percent attrition rate among blocked legitimate customers. Below that, entity grain wins; above it, event grain wins. Two lessons follow. First, the grain decision is a customer-value question, not a model question. Second, a team that never measured `q` cannot know which policy it should be running, and no offline AUC will tell it.
+
+The second sensitivity is on `m`. If the same portfolio had `m = 3.0` instead of 1.241, prevalence at entity grain would be `0.0144 / 3.0 = 0.0048`, the independent-miss recall bound would rise to `1 − 0.4³ = 0.936`, and the friction advantage of entity grain would grow because each blocked card now prevents three events rather than 1.24. Grain choice is therefore sensitive to a quantity that most teams never estimate.
+
+### 5e What the example does not prove
+
+The trace uses a constant loss per fraud event. Section 4.4 shows that a constant threshold is wrong when amounts vary, and this portfolio certainly has varying amounts, so the real optimum would use amount-conditional boundaries. The trace also assumes the two policies see the same population, which they do not: once policy B blocks a card, its later events never reach the authorisation stream, so the observed event rate under policy B falls for reasons unrelated to fraud. Both caveats are deliberate teaching points, and Section 8 lists the checks that detect them.
 
 ## 6. Visual / Geometric Intuition
 
-Imagine a horizontal time line for each decision record.
-The left point is event time, the middle point is the action commitment, and later points are evidence arrivals.
-A vertical line at the decision time is an information wall.
-Features to the left may be eligible if their availability is documented.
-Features to the right are future information, even if a warehouse query returns them today.
-A second vertical line at snapshot time divides mature and immature cohorts.
-An event far enough left of the snapshot may be mature; an event close to it cannot be declared legitimate merely because no adverse report has arrived.
-A taxonomy is the label attached to the time line: payment authorization, claim referral, reset challenge, AML alert, or marketplace entity review.
-The label determines which action arrows leave the decision point.
-For payment, arrows are immediate and may change completion.
-For insurance, arrows generally change investigation priority and documentation demands.
-For account takeover, arrows may create authentication friction or a recovery path.
-For application fraud, arrows may require evidence, delay onboarding, or reject according to approved policy.
-For AML, arrows enter a case-management workflow where suspicion, review disposition, and legal conclusions remain different states.
-For marketplace, arrows may constrain listings, payouts, or entities and may need appeal/reversal handling.
-A graph adds edges between entities and events.
-An edge can be useful evidence while still being a weak geometric direction: shared device does not mean shared control, and shared address can be a legitimate household.
-A high-degree node is visually central but may simply be a common provider or platform artifact.
-The correct mental image is a typed temporal graph with uncertainty, not a static “fraud ring” drawing.
-Takeaway: time walls and action arrows are more informative than a single risk-score axis.
+**Two clocks on one axis.** Draw a horizontal line for one event. The event sits at `t_e`. A vertical bar at `t_d` marks the deadline: everything to the right of the bar is invisible to the decision. A second bar at `t_m` marks maturity. The region between `t_d` and `t_m` is where the label exists but is unrecorded, and the area of that region is the censoring exposure.
+
+```text
+t_e            t_d                    t_m
+ |--------------|----------------------|
+    features        censored window     label final
+    available       (outcome unknown)   (outcome known)
+```
+
+The decision deadline is often much closer to `t_e` than practitioners assume. In authorisation it is measured in hundreds of milliseconds; in claims it is days; in AML alerting it is weeks. The same feature that is legitimate at a 5-day deadline may be unavailable at a 400-millisecond deadline, which is why the grain declaration must be paired with a latency budget.
+
+**Rung aggregation as a rectangle.** Picture 16 event cells in a row, one per card-month. Event-grain policies colour individual cells; entity-grain policies colour all 16 cells at once. If four cells are fraudulent, the entity policy is right to colour all 16 only because it cannot see which four. The picture makes the trade obvious: entity grain buys fewer colouring events (friction) and loses finer control (over-blocking).
+
+```text
+entity grain:  [######## ########]   1 friction charge, 16 cells affected
+event grain:   [.#..#....#......]    3 friction charges, 3 cells blocked
+               cells: 16  fraud: 3  entity recall: 1/1  event recall: 3/3
+```
+
+**Base-rate ladder.** Each rung multiplies the base rate by roughly the number of chances per unit. Plotting prevalence against rung gives a steep line, and the steepness is the reason a 99.9 percent accurate classifier at event grain can still be useless: at 0.09 percent prevalence, accuracy is dominated by the legitimate majority.
+
+```text
+rung            prevalence    rows per 10,000
+event             0.0900%           9
+entity            1.1600%         116
+ring (4 cards)    ~4.5%           ~450
+```
+
+**The correlation fan.** The recall bound `1 − (1 − d_e)^m` is an upper bound reached only when misses are independent within an entity. Draw `d_E` as a function of within-entity correlation `ρ` from 0 to 1: it falls monotonically from 68.0 percent to 60.0 percent. A measured value above the curve means the misses are anti-correlated, which usually signals that the model is keyed on an entity-level feature and is therefore not really making event-level decisions at all.
 
 ## 7. Comparison / Selection Table
 
-| Surface | Primary grain | Typical decision deadline | Allowed action examples | Label path | Do not borrow |
-|---|---|---|---|---|---|
-| payment card | authorization attempt | milliseconds to seconds | approve, challenge, decline | dispute, confirmed fraud, loss reconciliation | claim-referral recall |
-| insurance claims | claim or claim segment | hours to days | prioritize, refer, request evidence, hold where authorized | investigation, adjudication, recovery | authorization decline rate |
-| account takeover | login, reset, profile change, transfer setup | seconds to minutes | allow, step-up, lock, recovery | customer report, recovery outcome, confirmed compromise | payment amount as loss |
-| application fraud | application or onboarding entity | seconds to days | approve, verify, delay, decline, refer | document review, later performance, identity resolution | login challenge completion |
-| AML monitoring | alert, transaction cluster, customer relationship | hours to weeks | close, investigate, escalate | case disposition, external feedback where available | “fraud prevented” |
-| marketplace | listing, order, payout, buyer/seller entity, component | seconds to days | monitor, restrict, hold, refer, reverse if permitted | disputes, returns, appeals, investigation | graph connectivity as truth |
+### 7a The five families on the axes that matter
 
-| Decision condition | Preferred taxonomy detail | Why | Disqualifier | Fallback |
-|---|---|---|---|---|
-| Action is irreversible in-flight | event-level payment or transfer type | action timing and customer harm dominate | no verified deadline | rules-only safe fallback |
-| Human capacity binds | alert or case type with queue state | ranking at K matters | no stable queue ownership | manual stratified sampling |
-| Identity is uncertain | entity-resolution state and confidence | merges change features and labels | irreversible entity merge | reversible candidate links |
-| Multiple products share an actor | typed cross-surface taxonomy | prevents same word hiding different actions | unknown consent/access basis | separate products |
-| Labels mature slowly | outcome state and censoring state | prevents false negatives by silence | no maturity analysis | report only observed evidence |
-| Graph relation is proposed | edge type, source, time, confidence | limits association claims | edge semantics unknown | non-graph baseline |
+| Family | Decision unit | Deadline | Permitted actions | Label source | Maturity | Loss owner | Cardinality per entity |
+|---|---|---|---|---|---|---|---|
+| Card authorisation | Authorisation event | < 1 second | Allow, step-up, decline | Chargeback, fraud report | 90–120 days | Issuer P&L | 16–40 events/month |
+| Insurance claim | Claim, with line items | 1–10 days | Approve, request evidence, refer to SIU, deny | Adjudication + recovery | 30–180 days | Claims reserve | 1–3 claims/year |
+| Account takeover | Login or session | < 1 second to 1 day | Allow, challenge, lock, force reset | Customer report, chargeback | 30–90 days | Deposit or card P&L | 1–8 sessions/day |
+| Application / onboarding | Application | 1 minute to 3 days | Approve, manual review, decline, limit | First-party default, bust-out | 90–365 days | Credit loss | 1 |
+| AML monitoring | Alert, then case | 1–30 days | Close, escalate, file report | Investigator disposition, later enforcement | 180+ days | Compliance budget | Many transactions, few cases |
+| Marketplace abuse | Listing or seller | Hours to days | Delist, restrict, hold funds, ban | Buyer dispute, chargeback | 30–90 days | Marketplace goodwill | Many listings per seller |
 
-Selection rule: choose the narrowest taxonomy that fixes the decision grain, action owner, clock, and loss path.
-Selection rule: add mechanism subclasses only when they change data collection, action, or evaluation.
-Selection rule: do not label a record as a mechanism solely because a model feature resembles that mechanism.
-Takeaway: taxonomy resolution should earn its complexity by changing a decision.
+Reading across a row tells you what the metric must be. Reading down a column shows which families can share plumbing: the deadline column splits the table into sub-second, day-scale, and week-scale systems, and no feature store design spans all three comfortably.
+
+### 7b Metric transfers that always break
+
+| Metric borrowed | From | Why it fails at the destination | Use instead |
+|---|---|---|---|
+| Event recall | Authorisation | A card with 16 events is protected when any one is caught; event recall understates customer protection | Entity recall with the bound from 4.2 |
+| Alert precision | AML | Precision at alert grain is diluted by duplicate alerts on one entity | Deduplicated precision per entity |
+| AUC | Any | Invariant to prevalence and to the loss ratio, so it cannot rank two policies with different friction | Expected loss per 10,000 decisions |
+| Approval rate | Onboarding | Higher approval looks better until the bust-out cohort matures a year later | Vintage-level loss per approved account |
+| Case closure rate | AML | Closing cases fast is compatible with closing them wrongly | Confirmed-fraud yield per investigator hour |
+| Chargeback rate | Card | Only reflects fraud above the dispute threshold; small fraud is invisible | Fraud rate joined to the unreported-loss estimate |
+
+### 7c Choosing a grain when two are defensible
+
+| Condition | Prefer event grain | Prefer entity grain |
+|---|---|---|
+| Friction charged per action | Low relative to fraud loss | High, or charged per customer contact |
+| Multiplicity `m` | Near 1.0 | Well above 1.0 |
+| Attrition from a wrong block | High | Low |
+| Latency budget | Sub-second, event-level features only | Batch, entity history available |
+| Loss owner | Books per event | Books per customer or account |
+| Regulatory visibility | Per-transaction reporting required | Per-customer risk rating required |
+
+The table is not a scoring rubric; it is a list of the six facts you must establish before defending either choice. Two of them (`m` and attrition) are usually unmeasured, which is why the honest answer is often "we do not yet know, and here is the experiment that would tell us".
 
 ## 8. Failure Modes & Edge Cases
 
-### F-01 — Future label leakage disguised as enrichment
+**8.1 Prevalence mismatch across grains.** *Symptom:* the finance loss rate and the model's training prevalence differ by an order of magnitude and nobody can reconcile them. *Competing causes:* (a) one number is entity grain and the other event grain; (b) one counts fraud events, the other counts fraudulent currency; (c) one includes recovered funds. *Discriminating check:* recompute the ratio `π_E / π_e` and compare it with `n̄ / m` from the same window. If the ratio matches, the disagreement is grain and is not an error. If it does not, compute both numbers on a 30-day cohort and compare again.
 
-Symptom: an offline payment model has implausibly high discrimination, especially on recently closed cases.
-Competing cause A: a post-decision dispute or case-closure field entered the feature table.
-Competing cause B: an entity dimension was backfilled with a later risk status.
-Competing cause C: the model is genuinely useful because pre-decision device evidence is strong.
-Discriminating diagnostic: reconstruct every feature with availability time and compare a point-in-time replay against the retrospective table.
-Expected signal: performance collapses mainly when fields with availability_time > t_d are removed if leakage is causal.
-Bounded mitigation: exclude unavailable fields and re-train only on versioned point-in-time snapshots.
-Mitigation risk: a broad exclusion may remove legitimate timely values; restore only with lineage evidence.
-Prevention: require feature contracts with event time, availability time, source owner, stale policy, and default semantics.
-Verification: an independent replay oracle must return an empty set of features with availability after decision time.
+**8.2 Recall quoted at the wrong rung.** *Symptom:* a vendor claims 60 percent detection, operations observes that most compromised customers are still hit. *Competing causes:* (a) event-grain recall presented as customer protection; (b) recall measured on reviewed rows only; (c) recall measured before block-induced selection removed the easy cases. *Discriminating check:* recompute recall on an entity roll-up and compare against the 4.2 bounds. A value below the lower bound means the metric was not event recall at all; a value above the upper bound means the entity key is leaking label information.
 
-### F-02 — Selected investigation disposition treated as population truth
+**8.3 Silence treated as legitimate.** *Symptom:* a new rule shows spectacular precision in backtest and mediocre precision in production. *Competing causes:* (a) unlabelled fraud was scored as negative; (b) the rule targets a segment with low dispute propensity; (c) the rule was trained on rows that had already been reviewed. *Discriminating check:* restrict evaluation to rows with a mature, adjudicated disposition and compare. If precision falls by more than the label coverage gap, cause (a) dominates.
 
-Symptom: an AML or claims model reports high precision on investigated cases but fails to quantify unreviewed risk.
-Competing cause A: investigators preferentially sampled high-score alerts.
-Competing cause B: label definitions changed when a new case tool was introduced.
-Competing cause C: the ranker truly concentrated actionable cases.
-Discriminating diagnostic: compare review probability by score band, rule path, queue age, and operator; audit a governed sample outside the selected set where permitted.
-Expected signal: near-zero review probability for low-score bands establishes missing-not-at-random labels, not low fraud incidence.
-Bounded mitigation: publish precision among reviewed-and-mature cases separately from audited population estimates.
-Mitigation risk: random auditing can consume scarce capacity and may expose customers to delay; bound the sample and obtain approval.
-Prevention: log eligibility, recommendation, action, queue, reviewer, disposition, and maturity state separately.
-Verification: every reported metric carries an observation-condition field.
+**8.4 Aggressiveness mistaken for skill.** *Symptom:* a new policy raises recall and raises total loss. *Competing causes:* (a) friction outran the prevented loss; (b) the policy shifted fraud to an unmonitored channel; (c) true prevalence rose independently. *Discriminating check:* compute net benefit per 10,000 decisions at fixed volume for both policies, then re-run at fixed precision. A policy that wins at fixed volume and loses at fixed precision is buying recall with volume.
 
-### F-03 — Grain mismatch between entity score and event action
+**8.5 Censoring at the training boundary.** *Symptom:* the last two weeks of data look unusually clean and the model under-predicts recent fraud. *Competing causes:* (a) label immaturity; (b) a genuine decline in attack volume; (c) a change in the dispute process. *Discriminating check:* plot label-arrival curves for two cohorts 90 days apart. A parallel shift means process change, a change in level only in the recent cohort means censoring, and a drop across all cohorts means a real decline.
 
-Symptom: a seller-level marketplace score is applied to every order, producing apparently inconsistent decisions.
-Competing cause A: an entity score was used without an event-context model.
-Competing cause B: entity linkage merged distinct people or businesses.
-Competing cause C: the order-level action policy is correctly using a stable entity restriction.
-Discriminating diagnostic: inspect the score contract and sample cases where identical entity score meets differing event actions.
-Expected signal: undocumented use of amount, payout state, or policy eligibility after scoring indicates a hidden second decision layer.
-Bounded mitigation: declare entity score, event policy variables, and final action rules as separate artifacts.
-Mitigation risk: exposing overly detailed rules can enable evasion; document internally with access controls.
-Prevention: make grain a required schema field for every model output and outcome label.
-Verification: join tests reject event-level metric calculations using entity denominator without declared aggregation.
+**8.6 Entity resolution merging distinct actors.** *Symptom:* blocking one card also freezes an unrelated customer's account. *Competing causes:* (a) shared-device linkage merged a household; (b) a merchant terminal ID was used as an entity key; (c) deliberate shared infrastructure by an attacker to poison the graph. *Discriminating check:* audit the largest clusters by fan-out. Clusters of size 2–5 with distinct surnames and distinct payment instruments are household merges; single large clusters with fresh devices are attack-driven poisoning.
 
-### F-04 — Loss amount confused with detected fraud amount
+**8.7 Action changes the observed outcome.** *Symptom:* declining a segment improves its observed fraud rate, and the improvement is cited as evidence the decline worked. *Competing causes:* (a) genuinely prevented fraud; (b) displaced fraud that reappears elsewhere; (c) the decline removed the only channel through which the fraud was observable. *Discriminating check:* track the segment's fraud rate across a control holdout that continues to allow a small share. Only the holdout separates prevention from displacement.
 
-Symptom: a payment or claim dashboard calls gross amount “saved.”
-Competing cause A: gross authorized amount was substituted for net issuer or insurer loss.
-Competing cause B: recovery, liability, and operational costs were omitted.
-Competing cause C: a policy owner intentionally uses gross exposure as a separate risk metric.
-Discriminating diagnostic: trace one selected event from amount through action, adjudication, recovery, liability, and ledger reconciliation.
-Expected signal: if the accounting path is missing, “savings” is an unsupported proxy.
-Bounded mitigation: report gross exposure, adjudicated loss, recovered loss, and intervention cost as separate quantities.
-Mitigation risk: delayed reconciliation makes current dashboards incomplete; label preliminary windows.
-Prevention: bind each metric to its owner, ledger, horizon, currency conversion policy, and population.
-Verification: dimensional checks reject a currency numerator paired with an alert-only denominator unless explicitly normalized.
+**8.8 Duplicate alerts inflating workload metrics.** *Symptom:* analyst throughput looks adequate while the backlog grows. *Competing causes:* (a) duplicate alerts on open cases; (b) alerts requiring evidence not yet available; (c) genuinely rising attack volume. *Discriminating check:* compute the deduplicated alert count by entity and the median alerts per open case. A dedup share above one third means the queue metric is measuring generation, not work.
 
-### F-05 — Connectivity asserted as fraud evidence
+**8.9 Maturity assumption inside the label.** *Symptom:* precision looks excellent on claims decided within 48 hours. *Competing causes:* (a) fast decisions are easy decisions; (b) the fast-decision cohort has a different fraud mix; (c) investigators close thin cases early with a benign disposition. *Discriminating check:* compare the 48-hour cohort's later reopening rate with the slow cohort's. A reopening rate above 5 percent means the fast label is not the label.
 
-Symptom: a graph component is escalated because several accounts share an attribute.
-Competing cause A: legitimate household, employer, ISP, or service-provider sharing.
-Competing cause B: entity-resolution overmerge or recycled identifier.
-Competing cause C: coordinated behavior with independent corroborating evidence.
-Discriminating diagnostic: inspect edge type, temporal order, source reliability, degree baseline, and sampled low-risk connected components.
-Expected signal: a ubiquitous attribute creates many heterogeneous components and weak lift after degree conditioning.
-Bounded mitigation: use typed, time-bounded, confidence-weighted edges and require non-graph corroboration for action.
-Mitigation risk: filtering common edges may hide real coordination through common infrastructure.
-Prevention: maintain reversible entity merges and edge provenance.
-Verification: compare graph-enriched ranking with a point-in-time non-graph baseline at the same capacity and mature label horizon.
-
-### F-06 — Cross-product taxonomy erases different customer harm
-
-Symptom: a team applies a payment decline threshold to account recovery or claims triage.
-Competing cause A: a generic risk platform only exposes one score and one cutoff.
-Competing cause B: business owners have not defined action-specific losses.
-Competing cause C: the shared score is intentionally a feature, not a final action policy.
-Discriminating diagnostic: enumerate allowed actions, appeal routes, latency limits, and loss owners for each consuming product.
-Expected signal: materially different action sets invalidate a universal threshold even if score ordering transfers.
-Bounded mitigation: retain shared evidence features but calibrate product-specific decision policies.
-Mitigation risk: separate policies increase governance workload; use a common contract and review cadence.
-Prevention: version score target, calibration population, and consuming action policy separately.
-Verification: policy tests require each product to declare a population, threshold, and guardrails.
-Takeaway: diagnose the observation mechanism and grain before blaming the model.
+**8.10 Grain drift after a product change.** *Symptom:* a stable model degrades after a wallet or tokenisation launch. *Competing causes:* (a) the event count per entity changed, so prevalence at entity grain moved; (b) the fraud mechanism moved to a channel with no labels; (c) a feature lost availability at the new deadline. *Discriminating check:* recompute `n̄` before and after. If `n̄` moved by more than 20 percent, grain drift alone explains part of the degradation and the metric requires rebasing before any model change.
 
 ## 9. Complexity & Cost Analysis
 
-Taxonomy work has computational cost because events, entities, cases, and graph edges must be linked with time boundaries.
-A row-level event classification scan is O(n) time for n eligible events after features are materialized.
-A sort-based top-K alert selection is O(n log n) time and O(n) memory in a simple implementation.
-A bounded heap can select K alerts in O(n log K) time and O(K) additional memory, assuming scores arrive once and ties are handled deterministically.
-An entity aggregation over m event-to-entity links is O(m) time after canonical linkage, but the correctness cost is dominated by merge/reversal semantics.
-A typed graph traversal is O(|V|+|E|) for an in-memory component search, yet a high-degree shared provider can make a locally small query operationally expensive.
-Point-in-time reconstruction requires retaining historical versions; its storage and query cost is a correctness requirement, not optional data duplication.
-Illustrative sizing: 10,000,000 events/day at 800 bytes of payload-only retained decision record equals 8,000,000,000 bytes/day.
-Using decimal units, that is 8 GB/day payload-only; indexes, replication, feature history, and audit records are excluded.
-For 180 days, payload-only storage is 1,440 GB, or 1.44 TB decimal, before replication.
-The arithmetic is 10,000,000 events/day * 800 bytes/event * 180 days = 1,440,000,000,000 bytes.
-This is ILLUSTRATIVE, not a storage benchmark, because compression, schema, retention, replicas, and actual event volume are unknown.
-A review queue has a human capacity cost.
-Illustrative capacity: 20 investigators * 6 hours/day * 5 reviewed alerts/hour = 600 alerts/day.
-If 200 alerts/day are selected for a new policy, that policy uses 33.3% of this constructed capacity, computed as 200/600.
-If alert arrival exceeds completed reviews for a sustained period, queue age grows even with constant model quality.
-Taxonomy should record whether an alert is a new queue item, an update to a case, or a duplicate so capacity accounting does not count the same work twice.
-Takeaway: scalable fraud taxonomy needs versioned time, linkage, and queue-state data, not just a scoring endpoint.
+**Cost of the grain decision.** The dominant term is friction multiplicity. Event grain charges `f` once per blocked event; entity grain charges `f` once per blocked entity; ring grain charges once per cluster. If `n̄ = 16`, event grain can incur up to sixteen times the friction of entity grain for the same blocked population, which is exactly the 216,000 versus 45,000 difference in Section 5c.
+
+**Cost of entity resolution.** Exact-key joins (card number, policy number) are linear in the event count: 4,000,000 rows sorted and grouped once. Linkage-based resolution is quadratic in the worst case: full pairwise comparison over 250,000 entities is `250,000 × 249,999 / 2 = 31,249,875,000` pairs, which is not computable in a monthly batch at reasonable cost. Blocking on a shared device key reduces the candidate set to the sum of squared block sizes:
+
+```text
+pairs = sum over keys k of c(k) * (c(k) - 1) / 2
+      = 5,000 * (6 * 5 / 2) + 85,000 * 0
+      = 5,000 * 15 = 75,000 candidate pairs per month
+```
+
+The ratio between the two figures is 416,665 to one. That single computation is why every practical fraud graph starts with a blocking key and why the choice of blocking key is a modelling decision with direct cost consequences.
+
+**Cost of label latency.** A label that arrives at day 120 cannot supervise a model deployed at day 1. The usable training window ends at `cut − 120 days`, so a team that wants a monthly refresh with a full 12-month history is really training on months 13 to 24 before the deployment month. Shortening the wait requires either a faster label path or an explicit weak-label model with its own error budget, and neither is free.
+
+**Cost of review capacity.** Manual review is the most expensive action in the table and the one most often sized by headcount rather than by marginal value. Section 4 of the companion sheet derives the shadow price of a review slot; at a 25 dollar hourly cost and 20 reviews per hour, one review costs 1.25 dollars, so any queue item whose expected net benefit exceeds that is worth staffing.
+
+**Cost of metric churn.** A metric definition change forces a full historical restatement before the trend line is usable. Changing an entity definition after 18 months of reporting means either restating 18 months or living with a discontinuity, and teams routinely choose the discontinuity without recording it. The cost is not computational; it is the loss of the ability to detect a real change against a consistent baseline.
+
+**Where the cost is hidden.** Friction is booked in customer-service budgets, while fraud loss is booked in the fraud budget. A policy that moves cost from one to the other looks free to each owner separately. Any net-benefit calculation that reads only one ledger will therefore prefer the policy that exports its cost to the other ledger, which is the single most common way a fraud business case overstates its value.
 
 ## 10. Key Theorems / Results Reference
 
-### Result R-01 — Bayes decision rule under declared action loss
+**R1 — Break-even identity.** For one row with linear losses, blocking has lower expected cost than allowing exactly when `p > f / (f + a)`. *Condition:* single loss owner, no capacity limit, constant `a` and `f`. *Why it matters:* every threshold argument is this identity plus an argument about what `a` and `f` are.
 
-Given correctly calibrated action-conditional outcome probabilities and a complete loss matrix, choose the action with minimum expected loss.
-This result follows directly from linearity of expectation: compare the conditional expected loss for each available action.
-It does not authorize reuse of an observational risk score as an action-effect estimate.
-It does not remove hard constraints such as legal prohibitions, customer protections, or review capacity.
+**R2 — Prevalence transform.** `π_E = π_e · n̄ / m` when both counts use the same window and `m > 0`. *Condition:* one entity per event in the roll-up. *Why it matters:* it is the only defensible bridge between the two most reported fraud rates.
 
-### Result R-02 — Precision depends on prevalence and selection
+**R3 — Recall bounds under aggregation.** `d_e ≤ d_E ≤ 1 − (1 − d_e)^m`. *Condition:* entity is flagged if any event is flagged; `m ≥ 1`. *Why it matters:* it tells you whether an observed lift in recall is arithmetic or model improvement.
 
-Precision is P(Y=1 | selected), so it changes with prevalence and selection policy even when a model’s conditional behavior is stable.
-A precision value from an investigator queue cannot be generalized to all events without a population and selection rule.
-Recall is also undefined until the fraud outcome definition and maturity horizon are declared.
+**R4 — Threshold invariance in probability space.** Under a fixed loss ratio `f / a`, the optimal threshold `p*` does not depend on prevalence. *Condition:* `p` is calibrated and the action set is unchanged. *Why it matters:* under a prevalence shift the threshold should not move, but the flagged volume will, which is why capacity binds exactly when fraud rises.
 
-### Result R-03 — Missing labels can be informative
+**R5 — Threshold non-invariance in quantile space.** A fixed score quantile maps to a prevalence-dependent threshold. *Condition:* score distribution shifts with the population. *Why it matters:* "we always take the top 1 percent" is a capacity policy, not a risk policy, and it silently changes the loss ratio when prevalence moves.
 
-If review probability depends on score, rule hit, or action, then observed labels are missing not at random relative to the full eligible population.
-No metric transformation alone recovers unobserved truth without additional assumptions or an evidence-collection design.
-Audits, randomized exposure where ethical, delayed-outcome observation, and sensitivity analyses can narrow but not erase this limitation.
+**R6 — Censoring bias direction.** For any window ending closer than `t_m` to the cut, the apparent fraud rate is biased downward by the uncovered share. *Condition:* labels arrive after the event, never before. *Why it matters:* the bias has a known sign, so it can be corrected rather than merely suspected.
 
-### Result R-04 — Association is not identity or causation
+**R7 — Label-path inflation.** `π_true = π_obs / κ` when label generation is independent of features. *Condition:* constant `κ`. *Why it matters:* it converts a "confirmed cases only" rate into a population rate and quantifies how much the confirmed-only view understates.
 
-A graph edge shows a recorded relationship under a declared construction rule.
-It does not prove common control, intent, misconduct, or that restricting a connected entity prevents loss.
-Temporal edge construction, source provenance, and reversible linkage are necessary conditions for defensible graph use.
+**R8 — Selection-path bias in precision.** Precision measured on reviewed rows equals population precision only when review selection is independent of the outcome given the score. *Condition:* conditional independence. *Why it matters:* it explains why backtest precision on reviewed cases exceeds production precision, always in the same direction.
 
-### Result R-05 — Calibration is population and horizon specific
+**R9 — Friction multiplicity.** The friction ratio between event and entity grain equals the mean number of events per blocked entity, `n̄`. *Condition:* one friction charge per action. *Why it matters:* it is the entire quantitative content of the grain decision on the cost side.
 
-A score interpreted as probability requires a target event, population, feature window, and label maturity definition.
-Changing a product, period, action policy, or label source can invalidate the numerical interpretation without changing rank order.
-Later sheets address calibration mechanics; this sheet establishes why the taxonomy is its domain.
-Takeaway: named results constrain what can be inferred from a score; they do not create missing evidence.
+**R10 — Observable-share Goodhart.** If only a share `s` of losses is observable and the policy optimises the observable part, effort shifts toward the observable mechanisms until marginal returns equalise, leaving total loss possibly unchanged. *Condition:* attacker or staff response to policy. *Why it matters:* it predicts that a successful optimisation can improve the metric and not the loss.
 
 ## 11. Interview / Exam Questions
 
-### Q1. Why is “fraud” not a sufficient machine-learning target?
+**Q1. A team reports 0.09 percent fraud prevalence and a 1.2 percent chargeback rate for the same portfolio. Which is wrong?** Neither, necessarily. The 0.09 percent is event grain and the 1.2 percent is a value-weighted or entity-grain rate. Convert with `π_E = π_e n̄ / m`; at `n̄ = 16` and `m = 1.24` the entity rate is 11.6 per thousand events-equivalent. Then check whether the chargeback rate counts disputes or confirmed frauds, because disputes run higher than confirmations by the reversal share.
 
-**Checked answer:** It omits the unit of decision, allowed action, loss owner, observation process, and time boundary.
-**Reasoning:** A payment authorization and a claim referral can both concern suspected misconduct but differ in latency, reversibility, label maturity, and customer harm.
-**Follow-up:** Name one condition under which a shared upstream score can still be useful.
-**Acceptable alternative:** A shared feature representation or risk ordering can be used if each product has its own validated policy contract.
-**Red flag:** “Use one 0.5 threshold everywhere.”
-**Scoring:** Full credit names at least three operational differences and a policy boundary.
-**Answer support:** Sections 2, 3, and 7.
+**Q2. Given `d_e = 0.55` and `m = 2`, what is the best possible entity-level detection rate and what assumption makes it unattainable?** `1 − 0.45² = 0.7975`. It requires detection to be independent across the entity's events. Real events on one entity share device, merchant, and amount features, so misses correlate positively and the achieved rate lands between 0.55 and 0.7975.
 
-### Q2. A payment model used a chargeback status that arrived two days later. What is the defect?
+**Q3. Your precision is 22 percent at case grain and 0.4 percent at alert grain. Which number goes in the business case?** Both, labelled. The case-grain number describes analyst output; the alert-grain number describes queue load and the cost of generating work. A business case that quotes only the flattering number is unable to size the analyst team.
 
-**Checked answer:** Future-information leakage, because availability time exceeds the authorization decision time.
-**Reasoning:** The warehouse can display the status retrospectively, but the online policy could not observe it.
-**Follow-up:** What metadata proves a replacement feature is valid?
-**Acceptable alternative:** A documented source availability timestamp and a replay test.
-**Red flag:** “The event happened before training finished, so it is safe.”
-**Scoring:** Full credit distinguishes training cutoff from per-event prediction-time availability.
-**Answer support:** TAX-01 and F-01.
+**Q4. Why can an entity-grain policy that blocks 3 percent of customers be cheaper than an event-grain policy that blocks 0.9 percent of transactions?** Because friction is charged per action. At `n̄ = 16`, the event policy pays friction on roughly 0.9 percent of 16 events per customer, about 14 percent of customers contacted per month, versus 3 percent under entity grain. The comparison is only valid if attrition from over-blocking is included, which is the 28.5 percent crossover in Section 5d.
 
-### Q3. Compute precision and recall for 200 alerts containing 60 mature confirmed fraud outcomes when the eligible cohort contains 100.
+**Q5. A rule shows 80 percent precision on investigated cases and 12 percent precision in production. Diagnose.** Investigated cases were selected by the previous rule, so the row set is conditioned on a high score. Recompute on all rows in the population and compare. If the drop matches the review selection rate, this is R8 and not a modelling defect.
 
-**Checked answer:** Precision=60/200=30%; recall=60/100=60%.
-**Reasoning:** Precision conditions on selected alerts; recall conditions on all eligible mature fraud outcomes.
-**Follow-up:** What changes if 40 selected alerts are not mature?
-**Acceptable alternative:** Report them as censored and do not call the remaining count final precision.
-**Red flag:** Dividing 60 by 100 for both metrics.
-**Scoring:** Full credit includes denominators and maturity qualification.
-**Answer support:** Section 5 oracle.
+**Q6. What single field must every fraud training row carry, and why?** The selection path: scored-allowed, scored-blocked, or never scored. Without it, blocked rows enter training as legitimate, so the model learns that the pattern it just blocked is benign, and the resulting scores drift downward on exactly the traffic the policy is trying to catch.
 
-### Q4. Why is an investigator disposition not necessarily a fraud label?
+**Q7. You are asked to detect fraud on a payments app with a 400-millisecond deadline. Which rung is available?** Event or session grain only. Entity history can be served from a low-latency store, but any feature requiring a join to claims or case data is unavailable at that deadline. Choosing a higher rung changes the deadline, so the rung and the latency budget must be decided together.
 
-**Checked answer:** It may represent suspicion, insufficient evidence, queue closure, or a process decision rather than adjudicated truth.
-**Reasoning:** Review selection and operational constraints affect who receives a disposition.
-**Follow-up:** How would you report a model evaluated only on reviewed alerts?
-**Acceptable alternative:** State the reviewed-and-mature population and selection mechanism.
-**Red flag:** Treating “closed” as legitimate by default.
-**Scoring:** Full credit identifies selective observation.
-**Answer support:** Definitions and F-02.
+**Q8. Compute the entity prevalence if 900 fraud events are spread over 700 cards in a base of 120,000 cards, and state what is missing.** `m = 900/700 = 1.2857`; the entity rate is `700/120,000 = 0.005833`. What is missing is `n̄`, the mean events per card, which is needed only for the transform check, not for the direct computation. The direct computation is why the definition route should be preferred whenever the roll-up exists.
 
-### Q5. An account-level score triggers different actions for two orders. Is that automatically inconsistent?
+**Q9. An AML unit reports that 96 percent of alerts are closed as false positives and claims its model is therefore poor. What is wrong with the claim?** Alert-grain precision is structurally low because one genuine case generates dozens of alerts. The meaningful figure is confirmed cases per 100 cases opened, or currency confirmed per analyst hour. A 4 percent alert precision alongside 20 percent case precision is a normal ratio, not a broken model.
 
-**Checked answer:** No; an event policy may combine the entity score with order-level amount, eligibility, or payout state.
-**Reasoning:** The issue is whether the separate grains and inputs are documented.
-**Follow-up:** What test detects hidden policy variables?
-**Acceptable alternative:** Compare decision logs and action explanations for same-score entities.
-**Red flag:** Requiring identical actions without considering event context.
-**Scoring:** Full credit states the grain contract.
-**Answer support:** F-03.
+**Q10. Distinguish censoring from a real decline in fraud using two numbers.** Plot the label-arrival curve for two cohorts 90 days apart. Censoring shifts only the recent portion of the curve while the mature portion is unchanged; a real decline lowers the mature plateau. Report both the plateau and the age at which it is reached.
 
-### Q6. What is wrong with calling the gross value of blocked transactions “savings”?
+**Q11. Why does an optimal probability threshold not move when prevalence doubles?** Because the threshold compares the cost of two errors on the same row, and both costs are unconditional on prevalence. What does move is the number of rows above the threshold. This is why a fixed capacity queue and a fixed probability threshold cannot both be held constant during a prevalence shift.
 
-**Checked answer:** Gross value is exposure, not necessarily avoided net loss after liability, recovery, false-positive harm, and intervention cost.
-**Reasoning:** The action may not prevent the event and the loss owner can differ.
-**Follow-up:** Which quantities should be reported separately?
-**Acceptable alternative:** Gross exposure, adjudicated loss, recovered loss, cost, and mature net loss.
-**Red flag:** Assuming amount equals loss.
-**Scoring:** Full credit gives a reconciliation path.
-**Answer support:** TAX-03 and F-04.
+**Q12. A stakeholder asks for "the fraud rate". Give the four answers you must offer.** Event prevalence, entity prevalence, value-weighted loss rate, and confirmed-versus-suspected basis. State the window and the label maturity for each. If pressed for one number, give loss per 10,000 decisions because it is the only one that carries the action's cost.
 
-### Q7. A graph cluster shares one IP address. What is the first conclusion?
+**Q13. Your entity-graph links 40 cards through one device and the analyst wants all 40 frozen. What do you check first?** Cluster composition: distinct surnames, distinct funding instruments, account ages, and whether the device appeared before or after the accounts. A household shares a device for years; an attack cluster shares one for weeks and links to accounts opened in a burst.
 
-**Checked answer:** Only that the declared data source recorded a shared IP relationship at stated times.
-**Reasoning:** Shared infrastructure can be benign or an artifact; connectivity is not proof of common control.
-**Follow-up:** Give two discriminating checks.
-**Acceptable alternative:** Degree baseline, edge provenance, timing, sampled connected controls, or non-graph evidence.
-**Red flag:** Calling the component a fraud ring.
-**Scoring:** Full credit separates relation from conclusion.
-**Answer support:** F-05 and R-04.
-
-### Q8. Which timestamp must govern a feature in an online replay: event time or availability time?
-
-**Checked answer:** Availability time, with event time retained as separate context.
-**Reasoning:** A source may learn or correct an event after the business event occurred.
-**Follow-up:** What if availability time is unknown?
-**Acceptable alternative:** Exclude the feature until lineage is established.
-**Red flag:** Using end-of-day snapshots for intraday decisions.
-**Scoring:** Full credit names the information wall.
-**Answer support:** TAX-01.
-
-### Q9. Change the constraint: reviewers are cut from 600 to 300 alerts/day. What taxonomy field becomes immediately operational?
-
-**Checked answer:** Queue capacity and alert grain, plus the policy’s selected population and deduplication state.
-**Reasoning:** Capacity changes top-K selection and may expose duplicate case work.
-**Follow-up:** Is a new threshold automatically optimal?
-**Acceptable alternative:** No; revisit loss, maturity, workload, and guardrails.
-**Red flag:** Doubling an old threshold without replay.
-**Scoring:** Full credit ties capacity to policy evaluation.
-**Answer support:** Sections 5 and 9.
-
-### Q10. When may a score be shared across payment and application workflows?
-
-**Checked answer:** As an explicitly limited input after validating feature permissions, target meaning, calibration, and separate action policies.
-**Reasoning:** Shared actors do not make the decision surfaces equivalent.
-**Follow-up:** What must not be shared by default?
-**Acceptable alternative:** A common cutoff, loss matrix, or label definition.
-**Red flag:** “Same customer, same risk.”
-**Scoring:** Full credit states both permissible and prohibited reuse.
-**Answer support:** Sections 3 and 7.
-
-### Q11. Give an ambiguous diagnosis for a sudden drop in alert precision.
-
-**Checked answer:** It could be real adversarial shift, a changed label-maturity mix, review-policy selection, a source outage, or a definition change.
-**Reasoning:** Precision alone does not locate cause because numerator and denominator both depend on policy and observation.
-**Follow-up:** What first slices distinguish them?
-**Acceptable alternative:** Maturity, source freshness, queue selection, product/channel, rule version, and feature missingness.
-**Red flag:** Retrain immediately without checking labels.
-**Scoring:** Full credit names competing causes and discriminators.
-**Answer support:** F-02 and F-06.
-
-### Q12. What is a plausible wrong method for marketplace graph fraud?
-
-**Checked answer:** Train on a static graph containing future edges and classify every connected component as positive.
-**Reasoning:** Future links leak information and connectivity is not adjudication.
-**Follow-up:** What is the minimum credible comparison?
-**Acceptable alternative:** A temporal, typed graph feature evaluation against a non-graph baseline at fixed capacity and mature outcomes.
-**Red flag:** Reporting graph accuracy without edge-time policy.
-**Scoring:** Full credit identifies both leakage and semantic overclaim.
-**Answer support:** Sections 6 and 8.
-Takeaway: a defensible answer names grain, clock, evidence, and action rather than a fashionable model.
-
-### 11.1 Product-specific taxonomy traces
-These distinct constructed traces deepen the taxonomy; they are ILLUSTRATIVE and do not assert deployments, outcomes, or legal conclusions.
-
-### Payment-card authorization
-A card authorization begins after a merchant submits a purchase request and before issuer response is committed.
-Authorization amount is a request value; settlement, reversal, presentment, dispute, recovery, and liability may occur later.
-Card-present and card-not-present channels expose different available authentication and evidence paths.
-A merchant identifier can change ownership or processing arrangement, so historical aggregation needs versioned merchant context.
-An incremental authorization is neither automatically a duplicate nor an independent purchase.
-A reversal after approval is a lifecycle event that must be linked before counting loss exposure.
-A decline can move a customer to another tender or another attempt; a single-attempt metric misses displacement.
-A challenge completion can be customer-initiated, timeout-driven, or unavailable by channel; these need distinct terminal states.
-Network receipt time, issuer receipt time, feature availability time, and issuer action time can differ.
-An online device fingerprint may be timely while a dispute reason code is necessarily future information.
-Currency conversion used for comparison requires the exchange-rate snapshot that existed at the decision, not end-of-day correction.
-A velocity feature needs a window, timezone, event inclusion rule, and late-event policy.
-An issuer can observe one authorization but not the merchant’s full checkout context.
-A fraud report can identify a cardholder dispute without determining final issuer-borne loss.
-A confirmed-fraud flag can be reversed when an investigation changes the evidence state.
-A payment model target must distinguish authorization fraud propensity from expected net loss.
-A false decline has customer, merchant, and support effects that a chargeback ledger may not capture.
-A challenge rate is an action rate, not a fraud prevalence estimate.
-An approval can be a required safe fallback during feature-store or model outage.
-A hard latency budget must include serialization, feature retrieval, scoring, policy execution, and response transmission.
-A timeout outcome should be logged as a policy state, not silently relabeled as approve or decline.
-A payment evaluation cohort must include every eligible attempt, including rules-only fallback attempts.
-A dispute window can be immature even when an authorization is old enough for an operational dashboard.
-Review queues generally assess downstream cases, not live authorizations; do not treat review capacity as immediate authorization capacity.
-A rules-only baseline must retain its own challenge and fallback behavior.
-A payment policy can be segmented by channel only after the segment is defined before outcome observation.
-A score threshold may be replaced by an amount-aware expected-loss policy only if amount and liability assumptions are explicitly versioned.
-The same token can appear across attempts without proving that the person controlling each attempt is the same.
-Issuer-side fraud prevention does not establish merchant-side conversion impact.
-Payment trace oracle: P17 has t_d=10:00:00.100, device availability=10:00:00.030, dispute availability=two days later; only device is admissible.
-
-### Insurance-claims referral
-A claim referral starts from a claim, claim line, provider, claimant, policy, or documented evidence state; choose one primary grain.
-A claim can receive supplements after initial submission, creating a new review decision without necessarily creating a new fraud target.
-A referral ordinarily changes investigation priority, not the contractual final claim outcome by itself.
-Claim amount is a requested or reserved amount and is not a confirmed improper payment.
-A special-investigations referral can consume different effort for a simple inconsistency and a complex multi-party claim.
-Queue capacity therefore needs work units or completion time, not only alert count.
-A request for documents may delay legitimate claim resolution and must be treated as an action consequence.
-An investigation open state is neither legitimate nor fraudulent ground truth.
-An investigator close code can represent insufficient evidence, jurisdictional handoff, duplicate case, or confirmed concern.
-Recovery may occur months after adjudication and should not be backfilled into a decision-time feature.
-Provider, repair shop, claimant, and policyholder links have different semantics and cannot be merged merely because addresses match.
-A claim may be reopened after new documents arrive; outcome versioning preserves the original decision context.
-A claim severity estimate and a fraud suspicion estimate are distinct quantities.
-An escalation policy should state whether high-severity but low-suspicion claims compete for the same specialists.
-A low referral yield can result from conservative reviewers, immature outcomes, better deterrence, or poor ranking.
-Claim investigation labels are often selected because only referred files receive deep evidence.
-A representative audit must not expose claimants to unsupported delay merely to make labels convenient.
-A maturity horizon should be derived from observed adjudication and recovery delay distributions before production reporting.
-The baseline may be intake rules, random audit, existing triage, or investigator order; name the actual comparator.
-A claim model can rank referral value without authorizing denial.
-A fraud taxonomy must preserve “coverage dispute” separately from suspected deception where evidence rules differ.
-A claim’s event time may be date of loss, report time, intake time, or referral time; each serves a different analysis.
-The feature snapshot must specify whether document extraction existed before the referral decision.
-A later medical or repair assessment cannot validate a real-time intake feature retrospectively.
-A claim can belong to a catastrophe or provider surge, so temporal splits need to preserve operational regime shifts.
-A referral action can change what evidence is collected, which makes post-referral fields policy-mediated.
-An entity-resolution merge among providers must remain reversible because a mistaken merge can redirect many referrals.
-Claims trace oracle: C1 mature confirmed, C2 still open, C3 withdrawn; a mature-yield denominator includes C1 only under the declared rule.
-A claims result should report customer-service guardrails beside any recovered-amount proxy.
-No constructed claims trace in this file identifies insurer practice or measured savings.
-
-### Account takeover and application
-A login, password reset, recovery request, address change, payee addition, and application submission are separate events with different harms.
-A compromised login can be prevented by step-up while a compromised recovery channel may require manual identity resolution.
-A new device is a context signal, not proof that a legitimate user has been displaced.
-Credential-stuffing traffic can create many failed attempts without establishing successful account takeover.
-A successful reset followed by a customer complaint is evidence with a temporal relation, not automatically the exact compromise time.
-An account lock may prevent loss while also blocking urgent legitimate access and creating support work.
-A recovery route requires its own completion, abandonment, and security outcome metrics.
-An application identity mismatch can reflect data entry, bureau lag, shared household information, or deception.
-Application fraud must not be defined by later credit performance without a documented causal target relationship.
-Document review results are often unavailable at instant approval and must respect their availability timestamp.
-A phone number change can be an adversarial action, a legitimate migration, or a carrier artifact.
-An account score may support several events but requires an event policy to select an action.
-A session identifier is not necessarily a person identifier and may rotate between requests.
-A support interaction can reveal compromise later, making it inappropriate as an earlier online feature.
-A step-up challenge can fail due to delivery outage, customer abandonment, or adversary inability; distinguish these outcomes.
-A policy must define the safe action when strong identity evidence is unavailable and recovery cannot meet its deadline.
-A takeover evaluation must track post-action reattempts and alternate channels to assess displacement.
-An application evaluation must distinguish abandoned applications from declined applications.
-A customer report is selectively observed because reporting capability and trust vary.
-An account closure after a recovery can be a customer-service outcome rather than confirmed compromise.
-A device graph may link legitimate family devices; use typed relations and timing.
-A reset action can alter later authentication data and create feedback into labels.
-The loss from a takeover may include transfer, payout, support, reimbursement, and trust cost; no single amount is universal.
-An application’s requested limit is not a realized loss estimate.
-Rules that block impossible travel may be useful but should expose their location and time assumptions.
-A temporal split must avoid letting a later recovery state leak into an earlier login row.
-Account trace oracle: reset at 09:05, complaint at day 2, snapshot day 20, H=14 days yields mature=true but mechanism remains uncertain.
-An application score should have an explicit abstain or manual-verification path where available.
-A shared identity signal can be a feature only under authorized collection and use boundaries.
-No online authentication rule stated here is an endorsed security control.
-
-### AML monitoring
-An AML monitoring item can begin as a transaction, a transaction sequence, a customer relationship, a counterparty pattern, or a rule-generated alert.
-The monitored behavior and the legal conclusion must remain separate states.
-An alert may be deduplicated, grouped, suppressed, assigned, investigated, closed, reopened, or escalated.
-A rule hit is evidence of a scenario definition, not proof that the scenario reflects illicit activity.
-Case disposition depends on investigator evidence, policy, workload, and reporting rules; it is selected evidence.
-A closure reason can encode duplicate, no concern, insufficient information, or a process exception.
-An escalation may be time-sensitive but is usually not an in-flight payment authorization decision.
-Alert capacity depends on complexity, data requests, and case age, not raw alert count alone.
-A high-value transaction can be relevant context but is not the same as misconduct loss.
-Transaction aggregation requires currency, timezone, booking date, value date, and reversal treatment.
-A customer relationship can be amended after onboarding; use point-in-time customer state in backtests.
-A counterparty identifier can be missing, normalized differently, or reused; entity linkage needs confidence.
-An investigator may see case notes unavailable to an online detector; those notes must not be used as historical features.
-Alerts closed without review do not become negative labels by default.
-A monitoring rule can change the observed alert population, thereby changing downstream label prevalence.
-A model may rank investigators’ attention without making a regulatory conclusion.
-A typology label is often uncertain or multi-valued; retain unknown and mixed states.
-A transaction cluster can span products and jurisdictions with distinct access and policy boundaries.
-A high-risk geography field requires a documented source and allowed use; it cannot be inferred from a generic map.
-A monitoring evaluation must report alert creation, assignment, completion, maturity, and selected-label coverage.
-External feedback may be delayed, partial, unavailable, or non-comparable with internal case statuses.
-A system outage can create missed monitoring windows that a score-quality metric will not detect.
-Backfill replay needs original rule versions and original data availability to be meaningful.
-A queue threshold should be expressed as a fixed capacity or service target, not a general fraud cutoff.
-The simplest credible baseline is the current versioned scenario/rule process.
-A graph relation can prioritize evidence collection but does not establish common control.
-AML trace oracle: alert A closed duplicate, B open, C escalated; none alone establishes a crime label.
-Mature outcome reporting must state whether maturity means case completion, feedback receipt, or another declared event.
-A false-positive cost can include investigator time and customer impact only where the action actually contacts or constrains a customer.
-No AML item in this sheet asserts a filing duty or regulatory interpretation.
-
-### Marketplace integrity and graph fraud
-Marketplace decisions may target listings, orders, buyers, sellers, payouts, reviews, messages, or groups of linked entities.
-A seller restriction and a payout hold have different reversibility, customer impact, and evidence requirements.
-A buyer dispute can implicate an order without proving that the seller controlled a linked account.
-A shared device can arise from households, repair services, warehouses, or emulator infrastructure.
-A shared address can represent an apartment building, business location, forwarding service, or entity-resolution error.
-A payment instrument link may be tokenized, rotated, co-owned, or observed only on a subset of transactions.
-An edge must state source, type, direction, observation time, expiry policy, and confidence.
-A graph snapshot for evaluation must exclude edges formed after the decision time.
-A component can grow after an action; later connectivity cannot validate an earlier graph feature.
-A high-degree node can be a common service provider and should be analyzed against degree baseline.
-Entity resolution should preserve candidate links rather than forcing irreversible merges.
-A merge reversal must update downstream feature lineage and evaluation population.
-A listing image similarity signal can be reused content, stock photography, legitimate reseller behavior, or evasion.
-A review manipulation signal can be an incentive artifact rather than controlled coordination.
-An order cancellation can be customer-driven, seller-driven, payment-driven, or platform-enforced.
-A payout action has a different decision deadline than a listing moderation action.
-A marketplace score may produce monitoring, evidence request, restriction, or referral; the permissible set must be explicit.
-Appeal outcomes are selected because only some participants appeal and appeal access can differ.
-Restriction can change future transactions, graph edges, and observed disputes; post-action rates are policy-mediated.
-A graph model must be compared against a point-in-time non-graph model under equal review capacity.
-Discovery of a connected group is not the same outcome as confirmed harm avoided.
-A component-level label must state how entity-level outcomes are aggregated and how mixed components are represented.
-A seller-level score applied to every order needs an order-policy layer and a documented exception rule.
-A buyer-seller edge has a different semantic from a device-seller edge.
-Graph sampling can underrepresent low-degree or newly created entities and change evaluation prevalence.
-Cold-start entities need explicit handling rather than defaulting to “safe.”
-Marketplace trace oracle: future edge on day 10 is excluded from a decision snapshot on day 3 even if the final graph contains it.
-A graph explanation should name the observed relation and uncertainty, not declare an intent or ring.
-A marketplace loss schedule must separate platform reimbursement, seller impact, buyer harm, and operational cost where relevant.
-No graph feature alone establishes fraud or common ownership.
-
-### Mixed-portfolio governance
-A shared fraud platform should retain product-specific action policies even when it centralizes features or model hosting.
-The platform must record which product contract consumed a score and which version of that contract was active.
-A common risk score needs target documentation for every consuming surface.
-A shared entity key can be operationally useful without authorizing unbounded cross-product use.
-Feature access boundaries must be enforced before model training, not after a favorable offline result.
-A collection-wide metric dashboard should not combine event, entity, alert, and case denominators without an aggregation contract.
-A loss dashboard should separate currency, counts, service time, and probability rather than add incomparable units.
-A single “fraud rate” field is ambiguous unless numerator, denominator, maturity, and selection path are stated.
-A single “alert precision” field is ambiguous unless queue and review rules are stated.
-A single “savings” field is ambiguous unless action, counterfactual, loss owner, recovery, and cost are stated.
-A score release must retain model version, feature version, policy version, and fallback version.
-A feature outage can change the meaning of scores even when model weights remain unchanged.
-A policy change can change label collection even when scoring remains unchanged.
-A case-tool migration can change disposition taxonomy and make time-series comparisons invalid.
-An investigator staffing change can change queue maturity and selected-label prevalence.
-A new product channel can shift feature missingness and action availability.
-An adversary adaptation hypothesis should be tested separately from ingestion and labeling faults.
-A governance review should distinguish an observed incident from a constructed failure drill.
-An illustrative case should say not-measured rather than implying operational results.
-A metric can be numerically correct and still decision-invalid if it uses the wrong grain.
-A model can be calibrated and still policy-invalid if its target does not match the action.
-A high precision at capacity can coexist with low portfolio recall.
-A low false-positive count can coexist with unacceptable false-negative loss.
-A low model latency can coexist with unacceptable end-to-end decision latency.
-A strong graph lift can be leakage from future edges or entity resolution.
-A mature-outcome report should retain censored count rather than hide it.
-A customer-impact guardrail needs the same population and time window as the intervention metric.
-An appeal or override log is evidence about process, not automatically model error.
-A review sample requires an ethics, safety, and operations design; it is not free ground truth.
-Governance trace oracle: a score version change without policy change and a policy change without score change are distinct release events.
-
-Takeaway: each surface needs its own observed state, allowed action, label path, and counterexample before shared modelling is defensible.
-## Appendix D — Decision-grain classification traces
-All entries are ILLUSTRATIVE taxonomy exercises. They define a boundary for analysis; none reports a real company workflow, incident, or result.
-### T-01 — card authorization
-- **Unit of analysis:** `transaction`; do not silently aggregate it to an entity, alert, or case.
-- **Decision owner:** identify the role that can execute one of `approve/challenge/decline` within the stated deadline.
-- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
-- **Permitted actions:** `approve/challenge/decline`; unavailable actions are infeasible rather than low-value choices.
-- **Outcome record:** `authorization result plus mature dispute evidence`.
-- **Label boundary:** a dispute is not identical to confirmed fraud.
-- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
-- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
-- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
-- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
-- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
-### T-02 — claim intake
-- **Unit of analysis:** `claim`; do not silently aggregate it to an entity, alert, or case.
-- **Decision owner:** identify the role that can execute one of `queue/request/referral` within the stated deadline.
-- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
-- **Permitted actions:** `queue/request/referral`; unavailable actions are infeasible rather than low-value choices.
-- **Outcome record:** `investigation disposition with maturity state`.
-- **Label boundary:** referral is not a coverage determination.
-- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
-- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
-- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
-- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
-- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
-### T-03 — password reset
-- **Unit of analysis:** `account event`; do not silently aggregate it to an entity, alert, or case.
-- **Decision owner:** identify the role that can execute one of `allow/step-up/recovery` within the stated deadline.
-- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
-- **Permitted actions:** `allow/step-up/recovery`; unavailable actions are infeasible rather than low-value choices.
-- **Outcome record:** `verified recovery outcome and later report`.
-- **Label boundary:** a failed reset is not proof of takeover.
-- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
-- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
-- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
-- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
-- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
-### T-04 — new application
-- **Unit of analysis:** `application`; do not silently aggregate it to an entity, alert, or case.
-- **Decision owner:** identify the role that can execute one of `approve/verify/decline` within the stated deadline.
-- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
-- **Permitted actions:** `approve/verify/decline`; unavailable actions are infeasible rather than low-value choices.
-- **Outcome record:** `identity verification and mature account outcome`.
-- **Label boundary:** later credit loss is not automatically application fraud.
-- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
-- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
-- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
-- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
-- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
-### T-05 — AML scenario
-- **Unit of analysis:** `transaction sequence`; do not silently aggregate it to an entity, alert, or case.
-- **Decision owner:** identify the role that can execute one of `monitor/investigate/escalate` within the stated deadline.
-- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
-- **Permitted actions:** `monitor/investigate/escalate`; unavailable actions are infeasible rather than low-value choices.
-- **Outcome record:** `case status and external feedback if available`.
-- **Label boundary:** an alert is not a crime label.
-- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
-- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
-- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
-- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
-- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
-### T-06 — marketplace payout
-- **Unit of analysis:** `seller payout`; do not silently aggregate it to an entity, alert, or case.
-- **Decision owner:** identify the role that can execute one of `release/hold/review` within the stated deadline.
-- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
-- **Permitted actions:** `release/hold/review`; unavailable actions are infeasible rather than low-value choices.
-- **Outcome record:** `appeal, payment, and loss records`.
-- **Label boundary:** a shared device is not common control.
-- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
-- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
-- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
-- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
-- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
-### T-07 — listing moderation
-- **Unit of analysis:** `listing`; do not silently aggregate it to an entity, alert, or case.
-- **Decision owner:** identify the role that can execute one of `allow/request evidence/restrict` within the stated deadline.
-- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
-- **Permitted actions:** `allow/request evidence/restrict`; unavailable actions are infeasible rather than low-value choices.
-- **Outcome record:** `moderation outcome and appeal`.
-- **Label boundary:** image similarity is not intent.
-- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
-- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
-- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
-- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
-- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
-### T-08 — buyer order
-- **Unit of analysis:** `order`; do not silently aggregate it to an entity, alert, or case.
-- **Decision owner:** identify the role that can execute one of `allow/cancel/review` within the stated deadline.
-- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
-- **Permitted actions:** `allow/cancel/review`; unavailable actions are infeasible rather than low-value choices.
-- **Outcome record:** `delivery, dispute, and action history`.
-- **Label boundary:** cancellation source is ambiguous.
-- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
-- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
-- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
-- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
-- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
-### T-09 — merchant onboarding
-- **Unit of analysis:** `merchant application`; do not silently aggregate it to an entity, alert, or case.
-- **Decision owner:** identify the role that can execute one of `approve/verify/decline` within the stated deadline.
-- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
-- **Permitted actions:** `approve/verify/decline`; unavailable actions are infeasible rather than low-value choices.
-- **Outcome record:** `verification and later activity`.
-- **Label boundary:** an entity link can be stale.
-- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
-- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
-- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
-- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
-- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
-### T-10 — account login
-- **Unit of analysis:** `session`; do not silently aggregate it to an entity, alert, or case.
-- **Decision owner:** identify the role that can execute one of `allow/challenge/lock` within the stated deadline.
-- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
-- **Permitted actions:** `allow/challenge/lock`; unavailable actions are infeasible rather than low-value choices.
-- **Outcome record:** `authentication and recovery evidence`.
-- **Label boundary:** a challenge abandonment is selected evidence.
-- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
-- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
-- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
-- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
-- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
-### T-11 — payment refund
-- **Unit of analysis:** `refund request`; do not silently aggregate it to an entity, alert, or case.
-- **Decision owner:** identify the role that can execute one of `process/hold/review` within the stated deadline.
-- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
-- **Permitted actions:** `process/hold/review`; unavailable actions are infeasible rather than low-value choices.
-- **Outcome record:** `case and payment state`.
-- **Label boundary:** refund frequency is not a fraud label.
-- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
-- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
-- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
-- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
-- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
-### T-12 — chargeback intake
-- **Unit of analysis:** `dispute`; do not silently aggregate it to an entity, alert, or case.
-- **Decision owner:** identify the role that can execute one of `accept/contest/review` within the stated deadline.
-- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
-- **Permitted actions:** `accept/contest/review`; unavailable actions are infeasible rather than low-value choices.
-- **Outcome record:** `network decision and recovery state`.
-- **Label boundary:** chargeback reason codes can be noisy.
-- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
-- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
-- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
-- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
-- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
-### T-13 — promotion abuse
-- **Unit of analysis:** `redemption event`; do not silently aggregate it to an entity, alert, or case.
-- **Decision owner:** identify the role that can execute one of `grant/deny/review` within the stated deadline.
-- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
-- **Permitted actions:** `grant/deny/review`; unavailable actions are infeasible rather than low-value choices.
-- **Outcome record:** `eligibility and appeal record`.
-- **Label boundary:** high redemption is not abuse.
-- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
-- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
-- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
-- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
-- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
-### T-14 — review integrity
-- **Unit of analysis:** `review`; do not silently aggregate it to an entity, alert, or case.
-- **Decision owner:** identify the role that can execute one of `publish/hold/investigate` within the stated deadline.
-- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
-- **Permitted actions:** `publish/hold/investigate`; unavailable actions are infeasible rather than low-value choices.
-- **Outcome record:** `moderation and appeal state`.
-- **Label boundary:** coordination inference needs more than text similarity.
-- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
-- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
-- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
-- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
-- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
-### T-15 — coupon account
-- **Unit of analysis:** `account`; do not silently aggregate it to an entity, alert, or case.
-- **Decision owner:** identify the role that can execute one of `allow/verify/restrict` within the stated deadline.
-- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
-- **Permitted actions:** `allow/verify/restrict`; unavailable actions are infeasible rather than low-value choices.
-- **Outcome record:** `identity and action logs`.
-- **Label boundary:** household sharing is a competing explanation.
-- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
-- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
-- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
-- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
-- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
-### T-16 — device link
-- **Unit of analysis:** `relationship edge`; do not silently aggregate it to an entity, alert, or case.
-- **Decision owner:** identify the role that can execute one of `use/risk-route/ignore` within the stated deadline.
-- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
-- **Permitted actions:** `use/risk-route/ignore`; unavailable actions are infeasible rather than low-value choices.
-- **Outcome record:** `source, confidence, observation time`.
-- **Label boundary:** an edge can be a repair-shop artifact.
-- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
-- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
-- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
-- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
-- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
-### T-17 — beneficiary change
-- **Unit of analysis:** `account change`; do not silently aggregate it to an entity, alert, or case.
-- **Decision owner:** identify the role that can execute one of `allow/step-up/recovery` within the stated deadline.
-- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
-- **Permitted actions:** `allow/step-up/recovery`; unavailable actions are infeasible rather than low-value choices.
-- **Outcome record:** `verified authorization and subsequent report`.
-- **Label boundary:** a changed beneficiary is not itself fraud.
-- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
-- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
-- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
-- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
-- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
-### T-18 — cash withdrawal
-- **Unit of analysis:** `transaction`; do not silently aggregate it to an entity, alert, or case.
-- **Decision owner:** identify the role that can execute one of `approve/decline/challenge` within the stated deadline.
-- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
-- **Permitted actions:** `approve/decline/challenge`; unavailable actions are infeasible rather than low-value choices.
-- **Outcome record:** `authorization and later dispute`.
-- **Label boundary:** channel capability constrains action.
-- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
-- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
-- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
-- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
-- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
-### T-19 — claim document
-- **Unit of analysis:** `document`; do not silently aggregate it to an entity, alert, or case.
-- **Decision owner:** identify the role that can execute one of `accept/request/refer` within the stated deadline.
-- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
-- **Permitted actions:** `accept/request/refer`; unavailable actions are infeasible rather than low-value choices.
-- **Outcome record:** `provenance and investigator result`.
-- **Label boundary:** missing metadata is not deception.
-- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
-- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
-- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
-- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
-- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
-### T-20 — call-center contact
-- **Unit of analysis:** `interaction`; do not silently aggregate it to an entity, alert, or case.
-- **Decision owner:** identify the role that can execute one of `assist/verify/escalate` within the stated deadline.
-- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
-- **Permitted actions:** `assist/verify/escalate`; unavailable actions are infeasible rather than low-value choices.
-- **Outcome record:** `authentication and disposition`.
-- **Label boundary:** a short call is not a malicious signal.
-- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
-- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
-- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
-- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
-- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
-### T-21 — graph component
-- **Unit of analysis:** `time-bounded component`; do not silently aggregate it to an entity, alert, or case.
-- **Decision owner:** identify the role that can execute one of `prioritize/review/no action` within the stated deadline.
-- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
-- **Permitted actions:** `prioritize/review/no action`; unavailable actions are infeasible rather than low-value choices.
-- **Outcome record:** `typed edges and adjudication`.
-- **Label boundary:** future edges are leakage.
-- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
-- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
-- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
-- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
-- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
-### T-22 — case reopen
-- **Unit of analysis:** `case`; do not silently aggregate it to an entity, alert, or case.
-- **Decision owner:** identify the role that can execute one of `retain/reprioritize/close` within the stated deadline.
-- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
-- **Permitted actions:** `retain/reprioritize/close`; unavailable actions are infeasible rather than low-value choices.
-- **Outcome record:** `reopen reason and revised result`.
-- **Label boundary:** closure does not guarantee label finality.
-- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
-- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
-- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
-- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
-- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
-
-Takeaway: classify the grain before choosing features, labels, metrics, or a threshold; each later calculation inherits this contract.
+**Q14. What makes a metric "transferable" between two fraud families?** Same grain, same action set, same label path, and same loss owner. In practice that means almost nothing transfers except the loss arithmetic. The taxonomy in Section 7 exists so that a borrowed metric can be named, checked against those four conditions, and rejected explicitly rather than silently.
 
 ## 12. Quick Reference Card
 
-| Field | Fraud taxonomy card |
-|---|---|
-| Intended decision and reader | Product owner, risk analyst, investigator lead, or model-risk reviewer classifies a workflow before modelling. |
-| Precondition / inputs | Declared product surface, event/entity grain, event/availability/decision times, allowed actions, loss owner, label source, maturity horizon, and review capacity. |
-| Default recommendation | Use the narrowest taxonomy that makes the decision contract explicit; retain unknown mechanism and censored outcome states. |
-| Core rule | `X(e,t_d)={x_j: availability_time(x_j)<=t_d}`; evaluate only on a named eligible population and maturity condition. |
-| Decision-time boundary | Event time is not availability time; later adjudication, recovery, and case closure cannot enter an earlier replay. |
-| Label rule | Investigator disposition, alert, dispute, graph edge, and gross amount are evidence artifacts, not interchangeable fraud truth. |
-| Metric rule | State numerator, denominator, unit, horizon, selection policy, maturity, comparator, and guardrails; precision at capacity is not portfolio prevalence. |
-| Loss rule | Compare actions with action-specific loss and hard constraints; amount is not automatically net loss or savings. |
-| Graph rule | Typed, time-bounded, provenance-bearing edges support investigation; connectivity alone is not proof of fraud or common control. |
-| Critical avoid condition | Never transfer a cutoff across payment, claims, account/application, AML, and marketplace surfaces without a new action and label contract. |
-
+| Item | Rule | Check |
+|---|---|---|
+| Grain | Declare event, entity, case, or ring before any metric | One row equals one decision |
+| Base rate | `π_E = π_e n̄ / m` | Compute both routes; agree to rounding |
+| Recall | `d_e ≤ d_E ≤ 1 − (1 − d_e)^m` | Measured value must sit inside the bounds |
+| Break-even | `p* = f / (f + a)` | Recompute with actual friction, not a guess |
+| Friction | Charged per action, so grain sets the multiplier | Compare `n̄` before comparing policies |
+| Labels | `π_true = π_obs / κ` | Estimate `κ` on a labelled cohort |
+| Censoring | Apparent rate falls by uncovered share | Plot label-arrival curves by cohort |
+| Selection | Record allowed, blocked, never scored | Recompute precision on all rows |
+| Unit | Attach grain to every rate in every document | A number without a grain is not a metric |
+| Transfer | Same grain, actions, labels, loss owner | Otherwise name the mismatch and refuse |

@@ -8,17 +8,16 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | fraud taxonomy | planned |
-| 2 | decision cut-offs and losses | planned |
+| 1 | fraud taxonomy | [authored](Cheat_Sheets/01_Fraud_Taxonomy_and_Decision_Grain.md) |
+| 2 | decision cut-offs and losses | [authored](Cheat_Sheets/02_Decision_Cutoffs_and_Losses.md) |
 | 3 | labels and investigation feedback | planned |
-| 4 | real-time features | planned |
+| 4 | real-time features | [authored](Case_Studies/01_real_time_payment_card_fraud_detection.md) |
 | 5 | imbalance and calibration | planned |
 | 6 | rules plus ML | planned |
-| 7 | graph fraud | planned |
-| 8 | alert operations | planned |
+| 7 | graph fraud | [authored](Case_Studies/01_real_time_payment_card_fraud_detection.md) |
+| 8 | alert operations | [authored](Case_Studies/04_aml_transaction_monitoring_system.md) |
 | 9 | monitoring and concept drift | planned |
 | 10 | fairness and explainability | planned |
-
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.

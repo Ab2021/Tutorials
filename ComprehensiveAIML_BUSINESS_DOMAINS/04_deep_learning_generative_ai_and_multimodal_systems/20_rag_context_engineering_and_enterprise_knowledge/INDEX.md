@@ -8,12 +8,11 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | document ingestion | planned |
+| 1 | document ingestion | [authored](Cheat_Sheets/02_RAG_Ingestion_Chunking_and_Grounded_Answers.md) |
 | 2 | chunking embeddings and hybrid search | planned |
 | 3 | reranking and context assembly | planned |
 | 4 | grounding and citations | planned |
-| 5 | permission-aware retrieval | [Permission-aware retrieval draft](Cheat_Sheets/01_Permission_Aware_Retrieval.md); broader topic planned |
-
+| 5 | permission-aware retrieval | [authored](Cheat_Sheets/01_Permission_Aware_Retrieval.md) |
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

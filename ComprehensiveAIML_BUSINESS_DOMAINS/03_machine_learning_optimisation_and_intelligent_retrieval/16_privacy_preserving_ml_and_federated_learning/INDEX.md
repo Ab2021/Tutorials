@@ -9,11 +9,10 @@
 | # | Topic | Status |
 |---:|---|---|
 | 1 | privacy threat modelling | planned |
-| 2 | differential privacy | planned |
-| 3 | federated learning | planned |
-| 4 | secure aggregation | planned |
-| 5 | synthetic data limits | planned |
-
+| 2 | differential privacy | [authored](Cheat_Sheets/01_privacy_method_selection.md) |
+| 3 | federated learning | [authored](Cheat_Sheets/02_federated_learning_architecture.md) |
+| 4 | secure aggregation | [authored](Cheat_Sheets/02_federated_learning_architecture.md) |
+| 5 | synthetic data limits | [authored](Cheat_Sheets/03_data_minimisation_list.md) |
 ## What competence looks like
 
 After this module, a learner can turn a real problem into an appropriate technical approach, state the relevant assumptions and trade-offs, select evaluation measures, and explain where the method can fail. The module's case studies focus on applied judgement; its cheat sheets capture reusable operating knowledge.

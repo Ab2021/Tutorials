@@ -8,12 +8,11 @@
 
 | # | Topic | Status |
 |---:|---|---|
-| 1 | formulation and duality | planned |
-| 2 | network and scheduling models | planned |
-| 3 | integer programming | planned |
-| 4 | metaheuristics | planned |
+| 1 | formulation and duality | [authored](Cheat_Sheets/01_optimisation_formulation.md) |
+| 2 | network and scheduling models | [authored](Cheat_Sheets/04_network_and_scheduling_models.md) |
+| 3 | integer programming | [authored](Cheat_Sheets/05_integer_programming.md) |
+| 4 | metaheuristics | [authored](Cheat_Sheets/06_metaheuristics.md) |
 | 5 | discrete-event simulation | planned |
-
 ## Exact local coverage ledger
 
 Registered before individual authoring on 2026-11-08. Original commitments are retained verbatim.

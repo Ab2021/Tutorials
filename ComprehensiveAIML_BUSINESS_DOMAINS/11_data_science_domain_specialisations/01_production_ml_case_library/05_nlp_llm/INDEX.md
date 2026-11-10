@@ -11,14 +11,13 @@
 | 1 | task framing | planned |
 | 2 | data curation | planned |
 | 3 | embeddings and retrieval | planned |
-| 4 | RAG and citations | planned |
+| 4 | RAG and citations | [authored](Case_Studies/01_Enterprise_RAG_Knowledge_Assistant.md) |
 | 5 | structured extraction | planned |
 | 6 | moderation | planned |
 | 7 | support automation | planned |
 | 8 | evaluation and human review | planned |
 | 9 | privacy | planned |
 | 10 | production operations | planned |
-
 ## Applied collections
 
 - [Case Studies](./Case_Studies/INDEX.md): decision-centred cases using the local v2 catalog and integrated outline standard.
